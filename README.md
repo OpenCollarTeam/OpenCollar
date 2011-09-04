@@ -19,7 +19,7 @@ git config.  You can do that like this:
     git config user.name "Joe Resident"
 
 You'll probably also want to be able to sync the scripts inworld.  I suggest
-using the [Phoenix Viewer] [1]'s object 'Import Linkset' feature.  This
+using the [Phoenix Viewer] [1]'s 'Import Linkset' feature.  This
 requires that you have an xml file from an exported object.  There is an
 'updater.xml' file included in the repository for this purpose.  Before running
 the import, you'll need to make an `updater_assets` folder containing the
