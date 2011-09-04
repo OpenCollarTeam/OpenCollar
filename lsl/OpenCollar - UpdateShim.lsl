@@ -9,12 +9,12 @@ list lScripts;
 // LOCALSETTING_SAVE
 list lSettings;
 
-// Return the name and version of an item as a list.
+// Return the name and version of an item as a list.  If item has no version, return empty string for that part.
 list GetNameParts(string name) {
     list nameparts = llParseString2List(name, [" - "], []);
-    string shortname = llDumpList2String(llDeleteSubList(nameparts, -1, -1), " - ");
+    string shortname = llDumpList2String(llList2List(nameparts, 0, 1), " - ");
     string version;
-    if (llGetListLength(nameparts) > 1) {
+    if (llGetListLength(nameparts) > 2) {
         version = llList2String(nameparts, -1);
     } else {
         version = "";
@@ -73,6 +73,8 @@ default
             lScripts += GetNameParts(name);
         }
         
+        debug(llDumpList2String(lScripts, "|"));
+        
         // listen on the start param channel
         llListen(iStartParam, "", "", "");
         
@@ -81,7 +83,7 @@ default
     }
     
     listen(integer channel, string name, key id, string msg) {
-        debug("heard: " + msg);
+        //debug("heard: " + msg);
         if (llGetOwnerKey(id) == llGetOwner()) {
             list parts = llParseString2List(msg, ["|"], []);
             if (llGetListLength(parts) == 4) {
@@ -127,8 +129,10 @@ default
                         }
                     }                
                 } else if (mode == "REMOVE") {
+                    debug("remove: " + msg);
                     if (type == "SCRIPT") {
                         string script_name = GetScriptFullname(name);
+                        debug("script name: " + script_name);
                         if (llGetInventoryType(script_name) != INVENTORY_NONE) {
                             llRemoveInventory(script_name);
                         }
@@ -140,7 +144,7 @@ default
                     cmd = "OK";
                 }
                 string response = llDumpList2String([type, name, cmd], "|");
-                debug("responding: " + response);
+                //debug("responding: " + response);
                 llRegionSayTo(id, channel, response);                                                                
             } else {
                 if (llSubStringIndex(msg, "CLEANUP") == 0) {
