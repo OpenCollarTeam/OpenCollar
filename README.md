@@ -24,6 +24,8 @@ git config.  You can do that like this:
 Staying in Sync
 ---------------
 
+### From Disk to SL
+
 You'll probably also want to be able to sync the scripts inworld.  I suggest
 using the [Phoenix Viewer] [1]'s 'Import Linkset' feature.  This
 requires that you have an xml file from an exported object.  There is an
@@ -45,6 +47,8 @@ notecards.  So you might have to do those manually.
 There's one more step.  All of the scripts you just imported are probably
 compiled for the LSL2 runtime rather than Mono.  So select the object you just
 imported, and do `Tools -> Recompile Scripts in Selection -> Mono`.
+
+### From SL to Disk
 
 When you're actually working on the scripts, you'll need a way to sync them
 back to disk if you want to push them to Github and share your changes back to
