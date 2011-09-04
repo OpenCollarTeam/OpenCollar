@@ -10,6 +10,9 @@ All of the scripts and notecards necessary for the updater to function should
 be present in the 'lsl' folder of this repository.  Animations, textures, and
 other inventory types are not in this repo, and are only available inworld.
 
+Setting Your Identity in Git
+----------------------------
+
 When you first clone the repository, you may wish to set up your user account
 to use your Second Life name instead of whatever name might be in your global
 git config.  You can do that like this:
@@ -17,6 +20,9 @@ git config.  You can do that like this:
     cd ocupdater/
     git config user.email "joe.resident@gmail.com"
     git config user.name "Joe Resident"
+
+Staying in Sync
+---------------
 
 You'll probably also want to be able to sync the scripts inworld.  I suggest
 using the [Phoenix Viewer] [1]'s 'Import Linkset' feature.  This
