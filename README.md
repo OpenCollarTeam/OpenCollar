@@ -4,7 +4,9 @@ OpenCollar Updater
 This project contains the code for the OpenCollar Updater.  It uses new
 filenames that are more friendly to offline editing.  Version numbers have been
 removed from the filenames, in favor of using an actual version control system
-(Git).
+(Git).  If you're new to Git, [start here] [3].  Once you've forked this
+project on Github and cloned your fork to your own computer, come back and
+finish reading this.
 
 All of the scripts and notecards necessary for the updater to function should
 be present in the 'lsl' folder of this repository.  Animations, textures, and
@@ -67,7 +69,18 @@ the project.  There are two options there:
     version.  (This is what I do currently, since Phoenix object export seems
     to crash me most times I try it.)
 
-## The Part Where I Beg
+Contributing Changes
+--------------------
+
+Please submit all changes as Github pull requests.  We've tried accepting
+modified scripts inworld, and have burnt out more than one release manager that
+way.  It's a nightmare.  So for the sanity of all concerned, Github pull
+requests are the *only* way that we will accept modifications to the OC
+scripts.
+
+
+The Part Where I Beg
+--------------------
 
 Note to third party viewer devs: It would be *really* awesome to have a way to
 keep an inworld folder of scripts and notecards in sync with a folder on your
