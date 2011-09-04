@@ -38,8 +38,7 @@ that.
 
     python lsl2xml.py updater.xml
 
-(This requires that you have Python's lxml library installed.)
-
+(This requires that you have Python's [lxml] [4] library installed.)
 
 With that done, you should be able to launch Phoenix and do `File -> Import
 Linkset` in the menu, then select the updater.xml file from the ocupdater
@@ -89,3 +88,5 @@ annoying hoops.
 
 [1]: http://www.phoenixviewer.com/  "Phoenix Viewer"
 [2]: http://wiki.kokuaviewer.org/wiki/Downloads "Imprudence"
+[3]: http://help.github.com/ "start here"
+[4]: http://lxml.de/installation.html "lxml"
