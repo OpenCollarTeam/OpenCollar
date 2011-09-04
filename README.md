@@ -32,9 +32,12 @@ requires that you have an xml file from an exported object.  There is an
 'updater.xml' file included in the repository for this purpose.  Before running
 the import, you'll need to make an `updater_assets` folder containing the
 scripts and notecards, with special uuids in the names.  There's a script for
-that.  This requires that you have Python's lxml library installed.
+that.  
 
     python lsl2xml.py updater.xml
+
+(This requires that you have Python's lxml library installed.)
+
 
 With that done, you should be able to launch Phoenix and do `File -> Import
 Linkset` in the menu, then select the updater.xml file from the ocupdater
