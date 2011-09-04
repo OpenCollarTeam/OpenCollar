@@ -48,9 +48,16 @@ scripts inside.
 If you're like me, Phoenix will import the scripts just fine, but choke on the
 notecards.  So you might have to do those manually.
 
-There's one more step.  All of the scripts you just imported are probably
-compiled for the LSL2 runtime rather than Mono.  So select the object you just
-imported, and do `Tools -> Recompile Scripts in Selection -> Mono`.
+All of the scripts you just imported are probably compiled for the LSL2 runtime
+rather than Mono.  So select the object you just imported, and do `Tools ->
+Recompile Scripts in Selection -> Mono`.
+
+#### Other Items
+
+Last of all, don't forget that you still need to load the
+animations/textures/objects/etc in order to have a functioning updater!  You'll
+have to pull those from an existing collar or another copy of the updater
+inworld.
 
 ### From SL to Disk
 
