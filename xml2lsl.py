@@ -12,10 +12,10 @@ It takes two arguments:
     directory where the script is located.
 
 Example:
-    python xml_to_lsl.py ~/some_exported_object.xml
+    python xml2lsl.py ~/some_exported_object.xml
 
 Example with passing in a destination:
-    python xml_to_lsl.py ~/some_exported_object.xml ~/some_exported_scripts
+    python xml2lsl.py ~/some_exported_object.xml ~/some_exported_scripts
 
 """
 import sys
@@ -30,23 +30,28 @@ def map_to_dict(mapnode):
     kvs = [c.text for c in mapnode.getchildren()]
     return dict(zip(kvs[::2], kvs[1::2]))
 
-def move_item(item, srcdir, destdir):
-    """Given an item dict, a source directory, and a destination directory, move
-    the item from srcdir to destdir.  Use item['name'] as new filename.""" 
-    new_name = item['name']
+def copy_from_assets(item, asset_dir, proj_dir):
+    """Given an item dict, an export asset directory, and a project directory,
+    move the item from asset_dir to proj_dir.  Use item['name'] as new
+    filename.""" 
+    script_name = item['name']
     if item['type'] == 'lsltext':
         # strip off the version part of the name
-        new_name = re.sub(' - \d\.\d{3}', '', new_name)
-        new_name += '.lsl'
-    src = os.path.join(srcdir, '.'.join([item['item_id'], item['type']]))
-    dest = os.path.join(destdir, new_name)
+        script_name = re.sub(' - \d\.\d{3}', '', script_name)
+        # append .lsl if necessary
+        if not script_name.endswith('.lsl'):
+            script_name += '.lsl'
+    src = os.path.join(asset_dir, '.'.join([item['item_id'], item['type']]))
+    dest = os.path.join(proj_dir, script_name)
     try:
         shutil.copyfile(src, dest)
     except IOError, e:
         print e
     # TODO: make sure the name is safe for the filesystem
 
-def main():
+def load_info():
+    """Return a dictionary with all the information needed to sync from xml to
+    lsl or back."""
     try:
         xmlfile = sys.argv[1]
         # Assumes that xmlfile ends in .xml, and that there's a folder in the
@@ -56,10 +61,10 @@ def main():
         sys.exit(__doc__)
 
     try:
-        dest = sys.argv[2]
+        proj_dir = sys.argv[2]
     except IndexError:
         here = os.path.dirname(os.path.realpath(__file__))
-        dest = os.path.join(here, 'lsl')
+        proj_dir = os.path.join(here, 'lsl')
 
     tree = etree.parse(open(xmlfile, 'r'))
 
@@ -70,15 +75,20 @@ def main():
 
     # we only care about scripts and notecards, so filter list down to just them.
     items = [i for i in items if i['type'] in ('lsltext', 'notecard')]
+    return locals()
 
 
-    # Ensure that destdir exists.
-    if not os.path.exists(dest):
-        os.mkdir(dest)
+def main():
+    info = load_info()
 
-    for item in items:
-        print "Copying", item['name']
-        move_item(item, asset_dir, dest)
+    # Ensure that proj_dirdir exists.
+    if not os.path.exists(info['proj_dir']):
+        os.mkdir(info['proj_dir'])
+
+    for item in info['items']:
+        item.update(info)
+        print "Copying %(name)s to %(proj_dir)s" % item
+        copy_from_assets(item, info['asset_dir'], info['proj_dir'])
 
 if __name__ == '__main__':
     main()
