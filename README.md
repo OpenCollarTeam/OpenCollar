@@ -67,6 +67,8 @@ the project.  There are two options there:
     version.  (This is what I do currently, since Phoenix object export seems
     to crash me most times I try it.)
 
+## The Part Where I Beg
+
 Note to third party viewer devs: It would be *really* awesome to have a way to
 keep an inworld folder of scripts and notecards in sync with a folder on your
 hard drive.  All of the current methods require jumping through some really
