@@ -22,39 +22,6 @@ integer line;
 key lineid;
 integer listener;
 
-list g_lScripts;
-
-// Return the name and version of an item as a list.
-list GetNameParts(string name) {
-    list nameparts = llParseString2List(name, [" - "], []);
-    string shortname = llDumpList2String(llDeleteSubList(nameparts, -1, -1), " - ");
-    string version;
-    if (llGetListLength(nameparts) > 1) {
-        version = llList2String(nameparts, -1);
-    } else {
-        version = "";
-    }
-    return [shortname, version];
-}
-
-string GetScriptFullname(string name) {
-    integer idx = llListFindList(g_lScripts, [name]);
-    if (idx == -1) {
-        llSay(DEBUG_CHANNEL, "Script " + name + " not found.");
-        return (key)"";
-    }
-    
-    string version = llList2String(g_lScripts, idx + 1);
-    return llDumpList2String([name, version], " - ");    
-}
-
-// Given the name (but not version) of a script, look it up in our list and return the key
-// returns "" if not found.
-key GetScriptKey(string name) {
-
-    return llGetInventoryKey(GetScriptFullname(name));
-}
-
 SetStatus(string name) {
     // use card name, item type, and item name to set a nice 
     // text status message
@@ -67,21 +34,15 @@ SetStatus(string name) {
     llSetText(msg, <1,1,1>, 1.0);
 }
 
+debug(string msg) {
+    //llOwnerSay(llGetScriptName() + ": " + msg);
+}
+
 default
-{
-    state_entry() {
-        // build script list
-        integer n;
-        integer stop = llGetInventoryNumber(INVENTORY_SCRIPT);
-        for (n = 0; n < stop; n++) {
-            string name = llGetInventoryName(INVENTORY_SCRIPT, n);
-            // add to script list
-            g_lScripts += GetNameParts(name);
-        }        
-    }
-    
+{   
     link_message(integer sender, integer num, string str, key id) {
         if (num == DO_BUNDLE) {
+            debug("doing bundle: " + str);
             // str will be in form talkchannel|uuid|bundle_card_name
             list parts = llParseString2List(str, ["|"], []);
             talkchannel = (integer)llList2String(parts, 0);
@@ -110,15 +71,12 @@ default
                 
                 SetStatus(name);
                 
-                if (type == "SCRIPT") {
-                    // special handling because scripts have version numbers that we want to ignore.
-                    uuid = GetScriptKey(name);
-                } else if (type == "ITEM") {
-                    uuid = llGetInventoryKey(name);
-                }
-                msg = llDumpList2String([type, name, uuid, mode], "|");                
+                uuid = llGetInventoryKey(name);
+                msg = llDumpList2String([type, name, uuid, mode], "|");
+                debug("querying: " + msg);             
                 llRegionSayTo(rcpt, talkchannel, msg);
             } else {
+                debug("finished bundle: " + card);
                 // all done reading the card. send link msg to main script saying we're done.
                 llListenRemove(listener);
                 llSetText("", <1,1,1>, 1.0);
@@ -128,6 +86,7 @@ default
     }
     
     listen(integer channel, string name, key id, string msg) {
+        debug("heard: " + msg);
         // let's live on the edge and assume that we only ever listen with a uuid filter so we know it's safe
         // look for msgs in the form <type>|<name>|<cmd>
         list parts = llParseString2List(msg, ["|"], []);
@@ -145,8 +104,7 @@ default
                     llGiveInventory(id, name);
                 } else if (type == "SCRIPT") {
                     // get the full name, and load it via script pin.
-                    string script_name = GetScriptFullname(name);
-                    llRemoteLoadScriptPin(id, script_name, pin, TRUE, 0);
+                    llRemoteLoadScriptPin(id, name, pin, TRUE, 0);
                 }
                 line++;
                 lineid = llGetNotecardLine(card, line);

@@ -150,7 +150,7 @@ default {
                 }                
             } else if (type == INVENTORY_NOTECARD) {
                 // add card to bundle list if it's a bundle
-                if (llSubStringIndex(name, "BUNDLE:") == 0) {
+                if (llSubStringIndex(name, "BUNDLE_") == 0) {
                     list parts = llParseString2List(name, ["_"], []);
                     lBundles += [name, llList2String(parts, -1)];
                 }

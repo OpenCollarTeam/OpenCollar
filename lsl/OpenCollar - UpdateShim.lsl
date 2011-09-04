@@ -31,7 +31,11 @@ key GetScriptFullname(string name) {
     }
     
     string version = llList2String(lScripts, idx + 1);
-    return llDumpList2String([name, version], " - ");
+    if (version == "") {
+        return name;
+    } else {
+        return llDumpList2String([name, version], " - ");
+    }
 }
 
 integer COMMAND_NOAUTH = 0;
@@ -49,6 +53,10 @@ integer LOCALSETTING_REQUEST = 2501;
 integer LOCALSETTING_RESPONSE = 2502;
 integer LOCALSETTING_DELETE = 2503;
 integer LOCALSETTING_EMPTY = 2504;
+
+debug(string msg) {
+    //llOwnerSay(llGetScriptName() + ": " + msg);
+}
 
 default
 {
@@ -73,6 +81,7 @@ default
     }
     
     listen(integer channel, string name, key id, string msg) {
+        debug("heard: " + msg);
         if (llGetOwnerKey(id) == llGetOwner()) {
             list parts = llParseString2List(msg, ["|"], []);
             if (llGetListLength(parts) == 4) {
@@ -130,7 +139,9 @@ default
                     }
                     cmd = "OK";
                 }
-                llRegionSayTo(id, channel, llDumpList2String([type, name, cmd], "|"));                                                                
+                string response = llDumpList2String([type, name, cmd], "|");
+                debug("responding: " + response);
+                llRegionSayTo(id, channel, response);                                                                
             } else {
                 if (llSubStringIndex(msg, "CLEANUP") == 0) {
                     // set the new version

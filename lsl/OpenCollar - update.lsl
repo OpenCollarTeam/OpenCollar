@@ -58,9 +58,6 @@ key g_kUpdater; // key of avi who asked for the update
 integer g_iUpdatersNearBy = -1;
 integer g_iWillingUpdaters = -1;
 
-//new for checking on resets in other collars:
-integer g_iLastReset;
-
 //should the menu pop up again?
 integer g_iRemenu = FALSE;
 
@@ -183,96 +180,6 @@ ReadyToUpdate(integer iDel)
     llWhisper(g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
 }
 
-OrderlyReset(integer iFullReset, integer iIsUpdateReset)
-{
-    integer i;
-    llOwnerSay("OpenCollar scripts initializing...");
-
-    //put in here the full name of each script named in g_lResetFirst.  Then loop through and reset
-    //we initialize the list by setting equal to g_lResetFirst to ensure that indices will line up
-    Debug("resetting menu-hosting scripts");
-    list lResetFirstFullNames = g_lResetFirst;
-    for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++)
-    {
-        string sFullName = llGetInventoryName(INVENTORY_SCRIPT, i);
-        string sPartialName = llList2String(llParseString2List(sFullName, [" - "], []) , 1);
-        if(IsOpenCollarScript(sFullName))
-        {
-            integer iScriptPos = llListFindList(g_lResetFirst, [sPartialName]);
-            if (iScriptPos != -1)
-            {
-                //add to lResetFirstFullNames in same position as iScriptPos
-                lResetFirstFullNames = llListReplaceList(lResetFirstFullNames, [sFullName], iScriptPos, iScriptPos);
-            }
-        }
-    }
-    //now loop through lResetFirstFullNames and reset
-    integer iStop = llGetListLength(lResetFirstFullNames);
-    for (i = 0; i < iStop; i++)
-    {
-        //do not reset rlvmain on rez, only on a full reset (since it maintains its own local settings)
-        string sFullName = llList2String(lResetFirstFullNames, i);
-        string sPartialName = llList2String(llParseString2List(sFullName, [" - "], []) , 1);
-        if (iFullReset)
-        {
-            SafeResetOther(sFullName);
-        }
-        else if (sPartialName != "rlvmain" && sPartialName != "settings")
-        {
-            SafeResetOther(sFullName);
-        }
-    }
-    Debug("resetting everything else");
-    for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++)
-    {   //reset all other OpenCollar scripts
-        string sFullScriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
-        string sScriptName = llList2String(llParseString2List(sFullScriptName, [" - "], []) , 1);
-        if(IsOpenCollarScript(sFullScriptName) && llListFindList(g_lResetFirst, [sScriptName]) == -1)
-        {
-            if(sFullScriptName != llGetScriptName() && sScriptName != "settings" && sScriptName != "updateManager")
-            {
-                if (llSubStringIndex(sFullScriptName, "@") != -1)
-                { //just check once more if some childprim script remained and delete if
-                    i -= SafeRemoveInventory(sFullScriptName);
-                }
-                else
-                {
-                    SafeResetOther(sFullScriptName);
-                }
-            }
-        }
-        //take care of non OC script that were set to "not running" for the update, do not reset but set them back to "running"
-        else //if (iIsUpdateReset)
-        {
-            if(!llGetScriptState(sFullScriptName))
-            {
-                if (llGetInventoryType(sFullScriptName) == INVENTORY_SCRIPT)
-                {
-                    llSetScriptState(sFullScriptName, TRUE);
-                }
-            }
-        }
-    }
-    //send a message to childprim scripts to reset themselves
-    llMessageLinked(LINK_ALL_OTHERS, UPDATE, "reset", NULL_KEY);
-    for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++)
-    {   //last before myself reset the settings script
-        string sFullScriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
-        string sScriptName = llList2String(llParseString2List(sFullScriptName, [" - "], []) , 1);
-        if(IsOpenCollarScript(sFullScriptName) && sScriptName == "settings")
-        {
-            Debug("Restting settings script");
-            SafeResetOther(sFullScriptName);
-        }
-    }
-    llSleep(1.5);
-    llMessageLinked(LINK_SET, COMMAND_OWNER, "refreshmenu", NULL_KEY);
-    if (iIsUpdateReset)
-    {
-        llMessageLinked(LINK_SET, UPDATE, "Reset Done", NULL_KEY);
-    }
-}
-
 RestedInit()
 {
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu1, NULL_KEY);
@@ -292,7 +199,7 @@ default
     state_entry()
     {
         //check if we're in an updater.  if so, don't do regular startup routine.
-        if (llSubStringIndex(llGetObjectName(), "OpenCollarUpdater") == 0)
+        if (llSubStringIndex(llGetObjectName(), "Updater") != -1)
         {
             //we're in an updater. go to sleep
             llSetScriptState(llGetScriptName(), FALSE);
@@ -306,11 +213,7 @@ default
 
             g_kWearer = llGetOwner();
             Debug("state default");
-            //set our g_iLastReset to the time of our startup
-            g_iLastReset = llGetUnixTime();
-            OrderlyReset(TRUE, TRUE);
-            llSleep(1.5);
-            llMessageLinked(LINK_SET, COMMAND_OWNER, "refreshmenu", NULL_KEY);
+
             state reseted;
         }
     }
@@ -429,45 +332,15 @@ state reseted
             }
             //#################################################################
             //added to get the script in this collar aware when the last general collar reset happened and if one happened to reset scripts
-            else if (sToken = "lastReset")
-            {
-                if (g_iLastReset < (integer)sValue)
-                {
-                    g_iLastReset = (integer)sValue;
-                    //reset scripts
-                    OrderlyReset(TRUE, FALSE);
-                    RestedInit();
-                }
-            }
             else if (sToken == "HTTPDB")
             {
                 g_sHTTPDB_Url = sValue;
             }
         }
-        else if (iNum == HTTPDB_SAVE)
-        {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken = "lastReset")
-            {
-                if (g_iLastReset <= (integer)sValue)
-                {
-                    g_iLastReset = (integer)sValue;
-                }
-            }
-        }
         //#################################################################
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
-            if( (kID == g_kWearer || iNum == COMMAND_OWNER)
-                && sStr == g_sResetScripts)
-                {
-                    Debug(sStr + (string)iNum);
-                    OrderlyReset(TRUE, FALSE);
-                    RestedInit();
-                }
-            else if (sStr == "update")
+            if (sStr == "update")
             {
                 if (kID == g_kWearer)
                 {
