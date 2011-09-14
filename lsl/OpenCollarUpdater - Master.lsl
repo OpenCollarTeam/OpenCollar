@@ -35,18 +35,6 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string GetShimName() {
-    integer n;
-    integer stop = llGetInventoryNumber(INVENTORY_SCRIPT);
-    for (n = 0; n < stop; n++) {
-        string name = llGetInventoryName(INVENTORY_SCRIPT, n);
-        if (llSubStringIndex(name, "OpenCollar - UpdateShim") == 0) {
-            return name;
-        }
-    }
-    return "";
-}
-
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string name) {
@@ -105,9 +93,9 @@ SetBundleStatus(string bundlename, string status) {
 BundleMenu(integer page) {
     // Give the plugin selection/start menu.
     
-    string prompt = "Select the plugins to add/remove by clicking the buttons below.";
-    prompt += "\nClick START when you're ready to update the collar.";
-    prompt += "\nCurrent status: ";
+    string prompt = "Add/remove plugins by clicking the buttons below.";
+    prompt += "\nClick START when you're ready to update.";
+    prompt += "\nCurrent: ";
     
     
     // build list of buttons from list of bundles
@@ -120,7 +108,7 @@ BundleMenu(integer page) {
         list parts = llParseString2List(card, ["_"], []);
         string name = llList2String(parts, 2);
         
-        prompt += "\n" + name + ": " + status;
+        prompt += "\n" + name + ":" + status;
         if (status == "INSTALL") {
             choices += ["- " + name];
         } else if (status == "REQUIRED") {
@@ -130,6 +118,10 @@ BundleMenu(integer page) {
         }
     }
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"], page);
+}
+
+Debug(string str) {
+     //llOwnerSay(llGetScriptName() + ": " + str);
 }
 
 default {
@@ -165,6 +157,7 @@ default {
     
     listen(integer channel, string name, key id, string msg) {
         if (llGetOwnerKey(id) == llGetOwner()) {
+            Debug(llDumpList2String([name, msg], ", "));
             if (channel == initChannel) {
                 // everything heard on the init channel is stuff that has to comply with the existing update
                 // kickoff protocol.  New stuff will be heard on the random secure channel instead.
@@ -201,7 +194,7 @@ default {
                 integer page = (integer)llList2String(parts, 2);
                 if (button == "START") {
                     // so let's load the shim.
-                    string shim = GetShimName();
+                    string shim = "OpenCollar - UpdateShim";
                     iSecureChannel = (integer)llFrand(-2000000000 + 1);
                     llListen(iSecureChannel, "", kCollarKey, "");
                     llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        

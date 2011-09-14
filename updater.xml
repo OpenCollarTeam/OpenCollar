@@ -20,7 +20,7 @@
                     <key>creator_id</key>
                         <string>ff64c30a-198a-4415-8a33-7315fe74e160</string>
                     <key>description</key>
-                        <string>Update~3.680~oc_</string>
+                        <string>Update~3.686~oc_</string>
                     <key>everyone_mask</key>
                         <string>0</string>
                     <key>extra_id</key>
@@ -30,13 +30,13 @@
                     <key>from_task_id</key>
                         <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_id</key>
-                        <string>39ca5a27-71c2-b8b5-748b-fd2be9d5bd70</string>
+                        <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_mask</key>
                         <string>0</string>
                     <key>id</key>
-                        <string>6ceff1e4-80d3-4b01-ad5b-cd4ece39a4fa</string>
+                        <string>c9b0ec42-10bf-b25d-e2e8-b253c152aa21</string>
                     <key>inv_serial</key>
-                        <integer>137</integer>
+                        <integer>212</integer>
                     <key>inventory</key>
                         <array>
                             <map>
@@ -51,9 +51,79 @@
                             </map>
                             <map>
                             <key>desc</key>
+                                <string>2008-04-25 09:58:50 lsl2 script</string>
+                            <key>item_id</key>
+                                <string>302c7822-d1dc-a617-7e10-c0d65c960dbf</string>
+                            <key>name</key>
+                                <string>Texture Anim</string>
+                            <key>type</key>
+                                <string>lsltext</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>Misc - Silver Filligree</string>
+                            <key>item_id</key>
+                                <string>2acb2b89-fc93-9f3b-be4b-b47d83fb116b</string>
+                            <key>name</key>
+                                <string>Silver Filligree</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>35584730-b694-19c3-3fa3-c631fb6d6261</string>
+                            <key>name</key>
+                                <string>seamless gold foil</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>587d01d4-788b-d4ec-cf69-017f033639e3</string>
+                            <key>name</key>
+                                <string>seamless foil</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>5487457f-67fe-5695-7fb9-5e25e17cf4e3</string>
+                            <key>name</key>
+                                <string>Rusty Panel</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>Metal - Chest.jpg</string>
+                            <key>item_id</key>
+                                <string>dd384f4d-72d8-6678-6f6e-8ab3737d805c</string>
+                            <key>name</key>
+                                <string>Rusty Metal Chest</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>616ca5df-8c08-6c10-c612-2c41ae616838</string>
+                            <key>name</key>
+                                <string>rope</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
                                 <string>2011-08-16 22:23:23 lsl2 script</string>
                             <key>item_id</key>
-                                <string>4d776f01-0390-dc84-6013-d26f5c0e9888</string>
+                                <string>acf48edc-fbff-b098-541d-8a670345b269</string>
                             <key>name</key>
                                 <string>OpenCollarUpdater - Master</string>
                             <key>type</key>
@@ -63,7 +133,7 @@
                             <key>desc</key>
                                 <string>2009-04-27 15:31:04 lsl2 script</string>
                             <key>item_id</key>
-                                <string>2b16ad82-895c-a0d5-6be7-461f53f52955</string>
+                                <string>2bd57cff-e5cb-52b8-4d0e-b2823d93be2d</string>
                             <key>name</key>
                                 <string>OpenCollarUpdater - Dialog</string>
                             <key>type</key>
@@ -73,7 +143,7 @@
                             <key>desc</key>
                                 <string>2011-08-17 20:38:13 lsl2 script</string>
                             <key>item_id</key>
-                                <string>d1bef017-4a54-11e0-8450-fa132854c0dd</string>
+                                <string>795a0bc7-173a-6b70-7b0a-2fe6deb40777</string>
                             <key>name</key>
                                 <string>OpenCollarUpdater - BundleGiver</string>
                             <key>type</key>
@@ -103,7 +173,7 @@
                             <key>desc</key>
                                 <string>2011-08-16 22:37:42 lsl2 script</string>
                             <key>item_id</key>
-                                <string>2445ab65-b273-3587-2bdc-7b82278a24f3</string>
+                                <string>6148a6b1-e498-933b-d46e-e01c55f405b5</string>
                             <key>name</key>
                                 <string>OpenCollar - UpdateShim</string>
                             <key>type</key>
@@ -113,7 +183,7 @@
                             <key>desc</key>
                                 <string>2009-06-06 15:42:22 lsl2 script</string>
                             <key>item_id</key>
-                                <string>1af9afce-1178-3895-60cf-6898f57db172</string>
+                                <string>83890bb3-d6c7-0c05-8299-9931f8a08f26</string>
                             <key>name</key>
                                 <string>OpenCollar - update</string>
                             <key>type</key>
@@ -123,7 +193,7 @@
                             <key>desc</key>
                                 <string>2009-09-22 13:36:45 lsl2 script</string>
                             <key>item_id</key>
-                                <string>cbf1b4ba-6bc8-60a8-68c5-2198bc023836</string>
+                                <string>d933336c-047b-ecfc-2373-f04249d62c6a</string>
                             <key>name</key>
                                 <string>OpenCollar - timer</string>
                             <key>type</key>
@@ -133,7 +203,7 @@
                             <key>desc</key>
                                 <string>2009-08-24 23:52:56 lsl2 script</string>
                             <key>item_id</key>
-                                <string>56d49b4d-8e48-f49c-242e-e3d5138e78b7</string>
+                                <string>7b573dbf-dfe8-384d-b43f-1d1c202caa19</string>
                             <key>name</key>
                                 <string>OpenCollar - texture</string>
                             <key>type</key>
@@ -143,7 +213,7 @@
                             <key>desc</key>
                                 <string>2008-10-29 09:52:03 lsl2 script</string>
                             <key>item_id</key>
-                                <string>f8a4ac56-ca53-d501-1662-d0b2a9946877</string>
+                                <string>61b8df9f-0d2c-b75c-ec00-ba3f57808571</string>
                             <key>name</key>
                                 <string>OpenCollar - subspy</string>
                             <key>type</key>
@@ -153,7 +223,7 @@
                             <key>desc</key>
                                 <string>2008-10-09 16:04:37 lsl2 script</string>
                             <key>item_id</key>
-                                <string>e6a4379f-e339-3cdf-bf1c-b3f25c6335ea</string>
+                                <string>8f37f6cc-4b58-fcf6-ccf5-6e2bb34eea5c</string>
                             <key>name</key>
                                 <string>OpenCollar - settings</string>
                             <key>type</key>
@@ -163,7 +233,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>3ac63bcd-e1e0-c825-7749-58f1ebfa829d</string>
+                                <string>c3d684e4-c458-49e7-05e0-f10a7ec19214</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvundress</string>
                             <key>type</key>
@@ -173,7 +243,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>c19b8848-8c45-32f7-04e9-0a1278ab3e88</string>
+                                <string>3fe4d3cd-047e-693b-9c6b-4ada241898c0</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvtp</string>
                             <key>type</key>
@@ -183,7 +253,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>2740df33-6c0a-6981-3e2b-2f7de152a5ea</string>
+                                <string>8efa0438-2d12-e810-17b8-5011a4188fdf</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvtalk</string>
                             <key>type</key>
@@ -193,7 +263,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>c55b9490-9c4c-e0a8-b6d7-88c413881a1c</string>
+                                <string>3e1ca016-bd21-71d7-1b57-9b7f3bb21b7e</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvsit</string>
                             <key>type</key>
@@ -213,7 +283,7 @@
                             <key>desc</key>
                                 <string>2009-02-11 20:24:50 lsl2 script</string>
                             <key>item_id</key>
-                                <string>4922ce93-9569-18db-19da-48e3a6f270c5</string>
+                                <string>92c0fb6d-ee61-128e-12ff-b11ee20381a2</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvrelay</string>
                             <key>type</key>
@@ -223,7 +293,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>0934852c-b475-22b9-0305-fae18846cb0d</string>
+                                <string>f8b6a7a9-8134-c990-dc7e-173b7e9852c9</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvmisc</string>
                             <key>type</key>
@@ -233,7 +303,7 @@
                             <key>desc</key>
                                 <string>2009-05-02 10:09:11 lsl2 script</string>
                             <key>item_id</key>
-                                <string>57d59b44-b5b9-c86a-a533-168f5fc3358c</string>
+                                <string>44ee883c-1fbc-98a3-0127-b33010aef854</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvmain</string>
                             <key>type</key>
@@ -243,7 +313,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>ea9c5fe5-5030-d9d5-edcd-f5469eeb4eb7</string>
+                                <string>37016817-7ef1-4019-3249-fd36dc4f6ccf</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvfolders</string>
                             <key>type</key>
@@ -253,7 +323,7 @@
                             <key>desc</key>
                                 <string>2008-09-29 19:13:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>b86c7470-1785-49dd-a369-6e391b8bef37</string>
+                                <string>f3e67723-9724-f167-acc2-0b2b89b38c35</string>
                             <key>name</key>
                                 <string>OpenCollar - rlvex</string>
                             <key>type</key>
@@ -261,19 +331,9 @@
                             </map>
                             <map>
                             <key>desc</key>
-                                <string>2009-09-17 13:03:41 lsl2 script</string>
-                            <key>item_id</key>
-                                <string>e5452eba-33aa-2ce1-a38e-b241cd9ad500</string>
-                            <key>name</key>
-                                <string>OpenCollar - remoteserver</string>
-                            <key>type</key>
-                                <string>lsltext</string>
-                            </map>
-                            <map>
-                            <key>desc</key>
                                 <string>2008-10-09 16:08:32 lsl2 script</string>
                             <key>item_id</key>
-                                <string>240fb09a-cb5d-d725-9cfd-05982afa0be2</string>
+                                <string>11b852a0-8763-8c10-3c57-15a6240d1179</string>
                             <key>name</key>
                                 <string>OpenCollar - menu</string>
                             <key>type</key>
@@ -283,7 +343,7 @@
                             <key>desc</key>
                                 <string>2009-12-20 19:30:03 lsl2 script</string>
                             <key>item_id</key>
-                                <string>8451eb30-4379-fc9f-fca7-e752d7621c5a</string>
+                                <string>efb8fd72-c1e1-4016-d2f0-352bbdf55915</string>
                             <key>name</key>
                                 <string>OpenCollar - lock</string>
                             <key>type</key>
@@ -293,7 +353,7 @@
                             <key>desc</key>
                                 <string>2009-10-16 23:22:20 lsl2 script</string>
                             <key>item_id</key>
-                                <string>741d466e-3146-d57b-83bd-b755d8b39a70</string>
+                                <string>188bce23-4bbb-b236-c86f-57e1ebfe13ac</string>
                             <key>name</key>
                                 <string>OpenCollar - listener</string>
                             <key>type</key>
@@ -303,7 +363,7 @@
                             <key>desc</key>
                                 <string>2010-04-03 17:13:42 lsl2 script</string>
                             <key>item_id</key>
-                                <string>e39876a9-515d-7d35-fede-b71127e7a219</string>
+                                <string>ae7113d9-b5b7-9391-5278-aae3d4793f6c</string>
                             <key>name</key>
                                 <string>OpenCollar - leashParticle</string>
                             <key>type</key>
@@ -313,7 +373,7 @@
                             <key>desc</key>
                                 <string>2010-05-19 09:21:08 lsl2 script</string>
                             <key>item_id</key>
-                                <string>4ff41a3f-9aa7-5b63-3567-631726826a3a</string>
+                                <string>9f96d5e8-343c-7024-e435-107ba522d36a</string>
                             <key>name</key>
                                 <string>OpenCollar - leash</string>
                             <key>type</key>
@@ -323,7 +383,7 @@
                             <key>desc</key>
                                 <string>2008-11-24 17:08:01 lsl2 script</string>
                             <key>item_id</key>
-                                <string>9be65887-6464-6a2b-ab9a-ac62e2140dd8</string>
+                                <string>70505578-a396-9d09-4d6e-8dbf8dad16ae</string>
                             <key>name</key>
                                 <string>OpenCollar - label</string>
                             <key>type</key>
@@ -333,7 +393,7 @@
                             <key>desc</key>
                                 <string>2010-05-26 15:53:54 lsl2 script</string>
                             <key>item_id</key>
-                                <string>fd5468f2-a110-bcb5-a7ea-ca0f84673b7f</string>
+                                <string>c678fd1a-d8fc-63a1-3a75-30caa52b1d50</string>
                             <key>name</key>
                                 <string>OpenCollar - keyholder plugin</string>
                             <key>type</key>
@@ -341,9 +401,29 @@
                             </map>
                             <map>
                             <key>desc</key>
+                                <string>2008-10-09 16:20:27 lsl2 script</string>
+                            <key>item_id</key>
+                                <string>a2f249dd-0931-4a3b-828c-ce5a0fe09791</string>
+                            <key>name</key>
+                                <string>OpenCollar - hovertext</string>
+                            <key>type</key>
+                                <string>lsltext</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-09-11 09:50:11 lsl2 script</string>
+                            <key>item_id</key>
+                                <string>c749c1a8-f736-2390-d381-7bf6b7c7b2ad</string>
+                            <key>name</key>
+                                <string>OpenCollar - hovercleanup</string>
+                            <key>type</key>
+                                <string>lsltext</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
                                 <string>2008-10-09 16:04:17 lsl2 script</string>
                             <key>item_id</key>
-                                <string>c520b152-1bc5-47d5-c66f-daedc5fd62bf</string>
+                                <string>e1fa9087-3a7e-3601-2a28-09768cbe2dbd</string>
                             <key>name</key>
                                 <string>OpenCollar - hide</string>
                             <key>type</key>
@@ -353,7 +433,7 @@
                             <key>desc</key>
                                 <string>2009-04-27 15:31:04 lsl2 script</string>
                             <key>item_id</key>
-                                <string>9c00731e-e0a6-a98d-7cf0-3c50e6a3f4ad</string>
+                                <string>567aa251-562d-2630-c6f7-6ab97680a861</string>
                             <key>name</key>
                                 <string>OpenCollar - dialog</string>
                             <key>type</key>
@@ -363,7 +443,7 @@
                             <key>desc</key>
                                 <string>2008-10-09 16:05:52 lsl2 script</string>
                             <key>item_id</key>
-                                <string>4c128b51-b263-f154-7f95-128f813a1dc7</string>
+                                <string>113a5a83-59fb-585e-a054-d3c3429b22b1</string>
                             <key>name</key>
                                 <string>OpenCollar - coupleanim2</string>
                             <key>type</key>
@@ -373,7 +453,7 @@
                             <key>desc</key>
                                 <string>2008-10-09 16:05:21 lsl2 script</string>
                             <key>item_id</key>
-                                <string>b602c219-26a6-df71-02eb-be4358ca3453</string>
+                                <string>779fe760-0f02-3879-b761-caa98634ed4f</string>
                             <key>name</key>
                                 <string>OpenCollar - coupleanim1</string>
                             <key>type</key>
@@ -383,7 +463,7 @@
                             <key>desc</key>
                                 <string>2008-10-09 16:03:51 lsl2 script</string>
                             <key>item_id</key>
-                                <string>ffe55ec4-991e-b702-ee21-9866f7e9e44b</string>
+                                <string>7d02af3e-cecc-fe1f-f52b-055a5fb9b905</string>
                             <key>name</key>
                                 <string>OpenCollar - color</string>
                             <key>type</key>
@@ -393,7 +473,7 @@
                             <key>desc</key>
                                 <string>2009-09-18 10:11:30 lsl2 script</string>
                             <key>item_id</key>
-                                <string>96dc9a1d-dc41-4fb5-7eae-b8a4e8f8157e</string>
+                                <string>ac268862-108c-a2df-5421-5519da649fe7</string>
                             <key>name</key>
                                 <string>OpenCollar - camera</string>
                             <key>type</key>
@@ -403,7 +483,7 @@
                             <key>desc</key>
                                 <string>2009-01-30 01:10:40 lsl2 script</string>
                             <key>item_id</key>
-                                <string>e0b570cd-5378-bd0d-3b2b-839375613de0</string>
+                                <string>e77be4e5-9817-f234-65c3-a18f0a89fad3</string>
                             <key>name</key>
                                 <string>OpenCollar - bell</string>
                             <key>type</key>
@@ -413,7 +493,7 @@
                             <key>desc</key>
                                 <string>2008-10-10 14:59:56 lsl2 script</string>
                             <key>item_id</key>
-                                <string>d799bd72-a259-3581-b0e7-61edaa80cbdd</string>
+                                <string>e5d14637-6a08-a428-5913-e3c12119f40a</string>
                             <key>name</key>
                                 <string>OpenCollar - badwords</string>
                             <key>type</key>
@@ -423,7 +503,7 @@
                             <key>desc</key>
                                 <string>2009-09-22 10:47:57 lsl2 script</string>
                             <key>item_id</key>
-                                <string>79f12dd0-9f77-e532-0605-260b54c87823</string>
+                                <string>b78f107e-f7dd-77df-47b5-32dbe882ac66</string>
                             <key>name</key>
                                 <string>OpenCollar - auth</string>
                             <key>type</key>
@@ -433,7 +513,7 @@
                             <key>desc</key>
                                 <string>2008-11-11 13:33:07 lsl2 script</string>
                             <key>item_id</key>
-                                <string>aaddd314-3dba-c53d-03b5-a9d80df860fc</string>
+                                <string>193d8278-a7c6-ea22-fce0-0459953befe5</string>
                             <key>name</key>
                                 <string>OpenCollar - appearance</string>
                             <key>type</key>
@@ -443,11 +523,101 @@
                             <key>desc</key>
                                 <string>2009-09-22 10:47:22 lsl2 script</string>
                             <key>item_id</key>
-                                <string>8e72e91d-836a-4dfd-b370-09623f0f2b11</string>
+                                <string>17a0e304-8cf0-38ee-a9ab-ccdb18532b03</string>
                             <key>name</key>
                                 <string>OpenCollar - anim</string>
                             <key>type</key>
                                 <string>lsltext</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>ba689805-c947-0a05-984c-960a02121365</string>
+                            <key>name</key>
+                                <string>opaque gradient circle</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-vshaded</string>
+                            <key>item_id</key>
+                                <string>0e05a0f6-4a53-f4f6-46bb-f6b9277ca933</string>
+                            <key>name</key>
+                                <string>metal-v</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-roundshaded</string>
+                            <key>item_id</key>
+                                <string>c0fe892d-acd4-763e-8679-a1fb95a5e18f</string>
+                            <key>name</key>
+                                <string>metal-round</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-hshaded-contrasty</string>
+                            <key>item_id</key>
+                                <string>c77fc69b-66be-7f8e-e4ac-983404680a59</string>
+                            <key>name</key>
+                                <string>metal-h-contrast</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-hshaded</string>
+                            <key>item_id</key>
+                                <string>c4717bef-7664-d1ad-caed-13f924413c6b</string>
+                            <key>name</key>
+                                <string>metal-h 1</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-hshaded</string>
+                            <key>item_id</key>
+                                <string>987462d6-fdf7-4671-ce70-81fbb64b2f78</string>
+                            <key>name</key>
+                                <string>metal-h</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>9e7d7285-1b6f-dd31-3879-048d9dd799f0</string>
+                            <key>name</key>
+                                <string>innerwhite</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>C:\LW Gun Textures\Algerto textures\metals\AF_i_beam.tga</string>
+                            <key>item_id</key>
+                                <string>4d9350b7-129f-c0b3-fed2-ba8acea7a6dd</string>
+                            <key>name</key>
+                                <string>I-Beam</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>696a5eb8-cbb7-c54c-1edc-c021c00d1f7e</string>
+                            <key>name</key>
+                                <string>diamond</string>
+                            <key>type</key>
+                                <string>texture</string>
                             </map>
                             <map>
                             <key>desc</key>
@@ -471,11 +641,101 @@
                             </map>
                             <map>
                             <key>desc</key>
+                                <string>chain2</string>
+                            <key>item_id</key>
+                                <string>81ff9024-c711-1365-2c31-2c2b52f9aa13</string>
+                            <key>name</key>
+                                <string>chain</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>C:\Documents and Settings\Kerstin\My Documents\Textures SL Feb 22\St Patrick\0000Celtic1.jpg</string>
+                            <key>item_id</key>
+                                <string>a3f63bdb-fc91-60bc-283f-99f45a574b1f</string>
+                            <key>name</key>
+                                <string>Celtic</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
                                 <string>2011-08-19 00:43:37 note card</string>
                             <key>item_id</key>
-                                <string>49c8719c-7e9c-a483-bd02-6f1b69177329</string>
+                                <string>04792b74-10b3-68da-d6e7-7bb892153f81</string>
                             <key>name</key>
-                                <string>BUNDLE_05_Addons_INSTALL</string>
+                                <string>BUNDLE_99_Deprecated_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>deb32079-89b3-4c18-fe86-003bc9300ec1</string>
+                            <key>name</key>
+                                <string>BUNDLE_56_ExtraText_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>7682e3be-550b-9ccb-d065-033ae3b62da1</string>
+                            <key>name</key>
+                                <string>BUNDLE_55_ExtraBell_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>0d8a3158-5e6f-43fb-b963-08ef9db6d107</string>
+                            <key>name</key>
+                                <string>BUNDLE_54_ExtraShock_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>cafcddb9-24df-b5d9-a30a-715d29dc60b1</string>
+                            <key>name</key>
+                                <string>BUNDLE_53_ExtraCamera_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>dcdf8b13-0f8e-6dd0-85ca-b7fb52bb901b</string>
+                            <key>name</key>
+                                <string>BUNDLE_52_ExtraKeys_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>5b977301-062b-62bc-a0ed-a9fa42b39cca</string>
+                            <key>name</key>
+                                <string>BUNDLE_51_ExtraSpy_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:43:37 note card</string>
+                            <key>item_id</key>
+                                <string>e2ad83c6-292d-b1c0-9a7a-2fbddaa8284e</string>
+                            <key>name</key>
+                                <string>BUNDLE_50_ExtraTimer_REMOVE</string>
                             <key>type</key>
                                 <string>notecard</string>
                             </map>
@@ -483,19 +743,39 @@
                             <key>desc</key>
                                 <string>2011-08-19 00:33:12 note card</string>
                             <key>item_id</key>
-                                <string>c8a6779e-a610-fc16-be5c-4fe56d3f17c9</string>
+                                <string>b8b90ffb-7ed1-48a8-d677-4f51c2f08a92</string>
                             <key>name</key>
-                                <string>BUNDLE_04_RLV_INSTALL</string>
+                                <string>BUNDLE_06g_RLVWear_INSTALL</string>
                             <key>type</key>
                                 <string>notecard</string>
                             </map>
                             <map>
                             <key>desc</key>
-                                <string>2011-08-19 00:10:26 note card</string>
+                                <string>2011-08-19 00:33:12 note card</string>
                             <key>item_id</key>
-                                <string>ab292a99-21bd-9577-274b-07be8e4ce602</string>
+                                <string>252a655d-f62b-93e4-dbc5-09fc494c619f</string>
                             <key>name</key>
-                                <string>BUNDLE_03_Appearance_INSTALL</string>
+                                <string>BUNDLE_06f_RLVSight_INSTALL</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:33:12 note card</string>
+                            <key>item_id</key>
+                                <string>d05be2c3-6cda-c6a2-92b1-70eb9aedc6d4</string>
+                            <key>name</key>
+                                <string>BUNDLE_06a_RLVRelay_INSTALL</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:33:12 note card</string>
+                            <key>item_id</key>
+                                <string>afc35a7e-f72d-0505-9fb5-fa9102138019</string>
+                            <key>name</key>
+                                <string>BUNDLE_06_RLVMain_INSTALL</string>
                             <key>type</key>
                                 <string>notecard</string>
                             </map>
@@ -503,9 +783,79 @@
                             <key>desc</key>
                                 <string>2011-08-18 23:38:51 note card</string>
                             <key>item_id</key>
-                                <string>65dd6adc-7cfc-3eac-651c-eb73ebd7fb5d</string>
+                                <string>bc945c2e-e8b3-9d46-323c-d313a51b1247</string>
                             <key>name</key>
-                                <string>BUNDLE_02_Basic_INSTALL</string>
+                                <string>BUNDLE_05a_AnimCouples_INSTALL</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-18 23:38:51 note card</string>
+                            <key>item_id</key>
+                                <string>14744d08-cb33-7d3a-dde3-d0b2bd81cd0f</string>
+                            <key>name</key>
+                                <string>BUNDLE_05_AnimPoses_INSTALL</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:10:26 note card</string>
+                            <key>item_id</key>
+                                <string>287a16d3-ed4f-bd3c-dd69-d42143c34556</string>
+                            <key>name</key>
+                                <string>BUNDLE_04c_LooksLabel_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:10:26 note card</string>
+                            <key>item_id</key>
+                                <string>aaa16361-8e36-4981-d2d2-7621c27c3303</string>
+                            <key>name</key>
+                                <string>BUNDLE_04b_LooksColorer_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:10:26 note card</string>
+                            <key>item_id</key>
+                                <string>01aaf64e-7ac4-56cb-bcce-b73a10f68b34</string>
+                            <key>name</key>
+                                <string>BUNDLE_04a_LooksTexturer_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-19 00:10:26 note card</string>
+                            <key>item_id</key>
+                                <string>1603e064-df9c-0bda-3067-4e151f0369ec</string>
+                            <key>name</key>
+                                <string>BUNDLE_04_LooksMain_REMOVE</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-18 23:38:51 note card</string>
+                            <key>item_id</key>
+                                <string>94470a61-17be-126a-1d96-36b6dd8373e6</string>
+                            <key>name</key>
+                                <string>BUNDLE_03_BasicLeash_INSTALL</string>
+                            <key>type</key>
+                                <string>notecard</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>2011-08-18 23:38:51 note card</string>
+                            <key>item_id</key>
+                                <string>3fed065e-2f94-e349-9a88-9910ae3caf72</string>
+                            <key>name</key>
+                                <string>BUNDLE_02_BasicLock_INSTALL</string>
                             <key>type</key>
                                 <string>notecard</string>
                             </map>
@@ -519,13 +869,113 @@
                             <key>type</key>
                                 <string>notecard</string>
                             </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-vshaded</string>
+                            <key>item_id</key>
+                                <string>cbf75396-9044-0b4f-e349-98c0944094aa</string>
+                            <key>name</key>
+                                <string>brushedmetal-vshaded</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-roundshaded</string>
+                            <key>item_id</key>
+                                <string>162ada18-18dc-2177-3f72-d6f291fdb8a2</string>
+                            <key>name</key>
+                                <string>brushedmetal-roundshaded</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-hshaded-contrasty</string>
+                            <key>item_id</key>
+                                <string>74518a62-69e7-542a-a120-b93bfdcda56a</string>
+                            <key>name</key>
+                                <string>brushedmetal-hshaded-contrasty</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>brushedmetal-hshaded</string>
+                            <key>item_id</key>
+                                <string>bd2d8665-115c-3169-c553-871e3343ef9c</string>
+                            <key>name</key>
+                                <string>brushedmetal-hshaded</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>blkgraindot</string>
+                            <key>item_id</key>
+                                <string>edc985d8-5735-11ac-24a8-7f631c838e95</string>
+                            <key>name</key>
+                                <string>blkgraindot</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>26bdca05-ef7a-e976-c62b-6adf618583ea</string>
+                            <key>name</key>
+                                <string>blank</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>c8fac7a1-418f-d489-059c-d4eaf9b95e1d</string>
+                            <key>name</key>
+                                <string>5fadestripes</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>a320da52-e5da-ad3a-e3d4-de030daf53fa</string>
+                            <key>name</key>
+                                <string>!whiteleather</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>0e060d9f-c854-f129-113e-f509a217baf9</string>
+                            <key>name</key>
+                                <string>!totallytransparent</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
+                            <map>
+                            <key>desc</key>
+                                <string>(No Description)</string>
+                            <key>item_id</key>
+                                <string>736cc997-7fed-702f-ecd2-706e8a157da7</string>
+                            <key>name</key>
+                                <string>!fadestripe</string>
+                            <key>type</key>
+                                <string>texture</string>
+                            </map>
                         </array>
                     <key>item_id</key>
-                        <string>4b9c2c11-5dbf-290e-f388-c8f2eac5f192</string>
+                        <string>1c41dbef-3d3f-3ac5-19da-9acc9a655e7f</string>
                     <key>last_owner_id</key>
                         <string>ff64c30a-198a-4415-8a33-7315fe74e160</string>
                     <key>name</key>
-                        <string>ModularUpdater</string>
+                        <string>ModularUpdater - 3.686</string>
                     <key>next_owner_mask</key>
                         <string>581632</string>
                     <key>owner_id</key>
@@ -666,11 +1116,11 @@
                     <key>from_task_id</key>
                         <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_id</key>
-                        <string>39ca5a27-71c2-b8b5-748b-fd2be9d5bd70</string>
+                        <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_mask</key>
                         <string>0</string>
                     <key>id</key>
-                        <string>5019f911-5ca9-c3da-f2aa-79be71ec889a</string>
+                        <string>d117268e-0a0d-0cab-482a-1b0569748a5d</string>
                     <key>inv_serial</key>
                         <integer>1</integer>
                     <key>inventory</key>
@@ -966,11 +1416,11 @@
                     <key>from_task_id</key>
                         <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_id</key>
-                        <string>39ca5a27-71c2-b8b5-748b-fd2be9d5bd70</string>
+                        <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_mask</key>
                         <string>0</string>
                     <key>id</key>
-                        <string>bf71a37d-e7b5-d70a-31e2-3390e7d93c10</string>
+                        <string>4494b70b-a294-195f-77f9-6189aff91334</string>
                     <key>inv_serial</key>
                         <integer>2</integer>
                     <key>inventory</key>
@@ -1277,11 +1727,11 @@
                     <key>from_task_id</key>
                         <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_id</key>
-                        <string>39ca5a27-71c2-b8b5-748b-fd2be9d5bd70</string>
+                        <string>00000000-0000-0000-0000-000000000000</string>
                     <key>group_mask</key>
                         <string>0</string>
                     <key>id</key>
-                        <string>c935f621-89b8-11fe-6f21-6594af1e8c82</string>
+                        <string>783d0dfb-c820-fa0f-f94f-f4d56d1d65eb</string>
                     <key>inv_serial</key>
                         <integer>1</integer>
                     <key>inventory</key>

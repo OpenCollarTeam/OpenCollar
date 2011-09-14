@@ -2,9 +2,12 @@ ITEM|defaultsettings
 ITEM|OpenCollar Guide
 ITEM|OpenCollar License
 ITEM|!totallytransparent
+ITEM|~heightscalars
+ITEM|cutie
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
 SCRIPT|OpenCollar - listener
 SCRIPT|OpenCollar - dialog
 SCRIPT|OpenCollar - update
 SCRIPT|OpenCollar - settings
+SCRIPT|OpenCollar - anim
