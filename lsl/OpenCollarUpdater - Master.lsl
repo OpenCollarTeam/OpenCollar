@@ -94,9 +94,7 @@ BundleMenu(integer page) {
     // Give the plugin selection/start menu.
     
     string prompt = "Add/remove plugins by clicking the buttons below.";
-    prompt += "\nClick START when you're ready to update.";
-    prompt += "\nCurrent: ";
-    
+    prompt += "\nClick START when you're ready to update.";  
     
     // build list of buttons from list of bundles
     integer n;
@@ -108,13 +106,12 @@ BundleMenu(integer page) {
         list parts = llParseString2List(card, ["_"], []);
         string name = llList2String(parts, 2);
         
-        prompt += "\n" + name + ":" + status;
         if (status == "INSTALL") {
-            choices += ["- " + name];
+            choices += ["(*) " + name];
         } else if (status == "REQUIRED") {
-            choices += ["* " + name];                            
+            choices += ["(@) " + name];                            
         } else if (status == "REMOVE") {
-            choices += ["+ " + name];                            
+            choices += ["( ) " + name];                            
         }
     }
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"], page);
@@ -200,19 +197,18 @@ default {
                     llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        
                 } else {
                     // switch the bundle if appropriate
-                    list buttonparts = llParseString2List(button, [" "], []);
-                    string status = llList2String(buttonparts, 0);
-                    string bundlename = llDumpList2String(llDeleteSubList(buttonparts, 0, 0), " ");
-                    if (status == "*") {
+                    string status = llGetSubString(button, 0, 2);
+                    string bundlename = llGetSubString(button, 4, -1);
+                    if (status == "(@)") {
                         llOwnerSay("The " + bundlename + " bundle is required and cannot be removed.");
-                    } else if (status == "-") {
+                    } else if (status == "(*)") {
                         // if the button said +, that means we need to switch it to -
                         // find the bundle in the list, and set to REMOVE
                         SetBundleStatus(bundlename, "REMOVE");
-                        llOwnerSay(bundlename + " will be removed.");
-                    } else if (status == "+") {
+                        llOwnerSay(bundlename + " will be removed if present.");
+                    } else if (status == "( )") {
                         SetBundleStatus(bundlename, "INSTALL");
-                        llOwnerSay(bundlename + " will be installed.");
+                        llOwnerSay(bundlename + " will be updated/installed.");
                     }
                     BundleMenu(page);
                 }
