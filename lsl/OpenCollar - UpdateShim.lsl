@@ -128,7 +128,7 @@ default
                             cmd = "GIVE";
                         }
                     }                
-                } else if (mode == "REMOVE") {
+                } else if (mode == "REMOVE" || mode == "DEPRECATED") {
                     debug("remove: " + msg);
                     if (type == "SCRIPT") {
                         string script_name = GetScriptFullname(name);

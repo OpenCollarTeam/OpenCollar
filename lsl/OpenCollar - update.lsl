@@ -429,6 +429,11 @@ state reseted
                 g_iUpdatersNearBy++;
                 g_iWillingUpdaters++;
                 g_kUpdaterOrb = kID;
+                ConfirmUpdate(g_kUpdaterOrb); 
+                g_iUpdatersNearBy = -1;
+                g_iWillingUpdaters = -1;
+                g_iUpdateAvail = FALSE;                               
+                llSetTimerEvent(0);
             }
         }
     }
@@ -442,11 +447,6 @@ state reseted
                 Notify(g_kUpdater,"No updaters found.  Please rez an updater within 10m and try again",FALSE);
             } else if (g_iWillingUpdaters > 1) {
                     Notify(g_kUpdater,"Multiple updaters were found within 10m.  Please remove all but one and try again",FALSE);
-            } else if (g_iWillingUpdaters) {
-                    //integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
-                //llSetRemoteScriptAccessPin(pin);
-                //llWhisper(g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update scripts etc... 
-                ConfirmUpdate(g_kUpdaterOrb);
             }
             g_iUpdatersNearBy = -1;
             g_iWillingUpdaters = -1;

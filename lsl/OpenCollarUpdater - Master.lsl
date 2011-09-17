@@ -35,6 +35,11 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
+string BTN_REQUIRED = "(@)";
+string BTN_INSTALL = "(*)";
+string BTN_UNINSTALL = "( )";
+string BTN_DEPRECATED = "(X)";
+
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string name) {
@@ -107,11 +112,13 @@ BundleMenu(integer page) {
         string name = llList2String(parts, 2);
         
         if (status == "INSTALL") {
-            choices += ["(*) " + name];
+            choices += [BTN_INSTALL + " " + name];
         } else if (status == "REQUIRED") {
-            choices += ["(@) " + name];                            
+            choices += [BTN_REQUIRED + " " + name];                            
         } else if (status == "REMOVE") {
-            choices += ["( ) " + name];                            
+            choices += [BTN_UNINSTALL + " " + name];
+        } else if (status == "DEPRECATED") {
+            choices += [BTN_DEPRECATED + " "+ name];
         }
     }
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"], page);
@@ -199,14 +206,16 @@ default {
                     // switch the bundle if appropriate
                     string status = llGetSubString(button, 0, 2);
                     string bundlename = llGetSubString(button, 4, -1);
-                    if (status == "(@)") {
+                    if (status == BTN_REQUIRED) {
                         llOwnerSay("The " + bundlename + " bundle is required and cannot be removed.");
-                    } else if (status == "(*)") {
+                    } else if (status == BTN_DEPRECATED) {
+                        llOwnerSay("The " + bundlename + " bundle is deprecated and must be removed.");                            
+                    } else if (status == BTN_INSTALL) {
                         // if the button said +, that means we need to switch it to -
                         // find the bundle in the list, and set to REMOVE
                         SetBundleStatus(bundlename, "REMOVE");
                         llOwnerSay(bundlename + " will be removed if present.");
-                    } else if (status == "( )") {
+                    } else if (status == BTN_UNINSTALL) {
                         SetBundleStatus(bundlename, "INSTALL");
                         llOwnerSay(bundlename + " will be updated/installed.");
                     }
