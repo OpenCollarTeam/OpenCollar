@@ -4,6 +4,7 @@ ITEM|OpenCollar License
 ITEM|!totallytransparent
 ITEM|~heightscalars
 ITEM|cutie
+SCRIPT|OpenCollar - cleanup
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
 SCRIPT|OpenCollar - listener
