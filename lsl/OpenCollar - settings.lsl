@@ -17,12 +17,11 @@
 key g_kWearer = NULL_KEY;
 
 string g_sParentMenu = "Help/Debug";
-string DUMPCACHE = "Dump Cache";
+string DUMPCACHE = "Dump Settings";
 
 float g_iTimeOut = 30.0; //changing to a integer to be constant with other script we will mostlike remove this latter.
 
 list g_lDefaults;
-list g_lRequestQueue;//requests are stuck here until we're done reading the notecard and web settings
 string g_sCard = "defaultsettings";
 integer g_iLine = 0;
 key g_kDataID;
@@ -86,7 +85,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     }
 }
 
-integer CacheValExists(list cache, string sToken) {
+integer SettingExists(list cache, string sToken) {
     integer iIndex = llListFindList(cache, [sToken]);
     if (iIndex == -1) {
         return FALSE;
@@ -105,12 +104,12 @@ list SetCacheVal(list cache, string sToken, string sValue) {
     return cache;
 }
 
-string GetCacheVal(list cache, string sToken) {
+string GetSetting(list cache, string sToken) {
     integer iIndex = llListFindList(cache, [sToken]);
     return llList2String(cache, iIndex + 1);
 }
 
-list DelCacheVal(list cache, string sToken) {
+list DelSetting(list cache, string sToken) {
     integer iIndex = llListFindList(cache, [sToken]);
     if (iIndex != -1) {
         cache = llDeleteSubList(cache, iIndex, iIndex + 1);
@@ -141,7 +140,8 @@ DumpCache() {
 }
 
 SendValues() {
-    //loop through all the settings and defaults we've got
+    //loop through and send all the settings and defaults we've got
+    
     //settings first
     integer n;
     integer iStop = llGetListLength(g_lSettings);
@@ -155,60 +155,47 @@ SendValues() {
         llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, sToken + "=" + sValue, NULL_KEY);        
     }
 
-    //now loop through g_lDefaults, sending only if there's not a corresponding token in g_lDBCache
+    //now loop through g_lDefaults, sending only if there's not a corresponding token in g_lSettings
     iStop = llGetListLength(g_lDefaults);
     for (n = 0; n < iStop; n = n + 2) {
         string sToken = llList2String(g_lDefaults, n);
         string sValue = llList2String(g_lDefaults, n + 1);
-        if (!CacheValExists(g_lSettings, sToken)) {
+        if (!SettingExists(g_lSettings, sToken)) {
             llMessageLinked(LINK_SET, HTTPDB_RESPONSE, sToken + "=" + sValue, NULL_KEY);
         }
     }
     llMessageLinked(LINK_SET, HTTPDB_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
 }
 
-// Serialize a list into a string that can later be deserialized
-// with correct type for each field
-string Serialize(list lInput, string sIndicators) {
-    sIndicators += "|/?!@#$%^&*()_=:;~`'<>{}[],.\n\" aeiouAEIOU\\";
-    string sOutput = (string)(lInput);
-    integer iPos;
-    string sRealIndicators;
-    while( iPos < 6 ) {
-        if( 0 > llSubStringIndex(sOutput,llGetSubString(sIndicators,0,0)) ) {
-            iPos++;
-            sRealIndicators += llGetSubString(sIndicators,0,0);
-        }
-        sIndicators = llDeleteSubString(sIndicators,0,0);
-    }
-    sOutput = sRealIndicators;
-    iPos = 0;
-    while(llGetListLength(lInput) > iPos) {
-        integer type = llGetListEntryType(lInput, iPos);
-        sOutput += llGetSubString(sRealIndicators,type,type) + llList2String(lInput,iPos++);
-    }
-    return sOutput;
+Refresh() {
+    // register menus
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + DUMPCACHE, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + WIKI, NULL_KEY);
+    SendValues();
 }
-
 
 default {
     state_entry() {
+
         // if we're just starting up, save owner and read defaults
         if (g_kWearer == NULL_KEY) {
             //if we just started, save owner key
             g_kWearer = llGetOwner();
             // and read default settings
+            g_iLine = 0;
             g_kDataID = llGetNotecardLine(g_sCard, g_iLine);
         }
+        
+        // Remember how many scripts are in the prim so we can resend settings when new ones are added
+        g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
     }
 
     on_rez(integer iParam) {
-        if (g_kWearer != llGetOwner()) {
-            //we've changed hands.  reset script
-            llResetScript();
+        // resend settings to plugins, if owner hasn't changed.
+        if (g_kWearer == llGetOwner()) {
+            Refresh();        
         } else {
-            // same owner as last time.  go to ready state
-            state ready;
+            llResetScript();
         }
     }
 
@@ -224,51 +211,8 @@ default {
                 }
                 g_iLine++;
                 g_kDataID = llGetNotecardLine(g_sCard, g_iLine);
-            } else {
-                //done reading notecard, switch to ready state
-                state ready;
             }
         }
-    }
-
-    link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == HTTPDB_REQUEST || iNum == HTTPDB_SAVE || iNum == HTTPDB_DELETE) {
-            //we don't want to process these yet so queue them til done reading the notecard
-            g_lRequestQueue += [iNum, sStr, kID];
-        }
-    }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_OWNER) {
-            llResetScript();
-        }
-    }
-}
-
-state ready {
-    state_entry() {
-        llSleep(1.0);
-
-        // send the values stored in the cache
-        SendValues();
-
-        // and store the number of scripts
-        g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
-
-        //tell the world about our menu button
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + DUMPCACHE, NULL_KEY);
-
-        // allow to link to the wiki
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + WIKI, NULL_KEY);
-
-        //resend any requests that came while we weren't looking
-        integer n;
-        integer iStop = llGetListLength(g_lRequestQueue);
-        for (n = 0; n < iStop; n = n + 3) {
-            llMessageLinked(LINK_SET, (integer)llList2String(g_lRequestQueue, n), llList2String(g_lRequestQueue, n + 1), (key)llList2String(g_lRequestQueue, n + 2));
-        }
-        g_lRequestQueue = [];
-
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -281,18 +225,18 @@ state ready {
         } else if (iNum == HTTPDB_REQUEST || iNum == HTTPDB_REQUEST_NOCACHE || iNum == LOCALSETTING_REQUEST) {
             //check the dbcache for the token
             // responses are sent both as HTTPDB and LOCALSETTING until all scripts can use just SETTING
-            if (CacheValExists(g_lSettings, sStr)) {
-                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, sStr + "=" + GetCacheVal(g_lSettings, sStr), NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, sStr + "=" + GetCacheVal(g_lSettings, sStr), NULL_KEY);
-            } else if (CacheValExists(g_lDefaults, sStr)) {
-                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, sStr + "=" + GetCacheVal(g_lDefaults, sStr), NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, sStr + "=" + GetCacheVal(g_lDefaults, sStr), NULL_KEY);
+            if (SettingExists(g_lSettings, sStr)) {
+                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, sStr + "=" + GetSetting(g_lSettings, sStr), NULL_KEY);
+                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, sStr + "=" + GetSetting(g_lSettings, sStr), NULL_KEY);
+            } else if (SettingExists(g_lDefaults, sStr)) {
+                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, sStr + "=" + GetSetting(g_lDefaults, sStr), NULL_KEY);
+                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, sStr + "=" + GetSetting(g_lDefaults, sStr), NULL_KEY);
             } else {
                 llMessageLinked(LINK_SET, HTTPDB_EMPTY, sStr, NULL_KEY);
                 llMessageLinked(LINK_SET, LOCALSETTING_EMPTY, sStr, "");                
             }
         } else if (iNum == HTTPDB_DELETE || iNum == LOCALSETTING_DELETE) {
-            g_lSettings = DelCacheVal(g_lSettings, sStr);
+            g_lSettings = DelSetting(g_lSettings, sStr);
         } else if ( (sStr == "wiki") && (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
             // open the wiki page
             if  (g_iRemenu)
@@ -324,11 +268,11 @@ state ready {
         }
     }
 
-    on_rez(integer iParam) {
-        state default;
-    }
-
     changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) {
+            llResetScript();
+        }
+
         if ((iChange==CHANGED_INVENTORY)&&(g_iScriptCount!=llGetInventoryNumber(INVENTORY_SCRIPT))) {
             // number of scripts changed
             // resend values and store new number
