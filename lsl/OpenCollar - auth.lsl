@@ -1,4 +1,4 @@
-//OpenCollar - auth - 3.530
+//OpenCollar - auth
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 //save owner, secowners, and group key
@@ -1170,7 +1170,7 @@ default
     {
         if (iChange & CHANGED_OWNER)
         {
-            g_kWearer = llGetOwner();
+            llResetScript();
         }
     }
 
