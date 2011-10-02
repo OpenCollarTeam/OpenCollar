@@ -6,7 +6,7 @@ filenames that are more friendly to offline editing.  Version numbers have been
 removed from the filenames, in favor of using an actual version control system
 (Git).  
 
-If you're new to Git, [start here] [3].  Once you've forked this
+If you're new to Git, [start here] (http://help.github.com/).  Once you've forked this
 project on Github and cloned your fork to your own computer, come back and
 finish reading this.
 
@@ -51,7 +51,8 @@ scripts.
 I know Git will be intimidating for some people, especially those who have only
 worked on scripts inside SL.  Please take the time to learn to work with Git
 though.  It will be a huge help towards managing the project in a sane way. The
-[documentation] [3] is really pretty good.
+[documentation] (http://help.github.com/) is really pretty good.
+
 
 The Part Where I Beg
 --------------------
@@ -60,8 +61,3 @@ Note to third party viewer devs: It would be *really* awesome to have a way to
 keep an inworld folder of scripts and notecards in sync with a folder on your
 hard drive.  All of the current methods require jumping through some really
 annoying hoops.
-
-[1]: http://www.phoenixviewer.com/  "Phoenix Viewer"
-[3]: http://help.github.com/ "start here"
-[4]: http://lxml.de/installation.html "lxml"
-
