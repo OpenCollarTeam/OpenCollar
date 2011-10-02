@@ -4,7 +4,9 @@ OpenCollar Updater
 This project contains the code for the OpenCollar Updater.  It uses new
 filenames that are more friendly to offline editing.  Version numbers have been
 removed from the filenames, in favor of using an actual version control system
-(Git).  If you're new to Git, [start here] [3].  Once you've forked this
+(Git).  
+
+If you're new to Git, [start here] [3].  Once you've forked this
 project on Github and cloned your fork to your own computer, come back and
 finish reading this.
 
@@ -26,54 +28,16 @@ git config.  You can do that like this:
 Staying in Sync
 ---------------
 
-### From Disk to SL
+I used to have some instructions here for using Phoenix's export/import feature
+to keep files in sync between your disk and SL.  That was really crashy and
+buggy though, so I'm still looking for a good solution.
 
-You'll probably also want to be able to sync the scripts inworld.  I suggest
-using the [Phoenix Viewer] [1]'s 'Import Linkset' feature.  This
-requires that you have an xml file from an exported object.  There is an
-'updater.xml' file included in the repository for this purpose.  Before running
-the import, you'll need to make an `updater_assets` folder containing the
-scripts and notecards, with special uuids in the names.  There's a script for
-that.  
+My best advice right now is this:
 
-    python lsl2xml.py updater.xml
-
-(This requires that you have Python's [lxml] [4] library installed.)
-
-With that done, you should be able to launch Phoenix and do `File -> Import
-Linkset` in the menu, then select the updater.xml file from the ocupdater
-repository.  You should get a red and black object inworld, with all the OC
-scripts inside.
-
-If you're like me, Phoenix will import the scripts just fine, but choke on the
-notecards.  So you might have to do those manually.
-
-All of the scripts you just imported are probably compiled for the LSL2 runtime
-rather than Mono.  So select the object you just imported, and do `Tools ->
-Recompile Scripts in Selection -> Mono`.
-
-#### Other Items
-
-Last of all, don't forget that you still need to load the
-animations/textures/objects/etc in order to have a functioning updater!  You'll
-have to pull those from an existing collar or another copy of the updater
-inworld.
-
-### From SL to Disk
-
-When you're actually working on the scripts, you'll need a way to sync them
-back to disk if you want to push them to Github and share your changes back to
-the project.  There are two options there:
-
-1.  In Phoenix, right click the updater and select `More -> More -> Export` to
-    create a new exported object.  Then use the xml2lsl.py script to move the
-    scripts from your new assets folder into your git repo (and also rename
-    them to be human readable).
-2.  Run [Imprudence] [2] when you're working on OC scripts, and use the `Export
-    Text` and `Import Text` features built into its script editor in order to
-    manually keep your inworld version of the scripts in sync with your on-disk
-    version.  (This is what I do currently, since Phoenix object export seems
-    to crash me most times I try it.)
+1. Fork the code on Github and clone your fork to your local machine.
+2. Get a copy of the latest updater inside SL.
+3. When editing a file in SL, use the external editor support so you can easily
+   save your work both inworld and to your local working directory.
 
 Contributing Changes
 --------------------
@@ -84,6 +48,10 @@ way.  It's a nightmare.  So for the sanity of all concerned, Github pull
 requests are the *only* way that we will accept modifications to the OC
 scripts.
 
+I know Git will be intimidating for some people, especially those who have only
+worked on scripts inside SL.  Please take the time to learn to work with Git
+though.  It will be a huge help towards managing the project in a sane way. The
+[documentation] [3] is really pretty good.
 
 The Part Where I Beg
 --------------------
@@ -94,6 +62,6 @@ hard drive.  All of the current methods require jumping through some really
 annoying hoops.
 
 [1]: http://www.phoenixviewer.com/  "Phoenix Viewer"
-[2]: http://wiki.kokuaviewer.org/wiki/Downloads "Imprudence"
 [3]: http://help.github.com/ "start here"
 [4]: http://lxml.de/installation.html "lxml"
+
