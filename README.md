@@ -6,9 +6,11 @@ filenames that are more friendly to offline editing.  Version numbers have been
 removed from the filenames, in favor of using an actual version control system
 (Git).  
 
-If you're new to Git, [start here] (http://help.github.com/).  Once you've forked this
-project on Github and cloned your fork to your own computer, come back and
-finish reading this.
+If you're new to Git, [start here] (http://help.github.com/).  Once you've
+forked this project on Github and cloned your fork to your own computer, come
+back and finish reading this. (Or if you're masochistic enough, you can skip
+the clone part and edit directly on the web, one commit per file, if it works
+for you.)
 
 All of the scripts and notecards necessary for the updater to function should
 be present in the 'lsl' folder of this repository.  Animations, textures, and
