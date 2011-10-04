@@ -539,7 +539,7 @@ default
             {
                 Unleash();
             }
-            else if (sMesL == "yank" && kMessageID == g_kLeashedTo)
+            else if ((sMesL == "yank" && kMessageID == g_kLeashedTo) || (sMesL == "beckon" && iAuth == COMMAND_OWNER))
             {
                 YankTo(kMessageID);
             }
