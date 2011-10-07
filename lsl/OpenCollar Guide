@@ -261,6 +261,8 @@ the leash only works if the sub is in chat range, wont work with shouting
 
 <prefix>yank -- yanks the sub to you
 
+<prefix>beckon -- Same effect as yank, but does not need the sub to be leashed
+
 <prefix>unleash -- Releases the sub
 
 <prefix>length <number>-- sets length of the leash, no brackets, default setting is 3 meters, but if sub is further than 18 meters from the owner, this wont work

@@ -1,0 +1,11 @@
+(Tentative Release Notes)
+
+New Features
+------------
+
+New chat command in leash module: <prefix>beckon allows an owner to beckon (pull over) the wearer without needing to be leashed.
+
+Bug Fixes
+---------
+
+Fix bug in rlvsit module that caused the wrong object to be sat upon under certain circumstances.
