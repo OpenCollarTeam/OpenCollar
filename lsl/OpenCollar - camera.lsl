@@ -1,4 +1,4 @@
-//OpenCollar - camera - 3.520
+//OpenCollar - camera
 //allows dom to set different camera mode
 //responds to commands from modes list
 
@@ -20,6 +20,7 @@ integer g_rBroadChan;
 //a 2-strided list in the form modename,camparams, where camparams is a serialized list
 list g_lModes = [
 "default", "|/?!@#|12|0",//[CAMERA_ACTIVE, FALSE]
+"human", "|/?!@#|12|1|8/0.000000|9/0.000000|7/2.500000|6/0.050000|22|0|11/0.000000|0/20.000000|5/0.000000|21|0|10/0.000000|1@<0.000000, 0.000000, 0.350000>",
 "1stperson", "|/?!@#|12|1|7/0.500000|1@<2.500000, 0.000000, 1.000000>", //CAMERA_ACTIVE, TRUE, CAMERA_DISTANCE, 0.5,CAMERA_FOCUS_OFFSET, <2.5,0,1.0>]]
 "ass", "|/?!@#|12|1|7/0.500000",//[CAMERA_ACTIVE, TRUE, CAMERA_DISTANCE, 0.5]
 "far", "|/?!@#|12|1|7/10.000000", //[CAMERA_ACTIVE, TRUE,CAMERA_DISTANCE, 10.0]]
