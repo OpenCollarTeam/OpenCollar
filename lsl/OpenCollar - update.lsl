@@ -1,19 +1,39 @@
-//OpenCollar - update - 3.528
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
-//on attach and on state_entry, http request for update
+//Licensed under the GPLv2, with the additional requirement that these scripts
+//remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
-key g_kWearer;
+// This script does 3 things:
+// 1 - On rez, check whether there's an update to the collar available.
+// 2 - On command, ask appengine for an updater to be delivered.
+// 3 - On command, do the handshaking necessary for updater object to install
+// its shim script.
+
+// NOTE: As of version 3.706, the update script no longer uses object name or
+// description to tell it the current collar version.  Instead, it looks in the
+// "~version" notecard.  It compares the contents of that notecard with the
+// text at https://raw.github.com/nirea/ocupdater/release/lsl/~version.  If the
+// version online is newer, then the wearer will be advised that an update is
+// available.
+
+// Update checking sequence:
+// 1 - On rez, reset script.
+// 2 - On start, read the version notecard.
+// 3 - On getting version notecard contents, store in global var and request
+// version from github.
+// 4 - On getting version from github, compare to version from notecard.
+// 5 - If github version is newer, then give option to have update delivered.
+// 6 - On getting command to deliver updater, send http request to
+// update.mycollar.org.
+
+key wearer;
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_WEARER = 503;
-string g_sResetScripts = "resetscripts";
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer HTTPDB_SAVE = 2000;
+integer HTTPDB_REQUEST = 2001;
+integer HTTPDB_RESPONSE = 2002;
+integer HTTPDB_DELETE = 2003;
+integer HTTPDB_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -24,14 +44,9 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string g_sDBToken = "updatemethod";//valid values are "replace" and "inplace"
-string g_sUpdateMethod = "inplace";
-
-integer g_iUpdateChildPin = 4711;//not used?
-
-string g_sParentMenu = "Help/Debug";
-string g_sSubMenu1 = "Update";
-string g_sSubMenu2 = "Get Update";
+string PARENT_MENU = "Help/Debug";
+string BTN_DO_UPDATE = "Update";
+string BTN_GET_UPDATE = "Get Update";
 
 key g_kMenuID;
 
@@ -41,18 +56,27 @@ integer g_iUpdateHandle;
 key g_kConfirmUpdate;
 key g_kUpdaterOrb;
 
-string g_sHTTPDB_Url = "http://update.mycollar.org/"; //defaul OC url, can be changed in defaultsettings notecard and wil be send by settings script if changed
-string g_sUpdatePath = "updater/check?";
-key g_kHTTPUpdate;
-integer g_iUpdateAvail = FALSE;
+// We check for the latest version number by looking at the "~version" notecard
+// inside the 'release' branch of the collar's Github repo.
+string version_check_url = "https://raw.github.com/nirea/ocupdater/release/lsl/~version";
 
-integer g_iUpdateMode=FALSE;
+// A request to this URL will trigger delivery of an updater.  We omit the
+// "version=blah" parameter because we don't want the server deciding whether
+// we should get an updater or not.  We just want one.
+string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
 
-integer g_iUpdateBeta = FALSE;
+// key for storing the request handle when we ask Github what the latest
+// version is.
+key github_version_request;
 
-list g_lResetFirst = ["menu", "rlvmain", "anim", "appearance"];
+// key for storing request id when we ask app engine to deliver a new updater
+key appengine_delivery_request;
 
-integer g_iChecked = FALSE;//set this to true after checking version
+// store versions as strings and don't cast to float until the last minute.
+// This ensures that we can display them in a nice way without a bunch of
+// floating point garbage on the end.
+string my_version = "0.0";
+key my_version_request;
 
 key g_kUpdater; // key of avi who asked for the update
 integer g_iUpdatersNearBy = -1;
@@ -90,7 +114,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
-    if (kID == g_kWearer)
+    if (kID == wearer)
     {
         llOwnerSay(sMsg);
     }
@@ -108,26 +132,7 @@ ConfirmUpdate(key kUpdater)
 {
     string sPrompt = "Do you want to update with " + llKey2Name(kUpdater) + " with object key:" + (string)kUpdater +"\n"
     + "Do not rez any items till the update has started.";
-    g_kConfirmUpdate = Dialog(g_kWearer, sPrompt, ["Yes", "No"], [], 0);
-}
-// Return  1 IF inventory is removed - llInventoryNumber will drop
-integer SafeRemoveInventory(string sItem)
-{
-    if (llGetInventoryType(sItem) != INVENTORY_NONE)
-    {
-        llRemoveInventory(sItem);
-        return 1;
-    }
-    return 0;
-}
-SafeResetOther(string sName)
-{
-    Debug("safely resetting: " + sName);
-    if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
-    {
-        llResetOtherScript(sName);
-        llSetScriptState(sName, TRUE);
-    }
+    g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0);
 }
 
 integer IsOpenCollarScript(string sName)
@@ -139,224 +144,109 @@ integer IsOpenCollarScript(string sName)
     return FALSE;
 }
 
-CheckForUpdate(integer iUpdateMode)
+CheckForUpdate()
 {
     Debug("checking for update");
-    list lParams = llParseString2List(llGetObjectDesc(), ["~"], []);
-    string sObjectName = llList2String(lParams, 0);
-    string sObjectVersion = llList2String(lParams, 1);
-
-    //handle in-place updates.
-    if (g_sUpdateMethod == "inplace")
-    {
-        sObjectName = "OpenCollarUpdater";
-    }
-
-    if (sObjectName == "" || sObjectVersion == "")
-    {
-        llOwnerSay("You have changed my description.  Automatic updates are disabled.");
-    }
-    else if ((float)sObjectVersion)
-    {
-        string sUrl = g_sHTTPDB_Url + g_sUpdatePath;
-        sUrl += "object=" + llEscapeURL(sObjectName);
-        sUrl += "&version=" + llEscapeURL(sObjectVersion);
-
-        if (!iUpdateMode)
-        {
-            sUrl += "&update=no";
-        }
-        g_iUpdateMode = iUpdateMode;
-        g_iUpdateBeta = FALSE;
-
-        g_kHTTPUpdate = llHTTPRequest(sUrl, [HTTP_METHOD, "GET"], "");
-    }
+    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET"], "");
 }
 
-ReadyToUpdate(integer iDel)
+SayUpdatePin(key orb)
 {
     integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
     llSetRemoteScriptAccessPin(pin);
-    llWhisper(g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
-}
-
-RestedInit()
-{
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu1, NULL_KEY);
-
-    if (g_iUpdateAvail)
-    {
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu2, NULL_KEY);
-        llOwnerSay("There is an updated version of the collar available. To receive the updater, click the 'Get Update' button below, or click '"+g_sParentMenu+"' in the menu, then '"+g_sSubMenu2+"' if you wish to get it later on.");
-        g_kMenuID = Dialog(g_kWearer, "\nThere is an updated version of the collar available.\nTo receive the updater, click the 'Get Update' button below, or click '"+g_sParentMenu+"' in the menu, then '"+g_sSubMenu2+"' if you wish to get it later on. ", ["Get Update"], ["Cancel"], 0);
-    }
-
-    llSetTimerEvent(10.0);
+    llRegionSayTo(orb, g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
 }
 
 default
 {
     state_entry()
     {
-        //check if we're in an updater.  if so, don't do regular startup routine.
-        if (llSubStringIndex(llGetObjectName(), "Updater") != -1)
-        {
-            //we're in an updater. go to sleep
+        Debug("state default");
+
+        //check if we're in an updater.  if so, then just shut self down and
+        //don't do regular startup routine.
+        if (llSubStringIndex(llGetObjectName(), "Updater") != -1) {
             llSetScriptState(llGetScriptName(), FALSE);
         }
-        else
-        {
-            //we're in something else.  Thunderbirds Go!
 
-            g_iUpdateMode = FALSE;
-            g_iUpdateAvail = FALSE;
+        // we just started up.  Remember owner.
+        wearer = llGetOwner();
 
-            g_kWearer = llGetOwner();
-            Debug("state default");
+        // check if we're current version or not by reading notecard.
+        my_version_request = llGetNotecardLine("~version", 0); 
 
-            state reseted;
-        }
-    }
-}
-
-
-state reseted
-{
-    state_entry()
-    {
-        g_iUpdateAvail = FALSE;
-        g_iUpdateMode = FALSE;
-
-        g_kWearer = llGetOwner();
-        Debug("state reseted");
-        RestedInit();
+        // register menu buttons
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
     }
 
-    on_rez(integer iParam)
-    {
-        Debug("rezzed");
-        if (g_kWearer == llGetOwner())
-        {
-            Debug("no owner change");
-            g_iChecked = FALSE;
-            llSleep(1.5);
-            RestedInit();
+    dataserver(key id, string data) {
+        if (id == my_version_request) {
+            // we only ever read one notecard ("~version"), and it only ever has
+            // one line.  So whatever we got back, that's our version.
+            my_version = data;        
+    
+            // now request the version from github.
+            CheckForUpdate();            
         }
-        else
-        {
-            Debug("owner change");
-            llResetScript();
-        }
-        g_iUpdateMode = FALSE;
-
-
-
     }
 
-    http_response(key kID, integer iStatus, list lMeta, string sBody)
-    {
-        if (kID == g_kHTTPUpdate)
-        {Debug("test1");
-                list l=llParseString2List(sBody, ["|"], []);
-                if (llGetListLength(l) == 2)
-                {
-                    if (g_iUpdateMode)
-                    {
-                        llOwnerSay("An updater will be delivered to you shortly.");
-                    }
-                    else
-                    {
-                        llOwnerSay("There is an updated version of the collar available. To receive '"+llList2String(l,1)+"', click the 'Get Update' button below, or click '"+g_sParentMenu+"' in the menu, then '"+g_sSubMenu2+"' if you wish to get it later on.");
-                        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu2, NULL_KEY);
-                        g_iUpdateAvail = TRUE;
-                        g_kMenuID = Dialog(g_kWearer, "\nThere is an updated version of the collar available.\nTo receive '"+llList2String(l,1)+"', click the 'Get Update' button below, or click '"+g_sParentMenu+"' in the menu, then '"+g_sSubMenu2+"' if you wish to get it later on. ", ["Get Update"], ["Cancel"], 0);
-                    }
+    http_response(key id, integer status, list meta, string body) {
+        // if we just got version information from github, then compare to what
+        // we have in notecard.
+        if (status == 200) { // be silent on failures.
+            if (id == github_version_request) {
+                float release_version = (float)body;
+                if (release_version > (float)my_version) {
+                    llOwnerSay("There is an updated version of the collar available. To receive the updater, click the 'Get Update' button below, or click '"+PARENT_MENU+"' in the menu, then '"+BTN_GET_UPDATE+"' if you wish to get it later on.");
+                    g_kMenuID = Dialog(wearer, "\nThere is an updated version
+of the collar available.\nTo receive the updater, click the 'Get Update' button
+below, or click '"+PARENT_MENU+"' in the menu, then '"+BTN_GET_UPDATE+"' if you
+wish to get it later on. ", [BTN_GET_UPDATE], ["Cancel"], 0);
                 }
-                if (g_iUpdateBeta == FALSE)
-                {
-                    llSleep(1.0);
-                    list lParams = llParseString2List(llGetObjectDesc(), ["~"], []);
-                    string sObjectVersion = llList2String(lParams, 1);
-                    list lObjectVersion = llParseString2List(sObjectVersion, ["."], []);
-                    if ((integer)llGetSubString(llList2String(lObjectVersion, 1), 1, -1) >= 20)
-                    {
-                        g_iUpdateBeta = TRUE;
-                        string sUrl = g_sHTTPDB_Url + g_sUpdatePath;
-                        sUrl += "object=" + llEscapeURL("OpenCollarUpdater Dev/Beta/RC");
-                        sUrl += "&version=" + llEscapeURL(sObjectVersion);
-                        if (!g_iUpdateMode)
-                        {
-                            sUrl += "&update=no";
-                        }
-                        g_kHTTPUpdate = llHTTPRequest(sUrl, [HTTP_METHOD, "GET"], "");
-                        return;
-                    }
-                }
-
-                g_iUpdateBeta = FALSE;
-                g_iUpdateMode = FALSE;
+            } else if (id == appengine_delivery_request) {
+                llOwnerSay("An updater will be delivered to you shortly.");
             }
+        }
     }
 
-    link_message(integer iSender, integer iNum, string sStr, key kID)
-    {
+    on_rez(integer param) {
+        llResetScript();
+    }
 
-        if (iNum == SUBMENU)
-        {
-            if (sStr == g_sSubMenu1)
-            {
+    link_message(integer sender, integer num, string str, key id ) {
+        // handle menu clicks
+        if (num == SUBMENU) {
+            if (str == BTN_DO_UPDATE) {
                 g_iRemenu = TRUE;
-                llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "update", kID);
-            }
-            else if (sStr == g_sSubMenu2)
-            {
-                if (kID == g_kWearer)
-                {
-                    llOwnerSay("Contacting the servers now to check if a new version is available.");
-                    CheckForUpdate(TRUE);
-                }
-                else
-                {
-                    Notify(kID,"Only the wearer can request updates for the collar.",FALSE);
+                llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "update", id);
+            } else if (str == BTN_GET_UPDATE) {
+                if (id == wearer) {
+                    appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
+                } else {
+                    Notify(id,"Only the wearer can request updates for the collar.",FALSE);
                 }
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER)
         {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == g_sDBToken)
+            if (str == "update")
             {
-                g_sUpdateMethod = sValue;
-            }
-            //#################################################################
-            //added to get the script in this collar aware when the last general collar reset happened and if one happened to reset scripts
-            else if (sToken == "HTTPDB")
-            {
-                g_sHTTPDB_Url = sValue;
-            }
-        }
-        //#################################################################
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            if (sStr == "update")
-            {
-                if (kID == g_kWearer)
+                if (id == wearer)
                 {
                     if (llGetAttached())
                     {
-                        if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, g_sParentMenu, kID);
+                        if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
                         g_iRemenu = FALSE;
-                        Notify(kID, "Sorry, the collar cannot be updated while attached.  Rez it on the ground and try again.",FALSE);
+                        Notify(id, "Sorry, the collar cannot be updated while attached.  Rez it on the ground and try again.",FALSE);
                     }
                     else
                     {
                         string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
                         g_iUpdatersNearBy = 0;
                         g_iWillingUpdaters = 0;
-                        g_kUpdater = kID;
-                        Notify(kID,"Searching for nearby updater",FALSE);
+                        g_kUpdater = id;
+                        Notify(id,"Searching for nearby updater",FALSE);
                         g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
                         llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
                         llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
@@ -364,79 +254,74 @@ state reseted
                 }
                 else
                 {
-                    if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, g_sParentMenu, kID);
+                    if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
                     g_iRemenu = FALSE;
-                    Notify(kID,"Only the wearer can update the collar.",FALSE);
+                    Notify(id,"Only the wearer can update the collar.",FALSE);
                 }
             }
         }
-        else if (iNum == MENUNAME_REQUEST)
+        else if (num == MENUNAME_REQUEST)
         {
-            if (sStr == g_sParentMenu)
+            if (str == PARENT_MENU)
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu1, NULL_KEY);
-                if     (g_iUpdateAvail)
-                {
-                    // if there is an update, show the button for it
-                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu2, NULL_KEY);
-                }
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
             }
         }
-        else if (iNum == DIALOG_RESPONSE)
+        else if (num == DIALOG_RESPONSE)
         {
-            if (kID == g_kMenuID)
+            if (id == g_kMenuID)
             {
                 //got a menu response meant for us.  pull out values
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
+                list lMenuParams = llParseString2List(str, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
 
-                if (sMessage=="Get Update")
+                if (sMessage == BTN_GET_UPDATE)
                 {
-                    llOwnerSay("Contacting the servers now to check if a new version is available.");
-                    CheckForUpdate(TRUE);
+                    appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
                 }
             }
-            else if (kID == g_kConfirmUpdate)
+            else if (id == g_kConfirmUpdate)
             {
-                //got a menu response meant for us.  pull out values
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
+                // User clicked the Yes I Want To Update button
+                list lMenuParams = llParseString2List(str, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 if (sMessage == "Yes")
                 {
-                    ReadyToUpdate(TRUE);//any num will do
+                    SayUpdatePin(g_kUpdaterOrb);
                 }
             }
         }
     }
 
-    listen(integer iChan, string sName, key kID, string sMessage)
+    listen(integer channel, string name, key id, string message)
     {   //collar and updater have to have the same Owner else do nothing!
-        Debug(sMessage);
-        if (llGetOwnerKey(kID) == g_kWearer)
+        Debug(message);
+        if (llGetOwnerKey(id) == wearer)
         {
-            list lTemp = llParseString2List(sMessage, [","],[]);
+            list lTemp = llParseString2List(message, [","],[]);
             string sCommand = llList2String(lTemp, 0);
-            if(sMessage == "nothing to update")
+            if(message == "nothing to update")
             {
                 g_iUpdatersNearBy++;
             }
-            else if( sMessage == "get ready")
+            else if( message == "get ready")
             {
                 g_iUpdatersNearBy++;
                 g_iWillingUpdaters++;
-                g_kUpdaterOrb = kID;
+                g_kUpdaterOrb = id;
                 ConfirmUpdate(g_kUpdaterOrb); 
                 g_iUpdatersNearBy = -1;
                 g_iWillingUpdaters = -1;
-                g_iUpdateAvail = FALSE;                               
                 llSetTimerEvent(0);
             }
         }
     }
+
     timer()
     {
         Debug("timer");
@@ -450,18 +335,6 @@ state reseted
             }
             g_iUpdatersNearBy = -1;
             g_iWillingUpdaters = -1;
-            g_iUpdateAvail = FALSE;
-        }
-        if (!g_iChecked)
-        {
-            if (llGetAttached())
-            {
-                if (!g_iUpdateAvail)
-                {
-                    CheckForUpdate(FALSE);
-                }
-            }
-            g_iChecked = TRUE;
         }
     }
 }
