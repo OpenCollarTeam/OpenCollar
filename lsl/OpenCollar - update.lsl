@@ -47,6 +47,7 @@ integer DIALOG_TIMEOUT = -9002;
 string PARENT_MENU = "Help/Debug";
 string BTN_DO_UPDATE = "Update";
 string BTN_GET_UPDATE = "Get Update";
+string BTN_GET_VERSION = "Get Version";
 
 key g_kMenuID;
 
@@ -178,6 +179,7 @@ default
         // register menu buttons
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
     }
 
     dataserver(key id, string data) {
@@ -196,13 +198,10 @@ default
         // we have in notecard.
         if (status == 200) { // be silent on failures.
             if (id == github_version_request) {
-                float release_version = (float)body;
-                if (release_version > (float)my_version) {
-                    llOwnerSay("There is an updated version of the collar available. To receive the updater, click the 'Get Update' button below, or click '"+PARENT_MENU+"' in the menu, then '"+BTN_GET_UPDATE+"' if you wish to get it later on.");
-                    g_kMenuID = Dialog(wearer, "\nThere is an updated version
-of the collar available.\nTo receive the updater, click the 'Get Update' button
-below, or click '"+PARENT_MENU+"' in the menu, then '"+BTN_GET_UPDATE+"' if you
-wish to get it later on. ", [BTN_GET_UPDATE], ["Cancel"], 0);
+                // strip the newline off the end of the text
+                string release_version = llGetSubString(body, 0, -2);
+                if ((float)release_version > (float)my_version) {
+                    g_kMenuID = Dialog(wearer, "\nOpenCollar " + release_version + " is available.  You are running version " + my_version + ".", [BTN_GET_UPDATE], ["Cancel"], 0);
                 }
             } else if (id == appengine_delivery_request) {
                 llOwnerSay("An updater will be delivered to you shortly.");
@@ -226,22 +225,20 @@ wish to get it later on. ", [BTN_GET_UPDATE], ["Cancel"], 0);
                 } else {
                     Notify(id,"Only the wearer can request updates for the collar.",FALSE);
                 }
+            } else if (str == BTN_GET_VERSION) {
+                // on clicking version button, send link message to self with
+                // chat command
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "version remenu", id);
             }
-        }
-        else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER)
-        {
-            if (str == "update")
-            {
-                if (id == wearer)
-                {
-                    if (llGetAttached())
-                    {
+        } else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER) {
+            list cmd_parts = llParseString2List(str, [" "], []);
+            if (str == "update") {
+                if (id == wearer) {
+                    if (llGetAttached()) {
                         if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
                         g_iRemenu = FALSE;
                         Notify(id, "Sorry, the collar cannot be updated while attached.  Rez it on the ground and try again.",FALSE);
-                    }
-                    else
-                    {
+                    } else {
                         string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
                         g_iUpdatersNearBy = 0;
                         g_iWillingUpdaters = 0;
@@ -251,12 +248,15 @@ wish to get it later on. ", [BTN_GET_UPDATE], ["Cancel"], 0);
                         llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
                         llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
                     }
-                }
-                else
-                {
+                } else {
                     if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
                     g_iRemenu = FALSE;
                     Notify(id,"Only the wearer can update the collar.",FALSE);
+                }
+            } else if (llList2String(cmd_parts, 0) == "version") {
+                Notify(id, "I am running OpenCollar version " + my_version, FALSE);
+                if (llList2String(cmd_parts, 1) == "remenu") {
+                    llMessageLinked(LINK_SET, SUBMENU, PARENT_MENU, id);
                 }
             }
         }
@@ -266,6 +266,7 @@ wish to get it later on. ", [BTN_GET_UPDATE], ["Cancel"], 0);
             {
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
             }
         }
         else if (num == DIALOG_RESPONSE)
