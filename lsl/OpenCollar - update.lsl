@@ -174,7 +174,7 @@ string LeftOfDecimal(string str) {
 string RightOfDecimal(string str) {
     integer idx = llSubStringIndex(str, ".");
     if (idx == -1) {
-        return str;
+        return "0";
     }
     return llGetSubString(str, idx + 1, -1);
 }
