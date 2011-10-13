@@ -1,11 +1,14 @@
 //Licensed under the GPLv2, with the additional requirement that these scripts
 //remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
-// This script does 3 things:
+// This script does 4 things:
 // 1 - On rez, check whether there's an update to the collar available.
 // 2 - On command, ask appengine for an updater to be delivered.
 // 3 - On command, do the handshaking necessary for updater object to install
 // its shim script.
+// 4 - On rez, check a file on Github for any important project news, and
+// announce it to the wearer if it's new.  The timestamp of the last news
+// report is remembered in the object desc.
 
 // NOTE: As of version 3.706, the update script no longer uses object name or
 // description to tell it the current collar version.  Instead, it looks in the
@@ -60,18 +63,20 @@ key g_kUpdaterOrb;
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
 string version_check_url = "https://raw.github.com/nirea/ocupdater/release/lsl/~version";
+key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
 // "version=blah" parameter because we don't want the server deciding whether
 // we should get an updater or not.  We just want one.
 string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
-
-// key for storing the request handle when we ask Github what the latest
-// version is.
-key github_version_request;
-
-// key for storing request id when we ask app engine to deliver a new updater
 key appengine_delivery_request;
+
+// The news system is back!  Only smarter this time.  News will be kept in a
+// static file on Github to keep server load down.  This script will remember
+// the date of the last time it reported news so it will only show things once.
+// It will also not show things more than a week old.
+string news_url = "https://raw.github.com/nirea/ocupdater/master/news.md";
+key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
 // This ensures that we can display them in a nice way without a bunch of
@@ -158,6 +163,43 @@ SayUpdatePin(key orb)
     llRegionSayTo(orb, g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
 }
 
+string LeftOfDecimal(string str) {
+    integer idx = llSubStringIndex(str, ".");
+    if (idx == -1) {
+        return str;
+    }
+    return llGetSubString(str, 0, idx - 1);
+}
+
+string RightOfDecimal(string str) {
+    integer idx = llSubStringIndex(str, ".");
+    if (idx == -1) {
+        return str;
+    }
+    return llGetSubString(str, idx + 1, -1);
+}
+
+// LSL is fucking borked.  Example:
+// llOwnerSay((string)((float)((integer)"20111011"))); chats out
+// "20111012.000000", (adding 1), except sometimes when it chats out
+// "20111010.000000"  (subtracting 1).  So to work around that we have this
+// function that takes two string-formatted floats and tells you whether the
+// second is bigger than the first.
+integer SecondStringBigger(string s1, string s2) {
+    // first compare the pre-decimal parts.
+    integer i1 = (integer)LeftOfDecimal(s1);
+    integer i2 = (integer)LeftOfDecimal(s2);
+
+    if (i2 == i1) {
+        // pre-decimal parts are the same.  Need to compare the bits after.
+        integer j1 = (integer)RightOfDecimal(s1);
+        integer j2 = (integer)RightOfDecimal(s2);
+        return j2 > j1;
+    } else {
+        return i2 > i1;
+    }
+}
+
 default
 {
     state_entry()
@@ -175,6 +217,9 @@ default
 
         // check if we're current version or not by reading notecard.
         my_version_request = llGetNotecardLine("~version", 0); 
+        
+        // check for news
+        news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
 
         // register menu buttons
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
@@ -205,6 +250,36 @@ default
                 }
             } else if (id == appengine_delivery_request) {
                 llOwnerSay("An updater will be delivered to you shortly.");
+            } else if (id == news_request) {
+                // We got a response back from the news page on Github.  See if
+                // it's new enough to report to the user.
+                string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
+                list firstline_parts = llParseString2List(firstline, [" "], []);
+                
+                // The first line of a news item should always look like this:
+                // # First News - 20111012 
+                // So we can compare timestamps that way.  
+                string this_news_time = llList2String(firstline_parts, -1);
+                
+                // last news time should be recorded in the prim desc, where we
+                // used to record collar version.
+                list descparts = llParseString2List(llGetObjectDesc(), ["~"],[]);
+                string last_news_time = llList2String(descparts, 1);
+
+                if (SecondStringBigger(last_news_time, this_news_time)) {
+                    // write the new news check time to the desc.
+                    // account for previously-empty descs by making sure
+                    // descparts has at least 2 elements
+                    if (llGetListLength(descparts) < 2) {
+                        descparts = ["X"] + descparts;
+                    }
+                    descparts = llListReplaceList(descparts, [this_news_time], 1, 1);
+                    string newdesc = llDumpList2String(descparts, "~");
+                    llSetObjectDesc(newdesc);
+
+                    string news = "OPENCOLLAR NEWS\n" + body;
+                    Notify(llGetOwner(), news, FALSE);
+                } 
             }
         }
     }

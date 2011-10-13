@@ -177,14 +177,10 @@ default
                         llSetObjectName(just_name);
                     }
                     
-                    // look for a version in the desc and remove if present
-                    list descparts = llParseString2List(llGetObjectDesc(), ["~"], []);          
-                    if (llGetListLength(descparts) > 1 && (integer)llList2String(descparts, 1)) {
-                        // Remove version from desc.  Replace with just X
-                        descparts = llListReplaceList(descparts, ["X"], 1, 1);
-                        string newdesc = llDumpList2String(descparts, "~");
-                        llSetObjectDesc(newdesc);
-                    }
+                    // We used to set the version in the desc too.  Now we just
+                    // leave it alone in this script.  The in-collar update
+                    // script now uses that part of the desc to remember the
+                    // timestamp of the last news item that it reported.
                     
                     //restore settings 
                     integer n;
