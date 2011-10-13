@@ -309,20 +309,14 @@ default
             list cmd_parts = llParseString2List(str, [" "], []);
             if (str == "update") {
                 if (id == wearer) {
-                    if (llGetAttached()) {
-                        if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
-                        g_iRemenu = FALSE;
-                        Notify(id, "Sorry, the collar cannot be updated while attached.  Rez it on the ground and try again.",FALSE);
-                    } else {
-                        string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
-                        g_iUpdatersNearBy = 0;
-                        g_iWillingUpdaters = 0;
-                        g_kUpdater = id;
-                        Notify(id,"Searching for nearby updater",FALSE);
-                        g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
-                        llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
-                        llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
-                    }
+                    string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
+                    g_iUpdatersNearBy = 0;
+                    g_iWillingUpdaters = 0;
+                    g_kUpdater = id;
+                    Notify(id,"Searching for nearby updater",FALSE);
+                    g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
+                    llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+                    llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
                 } else {
                     if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
                     g_iRemenu = FALSE;
