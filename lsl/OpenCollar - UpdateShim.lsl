@@ -1,3 +1,10 @@
+// This script is like a kamikaze missile.  It sits dormant in the updater
+// until an update process starts.  Once the initial handshake is done, it's
+// then inserted into the object being updated, where it chats with the bundle
+// giver script inside the updater to let it know what to send over.  When the
+// update is finished, this script does a little final cleanup and then deletes
+// itself.
+
 integer iStartParam;
 
 // a strided list of all scripts in inventory, with their names,versions,uuids
@@ -148,24 +155,32 @@ default
                 llRegionSayTo(id, channel, response);                                                                
             } else {
                 if (llSubStringIndex(msg, "CLEANUP") == 0) {
-                    // set the new version
+                    // Prior to 3.706, collars would store version number in
+                    // both the object name and description.  This has
+                    // problems: 1) It prevents running updates while worn,
+                    // since llSetObjectName doesn't reliably persist for
+                    // attachments, 2) it's needless repetition and creates
+                    // unnecessary complexity, and 3) version numbers are ugly.
+                    // So now we store version number in just one place, inside
+                    // the "~version" notecard, which is automatically kept up
+                    // to date when the core bundle is installed.  The lines
+                    // below here exist to clean up version numbers in old
+                    // collars.
+
                     list msgparts = llParseString2List(msg, ["|"], []);
-                    string newversion = llList2String(msgparts, 1);
-                    // look for a version in the name and change if present
+                    // look for a version in the name and remove if present
                     list nameparts = llParseString2List(llGetObjectName(), [" - "], []);
                     if (llGetListLength(nameparts) == 2 && (integer)llList2String(nameparts, 1)) {
-                        // looks like there's a version in the name
-                        nameparts = llListReplaceList(nameparts, [newversion], 1, 1);
-                        string newname = llDumpList2String(nameparts, " - ");
-                        llSetObjectName(newname);
+                        // looks like there's a version in the name.  Remove
+                        // it!  
+                        string just_name = llList2String(nameparts, 0);
+                        llSetObjectName(just_name);
                     }
                     
-                    // look for a version in the desc and change if present
-                    list descparts = llParseString2List(llGetObjectDesc(), ["~"], []);                                      if (llGetListLength(descparts) > 1 && (integer)llList2String(descparts, 1)) {
-                        descparts = llListReplaceList(descparts, [newversion], 1, 1);
-                        string newdesc = llDumpList2String(descparts, "~");
-                        llSetObjectDesc(newdesc);
-                    }
+                    // We used to set the version in the desc too.  Now we just
+                    // leave it alone in this script.  The in-collar update
+                    // script now uses that part of the desc to remember the
+                    // timestamp of the last news item that it reported.
                     
                     //restore settings 
                     integer n;

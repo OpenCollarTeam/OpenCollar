@@ -1,12 +1,20 @@
-// This is the master updater script.  It complies with the update handshake protocol that OC
-// has been using for quite some time, and should therefore be compatible with current OC collars.
-// the internals of this script, and the the other parts of the new updater, have been completely re-written.
-// Don't expect this to work like the old updater.  Because we load an update shim script right after handshaking, 
-// we're free to rewrite everything that comes after the handshake.
+// This is the master updater script.  It complies with the update handshake
+// protocol that OC has been using for quite some time, and should therefore be
+// compatible with current OC collars.  the internals of this script, and the
+// the other parts of the new updater, have been completely re-written.  Don't
+// expect this to work like the old updater.  Because we load an update shim
+// script right after handshaking, we're free to rewrite everything that comes
+// after the handshake.
 
-// In addition to the handshake and shim installation, this script decides which bundles should be installed into 
-// (or removed from) the collar.  It loops over each bundle in inventory, telling the BundleGiver script to install
-// or remove each.
+// In addition to the handshake and shim installation, this script decides
+// which bundles should be installed into (or removed from) the collar.  It
+// loops over each bundle in inventory, telling the BundleGiver script to
+// install or remove each.
+
+// This script also does a little bit of magic to ensure that the updater's
+// version number always matches the contents of the "~version" card.
+
+key version_line_id;
 
 integer initChannel = -7483214;
 integer iSecureChannel;
@@ -128,8 +136,17 @@ Debug(string str) {
      //llOwnerSay(llGetScriptName() + ": " + str);
 }
 
+ReadVersionLine() {
+    // try to keep object's version in sync with "~version" notecard.
+    if (llGetInventoryType("~version") == INVENTORY_NOTECARD) {
+        version_line_id = llGetNotecardLine("~version", 0);
+    }
+}
+
 default {
     state_entry() {
+        ReadVersionLine();
+
         llListen(initChannel, "", "", "");
         
         // set all scripts except self to not running
@@ -231,7 +248,7 @@ default {
             } else {
                 // tell the shim to restore settings, set version, 
                 // remove the script pin, and delete himself.
-                string myversion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
+                string myversion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(kCollarKey, iSecureChannel, "CLEANUP|" + myversion);
             }
         }
@@ -243,7 +260,24 @@ default {
     
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
+            // Resetting on inventory change ensures that the bundle list is
+            // kept current, and that the ~version card is re-read if it
+            // changes.
             llResetScript();
+        }
+    }
+
+    dataserver(key id, string data) {
+        if (id == version_line_id) {
+            // make sure that object version matches this card.
+            list nameparts = llParseString2List(llGetObjectName(), [" - "], []);
+            integer length = llGetListLength(nameparts);
+            if (length == 2) {
+                nameparts = llListReplaceList(nameparts, [data], 1, 1);
+            } else if (length == 1) {
+                nameparts += [data];
+            }
+            llSetObjectName(llDumpList2String(nameparts, " - "));
         }
     }
 }
