@@ -744,7 +744,7 @@ default
                     g_iGroupEnabled = TRUE;
                     g_kDialoger = kID;
                     //get group name from
-                    g_kGroupHTTPID = llHTTPRequest("http://grouplookup.mycollar.org/groupname/GetGroupName?group=" + (string)g_kGroup, [HTTP_METHOD, "GET"], "");
+                    g_kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");
                 }
                 if(g_iRemenu)
                 {
@@ -1193,24 +1193,30 @@ default
         }
         else if (kID == g_kGroupHTTPID)
         {
+            g_sGroupName = "X";
             if (iStatus == 200)
             {
-                if (sBody == "X")
+                integer iPos = llSubStringIndex(sBody, "<title>");
+                integer iPos2 = llSubStringIndex(sBody, "</title>");
+                if (~iPos // Found
+                    && iPos2 > iPos // Has to be after it
+                    && iPos2 <= iPos + 43 // 36 characters max (that's 7+36 because <title> has 7)
+                    && !~llSubStringIndex(sBody, "AccessDenied") // Check as per groupname.py (?)
+                   )
                 {
-                    Notify(g_kDialoger, "Group set to (group name hidden).", FALSE);
+                    g_sGroupName = llGetSubString(sBody, iPos + 7, iPos2 - 1);
                 }
-                else if (llStringLength(sBody)>36)
-                {
-                    Notify(g_kDialoger, "Error retrieving group name! Group set to (group name hidden)", TRUE);
-                    sBody="X";
-                }
-                else
-                {
-                    Notify(g_kDialoger, "Group set to " + sBody, FALSE);
-                }
-                g_sGroupName = sBody;
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "groupname=" + g_sGroupName, "");
             }
+
+            if (g_sGroupName == "X")
+            {
+                Notify(g_kDialoger, "Group set to (group name hidden).", FALSE);
+            }
+            else
+            {
+                Notify(g_kDialoger, "Group set to " + g_sGroupName, FALSE);
+            }
+            llMessageLinked(LINK_SET, HTTPDB_SAVE, "groupname=" + g_sGroupName, "");
         }
     }
 }
