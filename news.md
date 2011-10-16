@@ -1,11 +1,14 @@
-# First News - 20111012.1
+# LL Bug Alert - 20111016
 
-Hi all.  This is the first post in the new OpenCollar news system.  This system
-will be used on occasions when we need to share important information with
-OpenCollar users. 
+Hi all.  There's currently a [bug]
+(https://jira.secondlife.com/browse/SVC-7321) in LL's code that prevents some
+full perms items from transferring cleanly with llGiveInventory and
+llRemoteLoadScriptPin.  You might see errors relating to this on update.  There
+is supposed to be a fix currently in the regions on the "Magnum" release
+channel.  
 
-We used to have a system like this in the early days, but it wasn't designed
-for the load of all our users.  This one should be much more robust.  And I
-promise, you won't see these notices often.
+If you see the errors happen in a Magnum region, please add your comment to the
+bug linked above, and IM me to let me know what failed.
 
+Thank you!
 Nirea
