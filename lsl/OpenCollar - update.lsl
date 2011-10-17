@@ -200,6 +200,21 @@ integer SecondStringBigger(string s1, string s2) {
     }
 }
 
+// used in the 'objectversion' command.
+integer GetOwnerChannel(key kOwner, integer iOffset)
+{
+    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
+    if (iChan>0)
+    {
+        iChan=iChan*(-1);
+    }
+    if (iChan > -10000)
+    {
+        iChan -= 30000;
+    }
+    return iChan;
+}
+
 default
 {
     state_entry()
@@ -327,6 +342,9 @@ default
                 if (llList2String(cmd_parts, 1) == "remenu") {
                     llMessageLinked(LINK_SET, SUBMENU, PARENT_MENU, id);
                 }
+            } else if (str == "objectversion") {
+                // ping from an object, we answer to it on the object channel
+                llSay(GetOwnerChannel(id,1111),(string)wearer+":version="+my_version);
             }
         }
         else if (num == MENUNAME_REQUEST)

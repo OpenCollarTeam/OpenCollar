@@ -1,4 +1,3 @@
-//OpenCollar - listener - 3.531
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //listener
 
@@ -315,26 +314,11 @@ default
             {
                 Notify(kID,"prefix: " + g_sPrefix, FALSE);
                 Notify(kID,"channel: " + (string)g_iListenChan, FALSE);
-                string s=CollarVersion();
-                if (s=="0.000") s="Version not correctly set";
-                Notify(kID,"Collar Version: "+s,FALSE);
             }
             else if (sStr == "ping")
                 // ping from an object, we answer to it on the object channel
             {
                 llSay(GetOwnerChannel(kID,1111),(string)g_kWearer+":pong");
-            }
-            else if (sStr == "objectversion")
-                // ping from an object, we answer to it on the object channel
-            {
-                llSay(GetOwnerChannel(kID,1111),(string)g_kWearer+":version="+CollarVersion());
-            }
-            else if (sStr == "version")
-                // answer on open chat the verison
-            {
-                string s=CollarVersion();
-                if (s=="0.000") s="Version not correctly set";
-                Notify(kID,"Collar Version: "+s,FALSE);
             }
             //handle changing prefix and channel from owner
             else if (iNum == COMMAND_OWNER)
