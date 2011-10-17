@@ -1,4 +1,3 @@
-//OpenCollar - rlvundress - 3.529
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //give 3 menus:
 //Clothing
@@ -54,24 +53,6 @@ list DETACH_CLOTH_POINTS = [
     "tattoo"
         ];
 
-
-//Nan: The below are commented out because.... can you really remove skin?
-//"skin",
-//"eyes",
-//"hair",
-//"shape"
-//    ];
-
-//Someone else: well you can't remove it, but you can certainly lock it!
-//list EXTRA_CLOTH_POINTS = [];
-//    "skin",
-//    "eyes",
-//    "hair",
-//    "shape",
-//    "alpha",
-//    "tattoo"
-//        ];
-
 list ATTACH_POINTS = [//these are ordered so that their indices in the list correspond to the numbers returned by llGetAttached
     "None",
     "Chest",
@@ -123,7 +104,6 @@ integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
 integer CHAT = 505;
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
 integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
