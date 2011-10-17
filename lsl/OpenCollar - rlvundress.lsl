@@ -387,14 +387,19 @@ UpdateSettings()
             string sValue=llList2String(g_lSettings, n + 1);
             //Debug(llList2String(g_lSettings, n) + "=" + sValue);
             lNewList += [llList2String(g_lSettings, n) + "=" + llList2String(g_lSettings, n + 1)];
-            if (llGetListLength(sOption)==2&&
-                (llList2String(sOption,0)=="adddetach"&&sValue=="n"
-                    ||llList2String(sOption,0)=="remdetach"&&sValue=="n"))
+            if (llGetListLength(sOption)==2
+                && (llList2String(sOption,0)=="addoutfit"
+                    ||llList2String(sOption,0)=="remoutfit")
+                && sValue=="n")
                 g_lLockedItems += [llList2String(sOption,1)];
-            if (llGetListLength(sOption)==1&&llList2String(sOption,0)=="remoutfit"&&sValue=="n")
+            if (llGetListLength(sOption)==1 && llList2String(sOption,0)=="remoutfit" && sValue=="n")
                 g_lLockedItems += [ALL];
 
-            if (llGetListLength(sOption)==2&&llList2String(sOption,0)=="detach"&&sValue=="n")
+            if (llGetListLength(sOption)==2
+                && (llList2String(sOption,0)=="addattach"
+                    || llList2String(sOption,0)=="remattach"
+                    || llList2String(sOption,0)=="detach")
+                && sValue=="n")
                 g_lLockedAttach += [llList2String(sOption,1)];
         }
         //output that string to viewer
