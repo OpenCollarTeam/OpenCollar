@@ -1,4 +1,3 @@
-//OpenCollar - rlvrelay - 3.705
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 integer RELAY_CHANNEL = -1812221819;
@@ -51,10 +50,6 @@ key g_kMinModeMenuID;
 key g_kAuthMenuID;
 key g_kListMenuID;
 key g_kListID;
-
-//string PROTOCOL_VERSION = "1100"; //with some additions, but backward compatible, nonetheless
-//string IMPL_VERSION = "OpenCollar 3.6";   <- not required in protocol 1.100
-//string ORG_VERSIONS = "ORG=0001/who=001";
 
 integer g_iGarbageRate = 180; //garbage collection rate
 
