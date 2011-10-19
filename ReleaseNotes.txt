@@ -3,9 +3,16 @@
 New Features
 ------------
 
+New update system.
+Possibility to update the collar while worn.
 New chat command in leash module: <prefix>beckon allows an owner to beckon (pull over) the wearer without needing to be leashed.
+
 
 Bug Fixes
 ---------
 
-Fix bug in rlvsit module that caused the wrong object to be sat upon under certain circumstances.
+Cope with imminent database shutdown.
+Fix bug in rlvsit that caused the wrong object to be sat upon under certain circumstances.
+Fix bug in rlvrelay that caused the relay to go off or not being able to be set to off.
+Fix bug in rlvrelay related to invalid IDs passed in !x-who commands.
+Fix bug in rlvundress that caused the locked items not to be properly marked in the dialogs after a restart.
