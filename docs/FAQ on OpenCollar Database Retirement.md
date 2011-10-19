@@ -96,7 +96,7 @@ change.  But that means we need a steady stream of new people stepping up, and
 that's where you come in.  If you have the means, and have the desire, this is
 your opportunity.  OpenCollar only lives as long as its community sustains it.
 
-Nirea
+Nirea and Athaliah
 
 [1]: http://googleappengine.blogspot.com/2011/09/few-adjustments-to-app-engines-upcoming.html
 [2]: http://code.google.com/appengine/ 
