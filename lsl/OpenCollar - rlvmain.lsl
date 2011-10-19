@@ -1,4 +1,3 @@
-//OpenCollar - rlvmain - 3.531
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //new viewer checking method, as of 2.73
 //on rez, restart script
@@ -38,13 +37,11 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
 integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
 integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
@@ -103,8 +100,9 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 
 CheckVersion(integer iSecond)
 {
-    if (g_iCheckCount && !iSecond) return; //ongoing try
-    //llOwnerSay("checking version");
+    if (g_iCheckCount && !iSecond) {
+        return; //ongoing try
+    }
     if (g_iVerbose)
     {
         Notify(g_kWearer, "Attempting to enable Restrained Love Viewer functions.  " + g_sRLVString+ " or higher is required for all features to work.", TRUE);
@@ -156,15 +154,13 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 }
 
-integer StartsWith(string sHayStack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
+// http://wiki.secondlife.com/wiki/llSubStringIndex
+integer StartsWith(string sHayStack, string sNeedle) {
     return llDeleteSubString(sHayStack, llStringLength(sNeedle), -1) == sNeedle;
 }
 
 
 // Book keeping functions
-
-
 
 integer SIT_CHANNEL;
 
@@ -182,26 +178,11 @@ key g_kSitter=NULL_KEY;
 key g_kSitTarget=NULL_KEY;
 
 
-//message map
-
 integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
 
-//integer CMD_ML=31;
-
-
 SendCommand(string sCmd)
 {
-//    if (sCmd=="thirdview=n")
-//    {
-//        llMessageLinked(LINK_SET,CMD_ML,"on",NULL_KEY);
-//    }
-//    else if (sCmd=="thirdview=y")
-//    {
-//        llMessageLinked(LINK_SET,CMD_ML,"off",NULL_KEY);
-//    }
-//    else
-//   there is no mouselook module in opencollar! easy to add again if there a popular vote  ^^
     llOwnerSay("@"+sCmd);
     if (g_iRLVNotify)
     {
@@ -338,261 +319,237 @@ ApplyRem(string sBehav)
 Release(key kID, string sPattern)
 {
     integer iSource=llListFindList(g_lSources,[kID]);
-    if (iSource!=-1)
-    {
+    if (iSource!=-1) {
         list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource),["/"],[]);
         integer i;
-        if (sPattern!="")
-        {
-            for (i=0;i<=llGetListLength(lSrcRestr);i++)
-            {
+        if (sPattern!="") {
+            for (i=0;i<=llGetListLength(lSrcRestr);i++) {
                 string  sBehav=llList2String(lSrcRestr,i);
-                if (llSubStringIndex(sBehav,sPattern)!=-1) RemRestriction(kID,sBehav);
+                if (llSubStringIndex(sBehav,sPattern)!=-1) {
+                    RemRestriction(kID,sBehav);
+                }
             }
-        }
-        else
-        {
+        } else {
             g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource);
             g_lSources=llDeleteSubList(g_lSources,iSource, iSource);
             llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);
-            for (i=0;i<=llGetListLength(lSrcRestr);i++)
-            {
+            for (i=0;i<=llGetListLength(lSrcRestr);i++) {
                 string  sBehav=llList2String(lSrcRestr,i);
                 ApplyRem(sBehav);
-                if (sBehav=="unsit"&&g_kSitter==kID)
-                {
+                if (sBehav=="unsit"&&g_kSitter==kID) {
                     g_kSitter=NULL_KEY;
                     g_kSitTarget=NULL_KEY;
 
                 }
             }
-            if (g_lSources == [] || g_lSources == [NULL_KEY]) ApplyRem("detach"); //should fix issue 927 (there was nothing to remove detach if the furniture did not explicitly set the restriction)
+            //should fix issue 927 (there was nothing to remove detach if the furniture did not explicitly set the restriction)
+            if (g_lSources == [] || g_lSources == [NULL_KEY]) {
+                ApplyRem("detach"); 
+            }
         }
     }
 }
 
 
-SafeWord(integer iCollarToo)
-{
-    //    integer iIndex=llListFindList(g_lSources,[NULL_KEY]);
-    //    list collarrestr=llParseString2List(llList2String(g_lRestrictions,iIndex),["/"],[]);
+SafeWord(integer iCollarToo) {
     SendCommand("clear");
     g_lBaked=[];
     g_lSources=[];
     g_lRestrictions=[];
-//    SendCommand("no_hax=n");   removed: issue 1040
     integer i;
-    if (!iCollarToo) llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
+    if (!iCollarToo) {
+        llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
+    }
 }
 
 
 // End of book keeping functions
 
-default
-{    /* //no more self resets
-        on_rez(integer iParam)
+default{
+    state_entry() {
+        g_kWearer = llGetOwner();
+        //request setting from DB
+        llSleep(1.0);
+        llMessageLinked(LINK_SET, HTTPDB_REQUEST, "rlvon", NULL_KEY);
+        SIT_CHANNEL=9999 + llFloor(llFrand(9999999.0));
+        // Ensure that menu script knows we're here.
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+    }
+
+    link_message(integer iSender, integer iNum, string sStr, key kID)
+    {
+
+        if (iNum == HTTPDB_SAVE)
         {
-            llResetScript();
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if(sToken == "owner" && llStringLength(sValue) > 0)
+            {
+                g_lOwners = llParseString2List(sValue, [","], []);
+                Debug("owners: " + sValue);
+            }
         }
-        */
-            state_entry()
-            {
-                g_kWearer = llGetOwner();
-                //request setting from DB
-                llSleep(1.0);
-                llMessageLinked(LINK_SET, HTTPDB_REQUEST, "rlvon", NULL_KEY);
-                SIT_CHANNEL=9999 + llFloor(llFrand(9999999.0));
-            }
-
-        link_message(integer iSender, integer iNum, string sStr, key kID)
+        else if (iNum == HTTPDB_RESPONSE)
         {
-
-            if (iNum == HTTPDB_SAVE)
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if(sToken == "owner" && llStringLength(sValue) > 0)
             {
-                list lParams = llParseString2List(sStr, ["="], []);
-                string sToken = llList2String(lParams, 0);
-                string sValue = llList2String(lParams, 1);
-                if(sToken == "owner" && llStringLength(sValue) > 0)
-                {
-                    g_lOwners = llParseString2List(sValue, [","], []);
-                    Debug("owners: " + sValue);
-                }
+                g_lOwners = llParseString2List(sValue, [","], []);
+                Debug("owners: " + sValue);
             }
-            else if (iNum == HTTPDB_RESPONSE)
-            {
-                list lParams = llParseString2List(sStr, ["="], []);
-                string sToken = llList2String(lParams, 0);
-                string sValue = llList2String(lParams, 1);
-                if(sToken == "owner" && llStringLength(sValue) > 0)
-                {
-                    g_lOwners = llParseString2List(sValue, [","], []);
-                    Debug("owners: " + sValue);
-                }
-                else if (sStr == "rlvon=0")
-                {//RLV is turned off in DB.  just switch to checked state without checking viewer
-                    //llOwnerSay("rlvdb false");
-                    state checked;
-                    llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+            else if (sStr == "rlvon=0")
+            {//RLV is turned off in DB.  just switch to checked state without checking viewer
+                //llOwnerSay("rlvdb false");
+                state checked;
+                llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
 
-                }
-                else if (sStr == "rlvon=1")
-                {//DB says we were running RLV last time it looked.  do @version to check.
-                    //llOwnerSay("rlvdb true");
-                    g_iRLVOn = TRUE;
-                    //check viewer version
-                    CheckVersion(FALSE);
-                }
-                else if (sStr == "rlvnotify=1")
-                {
-                    g_iRLVNotify = TRUE;
-                }
-                else if (sStr == "rlvnotify=0")
-                {
-                    g_iRLVNotify = FALSE;
-                }
-                else if (sStr == "rlvon=unset")
-                {
-                    CheckVersion(FALSE);
-                }
             }
-            else if ((iNum == HTTPDB_EMPTY && sStr == "rlvon"))
+            else if (sStr == "rlvon=1")
+            {//DB says we were running RLV last time it looked.  do @version to check.
+                //llOwnerSay("rlvdb true");
+                g_iRLVOn = TRUE;
+                //check viewer version
+                CheckVersion(FALSE);
+            }
+            else if (sStr == "rlvnotify=1")
+            {
+                g_iRLVNotify = TRUE;
+            }
+            else if (sStr == "rlvnotify=0")
+            {
+                g_iRLVNotify = FALSE;
+            }
+            else if (sStr == "rlvon=unset")
             {
                 CheckVersion(FALSE);
             }
-            else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-            }
-            else if (iNum == SUBMENU && sStr == g_sSubMenu)
-            {
-                if (iNum == SUBMENU)
-                {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
-                    Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
-                    llResetScript();//Nan: why do we reset here?!
-                }
-                else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)//Nan: this code can't even execute! EVER!
-                {//someone used "RLV" chat command.  Tell them we're not ready yet.
-                    Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
-                    llResetScript();
-                }
-            }
         }
-
-        listen(integer iChan, string sName, key kID, string sMsg)
+        else if ((iNum == HTTPDB_EMPTY && sStr == "rlvon"))
         {
-            if (iChan == g_iVersionChan)
-            {
-                //llOwnerSay("heard " + sMsg);
-                llListenRemove(g_iListener);
-                llSetTimerEvent(0.0);
-                g_iCheckCount = 0;
-                //get the version to send to rlv plugins
-                string sRLVVersion = llList2String(llParseString2List(sMsg, [" "], []), 2);
-                list lTemp = llParseString2List(sRLVVersion, ["."], []);
-                string sMajorV = llList2String(lTemp, 0);
-                string sMinorV = llList2String(lTemp, 1);
-                sRLVVersion = llGetSubString(sMajorV, -1, -1) + llGetSubString(sMinorV, 0, 1);
-                llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
-                //this is already TRUE if rlvon=1 in the DB, but not if rlvon was unset.  set it to true here regardless, since we're setting rlvon=1 in the DB
-                g_iRLVOn = TRUE;
-                llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
-
-                //someone thought it would be a good idea to use a whisper instead of a ownersay here
-                //for both privacy and spamminess reasons, I've reverted back to an ownersay. --Nan
-                if (g_iRLVNotify)
-                {
-                    llOwnerSay("Restrained Love functions enabled. " + sMsg + " detected.");//turned off for issue 896
-                }
-                g_iViewerCheck = TRUE;
-
-                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-
-                state checked;
-            }
+            CheckVersion(FALSE);
         }
-
-        timer()
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llListenRemove(g_iListener);
-            llSetTimerEvent(0.0);
-            if (g_iCheckCount)
-            {   //the viewer hasn't responded after 30 seconds, but maybe it was still logging in when we did @version
-                //give it one more chance
-                CheckVersion(TRUE);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        }
+        else if (iNum == SUBMENU && sStr == g_sSubMenu)
+        {
+            if (iNum == SUBMENU)
+            {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
+                Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
+                llResetScript();//Nan: why do we reset here?!
             }
-            else //if (g_iCheckCount >= 2)
-            {   //we've given the viewer a full 60 seconds
-                g_iViewerCheck = FALSE;
-                g_iRLVOn = FALSE;
-                llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
-
-
-                //            llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=0", NULL_KEY); <--- what was the point???
-                //else the user normally logs in with RLv, but just not this time
-                //in which case, leave it turned on in the database, until user manually changes it
-                //i think this should always be said
-                //            if (g_iVerbose)
-                //            {
-                Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
-                //            }
-                if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
-                    string sMsg = llKey2Name(g_kWearer)+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
-                    if (llGetListLength(g_lOwners) == 2) {
-                        // only 1 owner
-                        Notify(g_kWearer,"Your owner has been notified.",FALSE);
-                        Notify(llList2Key(g_lOwners,0), sMsg, FALSE);
-                    } else {
-                            Notify(g_kWearer,"Your owners have been notified.",FALSE);
-                        integer i;
-                        for(i=0; i < llGetListLength(g_lOwners); i+=2) {
-                            Notify(llList2Key(g_lOwners,i), sMsg, FALSE);
-                        }
-                    }
-                }
-
-                //DEBUG force g_iRLVOn and g_iViewerCheck for now, during development
-                //g_iViewerCheck = TRUE;
-                //g_iRLVOn = TRUE;
-                //llOwnerSay("DEBUG: rlv on");
-
-                state checked;
+            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)//Nan: this code can't even execute! EVER!
+            {//someone used "RLV" chat command.  Tell them we're not ready yet.
+                Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
+                llResetScript();
             }
         }
     }
 
-state checked
-{
-    on_rez(integer iParam)
+    listen(integer iChan, string sName, key kID, string sMsg)
     {
-        if (llGetUnixTime()-g_iLastDetach > 15) state default; //reset only if the detach delay was long enough (it could be an automatic reattach)
-        else
+        if (iChan == g_iVersionChan)
         {
+            //llOwnerSay("heard " + sMsg);
+            llListenRemove(g_iListener);
+            llSetTimerEvent(0.0);
+            g_iCheckCount = 0;
+            //get the version to send to rlv plugins
+            string sRLVVersion = llList2String(llParseString2List(sMsg, [" "], []), 2);
+            list lTemp = llParseString2List(sRLVVersion, ["."], []);
+            string sMajorV = llList2String(lTemp, 0);
+            string sMinorV = llList2String(lTemp, 1);
+            sRLVVersion = llGetSubString(sMajorV, -1, -1) + llGetSubString(sMinorV, 0, 1);
+            llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
+            //this is already TRUE if rlvon=1 in the DB, but not if rlvon was unset.  set it to true here regardless, since we're setting rlvon=1 in the DB
+            g_iRLVOn = TRUE;
+            llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
+
+            //someone thought it would be a good idea to use a whisper instead of a ownersay here
+            //for both privacy and spamminess reasons, I've reverted back to an ownersay. --Nan
+            if (g_iRLVNotify)
+            {
+                llOwnerSay("Restrained Love functions enabled. " + sMsg + " detected.");//turned off for issue 896
+            }
+            g_iViewerCheck = TRUE;
+
+            llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+
+            state checked;
+        }
+    }
+
+    timer() {
+        llListenRemove(g_iListener);
+        llSetTimerEvent(0.0);
+        if (g_iCheckCount) {   
+            // the viewer hasn't responded after 30 seconds, but maybe it
+            // was still logging in when we did @version give it one more
+            // chance
+            CheckVersion(TRUE);
+        }
+        else {   
+            //we've given the viewer a full 60 seconds
+            g_iViewerCheck = FALSE;
+            g_iRLVOn = FALSE;
+            llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+
+            Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
+            if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
+                string sMsg = llKey2Name(g_kWearer)+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
+                if (llGetListLength(g_lOwners) == 2) {
+                    // only 1 owner
+                    Notify(g_kWearer,"Your owner has been notified.",FALSE);
+                    Notify(llList2Key(g_lOwners,0), sMsg, FALSE);
+                } else {
+                        Notify(g_kWearer,"Your owners have been notified.",FALSE);
+                    integer i;
+                    for(i=0; i < llGetListLength(g_lOwners); i+=2) {
+                        Notify(llList2Key(g_lOwners,i), sMsg, FALSE);
+                    }
+                }
+            }
+
+            state checked;
+        }
+    }
+
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            llResetScript();
+        }
+    }
+}
+
+state checked {
+    on_rez(integer iParam) {
+        //reset only if the detach delay was long enough (it could be an
+        //automatic reattach)
+        if (llGetUnixTime()-g_iLastDetach > 15) {
+            state default;
+        } else {
             integer i;
             for (i = 0; i < llGetListLength(g_lBaked); i++)
             {
                 SendCommand(llList2String(g_lBaked,i)+"=n");
             }
             llSleep(2);
-            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY); // wake up other plugins anyway (tell them that RLV is still active, as it is likely they did reset themselves
+            // wake up other plugins anyway (tell them that RLV is still
+            // active, as it is likely they did reset themselves
+
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);         
         }
     }
 
 
-    /* Bad!  (would prevent reattach on detach)
-        //Nan: please use regular double slashes to comment things out.  That's the only way your comment will turn orange, which i think is an important visual cue for other people who have to read your script.
-        //    attach(key kID)
-        //    {
-        //        if (kID == NULL_KEY && g_iRLVOn && g_iViewerCheck)
-        //        {
-        //            llOwnerSay("@clear");
-        //        }
-        //    }
-        */
-
-            attach(key kID)
-            {
-                if (kID == NULL_KEY) g_iLastDetach = llGetUnixTime(); //remember when the collar was detached last
-            }
+    attach(key kID)
+    {
+        if (kID == NULL_KEY) g_iLastDetach = llGetUnixTime(); //remember when the collar was detached last
+    }
 
     state_entry()
     {
@@ -601,20 +558,15 @@ state checked
         if (g_iRLVOn && g_iViewerCheck)
         {   //ask RLV plugins to tell us about their rlv submenus
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-// /* Removed for issue 1040
-            //initialize restrictions and protect against the "arbitrary string on arbitrary channel" exploit
-//            SendCommand("clear");
-//            SendCommand("no_hax=n");
-// */
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
             llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
             llSleep(5); //Make sure the relay is ready before pinging
             //ping inworld object so that they reinstate their restrictions
             integer i;
-            for (i=0;i<llGetListLength(g_lSources);i++)
-            {
-                if ((key)llList2String(g_lSources,i)) llShout(RELAY_CHANNEL,"ping,"+llList2String(g_lSources,i)+",ping,ping");
-                //Debug("ping,"+llList2String(g_lSources,i)+",ping,ping");
+            for (i=0;i<llGetListLength(g_lSources);i++) {
+                if ((key)llList2String(g_lSources,i)) {
+                    llShout(RELAY_CHANNEL,"ping,"+llList2String(g_lSources,i)+",ping,ping");
+                }
             }
             g_lOldRestrictions=g_lRestrictions;
             g_lOldSources=g_lSources;
@@ -623,31 +575,28 @@ state checked
             g_lBaked=[];
             llSetTimerEvent(2);
         }
-        //llOwnerSay("entered checked state.  rlvon=" + (string)g_iRLVOn + ", viewercheck=" + (string)g_iViewerCheck);
+        // Ensure that menu script knows we're here.
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
     }
 
-    link_message(integer iSender, integer iNum, string sStr, key kID)
-    {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
         // added chat command for menu:
-        else if (llToUpper(sStr) == g_sSubMenu)
-        {
-            if (iNum == SUBMENU)
-            {   //someone clicked "RLV" on the main menu.  Give them our menu now
+        else if (llToUpper(sStr) == g_sSubMenu) {
+            if (iNum == SUBMENU) {
+                //someone clicked "RLV" on the main menu.  Give them our menu
+                //now
                 DoMenu(kID);
             }
-            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-            { //someone used the chat command
+            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) { 
+                //someone used the chat command
                 DoMenu(kID);
             }
         }
-        else if (sStr == "rlvon")
-        {
-            if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-            {
+        else if (sStr == "rlvon") {
+            if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
                 llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=1", NULL_KEY);
                 g_iRLVOn = TRUE;
                 g_iVerbose = TRUE;
@@ -876,5 +825,11 @@ state checked
         llSetTimerEvent(0.0);
         g_lOldSources=[];
         g_lOldRestrictions=[];
+    }
+    
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            llResetScript();
+        }
     }
 }

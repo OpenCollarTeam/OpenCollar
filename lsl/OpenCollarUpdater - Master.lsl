@@ -143,6 +143,34 @@ ReadVersionLine() {
     }
 }
 
+SetInstructionsText() {
+    llSetText("1 - Rez your collar next to me.\n" +
+              "2 - Touch the collar.\n" + 
+              "3 - In the menu, select Help/Debug > Update."
+               , <1,1,1>, 1.0);
+}
+
+Particles(key target) {
+    llParticleSystem([ 
+        PSYS_PART_FLAGS, 
+            PSYS_PART_INTERP_COLOR_MASK |
+            PSYS_PART_INTERP_SCALE_MASK |
+            PSYS_PART_TARGET_POS_MASK |
+            PSYS_PART_EMISSIVE_MASK,
+        PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
+        PSYS_SRC_TEXTURE, "aa383f73-8be2-c693-acf0-9b8be8b4a155",
+        PSYS_SRC_TARGET_KEY, target,
+        PSYS_PART_START_SCALE, <0.68, 0.64, 0>,
+        PSYS_PART_END_SCALE, <0.04, 0.04, 0>,
+        PSYS_PART_START_ALPHA, 0.1,
+        PSYS_PART_END_ALPHA, 1,
+        PSYS_SRC_BURST_PART_COUNT, 4,
+        PSYS_PART_MAX_AGE, 2,
+        PSYS_SRC_BURST_SPEED_MIN, 0.2,
+        PSYS_SRC_BURST_SPEED_MAX, 1
+    ]);
+}    
+
 default {
     state_entry() {
         ReadVersionLine();
@@ -169,19 +197,17 @@ default {
                 }
             }
         }
-        
-        llSetText("1 - Rez your collar next to me.\n" +
-                  "2 - Touch the collar.\n" + 
-                  "3 - In the menu, select Help/Debug > Update."
-                   , <1,1,1>, 1.0);
+
+        SetInstructionsText();
     }
     
     listen(integer channel, string name, key id, string msg) {
         if (llGetOwnerKey(id) == llGetOwner()) {
             Debug(llDumpList2String([name, msg], ", "));
             if (channel == initChannel) {
-                // everything heard on the init channel is stuff that has to comply with the existing update
-                // kickoff protocol.  New stuff will be heard on the random secure channel instead.
+                // everything heard on the init channel is stuff that has to
+                // comply with the existing update kickoff protocol.  New stuff
+                // will be heard on the random secure channel instead.
                 list parts = llParseString2List(msg, ["|"], []);
                 string cmd = llList2String(parts, 0);
                 string param = llList2String(parts, 1);
@@ -196,8 +222,8 @@ default {
                     BundleMenu(0);                    
                 }                
             } else if (channel == iSecureChannel) {
-                //llOwnerSay("SECURE: " + msg);
                 if (msg == "reallyready") {
+                    Particles(id);
                     iBundleIdx = 0;
                     DoBundle();       
                 }
@@ -250,6 +276,8 @@ default {
                 // remove the script pin, and delete himself.
                 string myversion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(kCollarKey, iSecureChannel, "CLEANUP|" + myversion);
+                SetInstructionsText();
+                llParticleSystem([]);
             }
         }
     }
