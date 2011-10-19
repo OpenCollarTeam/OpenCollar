@@ -19,8 +19,7 @@ good run on App Engine, getting free hosting and having to do almost no system
 administration, and had very high uptime for an application that's under
 constant load.  But Google is raising their prices and taking us out of the
 free quota range.  At first we thought this would raise our hosting costs to
-around $200 USD/month, but Google subsequently adjusted their plans (see
-http://googleappengine.blogspot.com/2011/09/few-adjustments-to-app-engines-upcoming.html),
+around $200 USD/month, but Google subsequently [adjusted their plans] [1],
 which took the cost down quite a bit.  With that and some tweaks of our own
 we're looking at around $30/month, though that will spike up when we release
 new versions.
@@ -47,9 +46,9 @@ Q: Can I just run a copy of the database on my own server for my own use?
 
 A: Yes.  BUT:
 
-1. You would need to set up your own instance of our code, (on Google App
-Engine or maybe Appscale http://code.google.com/p/appscale/), or fork it to run
-on your stack of choice.
+1. You would need to set up your own instance of our code, (on [Google App
+Engine] [2] or maybe [Appscale] [3] ), or fork it to run on your stack of
+choice.
 2. You would need to fork the LSL settings script to use your server.
 3. You would start with an empty database.
 
@@ -98,3 +97,7 @@ that's where you come in.  If you have the means, and have the desire, this is
 your opportunity.  OpenCollar only lives as long as its community sustains it.
 
 Nirea
+
+[1] http://googleappengine.blogspot.com/2011/09/few-adjustments-to-app-engines-upcoming.html
+[2] http://code.google.com/appengine/ 
+[3] http://code.google.com/p/appscale/
