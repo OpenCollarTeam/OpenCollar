@@ -72,7 +72,9 @@ have the infrastructure or team for any of that right now, so don't plan on
 server features until there's more news.
 
 Q: How can I help support OpenCollar?
+
 A: I'm glad you asked!  Here are some ideas:
+
 - Join the OpenCollar R&D group.  When a beta gets sent there, test it out.  If
   you file a bug on our tracker, IM Nirea about it.
 - If you're a scripter, dive in and learn the collar's systems (auth, settings,
