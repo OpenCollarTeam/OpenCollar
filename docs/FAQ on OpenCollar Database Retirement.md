@@ -98,6 +98,6 @@ your opportunity.  OpenCollar only lives as long as its community sustains it.
 
 Nirea
 
-[1] http://googleappengine.blogspot.com/2011/09/few-adjustments-to-app-engines-upcoming.html
-[2] http://code.google.com/appengine/ 
-[3] http://code.google.com/p/appscale/
+[1]: http://googleappengine.blogspot.com/2011/09/few-adjustments-to-app-engines-upcoming.html
+[2]: http://code.google.com/appengine/ 
+[3]: http://code.google.com/p/appscale/
