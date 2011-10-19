@@ -350,6 +350,7 @@ default
                 }
                 else if (button == "Full" || button == "Minimal" || button == "Default")
                 {
+                    INSTALL_METHOD = button;
                     SetInstallmode(button);
                     GiveMethodMenu();
                 }
