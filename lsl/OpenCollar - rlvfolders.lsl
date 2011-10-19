@@ -42,6 +42,8 @@ string ATTACH_ALL = "(+) *All*";
 string DETACH_ALL = "(-) *All*";
 string ATTACH_THIS = "(+) *This*";
 string DETACH_THIS = "(-) *This*";
+string ATTACH_THIS_OVER = "(+) *Add*";
+string ATTACH_ALL_OVER = "(+) *Add All*";
 string TICKED = "(*)";  //checked
 string STICKED = "(.)";   //partchecked
 string UNTICKED = "( )";
@@ -204,12 +206,12 @@ FolderMenu(string sStr)
             if (g_sCurrentFolder!="") {
                 lItem=llParseString2List(sFirst,["|"],[]);
                 iWorn=llList2Integer(lItem,0);
-                if  (iWorn%10==1)  {g_lShortFolders+= [ATTACH_ALL]; g_lLongFolders+=[];}
-                else if  (iWorn%10==2)  {g_lShortFolders+= [ATTACH_ALL, DETACH_ALL]; g_lLongFolders+=[];}
+                if  (iWorn%10==1)  {g_lShortFolders+= [ATTACH_ALL,ATTACH_ALL_OVER]; g_lLongFolders+=[];}
+                else if  (iWorn%10==2)  {g_lShortFolders+= [ATTACH_ALL, DETACH_ALL,ATTACH_ALL_OVER]; g_lLongFolders+=[];}
                 else if  (iWorn%10==3)  {g_lShortFolders+= [DETACH_ALL]; g_lLongFolders+=[];}
                 // and only then add the button for current foldder... if it makes also sense
-                if  (iWorn/10==1)  {g_lShortFolders+= [ATTACH_THIS]; g_lLongFolders+=[];}
-                else if  (iWorn/10==2)  {g_lShortFolders+= [ATTACH_THIS, DETACH_THIS]; g_lLongFolders+=[];}
+                if  (iWorn/10==1)  {g_lShortFolders+= [ATTACH_THIS,ATTACH_THIS_OVER]; g_lLongFolders+=[];}
+                else if  (iWorn/10==2)  {g_lShortFolders+= [ATTACH_THIS, DETACH_THIS,ATTACH_THIS_OVER]; g_lLongFolders+=[];}
                 else if  (iWorn/10==3)  {g_lShortFolders+= [DETACH_THIS]; g_lLongFolders+=[];}
             }
 //        }
@@ -254,7 +256,17 @@ handleMultiSearch()
     string sItem=llList2String(g_lSearchList,0);
     string sSearchStr;
     g_lSearchList=llDeleteSubList(g_lSearchList,0,0);
-    if (llGetSubString(sItem,0,1)=="++")
+    if (llGetSubString(sItem,0,1)=="&&")
+    {
+        g_sFolderType = "searchattachallover";
+        sSearchStr = llToLower(llGetSubString(sItem,2,-1));
+    }
+    else if (llGetSubString(sItem,0,0)=="&")
+    {
+        g_sFolderType = "searchattachover";
+        sSearchStr = llToLower(llGetSubString(sItem,1,-1));
+    }
+    else if (llGetSubString(sItem,0,1)=="++")
     {
         g_sFolderType = "searchattachall";
         sSearchStr = llToLower(llGetSubString(sItem,2,-1));
@@ -355,7 +367,7 @@ default
                     llMessageLinked(LINK_SET, RLV_CMD,  "attach" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
                 Notify(kID, "Saved outfit has been restored.", TRUE );
             }
-            else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-")
+            else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&")
             {
                 g_lSearchList=llParseString2List(sStr,[","],[]);
                 handleMultiSearch();
@@ -390,6 +402,11 @@ default
                         llMessageLinked(LINK_SET, RLV_CMD,  "attach" + g_sCurrentFolder + "=force", NULL_KEY);
                         Notify(kAv, "Now attaching "+g_sCurrentFolder, TRUE);
                     }
+                    else if (sMessage == ATTACH_THIS_OVER)
+                    {
+                        llMessageLinked(LINK_SET, RLV_CMD,  "attachover" + g_sCurrentFolder + "=force", NULL_KEY);
+                        Notify(kAv, "Now Adding "+g_sCurrentFolder, TRUE);
+                    }
                     else if (sMessage == DETACH_THIS)
                     {
                         llMessageLinked(LINK_SET, RLV_CMD,  "detach" + g_sCurrentFolder + "=force", NULL_KEY);
@@ -399,6 +416,11 @@ default
                     {
                         llMessageLinked(LINK_SET, RLV_CMD,  "attachall" + g_sCurrentFolder + "=force", NULL_KEY);
                         Notify(kAv, "Now attaching everything in "+g_sCurrentFolder, TRUE);
+                    }
+                    else if (sMessage == ATTACH_ALL_OVER)
+                    {
+                        llMessageLinked(LINK_SET, RLV_CMD,  "attachallover" + g_sCurrentFolder + "=force", NULL_KEY);
+                        Notify(kAv, "Now Adding everything in "+g_sCurrentFolder, TRUE);
                     }
                     else if (sMessage == DETACH_ALL)
                     {
