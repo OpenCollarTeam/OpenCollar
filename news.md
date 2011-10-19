@@ -19,6 +19,6 @@ this on update.  There is supposed to be a fix currently in the regions on the
 
 
 Thank you!
-Nirea
+Nirea and Athaliah
 
 [1]: https://github.com/nirea/ocupdater/blob/master/docs/FAQ%20on%20OpenCollar%20Database%20Retirement.md 
