@@ -254,6 +254,7 @@ default
                 llMessageLinked(LINK_ROOT, HTTPDB_DELETE, g_sDBToken , NULL_KEY);
             }
         }
+        /*
         else if (iNum == UPDATE)
         {
             if(sStr == "prepare")
@@ -263,6 +264,7 @@ default
                 llMessageLinked(LINK_ROOT, UPDATE, scriptName + "|" + (string)g_iUpdatePin, llGetKey());
             }
         }
+        */
     }
 
     changed(integer iChange)
