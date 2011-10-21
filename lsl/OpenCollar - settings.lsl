@@ -92,6 +92,9 @@ list SetDefault(list cache, string token, string value) {
     integer idx = llListFindList(cache, [token]);
     if (idx == -1) {
         cache += [token, value];
+        // also let the plugins know about it
+        llMessageLinked(LINK_SET, HTTPDB_RESPONSE, token + "=" + value, NULL_KEY);
+        llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, token + "=" + value, NULL_KEY);        
     }
     return cache;
 }

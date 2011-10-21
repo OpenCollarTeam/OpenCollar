@@ -91,6 +91,8 @@ integer g_iWillingUpdaters = -1;
 //should the menu pop up again?
 integer g_iRemenu = FALSE;
 
+string last_news_time = "0";
+
 Debug(string sMessage)
 {
     //llOwnerSay(llGetScriptName() + ": " + sMessage);
@@ -215,6 +217,19 @@ integer GetOwnerChannel(key kOwner, integer iOffset)
     return iChan;
 }
 
+Init() {
+    // check if we're current version or not by reading notecard.
+    my_version_request = llGetNotecardLine("~version", 0); 
+    
+    // check for news
+    news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+
+    // register menu buttons
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);    
+}
+
 default
 {
     state_entry()
@@ -229,17 +244,8 @@ default
 
         // we just started up.  Remember owner.
         wearer = llGetOwner();
-
-        // check if we're current version or not by reading notecard.
-        my_version_request = llGetNotecardLine("~version", 0); 
         
-        // check for news
-        news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
-
-        // register menu buttons
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
+        Init();
     }
 
     dataserver(key id, string data) {
@@ -261,7 +267,9 @@ default
                 // strip the newline off the end of the text
                 string release_version = llGetSubString(body, 0, -2);
                 if ((float)release_version > (float)my_version) {
-                    g_kMenuID = Dialog(wearer, "\nOpenCollar " + release_version + " is available.  You are running version " + my_version + ".", [BTN_GET_UPDATE], ["Cancel"], 0);
+                    string prompt = "\nYou are running OpenCollar version " +
+                    my_version + ".  There is an update available.";
+                    g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0);
                 }
             } else if (id == appengine_delivery_request) {
                 llOwnerSay("An updater will be delivered to you shortly.");
@@ -272,35 +280,32 @@ default
                 list firstline_parts = llParseString2List(firstline, [" "], []);
                 
                 // The first line of a news item should always look like this:
-                // # First News - 20111012 
+                // # First News - 20111012
+                // or optionally with a decimal like this:
+                // # Second News of the Day - 20111012.2
                 // So we can compare timestamps that way.  
                 string this_news_time = llList2String(firstline_parts, -1);
-                
-                // last news time should be recorded in the prim desc, where we
-                // used to record collar version.
-                list descparts = llParseString2List(llGetObjectDesc(), ["~"],[]);
-                string last_news_time = llList2String(descparts, 1);
 
                 if (SecondStringBigger(last_news_time, this_news_time)) {
-                    // write the new news check time to the desc.
-                    // account for previously-empty descs by making sure
-                    // descparts has at least 2 elements
-                    if (llGetListLength(descparts) < 2) {
-                        descparts = ["X"] + descparts;
-                    }
-                    descparts = llListReplaceList(descparts, [this_news_time], 1, 1);
-                    string newdesc = llDumpList2String(descparts, "~");
-                    llSetObjectDesc(newdesc);
-
                     string news = "OPENCOLLAR NEWS\n" + body;
                     Notify(llGetOwner(), news, FALSE);
+                    // last news time is remembered in memory.  We used to
+                    // store it in the desc but you can't write to that while
+                    // worn.
+                    last_news_time = this_news_time;
                 } 
             }
         }
     }
 
     on_rez(integer param) {
-        llResetScript();
+        // only reset if owner has changed
+        if (wearer != llGetOwner()) {
+            llResetScript();
+        }
+        
+        // otherwise do the usual news, version, and menu stuff
+        Init();
     }
 
     link_message(integer sender, integer num, string str, key id ) {
