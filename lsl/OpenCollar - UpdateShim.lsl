@@ -65,11 +65,32 @@ debug(string msg) {
     //llOwnerSay(llGetScriptName() + ": " + msg);
 }
 
+// Some versions of the collar have a hover text script in them that breaks
+// updates because it set a script pin that overwrites the one set by this shim
+// script.  So before starting, delete any script that starts with "OpenCollar
+// - hovertext".  
+// In general, removal of old cruft should be done with the cleanup script or
+// a "DEPRECATED" bundle, but this has to be done here because it breaks the updater
+// before bundles get going.
+RemoveHoverTextScript() {
+    string kill = "OpenCollar - hovertext";
+    integer n;
+    // loop from the top down to avoid shifting indices
+    for (n = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; n >= 0; n--) {
+        string name = llGetInventoryName(INVENTORY_SCRIPT, n);
+        if (llSubStringIndex(name, kill) == 0) {
+            llRemoveInventory(name);
+        }
+    }
+}
+
 default
 {
     state_entry()
     {
         iStartParam = llGetStartParameter();
+
+        RemoveHoverTextScript();
         
         // build script list
         integer n;
@@ -87,6 +108,7 @@ default
         
         // let mama know we're ready
         llWhisper(iStartParam, "reallyready");
+
     }
     
     listen(integer channel, string name, key id, string msg) {
