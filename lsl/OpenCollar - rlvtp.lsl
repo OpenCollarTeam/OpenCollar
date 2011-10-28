@@ -449,7 +449,7 @@ default
                         }
                         iChange = TRUE;
                     }
-                    else if (sBehavior == "clear")
+                    else if (sBehavior == "clear" && iNum == COMMAND_OWNER)
                     {
                         ClearSettings();
                     }
