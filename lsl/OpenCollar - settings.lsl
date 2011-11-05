@@ -15,6 +15,7 @@ key defaultslineid;
 key card_key;
 
 list settings_pairs;// stores all settings
+list settings_default; // Default settings placeholder.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -193,10 +194,40 @@ default {
                     integer idx = llSubStringIndex(data, "=");
                     string token = llGetSubString(data, 0, idx - 1);
                     string value = llGetSubString(data, idx + 1, -1);
-                    settings_pairs = SetDefault(settings_pairs, token, value);
+                    // Take multiple lines and puts them together,
+                    //  workaround for llGetNotecardLine() limitation.
+                    if (SettingExists(settings_default,token))
+                    {
+                        integer loc = llListFindList(settings_default, [token]) + 1;
+                        string sep = ",";
+                        if (token == "oc_colorsettings" ||
+                            token == "aipcpc_colorsettings" ||
+                            token == "oc_textures")
+                        {
+                            sep = "~";
+                        }
+                        value = llList2String(settings_default, loc) + sep + value;
+                    }
+                    settings_default = SetSetting(settings_default, token, value);
                 }
                 defaultsline++;
                 defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
+            }
+            else
+            {
+                // Merge defaults with settings.
+                string sToken;
+                string sValue;
+                integer count;
+                for (count = 0; count < llGetListLength(settings_default); count += 2)
+                {
+                    sToken = llList2String(settings_default, count);
+                    sValue = llList2String(settings_default, (count + 1));
+                    settings_pairs = SetDefault(settings_pairs, sToken, sValue);
+                }
+                // Settings have been loaded, send them to plugins.
+                Refresh();
+                llOwnerSay("Default settings loaded from notecard.");
             }
         }
     }
