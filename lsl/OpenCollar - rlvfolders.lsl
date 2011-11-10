@@ -304,10 +304,9 @@ doLockFolder(integer iIndex)
 updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);   
-    llOwnerSay("adding: "+(string)iAdd+"\t removing: "+(string) iRem);     
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LOCALSETTING_SAVE,  "UnsharedLocks=" + g_iUnsharedLocks, NULL_KEY);
-    else llMessageLinked(LINK_SET, LOCALSETTING_DELETE,  "FolderLocks", NULL_KEY);
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LOCALSETTING_SAVE,  "UnsharedLocks=" + (string) g_iUnsharedLocks, NULL_KEY);
+    else llMessageLinked(LINK_SET, LOCALSETTING_DELETE,  "UnsharedLocks", NULL_KEY);
 }
     
 doLockUnshared()
@@ -316,7 +315,6 @@ doLockUnshared()
     if ((g_iUnsharedLocks >> 0) & 1)  sRlvCom += "n"; else sRlvCom += "y";
     sRlvCom += ",unsharedwear=";
     if ((g_iUnsharedLocks >> 1) & 1)  sRlvCom += "n"; else sRlvCom += "y";
-    llOwnerSay((string) g_iUnsharedLocks + " " + sRlvCom);
     llMessageLinked(LINK_SET, RLV_CMD,  sRlvCom, NULL_KEY);
 }
 
@@ -508,6 +506,17 @@ default
             {
                 g_lSearchList=llParseString2List(sStr,[","],[]);
                 handleMultiSearch();
+            }
+            else if (iNum <= COMMAND_GROUP)
+            {
+                list lArgs = llParseStringKeepNulls(sStr, ["="], []);
+                integer val;
+                if (llList2String(lArgs,0)=="unsharedwear") val = 0x2;
+                else if (llList2String(lArgs,0)=="unsharedunwear") val = 0x1;
+                else return;
+                if (llList2String(lArgs,1)=="y") updateUnsharedLocks(0, val);
+                else if (llList2String(lArgs,1)=="n") updateUnsharedLocks(val, 0);
+                else return;            
             }
         }  
         else if (iNum == DIALOG_RESPONSE)
