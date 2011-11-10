@@ -61,8 +61,8 @@ list g_lTempUserWhiteList=[];
 list g_lTempUserBlackList=[];
 list g_lObjWhiteList=[];
 list g_lObjBlackList=[];
-list g_lAvWhiteList=[];
-list g_lAvBlackList=[];
+list g_lAvWhiteList=[]; // keys stored as string since strings is what you get when restoring settings
+list g_lAvBlackList=[]; // same here (this fixes issue 1253)
 list g_lObjWhiteListNames=[];
 list g_lObjBlackListNames=[];
 list g_lAvWhiteListNames=[];
@@ -897,44 +897,62 @@ default
                     if (sMsg=="Yes")
                     {
                         g_lTempWhiteList+=[kCurID];
-                        if (kUser) g_lTempUserWhiteList+=[kUser];
+                        if (kUser) g_lTempUserWhiteList+=[(string)kUser];
                         iSave=FALSE;
                     }
                     else if (sMsg=="No")
                     {
                         g_lTempBlackList+=[kCurID];
-                        if (kUser) g_lTempUserBlackList+=[kUser];
+                        if (kUser) g_lTempUserBlackList+=[(string)kUser];
                         iSave=FALSE;
                     }
                     else if (sMsg=="Trust Object")
                     {
-                        g_lObjWhiteList+=[kCurID];
-                        g_lObjWhiteListNames+=[llKey2Name(kCurID)];
+                        if (!~llListFindList(g_lObjWhiteList, [kCurID]))
+                        {
+                            g_lObjWhiteList+=[kCurID];
+                            g_lObjWhiteListNames+=[llKey2Name(kCurID)];
+                        }
                     }
                     else if (sMsg=="Ban Object")
                     {
-                        g_lObjBlackList+=[kCurID];
-                        g_lObjBlackListNames+=[llKey2Name(kCurID)];
+                        if (!~llListFindList(g_lObjBlackList, [kCurID]))
+                        {
+                            g_lObjBlackList+=[kCurID];
+                            g_lObjBlackListNames+=[llKey2Name(kCurID)];
+                        }
                     }
                     else if (sMsg=="Trust Owner")
                     {
-                        g_lAvWhiteList+=[llGetOwnerKey(kCurID)];
-                        g_lAvWhiteListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        if (!~llListFindList(g_lAvWhiteList, [(string)llGetOwnerKey(kCurID)]))
+                        {
+                            g_lAvWhiteList+=[(string)llGetOwnerKey(kCurID)];
+                            g_lAvWhiteListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        }
                     }
                     else if (sMsg=="Ban Owner")
                     {
-                        g_lAvBlackList+=[llGetOwnerKey(kCurID)];
-                        g_lAvBlackListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        if (!~llListFindList(g_lAvBlackList, [(string)llGetOwnerKey(kCurID)]))
+                        {
+                            g_lAvBlackList+=[(string)llGetOwnerKey(kCurID)];
+                            g_lAvBlackListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        }
                     }
                     else if (sMsg=="Trust User")
                     {
-                        g_lAvWhiteList+=[kUser];
-                        g_lAvWhiteListNames+=[llKey2Name(kUser)];
+                        if (!~llListFindList(g_lAvWhiteList, [(string)kUser]))
+                        {
+                            g_lAvWhiteList+=[(string)kUser];
+                            g_lAvWhiteListNames+=[llKey2Name(kUser)];
+                        }
                     }
                     else if (sMsg=="Ban User")
                     {
-                        g_lAvBlackList+=[kUser];
-                        g_lAvBlackListNames+=[llKey2Name(kUser)];
+                        if (!~llListFindList(g_lAvBlackList, [(string)kUser]))
+                        {
+                            g_lAvBlackList+=[(string)kUser];
+                            g_lAvBlackListNames+=[llKey2Name(kUser)];
+                        }
                     }
                     if (iSave) SaveSettings();
                     CleanQueue();
