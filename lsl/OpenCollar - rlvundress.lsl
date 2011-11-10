@@ -26,12 +26,13 @@ list LOCK_CLOTH_POINTS = [
     "Socks",
     "Underpants",
     "Undershirt",
-    "skin",
-    "eyes",
-    "hair",
-    "shape",
-    "alpha",
-    "tattoo"
+    "Skin",
+    "Eyes",
+    "Hair",
+    "Shape",
+    "Alpha",
+    "Tattoo",
+    "Physics"
         ];
 
 
@@ -49,8 +50,9 @@ list DETACH_CLOTH_POINTS = [
     "xx", //"eyes", those are not to be detached, so we ignore them later
     "xx", //"hair", those are not to be detached, so we ignore them later
     "xx", //"shape", those are not to be detached, so we ignore them later
-    "alpha",
-    "tattoo"
+    "Alpha",
+    "Tattoo",
+    "Physics"
         ];
 
 list ATTACH_POINTS = [//these are ordered so that their indices in the list correspond to the numbers returned by llGetAttached
@@ -92,7 +94,9 @@ list ATTACH_POINTS = [//these are ordered so that their indices in the list corr
     "Center",
     "Bottom Left",
     "Bottom",
-    "Bottom Right"
+    "Bottom Right",
+    "Neck",
+    "Avatar Center"
         ];
 
 //MESSAGE MAP
