@@ -6,8 +6,6 @@
 //reset self on owner change
 
 key g_kWearer;
-//key owner;
-//string g_lOwnerName;
 list g_lOwners;//strided list in form key,name
 key g_kGroup = "";
 string g_sGroupName;
@@ -24,9 +22,25 @@ string g_sRequestType; //may be "owner" or "secowner" or "remsecowner"
 key g_kHTTPID;
 key g_kGroupHTTPID;
 
+// tokens to save/retrieve settings
 string g_sOwnersToken = "owner";
 string g_sSecOwnersToken = "secowners";
 string g_sBlackListToken = "blacklist";
+string g_sGroupKeyToken = "group";
+string g_sGroupNameToken = "groupname";
+string g_sOpenAccessToken = "openaccess";
+string g_sLimitRangeToken = "limitrange";
+string g_sPrefixToken = "prefix";
+
+// used to poll for settings after script reset
+integer g_iOwnersRetrieved = 0;
+integer g_iSecOwnersRetrieved = 0;
+integer g_iBlackListRetrieved = 0;
+integer g_iGroupKeyRetrieved = 0;
+integer g_iGroupNameRetrieved = 0;
+integer g_iOpenAccessRetrieved = 0;
+integer g_iLimitRangeRetrieved = 0;
+integer g_iPrefixRetrieved = 0;
 
 string g_sPrefix;
 
@@ -466,10 +480,23 @@ default
         Debug((string)llGetFreeMemory());
         g_kWearer = llGetOwner();
         list sName = llParseString2List(llKey2Name(g_kWearer), [" "], []);
-        g_sPrefix = llToLower(llGetSubString(llList2String(sName, 0), 0, 0)) + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
+        g_sPrefix = llToLower(llGetSubString(llList2String(sName, 0), 0, 0))
+        + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
         //added for attachment auth
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+        if (g_iInterfaceChannel > 0)
+        g_iInterfaceChannel = -g_iInterfaceChannel;
+
+        // start polling for settings
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sOwnersToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sSecOwnersToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sBlackListToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sGroupKeyToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sGroupNameToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sOpenAccessToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sLimitRangeToken, "");
+        llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sPrefixToken, "");
+        llSetTimerEvent (1.0);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -834,9 +861,11 @@ default
             if (sToken == g_sOwnersToken)
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
+                g_iOwnersRetrieved = 1;
             }
-            else if (sToken == "group")
+            else if (sToken == g_sGroupKeyToken)
             {
+                g_iGroupKeyRetrieved = 1;
                 g_kGroup = (key)sValue;
                 //check to see if the object's group is set properly
                 if (g_kGroup != "")
@@ -855,30 +884,55 @@ default
                     g_iGroupEnabled = FALSE;
                 }
             }
-            else if (sToken == "groupname")
+            else if (sToken == g_sGroupNameToken)
             {
                 g_sGroupName = sValue;
+                g_iGroupNameRetrieved = 1;
             }
-            else if (sToken == "openaccess")
+            else if (sToken == g_sOpenAccessToken)
             {
                 g_iOpenAccess = (integer)sValue;
+                g_iOpenAccessRetrieved = 1;
             }
-            else if (sToken == "limitrange")
+            else if (sToken == g_sLimitRangeToken)
             {
                 g_iLimitRange = (integer)sValue;
+                g_iLimitRangeRetrieved = 1;
             }
-            else if (sToken == "secowners")
+            else if (sToken == g_sSecOwnersToken)
             {
                 g_lSecOwners = llParseString2List(sValue, [","], [""]);
+                g_iSecOwnersRetrieved = 1;
             }
-            else if (sToken == "blacklist")
+            else if (sToken == g_sBlackListToken)
             {
                 g_lBlackList = llParseString2List(sValue, [","], [""]);
+                g_iBlackListRetrieved = 1;
             }
-            else if (sToken == "prefix")
+            else if (sToken == g_sPrefixToken)
             {
                 g_sPrefix = sValue;
+                g_iPrefixRetrieved = 1;
             }
+        }
+        else if (iNum == HTTPDB_EMPTY)
+        {
+            if (sStr == g_sOwnersToken)
+                g_iOwnersRetrieved = 1;
+            else if (sStr == g_sSecOwnersToken)
+                g_iSecOwnersRetrieved = 1;
+            else if (sStr == g_sBlackListToken)
+                g_iBlackListRetrieved = 1;
+            else if (sStr == g_sGroupKeyToken)
+                g_iGroupKeyRetrieved = 1;
+            else if (sStr == g_sGroupNameToken)
+                g_iGroupNameRetrieved = 1;
+            else if (sStr == g_sOpenAccessToken)
+                g_iOpenAccessRetrieved = 1;
+            else if (sStr == g_sLimitRangeToken)
+                g_iLimitRangeRetrieved = 1;
+            else if (sStr == g_sPrefixToken)
+                g_iPrefixRetrieved = 1;
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -1218,5 +1272,63 @@ default
             }
             llMessageLinked(LINK_SET, HTTPDB_SAVE, "groupname=" + g_sGroupName, "");
         }
+    }
+
+    // Check if we got a response for all our requests for settings
+    // (HTTPDB_REQUEST). If no continue polling.
+    timer ()
+    {
+        integer iContPoll = 0;
+
+        if (g_iOwnersRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sOwnersToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iSecOwnersRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sSecOwnersToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iBlackListRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sBlackListToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iGroupKeyRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sGroupKeyToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iGroupNameRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sGroupNameToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iOpenAccessRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sOpenAccessToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iLimitRangeRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sLimitRangeToken, "");
+            iContPoll = 1;
+        }
+
+        if (g_iPrefixRetrieved == 0)
+        {
+            llMessageLinked (LINK_THIS, HTTPDB_REQUEST, g_sPrefixToken, "");
+            iContPoll = 1;
+        }
+
+        if (iContPoll)
+            llSetTimerEvent (1.0);
     }
 }
