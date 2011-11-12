@@ -1,13 +1,7 @@
 //OpenCollar - auth
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
-//save owner, secowners, and group key
-//check credentials when messages come in on COMMAND_NOAUTH, send out message on appropriate channel
-//reset self on owner change
-
 key g_kWearer;
-//key owner;
-//string g_lOwnerName;
 list g_lOwners;//strided list in form key,name
 key g_kGroup = "";
 string g_sGroupName;
@@ -55,7 +49,6 @@ integer COMMAND_WEARERLOCKEDOUT = 521;
 integer ATTACHMENT_REQUEST = 600;
 integer ATTACHMENT_RESPONSE = 601;
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
 integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
@@ -127,6 +120,31 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (iAlsoNotifyWearer) {
             llOwnerSay(sMsg);
         }
+    }
+}
+
+SayOwners() {
+    // Give a "you are owned by" message, nicely formatted.
+    list ownernames = llList2ListStrided(llDeleteSubList(g_lOwners, 0, 0), 0, -1, 2);
+    integer ownercount = llGetListLength(ownernames);
+    if (ownercount) {
+        string msg = "You are owned by ";
+        if (ownercount == 1) {
+            // if one person, then just name.
+            msg += (string)ownernames;
+        } else if (ownercount == 2) {
+            // if two people, then A and B.
+            msg += llDumpList2String(ownernames, " and ");
+        } else {
+            // if >2 people, then A, B, and C
+            list init = llDeleteSubList(ownernames, -1, -1);
+            list tail = llDeleteSubList(ownernames, 0, -2);
+            msg += llDumpList2String(init, ", ");
+            msg += ", and " + (string)tail;
+        }
+        // end with a period.
+        msg += ".";
+        Notify(llGetOwner(), msg, FALSE);
     }
 }
 
@@ -268,9 +286,6 @@ integer in_range(key kID) {
 
 integer UserAuth(string kID, integer attachment)
 {
-    //Nan: the auth script in 3.3 had a separate UserAuthAttach function that was identical to this one except omitted
-    //the lockout block (the first "if").  I've added the "attachment" argument to this function in 3.4 to accomplish the same thing
-    //Let's try not to duplicate code if we don't have to!
     integer iNum;
     if (g_kWearerlocksOut && kID == (string)g_kWearer && !attachment)
     {
@@ -470,6 +485,14 @@ default
         //added for attachment auth
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+
+        // Request owner list.  Be careful about doing this in all scripts,
+        // because we can easily flood the 64 event limit in LSL's event queue
+        // if all the scripts send a ton of link messages at the same time on
+        // startup.
+        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sOwnersToken, "");
+        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sSecOwnersToken, "");
+        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sBlackListToken, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -502,8 +525,6 @@ default
         {   //say owner, secowners, group
             if (iNum == COMMAND_OWNER || kID == g_kWearer)
             {
-                //Nan: This used to be in a function called SendOwnerSettings, but it was *only* called here, and
-                //that's a waste of
                 //Do Owners list
                 integer n;
                 integer iLength = llGetListLength(g_lOwners);
@@ -833,7 +854,16 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sOwnersToken)
             {
+                // temporarily stash owner list so we can see if it's changing.
+                list tmpowners = g_lOwners;
                 g_lOwners = llParseString2List(sValue, [","], []);
+
+                // only say the owner list if it has changed.  This includes on
+                // rez, since we reset (and therefore blank the owner list) on
+                // rez.
+                if (llGetListLength(g_lOwners) && tmpowners != g_lOwners) {
+                    SayOwners();
+                }
             }
             else if (sToken == "group")
             {
@@ -1220,3 +1250,4 @@ default
         }
     }
 }
+

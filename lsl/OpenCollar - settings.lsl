@@ -180,6 +180,9 @@ default {
         // resend settings to plugins, if owner hasn't changed, in which case
         // reset the whole lot.
         if (wearer == llGetOwner()) {
+            // wait a sec before sending settings, in case other scripts are
+            // still resetting.
+            llSleep(0.5);
             Refresh();        
         } else {
             llResetScript();
@@ -225,9 +228,7 @@ default {
                     sValue = llList2String(settings_default, (count + 1));
                     settings_pairs = SetDefault(settings_pairs, sToken, sValue);
                 }
-                // Settings have been loaded, send them to plugins.
                 Refresh();
-                llOwnerSay("Default settings loaded from notecard.");
             }
         }
     }
