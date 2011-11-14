@@ -1,0 +1,8 @@
+hug|~hug|~hug-feminine|0.6|_SELF_ squeezes _PARTNER_ tightly.
+kiss|~kiss|~kiss-feminine|0.6|_SELF_ pulls _PARTNER_ close for a kiss.
+subhug|~kneelhug-dom|~kneelhug|0.6|_PARTNER_ kneels and hugs _SELF_'s hips.
+kissfoot|~extendfoot|~footkiss|1.5|_PARTNER_ kneels and reverently kisses _SELF_'s foot.
+lickboot|~footextend|~bootlick|0.8|_PARTNER_ gets on all fours to adoringly lick _SELF_'s boot.
+jumphug|~jumphold|~jumphug|0.6|_PARTNER_ jumps into _SELF_'s arms and holds tight.
+leghug|~master|~sub-hug|0.6|_PARTNER_ hugs _SELF_ submissively.
+subpet|~master|~sub-pet|1.0|_SELF_ pets _PARTNER_  adoringly.
