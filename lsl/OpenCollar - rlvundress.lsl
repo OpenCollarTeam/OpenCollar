@@ -7,7 +7,7 @@
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
 
-list g_lChildren = ["Clothing","Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
+list g_lChildren = ["Rem Clothing","Rem Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
 list g_sSubMenus= [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
@@ -223,13 +223,13 @@ MainMenu(key kID)
     {
         sPrompt += "\n all clothes and attachments are currently locked.";
         //skip the LockClothing and the LockAttachment buttons
-        lButtons += ["UnLockAll"];
+        lButtons += ["(*)Lock All"];
     }
     else
     {
-        lButtons += ["LockClothing"];
-        lButtons += ["LockAttachment"];
-        lButtons += ["LockAll"];
+        lButtons += ["Lock Clothing"];
+        lButtons += ["Lock Attachment"];
+        lButtons += ["( )Lock All"];
     }
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_sSubMenus, [UPMENU], 0);
 }
@@ -246,7 +246,7 @@ QueryClothing()
 ClothingMenu(key kID, string sStr)
 {
     //str looks like 0110100001111
-    //loop through CLOTH_POINTS, look at char of str for each
+    //loop through CLOTH_POINTS, look at chaClothingr of str for each
     //for each 1, add capitalized button
     string sPrompt = "Select an article of clothing to remove.";
     list lButtons = [];
@@ -262,7 +262,7 @@ ClothingMenu(key kID, string sStr)
                 lButtons += item;
         }
     }
-    g_kClothID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kClothID = Dialog(kID, sPrompt, lButtons, ["Attachments", UPMENU], 0);
 }
 
 LockMenu(key kID)
@@ -352,7 +352,7 @@ DetachMenu(key kID, string sStr)
             }
         }
     }
-    g_kAttachID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kAttachID = Dialog(kID, sPrompt, lButtons, ["Clothing", UPMENU], 0);
 }
 
 UpdateSettings()
@@ -779,33 +779,33 @@ default
                     {
                         llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
                     }
-                    else if (sMessage == "Clothing")
+                    else if (sMessage == "Rem Clothing")
                     {
                         g_kMenuUser = kAv;
                         QueryClothing();
                     }
-                    else if (sMessage == "Attachment")
+                    else if (sMessage == "Rem Attachment")
                     {
                         g_kMenuUser = kAv;
                         QueryAttachments();
                     }
-                    else if (sMessage == "LockClothing")
+                    else if (sMessage == "Lock Clothing")
                     {
                         g_kMenuUser = kAv;
                         LockMenu(kAv);
                     }
-                    else if (sMessage == "LockAttachment")
+                    else if (sMessage == "Lock Attachment")
                     {
                         g_kMenuUser = kAv;
                         LockAttachmentMenu(kAv);
                     }
-                    else if (sMessage == "LockAll")
+                    else if (sMessage == "( )Lock All")
                     {
                         //forward this command to the other section - it came from the menu button
                         g_iRemenu = TRUE;
                         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "lockall", kAv);
                     }
-                    else if (sMessage == "UnLockAll")
+                    else if (sMessage == "(*)Lock All")
                     {
                         //forward this command to the other section - it came from the menu button
                         g_iRemenu = TRUE;
@@ -826,6 +826,7 @@ default
                     {
                         llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
                     }
+                    else if (sMessage == "Attachments") QueryAttachments();
                     else if (sMessage == ALL)
                     { //send the RLV command to remove it.
                         llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", kAv);
@@ -853,6 +854,7 @@ default
                     {
                         llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
                     }
+                    else if (sMessage == "Clothing") QueryClothing();
                     else
                     {    //we got an attach point.  send a message to detach
                         //we got a cloth point.
