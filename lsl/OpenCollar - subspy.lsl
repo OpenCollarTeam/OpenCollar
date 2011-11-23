@@ -1,4 +1,4 @@
-//OpenCollar - subspy - 3.521
+//OpenCollar - subspy
 //put all reporting on an interval of 30 or 60 secs.  That way we won't get behind with IM delays.
 //use sensorrepeat as a second timer to do the reporting (since regular timer is already used by menu system
 //if radar is turned off, just don't report avs when the sensor or no_sensor event goes off
@@ -25,7 +25,7 @@ integer g_iSensorRange = 8;
 integer g_iSensorRepeat = 120;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
@@ -46,7 +46,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
@@ -58,13 +57,13 @@ string g_sDBToken = "spy";
 string UPMENU = "^";
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "Spy";
-string g_sCurrentMenu;
 
 list g_lOwners;
 string g_sSubName;
 list g_lSetttings;
 
-key g_kDialogID;
+key g_kDialogSpyID;
+key g_kDialogRadarSettingsID;
 
 key g_kWearer;
 
@@ -247,31 +246,31 @@ string GetLocation() {
         (string)((integer)g_vPos.x)+","+(string)((integer)g_vPos.y)+","+(string)((integer)g_vPos.z)+">)";
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-DialogSpy(key kID)
+DialogSpy(key kID, integer iAuth)
 {
-    g_sCurrentMenu = "spy";
+    if (iAuth != COMMAND_OWNER)
+    {
+        string sPromt = "Only an Owner can set and see spy options.";
+        g_kDialogSpyID = Dialog(kID, sPromt, [], [UPMENU], 0, iAuth);
+        return;
+    }
     list lButtons ;
     string sPromt = "These are ONLY Primary Owner options:\n";
     sPromt += "Trace turns on/off notices if the sub teleports.\n";
@@ -303,26 +302,18 @@ DialogSpy(key kID)
         lButtons += ["Listen On"];
     }
     lButtons += ["RadarSettings"];
-    g_kDialogID = Dialog(kID, sPromt, lButtons, [UPMENU], 0);
+    g_kDialogSpyID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
 }
 
-NonSpyMenu(key kID)
+DialogRadarSettings(key kID, integer iAuth)
 {
-    string sPromt = "Only an Owner can set and see spy options.";
-    g_sCurrentMenu = "spy";
-    g_kDialogID = Dialog(kID, sPromt, [], [UPMENU], 0);
-}
-
-DialogRadarSettings(key kID)
-{
-    g_sCurrentMenu = "radarsettings";
     list lButtons;
     string sPromt = "Choose the radar repeat and sensor range:\n";
     sPromt += "Current Radar Range is: " + (string)((integer)g_iSensorRange) + " meter.\n";
     sPromt += "Current Radar Frequenz is: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
     lButtons += ["5 meter", "8 meter", "10 meter", "15 meter"];
     lButtons += ["2 minutes", "5 minutes", "8 minutes", "10 minutes"];
-    g_kDialogID = Dialog(kID, sPromt, lButtons, [UPMENU], 0);
+    g_kDialogRadarSettingsID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -437,6 +428,70 @@ TurnAllOff()
     llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
 }
 
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+    //only a primary owner can use this !!
+    sStr = llToLower(sStr);
+    if (sStr == "spy" || sStr == "menu " + llToLower(g_sSubMenu)) DialogSpy(kID, iNum);
+    else if (iNum != COMMAND_OWNER)
+    { 
+        if(~llListFindList(g_lCmds, [sStr]))
+            Notify(kID, "Sorry, only an owner can set spy settings.", FALSE);
+    }
+    else // COMMAND_OWNER
+    {
+        if (sStr == "radarsettings")//request for the radar settings menu
+        {
+            DialogRadarSettings(kID, iNum);
+        }
+        else if (~llListFindList(g_lCmds, [sStr]))//received an actual spy command
+        {
+            if(sStr == "trace on")
+            {
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Teleport tracing is now turned on.", TRUE);
+                g_sLoc=llGetRegionName();
+            }
+            else if(sStr == "trace off")
+            {
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Teleport tracing is now turned off.", TRUE);
+            }
+            else if(sStr == "radar on")
+            {
+                g_sOldAVBuffer = "";
+                g_iOldAVBufferCount = -1;
+
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned ON.", TRUE);
+            }
+            else if(sStr == "radar off")
+            {
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned OFF.", TRUE);
+            }
+            else if(sStr == "listen on")
+            {
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Chat listener enabled.", TRUE);
+            }
+            else if(sStr == "listen off")
+            {
+                SaveSetting(sStr);
+                EnforceSettings();
+                Notify(kID, "Chat listener disabled.", TRUE);
+            }
+        }
+    }
+    return TRUE;
+}
+
 default
 {
     on_rez(integer iNum)
@@ -477,68 +532,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        //only a primary owner can use this !!
-        if (iNum == COMMAND_OWNER)
-        {
-            sStr = llToLower(sStr);
-            if(sStr == "spy")//request for our main menu
-            {
-                DialogSpy(kID);
-            }
-            else if(sStr == "radarsettings")//request for the radar settings menu
-            {
-                DialogRadarSettings(kID);
-            }
-            else if (~llListFindList(g_lCmds, [sStr]))//received an actual spy command
-            {
-                if(sStr == "trace on")
-                {
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Teleport tracing is now turned on.", TRUE);
-                    g_sLoc=llGetRegionName();
-                }
-                else if(sStr == "trace off")
-                {
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Teleport tracing is now turned off.", TRUE);
-                }
-                else if(sStr == "radar on")
-                {
-                    g_sOldAVBuffer = "";
-                    g_iOldAVBufferCount = -1;
-
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned ON.", TRUE);
-                }
-                else if(sStr == "radar off")
-                {
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned OFF.", TRUE);
-                }
-                else if(sStr == "listen on")
-                {
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Chat listener enabled.", TRUE);
-                }
-                else if(sStr == "listen off")
-                {
-                    SaveSetting(sStr);
-                    EnforceSettings();
-                    Notify(kID, "Chat listener disabled.", TRUE);
-                }
-
-                //the command might have been sent to the backend from a menu button, so see if we're supposed to give a menu back
-                if(g_sCurrentMenu == "spy")
-                {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kID);
-                }
-            }
-        }
+        if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == HTTPDB_SAVE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -582,70 +576,55 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            DialogSpy(kID);
-        }
-        else if((iNum > COMMAND_OWNER) && (iNum <= COMMAND_EVERYONE))
-        {
-            if (~llListFindList(g_lCmds, [sStr]))
-            {
-                Notify(kID, "Sorry, only an owner can set spy settings.", FALSE);
-            }
-            else if (sStr == "spy")
-            {
-                NonSpyMenu(kID);
-            }
-        }
         else if(iNum == COMMAND_SAFEWORD)
         {//we recieved a safeword sCommand, turn all off
             TurnAllOff();
         }
         else if (iNum == DIALOG_RESPONSE)
         {
-            if (kID == g_kDialogID)
+            if (kID == g_kDialogSpyID || kID == g_kDialogRadarSettingsID)
             {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
-                if(sMessage == UPMENU)
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                if (kID == g_kDialogSpyID)
                 {
-                    if(g_sCurrentMenu == "radarsettings")
-                    {
-                        DialogSpy(kAv);
-                    }
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == "RadarSettings") DialogRadarSettings(kAv, iAuth);
                     else
                     {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        UserCommand(iAuth, llToLower(sMessage), kAv);
+                        DialogSpy(kAv, iAuth);
                     }
                 }
-                else if(g_sCurrentMenu == "radarsettings")
+                else if (kID == g_kDialogRadarSettingsID)
                 {
-                    list lTemp = llParseString2List(sMessage, [" "], []);
-                    integer sValue = (integer)llList2String(lTemp,0);
-                    string sOption = llList2String(lTemp,1);
-                    if(sOption == "meter")
+                    if (sMessage == UPMENU) DialogSpy(kAv, iAuth);
+                    else
                     {
-                        g_iSensorRange = sValue;
-                        SaveSetting(sOption + " " + (string)sValue);
-                        Notify(kAv, "Radar range changed to " + (string)((integer)sValue) + " meters.", TRUE);
+                        list lTemp = llParseString2List(sMessage, [" "], []);
+                        integer sValue = (integer)llList2String(lTemp,0);
+                        string sOption = llList2String(lTemp,1);
+                        if(sOption == "meter")
+                        {
+                            g_iSensorRange = sValue;
+                            SaveSetting(sOption + " " + (string)sValue);
+                            Notify(kAv, "Radar range changed to " + (string)((integer)sValue) + " meters.", TRUE);
+                        }
+                        else if(sOption == "minutes")
+                        {
+                            g_iSensorRepeat = sValue * 60;
+                            SaveSetting(sOption + " " + (string)g_iSensorRepeat);
+                            Notify(kAv, "Radar frequency changed to " + (string)((integer)sValue) + " minutes.", TRUE);
+                        }
+                        if(Enabled("radar"))
+                        {
+                            UpdateSensor();
+                        }
+                        DialogRadarSettings(kAv, iAuth);
                     }
-                    else if(sOption == "minutes")
-                    {
-                        g_iSensorRepeat = sValue * 60;
-                        SaveSetting(sOption + " " + (string)g_iSensorRepeat);
-                        Notify(kAv, "Radar frequency changed to " + (string)((integer)sValue) + " minutes.", TRUE);
-                    }
-                    if(Enabled("radar"))
-                    {
-                        UpdateSensor();
-                    }
-                    DialogSpy(kAv);
-                }
-                else if(sMessage != " ")
-                {
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, llToLower(sMessage), kAv);
                 }
             }
         }

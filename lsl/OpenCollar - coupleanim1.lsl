@@ -1,10 +1,8 @@
-//OpenCollar - coupleanim1 - 3.522
+//OpenCollar - coupleanim1
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //coupleanim1
 string g_sParentMenu = "Animations";
 string g_sSubMenu = "Couples";
-//string UPMENU = "?";
-//string MORE = "?";
 string UPMENU = "^";
 //string MORE = ">";
 key g_kAnimmenu;
@@ -38,7 +36,8 @@ float g_fWalkingTau = 1.5; // how hard to push me toward partner while walking
 float g_fAlignTau = 0.05; // how hard to push me toward partner while aligning
 float g_fAlignDelay = 0.6; // how long to let allignment settle (in seconds)
 
-key g_kCmdGiver;
+key g_kCmdGiver; // id of the avatar having issued the last command
+integer g_iCmdAuth; // auth level of that avatar
 integer g_iCmdIndex;
 string g_sTmpName;
 key g_kPartner;
@@ -73,7 +72,6 @@ integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -98,50 +96,44 @@ Debug(string sStr)
     //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-
-PartnerMenu(key kID, list kAvs)
+PartnerMenu(key kID, list kAvs, integer iAuth)
 {
     string sPrompt = "Pick a partner.";
-    g_kPart=Dialog(kID, sPrompt, kAvs, [UPMENU],0);
+    g_kPart=Dialog(kID, sPrompt, kAvs, [UPMENU],0, iAuth);
 }
 
-CoupleAnimMenu(key kID)
+CoupleAnimMenu(key kID, iAuth)
 {
     string sPrompt = "Pick an animation to play.";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
-    g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0);
+    g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
-TimerMenu(key kID)
+TimerMenu(key kID, integer iAuth)
 {
     string sPrompt = "Pick an time to play.";
     list lButtons = ["10", "20", "30"];
     lButtons += ["40", "50", "60"];
     lButtons += ["90", "120", "endless"];
-    g_kPart=Dialog(kID, sPrompt, lButtons, [UPMENU],0);
+    g_kPart=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
 
@@ -450,7 +442,7 @@ state ready
         {
             //the command was given by either owner, secowner, group member, or wearer
             list lParams = llParseString2List(sStr, [" "], []);
-            g_kCmdGiver = kID;
+            g_kCmdGiver = kID; g_iCmdAuth = iNum;
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llToLower(llList2String(lParams, 1));
             integer tmpiIndex = llListFindList(g_lAnimCmds, [sCommand]);
@@ -489,9 +481,9 @@ state ready
             {
                 StopAnims();
             }
-            else if (sStr == "couples")
+            else if (sStr == "menu "+g_sSubmenu || sStr == "couples")
             {
-                CoupleAnimMenu(kID);
+                CoupleAnimMenu(kID, iNum);
             }
 
         }
@@ -511,10 +503,6 @@ state ready
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            CoupleAnimMenu(kID);
-        }
         else if (iNum == HTTPDB_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -533,25 +521,26 @@ state ready
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 }
                 else if (sMessage == STOP_COUPLES)
                 {
                     StopAnims();
-                    CoupleAnimMenu(kAv);
+                    CoupleAnimMenu(kAv, iAuth);
                 }
                 else if (sMessage == TIME_COUPLES)
                 {
-                    TimerMenu(kAv);
+                    TimerMenu(kAv, iAuth);
                 }
                 else
                 {
                     integer iIndex = llListFindList(g_lAnimCmds, [sMessage]);
                     if (iIndex != -1)
                     {
-                        g_kCmdGiver = kAv;
+                        g_kCmdGiver = kAv; g_iCmdAuth = iAuth;
                         g_iCmdIndex = iIndex;
                         g_sSensorMode = "menu";
                         llSensor("", NULL_KEY, AGENT, g_fRange, PI);
@@ -564,16 +553,17 @@ state ready
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
-                    CoupleAnimMenu(kAv);
+                    CoupleAnimMenu(kAv, iAuth);
                 }
                 else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage))
                 {
                     g_fTimeOut = (float)((integer)sMessage);
                     llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + (string)g_fTimeOut, NULL_KEY);
                     Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
-                    CoupleAnimMenu(kAv);
+                    CoupleAnimMenu(kAv, iAuth);
                 }
                 else if (sMessage == "endless")
                 {
@@ -646,7 +636,7 @@ state ready
                     g_lPartners += [llDetectedKey(n), llDetectedName(n)];
                     kAvs += [llDetectedName(n)];
                 }
-                PartnerMenu(g_kCmdGiver, kAvs);
+                PartnerMenu(g_kCmdGiver, kAvs, g_iCmdAuth);
             }
             else if (g_sSensorMode == "chat")
             {
@@ -681,7 +671,7 @@ state ready
             else if (g_sSensorMode == "menu")
             {
                 llInstantMessage(g_kCmdGiver, "Could not find anyone nearby to " + llList2String(g_lAnimCmds, g_iCmdIndex) + ".");
-                CoupleAnimMenu(g_kCmdGiver);
+                CoupleAnimMenu(g_kCmdGiver, g_iCmdAuth);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿//OpenCollar - lock - 3.529
+﻿//OpenCollar - lock
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 list g_lOwners;
@@ -52,14 +52,11 @@ integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-
-integer g_iRemenu=FALSE;
 
 //added to prevent altime attach messages
 integer g_bDetached = FALSE;
@@ -221,14 +218,15 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (sStr == "settings" && iNum >= COMMAND_OWNER && iNum <=COMMAND_WEARER)
+        if (iNum >= COMMAND_OWNER && iNum <=COMMAND_WEARER)
         {
-            if (g_iLocked) Notify(kID, "Locked.", FALSE);
-            else Notify(kID, "Unlocked.", FALSE);
-        }
-        else if ((sStr == "lock" || sStr == "unlock") && iNum >= COMMAND_OWNER && iNum <=COMMAND_WEARER)
-        {
-            if (sStr == "lock"){
+            if (sStr == "settings")
+            {
+                if (g_iLocked) Notify(kID, "Locked.", FALSE);
+                else Notify(kID, "Unlocked.", FALSE);
+            }
+            else if (sStr == "lock")
+            {
                 if (iNum == COMMAND_OWNER || kID == g_kWearer )
                 {   //primary owners and wearer can lock and unlock. no one else
                     Lock();
@@ -236,11 +234,7 @@ default
                     Notify(kID, "Locked.", FALSE);
                     if (kID!=g_kWearer) llOwnerSay("Your collar has been locked.");
                 }
-                else
-                {
-                    Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
-
-                }
+                else Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
             }
             else if (sStr == "unlock")
             {
@@ -250,14 +244,31 @@ default
                     Notify(kID, "Unlocked.", FALSE);
                     if (kID!=g_kWearer) llOwnerSay("Your collar has been unlocked.");
                 }
-                else
-                {
-                    Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
-                }
+                else Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
             }
-            if (g_iRemenu) {g_iRemenu=FALSE; llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);}
+            else if (sStr == "menu " + LOCK)
+            {
+                if (iNum == COMMAND_OWNER || kID == g_kWearer )
+                {   //primary owners and wearer can lock. no one else
+                    Lock();
+                    Notify(kID, "Locked.", FALSE);
+                    if (kID!=g_kWearer) llOwnerSay("Your collar has been locked.");
+                }
+                else Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
+                llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+            }
+            else if (sStr == "menu " + UNLOCK)
+            {
+                if (iNum == COMMAND_OWNER)
+                {  //primary owners can unlock. no one else
+                    Unlock();
+                    Notify(kID, "Unlocked.", FALSE);
+                    if (kID!=g_kWearer) llOwnerSay("Your collar has been unlocked.");
+                }
+                else Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
+                llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+            }
         }
-
         else if (iNum == HTTPDB_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -307,20 +318,6 @@ default
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
             }
         }
-        else if (iNum == SUBMENU)
-        {
-            if (sStr == LOCK)
-            {
-                g_iRemenu=TRUE;
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "lock", kID);
-            }
-            else if (sStr == UNLOCK)
-            {
-                g_iRemenu=TRUE;
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "unlock", kID);
-            }
-        }
-
         else if (iNum == RLV_REFRESH)
         {
             if (g_iLocked)

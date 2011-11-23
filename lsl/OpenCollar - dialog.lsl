@@ -1,4 +1,4 @@
-//OpenCollar - dialog - 3.531
+//OpenCollar - dialog
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
@@ -26,7 +26,6 @@ integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -55,14 +54,14 @@ string BLANK = " ";
 integer g_iTimeOut = 300;
 integer g_iReapeat = 5;//how often the timer will go off, in seconds
 
-list g_lMenus;//9-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage
+list g_lMenus;//10-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, auth level
 //where "list buttons" means the big list of choices presented to the user
 //and "page buttons" means utility buttons that will appear on every page, such as one saying "go up one level"
 //and "currentpage" is an integer meaning which page of the menu the user is currently viewing
 
 list g_lRemoteMenus;
 
-integer g_iStrideLength = 9;
+integer g_iStrideLength = 10;
 
 key g_kWearer;
 
@@ -118,7 +117,7 @@ integer RandomUniqueChannel()
     return iOut;
 }
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID)
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iAuth)
 {
     string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
     list lButtons;
@@ -186,7 +185,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
     }    
     integer ts = llGetUnixTime() + g_iTimeOut;
-    g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage];
+    g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iAuth];
 }
 
 list SanitizeButtons(list lIn)
@@ -239,7 +238,7 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 }
 
 
-list RemoveMenuStrkIDe(list lMenu, integer iIndex)
+list RemoveMenuStride(list lMenu, integer iIndex)
 {
     //tell this function the menu you wish to remove, identified by list index
     //it will close the listener, remove the menu's entry from the list, and return the new list
@@ -266,7 +265,7 @@ CleanList()
             Debug("menu timeout");                
             key kID = llList2Key(g_lMenus, n + 1);
             llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
-            g_lMenus = RemoveMenuStrkIDe(g_lMenus, n);
+            g_lMenus = RemoveMenuStride(g_lMenus, n);
         }            
     } 
 }
@@ -310,7 +309,7 @@ default
     {
         if (iNum == DIALOG)
         {//give a dialog with the options on the button labels
-            //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons
+            //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
             Debug(sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = (key)llList2String(lParams, 0);
@@ -331,11 +330,14 @@ default
             integer iPage = (integer)llList2String(lParams, 2);
             list lbuttons = CharacterCountCheck(llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []), kRCPT);
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);        
+	    integer iAuth;
+	    if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
+	    else iAuth = COMMAND_NOAUTH;
             
             //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
-            Dialog(kRCPT, sPrompt, lbuttons, ubuttons, iPage, kID);
+            Dialog(kRCPT, sPrompt, lbuttons, ubuttons, iPage, kID, iAuth);
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
@@ -361,7 +363,7 @@ default
                     integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
                     if (~iIndex)
                     {
-                        g_lRemoteMenus = llListReplaceList((g_lRemoteMenus = []) + g_lRemoteMenus, [], iIndex, iIndex+1);
+                        g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [], iIndex, iIndex+1);
                     }
                 }
                 else if (llGetSubString(sCmd, 0, 8) == "response:")
@@ -389,7 +391,8 @@ default
             list items = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
             list ubuttons = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
             integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);    
-            g_lMenus = RemoveMenuStrkIDe(g_lMenus, iMenuIndex);       
+            integer iAuth = llList2Integer(g_lMenus, iMenuIndex + 9);    
+            g_lMenus = RemoveMenuStride(g_lMenus, iMenuIndex);       
                    
             if (sMessage == MORE)
             {
@@ -401,7 +404,7 @@ default
                 {
                     iPage = 0;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iAuth);
             }
             else if (sMessage == PREV)
             {
@@ -415,17 +418,17 @@ default
 
                     iPage = (llGetListLength(items)-1)/thisiPagesize;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iAuth);
             }
             else if (sMessage == BLANK)
             
             {
                 //give the same menu back
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iAuth);
             }            
             else
             {
-                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
+                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }  
         }
     }

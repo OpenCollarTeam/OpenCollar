@@ -1,3 +1,4 @@
+//OpenCollar - UpdateShim
 // This script is like a kamikaze missile.  It sits dormant in the updater
 // until an update process starts.  Once the initial handshake is done, it's
 // then inserted into the object being updated, where it chats with the bundle

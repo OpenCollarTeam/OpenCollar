@@ -1,10 +1,11 @@
+//OpenCollar - rlvrelay
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 integer RELAY_CHANNEL = -1812221819;
 integer g_iRlvListener;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 //integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
@@ -21,7 +22,6 @@ integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this c
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLVR_CMD = 6010; //let's do that for now (note this is not RLV_CMD)
@@ -36,8 +36,6 @@ integer DIALOG_TIMEOUT = -9002;
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
-integer g_iRemenu = FALSE;
-integer g_iAuthToken;
 
 string UPMENU = "^";
 
@@ -273,7 +271,7 @@ Dequeue()
     }
     sPrompt+="\nDo you want to allow this?";
     g_iAuthPending = TRUE;
-    g_kAuthMenuID = Dialog(g_kWearer, sPrompt, lButtons, [], 0);
+    g_kAuthMenuID = Dialog(g_kWearer, sPrompt, lButtons, [], 0, COMMAND_WEARER); // should be enough to dequeue...
 }
 
 
@@ -338,10 +336,10 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
     return "";
 }
 
-Debug(string sMsg)
-{
-    llInstantMessage(g_kWearer,sMsg);
-}
+//Debug(string sMsg)
+//{
+    //llOwnerSay(llGetScriptName() + ": " + Msg);
+//}
 
 SafeWord()
 {
@@ -370,7 +368,7 @@ SafeWord()
 }
 
 //----Menu functions section---//
-Menu(key kID)
+Menu(key kID, integer iAuth)
 {
     string sPrompt = "\nCurrent mode is: " + Mode2String(FALSE);
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iBaseMode,g_iBaseMode);
@@ -399,10 +397,10 @@ Menu(key kID)
     }
     lButtons+=["Access Lists", "MinMode", "Help"];
     sPrompt+="\n\nMake a choice:";
-    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-MinModeMenu(key kID)
+MinModeMenu(key kID, integer iAuth)
 {
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iMinBaseMode,g_iMinBaseMode);
     string sPrompt = "\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
@@ -413,25 +411,25 @@ MinModeMenu(key kID)
     if (g_iMinSafeMode) lButtons+=["(*)Safeword"];
     else lButtons+=["( )Safeword"];
     sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed go under.\n(owner only)";
-    g_kMinModeMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kMinModeMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-ListsMenu(key kID)
+ListsMenu(key kID, integer iAuth)
 {
     string sPrompt="What list do you want to remove items from?";
     list lButtons=["Trusted Object","Banned Object","Trusted Avatar","Banned Avatar",UPMENU];
     sPrompt+="\n\nMake a choice:";
-    g_kListMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
+    g_kListMenuID = Dialog(kID, sPrompt, lButtons, [], 0, iAuth);
 }
 
-PListsMenu(key kID, string sMsg)
+PListsMenu(key kID, string sMsg, integer iAuth)
 {
     list lOList;
     list lOListNames;
     string sPrompt;
     if (sMsg==UPMENU)
     {
-        Menu(kID);
+        Menu(kID, iAuth);
         return;
     }
     else if (sMsg=="Trusted Object")
@@ -470,21 +468,17 @@ PListsMenu(key kID, string sMsg)
     g_sListType=sMsg;
 
     list lButtons=[ALL];
-//    lButtons+=[UPMENU];
     integer i;
     for (i=0;i<(lOList!=[]);++i)
     {
         lButtons+=(string)(i+1);
         llInstantMessage(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i));
     }
-//    lButtons = RestackMenu(buttons);
     sPrompt+="\n\nMake a choice:";
-//    g_iListener=llListen(LIST_CHANNEL,"",kID,"");
-//    llDialog(kID,sPrompt,buttons,LIST_CHANNEL);
-    g_kListID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kListID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     //key generation
     //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
@@ -496,13 +490,13 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
         sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
     key kID = (sOut + "-0000-0000-0000-000000000000");
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
 
-RemListItem(string sMsg)
+RemListItem(string sMsg, integer iAuth)
 {
-
     integer i=((integer) sMsg) -1;
     if (g_sListType=="Banned Avatar")
     {
@@ -522,7 +516,7 @@ RemListItem(string sMsg)
             g_lObjBlackListNames=llDeleteSubList(g_lObjBlackListNames,i,i);
         }
     }
-    else if (g_iAuthToken==COMMAND_WEARER && g_iMinBaseMode > 0)
+    else if (iAuth==COMMAND_WEARER && g_iMinBaseMode > 0)
     {
         notify(g_kWearer,"Sorry, your owner does not allow you to remove trusted sources.",TRUE);
     }
@@ -556,42 +550,172 @@ refreshRlvListener()
 
 CleanQueue()
 {
-                    //clean newly iNumed events, while preserving the order of arrival for every device
-                    list lOnHold=[];
-                    integer i=0;
-                    while (i<(g_lQueue!=[])/QSTRIDES)  //GetQLength()
-                    {
-                        string sIdent = llList2String(g_lQueue,0); //GetQident(0)
-                        key kObj = llList2String(g_lQueue,1); //GetQObj(0);
-                        string sCommand = llList2String(g_lQueue,2); //GetQCom(0);
-                        key kUser = NULL_KEY;
-                        integer iGotWho = llGetSubString(sCommand,0,6)=="!x-who/";
-                        if (iGotWho) kUser=SanitizeKey(llGetSubString(sCommand,7,42));
-                        integer iAuth=Auth(kObj,kUser);
-                        if(~llListFindList(lOnHold,[kObj])) ++i;
-                        else if(iAuth==1 && (kUser!=NULL_KEY || !iGotWho)) // !x-who/NULL_KEY means unknown user
-                        {
-                          g_lQueue = llDeleteSubList(g_lQueue,i,i+QSTRIDES-1); //DeleteQItem(i);
-                          HandleCommand(sIdent,kObj,sCommand,TRUE);
-                        }
-                        else if(iAuth==-1)
-                        {
-                          g_lQueue = llDeleteSubList(g_lQueue,i,i+QSTRIDES-1); //DeleteQItem(i);
-                          list lCommands = llParseString2List(sCommand,["|"],[]);
-                          integer j;
-                          for (j=0;j<(lCommands!=[]);++j)
-                              llShout(RELAY_CHANNEL,sIdent+","+(string)kObj+","+llList2String(lCommands,j)+",ko");
-                        }
-                        else
-                        {
-                            ++i;
-                            lOnHold+=[kObj];
-                        }
-                    }
-                    //end of cleaning, now check if there is still events in queue and act accordingly
-                    Dequeue();
+    //clean newly iNumed events, while preserving the order of arrival for every device
+    list lOnHold=[];
+    integer i=0;
+    while (i<(g_lQueue!=[])/QSTRIDES)  //GetQLength()
+    {
+        string sIdent = llList2String(g_lQueue,0); //GetQident(0)
+        key kObj = llList2String(g_lQueue,1); //GetQObj(0);
+        string sCommand = llList2String(g_lQueue,2); //GetQCom(0);
+        key kUser = NULL_KEY;
+        integer iGotWho = llGetSubString(sCommand,0,6)=="!x-who/";
+        if (iGotWho) kUser=SanitizeKey(llGetSubString(sCommand,7,42));
+        integer iAuth=Auth(kObj,kUser);
+        if(~llListFindList(lOnHold,[kObj])) ++i;
+        else if(iAuth==1 && (kUser!=NULL_KEY || !iGotWho)) // !x-who/NULL_KEY means unknown user
+        {
+            g_lQueue = llDeleteSubList(g_lQueue,i,i+QSTRIDES-1); //DeleteQItem(i);
+            HandleCommand(sIdent,kObj,sCommand,TRUE);
+        }
+        else if(iAuth==-1)
+        {
+            g_lQueue = llDeleteSubList(g_lQueue,i,i+QSTRIDES-1); //DeleteQItem(i);
+            list lCommands = llParseString2List(sCommand,["|"],[]);
+            integer j;
+            for (j=0;j<(lCommands!=[]);++j)
+                llShout(RELAY_CHANNEL,sIdent+","+(string)kObj+","+llList2String(lCommands,j)+",ko");
+        }
+        else
+        {
+            ++i;
+            lOnHold+=[kObj];
+        }
+    }
+    //end of cleaning, now check if there is still events in queue and act accordingly
+    Dequeue();
 }
 
+// returns TRUE if it was a user command, FALSE if it is a LM from another subsystem
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    if (iNum<COMMAND_OWNER || iNum>COMMAND_WEARER) return FALSE;
+    if (llSubStringIndex(sStr,"relay") && sStr != "menu "+g_sSubMenu) return TRUE;
+    if (!g_iRLV)
+    {
+        notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+    }
+    else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") MinModeMenu(kID, iNum);
+    else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
+        llInstantMessage(kID, "Sorry, only the wearer of the collar or their owner can change the relay options.");
+    else if (sStr=="safeword") SafeWord();
+    else if (sStr=="pending")
+    {
+        if (g_lQueue) Dequeue();
+        else llOwnerSay("No pending relay request for now.");
+    }
+    else if (sStr=="access") ListsMenu(kID, iNum);
+    else if (iNum == COMMAND_OWNER && !llSubStringIndex(sStr,"minmode"))
+    {
+        sStr=llGetSubString(sStr,8,-1);
+        integer iOSuccess = 0;
+        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
+        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        if (sChangetype=="safeword")
+        {
+            if (sChangevalue == "on") g_iMinSafeMode = TRUE;
+            else if (sChangevalue == "off")
+            {
+                g_iMinSafeMode = FALSE;
+                g_iSafeMode = FALSE;
+            }
+            else iOSuccess = 3;
+        }
+        else if (sChangetype=="land")
+        {
+            if (sChangevalue == "off") g_iMinLandMode = FALSE;
+            else if (sChangevalue == "on")
+            {
+                g_iMinLandMode = TRUE;
+                g_iLandMode = TRUE;
+            }
+            else iOSuccess = 3;
+        }
+        else if (sChangetype=="playful")
+        {
+            if (sChangevalue == "off") g_iMinPlayMode = FALSE;
+            else if (sChangevalue == "on")
+            {
+                g_iMinPlayMode = TRUE;
+                g_iPlayMode = TRUE;
+            }
+            else iOSuccess = 3;
+        }
+        else 
+        {
+            integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
+            if (~modetype)
+            {
+                g_iMinBaseMode = modetype;
+                if (modetype > g_iBaseMode) g_iBaseMode = modetype;
+            }
+            else  iOSuccess = 3;
+        }
+        if (!iOSuccess)
+        {
+            notify(kID, llKey2Name(g_kWearer)+"'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), TRUE);
+            SaveSettings();
+            refreshRlvListener();
+        }
+        else notify(kID, "Unknown relay mode.", FALSE);
+    }
+    else
+    {
+        integer iWSuccess = 0; //0: successful, 1: forbidden because of minmode, 2: forbidden because grabbed, 3: unrecognized commad
+        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
+        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        if (sChangetype=="safeword")
+        {
+            if (sChangevalue == "on")
+            {
+                if (g_iMinSafeMode == FALSE) iWSuccess = 1;
+                else if (g_lSources!=[]) iWSuccess = 2;
+                else g_iSafeMode = TRUE;
+            }
+            else if (sChangevalue == "off") g_iSafeMode = FALSE;
+            else iWSuccess = 3;
+        }
+        else if (sChangetype=="land")
+        {
+            if (sChangevalue == "off")
+            {
+                if (g_iMinLandMode == TRUE) iWSuccess = 1;
+                else g_iLandMode = FALSE;
+            }
+            else if (sChangevalue == "on") g_iLandMode = TRUE;
+            else iWSuccess = 3;
+        }
+        else if (sChangetype=="playful")
+        {
+            if (sChangevalue == "off")
+            {
+                if (g_iMinPlayMode == TRUE) iWSuccess = 1;
+                else g_iPlayMode = FALSE;
+            }
+            else if (sChangevalue == "on") g_iPlayMode = TRUE;
+            else iWSuccess = 3;
+        }
+        else 
+        {
+            integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
+            if (~modetype)
+            {
+                if (modetype >= g_iMinBaseMode) g_iBaseMode = modetype;
+                else iWSuccess = 1;
+            }
+            else iWSuccess = 3;
+        }
+        if (!iWSuccess) notify(kID, "Your relay mode is successfully set to: "+Mode2String(FALSE), TRUE);
+        else if (iWSuccess == 1) notify(kID, "Minimal mode previously set by owner does not allow this setting. Change it or have it changed first.", TRUE);
+        else if (iWSuccess == 2) notify(kID, "Your relay is being locked by at least one object, you cannot disable it or enable safewording now.", TRUE);
+        else if (iWSuccess == 3) notify(kID, "Invalid command, please read the manual.", FALSE);
+        SaveSettings();
+        refreshRlvListener();
+    }
+    return TRUE;
+}
 
 default
 {
@@ -608,11 +732,6 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //give menu
-            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "relay", kID);
-        }
         else if (iNum==CMD_ADDSRC)
         {
             g_lSources+=[kID];
@@ -622,153 +741,7 @@ default
             integer i= llListFindList(g_lSources,[kID]);
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
-        else if (iNum>=COMMAND_OWNER&&iNum<=COMMAND_WEARER)
-        {
-            if (llSubStringIndex(sStr,"relay")) return;
-            else if (!g_iRLV)
-            {
-                notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                return;
-            }
-            else if (sStr=="relay") 
-            {
-                g_iAuthToken=iNum;
-                Menu(kID);
-                return;
-            }
-            else if (sStr=="relay minmode")
-            {
-                g_iAuthToken=iNum;
-                MinModeMenu(kID);
-                return;
-            }
-            else if (iNum==COMMAND_OWNER||kID==g_kWearer)
-            {
-                sStr=llGetSubString(sStr,6,-1);
-                if (sStr=="safeword") SafeWord();
-                else if (sStr=="pending")
-                {
-                    if (g_lQueue) {Dequeue(); return;} //don't pop up the main menu again
-                    else llOwnerSay("No pending relay request for now.");
-                }
-                else if (sStr=="access")
-                {
-                    g_iAuthToken = iNum;
-                    ListsMenu(kID);
-                }
-                else if (iNum == COMMAND_OWNER && !llSubStringIndex(sStr,"minmode"))
-                {
-                    sStr=llGetSubString(sStr,8,-1);
-                    integer iOSuccess = 0;
-                    string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-                    string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-                    if (sChangetype=="safeword")
-                    {
-                        if (sChangevalue == "on") g_iMinSafeMode = TRUE;
-                        else if (sChangevalue == "off")
-                        {
-                            g_iMinSafeMode = FALSE;
-                            g_iSafeMode = FALSE;
-                        }
-                        else iOSuccess = 3;
-                    }
-                    else if (sChangetype=="land")
-                    {
-                        if (sChangevalue == "off") g_iMinLandMode = FALSE;
-                        else if (sChangevalue == "on")
-                        {
-                            g_iMinLandMode = TRUE;
-                            g_iLandMode = TRUE;
-                        }
-                        else iOSuccess = 3;
-                    }
-                    else if (sChangetype=="playful")
-                    {
-                        if (sChangevalue == "off") g_iMinPlayMode = FALSE;
-                        else if (sChangevalue == "on")
-                        {
-                            g_iMinPlayMode = TRUE;
-                            g_iPlayMode = TRUE;
-                        }
-                        else iOSuccess = 3;
-                    }
-                    else 
-                    {
-                        integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
-                        if (~modetype)
-                        {
-                            g_iMinBaseMode = modetype;
-                            if (modetype > g_iBaseMode) g_iBaseMode = modetype;
-                        }
-                        else  iOSuccess = 3;
-                    }
-                    if (!iOSuccess)
-                    {
-                        notify(kID, llKey2Name(g_kWearer)+"'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), TRUE);
-                        SaveSettings();
-                        refreshRlvListener();
-                    }
-                    else notify(kID, "Unknown relay mode.", FALSE);
-                    if (g_iRemenu) {g_iRemenu=FALSE; g_iAuthToken = iNum; MinModeMenu(kID); return;}
-                }
-                else
-                {
-                    integer iWSuccess = 0; //0: successful, 1: forbidden because of minmode, 2: forbidden because grabbed, 3: unrecognized commad
-                    string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-                    string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
-                    if (sChangetype=="safeword")
-                    {
-                        if (sChangevalue == "on")
-                        {
-                            if (g_iMinSafeMode == FALSE) iWSuccess = 1;
-                            else if (g_lSources!=[]) iWSuccess = 2;
-                            else g_iSafeMode = TRUE;
-                        }
-                        else if (sChangevalue == "off") g_iSafeMode = FALSE;
-                        else iWSuccess = 3;
-                    }
-                    else if (sChangetype=="land")
-                    {
-                        if (sChangevalue == "off")
-                        {
-                            if (g_iMinLandMode == TRUE) iWSuccess = 1;
-                            else g_iLandMode = FALSE;
-                        }
-                        else if (sChangevalue == "on") g_iLandMode = TRUE;
-                        else iWSuccess = 3;
-                    }
-                    else if (sChangetype=="playful")
-                    {
-                        if (sChangevalue == "off")
-                        {
-                            if (g_iMinPlayMode == TRUE) iWSuccess = 1;
-                            else g_iPlayMode = FALSE;
-                        }
-                        else if (sChangevalue == "on") g_iPlayMode = TRUE;
-                        else iWSuccess = 3;
-                    }
-                    else 
-                    {
-                        integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
-                        if (~modetype)
-                        {
-                            if (modetype >= g_iMinBaseMode) g_iBaseMode = modetype;
-                            else iWSuccess = 1;
-                        }
-                        else iWSuccess = 3;
-                    }
-                    if (!iWSuccess) notify(kID, "Your relay mode is successfully set to: "+Mode2String(FALSE), TRUE);
-                    else if (iWSuccess == 1) notify(kID, "Minimal mode previously set by owner does not allow this setting. Change it or have it changed first.", TRUE);
-                    else if (iWSuccess == 2) notify(kID, "Your relay is being locked by at least one object, you cannot disable it or enable safewording now.", TRUE);
-                    else if (iWSuccess == 3) notify(kID, "Invalid command, please read the manual.", FALSE);
-                    SaveSettings();
-                    refreshRlvListener();
-                }
-            }
-            else llInstantMessage(kID, "Sorry, only the wearer of the collar or their owner can change the relay options.");
-            if (g_iRemenu) {g_iRemenu=FALSE; g_iAuthToken = iNum; Menu(kID);}
-        }
+        else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == HTTPDB_RESPONSE)
         {   //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
@@ -838,51 +811,55 @@ default
                 key kAv = llList2Key(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = llList2Integer(lMenuParams, 2);
+                integer iAuth = llList2Integer(lMenuParams, 3);
                 if (kID==g_kMenuID || kID == g_kMinModeMenuID)
                 {
                     llSetTimerEvent(g_iGarbageRate);
-                    integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "( )Safeword", "(*)Safeword","( )Playful","(*)Playful","( )Land","(*)Land","Pending","Access Lists"],[sMsg]);
-                    if (~iIndex)
+                    integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "( )Safeword", "(*)Safeword","( )Playful","(*)Playful","( )Land","(*)Land"],[sMsg]);
+                    if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
+                    else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
+                    else if (~iIndex)
                     {
                         string sInternalCommand = "relay ";
                         if (kID == g_kMinModeMenuID) sInternalCommand += "minmode ";
-                        sInternalCommand += llList2String(["auto","ask","restricted","off","safeword","safeword on","safeword off","playful on", "playful off","land on","land off","pending","access"],iIndex);
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, sInternalCommand, kAv);
-                        if (sMsg!="Access Lists") g_iRemenu=TRUE;
+                        sInternalCommand += llList2String(["auto","ask","restricted","off","safeword","safeword on","safeword off","playful on", "playful off","land on","land off"],iIndex);
+                        UserCommand(iAuth, sInternalCommand, kAv);
+                        if (kID == g_kMinModeMenuID) MinModeMenu(kAv, iAuth);
+                        else Menu(kAv, iAuth);
                     }
                     else if (sMsg=="Grabbed by")
                     {
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH,"showrestrictions",kAv);
-                        g_iRemenu=TRUE;
+                        llMessageLinked(LINK_SET, iAuth,"showrestrictions",kAv);
+                        Menu(kAv, iAuth);
                     }
-                    else if (sMsg=="MinMode") MinModeMenu(kAv);
+                    else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
                     else if (sMsg=="Help")
                     {
                         llGiveInventory(kAv,"OpenCollar - rlvrelay - Help");
-                        Menu(kAv);
+                        Menu(kAv, iAuth);
                     }
                     else if (sMsg==UPMENU)
                     {
-                        if (kID == g_kMenuID) llMessageLinked(LINK_SET,SUBMENU,g_sParentMenu,kAv);
-                        else Menu(kAv);
+                        if (kID == g_kMenuID) llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
+                        else Menu(kAv, iAuth);
                     }
                 }
                 else if (kID==g_kListMenuID)
                 {
                     llSetTimerEvent(g_iGarbageRate);
-                    PListsMenu(kAv,sMsg);
+                    PListsMenu(kAv,sMsg, iAuth);
                 }
                 else if (kID==g_kListID)
                 {
                     llSetTimerEvent(g_iGarbageRate);
                     if (sMsg==UPMENU)
                     {
-                        ListsMenu(kAv);
+                        ListsMenu(kAv, iAuth);
                     }
                     else 
                     {
-                        RemListItem(sMsg);
-                        ListsMenu(kAv);
+                        RemListItem(sMsg, iAuth);
+                        ListsMenu(kAv, iAuth);
                     }
                 }
                 else if (kID==g_kAuthMenuID)

@@ -1,6 +1,9 @@
-// Keyholder Module - OpenCollar Version 3.526+
+// OpenCollar - keyholder plugin
 // 
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+//
+// OC3.7xx by Satomi Ahn
+// - New authed dialogs system.
 //
 // OC3.526.2 by WhiteFire Sondergaard
 // - Safeword Support. DURP.
@@ -18,7 +21,7 @@
 // - Updated to handle new timer module's "timer on+24:00" format. ** This REQUIRES version 3.525 or better to work now, but no longer requires a hacked timer module. **
 // - FIXED: Do not display Main Menu *Take Key* when module is off.
 // - Main Menu *Take Key* not enabled by default.
-// - FIXED: bug preventing the *Take Key* in the main menu and ()Return Key in the timer menu from working at all. Also merged two different SUBMENU clauses so this mistake won't happen again.
+// - FIXED: bug preventing the *Take Key* in the main menu and ()Return Key in the timer menu from working at all. Also merged two different submenu clauses so this mistake won't happen again.
 //
 // WS0.822 by WhiteFire Sondergaard
 // - Save and restore data.
@@ -106,7 +109,6 @@
 
 // -- Toy Configureation ----------------------------------------
 string g_szChatCommand = "kh"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
-integer g_nDebugMode=FALSE; // set to TRUE to enable Debug messages
 integer g_iHideLockWhenOff=TRUE; // set to FALSE to not hide the lock when the module is off and the collar is unlocked. :kc
 string g_sToyName = "collar";
 
@@ -238,7 +240,6 @@ integer LOCALSETTING_EMPTY = 2504;
 // messages for creating OC menu structure
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 // messages to the dialog helper
@@ -338,10 +339,7 @@ SetElementAlpha(float fAlpha, list lList) // EB :kc was here
     // loop through stored links, setting alpha if element type is lock
     integer n;
     integer iLinkElements = llGetListLength(lList);
-    for (n = 0; n < iLinkElements; n++)
-    {
-        llSetLinkAlpha(llList2Integer(lList,n), fAlpha, ALL_SIDES);
-    }
+    for (n = 0; n < iLinkElements; n++) llSetLinkAlpha(llList2Integer(lList,n), fAlpha, ALL_SIDES);
 }
 
 string strReplace(string str, string search, string replace) {
@@ -356,31 +354,22 @@ integer CompareDBPrefix(string str, string value)
 
 //===============================================================================
 //= parameters   :    string    szMsg   message string received
-//=
 //= return        :    none
-//=
 //= description  :    output debug messages
-//=
 //===============================================================================
-
-
 Debug(string szMsg)
 {
-    if (!g_nDebugMode) return;
-    llOwnerSay(llGetScriptName() + ": " + szMsg);
+// uncomment to enable debug mode
+//    llOwnerSay(llGetScriptName() + ": " + szMsg);
 }
 
 //===============================================================================
 //= parameters   :    key       kID                 key of the avatar that receives the message
 //=                   string    msg                message to send
 //=                   integer   alsoNotifyWearer   if TRUE, a copy of the message is sent to the wearer
-//=
 //= return        :    none
-//=
 //= description  :    notify targeted id and maybe the wearer
-//=
 //===============================================================================
-
 Notify(key kID, string msg, integer alsoNotifyWearer)
 {
     if (kID == g_keyWearer)
@@ -398,60 +387,39 @@ Notify(key kID, string msg, integer alsoNotifyWearer)
 }
 
 //===============================================================================
-//= parameters   :    none
-//=
-//= return        :    key random uuid
-//=
-//= description  :    random key generator, not complety unique, but enough for use in dialogs
-//=
-//===============================================================================
-
-
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string chars = "0123456789abcdef";
-    integer length = 16;
-    string out;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer index = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        out += llGetSubString(chars, index, index);
-    }
-
-    return (key)(out + "-0000-0000-0000-000000000000");
-}
-
-//===============================================================================
-//= parameters   :    key   rcpt  recipient of the dialog
-//=                   string  prompt    dialog prompt
-//=                   list  choices    true dialog buttons
-//=                   list  utilitybuttons  utility buttons (kept on every page)
-//=                   integer   page    page to display
+//= parameters   :    key   kRCPT      recipient of the dialog
+//=                   string  sPrompt    dialog prompt
+//=                   list  lChoices    true dialog buttons
+//=                   list  lUtilitybuttons  utility buttons (kept on every page)
+//=                   integer  iPage    page to display
+//=                   integer  iAuth    authentification level of recipient
 //=
 //= return        :    key  handler of the dialog
 //=
 //= description  :    displays a dialog to the given recipient
 //=
 //===============================================================================
-
-
-key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-    key kID = ShortKey();
-    llMessageLinked(LINK_WHAT, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page + "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), kID);
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
+    string sOut;
+    integer n;
+    for (n = 0; n < 8; ++n)
+    {
+        integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
+    }
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
 string CheckBox(string name, integer value)
 {
-    string s;
-    if (value)
-        s = "(*)";
-    else
-        s = "()";
-    
-    return s + name;
+    if (value) return "(*)" + name;
+    else return "()" + name;
 }
 
 //===============================================================================
@@ -477,7 +445,7 @@ integer nStartsWith(string szHaystack, string szNeedle) // http://wiki.secondlif
 //=
 //===============================================================================
 
-DoMenuSpecial(key keyID, integer page, integer special)
+DoMenuSpecial(key keyID, integer page, integer special, integer iAuth)
 {
     string prompt;
     list mybuttons = localbuttons + externalbuttons;
@@ -522,12 +490,12 @@ DoMenuSpecial(key keyID, integer page, integer special)
         utility_buttons += [UPMENU]; //make sure there's a button to return to the parent menu
 
     // and dispay the menu
-    g_keyMenuID = Dialog(keyID, prompt, mybuttons, utility_buttons, 0);
+    g_keyMenuID = Dialog(keyID, prompt, mybuttons, utility_buttons, 0, iAuth);
 }
 
-DoMenu(key keyID, integer page)
+DoMenu(key keyID, integer page, integer iAuth)
 {
-    DoMenuSpecial(keyID, page, FALSE);
+    DoMenuSpecial(keyID, page, FALSE, iAuth);
 }
 
 string Int2Time(integer sTime)
@@ -546,7 +514,7 @@ string Int2Time(integer sTime)
         llGetSubString("0"+(string)iSecs,-2,-1) );
 }
 
-DoMenuAutoReturnConfig(key keyID, integer page)
+DoMenuAutoReturnConfig(key keyID, integer page, integer iAuth)
 {
     string prompt;
     list mybuttons = localbuttons;
@@ -575,10 +543,10 @@ Only the owner may change these.
     llListSort(localbuttons, 1, TRUE); // resort menu buttons alphabetical
     
     // and dispay the menu
-    g_keyConfigAutoReturnMenuID = Dialog(keyID, prompt, mybuttons, [UPMENU], 0);
+    g_keyConfigAutoReturnMenuID = Dialog(keyID, prompt, mybuttons, [UPMENU], 0, iAuth);
 }
 
-DoMenuConfigure(key keyID, integer page)
+DoMenuConfigure(key keyID, integer page, integer iAuth)
 {
     string prompt;
     list mybuttons = localbuttons;
@@ -609,7 +577,7 @@ Only the owner may change these.
     llListSort(localbuttons, 1, TRUE); // resort menu buttons alphabetical
 
     // and dispay the menu
-    g_keyConfigMenuID = Dialog(keyID, prompt, mybuttons, [UPMENU], 0);
+    g_keyConfigMenuID = Dialog(keyID, prompt, mybuttons, [UPMENU], 0, iAuth);
 }
 
 
@@ -660,7 +628,7 @@ TakeKey(key avatar, integer auth, integer remote)
     }
     
     llInstantMessage(avatar, "You take " + llKey2Name(llGetOwner()) + "'s key!");
-    llOwnerSay("Your key has been taken by " + llKey2Name(avatar) + "!");
+    Notify(g_keyWearer, "Your key has been taken by " + llKey2Name(avatar) + "!", TRUE);
 
     if (!remote && g_iGlobalKey)
         llWhisper(g_iKeyHolderChannel, llDumpList2String([
@@ -703,7 +671,7 @@ ReturnKey(string reason, integer remote)
     }
             
     llInstantMessage(avatar, llKey2Name(llGetOwner()) + "'s key is returned. " + reason);
-    llOwnerSay("Your key has been returned. " + reason);
+    Notify(g_keyWearer, "Your key has been returned. " + reason, TRUE);
     
     if (!remote && g_iGlobalKey)
         llWhisper(g_iKeyHolderChannel, llDumpList2String([
@@ -894,6 +862,187 @@ string GetDBPrefix()
 
 //===============================================================================
 
+
+// Check whether the avatar has owner privileges. Notify if not.
+integer OwnerCheck(key kAv, integer iAuth)
+{
+    if (iAuth == COMMAND_OWNER) return TRUE;
+    else
+    {
+        Notify(kAv, "That command can only be accessed by an Owner.", FALSE);
+        return FALSE;
+    }
+}
+
+// Check whether the avatar holds the key. Notify if not.
+integer KeyholderCheck(key kAv)
+{
+    if (kAv == kh_key) return TRUE;
+    else
+    {
+        Notify(kAv, "You are not the keyholder.", FALSE);
+        return FALSE;
+    }
+}
+
+// returns TRUE if eligible (AUTHED link message number)
+integer UserCommand(integer num, string str, key id) // here iNum: auth value, sStr: user command, kID: avatar id
+{
+    if (num > COMMAND_EVERYONE || num < COMMAND_OWNER) return FALSE; // sanity check
+    // Main Menu
+    if (str == "menu " + g_szSubmenu)
+    {
+        DoMenu(id, 0, num);
+    }
+    // Config Menu
+    else if (str == "menu " + g_szKeyConfigMenu)
+    {
+        DoMenuConfigure(id, 0, num);
+    }
+    // This is out of the timer module...
+    else if (str == "menu (*)Return Key")
+    {
+        UserCommand(num, "khunsettimerreturnkey", id);
+        llMessageLinked(LINK_WHAT, num, "menu "+ g_szTimerMenu, id);                
+    }
+    else if (str == "menu ()Return Key")
+    {
+        UserCommand(num, "khsettimerreturnkey", id);
+        llMessageLinked(LINK_WHAT, num, "menu "+ g_szTimerMenu, id);                
+    }
+    // Take / Return key from the main menu
+    else if (str == "menu " + TAKEKEY)
+    {
+        UserCommand(num, "khtakekey", id);
+        llMessageLinked(LINK_WHAT, num, "menu Main", id);
+    }
+    else if (str == "menu " + RETURNKEY)
+    {
+        if (KeyholderCheck(id)) ReturnKey("", FALSE);
+        llMessageLinked(LINK_WHAT, num, "menu Main", id);
+    }      
+    else if (str == "khreturnkey") {if (KeyholderCheck(id)) ReturnKey("", FALSE);}
+    else if (kh_public_key && str == "khtakekey")
+    {
+        if (id == g_keyWearer) Notify(id, "Taking your own key does not make any sense.", FALSE);
+        else if (kh_key != NULL_KEY) Notify(id, "The key is not in the lock.", FALSE);
+        else TakeKey(id, num, FALSE);
+    }
+    else if ((id == g_keyWearer || num == COMMAND_OWNER) && str == "resetscripts")
+    {
+        llResetScript();
+    }
+    // after here, only primary owner commands
+    else if (llGetSubString(str, 0, 4) == "khset" 
+            && (llGetSubString(str, 5, 6) == "0," || (integer)llGetSubString(str, 5, 5) > 0) )
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        list times = llParseString2List(str, [ "khset", ",", ":" ], []);
+        kh_auto_return_time = 
+            ( (integer)llList2String(times, 0) * 24 * 60 * 60 ) + // days
+            ( (integer)llList2String(times, 1) * 60 * 60 ) + // Hours
+            ( (integer)llList2String(times, 2) * 60 ) + // Minutes
+            ( (integer)llList2String(times, 3)  ) ; // Seconds
+        kh_auto_return_timer = TRUE;
+        DoMenuAutoReturnConfig(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khsetautooff")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_auto_return_timer = FALSE; 
+        DoMenuAutoReturnConfig(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khforcereturn")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        if (kh_key == NULL_KEY)
+            llInstantMessage(id, "The key is already in the lock.");
+        else
+        {
+            ReturnKey(llKey2Name(id) + " forced the return.", FALSE);
+            llInstantMessage(id, "You force-return the key to the lock.");
+        }
+        DoMenu(id, 0, num);
+    }
+    else if (str == "khtimerreturn")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        if (kh_key != NULL_KEY)
+        {
+            ReturnKey("Key returned by timer.", FALSE);
+        }
+    }
+    else if (str == "khsetlock" || str == "khunsetlock")
+    { 
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_lock_collar = ( str == "khsetlock" );
+        DoMenuConfigure(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khsetnoopen" || str == "khunsetnoopen")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_disable_openaccess = ( str == "khsetnonoopen" );
+        DoMenuConfigure(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khsetpub.key" || str == "khunsetpub.key")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_public_key = ( str == "khsetpub.key" );
+        DoMenuConfigure(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khlockout")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        if (kh_lockout)
+            return TRUE;
+        kh_lockout = TRUE;
+        Notify(g_keyWearer, "You are now locked out until your key is taken and returned.", TRUE);
+        llMessageLinked(LINK_WHAT, WEARERLOCKOUT, "on", "");
+        if (id != llGetOwner())
+            DoMenuConfigure(id, 0, num);
+    }
+    else if (str == "khsetmainmenu" || str == "khunsetmainmenu")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_main_menu = ( str == "khsetmainmenu" );
+        setMainMenu();
+        DoMenuConfigure(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khsetglobal" || str == "khunsetglobal")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        g_iGlobalKey = ( str == "khsetglobal" );
+        DoMenuConfigure(id, 0, num);
+        saveSettings();
+    }
+    else if (str == "khseton" || str == "khunseton")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_on = ( str == "khseton" );                
+        if (kh_key != NULL_KEY)
+            ReturnKey("Key Holder plugin turned off by " + llKey2Name(id), FALSE);
+        DoMenuConfigure(id, 0, num);
+        
+        updateVisible();
+        saveSettings();
+    }
+    else if (str == "khunsettimerreturnkey" || str == "khsettimerreturnkey")
+    {
+        if (!OwnerCheck(id, num)) return TRUE;
+        kh_return_on_timer = ( str == "khsettimerreturnkey");
+        setTimerMenu();
+        llMessageLinked(LINK_WHAT, num, "menu " + g_szTimerMenu, id);
+        saveSettings();
+    }
+    return TRUE;
+}
+
 default
 {
     state_entry()
@@ -933,10 +1082,8 @@ default
             // Reset if wearer changed
             llResetScript();
         }
-        
         if ( kh_lockout || kh_key != NULL_KEY )
             llMessageLinked(LINK_WHAT, WEARERLOCKOUT, "on", "");
-        
         updateVisible();
     }
 
@@ -944,45 +1091,7 @@ default
     // listen for likend messages from OC scripts
     link_message(integer sender, integer num, string str, key id)
     {
-        if (num == SUBMENU)
-        {
-            // Main Menu
-            if (str == g_szSubmenu)
-            {
-                DoMenu(id, 0);
-            }
-            // Config Menu
-            else if (str == g_szKeyConfigMenu)
-            {
-                DoMenuConfigure(id, 0);
-            }
-            // This is out of the timer module...
-            else if (str == "(*)Return Key")
-            {
-                llMessageLinked(LINK_WHAT, COMMAND_NOAUTH, "khunsettimerreturnkey", id);
-            }
-            else if (str == "()Return Key")
-            {
-                llMessageLinked(LINK_WHAT, COMMAND_NOAUTH, "khsettimerreturnkey", id);
-            }
-            // Take / Return key from the main menu
-            else if (str == TAKEKEY)
-            {
-                llMessageLinked(LINK_WHAT, COMMAND_NOAUTH, "khtakekeymain", id);
-            }
-            else if (str == RETURNKEY)
-            {
-                if (kh_key != id)
-                {
-                    llInstantMessage(id, "You are not the keyholder.");
-                }
-                else
-                {
-                    ReturnKey("", FALSE);
-                }  
-            }      
-        }
-        else if (num == MENUNAME_REQUEST)
+        if (num == MENUNAME_REQUEST)
             // our parent menu requested to receive buttons, so send ours
         {
             if (str == g_szParentmenu)
@@ -990,10 +1099,8 @@ default
             else if (str == g_szConfigMenu && g_iConfigMenu)
                 llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_szConfigMenu + "|" + g_szKeyConfigMenu, NULL_KEY);
 
-            if (str == "Main")
-                setMainMenu();
-            else if (str == g_szTimerMenu)
-                setTimerMenu();
+            if (str == "Main") setMainMenu();
+            else if (str == g_szTimerMenu) setTimerMenu();
         }
         else if (num == MENUNAME_RESPONSE)
             // a button is send to be added to a menu
@@ -1029,170 +1136,27 @@ default
             if (str == "menu" && ( kh_key != NULL_KEY || kh_lockout ) )
             {
                 if ( kh_key == NULL_KEY )
-                    llOwnerSay("You are locked out of the " + g_sToyName + " until someone takes and returns your key.");
-                else
-                llOwnerSay("You are locked out of the " + g_sToyName + " until your key is returned.");
+                    Notify(g_keyWearer, "You are locked out of the " + g_sToyName + " until someone takes and returns your key.", TRUE);
+                else Notify(g_keyWearer, "You are locked out of the " + g_sToyName + " until your key is returned.", TRUE);
             }
         }
-        
-        else if (
-                (num >= COMMAND_OWNER && num <= COMMAND_WEARER) ||
-                (num == COMMAND_EVERYONE && str == "khtakekey" && kh_public_key)
-            )
-            // a validated command from a owner, secowner, groupmember or the wearer has been received
-            // can also be used to listen to chat commands
+        else if (num == COMMAND_EVERYONE)
         {
-            if (str == "reset")
-                // it is a request for a reset
+            if (kh_public_key && str == "khtakekey")
             {
-                if (num == COMMAND_WEARER || num == COMMAND_OWNER)
-                {   // only owner and wearer may reset
-                    llResetScript();
-                }
+                if (kh_key != NULL_KEY) Notify(id, "The key is not in the lock.", FALSE);
+                else TakeKey(id, num, FALSE);
             }
-            else if (str == "khtakekey" || str == "khtakekeymain")
+            else if (id == kh_key)
             {
-                if (id == g_keyWearer)
-                {
-                    llInstantMessage(id, "Taking your own key does not make any sense.");
-                }
-                else if (kh_key != NULL_KEY)
-                {
-                    llInstantMessage(id, "The key is not in the lock.");
-                }
-                else
-                {
-                    TakeKey(id, num, FALSE);
-                }
-                if (str == "khtakekey")
-                    DoMenu(id, 0);
+                llMessageLinked(LINK_WHAT, COMMAND_GROUP, str, id);
             }
-            else if (num != COMMAND_OWNER)
+            else if (kh_key == NULL_KEY && str == "menu" && !oc_openaccess && kh_public_key)
             {
-                // Only onwner accessable commands past here.
-                if (llGetSubString(str, 0, 1) == "kh")
-                    llInstantMessage(id, "That command can only be accessed by an Owner.");
-            }
-            else if (llGetSubString(str, 0, 4) == "khset" && (
-                 llGetSubString(str, 5, 6) == "0," || 
-                (integer)llGetSubString(str, 5, 5) > 0
-                ) )
-            {
-                list times = llParseString2List(str, [ "khset", ",", ":" ], []);
-                kh_auto_return_time = 
-                    ( (integer)llList2String(times, 0) * 24 * 60 * 60 ) + // days
-                    ( (integer)llList2String(times, 1) * 60 * 60 ) + // Hours
-                    ( (integer)llList2String(times, 2) * 60 ) + // Minutes
-                    ( (integer)llList2String(times, 3)  ) ; // Seconds
-                
-                kh_auto_return_timer = TRUE;
-                
-                DoMenuAutoReturnConfig(id, 0);
-        
-        saveSettings();
-            }
-            else if (str == "khsetautooff")
-            {
-                kh_auto_return_timer = FALSE; 
-            
-                DoMenuAutoReturnConfig(id, 0);
-        
-        saveSettings();
-            }
-            else if (str == "khforcereturn")
-            {
-                if (kh_key == NULL_KEY)
-                    llInstantMessage(id, "The key is already in the lock.");
-                else
-                {
-                    ReturnKey(llKey2Name(id) + " forced the return.", FALSE);
-                    llInstantMessage(id, "You force-return the key to the lock.");
-                }
-                DoMenu(id, 0);
-            }
-            else if (str == "khtimerreturn")
-            {
-                if (kh_key != NULL_KEY)
-                {
-                    ReturnKey("Key returned by timer.", FALSE);
-                }
-            }
-            else if (str == "khsetlock" || str == "khunsetlock")
-            {
-                kh_lock_collar = ( str == "khsetlock" );
-                DoMenuConfigure(id, 0);
-        saveSettings();
-            }
-            else if (str == "khsetnoopen" || str == "khunsetnoopen")
-            {
-                kh_disable_openaccess = ( str == "khsetnonoopen" );
-                DoMenuConfigure(id, 0);
-        saveSettings();
-            }
-            else if (str == "khsetpub.key" || str == "khunsetpub.key")
-            {
-                kh_public_key = ( str == "khsetpub.key" );
-                DoMenuConfigure(id, 0);
-        saveSettings();
-            }
-            else if (str == "khlockout")
-            {
-                if (kh_lockout)
-                    return;
-                
-                kh_lockout = TRUE;
-                
-                llOwnerSay("You are now locked out until your key is taken and returned.");
-                
-                llMessageLinked(LINK_WHAT, WEARERLOCKOUT, "on", "");
-                
-                if (id != llGetOwner())
-                    DoMenuConfigure(id, 0);
-            }
-            else if (str == "khsetmainmenu" || str == "khunsetmainmenu")
-            {
-                kh_main_menu = ( str == "khsetmainmenu" );
-                setMainMenu();
-                DoMenuConfigure(id, 0);
-        saveSettings();
-            }
-            else if (str == "khsetglobal" || str == "khunsetglobal")
-            {
-                g_iGlobalKey = ( str == "khsetglobal" );
-                DoMenuConfigure(id, 0);
-        saveSettings();
-            }
-            else if (str == "khseton" || str == "khunseton")
-            {
-                kh_on = ( str == "khseton" );
-                
-                if (kh_key != NULL_KEY)
-                    ReturnKey("Key Holder plugin turned off by " + llKey2Name(id), FALSE);
-
-                DoMenuConfigure(id, 0);
-                
-                updateVisible();
-        saveSettings();
-            }
-            else if (str == "khunsettimerreturnkey" || str == "khsettimerreturnkey")
-            {
-                kh_return_on_timer = ( str == "khsettimerreturnkey");
-                setTimerMenu();
-                llMessageLinked(LINK_WHAT, SUBMENU, g_szTimerMenu, id);
-        saveSettings();
+                DoMenuSpecial(id, 0, TRUE, num);
             }
         }
-        else if (str == "khreturnkey")
-        {
-            if (kh_key != id)
-            {
-                llInstantMessage(id, "You are not the keyholder.");
-            }
-            else
-            {
-                ReturnKey("", FALSE);
-            }
-        }
+        else if (UserCommand(num, str, id)) return;  // from COMMAND_OWNER to COMMAND_WEARER
         else if (num == DIALOG_RESPONSE)
             // answer from menu system
             // careful, don't use the variable id to identify the user.
@@ -1206,59 +1170,48 @@ default
                 key av = (key)llList2String(menuparams, 0);
                 string message = llList2String(menuparams, 1);
                 integer page = (integer)llList2String(menuparams, 2);
+                integer iAuth = (integer)llList2String(menuparams, 3);
                 
                 // request to change to parent menu
                 if (message == UPMENU)
                 {
                     if (id == g_keyMenuID)
-                        llMessageLinked(LINK_WHAT, SUBMENU, g_szParentmenu, av);
-                    if (id == g_keyConfigMenuID)
+                        llMessageLinked(LINK_WHAT, iAuth, "menu "+g_szParentmenu, av);
+                    else if (id == g_keyConfigMenuID)
                     {
                         if (g_iConfigMenu)
-                            llMessageLinked(LINK_WHAT, SUBMENU, g_szConfigMenu, av);
+                            llMessageLinked(LINK_WHAT, iAuth, "menu " + g_szConfigMenu, av);
                         else
-                            DoMenu(av, 0);
+                            DoMenu(av, 0, iAuth);
                     }
                     else if (id == g_keyConfigAutoReturnMenuID)
-                        DoMenuConfigure(av, 0);
+                        DoMenuConfigure(av, 0, iAuth);
                 }
                 else if (message == "Configure" && !g_iConfigMenu)
                 {
-                    DoMenuConfigure(av, 0);
+                    DoMenuConfigure(av, 0, iAuth);
                 }
                 else if (message == "Auto Return")
                 {
-                    DoMenuAutoReturnConfig(av, 0);
+                    DoMenuAutoReturnConfig(av, 0, iAuth);
                 }
                 else
                 {
                     // Handle checkboxes.
-                    integer checkbox = FALSE;
-                    list l = llParseString2List(message, [ ], [ "()", "(*)" ]);
-                    string s = llList2String(l, 0);
-                    string cmd = message;
-                    
-                    if (s == "()" || s == "(*)")
+                    string cmd = g_szChatCommand;             
+                    if (llGetSubString(message, 0, 1) == "()")
                     {
-                        checkbox = TRUE;
-                        cmd = llList2String(l, 1);
-                        if (s == "(*)")
-                            cmd = "unset" + cmd;
-                        else
-                            cmd = "set" + cmd;
+                        cmd += "set"+llGetSubString(message, 2, -1);
                     }
-                    
-                    // Module prefix for text version of command
-                    cmd = g_szChatCommand + cmd;
-                    
-                    // Remove spaces from the button name
+                    else if (llGetSubString(message, 0, 2) == "(*)")
+                    {
+                        cmd += "unset" + llGetSubString(message, 3, -1);
+                    }
+                    // Remove spaces, lowercase
                     cmd = strReplace(cmd, " ", "");
-                    
-                    // Lowercase
                     cmd = llToLower(cmd);
-                    
-                    // Send it to get authenitcated
-                    llMessageLinked(LINK_WHAT, COMMAND_NOAUTH, cmd, av);
+                    // Handle the command
+                    UserCommand(iAuth, cmd, av);
                 }
                 
                 if (id == g_keyMenuID)
@@ -1273,18 +1226,6 @@ default
                 g_keyMenuID = NULL_KEY;
             if (id == g_keyConfigMenuID)
                 g_keyConfigMenuID = NULL_KEY;
-        }
-        else if (num == COMMAND_EVERYONE)
-        {
-            // Auth keyholder commands
-            if (id == kh_key)
-            {
-                llMessageLinked(LINK_WHAT, COMMAND_GROUP, str, id);
-            }
-            else if (kh_key == NULL_KEY && str == "menu" && !oc_openaccess && kh_public_key)
-            {
-                DoMenuSpecial(id, 0, TRUE);
-            }
         }
         else if (num == HTTPDB_RESPONSE || num == HTTPDB_SAVE)
         {
@@ -1323,11 +1264,9 @@ default
             if ( CompareDBPrefix(str, "locked") )
             {
                 oc_locked = FALSE;
-
                 updateVisible();
             }
-            else if ( CompareDBPrefix(str, "openaccess") )
-                oc_openaccess = FALSE;
+            else if ( CompareDBPrefix(str, "openaccess") ) oc_openaccess = FALSE;
         }
         else if (num == COMMAND_SAFEWORD)
         {
@@ -1390,13 +1329,7 @@ default
     
     changed(integer iChange)
     {
-        if (iChange & CHANGED_OWNER)
-        {
-            llResetScript();
-        }
-        else if (iChange & CHANGED_LINK)
-        {
-            BuildLockElementList();
-        }
+        if (iChange & CHANGED_OWNER) llResetScript();
+        else if (iChange & CHANGED_LINK) BuildLockElementList();
     }
 }

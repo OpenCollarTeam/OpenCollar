@@ -1,4 +1,4 @@
-//OpenCollar - menu - 3.520
+//OpenCollar - menu
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -43,7 +43,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
@@ -66,29 +65,24 @@ Debug(string text)
     //llOwnerSay(llGetScriptName() + ": " + text);
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-Menu(string sName, key kID)
+Menu(string sName, key kID, integer iAuth)
 {
     integer iMenuIndex = llListFindList(g_lMenuNames, [sName]);
     Debug((string)iMenuIndex);    
@@ -105,7 +99,7 @@ Menu(string sName, key kID)
             lUtility = [UPMENU];
         }
         
-        key kMenuID = Dialog(kID, sPrompt, lItems, lUtility, 0);
+        key kMenuID = Dialog(kID, sPrompt, lItems, lUtility, 0, iAuth);
         
         integer iIndex = llListFindList(g_lMenuIDs, [kID]);
         if (~iIndex)
@@ -177,6 +171,41 @@ HandleMenuResponse(string entry)
     }
 }
 
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    // SA: TODO delete this when transition is finished
+    if (iNum == COMMAND_NOAUTH) {llMessageLinked(LINK_SET, iNum, sStr, kID); return TRUE;}
+    // /SA
+    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llList2String(lParams, 0);
+
+    if (sStr == "menu") Menu("Main", kID, iNum);
+    else if (sCmd == "menu")
+    {
+        string sSubmenu = llGetSubString(sStr, 5, -1);
+        if (llListFindList(g_lMenuNames, [sSubmenu]) != -1);
+        Menu(sSubmenu, kID, iNum);
+    }
+    else if (sStr == "help") llGiveInventory(kID, HELPCARD);                
+    else if (sStr == "addons") Menu("AddOns", kID, iNum);
+    else if (sStr == "debug") Menu("Help/Debug", kID, iNum);
+    else if (sCmd == "menuto") 
+    {
+        key kAv = (key)llList2String(lParams, 1);
+        if (KeyIsAv(kAv)) Menu("Main", kAv, iNum);
+    }
+    else if (sCmd == "refreshmenu")
+    {
+        llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);
+        //MenuInit();
+        llResetScript();
+    }
+    return TRUE;
+}
+
 default
 {
     state_entry()
@@ -187,48 +216,16 @@ default
     }
     
     touch_start(integer iNum)
-    {
+    { // SA: true entry point where auth is *really* needed
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", llDetectedKey(0));
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCmd = llList2String(lParams, 0);
-            string sValue = llToLower(llList2String(lParams, 1));
-            if (sStr == "menu")
-            {
-                Menu("Main", kID);
-            }
-            else if (sStr == "help")
-            {
-                llGiveInventory(kID, HELPCARD);                
-            }
-            if (sStr == "addons")
-            {
-                Menu("AddOns", kID);
-            }
-            if (sStr == "debug")
-            {
-               Menu("Help/Debug", kID);
-            }
-            else if (sCmd == "menuto")
-            {
-                key kAv = (key)llList2String(lParams, 1);
-                if (KeyIsAv(kAv))
-                {
-                    Menu("Main", kAv);
-                }
-            }
-            else if (sCmd == "refreshmenu")
-            {
-                llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);
-                //MenuInit();
-                llResetScript();
-            }
-        }
+        // SA: delete this after transition is finished
+        if (iNum == COMMAND_NOAUTH) return;
+        // /SA
+        if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == MENUNAME_RESPONSE)
         {
             //sStr will be in form of "parent|menuname"
@@ -254,13 +251,6 @@ default
                 }        
             }
         }
-        else if (iNum == SUBMENU)
-        {
-            if (llListFindList(g_lMenuNames, [sStr]) != -1)
-            {
-                Menu(sStr, kID);
-            }
-        }
         else if (iNum == DIALOG_RESPONSE)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -271,6 +261,7 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
@@ -279,26 +270,26 @@ default
                 //process response
                 if (sMessage == UPMENU)
                 {
-                    Menu("Main", kAv);
+                    Menu("Main", kAv, iAuth);
                 }
                 else
                 {
                     if (sMessage == GIVECARD)
                     {
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "help", kAv);
-                        Menu("Help/Debug", kAv);
+                        UserCommand(iAuth, "help", kAv);
+                        Menu("Help/Debug", kAv, iAuth);
                     }
                     else if (sMessage == REFRESH_MENU)
                     {//send a command telling other plugins to rebuild their menus
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "refreshmenu", kAv);
+                        UserCommand(iAuth, "refreshmenu", kAv);
                     }
                     else if (sMessage == RESET_MENU)
                     {//send a command to reset scripts
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "resetscripts", kAv);
+                        UserCommand(iAuth, "resetscripts", kAv);
                     }
                     else
                     {
-                        llMessageLinked(LINK_SET, SUBMENU, sMessage, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
                 }
             }

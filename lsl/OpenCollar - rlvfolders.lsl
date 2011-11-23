@@ -1,7 +1,5 @@
-//OpenCollar - rlvfolders - 3.520
+//OpenCollar - rlvfolders
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
-//give 4 menus:
-    //Folder
 
 integer g_iRLVVer = 115; //temporary hack until we can parse the version string in a sensible way
 //string g_sSubMenu = "#RLV Folder";
@@ -10,7 +8,7 @@ string g_sParentMenu = "Un/Dress";
 list g_lChildren = ["Browse #RLV","Save","Restore"];
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
@@ -23,7 +21,6 @@ integer POPUP_HELP = 1001;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -52,16 +49,20 @@ integer g_iTimeOut = 60;
 integer g_iFolderRLV = 78467;
 
 key g_kFolderID;
-integer iPage = 0;//Let's see if we can get away from using a global for this now that we have the dialog plugin
+integer g_iPage = 0;//Having a global is nice, if you redisplay the menu after an action on a folder.
 
-integer g_iListener;//Nan:do we still need this?
-key g_sMenuUser;
+integer g_iListener;//Nan:do we still need this? -- SA: of course. It's where the viewer talks.
+
+// Asynchronous menu request. Alas still needed since some menus are triggered after an answer from the viewer.
+key g_kAsyncMenuUser;
+integer g_iAsyncMenuAuth;
+integer g_iAsyncMenuRequested = FALSE;
+
 string sPrompt;//Nan: why is this global?
 string g_sFolderType; //what to do with those folders
 string g_sCurrentFolder;
 
 string g_sDBToken = "folders";
-integer g_iRemenu = FALSE;
 
 list g_lOutfit; //saved folder list
 list g_lToCheck; //stack of folders to check, used for subfolder tree search
@@ -97,6 +98,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 ParentFolder() {
     list lFolders = llParseString2List(g_sCurrentFolder,["/"],[]);
+    g_iPage = 0; // changing the folder also means going back to first page
     if (llGetListLength(lFolders)>1) {
         g_sCurrentFolder=llList2String(lFolders,0);
         integer i;
@@ -105,42 +107,35 @@ ParentFolder() {
     else g_sCurrentFolder="";
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
 
-QueryFolders()
-{    //open g_iListener
+QueryFolders(string sType)
+{
+    g_sFolderType = sType;
     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
-    //start timer
     llSetTimerEvent(g_iTimeOut);
-    //send rlvcmd            
-    //if (g_iRLVVer<115) llMessageLinked(LINK_SET, RLV_CMD, "getinv"+g_sCurrentFolder+"=" + (string)g_iFolderRLV, NULL_KEY);
-    //RLV 1.15: getinvworn gives more data                     
-    //else
     llMessageLinked(LINK_SET, RLV_CMD, "getinvworn"+g_sCurrentFolder+"=" + (string)g_iFolderRLV, NULL_KEY);                     
 }
 
+// Browsing menu, called asynchronously only (after querying folder state). Queries user and auth from globals.
 FolderMenu(string sStr)
 {
+    g_iAsyncMenuRequested = FALSE;
     sPrompt = "";
 //    if (g_iRLVVer>=115) sPrompt += "\nOnly folders with items you can "+g_sFolderType+" are shown.";
     sPrompt+="\n"+UNTICKED+": nothing worn. Make the sub wear it.";
@@ -216,7 +211,7 @@ FolderMenu(string sStr)
 //        if ((g_iRLVVer>=115&&llGetListLength(sData)<=1)||llGetListLength(sData)<=0) sPrompt = "\n\nEither your #RLV folder is empty, or you did not set up your shared folders.\nCheck Real Restraint blog for more information.";
 //        else
         if (g_lShortFolders==[]) sPrompt = "\n\nThere is no item to "+g_sFolderType+" in the current folder.";
-        else g_kFolderID = Dialog(g_sMenuUser, sPrompt, g_lShortFolders, [UPMENU], iPage);
+        else g_kFolderID = Dialog(g_kAsyncMenuUser, sPrompt, g_lShortFolders, [UPMENU], g_iPage, g_iAsyncMenuAuth);
 
 }
 
@@ -238,12 +233,16 @@ SaveFolder(string sStr)
     {
         g_sCurrentFolder=llList2String(g_lToCheck,-1);
         g_lToCheck=llDeleteSubList(g_lToCheck,-1,-1);
-        QueryFolders();
+        QueryFolders("save");
     }
     else
     {
-        Notify(g_sMenuUser,"Current outfit has been saved.", TRUE);
-        if (g_iRemenu) {g_iRemenu=FALSE;  llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, g_sMenuUser);}
+        Notify(g_kAsyncMenuUser,"Current outfit has been saved.", TRUE);
+        if (g_iAsyncMenuRequested)
+        {
+            g_iAsyncMenuRequested=FALSE;
+            llMessageLinked(LINK_SET, g_iAsyncMenuAuth, "menu "+g_sParentMenu, g_kAsyncMenuUser);
+        }
     }
 }
 
@@ -281,6 +280,14 @@ handleMultiSearch()
     llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sSearchStr+"="+(string)g_iFolderRLV, NULL_KEY);       
 }
 
+// set a dialog to be requested after the next viewer answer
+SetAsyncMenu(key kAv, integer iAuth)
+{
+    g_iAsyncMenuRequested = TRUE;
+    g_kAsyncMenuUser = kAv;
+    g_iAsyncMenuAuth = iAuth;
+}
+
 default
 {
     state_entry()
@@ -290,38 +297,13 @@ default
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
-    {  
+    {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             integer i;
             for (i=0;i < llGetListLength(g_lChildren);i++)              
             {
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
-            }
-        }
-        else if (iNum == SUBMENU && llListFindList(g_lChildren,[sStr]) != -1)
-        {
-            iPage = 0;
-            if (sStr == "Browse #RLV")
-            {
-                g_sCurrentFolder = "";
-                g_sFolderType="browse";
-                g_sMenuUser = kID;
-                QueryFolders();             
-            }
-            else if (sStr == "Save")
-            {
-                g_iRemenu=TRUE;
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "save", kID);
-            }
-            else if (sStr == "Restore")
-            {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "restore", kID);
-                llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);;
-            }
-            else
-            {
-                //should not happen
             }
         }
         else if (iNum == RLV_VERSION)
@@ -333,30 +315,33 @@ default
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llToLower(llList2String(lParams, 1));
-            g_sMenuUser = kID;
-            if (llToLower(sStr) == "#rlv")
+            if (llToLower(sStr) == "#rlv" || sStr == "menu Browse #RLV")
             {
+                
                 g_sCurrentFolder = "";
-                g_sFolderType="browse";
-                QueryFolders(); 
+                QueryFolders("browse"); 
+                if (sCommand == "menu") SetAsyncMenu(kID, iNum);
             }
-            else if (sStr=="save")
+            else if (sStr=="save" || sStr=="menu Save")
             {
-                g_sFolderType = "save";
                 g_sCurrentFolder = "";
                 g_lOutfit=[];
                 g_lToCheck=[];
-                QueryFolders();
+                QueryFolders("save");
+                if (sCommand == "menu") SetAsyncMenu(kID, iNum);
+                else g_kAsyncMenuUser = kID; // needed for notifying
             }
-            else if (sStr=="restore")
+            else if (sStr=="restore"|| sStr=="menu Restore")
             {
                 integer i;
                 for (i=0; i<=llGetListLength(g_lOutfit);i++)
                     llMessageLinked(LINK_SET, RLV_CMD,  "attach" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
                 Notify(kID, "Saved outfit has been restored.", TRUE );
+                if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
             }
             else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-")
             {
+                g_kAsyncMenuUser = kID;
                 g_lSearchList=llParseString2List(sStr,[","],[]);
                 handleMultiSearch();
             }
@@ -368,17 +353,19 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
-                integer iPage = (integer)llList2String(lMenuParams, 2);                
+                g_iPage = (integer)llList2String(lMenuParams, 2);                
+                integer iAuth = (integer)llList2String(lMenuParams, 3);                
                 if (sMessage == UPMENU)
                 {
                     if (g_sCurrentFolder=="")
                     {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     }
                     else 
                     {
                         ParentFolder();
-                        QueryFolders();
+                        SetAsyncMenu(kAv, iAuth);                
+                        QueryFolders("browse");
                     }
                 }
                 else
@@ -412,7 +399,7 @@ default
                         string folder = llList2String(g_lLongFolders,iIndex);
                         if (g_sCurrentFolder=="") newfolder=":"+folder;
                         else newfolder = g_sCurrentFolder + "/" + folder;
-                        if (cstate==FOLDER || cstate==STICKED) g_sCurrentFolder=newfolder;
+                        if (cstate==FOLDER || cstate==STICKED) {g_sCurrentFolder=newfolder; g_iPage = 0;}
                         else if (cstate==TICKED)
                         {
                             llMessageLinked(LINK_SET, RLV_CMD,  "detach" + newfolder + "=force", NULL_KEY);
@@ -429,8 +416,8 @@ default
                         llSleep(1.0); //time for command to take effect so that we see the result in menu
                     }
                     //Return menu
-                    g_sMenuUser = kAv;                
-                    QueryFolders();
+                    SetAsyncMenu(kAv, iAuth);                
+                    QueryFolders("browse");
                 }                
             }
         }
@@ -450,7 +437,7 @@ default
                 else
                 {
                     llMessageLinked(LINK_SET, RLV_CMD,  llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
-                    Notify(g_sMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
+                    Notify(g_kAsyncMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
                 }
                 if (g_lSearchList!=[]) handleMultiSearch();
             }

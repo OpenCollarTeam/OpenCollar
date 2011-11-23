@@ -1,4 +1,4 @@
-//OpenCollar - coupleanim2 - 3.520
+//OpenCollar - coupleanim2
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 key g_kPartner;
 float g_fTimeOut = 30.0;//time for the potential kissee to respond before we give up
@@ -26,7 +26,6 @@ integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
