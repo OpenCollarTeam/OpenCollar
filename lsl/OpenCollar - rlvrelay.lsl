@@ -59,8 +59,8 @@ list g_lTempUserWhiteList=[];
 list g_lTempUserBlackList=[];
 list g_lObjWhiteList=[];
 list g_lObjBlackList=[];
-list g_lAvWhiteList=[];
-list g_lAvBlackList=[];
+list g_lAvWhiteList=[]; // keys stored as string since strings is what you get when restoring settings
+list g_lAvBlackList=[]; // same here (this fixes issue 1253)
 list g_lObjWhiteListNames=[];
 list g_lObjBlackListNames=[];
 list g_lAvWhiteListNames=[];
@@ -101,8 +101,7 @@ integer g_iSafeMode = 1;
 integer g_iLandMode = 1;
 integer g_iPlayMode = 0;
 
-
-//list g_lBaseModes = ["off", "restricted", "ask", "auto"];
+key g_kDebugRcpt = NULL_KEY; // recipient key for relay chat debugging (useful since you cannot eavesdrop llRegionSayTo)
 
 
 
@@ -331,15 +330,17 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
             //better try to execute the rest of the command, right?
             sAck=""; //not ko'ing as some old bug in chorazin cages would make them go wrong. Otherwise "ko" looks closer in spirit to the relay spec. (issue 514)
         }//probably an ill-formed command, not answering
-        if (sAck) llShout(RELAY_CHANNEL,sIdent+","+(string)kID+","+sCom+","+sAck);
+        if (sAck) sendrlvr(sIdent, kID, sCom, sAck);
     }
     return "";
 }
 
-//Debug(string sMsg)
-//{
-    //llOwnerSay(llGetScriptName() + ": " + Msg);
-//}
+sendrlvr(string sIdent, key kID, string sCom, string sAck)
+{
+    llRegionSayTo(kID, RELAY_CHANNEL, sIdent+","+(string)kID+","+sCom+","+sAck);
+    if (g_kDebugRcpt == g_kWearer) llOwnerSay("From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);    
+    else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);    
+}
 
 SafeWord()
 {
@@ -354,7 +355,7 @@ SafeWord()
         integer i;
         for (i=0;i<(g_lSources!=[]);++i)
         {
-            llShout(RELAY_CHANNEL,"release,"+llList2String(g_lSources,i)+",!release,ok");
+            sendrlvr("release", llList2Key(g_lSources, i), "!release", "ok");
         }
         g_lSources=[];
         g_iRecentSafeword = TRUE;
@@ -574,7 +575,7 @@ CleanQueue()
             list lCommands = llParseString2List(sCommand,["|"],[]);
             integer j;
             for (j=0;j<(lCommands!=[]);++j)
-                llShout(RELAY_CHANNEL,sIdent+","+(string)kObj+","+llList2String(lCommands,j)+",ko");
+                sendrlvr(sIdent,kObj,llList2String(lCommands,j),"ko");
         }
         else
         {
@@ -601,6 +602,18 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
         llInstantMessage(kID, "Sorry, only the wearer of the collar or their owner can change the relay options.");
     else if (sStr=="safeword") SafeWord();
+    else if (sStr=="relay getdebug")
+    {
+        g_kDebugRcpt = kID;
+        notify(kID, "Relay messages will be forwarded to "+llKey2Name(kID)+".", TRUE);
+        return TRUE;
+    }
+    else if (sStr=="relay stopdebug")
+    {
+        g_kDebugRcpt = NULL_KEY;
+        notify(kID, "Relay messages will not forwarded anymore.", TRUE);
+        return TRUE;
+    }
     else if (sStr=="pending")
     {
         if (g_lQueue) Dequeue();
@@ -874,44 +887,62 @@ default
                     if (sMsg=="Yes")
                     {
                         g_lTempWhiteList+=[kCurID];
-                        if (kUser) g_lTempUserWhiteList+=[kUser];
+                        if (kUser) g_lTempUserWhiteList+=[(string)kUser];
                         iSave=FALSE;
                     }
                     else if (sMsg=="No")
                     {
                         g_lTempBlackList+=[kCurID];
-                        if (kUser) g_lTempUserBlackList+=[kUser];
+                        if (kUser) g_lTempUserBlackList+=[(string)kUser];
                         iSave=FALSE;
                     }
                     else if (sMsg=="Trust Object")
                     {
-                        g_lObjWhiteList+=[kCurID];
-                        g_lObjWhiteListNames+=[llKey2Name(kCurID)];
+                        if (!~llListFindList(g_lObjWhiteList, [kCurID]))
+                        {
+                            g_lObjWhiteList+=[kCurID];
+                            g_lObjWhiteListNames+=[llKey2Name(kCurID)];
+                        }
                     }
                     else if (sMsg=="Ban Object")
                     {
-                        g_lObjBlackList+=[kCurID];
-                        g_lObjBlackListNames+=[llKey2Name(kCurID)];
+                        if (!~llListFindList(g_lObjBlackList, [kCurID]))
+                        {
+                            g_lObjBlackList+=[kCurID];
+                            g_lObjBlackListNames+=[llKey2Name(kCurID)];
+                        }
                     }
                     else if (sMsg=="Trust Owner")
                     {
-                        g_lAvWhiteList+=[llGetOwnerKey(kCurID)];
-                        g_lAvWhiteListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        if (!~llListFindList(g_lAvWhiteList, [(string)llGetOwnerKey(kCurID)]))
+                        {
+                            g_lAvWhiteList+=[(string)llGetOwnerKey(kCurID)];
+                            g_lAvWhiteListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        }
                     }
                     else if (sMsg=="Ban Owner")
                     {
-                        g_lAvBlackList+=[llGetOwnerKey(kCurID)];
-                        g_lAvBlackListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        if (!~llListFindList(g_lAvBlackList, [(string)llGetOwnerKey(kCurID)]))
+                        {
+                            g_lAvBlackList+=[(string)llGetOwnerKey(kCurID)];
+                            g_lAvBlackListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                        }
                     }
                     else if (sMsg=="Trust User")
                     {
-                        g_lAvWhiteList+=[kUser];
-                        g_lAvWhiteListNames+=[llKey2Name(kUser)];
+                        if (!~llListFindList(g_lAvWhiteList, [(string)kUser]))
+                        {
+                            g_lAvWhiteList+=[(string)kUser];
+                            g_lAvWhiteListNames+=[llKey2Name(kUser)];
+                        }
                     }
                     else if (sMsg=="Ban User")
                     {
-                        g_lAvBlackList+=[kUser];
-                        g_lAvBlackListNames+=[llKey2Name(kUser)];
+                        if (!~llListFindList(g_lAvBlackList, [(string)kUser]))
+                        {
+                            g_lAvBlackList+=[(string)kUser];
+                            g_lAvBlackListNames+=[llKey2Name(kUser)];
+                        }
                     }
                     if (iSave) SaveSettings();
                     CleanQueue();
@@ -952,6 +983,8 @@ default
         if (llList2Key(lArgs,1)!=g_kWearer && llList2String(lArgs,1)!="ffffffff-ffff-ffff-ffff-ffffffffffff") return; // allow FFF...F wildcard
         string sIdent=llList2String(lArgs,0);
         sMsg=llToLower(llList2String(lArgs,2));
+        if (g_kDebugRcpt == g_kWearer) llOwnerSay("To relay: "+sIdent+","+sMsg);
+        else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "To relay: "+sIdent+","+sMsg);
         if (sMsg == "!pong")
         {//sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
             llMessageLinked(LINK_SET, COMMAND_RLV_RELAY, "ping,"+(string)g_kWearer+",!pong", kID);
