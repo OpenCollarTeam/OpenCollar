@@ -455,6 +455,55 @@ SetAsyncMenu(key kAv, integer iAuth)
     g_iAsyncMenuAuth = iAuth;
 }
 
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCommand = llToLower(llList2String(lParams, 0));
+    string sValue = llToLower(llList2String(lParams, 1));
+    if (llToLower(sStr) == "#rlv" || sStr == "menu Browse #RLV")
+    {
+        g_sCurrentFolder = "";
+        QueryFolders("browse"); 
+        if (sCommand == "menu") SetAsyncMenu(kID, iNum);
+    }
+    else if (sStr=="save" /*|| sStr=="menu Save"*/)
+    {
+        g_sCurrentFolder = "";
+        g_lOutfit=[];
+        g_lToCheck=[];
+        QueryFolders("save");
+        //if (sCommand == "menu") SetAsyncMenu(kID, iNum);
+        g_kAsyncMenuUser = kID; // needed for notifying
+    }
+    else if (sStr=="restore"/*|| sStr=="menu Restore"*/)
+    {
+        integer i = 0; integer n = llGetListLength(g_lOutfit);
+        for (; i < n; ++i)
+            llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
+        Notify(kID, "Saved outfit has been restored.", TRUE );
+        //if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
+    }
+    else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-")
+    {
+        g_kAsyncMenuUser = kID;
+        g_lSearchList=llParseString2List(sStr,[","],[]);
+        handleMultiSearch();
+    }
+    else if (iNum <= COMMAND_GROUP)
+    {
+        list lArgs = llParseStringKeepNulls(sStr, ["="], []);
+        integer val;
+        if (llList2String(lArgs,0)=="unsharedwear") val = 0x2;
+        else if (llList2String(lArgs,0)=="unsharedunwear") val = 0x1;
+        else return TRUE;
+        if (llList2String(lArgs,1)=="y") updateUnsharedLocks(0, val);
+        else if (llList2String(lArgs,1)=="n") updateUnsharedLocks(val, 0);
+        else return TRUE;            
+    }
+    return TRUE;
+}
+
 default
 {
     state_entry()
@@ -473,53 +522,7 @@ default
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
             }
         }
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llToLower(llList2String(lParams, 0));
-            string sValue = llToLower(llList2String(lParams, 1));
-            if (llToLower(sStr) == "#rlv" || sStr == "menu Browse #RLV")
-            {
-                
-                g_sCurrentFolder = "";
-                QueryFolders("browse"); 
-                if (sCommand == "menu") SetAsyncMenu(kID, iNum);
-            }
-            else if (sStr=="save" || sStr=="menu Save")
-            {
-                g_sCurrentFolder = "";
-                g_lOutfit=[];
-                g_lToCheck=[];
-                QueryFolders("save");
-                if (sCommand == "menu") SetAsyncMenu(kID, iNum);
-                else g_kAsyncMenuUser = kID; // needed for notifying
-            }
-            else if (sStr=="restore"|| sStr=="menu Restore")
-            {
-                integer i = 0; integer n = llGetListLength(g_lOutfit);
-                for (; i < n; ++i)
-                    llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
-                Notify(kID, "Saved outfit has been restored.", TRUE );
-                if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
-            }
-            else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-")
-            {
-                g_kAsyncMenuUser = kID;
-                g_lSearchList=llParseString2List(sStr,[","],[]);
-                handleMultiSearch();
-            }
-            else if (iNum <= COMMAND_GROUP)
-            {
-                list lArgs = llParseStringKeepNulls(sStr, ["="], []);
-                integer val;
-                if (llList2String(lArgs,0)=="unsharedwear") val = 0x2;
-                else if (llList2String(lArgs,0)=="unsharedunwear") val = 0x1;
-                else return;
-                if (llList2String(lArgs,1)=="y") updateUnsharedLocks(0, val);
-                else if (llList2String(lArgs,1)=="n") updateUnsharedLocks(val, 0);
-                else return;            
-            }
-        }  
+        else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID == g_kRootActionsID)
@@ -553,7 +556,7 @@ default
                         Notify(kAv, "Now wearing unshared items is forbidden.", TRUE);
                     }
                 }
-                RootActionsMenu();
+                RootActionsMenu(kAv, iAuth);
             }            
             else if (kID == g_kBrowseID)
             {
@@ -605,6 +608,7 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
+                integer iAuth = (integer)llList2String(lMenuParams, 3);                                         
                 
                 integer iIndex = llListFindList(g_lShortFolders,[sMessage]);
                 if (sMessage == ADD)
@@ -657,12 +661,12 @@ default
                     updateFolderLocks(g_sCurrentFolder, 0x08, 0x80);
                     Notify(kAv, "Now removing "+g_sCurrentFolder+ " or its subfolders is forbidden (this overrides parent exceptions).", TRUE);
                 }
-                else if (sMessage == lockFolderButton(0x0F,0, 0))
+                else if (sMessage == lockFolderButton(0x0F, 0, 0))
                 {
                     updateFolderLocks(g_sCurrentFolder, 0x10, 0x01);
                     Notify(kAv, "Now wearing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).", TRUE);
                 }
-                else if (sMessage == lockFolderButton(0x0F,1, 0))
+                else if (sMessage == lockFolderButton(0x0F, 1, 0))
                 {
                     updateFolderLocks(g_sCurrentFolder, 0x20, 0x02);
                     Notify(kAv, "Now removing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).", TRUE);
@@ -736,7 +740,8 @@ default
                 if (sMsg == "")
                 { // try again if the folder name was wrong (may happen if the inventory changed)
                     g_sCurrentFolder = "";
-                    QueryFolders();
+                    g_iPage = 0;
+                    QueryFolders("browse");
                 }
                 else FolderBrowseMenu(sMsg);
             }

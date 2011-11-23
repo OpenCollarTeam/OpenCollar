@@ -616,7 +616,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else if (sStr=="pending")
     {
-        if (g_lQueue) Dequeue();
+        if (g_lQueue != []) Dequeue();
         else llOwnerSay("No pending relay request for now.");
     }
     else if (sStr=="access") ListsMenu(kID, iNum);

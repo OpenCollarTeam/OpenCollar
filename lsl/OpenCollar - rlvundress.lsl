@@ -783,10 +783,9 @@ default
                 else if (kID == g_kAttachID)
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sSubMenu, kAv);
-                    else //SA: same remark here, people who are able to get the menu happen to be the ones who have the permission to detach
                     else if (sMessage == "Clothing") QueryClothing(kAv, iAuth);
+                    else //SA: same remark here, people who are able to get the menu happen to be the ones who have the permission to detach
                     {    //we got an attach point.  send a message to detach
-                        //we got a cloth point.
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
                         llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", kAv);
