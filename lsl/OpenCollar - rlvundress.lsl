@@ -5,7 +5,7 @@
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
 
-list g_lChildren = ["Clothing","Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
+list g_lChildren = ["Rem Clothing","Rem Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
 list g_lSubMenus= [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
@@ -24,12 +24,13 @@ list LOCK_CLOTH_POINTS = [
     "Socks",
     "Underpants",
     "Undershirt",
-    "skin",
-    "eyes",
-    "hair",
-    "shape",
-    "alpha",
-    "tattoo"
+    "Skin",
+    "Eyes",
+    "Hair",
+    "Shape",
+    "Alpha",
+    "Tattoo",
+    "Physics"
         ];
 
 
@@ -47,8 +48,9 @@ list DETACH_CLOTH_POINTS = [
     "xx", //"eyes", those are not to be detached, so we ignore them later
     "xx", //"hair", those are not to be detached, so we ignore them later
     "xx", //"shape", those are not to be detached, so we ignore them later
-    "alpha",
-    "tattoo"
+    "Alpha",
+    "Tattoo",
+    "Physics"
         ];
 
 list ATTACH_POINTS = [//these are ordered so that their indices in the list correspond to the numbers returned by llGetAttached
@@ -90,7 +92,9 @@ list ATTACH_POINTS = [//these are ordered so that their indices in the list corr
     "Center",
     "Bottom Left",
     "Bottom",
-    "Bottom Right"
+    "Bottom Right",
+    "Neck",
+    "Avatar Center"
         ];
 
 //MESSAGE MAP
@@ -209,13 +213,13 @@ MainMenu(key kID, integer iAuth)
     {
         sPrompt += "\n all clothes and attachments are currently locked.";
         //skip the LockClothing and the LockAttachment buttons
-        lButtons += ["UnLockAll"];
+        lButtons += ["(*)Lock All"];
     }
     else
     {
-        lButtons += ["LockClothing"];
-        lButtons += ["LockAttachment"];
-        lButtons += ["LockAll"];
+        lButtons += ["Lock Clothing"];
+        lButtons += ["Lock Attachment"];
+        lButtons += ["( )Lock All"];
     }
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
@@ -234,7 +238,7 @@ QueryClothing(key kAv, integer iAuth)
 ClothingMenu(key kID, string sStr, integer iAuth)
 {
     //str looks like 0110100001111
-    //loop through CLOTH_POINTS, look at char of str for each
+    //loop through CLOTH_POINTS, look at chaClothingr of str for each
     //for each 1, add capitalized button
     string sPrompt = "Select an article of clothing to remove.";
     list lButtons = [];
@@ -250,7 +254,7 @@ ClothingMenu(key kID, string sStr, integer iAuth)
                 lButtons += item;
         }
     }
-    g_kClothID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    g_kClothID = Dialog(kID, sPrompt, lButtons, ["Attachments", UPMENU], 0, iAuth);
 }
 
 LockMenu(key kID, integer iAuth)
@@ -328,7 +332,7 @@ DetachMenu(key kID, string sStr, integer iAuth)
             }
         }
     }
-    g_kAttachID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    g_kAttachID = Dialog(kID, sPrompt, lButtons, ["Clothing", UPMENU], 0, iAuth);
 }
 
 UpdateSettings()
@@ -736,12 +740,12 @@ default
                 if (kID == g_kMainID)
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                    else if (sMessage == "Clothing") QueryClothing(kAv, iAuth);
-                    else if (sMessage == "Attachment") QueryAttachments(kAv, iAuth);
-                    else if (sMessage == "LockClothing") LockMenu(kAv, iAuth);
-                    else if (sMessage == "LockAttachment") LockAttachmentMenu(kAv, iAuth);
-                    else if (sMessage == "LockAll") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
-                    else if (sMessage == "UnLockAll") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "Rem Clothing") QueryClothing(kAv, iAuth);
+                    else if (sMessage == "Rem Attachment") QueryAttachments(kAv, iAuth);
+                    else if (sMessage == "Lock Clothing") LockMenu(kAv, iAuth);
+                    else if (sMessage == "Lock Attachment") LockAttachmentMenu(kAv, iAuth);
+                    else if (sMessage == "( )Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "(*)Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
@@ -754,6 +758,7 @@ default
                 else if (kID == g_kClothID)
                 {
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
+                    else if (sMessage == "Attachments") QueryAttachments(kAv, iAuth);
                     else if (sMessage == ALL) 
                     // SA: we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
                     //    Note for people looking for the auth check: it would have been here, look no further!
@@ -779,6 +784,7 @@ default
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sSubMenu, kAv);
                     else //SA: same remark here, people who are able to get the menu happen to be the ones who have the permission to detach
+                    else if (sMessage == "Clothing") QueryClothing(kAv, iAuth);
                     {    //we got an attach point.  send a message to detach
                         //we got a cloth point.
                         sMessage = llToLower(sMessage);
