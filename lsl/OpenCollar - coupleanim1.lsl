@@ -119,7 +119,7 @@ PartnerMenu(key kID, list kAvs, integer iAuth)
     g_kPart=Dialog(kID, sPrompt, kAvs, [UPMENU],0, iAuth);
 }
 
-CoupleAnimMenu(key kID, iAuth)
+CoupleAnimMenu(key kID, integer iAuth)
 {
     string sPrompt = "Pick an animation to play.";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
@@ -481,7 +481,7 @@ state ready
             {
                 StopAnims();
             }
-            else if (sStr == "menu "+g_sSubmenu || sStr == "couples")
+            else if (sStr == "menu "+g_sSubMenu || sStr == "couples")
             {
                 CoupleAnimMenu(kID, iNum);
             }
