@@ -27,10 +27,15 @@ integer CHAT = 505;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
+// scripts send messages on this channel to have settings saved to httpdb
+// str must be in form of "token=value"
+integer HTTPDB_SAVE = 2000;
+
+//when startup, scripts send requests for settings on this channel
+integer HTTPDB_REQUEST = 2001;
+
+//the httpdb script will send responses on this channel
+integer HTTPDB_RESPONSE = 2002;
 integer HTTPDB_DELETE = 2003;//delete token from DB
 integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 integer HTTPDB_REQUEST_NOCACHE = 2005;
@@ -46,6 +51,9 @@ integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
+// separator to enable setting/deleting/retrieving multiple settings
+// (name1=value1|name2=value2|...)
+string SEPARATOR = "|";
 
 string WIKI ="Online Guide";
 string WIKI_URL = "http://wiki.mycollar.org/UserDocumentation";
@@ -233,26 +241,60 @@ default {
         }
     }
 
-    link_message(integer sender, integer num, string str, key id) {
+    link_message(integer sender, integer num, string str, key id)
+    {
         if (num == HTTPDB_SAVE || num == LOCALSETTING_SAVE) {
-            //save the token, value
-            list params = llParseString2List(str, ["="], []);
-            string token = llList2String(params, 0);
-            string value = llList2String(params, 1);
-            settings_pairs = SetSetting(settings_pairs, token, value);
-        } else if (num == HTTPDB_REQUEST || num == HTTPDB_REQUEST_NOCACHE || num == LOCALSETTING_REQUEST) {
-            //check the dbcache for the token
-            // responses are sent both as HTTPDB and LOCALSETTING until all scripts can use just SETTING
-            if (SettingExists(settings_pairs, str)) {
-                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-            } else {
-                llMessageLinked(LINK_SET, HTTPDB_EMPTY, str, NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_EMPTY, str, "");                
+            list nv_pairs = llParseString2List (str, [SEPARATOR], []);
+            do {
+                //save the token, value
+                list params = llParseString2List
+                    (llList2String (nv_pairs, 0), ["="], []);
+                string token = llList2String(params, 0);
+                string value = llList2String(params, 1);
+                settings_pairs = SetSetting(settings_pairs, token, value);
             }
+            while ((nv_pairs = llDeleteSubList (nv_pairs, 0, 0)) != []);
+
+        } else if (num == HTTPDB_REQUEST
+                   || num == HTTPDB_REQUEST_NOCACHE
+                   || num == LOCALSETTING_REQUEST) {
+            list names = llParseString2List (str, [SEPARATOR], []);
+            string response = "";
+            string notexist = "";
+            do {
+                // check the dbcache for the token
+                // responses are sent both as HTTPDB and LOCALSETTING until all 
+                // scripts can use just SETTING
+                string name = llList2String (names, 0);
+                if (SettingExists(settings_pairs, name)) {
+                    response = response + name + "="
+                        + GetSetting(settings_pairs, name) + SEPARATOR;
+                } else {
+                    notexist = notexist + name + SEPARATOR;
+                }
+            } while ((names = llDeleteSubList (names, 0, 0)) != []);
+
+            if (llStringLength (response) != 0) {
+                response = llGetSubString (response, 0, -2);
+                llMessageLinked (LINK_SET, HTTPDB_RESPONSE, response, "");
+                llMessageLinked
+                    (LINK_SET, LOCALSETTING_RESPONSE, response, "");
+            }
+            if (llStringLength (notexist) != 0) {
+                notexist = llGetSubString (notexist, 0, -2);
+                llMessageLinked (LINK_SET, HTTPDB_EMPTY, notexist, "");
+                llMessageLinked (LINK_SET, LOCALSETTING_EMPTY, notexist, "");
+            }
+
         } else if (num == HTTPDB_DELETE || num == LOCALSETTING_DELETE) {
-            settings_pairs = DelSetting(settings_pairs, str);
-        } else if ( (str == "wiki") && (num >= COMMAND_OWNER && num <= COMMAND_WEARER)) {
+            list names = llParseString2List (str, [SEPARATOR], []);
+            do {
+                settings_pairs
+                    = DelSetting(settings_pairs, llList2String (names, 0));
+            } while ((names = llDeleteSubList (names, 0, 0)) != []);
+
+        } else if ( (str == "wiki") 
+                    && (num >= COMMAND_OWNER && num <= COMMAND_WEARER)) {
             // open the wiki page
             if  (remenu)
             {
