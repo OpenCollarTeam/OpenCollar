@@ -100,6 +100,10 @@ In the request dialog, which will pop up in Ask mode when an RLV source tries to
 
 * [initials]relay minmode [playful/land/safeword] [on/off] (owner only): sets the minimal submodes.
 
+* [initials]relay getdebug: starts relay debugging, i.e. forwards all relay chat to the person issuing this command
+
+* [initials]relay stopdebug: stops relay debugging
+
 
 2. Technical information for RLV scripters
 
