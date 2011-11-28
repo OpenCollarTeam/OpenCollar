@@ -13,12 +13,18 @@
 
 // This script also does a little bit of magic to ensure that the updater's
 // version number always matches the contents of the "~version" card.
-
+integer GIVE_LINK = -349857;
 
 key version_line_id;
 
 integer initChannel = -7483214;
 integer iSecureChannel;
+
+// a few things needed for the json interface
+integer mychannel;
+integer HTTP_RESPONSE = -85432;
+string NAMESEP = "~";
+
 
 // store the script pin here when we get it from the collar.
 integer iPin;
@@ -34,21 +40,8 @@ list lBundles;
 // by the bundlegiver.
 integer iBundleIdx;
 
-// handle for our dialogs
-key kDialogID;
-
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
-
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-
-string BTN_REQUIRED = "(@)";
-string BTN_INSTALL = "(*)";
-string BTN_UNINSTALL = "( )";
-string BTN_DEPRECATED = "(X)";
-string INSTALL_METHOD = "Default";
 
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
@@ -68,25 +61,6 @@ DoBundle() {
     llMessageLinked(LINK_SET, DO_BUNDLE, bundlemsg, "");    
 }
 
-key ShortKey() {//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
-    string sOut;
-    integer n;
-    for (n = 0; n < 8; n++) {
-        integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
-    }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage) {
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
-    return kID;
-}
-
 SetBundleStatus(string bundlename, string status) {
     // find the bundle in the list
     integer n;
@@ -101,77 +75,10 @@ SetBundleStatus(string bundlename, string status) {
         }
     }
 }
-
-SetInstallmode(string type) {
-    //user clicked default.. restore Bundle Status
-    if(type == "Default") {
-        lBundles = [];
-        integer n;
-        integer stop = llGetInventoryNumber(INVENTORY_NOTECARD);
-        for (n = 0; n < stop; n++) {
-            string name = llGetInventoryName(INVENTORY_NOTECARD, n);
-            if (llSubStringIndex(name, "BUNDLE_") == 0) {
-                list parts = llParseString2List(name, ["_"], []);
-                lBundles += [name, llList2String(parts, -1)];
-            }
-        }
-        return;
-    }
-    string newstatus;
-    //user clicked Minimal.. set Bundle Status
-    if(type == "Minimal") {
-        newstatus = "REMOVE";
-    }
-    integer n;
-    integer stop = llGetListLength(lBundles);
-    for (n = 0; n < stop; n += 2) {
-        string card = llList2String(lBundles, n);
-        string status = llList2String(lBundles, n + 1);
-        if (status != "REQUIRED") {
-            if(status != "DEPRECATED") {
-                lBundles = llListReplaceList(lBundles, [newstatus], n + 1, n + 1);
-            }
-        }
-    }
-}
-
-BundleMenu(integer page) {
-    // Give the plugin selection/start menu.
-    
-    string prompt = "Add/remove plugins by clicking the buttons below.";
-    prompt += "\nClick START when you're ready to update.";  
-    
-    // build list of buttons from list of bundles
-    integer n;
-    integer stop = llGetListLength(lBundles);
-    list choices;
-    for (n = 0; n < stop; n += 2) {
-        string card = llList2String(lBundles, n);
-        string status = llList2String(lBundles, n + 1);
-        list parts = llParseString2List(card, ["_"], []);
-        string name = llList2String(parts, 2);
         
-        if (status == "INSTALL") {
-            choices += [BTN_INSTALL + " " + name];
-        } else if (status == "REQUIRED") {
-            choices += [BTN_REQUIRED + " " + name];                            
-        } else if (status == "REMOVE") {
-            choices += [BTN_UNINSTALL + " " + name];
-        } else if (status == "DEPRECATED") {
-            choices += [BTN_DEPRECATED + " "+ name];
-        }
-    }
-    kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"], page);
-}
-
-GiveMethodMenu() {
-    string prompt = "\nChose Your Install method.";
-    prompt += "\nCurrent method chosen : \""+INSTALL_METHOD+"\"\n";
-    prompt += "\nDefault: Update/Install/Remove as set by default files.";
-    prompt += "\nMinimal: Remove anything except the Core Scripts.";
-    prompt += "\nCustom: Select individual bundles to install or remove.";
-    list choices = ["Default","Minimal","Custom"];
-    kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"],0);
+string PrettyCardName(string ugly) {
+    list parts = llParseString2List(ugly, ["_"], []);
+    return llList2String(parts, 2);        
 }
 
 Debug(string str) {
@@ -213,6 +120,78 @@ Particles(key target) {
     ]);
 }
 
+string Strided2JSON(list strided)
+{//takes a 2-strided list and returns a JSON-formatted string representing the list as an object
+    list outlist;
+    integer n;
+    integer stop = llGetListLength(strided);
+    for (n = 0; n < stop; n += 2)
+    {
+        string token = llList2String(strided, n);
+        string value = llList2String(strided, n + 1);
+        integer type = llGetListEntryType(strided, n + 1);
+        if (type != TYPE_INTEGER && type != TYPE_FLOAT)
+        {//JSON needs quotes around everything but integers and floats
+            value = "\"" + value + "\"";
+        }
+        token = "\"" + token + "\"";
+        
+        outlist += [token + ": " + value];
+    }
+    return "{" + llDumpList2String(outlist, ", ") + "}";
+}
+
+string GetCallback(string qstring) {
+    list qparams = llParseString2List(qstring, ["&", "="], []);
+    return GetParam(qparams, "callback");
+}
+
+string WrapCallback(string resp, string callback) {
+    return callback + "(" + resp + ")";
+}
+
+string GetParam(list things, string tok) {
+    //return "-1" if not found
+    integer index = llListFindList(things, [tok]);
+    if (index == -1) {
+        return "-1";
+    } else {
+        return llList2String(things, index + 1);
+    }
+}
+
+string List2JS(list things) {
+    string inner = llDumpList2String(things, ",");
+    return "[" + inner + "]";
+}    
+    
+string GetBundlesJSON(string status) {
+    list bundlestrings = [];
+    integer n;
+    integer stop = llGetListLength(lBundles);
+    for (n = 0; n < stop; n += 2) {
+        string card = llList2String(lBundles, n);
+        bundlestrings += Strided2JSON([
+            "card", card,
+            "status", llList2String(lBundles, n + 1),
+            "name", PrettyCardName(card)
+        ]);
+    }
+    return "{\"bundles\":" + List2JS(bundlestrings)
+            + ", \"updatestatus\":" + "\"" + status + "\""
+            + ", \"name\":" + "\"" + llGetObjectName() + "\""            
+         + "}";
+    
+}
+    
+StartUpdate() {
+    // so let's load the shim.
+    string shim = "OpenCollar - UpdateShim";
+    iSecureChannel = (integer)llFrand(-2000000000 + 1);
+    llListen(iSecureChannel, "", kCollarKey, "");
+    llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                            
+}
+
 default {
     state_entry() {
         ReadVersionLine();
@@ -239,6 +218,12 @@ default {
         }
         SetInstructionsText();
         llParticleSystem([]);
+        
+        // init the web stuff
+        //set my channel from my script name
+        string myname = llGetScriptName();
+        list parts = llParseString2List(myname, [NAMESEP], []);
+        mychannel = (integer)llList2String(parts, -1);          
     }
 
     listen(integer channel, string name, key id, string msg) {
@@ -260,7 +245,10 @@ default {
                     iPin = (integer)param;     
                     kCollarKey = id;
                     //BundleMenu(0);
-                    GiveMethodMenu();
+                    //GiveMethodMenu();
+                    // TODO: provide a way for a non-owner (like the sub's dom) to get the IM
+                    // and run the update.
+                    llMessageLinked(LINK_SET, GIVE_LINK, "", llGetOwner());
                 }                
             } else if (channel == iSecureChannel) {
                 if (msg == "reallyready") {
@@ -274,46 +262,7 @@ default {
 
     // when we get a BUNDLE_DONE message, move to the next bundle
     link_message(integer sender, integer num, string str, key id) {
-        if (num == DIALOG_RESPONSE) {
-            if (id == kDialogID) {
-                list parts = llParseString2List(str, ["|"], []);
-                key av = (key)llList2String(parts, 0);
-                string button = llList2String(parts, 1);
-                integer page = (integer)llList2String(parts, 2);
-                if (button == "START") {
-                    // so let's load the shim.
-                    string shim = "OpenCollar - UpdateShim";
-                    iSecureChannel = (integer)llFrand(-2000000000 + 1);
-                    llListen(iSecureChannel, "", kCollarKey, "");
-                    llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        
-
-                } else if (button == "Minimal" || button == "Default") {
-                    INSTALL_METHOD = button;
-                    SetInstallmode(button);
-                    GiveMethodMenu();
-                } else if (button == "Custom") {
-                    BundleMenu(0);
-                } else {
-                    // switch the bundle if appropriate
-                    string status = llGetSubString(button, 0, 2);
-                    string bundlename = llGetSubString(button, 4, -1);
-                    if (status == BTN_REQUIRED) {
-                        llOwnerSay("The " + bundlename + " bundle is required and cannot be removed.");
-                    } else if (status == BTN_DEPRECATED) {
-                        llOwnerSay("The " + bundlename + " bundle is deprecated and must be removed.");                            
-                    } else if (status == BTN_INSTALL) {
-                        // if the button said +, that means we need to switch it to -
-                        // find the bundle in the list, and set to REMOVE
-                        SetBundleStatus(bundlename, "REMOVE");
-                        llOwnerSay(bundlename + " will be removed if present.");
-                    } else if (status == BTN_UNINSTALL) {
-                        SetBundleStatus(bundlename, "INSTALL");
-                        llOwnerSay(bundlename + " will be updated/installed.");
-                    }
-                    BundleMenu(page);
-                }
-            }
-        } else if (num == BUNDLE_DONE) {
+        if (num == BUNDLE_DONE) {
             // see if there's another bundle
             integer count = llGetListLength(lBundles);
             iBundleIdx += 2;
@@ -328,6 +277,45 @@ default {
                 llParticleSystem([]);
             }
         }
+        else if (num == mychannel) {
+            list qparams = llParseString2List(str, ["&", "="], []);                
+            // handle enabling bundles
+            string enable = GetParam(qparams, "enable");
+            if (enable != "-1") {
+                // The list of plugins to enable should be delimited by tildes.  
+                // They sould be the human friendly names as seen in the former dialog ui
+                // (not the full notecard names)
+                list to_enable = llParseString2List(llUnescapeURL(enable), ["~"], []);
+                integer n;
+                integer stop = llGetListLength(to_enable);
+                for (n = 0; n < stop; n++) {
+                    string bundle = llList2String(to_enable, n);
+                    SetBundleStatus(bundle, "INSTALL");
+                }
+            }
+            
+            // handle disabling bundles
+            string disable = GetParam(qparams, "disable");                    
+            if (disable != "-1") {
+                list to_disable = llParseString2List(llUnescapeURL(disable), ["~"], []);
+                integer n;
+                integer stop = llGetListLength(to_disable);
+                for (n = 0; n < stop; n++) {
+                    string bundle = llList2String(to_disable, n);
+                    SetBundleStatus(bundle, "REMOVE");
+                }                
+            }
+            string status = "waiting";
+            string start = GetParam(qparams, "start");
+            if (start != "-1") {
+                StartUpdate();
+                status = "started";
+            }
+                    
+            string json = GetBundlesJSON(status);
+            string callback = GetCallback(str);
+            llMessageLinked(LINK_SET, HTTP_RESPONSE, WrapCallback(json, callback), id);            
+        }                
     }
 
     on_rez(integer param) {
