@@ -2,19 +2,20 @@
 //new viewer checking method, as of 2.73
 //on rez, restart script
 //on script start, query db for rlvon setting
-//on rlvon response, if rlvon=0 then just switch to checked state.  if rlvon=1 or rlvon=unset then open listener, do @version, start 30 second timer
+//on rlvon response, if rlvon=0 then just switch to checked state.  if rlvon=1 or rlvon=unset then open listener, do @versionnum, start 30 second timer
 //on listen, we got version, so stop timer, close listen, turn on rlv flag, and switch to checked state
 //on timer, we haven't heard from viewer yet.  Either user is not running RLV, or else they're logging in and viewer could not respond yet when we asked.
-//so do @version one more time, and wait another 30 seconds.
+//so do @versionnum one more time, and wait another 30 seconds.
 //on next timer, give up. User is not running RLV.  Stop timer, close listener, set rlv flag to FALSE, save to db, and switch to checked state.
 
 integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features on
-integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @version message
+integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
 float g_fVersionTimeOut = 60.0;
 integer g_iVersionChan = 293847;
-integer g_iCheckCount;//increment this each time we say @version.  check it each time timer goes off in default state. give up if it's >= 2
+integer g_iRlvVersion;
+integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
 integer g_iReturnMenu;
 string g_sRLVString = "RestrainedLife viewer v1.20";
 
@@ -113,7 +114,7 @@ CheckVersion(integer iSecond)
     llSetTimerEvent(g_fVersionTimeOut);
     //do ownersay
     g_iCheckCount = !iSecond;
-    llOwnerSay("@version=" + (string)g_iVersionChan);
+    llOwnerSay("@versionnum=" + (string)g_iVersionChan);
 }
 
 DoMenu(key kID)
@@ -128,7 +129,8 @@ DoMenu(key kID)
         lButtons += [TURNON];
     }
 
-    string sPrompt = "Restrained Love Viewer Options";
+    string sPrompt = "Restrained Love Viewer Options.";
+    if (g_iRlvVersion) sPrompt += "\nDetected version of RLV API: "+(string)g_iRlvVersion;
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
 }
 
@@ -408,7 +410,7 @@ default{
 
             }
             else if (sStr == "rlvon=1")
-            {//DB says we were running RLV last time it looked.  do @version to check.
+            {//DB says we were running RLV last time it looked.  do @versionnum to check.
                 //llOwnerSay("rlvdb true");
                 g_iRLVOn = TRUE;
                 //check viewer version
@@ -458,16 +460,11 @@ default{
             llListenRemove(g_iListener);
             llSetTimerEvent(0.0);
             g_iCheckCount = 0;
-            //get the version to send to rlv plugins
-            string sRLVVersion = llList2String(llParseString2List(sMsg, [" "], []), 2);
-            list lTemp = llParseString2List(sRLVVersion, ["."], []);
-            string sMajorV = llList2String(lTemp, 0);
-            string sMinorV = llList2String(lTemp, 1);
-            sRLVVersion = llGetSubString(sMajorV, -1, -1) + llGetSubString(sMinorV, 0, 1);
-            llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
+            //send the version to rlv plugins
+            g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2);
+            llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
             //this is already TRUE if rlvon=1 in the DB, but not if rlvon was unset.  set it to true here regardless, since we're setting rlvon=1 in the DB
             g_iRLVOn = TRUE;
-            llMessageLinked(LINK_SET, RLV_VERSION, sRLVVersion, NULL_KEY);
 
             //someone thought it would be a good idea to use a whisper instead of a ownersay here
             //for both privacy and spamminess reasons, I've reverted back to an ownersay. --Nan
@@ -488,7 +485,7 @@ default{
         llSetTimerEvent(0.0);
         if (g_iCheckCount) {   
             // the viewer hasn't responded after 30 seconds, but maybe it
-            // was still logging in when we did @version give it one more
+            // was still logging in when we did @versionnum give it one more
             // chance
             CheckVersion(TRUE);
         }
