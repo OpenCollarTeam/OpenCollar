@@ -70,7 +70,7 @@ string BUTTON_SUBMENU      = "Leash";
 string BUTTON_LEASH        = "Grab";
 string BUTTON_LEASH_TO     = "LeashTo";
 string BUTTON_FOLLOW       = "Follow Me";
-string BUTTON_FOLLOW_MENU  = "Follow Menu";
+string BUTTON_FOLLOW_MENU  = "FollowTarget";
 string BUTTON_UNLEASH      = "Unleash";
 string BUTTON_UNFOLLOW     = "Unfollow";
 string BUTTON_STAY         = "Stay";
@@ -83,14 +83,6 @@ string BUTTON_GIVE_POST    = "give Post";
 string BUTTON_REZ_POST     = "Rez Post";
 string BUTTON_POST         = "Post";
 string BUTTON_YANK         = "Yank";
-
-// --- tokens for g_iCurrentMenu ---
-// - to remember which menu was just displayed
-integer MENU_MAIN           = 0;
-integer MENU_SET_LENGTH     = 1;
-integer MENU_LEASH_TARGET   = 2;
-integer MENU_FOLLOW_TARGET  = 3;
-integer MENU_POST_TARGET    = 4;
 
 // --- tokens for g_iSensorMode ---
 // - to remember what the sensor is tracking
@@ -106,9 +98,13 @@ integer SENSORMODE_FIND_TARGET_FOR_POST_MENU    = 102;
 // ---------------------------------------------
 // ------ VARIABLE DEFINITIONS ------
 // ----- menu -----
-integer g_iCurrentMenu = MENU_MAIN;
+integer g_iReturnMenu; // asynchronous menu callback after sensor
 key g_kMenuUser;
-key g_kDialogID;
+key g_kMainDialogID;
+key g_kSetLengthDialogID;
+key g_kLeashTargetDialogID;
+key g_kFollowTargetDialogID;
+key g_kPostTargetDialogID;
 list g_lButtons;
 list g_lPostKeys;
 // ----- collar -----
@@ -217,8 +213,7 @@ integer CheckCommandAuth(key kCmdGiver, integer iAuth)
 
 LeashMenu(key kIn, integer iAuth)
 {
-    g_iCurrentMenu = MENU_MAIN;
-    
+    g_iReturnMenu = FALSE;
     list lButtons = g_lButtons;
     if (kIn != g_kWearer)
         lButtons = [BUTTON_LEASH, BUTTON_FOLLOW, BUTTON_YANK]; // Only if not the wearer.
@@ -245,32 +240,28 @@ LeashMenu(key kIn, integer iAuth)
         else
             lButtons += [BUTTON_ROT];
     }
+
         
     string sPrompt = "Leash Options";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
+    g_kMainDialogID = Dialog(kIn, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
 }
 
 LengthMenu(key kIn, integer iAuth)
 {
-    g_iCurrentMenu = MENU_SET_LENGTH;
     string sPrompt = "Set a leash length in meter:\nCurrent length is: " + (string)g_fLength + "m";
-    g_kDialogID = Dialog(kIn, sPrompt, g_lLengths, [BUTTON_UPMENU], 0, iAuth);
+    g_kSetLengthDialogID = Dialog(kIn, sPrompt, g_lLengths, [BUTTON_UPMENU], 0, iAuth);
 }
 
 LeashToMenu(key kIn, list lLeashTo, integer iAuth)
 {
-    // 11 limit removed - Dialog subsystem can handle paging
-    g_iCurrentMenu = MENU_LEASH_TARGET;
     string sPrompt = "Pick someone/thing to leash to.";
-    g_kDialogID = Dialog(kIn, sPrompt, lLeashTo, [BUTTON_UPMENU], 0, iAuth);
+    g_kLeashTargetDialogID = Dialog(kIn, sPrompt, lLeashTo, [BUTTON_UPMENU], 0, iAuth);
 }
 
 FollowMenu(key kIn, list lFollow, integer iAuth)
 {
-    // 11 limit removed - Dialog subsystem can handle paging
-    g_iCurrentMenu = MENU_FOLLOW_TARGET;
     string sPrompt = "Pick someone/thing to follow.";
-    g_kDialogID = Dialog(kIn, sPrompt, lFollow, [BUTTON_UPMENU], 0, iAuth);
+    g_kFollowTargetDialogID = Dialog(kIn, sPrompt, lFollow, [BUTTON_UPMENU], 0, iAuth);
 }
 
 SetLength(float fIn)
@@ -669,7 +660,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
                 ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_CHAT);
             }
         }
-        else if(sComm == "followmenu")
+        else if(sComm == "followtarget")
         {
             if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
             
@@ -751,10 +742,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             {
                 StayPut(kMessageID, iAuth);
             }
-            if (g_iCurrentMenu == MENU_MAIN)
-            {
-                LeashMenu(kMessageID, iAuth);
-            }
         }
         else if ((sMesL == "unstay" || sMesL == "move") && g_iStay)
         {
@@ -764,10 +751,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
                 llReleaseControls();
                 llOwnerSay("You are free to move again.");
                 Notify(kMessageID,"You allowed " + g_sWearer + " to move freely again.", FALSE);
-            }
-            if (g_iCurrentMenu == MENU_MAIN)
-            {
-                LeashMenu(kMessageID, iAuth);
             }
         }
         else if(sMesL == "don't rotate" && g_iRot)
@@ -781,10 +764,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             {
                 Notify(kMessageID,"Only the wearer can change the rotate setting", FALSE);
             }
-            if (g_iCurrentMenu == MENU_MAIN)
-            {
-                LeashMenu(kMessageID, iAuth);
-            }
         }
         else if(sMesL == "rotate" && !g_iRot)
         {
@@ -796,10 +775,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             else
             {
                 Notify(kMessageID,"Only the wearer can change the rotate setting", FALSE);
-            }
-            if (g_iCurrentMenu == MENU_MAIN)
-            {
-                LeashMenu(kMessageID, iAuth);
             }
         }
         return TRUE;
@@ -860,15 +835,15 @@ default
         llResetScript();
     }
     
-    link_message(integer iPrim, integer iAuth, string sMessage, key kMessageID)
+    link_message(integer iPrim, integer iNum, string sMessage, key kMessageID)
     {
         //only respond to owner, secowner, group, wearer, and "everyone" for unleashing themselves
-        if (UserCommand(iAuth, sMessage, kMessageID)) return;
-        else if (iAuth == MENUNAME_REQUEST)
+        if (UserCommand(iNum, sMessage, kMessageID)) return;
+        else if (iNum == MENUNAME_REQUEST)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
         }
-        else if (iAuth == MENUNAME_RESPONSE)
+        else if (iNum == MENUNAME_RESPONSE)
         {
             list lParts = llParseString2List(sMessage, ["|"], []);
             if (llList2String(lParts, 0) == BUTTON_SUBMENU)
@@ -880,7 +855,7 @@ default
                 }
             }
         }
-        else if (iAuth == COMMAND_SAFEWORD)
+        else if (iNum == COMMAND_SAFEWORD)
         {
             if(g_iStay)
             {
@@ -889,7 +864,7 @@ default
             }
             DoUnleash();
         }
-        else if (iAuth == LOCALSETTING_RESPONSE)
+        else if (iNum == LOCALSETTING_RESPONSE)
         {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sTOK = llGetSubString(sMessage, 0, iInd -1);
@@ -914,7 +889,7 @@ default
             }
         }
         // All default settings from the settings notecard are sent over "HTTPDB_RESPONSE" channel
-        else if (iAuth == HTTPDB_RESPONSE)
+        else if (iNum == HTTPDB_RESPONSE)
         {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sTOK = llGetSubString(sMessage, 0, iInd -1);
@@ -928,100 +903,73 @@ default
                 g_iRot = (integer)sVAL;
             }
         }
-        else if (iAuth == DIALOG_TIMEOUT)
+        else if (iNum == DIALOG_RESPONSE)
         {
-            g_iCurrentMenu = MENU_MAIN;
-        }
-        else if (iAuth == DIALOG_RESPONSE)
-        {
-            if (kMessageID == g_kDialogID)
+            if (kMessageID != g_kMainDialogID 
+                && kMessageID != g_kSetLengthDialogID
+                && kMessageID != g_kLeashTargetDialogID
+                && kMessageID != g_kFollowTargetDialogID
+                && kMessageID != g_kPostTargetDialogID) return;  // it's not for us
+            list lMenuParams = llParseString2List(sMessage, ["|"], []);
+            key kAV = (key)llList2String(lMenuParams, 0);          
+            string sButton = llList2String(lMenuParams, 1);
+            integer iAuth = (integer) llList2String(lMenuParams, 3);
+            if (kMessageID == g_kMainDialogID)
             {
-                list lMenuParams = llParseString2List(sMessage, ["|"], []);
-                key kAV = (key)llList2String(lMenuParams, 0);          
-                string sButton = llList2String(lMenuParams, 1);
-                integer iAuth = (integer) llList2String(lMenuParams, 3);
-                if(sButton == BUTTON_LENGTH)
-                {
-                    LengthMenu(kAV, iAuth);
-                }
-                else if(sButton == BUTTON_UPMENU)
-                {
-                    if(g_iCurrentMenu == MENU_SET_LENGTH || g_iCurrentMenu == MENU_LEASH_TARGET || g_iCurrentMenu == MENU_FOLLOW_TARGET || g_iCurrentMenu == MENU_POST_TARGET)
-                    {
-                        LeashMenu(kAV, iAuth);
-                    }
-                    else
-                    {
-                        llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
-                    }
-                }
-                else if(sButton == BUTTON_LEASH_TO)
-                {
-                    g_iSensorMode = SENSORMODE_FIND_TARGET_FOR_LEASH_MENU;
-                    UserCommand(iAuth, sButton, kAV);
-                }
-                else if(g_iCurrentMenu == MENU_LEASH_TARGET)
-                {
-                    integer iInd = llListFindList(g_lLeashers, [sButton]);
-                    if (iInd != -1)
-                    {
-                        g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
-                        if (CheckCommandAuth(g_kCmdGiver, g_iLastRank))
-                            LeashTo(g_kLeashedTo, g_kCmdGiver, g_iLastRank, ["collar", "handle"]);
-                    }
-                }
-                else if(g_iCurrentMenu == MENU_FOLLOW_TARGET)
-                {
-                    integer iInd = llListFindList(g_lLeashers, [sButton]);
-                    if (iInd != -1)
-                    {
-                        g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
-                        Follow(g_kLeashedTo, g_kCmdGiver, g_iLastRank);
-                    }
-                }
-                else if(g_iCurrentMenu == MENU_POST_TARGET)
-                {
-                    integer iPostNum = (integer)sButton - 1;
-                    if (iPostNum >= 0)
-                    {
-                        UserCommand(iAuth, llList2String(g_lPostKeys, iPostNum), kAV);
-                    }
-                    //debug("post " + llList2String(g_lPostKeys, iPostNum) + (string)kAV);
-                }
-                else if(sButton == BUTTON_GIVE_HOLDER)
-                {
-                    UserCommand(iAuth, "giveholder", kAV);
-                    LeashMenu(kAV, iAuth);
-                }
-                else if(sButton == BUTTON_GIVE_POST)
-                {
-                    UserCommand(iAuth, "givepost", kAV);
-                    LeashMenu(kAV, iAuth);
-                }
-                else if(sButton == BUTTON_REZ_POST)
-                {
-                    UserCommand(iAuth, "rezpost", kAV);
-                    LeashMenu(kAV, iAuth);
-                }
-                else if(llListFindList(g_lLengths,[sButton]) != -1)
-                {
-                    UserCommand(iAuth, "length " + sButton, kAV);
-                    LengthMenu(kAV, iAuth);
-                }
+                if (sButton == BUTTON_UPMENU) { llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV); return; }
+                else if(sButton == BUTTON_LENGTH) { LengthMenu(kAV, iAuth); return; } // no re-leash menu
+                else if (sButton == BUTTON_GIVE_HOLDER) UserCommand(iAuth, "giveholder", kAV);
+                else if (sButton == BUTTON_GIVE_POST) UserCommand(iAuth, "givepost", kAV);
+                else if (sButton == BUTTON_REZ_POST) UserCommand(iAuth, "rezpost", kAV);
                 else if (~llListFindList(g_lButtons, [sButton]))
                 { // child menu buttons
                     llMessageLinked(LINK_SET, iAuth, "menu "+sButton, kAV);
+                    return; // no re-leash menu
                 }
                 else
-                {
+                { // catch all
+                    g_iReturnMenu = TRUE; //return menu if asynchronous command
                     UserCommand(iAuth, llToLower(sButton), kAV);
-                    list lTemp = [BUTTON_LEASH, BUTTON_POST, BUTTON_UNLEASH];
-                    if (~llListFindList(lTemp, [sButton]))
-                    {
-                        LeashMenu(kAV, iAuth);
-                    }
+                    return; // and thus, no menu back yet
                 }
             }
+            else if (kMessageID == g_kLeashTargetDialogID)
+            {   
+                integer iInd = llListFindList(g_lLeashers, [sButton]);
+                if (~iInd)
+                {
+                    g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
+                    if (CheckCommandAuth(g_kCmdGiver, g_iLastRank))
+                        LeashTo(g_kLeashedTo, g_kCmdGiver, g_iLastRank, ["collar", "handle"]);
+                }
+                if (!g_iReturnMenu) return;
+            }
+            else if (kMessageID == g_kFollowTargetDialogID)
+            {
+                integer iInd = llListFindList(g_lLeashers, [sButton]);
+                if (~iInd)
+                {
+                    g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
+                    Follow(g_kLeashedTo, g_kCmdGiver, g_iLastRank);
+                }
+                if (!g_iReturnMenu) return;
+            }
+            else if (kMessageID == g_kPostTargetDialogID)
+            {
+                integer iPostNum = (integer)sButton - 1;
+                if (iPostNum >= 0) UserCommand(iAuth, "post " + llList2String(g_lPostKeys, iPostNum), kAV);
+                if (!g_iReturnMenu) return;
+            }
+            else if (kMessageID == g_kSetLengthDialogID)
+            {
+                if(llListFindList(g_lLengths,[sButton]) != -1)
+                {
+                    UserCommand(iAuth, "length " + sButton, kAV);
+                    LengthMenu(kAV, iAuth);
+                    return; // no re-main leash menu
+                }
+            }
+            LeashMenu(kAV, iAuth); // remenu
         }
     }
 
@@ -1096,8 +1044,8 @@ default
         } 
         else if(g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_POST_MENU)
         {
-            //debug("a"+(string)llGetFreeMemory( ));
-            list lButtons = g_lPostKeys = [];
+            list lButtons = [];
+            g_lPostKeys = [];
             string sPrompt = "Pick the object that you would like the sub to be leashed to.  If it's not in the list, have the sub move closer and try again.\n";
             string sName;
             integer iCounter = 0; //since some targets are filtered out, we cannot use iLoop
@@ -1126,9 +1074,8 @@ default
                 }
             }
             @out;
-            g_iCurrentMenu = MENU_POST_TARGET;
             //debug("f"+(string)llGetFreeMemory( ));
-            g_kDialogID = Dialog(g_kMenuUser, sPrompt, lButtons, [BUTTON_UPMENU], 0, g_iLastRank);
+            g_kPostTargetDialogID = Dialog(g_kMenuUser, sPrompt, lButtons, [BUTTON_UPMENU], 0, g_iLastRank);
             //debug("e"+(string)llGetFreeMemory( ));
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_POST_CHAT)
@@ -1152,7 +1099,7 @@ default
     {
         // Nothing found close enough to leash onto, tell menuuser
         Notify(g_kMenuUser, "Unable to find any nearby targets.", FALSE);
-        if (g_iSensorMode >= SENSORMODE_FIND_TARGET_FOR_LEASH_MENU)
+        if (g_iSensorMode >= SENSORMODE_FIND_TARGET_FOR_LEASH_MENU && g_iReturnMenu)
             LeashMenu(g_kMenuUser, g_iLastRank);
     }        
     
