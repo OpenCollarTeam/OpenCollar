@@ -525,9 +525,9 @@ default
         llResetScript();
     }
 
-    link_message(integer iSenderPrim, integer iAuth, string sMessage, key kMessageID)
+    link_message(integer iSenderPrim, integer iNum, string sMessage, key kMessageID)
     {
-        if (iAuth == COMMAND_PARTICLE)
+        if (iNum == COMMAND_PARTICLE)
         {
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash")
@@ -568,28 +568,28 @@ default
                 }
             }
         }
-        else if (iAuth >= COMMAND_OWNER && iAuth <= COMMAND_WEARER)
+        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
             if (llToLower(sMessage) == llToLower(SUBMENU))
             {
-                if(iAuth == COMMAND_OWNER) OptionsMenu(kMessageID, iAuth);
+                if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
                 else Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
             }
             else if (sMessage == "menu "+SUBMENU)
             {
-                if(iAuth == COMMAND_OWNER) OptionsMenu(kMessageID, iAuth);
+                if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
                 else
                 {
                     Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
-                    llMessageLinked(LINK_SET, iAuth, "menu "+PARENTMENU, kMessageID);
+                    llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
         }
-        else if (iAuth == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
         }
-        else if (iAuth == DIALOG_RESPONSE)
+        else if (iNum == DIALOG_RESPONSE)
         {
             if (kMessageID == g_kDialogID)
             {
@@ -808,7 +808,7 @@ default
                 }
             }
         }
-        else if (iAuth == LOCALSETTING_RESPONSE)
+        else if (iNum == LOCALSETTING_RESPONSE)
         {
             //debug("LocalSettingsResponse: " + sMessage);
             integer iIndex = llSubStringIndex(sMessage, "=");
@@ -853,7 +853,7 @@ default
             }
         }
         // All default settings from the settings notecard are sent over "HTTPDB_RESPONSE" channel
-        else if (iAuth == HTTPDB_RESPONSE)
+        else if (iNum == HTTPDB_RESPONSE)
         {
             //debug("HTTPDBResponse: " + sMessage);
             integer iIndex = llSubStringIndex(sMessage, "=");
@@ -908,7 +908,7 @@ default
                 }
             }
         }
-        else if (iAuth == HTTPDB_EMPTY)
+        else if (iNum == HTTPDB_EMPTY)
         {
             //debug("HTTPDB EMPTY");
             if (sMessage == ("leash" + L_TEXTURE)) // no designer-set texture
