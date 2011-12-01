@@ -1,4 +1,3 @@
-//OpenCollar - menu
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -213,11 +212,6 @@ default
         llSleep(1.0);//delay sending this message until we're fairly sure that other scripts have reset too, just in case
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
         MenuInit();      
-    }
-    
-    touch_start(integer iNum)
-    { // SA: true entry point where auth is *really* needed
-        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", llDetectedKey(0));
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
