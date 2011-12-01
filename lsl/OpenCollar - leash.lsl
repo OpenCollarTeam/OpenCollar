@@ -615,7 +615,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         list lParam = llParseString2List(sMessage, [" "], []);
         string sComm = llToLower(llList2String(lParam, 0));
         
-        if (sMesL == "grab" || sMesL == "leash")
+        if (sMesL == "grab" || sMesL == "leash" || (sMesL == "toggleleash" && NULL_KEY == g_kLeashedTo))
         {
             if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
             
@@ -683,7 +683,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             llRezObject("OC_Leash_Post", llGetPos() + (<1.0, 0, 0.5> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 0> * DEG_TO_RAD), 0);
         }
         //allow if from leasher or someone outranking them
-        else if (sMesL == "unleash" || sMesL == "unfollow")
+        else if (sMesL == "unleash" || sMesL == "unfollow" || (sMesL == "toggleleash" && NULL_KEY != g_kLeashedTo))
         {
             //Person holding the leash can always unleash.
             if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
