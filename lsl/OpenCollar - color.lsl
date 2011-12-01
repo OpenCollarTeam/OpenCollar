@@ -98,6 +98,7 @@ list g_lButtons;
 list g_lNewButtons;
 
 list g_lMenuIDs;
+key g_kTouchID;
 
 integer g_iAppLock = FALSE;
 string g_sAppLockToken = "AppLock";
@@ -128,6 +129,10 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
+integer TOUCH_REQUEST = -9500;
+integer TOUCH_CANCEL = -9501;
+integer TOUCH_RESPONSE = -9502;
+integer TOUCH_EXPIRE = -9503;
 
 
 //5000 block is reserved for IM slaves
@@ -136,8 +141,7 @@ string UPMENU = "^";
 
 key g_kWearer;
 
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+key ShortKey()
 {
     //key generation
     //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
@@ -148,9 +152,24 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
         sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-    key kID = (sOut + "-0000-0000-0000-000000000000");
+    return (key) (sOut + "-0000-0000-0000-000000000000");
+}
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = ShortKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
         + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    return kID;
+} 
+
+key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAuth)
+{
+    key kID = ShortKey();
+    integer iFlags = 0;
+    if (iTouchStart) iFlags = iFlags | 0x01;
+    if (iTouchEnd) iFlags = iFlags | 0x02;
+    llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kRCPT + "|" + (string)iFlags + "|" + (string)iAuth, kID);
     return kID;
 } 
 
@@ -182,9 +201,9 @@ ColorMenu(key kAv, integer iAuth)
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the collar you would like to recolor";
+    string sPrompt = "Pick which part of the collar you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
     g_lButtons = llListSort(g_lElements, 1, TRUE);
-    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0, iAuth)];
+    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth)];
 }
 
 string ElementType(integer iLinkNumber)
@@ -436,6 +455,11 @@ default
                         CategoryMenu(kAv, iAuth);
                     }
                 }
+                else if (sMessage == "*Touch*")
+                {
+                    Notify(kAv, "Please touch the part of the collar you want to recolor.", FALSE);
+                    g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
+                }
                 else if (g_sCurrentElement == "")
                 {
                     //we just got the element name
@@ -478,7 +502,33 @@ default
                 g_lMenuIDs=llDeleteSubList(g_lMenuIDs,iMenuIndex,iMenuIndex);
             }
         }
+        else if (iNum == TOUCH_RESPONSE)
+        {
+            if (kID == g_kTouchID)
+            {
+                list lParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lParams, 0);
+                integer iAuth = (integer)llList2String(lParams, 1);
+                integer iLinkNumber = (integer)llList2String(lParams, 3);
+                
+                string sDesc = (string)llGetObjectDetails(llGetLinkKey(iLinkNumber), [OBJECT_DESC]);
+                list lDescTokens = llParseStringKeepNulls(sDesc, ["~"], []);
+                
+                string sElement = llList2String(lDescTokens, 0);
+                integer iNotColorable = ~llListFindList(lDescTokens, ["nocolor"]);
 
+                if (sElement != "" && !iNotColorable)
+                {
+                    CategoryMenu(kAv, iAuth);
+                    g_sCurrentElement = sElement;
+                }
+                else
+                {
+                    Notify(kAv, "You selected a prim which is not colorable. You can try again.", FALSE);
+                    ElementMenu(kAv, iAuth);
+                }
+            }
+        }
     }
 
     on_rez(integer iParam)
