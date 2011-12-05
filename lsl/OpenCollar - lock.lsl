@@ -225,7 +225,7 @@ default
                 if (g_iLocked) Notify(kID, "Locked.", FALSE);
                 else Notify(kID, "Unlocked.", FALSE);
             }
-            else if (sStr == "lock")
+            else if (sStr == "lock" || (!g_iLocked && sStr == "togglelock"))
             {
                 if (iNum == COMMAND_OWNER || kID == g_kWearer )
                 {   //primary owners and wearer can lock and unlock. no one else
@@ -236,7 +236,7 @@ default
                 }
                 else Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
             }
-            else if (sStr == "unlock")
+            else if (sStr == "unlock" || (g_iLocked && sStr == "togglelock"))
             {
                 if (iNum == COMMAND_OWNER)
                 {  //primary owners can lock and unlock. no one else
@@ -246,6 +246,7 @@ default
                 }
                 else Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
             }
+            
             else if (sStr == "menu " + LOCK)
             {
                 if (iNum == COMMAND_OWNER || kID == g_kWearer )

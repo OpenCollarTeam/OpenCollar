@@ -73,7 +73,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher)
                 ||((iTrigFlags & FLAG_TOUCHEND)&& sType == "touchend"))
             {
                 integer iAuth = llList2Integer(g_lTouchRequests, iTrig + 3);
-                string sReply = (string) kToucher + "|" + (string) iAuth + "|" + sType +"|"+iLinkNumber;
+                string sReply = (string) kToucher + "|" + (string) iAuth + "|" + sType +"|"+ (string) iLinkNumber;
                 llMessageLinked(LINK_THIS, TOUCH_RESPONSE, sReply, llList2Key(g_lTouchRequests, iTrig));
             }
             if (sType =="touchend") ClearUser(kToucher, FALSE);

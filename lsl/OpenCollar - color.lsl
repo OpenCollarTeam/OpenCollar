@@ -511,16 +511,12 @@ default
                 integer iAuth = (integer)llList2String(lParams, 1);
                 integer iLinkNumber = (integer)llList2String(lParams, 3);
                 
-                string sDesc = (string)llGetObjectDetails(llGetLinkKey(iLinkNumber), [OBJECT_DESC]);
-                list lDescTokens = llParseStringKeepNulls(sDesc, ["~"], []);
-                
-                string sElement = llList2String(lDescTokens, 0);
-                integer iNotColorable = ~llListFindList(lDescTokens, ["nocolor"]);
-
-                if (sElement != "" && !iNotColorable)
+                string sElement = ElementType(iLinkNumber);
+                if (sElement != "nocolor")
                 {
                     CategoryMenu(kAv, iAuth);
                     g_sCurrentElement = sElement;
+                    Notify(kAv, "You selected \""+sElement+"\".", FALSE);
                 }
                 else
                 {

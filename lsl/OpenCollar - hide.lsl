@@ -12,11 +12,11 @@ list g_lElements;
 key g_kWearer;
 
 key g_kDialogID;
-
+key g_kTouchID;
+ 
 string g_sDBToken = "elementalpha";
 list g_lAlphaSettings;
 string g_sIgnore = "nohide";
-string g_sCurrentElement;
 list g_lButtons;
 
 integer g_iAppLock = FALSE;
@@ -50,6 +50,11 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
+integer TOUCH_REQUEST = -9500;
+integer TOUCH_CANCEL = -9501;
+integer TOUCH_RESPONSE = -9502;
+integer TOUCH_EXPIRE = -9503;
+
 //5000 block is reserved for IM slaves
 
 string HIDE = "Hide";
@@ -75,7 +80,8 @@ Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
     }
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+
+key ShortKey()
 {
     //key generation
     //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
@@ -86,9 +92,24 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
         sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-    key kID = (sOut + "-0000-0000-0000-000000000000");
+    return (sOut + "-0000-0000-0000-000000000000");
+}
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = ShortKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
         + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    return kID;
+} 
+
+key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAuth)
+{
+    key kID = ShortKey();
+    integer iFlags = 0;
+    if (iTouchStart) iFlags = iFlags | 0x01;
+    if (iTouchEnd) iFlags = iFlags | 0x02;
+    llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kRCPT + "|" + (string)iFlags + "|" + (string)iAuth, kID);
     return kID;
 } 
 
@@ -161,8 +182,7 @@ SaveAlphaSettings()
 
 ElementMenu(key kAv, integer iAuth)
 {
-    g_sCurrentElement = "";
-    string sPrompt = "Pick which part of the collar you would like to hide or show";
+    string sPrompt = "Pick which part of the collar you would like to hide or show.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
     g_lButtons = [];
     //loop through elements, show appropriate buttons and prompts if hidden or shown
 
@@ -196,7 +216,7 @@ ElementMenu(key kAv, integer iAuth)
         }
     }
     g_lButtons += [SHOW + " " + ALL, HIDE + " " + ALL];
-    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0, iAuth);
+    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth);
 }
 
 string ElementType(integer linkiNumber)
@@ -416,16 +436,13 @@ default
 
                 if (sMessage == UPMENU)
                 {
-                    if (g_sCurrentElement == "")
-                    {
-                        //main menu
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                    }
-                    else
-                    {
-                        g_sCurrentElement = "";
-                        ElementMenu(kAv, iAuth);
-                    }
+                    //main menu
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                }
+                else if (sMessage == "*Touch*")
+                {
+                    Notify(kAv, "Please touch the part of the collar you want to hide or show. You can press ctr+alt+T to see invisible parts.", FALSE);
+                    g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
                 }
                 else
                 {
@@ -461,6 +478,32 @@ default
                     SaveAlphaSettings();
                     ElementMenu(kAv, iAuth);
                 }
+            }
+        }
+        else if (iNum == TOUCH_RESPONSE)
+        {
+            if (kID == g_kTouchID)
+            {
+                list lParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lParams, 0);
+                integer iAuth = (integer)llList2String(lParams, 1);
+                integer iLinkNumber = (integer)llList2String(lParams, 3);
+                
+                string sElement = ElementType(iLinkNumber);
+                if (sElement != g_sIgnore)
+                {
+                    integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
+                    float fAlpha;
+                    if (iIndex == -1) fAlpha = 1.0; // assuming visible
+                    else fAlpha = (float)llList2String(g_lAlphaSettings, iIndex + 1);
+                    Notify(kAv, "You selected \"" + sElement+"\". Toggling its transparency.", FALSE);
+                    SetElementAlpha(sElement, (float)(!llCeil(fAlpha)));
+                }
+                else
+                {
+                    Notify(kAv, "You selected a prim which is not hideable. You can try again.", FALSE);
+                }
+                ElementMenu(kAv, iAuth);
             }
         }
     }
