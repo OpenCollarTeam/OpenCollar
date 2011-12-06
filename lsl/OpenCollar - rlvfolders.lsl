@@ -68,9 +68,6 @@ list g_lToCheck; //stack of folders to check, used for subfolder tree search
 
 list g_lSearchList; //list of folders to search
 
-list g_lLongFolders; //full names of the subfolders in current folder 
-list g_lShortFolders; //shortened names of the subfolders in s_Current folder 
-
 key g_kWearer;
 
 
@@ -156,34 +153,17 @@ FolderMenu(string sStr)
     integer i;
     list lItem;
     integer iWorn;
-    g_lShortFolders = [];
-    g_lLongFolders = [];
+    list lMenuItems = [];
 //    if (g_iRLVVer<115) lButtons= sData;
 //    else {
         for (i=0;i<llGetListLength(sData);i++) {
             lItem=llParseString2List(llList2String(sData,i),["|"],[]);
             string sFolder = llList2String(lItem,0);
             iWorn=llList2Integer(lItem,1);
-            if  (iWorn%10>=1)
-            {
-                g_lLongFolders += sFolder;
-                g_lShortFolders += [llGetSubString(FOLDER+sFolder,0,20)];
-            }
-            else if  (iWorn==10)
-            {
-                g_lLongFolders += sFolder;
-                g_lShortFolders += [llGetSubString(UNTICKED+sFolder,0,20)];
-            }
-            else if  (iWorn==20)
-            {
-                g_lLongFolders += sFolder;
-                g_lShortFolders += [llGetSubString(STICKED+sFolder,0,20)];
-            }
-            else if  (iWorn==30)
-            {
-                g_lLongFolders += sFolder;
-                g_lShortFolders += [llGetSubString(TICKED+sFolder,0,20)];
-            }
+            if  (iWorn%10>=1) lMenuItems += [FOLDER+sFolder];
+            else if  (iWorn==10) lMenuItems += [UNTICKED+sFolder];
+            else if  (iWorn==20) lMenuItems += [STICKED+sFolder];
+            else if  (iWorn==30) lMenuItems += [TICKED+sFolder];
         }
 //    }
 //    lButtons = llListSort(buttons, 1, TRUE);    
@@ -204,19 +184,19 @@ FolderMenu(string sStr)
             if (g_sCurrentFolder!="") {
                 lItem=llParseString2List(sFirst,["|"],[]);
                 iWorn=llList2Integer(lItem,0);
-                if  (iWorn%10==1)  {g_lShortFolders+= [ATTACH_ALL]; g_lLongFolders+=[];}
-                else if  (iWorn%10==2)  {g_lShortFolders+= [ATTACH_ALL, DETACH_ALL]; g_lLongFolders+=[];}
-                else if  (iWorn%10==3)  {g_lShortFolders+= [DETACH_ALL]; g_lLongFolders+=[];}
+                if  (iWorn%10==1)  lMenuItems+= [ATTACH_ALL];
+                else if  (iWorn%10==2)  lMenuItems+= [ATTACH_ALL, DETACH_ALL];
+                else if  (iWorn%10==3)  lMenuItems+= [DETACH_ALL];
                 // and only then add the button for current foldder... if it makes also sense
-                if  (iWorn/10==1)  {g_lShortFolders+= [ATTACH_THIS]; g_lLongFolders+=[];}
-                else if  (iWorn/10==2)  {g_lShortFolders+= [ATTACH_THIS, DETACH_THIS]; g_lLongFolders+=[];}
-                else if  (iWorn/10==3)  {g_lShortFolders+= [DETACH_THIS]; g_lLongFolders+=[];}
+                if  (iWorn/10==1)  lMenuItems+= [ATTACH_THIS];
+                else if  (iWorn/10==2)  lMenuItems+= [ATTACH_THIS, DETACH_THIS];
+                else if  (iWorn/10==3)  lMenuItems+= [DETACH_THIS];
             }
 //        }
 //        if ((g_iRLVVer>=115&&llGetListLength(sData)<=1)||llGetListLength(sData)<=0) sPrompt = "\n\nEither your #RLV folder is empty, or you did not set up your shared folders.\nCheck Real Restraint blog for more information.";
 //        else
-        if (g_lShortFolders==[]) sPrompt = "\n\nThere is no item to "+g_sFolderType+" in the current folder.";
-        else g_kFolderID = Dialog(g_sMenuUser, sPrompt, g_lShortFolders, [UPMENU], iPage);
+        if (lMenuItems==[]) sPrompt = "\n\nThere is no item to "+g_sFolderType+" in the current folder.";
+        else g_kFolderID = Dialog(g_sMenuUser, sPrompt, lMenuItems, [UPMENU], iPage);
 
 }
 
@@ -368,7 +348,7 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
-                integer iPage = (integer)llList2String(lMenuParams, 2);                
+                integer iPage = (integer)llList2String(lMenuParams, 2);
                 if (sMessage == UPMENU)
                 {
                     if (g_sCurrentFolder=="")
@@ -383,7 +363,6 @@ default
                 }
                 else
                 { //we got a folder.  send the RLV command to remove/attach it.
-                    integer iIndex = llListFindList(g_lShortFolders,[sMessage]);
                     string oldfolder = g_sCurrentFolder;
                     if (sMessage == ATTACH_THIS)
                     {
@@ -405,11 +384,11 @@ default
                         llMessageLinked(LINK_SET, RLV_CMD,  "detachall" + g_sCurrentFolder + "=force", NULL_KEY);
                         Notify(kAv, "Now detaching everything in "+g_sCurrentFolder, TRUE);
                     }
-                    else if (iIndex != -1)
+                    else
                     {
                         string cstate = llGetSubString(sMessage,0,llStringLength(TICKED) - 1);
+                        string folder = llGetSubString(sMessage,llStringLength(TICKED), -1);
                         string newfolder;
-                        string folder = llList2String(g_lLongFolders,iIndex);
                         if (g_sCurrentFolder=="") newfolder=":"+folder;
                         else newfolder = g_sCurrentFolder + "/" + folder;
                         if (cstate==FOLDER || cstate==STICKED) g_sCurrentFolder=newfolder;

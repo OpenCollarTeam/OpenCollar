@@ -55,16 +55,62 @@ string BLANK = " ";
 integer g_iTimeOut = 300;
 integer g_iReapeat = 5;//how often the timer will go off, in seconds
 
-list g_lMenus;//9-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage
+list g_lMenus;//10-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, button digits
 //where "list buttons" means the big list of choices presented to the user
 //and "page buttons" means utility buttons that will appear on every page, such as one saying "go up one level"
 //and "currentpage" is an integer meaning which page of the menu the user is currently viewing
 
 list g_lRemoteMenus;
 
-integer g_iStrideLength = 9;
+integer g_iStrideLength = 10;
 
 key g_kWearer;
+
+string Integer2String(integer iNum, integer iDigits)
+{
+    string sOut = "";
+    integer i;
+    for (i = 0; i <iDigits; i++) {
+        sOut = (string) (iNum%10) + sOut;
+        iNum /= 10;
+    }
+    return sOut;
+}
+
+integer GetStringBytes(string sStr) { // from SL wiki
+    sStr = llEscapeURL(sStr);
+    integer i = 0;
+    integer j;
+    integer l = llStringLength(sStr);
+    for (j = l; j > -1; j--)
+        if (llGetSubString(sStr, j, j) == "%") i++;
+    return l - i - i;
+}
+
+string TruncateString(string sStr, integer iBytes){
+    sStr = llEscapeURL(sStr);
+    integer j;
+    string sOut;
+    integer l = llStringLength(sStr);
+    for (j = 0; j < l; j++)
+    {  
+        string c = llGetSubString(sStr, j, j);
+        if (c == "%") {
+            if (iBytes >= 2) {
+                sOut += llGetSubString(sStr, j, j+2);
+                j += 2;
+                iBytes -= 2;
+            }
+        }
+        else {
+            if (iBytes >= 1) {
+                sOut += c;
+                iBytes --;
+            }
+        }
+    }
+    return llUnescapeURL(sOut);
+}
 
 Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
 {
@@ -84,27 +130,17 @@ Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
 }
 
 
-list CharacterCountCheck(list lIn, key ID)
-// checks if any of the times is over 24 characters and removes them if needed
+integer ButtonDigits(list lIn)
+// checks if any of the times is over 20 characters and deduces how many digits are needed
 {
-    list lOut;
-    string s;
-    integer i;
     integer m=llGetListLength(lIn);
-    for (i=0;i<m;i++)
-    {
-        s=llList2String(lIn,i);
-        if (llStringLength(s)>24)
-        {
-            Notify(ID, "The following button is longer than 24 characters and has been removed (can be caused by the name length of the item in the collars inventory): "+s, TRUE);
-        }
-        else
-        {
-            lOut+=[s];
-        }     
-    }
-    return lOut;
-    
+    integer iDigits;
+    if ( m < 10 ) iDigits = 1;
+    else if (m < 100) iDigits = 2;
+    else if (m < 1000) iDigits = 3; // more than 100 is unlikely, considering the size of a LM
+    integer i;
+    for (i=0;i<m;i++) if (GetStringBytes(llList2String(lIn,i))>18) return iDigits;
+    return 0; // if no button label is too long, then no need for any digit
 }
 
 
@@ -118,7 +154,7 @@ integer RandomUniqueChannel()
     return iOut;
 }
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID)
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums)
 {
     string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
     list lButtons;
@@ -132,27 +168,31 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     {
         iMyPageSize=iMyPageSize-2;//we'll use two slots for the MORE and PREV button, so shrink the page accordingly
         iStart = iPage * iMyPageSize;
-        integer iEnd = iStart + iMyPageSize - 1;
         //multi page menu
-        //lCurrentItems = llList2List(lMenuItems, iStart, iEnd);
-        lButtons = llList2List(lMenuItems, iStart, iEnd);
         sThisPrompt = sThisPrompt + " Page "+(string)(iPage+1)+"/"+(string)(((iNumitems-1)/iMyPageSize)+1);
     }
-    else
-    {
-        iStart = 0;
-        lButtons = lMenuItems;
+    else iStart = 0;
+    integer iEnd = iStart + iMyPageSize - 1;
+    if (iEnd >= iNumitems) iEnd = iNumitems - 1;
+    if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
+        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) {
+            string sButton = Integer2String(iCur, iWithNums) + " " + llList2String(lMenuItems, iCur);
+            sButton = TruncateString(sButton+"                        ", 24); // filling with spaces for left alignment
+            lButtons += [sButton];
+        }
     }
+    else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
+    else lButtons = lMenuItems;
     
     // check promt lenghtes
-    integer iPromptlen=llStringLength(sPrompt);
+    integer iPromptlen=GetStringBytes(sPrompt);
     if (iPromptlen>511)
     {
         Notify(kRecipient,"The dialog prompt message is longer than 512 characters. It will be truncated to 512 characters.",TRUE);
-        sPrompt=llGetSubString(sPrompt,0,510);
+        sPrompt=TruncateString(sPrompt,510);
         sThisPrompt = sPrompt;
     }
-    else if (iPromptlen + llStringLength(sThisPrompt)< 512)
+    else if (iPromptlen + GetStringBytes(sThisPrompt)< 512)
     {
         sThisPrompt= sPrompt + sThisPrompt;
     }
@@ -170,9 +210,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //}
     
 
-    
-    lButtons = SanitizeButtons(lButtons);
-    lUtilityButtons = SanitizeButtons(lUtilityButtons);
+    // SA: not needed in this script since we actually build lButtons and lUtilityButtons here
+    //    both are made from parsing a string. Thus the result is necessarily a list of strings
+    //    and if we use llParseString2List instead of llParseStringKeepNulls, there won't be any
+    //    empty string.
+    // lButtons = SanitizeButtons()lButtons);
+    // lUtilityButtons = SanitizeButtons(lUtilityButtons);
     
     integer iChan = RandomUniqueChannel();
     integer g_iListener = llListen(iChan, "", kRecipient, "");
@@ -186,26 +229,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
     }    
     integer ts = llGetUnixTime() + g_iTimeOut;
-    g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage];
-}
-
-list SanitizeButtons(list lIn)
-{
-    integer iLength = llGetListLength(lIn);
-    integer n;
-    for (n = iLength - 1; n >= 0; n--)
-    {
-        integer type = llGetListEntryType(lIn, n);
-        if (llList2String(lIn, n) == "") //remove empty sStrings
-        {
-            lIn = llDeleteSubList(lIn, n, n);
-        }        
-        else if (type != TYPE_STRING)        //cast anything else to string
-        {
-            lIn = llListReplaceList(lIn, [llList2String(lIn, n)], n, n);
-        }
-    }
-    return lIn;
+    g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums];
 }
 
 list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
@@ -239,7 +263,7 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 }
 
 
-list RemoveMenuStrkIDe(list lMenu, integer iIndex)
+list RemoveMenuStride(list lMenu, integer iIndex)
 {
     //tell this function the menu you wish to remove, identified by list index
     //it will close the listener, remove the menu's entry from the list, and return the new list
@@ -266,7 +290,7 @@ CleanList()
             Debug("menu timeout");                
             key kID = llList2Key(g_lMenus, n + 1);
             llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
-            g_lMenus = RemoveMenuStrkIDe(g_lMenus, n);
+            g_lMenus = RemoveMenuStride(g_lMenus, n);
         }            
     } 
 }
@@ -286,7 +310,7 @@ ClearUser(key kRCPT)
 
 Debug(string sStr)
 {
-    //llOwnerSay(llGetScriptName() + ": " + sStr);
+//    llOwnerSay(llGetScriptName() + ": " + sStr);
 }
 
 integer InSim(key id)
@@ -329,13 +353,33 @@ default
             }
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
-            list lbuttons = CharacterCountCheck(llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []), kRCPT);
+            // SA: why should we keep nulls? Discarding them now saves us the use of SanitizeButtons()
+            list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
+            integer iDigits = ButtonDigits(lButtons);
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);        
             
             //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
-            Dialog(kRCPT, sPrompt, lbuttons, ubuttons, iPage, kID);
+            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits);
+            if (iDigits)
+            {   
+                string sOut = sPrompt;
+                integer iNb = llGetListLength(lButtons);
+                integer iCount;
+                string sLine;
+                for (iCount = 0; iCount < iNb; iCount++)
+                {
+                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + llList2String(lButtons, iCount);
+                    if (GetStringBytes(sOut+sLine) >= 1024)
+                    {
+                        Notify(kRCPT, sOut, FALSE);
+                        sOut = "";
+                    }
+                    sOut += sLine;
+                }
+                Notify(kRCPT, sOut, FALSE);
+            }
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
@@ -361,7 +405,7 @@ default
                     integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
                     if (~iIndex)
                     {
-                        g_lRemoteMenus = llListReplaceList((g_lRemoteMenus = []) + g_lRemoteMenus, [], iIndex, iIndex+1);
+                        g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [], iIndex, iIndex+1);
                     }
                 }
                 else if (llGetSubString(sCmd, 0, 8) == "response:")
@@ -385,11 +429,13 @@ default
         {
             key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
             key kAv = llList2Key(g_lMenus, iMenuIndex + 4);
-            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);            
-            list items = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
-            list ubuttons = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
+            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);   
+            // SA: null strings should not be kept for dialog buttons
+            list items = llParseString2List(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
+            list ubuttons = llParseString2List(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
             integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);    
-            g_lMenus = RemoveMenuStrkIDe(g_lMenus, iMenuIndex);       
+            integer iDigits = llList2Integer(g_lMenus, iMenuIndex + 9);    
+            g_lMenus = RemoveMenuStride(g_lMenus, iMenuIndex);       
                    
             if (sMessage == MORE)
             {
@@ -401,7 +447,7 @@ default
                 {
                     iPage = 0;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits);
             }
             else if (sMessage == PREV)
             {
@@ -415,17 +461,25 @@ default
 
                     iPage = (llGetListLength(items)-1)/thisiPagesize;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits);
             }
             else if (sMessage == BLANK)
             
             {
                 //give the same menu back
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits);
             }            
             else
-            {
-                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
+            {   
+                string sAnswer;
+                integer iIndex = llListFindList(ubuttons, [sMessage]);
+                if (iDigits && !~iIndex)
+                {
+                    integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
+                    sAnswer = llList2String(items, iBIndex);
+                }
+                else sAnswer = sMessage;
+                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage, kMenuID);
             }  
         }
     }
