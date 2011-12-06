@@ -1,4 +1,4 @@
-//OpenCollar - leash - 3.531
+//OpenCollar - leash
 //leash script for the Open Collar Project (c)
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
@@ -1049,10 +1049,6 @@ default
             for (iLoop = 0; iLoop < iSense; iLoop++)
             {
                 string g_sTmpName = llDetectedName(iLoop);
-                if(llStringLength(g_sTmpName) > 24)
-                {
-                    g_sTmpName = llGetSubString(g_sTmpName, 0, 23);
-                }
                 g_lLeashers += [llDetectedKey(iLoop), g_sTmpName];
                 lAVs += [g_sTmpName];
             }
@@ -1065,10 +1061,6 @@ default
             for (iLoop = 0; iLoop < iSense; iLoop++)
             {
                 string g_sTmpName = llDetectedName(iLoop);
-                if(llStringLength(g_sTmpName) > 24)
-                {
-                    g_sTmpName = llGetSubString(g_sTmpName, 0, 23);
-                }
                 g_lLeashers += [llDetectedKey(iLoop), g_sTmpName];
                 lAVs += [g_sTmpName];
             }

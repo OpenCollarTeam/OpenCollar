@@ -1,4 +1,4 @@
-//OpenCollar - rlvtp - 3.529
+//OpenCollar - rlvtp
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 //3.004 - adding "accepttp" support.  No button, just automatically turned on for owner.
@@ -217,14 +217,7 @@ LandmarkMenu(key kAv)
     for (n = 0; n < iStop; n++)
     {
         string sName = llGetInventoryName(INVENTORY_LANDMARK, n);
-        if (llStringLength(sName) <= 24)
-        {
-            lButtons += [sName];
-        }
-        else
-        {
-            Notify(kAv, "Omitting '" + sName + "' from landmark menu because it is too long.  Please rename it.", TRUE);
-        }
+        lButtons += [sName];
     }
 
     lmkMenuID = Dialog(kAv, "Pick a landmark to teleport to.", lButtons, [UPMENU], 0);
