@@ -1,4 +1,4 @@
-//OpenCollar - dialog
+//OpenCollar - dialog.lsl
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
@@ -177,7 +177,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
         integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) {
             string sButton = Integer2String(iCur, iWithNums) + " " + llList2String(lMenuItems, iCur);
-            sButton = TruncateString(sButton+"                        ", 24); // filling with spaces for left alignment
+            sButton = TruncateString(sButton, 24);
             lButtons += [sButton];
         }
     }
