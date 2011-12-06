@@ -1,4 +1,4 @@
-//OpenCollar - appearance - 3.523
+//OpenCollar - appearance
 //handle appearance menu
 //handle saving position on detach, and restoring it on httpdb_response
 
@@ -58,7 +58,6 @@ integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -80,29 +79,23 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "^";
 
 key g_kWearer;
-integer g_iRemenu;
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) {
@@ -285,11 +278,11 @@ AdjustRot(vector vDelta)
     }
 }
 
-RotMenu(key kAv)
+RotMenu(key kAv, integer iAuth)
 {
     string sPrompt = "Adjust the collar rotation.";
     list lMyButtons = ["tilt up", "right", "tilt left", "tilt down", "left", "tilt right"];// ria change
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0);
+    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, ROTMENU];
     if (iMenuIndex == -1)
@@ -302,7 +295,7 @@ RotMenu(key kAv)
     }
 }
 
-PosMenu(key kAv)
+PosMenu(key kAv, integer iAuth)
 {
     string sPrompt = "Adjust the collar position:\nChoose the size of the nudge (S/M/L), and move the collar in one of the three directions (X/Y/Z).\nCurrent nudge size is: ";
     list lMyButtons = ["left", "up", "forward", "right", "down", "backward"];// ria iChange
@@ -313,7 +306,7 @@ PosMenu(key kAv)
     if (g_fNudge!=g_fLargeNudge) lMyButtons+=["Nudge: L"];
     else sPrompt += "Large.";
     
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0);
+    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, POSMENU];
     if (iMenuIndex == -1)
@@ -326,10 +319,10 @@ PosMenu(key kAv)
     }
 }
 
-SizeMenu(key kAv)
+SizeMenu(key kAv, integer iAuth)
 {
     string sPrompt = "Adjust the collar scale. It is based on the size the collar has on rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
-    key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0);
+    key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
     if (iMenuIndex == -1)
@@ -343,7 +336,7 @@ SizeMenu(key kAv)
         Debug("FreeMem: " + (string)llGetFreeMemory());
 }
 
-DoMenu(key kAv)
+DoMenu(key kAv, integer iAuth)
 {
     list lMyButtons;
     string sPrompt;
@@ -359,7 +352,7 @@ DoMenu(key kAv)
         lMyButtons = [UNTICKED + APPLOCK];
         lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
     }
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0);
+    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, g_sSubMenu];
     if (iMenuIndex == -1)
@@ -396,14 +389,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //someone asked for our menu
-            //give this plugin's menu to id
-            g_iRemenu = TRUE;
-            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "appearance",kID);
-        }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
@@ -425,7 +411,18 @@ default
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llToLower(llList2String(lParams, 1));
-            if (sStr == "refreshmenu")
+            if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu)
+            {
+                //someone asked for our menu
+                //give this plugin's menu to id
+                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+                {
+                    Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
+                    llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+                }
+                else DoMenu(kID, iNum);
+            }
+            else if (sStr == "refreshmenu")
             {
                 g_lButtons = [];
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
@@ -435,10 +432,8 @@ default
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
                     Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
-                    if (g_iRemenu) llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);
                 }
-                else DoMenu(kID);
-                g_iRemenu=FALSE;
+                else DoMenu(kID, iNum);
             }
             else if (sStr == "rotation")
             {
@@ -449,9 +444,9 @@ default
                 else if (g_iAppLock)
                 {
                     Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID);
+                    DoMenu(kID, iNum);
                 }
-                else RotMenu(kID);
+                else RotMenu(kID, iNum);
              }
             else if (sStr == "position")
             {
@@ -462,9 +457,9 @@ default
                 else if (g_iAppLock)
                 {
                     Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID);
+                    DoMenu(kID, iNum);
                 }
-                else PosMenu(kID);
+                else PosMenu(kID, iNum);
             }
             else if (sStr == "size")
             {
@@ -475,34 +470,20 @@ default
                 else if (g_iAppLock)
                 {
                     Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID);
+                    DoMenu(kID, iNum);
                 }
-                else SizeMenu(kID);
+                else SizeMenu(kID, iNum);
             }
-            else if (llGetSubString(sStr,0,6) == "applock")
+            else if (sCommand == "lockappearance")
             {
                 if (iNum == COMMAND_OWNER)
                 {
-                    if(llGetSubString(sStr, -1, -1) == "0")
-                    {
-                        g_iAppLock = FALSE;
-                        llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sAppLockToken, NULL_KEY);
-                        llMessageLinked(LINK_SET, COMMAND_OWNER, "lockappearance 0", kID);
-                    }
-                    else
-                    {
-                        g_iAppLock = TRUE;
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sAppLockToken + "=1", NULL_KEY);
-                        llMessageLinked(LINK_SET, COMMAND_OWNER, "lockappearance 1", kID);
-                    }
+                    g_iAppLock = (sValue!="0");
+                    if(g_iAppLock) llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sAppLockToken + "=1", NULL_KEY);
+                    else llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sAppLockToken, NULL_KEY);
                 }
-                else
-                {
-                    Notify(kID,"Only owners can use this option.",FALSE);
-                }
-                DoMenu(kID);
+                else Notify(kID,"Only owners can use this option.", FALSE);
             }
-
         }
         else if (iNum == HTTPDB_RESPONSE)
         {
@@ -525,6 +506,7 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
@@ -534,47 +516,55 @@ default
                     if (sMessage == UPMENU)
                     {
                         //give kID the parent menu
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     }
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == APPLOCK)
                     {
-                            if(llGetSubString(sMessage, 0, llStringLength(TICKED) - 1) == TICKED)
-                            {
-                                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "applock 0", kAv);
-                            }
-                            else
-                            {
-                                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "applock 1", kAv);
-                            }
-
-                        }
+                        integer lock = llGetSubString(sMessage, 0, llStringLength(UNTICKED) - 1) == UNTICKED;
+                        // Hack: change local lock state in order for the menu to appear updated
+                        //      without waiting for the result of the "lockappearance" asynchronous call.
+                        //      We use this call here is because appearance lock has to be propagated
+                        //      to other scripts. Thus we cannot prevent the local handler from
+                        //      being called too although we would be better with just calling a
+                        //      shared function (synchronously).
+                        //      The alternative would be calling DoMenu in the "lockappearance" LM
+                        //      handler, using a global variable such as g_iRemenu
+                        //      ... which we do not like anymore.
+                        //      The only drawback is to make sure the auth test remains consistant
+                        //      in both places: here and in the "lockappearance" handler.
+                        if (iAuth == COMMAND_OWNER) g_iAppLock = lock;
+                        // /Hack
+                        if (lock) llMessageLinked(LINK_SET, iAuth, "lockappearance 1", kAv);
+                        else llMessageLinked(LINK_SET, iAuth, "lockappearance 0", kAv);
+                        DoMenu(kAv, iAuth);
+                    }
                     else if (~llListFindList(g_lLocalButtons, [sMessage]))
                     {
                         //we got a response for something we handle locally
                         if (sMessage == POSMENU)
                         {
-                            PosMenu(kAv);
+                            PosMenu(kAv, iAuth);
                         }
                         else if (sMessage == ROTMENU)
                         {
-                            RotMenu(kAv);
+                            RotMenu(kAv, iAuth);
                         }
                         else if (sMessage == SIZEMENU)
                         {
-                            SizeMenu(kAv);
+                            SizeMenu(kAv, iAuth);
                         }
                     }
                     else if (~llListFindList(g_lButtons, [sMessage]))
                     {
                         //we got a submenu selection
-                        llMessageLinked(LINK_SET, SUBMENU, sMessage, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
                     }                                
                 }
                 else if (sMenuType == POSMENU)
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv);
+                        DoMenu(kAv, iAuth);
                         return;
                     }
                     else if (llGetAttached())
@@ -620,13 +610,13 @@ default
                     {
                         Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
                     }
-                    PosMenu(kAv);                    
+                    PosMenu(kAv, iAuth);                    
                 }
                 else if (sMenuType == ROTMENU)
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv);
+                        DoMenu(kAv, iAuth);
                         return;
                     }
                     else if (llGetAttached())
@@ -660,13 +650,13 @@ default
                     {
                         Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
                     }
-                    RotMenu(kAv);                     
+                    RotMenu(kAv, iAuth);                     
                 }
                 else if (sMenuType == SIZEMENU)
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv);
+                        DoMenu(kAv, iAuth);
                         return;
                     }
                     else
@@ -692,7 +682,7 @@ default
                                 ScalePrimLoop(g_iScaleFactor + iSizeFactor, FALSE, kAv);
                             }
                         }
-                        SizeMenu(kAv);
+                        SizeMenu(kAv, iAuth);
                     }
                 }
             }            

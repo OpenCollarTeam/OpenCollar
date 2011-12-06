@@ -1,3 +1,4 @@
+//OpenCollar - settings
 // This script stores settings for other scripts in the collar.  In bygone days
 // it was responsible for storing them to an online database too.  It doesn't
 // do that anymore.  But so long as plugin scripts are still using central
@@ -43,7 +44,6 @@ integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 
@@ -228,56 +228,65 @@ default {
                     sValue = llList2String(settings_default, (count + 1));
                     settings_pairs = SetDefault(settings_pairs, sToken, sValue);
                 }
+                // wait a sec before sending settings, in case other scripts are
+                // still resetting.
+                llSleep(0.5);
                 Refresh();
             }
         }
     }
 
-    link_message(integer sender, integer num, string str, key id) {
-        if (num == HTTPDB_SAVE || num == LOCALSETTING_SAVE) {
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == HTTPDB_SAVE || num == LOCALSETTING_SAVE)
+        {
             //save the token, value
             list params = llParseString2List(str, ["="], []);
             string token = llList2String(params, 0);
             string value = llList2String(params, 1);
             settings_pairs = SetSetting(settings_pairs, token, value);
-        } else if (num == HTTPDB_REQUEST || num == HTTPDB_REQUEST_NOCACHE || num == LOCALSETTING_REQUEST) {
+        }
+        else if (num == HTTPDB_REQUEST || num == HTTPDB_REQUEST_NOCACHE || num == LOCALSETTING_REQUEST)
+        {
             //check the dbcache for the token
             // responses are sent both as HTTPDB and LOCALSETTING until all scripts can use just SETTING
-            if (SettingExists(settings_pairs, str)) {
+            if (SettingExists(settings_pairs, str))
+            {
                 llMessageLinked(LINK_SET, HTTPDB_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
                 llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-            } else {
+            } 
+            else
+            {
                 llMessageLinked(LINK_SET, HTTPDB_EMPTY, str, NULL_KEY);
                 llMessageLinked(LINK_SET, LOCALSETTING_EMPTY, str, "");                
             }
-        } else if (num == HTTPDB_DELETE || num == LOCALSETTING_DELETE) {
+        }
+        else if (num == HTTPDB_DELETE || num == LOCALSETTING_DELETE)
+        {
             settings_pairs = DelSetting(settings_pairs, str);
-        } else if ( (str == "wiki") && (num >= COMMAND_OWNER && num <= COMMAND_WEARER)) {
-            // open the wiki page
-            if  (remenu)
+        }
+        else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER)
+        {
+            integer loadurl = FALSE; integer remenu = FALSE;
+            if (str == "wiki") loadurl = TRUE;
+            else if (str == "menu "+WIKI) {loadurl = TRUE; remenu = TRUE;}
+            else if (num == COMMAND_OWNER || id == wearer)
             {
-                remenu=FALSE;
-                llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
+                if (str == "cachedump") DumpCache();
+                else if (str == "menu "+DUMPCACHE) { DumpCache(); remenu = TRUE; }
+                else if (str == "reset" || str == "runaway") llResetScript();
+                else return;
+            }
+            else return;
+            if (remenu) llMessageLinked(LINK_SET, num, "menu " + parentmenu, id);
+            if (loadurl)
+            {
                 llSleep(0.2);
+                llLoadURL(id, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
             }
-            llLoadURL(id, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
-        } else if (num == COMMAND_OWNER || ((num > COMMAND_OWNER) && (num < 600) && (id == wearer))) {
-            if (str == "cachedump") {
-                DumpCache();
-            }
-            else if (str == "reset" || str == "runaway") {
-                llResetScript();
-            }
-        } else if (num == SUBMENU) {
-            if (str == DUMPCACHE) {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "cachedump", id);
-
-                llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-            } else if (str == WIKI) {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "wiki", id);
-                remenu = TRUE;
-            }
-        } else if (num == MENUNAME_REQUEST && str == parentmenu) {
+        }
+        else if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + DUMPCACHE, NULL_KEY);
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + WIKI, NULL_KEY);
         }

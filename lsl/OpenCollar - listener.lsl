@@ -1,3 +1,4 @@
+//OpenCollar - listener
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //listener
 
@@ -38,7 +39,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 
 //5000 block is reserved for IM slaves
 

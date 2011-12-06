@@ -1,4 +1,4 @@
-//OpenCollar - hide - 3.530
+//OpenCollar - hide
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on getting menu request, give element menu
 //on getting element type, give Hide and Show buttons
@@ -44,7 +44,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
@@ -76,28 +75,22 @@ Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
     }
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
-
+} 
 
 SetAllElementsAlpha(float fAlpha)
 {
@@ -166,7 +159,7 @@ SaveAlphaSettings()
 
 }
 
-ElementMenu(key kAv)
+ElementMenu(key kAv, integer iAuth)
 {
     g_sCurrentElement = "";
     string sPrompt = "Pick which part of the collar you would like to hide or show";
@@ -203,7 +196,7 @@ ElementMenu(key kAv)
         }
     }
     g_lButtons += [SHOW + " " + ALL, HIDE + " " + ALL];
-    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0);
+    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0, iAuth);
 }
 
 string ElementType(integer linkiNumber)
@@ -309,11 +302,11 @@ default
                     SaveAlphaSettings();
                 }
             }
-            else if (sStr == "hidemenu")
+            else if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu")
             {
                 if (!AppLocked(kID))
                 {
-                    ElementMenu(kID);
+                    ElementMenu(kID, iNum);
                 }
             }
             else if (StartsWith(sStr, "setalpha"))
@@ -410,12 +403,6 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //give element menu
-            ElementMenu(kID);
-        }
-
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID==g_kDialogID)
@@ -425,18 +412,19 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (sMessage == UPMENU)
                 {
                     if (g_sCurrentElement == "")
                     {
                         //main menu
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     }
                     else
                     {
                         g_sCurrentElement = "";
-                        ElementMenu(kAv);
+                        ElementMenu(kAv, iAuth);
                     }
                 }
                 else
@@ -471,7 +459,7 @@ default
                         SetElementAlpha(sElement, fAlpha);
                     }
                     SaveAlphaSettings();
-                    ElementMenu(kAv);
+                    ElementMenu(kAv, iAuth);
                 }
             }
         }

@@ -1,4 +1,4 @@
-//OpenCollar - bell - 3.520
+//OpenCollar - bell
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //Collar Cuff Menu
 
@@ -71,10 +71,8 @@ integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 
 list g_lButtons;
 
-integer g_iLocalMenuCall=FALSE;
-
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
@@ -96,7 +94,6 @@ integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -119,28 +116,22 @@ string UPMENU = "^";//when your menu hears this, give the parent menu
 
 
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
-
+} 
 
 string AutoPrefix()
 {
@@ -235,7 +226,7 @@ string sGetDBPrefix()
 //=
 //===============================================================================
 
-DoMenu(key kID)
+DoMenu(key kID, integer iAuth)
 {
     string sPrompt = "Pick an option.\n";
     // sPrompt += "(Menu will time out in " + (string)g_iTimeOut + " seconds.)\n";
@@ -281,7 +272,7 @@ DoMenu(key kID)
 
     lMyButtons = llListSort(lMyButtons, 1, TRUE);
 
-    g_kDialogID=Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0);
+    g_kDialogID=Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
 
 //===============================================================================
@@ -493,6 +484,131 @@ SaveBellSettings()
     llMessageLinked(LINK_SET, HTTPDB_SAVE,sSettings,NULL_KEY);
 }
 
+// returns TRUE if eligible (AUTHED link message number)
+integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
+{
+    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    string test=llToLower(sStr);
+    if (sStr == "refreshmenu")
+    {
+        g_lButtons = [];
+        llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+    }
+    else if (sStr == "menu " + g_sSubMenu || sStr == g_sBellChatPrefix)
+    {// the command prefix + bell without any extentsion is used in chat
+        //give this plugin's menu to kID
+        DoMenu(kID, iNum);
+    }
+    // we now chekc for chat commands
+    else if (nStartsWith(test,g_sBellChatPrefix))
+    {
+        // it is a chat commad for the bell so process it
+        list lParams = llParseString2List(test, [" "], []);
+        string sToken = llList2String(lParams, 1);
+        string sValue = llList2String(lParams, 2);
+
+        if (sToken=="volume")
+        {
+            integer n=(integer)sValue;
+            if (n<1) n=1;
+            if (n>10) n=10;
+            g_fVolume=(float)n/10;
+            SaveBellSettings();
+            Notify(kID,"Bell volume set to "+(string)n, TRUE);
+        }
+        else if (sToken=="delay")
+        {
+            g_fSpeed=(float)sValue;
+            if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
+            if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
+            SaveBellSettings();
+            llWhisper(0,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.");
+        }
+        else if (sToken=="show" || sToken=="hide")
+        {
+            if (sToken=="show")
+            {
+                g_iBellShow=TRUE;
+                SetBellElementAlpha(1.0);
+                Notify(kID,"The bell is now visible.",TRUE);
+            }
+            else
+            {
+                g_iBellShow=FALSE;
+                SetBellElementAlpha(0.0);
+                Notify(kID,"The bell is now invisible.",TRUE);
+            }
+            SaveBellSettings();
+
+        }
+        else if (sToken=="on")
+        {
+            if (iNum!=COMMAND_GROUP)
+            {
+                if (g_iBellOn==0)
+                {
+                    g_iBellOn=iNum;
+                    if (!g_iHasControl)
+                        llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
+
+
+                    SaveBellSettings();
+                    Notify(kID,"The bell rings now.",TRUE);
+                }
+            }
+            else
+            {
+                Notify(kID,"Group users or Open Acces users cannot change the ring status of the bell.",TRUE);
+            }
+        }
+        else if (sToken=="off")
+        {
+            if ((g_iBellOn>0)&&(iNum!=COMMAND_GROUP))
+            {
+                g_iBellOn=0;
+
+                if (g_iHasControl)
+                {
+                    llReleaseControls();
+                    g_iHasControl=FALSE;
+
+                }
+
+                SaveBellSettings();
+                Notify(kID,"The bell is now quiet.",TRUE);
+            }
+            else
+            {
+                Notify(kID,"Group users or Open Access users cannot change the ring status of the bell.",TRUE);
+            }
+        }
+        else if (sToken=="nextsound")
+        {
+            g_iCurrentBellSound++;
+            if (g_iCurrentBellSound>=g_iBellSoundCount)
+            {
+                g_iCurrentBellSound=0;
+            }
+            g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
+            Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
+        }
+        // show the help
+        else if (sToken=="help" || sToken=="?")
+        {
+            ShowHelp(kID);
+        }
+        // let the bell ring one time
+        else if (sToken=="ring")
+        {
+            // update variable for time check
+            g_fNextRing=llGetTime()+g_fSpeed;
+            // and play the sound
+            llPlaySound(g_kCurrentBellSound,g_fVolume);
+        }
+
+    }
+    return TRUE;
+}
 
 default
 {
@@ -530,13 +646,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //someone asked for our menu
-            //give this plugin's menu to id
-            DoMenu(kID);
-        }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             // the menu structure is to be build again, so make sure we get recognized
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
@@ -617,158 +727,26 @@ default
                 SaveBellSettings();
             }
         }
-        else if (iNum>=COMMAND_OWNER && iNum<=COMMAND_WEARER)
-        {
-            string test=llToLower(sStr);
-            if (sStr == "refreshmenu")
-            {
-                g_lButtons = [];
-                llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-            }
-            else if (sStr == g_sBellChatPrefix)
-            {// the command prefix + bell without any extentsion is used in chat
-                //give this plugin's menu to kID
-                DoMenu(kID);
-            }
-            // we now chekc for chat commands
-            else if (nStartsWith(test,g_sBellChatPrefix))
-            {
-                // it is a chat commad for the bell so process it
-                list lParams = llParseString2List(test, [" "], []);
-                string sToken = llList2String(lParams, 1);
-                string sValue = llList2String(lParams, 2);
-
-                if (sToken=="volume")
-                {
-                    integer n=(integer)sValue;
-                    if (n<1) n=1;
-                    if (n>10) n=10;
-                    g_fVolume=(float)n/10;
-                    SaveBellSettings();
-                    Notify(kID,"Bell volume set to "+(string)n, TRUE);
-                }
-                else if (sToken=="delay")
-                {
-                    g_fSpeed=(float)sValue;
-                    if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
-                    if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
-                    SaveBellSettings();
-                    llWhisper(0,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.");
-                }
-                else if (sToken=="show" || sToken=="hide")
-                {
-                    if (sToken=="show")
-                    {
-                        g_iBellShow=TRUE;
-                        SetBellElementAlpha(1.0);
-                        Notify(kID,"The bell is now visible.",TRUE);
-                    }
-                    else
-                    {
-                        g_iBellShow=FALSE;
-                        SetBellElementAlpha(0.0);
-                        Notify(kID,"The bell is now invisible.",TRUE);
-                    }
-                    SaveBellSettings();
-
-                }
-                else if (sToken=="on")
-                {
-                    if (iNum!=COMMAND_GROUP)
-                    {
-                        if (g_iBellOn==0)
-                        {
-                            g_iBellOn=iNum;
-                            if (!g_iHasControl)
-                                llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
-
-
-                            SaveBellSettings();
-                            Notify(kID,"The bell rings now.",TRUE);
-                            if (g_iLocalMenuCall)
-                            {
-                                g_iLocalMenuCall=FALSE;
-                                DoMenu(kID);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Notify(kID,"Group users or Open Acces users cannot change the ring status of the bell.",TRUE);
-                    }
-                }
-                else if (sToken=="off")
-                {
-                    if ((g_iBellOn>0)&&(iNum!=COMMAND_GROUP))
-                    {
-                        g_iBellOn=0;
-
-                        if (g_iHasControl)
-                        {
-                            llReleaseControls();
-                            g_iHasControl=FALSE;
-
-                        }
-
-                        SaveBellSettings();
-                        Notify(kID,"The bell is now quiet.",TRUE);
-                    }
-                    else
-                    {
-                        Notify(kID,"Group users or Open Access users cannot change the ring status of the bell.",TRUE);
-                    }
-                    if (g_iLocalMenuCall)
-                    {
-                        g_iLocalMenuCall=FALSE;
-                        DoMenu(kID);
-                    }
-                }
-                else if (sToken=="nextsound")
-                {
-                    g_iCurrentBellSound++;
-                    if (g_iCurrentBellSound>=g_iBellSoundCount)
-                    {
-                        g_iCurrentBellSound=0;
-                    }
-                    g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                    Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
-                }
-                // show the help
-                else if (sToken=="help" || sToken=="?")
-                {
-                    ShowHelp(kID);
-                }
-                // let the bell ring one time
-                else if (sToken=="ring")
-                {
-                    // update variable for time check
-                    g_fNextRing=llGetTime()+g_fSpeed;
-                    // and play the sound
-                    llPlaySound(g_kCurrentBellSound,g_fVolume);
-                }
-
-            }
-        }
+        else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
         {
             //str will be a 2-element, pipe-delimited list in form pagenum|response
+    
+            if (kID == g_kDialogID)
+            {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAV = llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
-    
-            if (kID == g_kDialogID)
-            {
-                integer nRemenu=FALSE;
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
                     //give id the parent menu
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAV);
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAV);
+                    return; // no "remenu"
                 }
                 else if (~llListFindList(g_lLocalButtons, [sMessage]))
                 {
-                    // usually we want to reopen the menu
-                    nRemenu=TRUE;
                     //we got a response for something we handle locally
                     if (sMessage == "Vol +")
                         // pump up the volume and store the value
@@ -850,11 +828,7 @@ default
                     {
                         s="bell on";
                     }
-                    llMessageLinked(LINK_SET,COMMAND_NOAUTH,s,kAV);
-
-                    // LM listerer wil tkae care of showing the menua
-                    g_iLocalMenuCall=TRUE;
-                    nRemenu=FALSE;
+                    UserCommand(iAuth,s,kAV);
                 }
                 else if (sMessage == g_sBellShow || sMessage == g_sBellHide)
                     // someone wants to hide or show the bell
@@ -869,15 +843,15 @@ default
                         SetBellElementAlpha(0.0);
                     }
                     SaveBellSettings();
-                    nRemenu=TRUE;
                 }
                 else if (~llListFindList(g_lButtons, [sMessage]))
                 {
                     //we got a submenu selection
-                    llMessageLinked(LINK_SET, SUBMENU, sMessage, kAV);
+                    UserCommand(iAuth, "menu "+sMessage, kAV);
+                    return; // no main menu
                 }
                 // do we want to see the menu again?
-                if (nRemenu) DoMenu(kAV);
+                DoMenu(kAV, iAuth);
 
             }
         }

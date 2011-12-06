@@ -1,4 +1,4 @@
-//OpenCollar - texture - 3.525
+//OpenCollar - texture
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //color
 
@@ -25,7 +25,7 @@ integer g_iAppLock = FALSE;
 string g_sAppLockToken = "AppLock";
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
@@ -45,8 +45,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
-
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -73,29 +71,24 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     }
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-TextureMenu(key kID, integer iPage)
+TextureMenu(key kID, integer iPage, integer iAuth)
 {
     //create a list
     list lButtons;
@@ -109,14 +102,14 @@ TextureMenu(key kID, integer iPage)
         string sName = llGetInventoryName(INVENTORY_TEXTURE,n);
         lButtons += [sName];
     }
-    g_ktextureID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
+    g_ktextureID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage, iAuth);
 }
 
-ElementMenu(key kAv)
+ElementMenu(key kAv, integer iAuth)
 {
     string sPrompt = "Pick which part of the collar you would like to retexture";
     lButtons = llListSort(g_lElements, 1, TRUE);
-    g_kElementID = Dialog(kAv, sPrompt, lButtons, [UPMENU], 0);
+    g_kElementID = Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 string ElementType(integer iLinkNum)
@@ -236,47 +229,43 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //owner, secowner, group, and wearer may currently change colors
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER && sStr == "textures")
+        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
-            if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+            if (sStr == "textures" || sStr == "menu "+g_sSubMenu)
             {
-                Notify(kID,"You are not allowed to change the textures.", FALSE);
-                llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);
-            }
-            else if (g_iAppLock)
-            {
-                Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-            }
-
-            else
-            {
-                s_CurrentElement = "";
-                ElementMenu(kID);
-            }
-        }
-        else if (llGetSubString(sStr,0,13) == "lockappearance")
-        {
-            if (iNum == COMMAND_OWNER)
-            {
-                if(llGetSubString(sStr, -1, -1) == "0")
+                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    g_iAppLock  = FALSE;
+                    Notify(kID,"You are not allowed to change the textures.", FALSE);
+                    if (!llSubStringIndex(sStr, "menu "))
+                        llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+                }
+                else if (g_iAppLock)
+                {
+                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    if (!llSubStringIndex(sStr, "menu "))
+                        llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
                 }
                 else
                 {
-                    g_iAppLock  = TRUE;
+                    s_CurrentElement = "";
+                    ElementMenu(kID, iNum);
                 }
             }
-        }        
-        else if (sStr == "reset" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
-        {
-            //clear saved settings
-            //llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
-            llResetScript();
-        }
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            if (sStr == "settings")
+            else if (llGetSubString(sStr,0,13) == "lockappearance")
+            {
+                if (iNum == COMMAND_OWNER)
+                {
+                    if(llGetSubString(sStr, -1, -1) == "0") g_iAppLock = FALSE;
+                    else g_iAppLock  = TRUE;
+                }
+            }        
+            else if (sStr == "reset" && (iNum == COMMAND_OWNER || kID == g_kWearer))
+            {
+                //clear saved settings
+                //llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+                llResetScript();
+            }
+            else if (sStr == "settings")
             {
                 Notify(kID, "Texture Settings: " + llDumpList2String(g_lTextures, ","), FALSE);
             }
@@ -319,14 +308,6 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            if (sStr == g_sSubMenu)
-            {
-                //we don't know the authority of the menu requester, so send a message through the auth system
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "textures", kID);
-            }
-        }
         else if (iNum == DIALOG_RESPONSE)
         {
             if (llListFindList([g_kElementID, g_ktextureID], [kID]) != -1)
@@ -335,19 +316,20 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (kID == g_kElementID)
                 {//they just chose an element, now choose a texture
                     if (sMessage == UPMENU)
                     {
                         //main menu
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else
                     {
                         //we just got the element name
                         s_CurrentElement = sMessage;
-                        TextureMenu(kAv, iPage);
+                        TextureMenu(kAv, iPage, iAuth);
                     }
                 }
                 else if (kID == g_ktextureID)
@@ -355,7 +337,7 @@ default
                     if (sMessage == UPMENU)
                     {
                         s_CurrentElement = "";
-                        ElementMenu(kAv);
+                        ElementMenu(kAv, iAuth);
                     }
                     else
                     {
@@ -364,7 +346,7 @@ default
                         //loop through links, setting texture if element type matches what we're changing
                         //root prim is 1, so start at 2
                         SetElementTexture(s_CurrentElement, (key)sTex);
-                        TextureMenu(kAv, iPage);
+                        TextureMenu(kAv, iPage, iAuth);
                     }
                 }
             }

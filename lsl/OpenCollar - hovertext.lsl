@@ -1,3 +1,4 @@
+//OpenCollar - hovertext
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
 
@@ -5,13 +6,13 @@ string g_sFeatureName = "FloatText";
 integer g_iUpdatePin = 4711;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer SEND_IM = 1000;
+//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 integer UPDATE = 10001;
 
@@ -23,7 +24,6 @@ integer HTTPDB_DELETE = 2003;//delete token from DB
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 
 vector g_vHideScale = <.02,.02,.02>;
 vector g_vShowScale = <.02,.02,1.0>;
@@ -145,7 +145,11 @@ default {
         string sCommand = llList2String(lParams, 0);
         string sValue = llToLower(llList2String(lParams, 1));
         if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
-            if (sCommand == "text") {
+            if (sStr == "menu " + g_sFeatureName) {
+                //popup help on how to set label
+                llMessageLinked(LINK_ROOT, POPUP_HELP, "To set floating text , say _PREFIX_text followed by the text you wish to set.  \nExample: _PREFIX_text I have text above my head!", kID);
+                llMessageLinked(LINK_ROOT, iNum, "menu " + g_sParentMenu, kID);
+            } else if (sCommand == "text") {
                 //llSay(0, "got text command");
                 lParams = llDeleteSubList(lParams, 0, 0);//pop off the "text" command
                 string sNewText = llDumpList2String(lParams, " ");
@@ -197,9 +201,6 @@ default {
             }
         } else if (iNum == MENUNAME_REQUEST) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
-        } else if (iNum == SUBMENU && sStr == g_sFeatureName) {
-            //popup help on how to set label
-            llMessageLinked(LINK_ROOT, POPUP_HELP, "To set floating text , say _PREFIX_text followed by the text you wish to set.  \nExample: _PREFIX_text I have text above my head!", kID);
         } else if (iNum == HTTPDB_RESPONSE) {
             lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

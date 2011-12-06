@@ -1,4 +1,4 @@
-//OpenCollar - label - 3.526
+//OpenCollar - label
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "Label";
@@ -30,7 +30,6 @@ integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -133,34 +132,29 @@ list g_lDecode=[]; // to handle special characters from CP850 page for european 
 
 /////////// END GLOBAL VARIABLES ////////////
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-FontMenu(key kID)
+FontMenu(key kID, integer iAuth)
 {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
     string sPrompt = "Select the font for the collar's label.  (Not all collars have a label that can use this feature.)";
 
-    g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU],0);
+    g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 ResetCharIndex() {
@@ -359,6 +353,19 @@ default
         {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llList2String(lParams, 0);
+
+            if (sStr == "menu " + g_sSubMenu)
+            {
+                //popup help on how to set label
+                llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
+                llMessageLinked(LINK_SET, POPUP_HELP, "To set the label on the collar, say _PREFIX_label followed by the text you wish to set.\nExample: _PREFIX_label I Rock!", kID);
+            }
+            else if (sStr == "menu " + g_sFontMenu)
+            {
+                //give font selection menu
+                FontMenu(kID, iNum);
+            }
+
             if (llGetSubString(sStr,0,13) == "lockappearance")
             {
                 if(llGetSubString(sStr, -1, -1) == "0")
@@ -393,7 +400,7 @@ default
                 else
                 {
                     //give font selection menu
-                    FontMenu(kID);
+                    FontMenu(kID, iNum);
                 }
             }
             //no more needed
@@ -408,9 +415,17 @@ default
         {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llList2String(lParams, 0);
-            if (sCommand == "label")
-                Notify(kID,"Only owners can change the label!", FALSE);
-
+            if (sCommand == "label") {} // do nothing here
+            else if (sStr == "menu " + g_sSubMenu)
+            {
+                llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
+            }
+            else if (sStr == "menu " + g_sFontMenu)
+            {
+                llMessageLinked(LINK_SET, iNum, "menu "+g_sFontParent, kID);
+            }
+            else return;
+            Notify(kID,"Only owners can change the label!", FALSE);
         }
         else if (iNum == HTTPDB_RESPONSE)
         {
@@ -458,20 +473,6 @@ default
                     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
                 }
             }
-        else if (iNum == SUBMENU)
-        {
-            if (sStr == g_sSubMenu)
-            {
-                //popup help on how to set label
-                llMessageLinked(LINK_SET, POPUP_HELP, "To set the label on the collar, say _PREFIX_label followed by the text you wish to set.\nExample: _PREFIX_label I Rock!", kID);
-            }
-            else if (sStr == g_sFontMenu)
-            {
-                //give font selection menu
-                FontMenu(kID);
-            }
-        }
-
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID==g_kDialogID)
@@ -481,9 +482,10 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sFontParent, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sFontParent, kAv);
                 }
                 else
                 {
@@ -495,7 +497,7 @@ default
                         SetLabel(g_sLabelText);
                         llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDesignPrefix + "font=" + (string)g_kFontTexture, NULL_KEY);
                     }
-                    FontMenu(kAv);
+                    FontMenu(kAv, iAuth);
                 }
             }
         }
