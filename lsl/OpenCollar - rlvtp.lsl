@@ -203,14 +203,7 @@ LandmarkMenu(key kAv, integer iAuth)
     for (n = 0; n < iStop; n++)
     {
         string sName = llGetInventoryName(INVENTORY_LANDMARK, n);
-        if (llStringLength(sName) <= 24)
-        {
-            lButtons += [sName];
-        }
-        else
-        {
-            Notify(kAv, "Omitting '" + sName + "' from landmark menu because it is too long.  Please rename it.", TRUE);
-        }
+        lButtons += [sName];
     }
 
     lmkMenuID = Dialog(kAv, "Pick a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);

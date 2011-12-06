@@ -40,9 +40,6 @@ key g_kSitID;
 float g_fScanRange = 20.0;//range we'll scan for scripted objects when doing a force-sit
 key g_kMenuUser;//used to remember who to give the menu to after scanning
 integer g_iMenuAuth;//used to remember the auth level of that person
-list g_lSitButtons;
-string g_sSitPrompt;
-list g_lSitKeys;
 
 // Variables used for sit memory function
 string  g_sSitTarget = "";
@@ -656,11 +653,9 @@ default
                     {
                         Menu(kAv, iAuth);
                     }
-                    else
+                    else if ((key) sMessage)
                     {
-                        //we heard a number for an object to sit on
-                        integer seatiNum = (integer)sMessage - 1;
-                        UserCommand(iAuth, "sit:" + llList2String(g_lSitKeys, seatiNum) + "=force", kAv);
+                        UserCommand(iAuth, "sit:" + sMessage + "=force", kAv);
                         Menu(kAv, iAuth);
                     }                            
                 }                 
@@ -670,38 +665,20 @@ default
 
     sensor(integer iNum)
     {
-        g_lSitButtons = [];
-        g_sSitPrompt = "Pick the object on which you want the sub to sit.  If it's not in the list, have the sub move closer and try again.\n";
-        g_lSitKeys = [];
+        list lSitButtons = [];
+        string sSitPrompt = "Pick the object on which you want the sub to sit.  If it's not in the list, have the sub move closer and try again.\n";
         //give g_kMenuUser a list of things to choose from
         integer n;
-        integer iButtonLabel = 0;
         for (n = 0; n < iNum; n ++)
         {
             //don't add things named "Object"
-            string sName = llDetectedName(n);
-            if (sName != "Object")
+            if (llDetectedName(n) != "Object")
             {
-                ++iButtonLabel;
-                g_lSitButtons += [(string)iButtonLabel];
-                if (llStringLength(sName) > 44)
-                {   //added to prevent errors due to 512 char limit in poup prompt text
-                    sName = llGetSubString(sName, 0, 40) + "...";
-                }
-                g_sSitPrompt += "\n" + (string)iButtonLabel + " - " + sName;
-                g_lSitKeys += [llDetectedKey(n)];
+                lSitButtons += [llDetectedKey(n)];
             }
         }
 
-        //prompt can only have 512 chars
-        while (llStringLength(g_sSitPrompt) >= 512)
-        {
-            //pop the last item off the buttons, keys, and prompt
-            g_lSitButtons = llDeleteSubList(g_lSitButtons, -1, -1);
-            g_lSitKeys = llDeleteSubList(g_lSitKeys, -1, -1);
-            g_sSitPrompt = llDumpList2String(llDeleteSubList(llParseString2List(g_sSitPrompt, ["\n"], []), -1, -1), "\n");
-        }
-        g_kSitID = Dialog(g_kMenuUser, g_sSitPrompt, g_lSitButtons, [UPMENU], 0, g_iMenuAuth);
+        g_kSitID = Dialog(g_kMenuUser, sSitPrompt, lSitButtons, [UPMENU], 0, g_iMenuAuth);
     }
 
     no_sensor()

@@ -65,6 +65,13 @@ integer g_iStrideLength = 11;
 
 key g_kWearer;
 
+string Key2Name(key kId)
+{
+    string sOut = llGetDisplayName(kId);
+    if (sOut) return sOut;
+    else return llKey2Name(kId);
+}
+
 string Integer2String(integer iNum, integer iDigits)
 {
     string sOut = "";
@@ -175,7 +182,9 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iEnd >= iNumitems) iEnd = iNumitems - 1;
     if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
         integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) {
-            string sButton = Integer2String(iCur, iWithNums) + " " + llList2String(lMenuItems, iCur);
+            string sButton = llList2String(lMenuItems, iCur);
+            if ((key)sButton) sButton = Key2Name((key)sButton);
+            sButton = Integer2String(iCur, iWithNums) + " " + sButton;
             sButton = TruncateString(sButton, 24);
             lButtons += [sButton];
         }
@@ -372,7 +381,9 @@ default
                 string sLine;
                 for (iCount = 0; iCount < iNb; iCount++)
                 {
-                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + llList2String(lButtons, iCount);
+                    string sButton = llList2String(lButtons, iCount);
+                    if ((key)sButton) sButton = Key2Name((key)sButton);
+                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
                     if (GetStringBytes(sOut+sLine) >= 1024)
                     {
                         Notify(kRCPT, sOut, FALSE);

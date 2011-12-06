@@ -1063,18 +1063,8 @@ default
         for(i = 0; i < iNum_detected; i++)
         {
             sName = llDetectedName(i);
-            if (llStringLength(sName) <= 24)
-            {
-                lButtons += [sName];
-                g_lScan += [(string)llDetectedKey(i) ,sName];
-            }
-            else
-            {
-                //string s = "The name '" + sName + "' is too long and cannot be added with the menu. Please use the command ****the one to be added****'" + g_sPrefix;
-                //s += "owner " + sName + "'.";
-                //Notify(g_kDialoger,  s, FALSE);
-            }
-                
+            lButtons += [sName];
+            g_lScan += [(string)llDetectedKey(i) ,sName];
         }
         //add wearer if not already in button list
         if (llGetListLength(lButtons) > 0)

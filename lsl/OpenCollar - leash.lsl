@@ -106,7 +106,6 @@ key g_kLeashTargetDialogID;
 key g_kFollowTargetDialogID;
 key g_kPostTargetDialogID;
 list g_lButtons;
-list g_lPostKeys;
 // ----- collar -----
 string g_sWearer;
 key g_kWearer;
@@ -127,7 +126,6 @@ key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
 
-list g_lLeashers;
 list g_lLengths = ["1", "2", "3", "4", "5", "8","10" , "15", "20", "25", "30"];
 //list g_lPartPoints; // DoLeash function- priority given to last item in list. so if list is ["collar", "handle"], and we've heard from the handle and particles are going there, we'll ignore any responses from "collar"
 // integer iLoop;//testing how it works with it a golable
@@ -250,18 +248,6 @@ LengthMenu(key kIn, integer iAuth)
 {
     string sPrompt = "Set a leash length in meter:\nCurrent length is: " + (string)g_fLength + "m";
     g_kSetLengthDialogID = Dialog(kIn, sPrompt, g_lLengths, [BUTTON_UPMENU], 0, iAuth);
-}
-
-LeashToMenu(key kIn, list lLeashTo, integer iAuth)
-{
-    string sPrompt = "Pick someone/thing to leash to.";
-    g_kLeashTargetDialogID = Dialog(kIn, sPrompt, lLeashTo, [BUTTON_UPMENU], 0, iAuth);
-}
-
-FollowMenu(key kIn, list lFollow, integer iAuth)
-{
-    string sPrompt = "Pick someone/thing to follow.";
-    g_kFollowTargetDialogID = Dialog(kIn, sPrompt, lFollow, [BUTTON_UPMENU], 0, iAuth);
 }
 
 SetLength(float fIn)
@@ -935,10 +921,9 @@ default
             }
             else if (kMessageID == g_kLeashTargetDialogID)
             {   
-                integer iInd = llListFindList(g_lLeashers, [sButton]);
-                if (~iInd)
+                if ((key)sButton)
                 {
-                    g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
+                    g_kLeashedTo = (key)sButton;
                     if (CheckCommandAuth(g_kCmdGiver, g_iLastRank))
                         LeashTo(g_kLeashedTo, g_kCmdGiver, g_iLastRank, ["collar", "handle"]);
                 }
@@ -946,18 +931,16 @@ default
             }
             else if (kMessageID == g_kFollowTargetDialogID)
             {
-                integer iInd = llListFindList(g_lLeashers, [sButton]);
-                if (~iInd)
+                if ((key)sButton)
                 {
-                    g_kLeashedTo = (key)llList2String(g_lLeashers, iInd -1);
+                    g_kLeashedTo = (key)sButton;
                     Follow(g_kLeashedTo, g_kCmdGiver, g_iLastRank);
                 }
                 if (!g_iReturnMenu) return;
             }
             else if (kMessageID == g_kPostTargetDialogID)
             {
-                integer iPostNum = (integer)sButton - 1;
-                if (iPostNum >= 0) UserCommand(iAuth, "post " + llList2String(g_lPostKeys, iPostNum), kAV);
+                if ((key)sButton) UserCommand(iAuth, "post " + sButton, kAV);
                 if (!g_iReturnMenu) return;
             }
             else if (kMessageID == g_kSetLengthDialogID)
@@ -979,35 +962,23 @@ default
         integer iLoop;
         if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_LEASH_MENU)
         {
-            g_lLeashers = [];
             list lAVs; // just used for menu building
             for (iLoop = 0; iLoop < iSense; iLoop++)
             {
-                string g_sTmpName = llDetectedName(iLoop);
-                if(llStringLength(g_sTmpName) > 24)
-                {
-                    g_sTmpName = llGetSubString(g_sTmpName, 0, 23);
-                }
-                g_lLeashers += [llDetectedKey(iLoop), g_sTmpName];
-                lAVs += [g_sTmpName];
+                lAVs += [llDetectedKey(iLoop)];
             }
-            LeashToMenu(g_kMenuUser, lAVs, g_iLastRank);
+            string sPrompt = "Pick someone/thing to leash to.";
+            g_kLeashTargetDialogID = Dialog(g_kMenuUser, sPrompt, lAVs, [BUTTON_UPMENU], 0, g_iLastRank);
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_FOLLOW_MENU)
         {
-            g_lLeashers = [];
             list lAVs; // just used for menu building
             for (iLoop = 0; iLoop < iSense; iLoop++)
             {
-                string g_sTmpName = llDetectedName(iLoop);
-                if(llStringLength(g_sTmpName) > 24)
-                {
-                    g_sTmpName = llGetSubString(g_sTmpName, 0, 23);
-                }
-                g_lLeashers += [llDetectedKey(iLoop), g_sTmpName];
-                lAVs += [g_sTmpName];
+                lAVs += [llDetectedKey(iLoop)];
             }
-            FollowMenu(g_kMenuUser, lAVs, g_iLastRank);
+            string sPrompt = "Pick someone/thing to follow.";
+            g_kFollowTargetDialogID = Dialog(g_kMenuUser, sPrompt, lAVs, [BUTTON_UPMENU], 0, g_iLastRank);
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_LEASH_CHAT)
         {
@@ -1045,38 +1016,12 @@ default
         else if(g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_POST_MENU)
         {
             list lButtons = [];
-            g_lPostKeys = [];
             string sPrompt = "Pick the object that you would like the sub to be leashed to.  If it's not in the list, have the sub move closer and try again.\n";
-            string sName;
-            integer iCounter = 0; //since some targets are filtered out, we cannot use iLoop
             for (iLoop = 0; iLoop < iSense; iLoop ++)
             {
-                //debug("b"+(string)llGetFreeMemory( ));
-                sName = llDetectedName(iLoop);
-                if(sName != "Object")
-                {
-                    iCounter++;
-                    //added to prevent errors due to 512 char limit in poup prompt text
-                    if (llStringLength(sName) > 44)
-                    {
-                        sName = llGetSubString(sName, 0, 40) + "...";
-                    }
-                    // Looping costs memory, even if no action performed in loop
-                    // jump out to save memory - prompt limit 512
-                    if (llStringLength(sPrompt + "\n" + (string)iCounter + " - " + sName) > 512)
-                    {
-                        jump out;
-                    }
-                    sPrompt += "\n" + (string)iCounter + " - " + sName;
-                    lButtons += (string)iCounter;
-                    g_lPostKeys += [llDetectedKey(iLoop)];
-                    //debug("c"+(string)llGetFreeMemory( ));
-                }
+                if(llDetectedName(iLoop) != "Object") lButtons += [llDetectedKey(iLoop)];
             }
-            @out;
-            //debug("f"+(string)llGetFreeMemory( ));
             g_kPostTargetDialogID = Dialog(g_kMenuUser, sPrompt, lButtons, [BUTTON_UPMENU], 0, g_iLastRank);
-            //debug("e"+(string)llGetFreeMemory( ));
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_POST_CHAT)
         {
