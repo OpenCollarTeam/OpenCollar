@@ -93,9 +93,6 @@ list g_lToCheck; //stack of folders to check, used for subfolder tree search
 
 list g_lSearchList; //list of folders to search
 
-list g_lLongFolders; //full names of the subfolders in current folder 
-list g_lShortFolders; //shortened names of the subfolders in s_Current folder 
-list g_lFolderStates; //corresponding folder states
 integer g_iLastFolderState;
 
 key g_kWearer;
@@ -237,12 +234,34 @@ string folderIcon(integer iState)
     else if (iStateThis==1) sOut += "◻";
     else if (iStateThis==2) sOut += "◩";
     else if (iStateThis==3) sOut += "◼";
+    else sOut += " ";
 //    sOut += "/";
     if (iStateSub==0) sOut += "⬚";//▪";
     else if (iStateSub==1) sOut += "◻";
     else if (iStateSub==2) sOut += "◩";
     else if (iStateSub==3) sOut += "◼";
+    else sOut += " ";
     return sOut;
+}
+
+integer StateFromButton(string sButton)
+{
+    string sIconThis = llGetSubString(sButton, 0, 0);
+    string sIconSub = llGetSubString(sButton, 1, 1);
+    integer iState;
+    if (sIconThis=="◻") iState = 1;
+    else if (sIconThis=="◩") iState = 2;
+    else if (sIconThis=="◼") iState = 3;
+    iState *= 10;
+    if (sIconSub=="◻") iState +=1;
+    else if (sIconSub=="◩") iState +=2;
+    else if (sIconSub=="◼") iState += 3;
+    return iState;
+}
+
+string FolderFromButton(string sButton)
+{
+    return llToLower(llGetSubString(sButton, 2, -1));
 }
     
 updateFolderLocks(string sFolder, integer iAdd, integer iRem)
@@ -334,9 +353,7 @@ FolderBrowseMenu(string sStr)
     integer i;
     list lItem;
     integer iWorn;
-    g_lShortFolders = [];
-    g_lLongFolders = [];
-    g_lFolderStates = [];
+    list lFolders = [];
 
     // now add the button for wearing all recursively when it makes sense
     if (g_sCurrentFolder!="") {
@@ -348,10 +365,6 @@ FolderBrowseMenu(string sStr)
         else if (iWorn / 10 == 3 ) sPrompt += "It has removable items";
         else if (iWorn / 10 == 0 ) sPrompt += "It does not directly have any wearable or removable item";
         sPrompt += ".\n\n";
-        
-//        g_lFolderStates += [iWorn];
-//        g_lShortFolders += [ACTIONS_CURRENT];
-//        g_lLongFolders += [""];
         lUtilityButtons += [ACTIONS_CURRENT];
     }
     else lUtilityButtons += [ROOT_ACTIONS];
@@ -361,15 +374,13 @@ FolderBrowseMenu(string sStr)
         iWorn=llList2Integer(lItem,1);
         if (iWorn != 0)        
         {
-            g_lLongFolders += sFolder;
-            g_lShortFolders += [llGetSubString(folderIcon(iWorn)+sFolder,0,19)];
-            g_lFolderStates += [iWorn];
+            lFolders += [folderIcon(iWorn) + sFolder];
         }
     }
     sPrompt += "- Click "+ACTIONS_CURRENT+" to manage this folder content.\n- Click one of the subfolders to browse it.\n";
     if (g_sCurrentFolder!="") {sPrompt += "- Click "+PARENT+" to browse parent folder."; lUtilityButtons += [PARENT];}
     sPrompt += "\n- Click "+UPMENU+" to go back to "+g_sParentMenu+".\n\n";
-    g_kBrowseID = Dialog(g_kAsyncMenuUser, sPrompt, g_lShortFolders, lUtilityButtons, g_iPage, g_iAsyncMenuAuth);    
+    g_kBrowseID = Dialog(g_kAsyncMenuUser, sPrompt, lFolders, lUtilityButtons, g_iPage, g_iAsyncMenuAuth);    
 }
 
 SaveFolder(string sStr)
@@ -465,7 +476,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         g_sCurrentFolder = "";
         QueryFolders("browse"); 
-        if (sCommand == "menu") SetAsyncMenu(kID, iNum);
+        SetAsyncMenu(kID, iNum);
     }
     else if (sStr=="save" /*|| sStr=="menu Save"*/)
     {
@@ -509,7 +520,11 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();         
-        g_iFolderRLV = 9999 + llRound(llFrand(9999999.0));
+        integer i;
+        for (i=0;i < llGetListLength(g_lChildren);i++)              
+        {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
+        }
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -566,7 +581,6 @@ default
                 g_iPage = (integer)llList2String(lMenuParams, 2);                
                 integer iAuth = (integer)llList2String(lMenuParams, 3);                
                                 
-                integer iIndex = llListFindList(g_lShortFolders,[sMessage]);
                 if (sMessage == UPMENU)
                 {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -586,10 +600,10 @@ default
                 {
                     ParentFolder();
                 }
-                else if (iIndex != -1)
+                else
                 { //we got a folder.  send the RLV command to remove/attach it.
-                    integer iState = llList2Integer(g_lFolderStates, iIndex);
-                    string folder = llList2String(g_lLongFolders,iIndex);
+                    integer iState = StateFromButton(sMessage);
+                    string folder = FolderFromButton(sMessage);
                     if (g_sCurrentFolder == "") g_sCurrentFolder = folder;
                     else g_sCurrentFolder  += "/" + folder;
                     if ((iState % 10) == 0)
@@ -610,7 +624,6 @@ default
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iAuth = (integer)llList2String(lMenuParams, 3);                                         
                 
-                integer iIndex = llListFindList(g_lShortFolders,[sMessage]);
                 if (sMessage == ADD)
                 {
                     llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + g_sCurrentFolder + "=force", NULL_KEY);
