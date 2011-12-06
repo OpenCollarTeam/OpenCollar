@@ -617,58 +617,30 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         
         if (sMesL == "grab" || sMesL == "leash")
         {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
-            
-            LeashTo(kMessageID, kMessageID, iAuth, ["handle"]);
-        }
-        else if (sComm == "leashto")
-        {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
-
-            string sChattedTarget = llList2String(lParam, 1);
-            if (sMesL == sComm) // no parameters were passed
-            {
-                DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_LEASH_MENU);
-            }       
-            else if((key)sChattedTarget)
-            {
-                list lPoints;
-                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
-                //debug("leash target is key");//could be a post, or could be we specified an av key
-                LeashTo((key)sChattedTarget, kMessageID, iAuth, lPoints);
-            }
-            else
-            {
-                ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_LEASH_CHAT);
-            }
+            if (CheckCommandAuth(kMessageID, iAuth)) LeashTo(kMessageID, kMessageID, iAuth, ["handle"]);
         }
         else if(sComm == "follow")
         {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
-            
-            string sChattedTarget = llList2String(lParam, 1);
-            if (sMesL == sComm) // no parameters were passed
+            if (CheckCommandAuth(kMessageID, iAuth))
             {
-                Follow(kMessageID, kMessageID, iAuth);
-            }       
-            else if ((key)sChattedTarget)
-            {
-                Follow((key)sChattedTarget, kMessageID, iAuth);
-            } 
-            else
-            {
-                ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_CHAT);
+                string sChattedTarget = llList2String(lParam, 1);
+                if (sMesL == sComm) // no parameters were passed
+                {
+                    Follow(kMessageID, kMessageID, iAuth);
+                }       
+                else if ((key)sChattedTarget)
+                {
+                    Follow((key)sChattedTarget, kMessageID, iAuth);
+                } 
+                else
+                {
+                    ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_CHAT);
+                }
             }
         }
-        else if(sComm == "followtarget")
+        else if (sMesL == "unleash" || sMesL == "unfollow")
         {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
-            
-            DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_MENU);
-        }
-        else if(sMesL == "leashmenu" || sMessage == "menu " + BUTTON_SUBMENU)
-        {
-            LeashMenu(kMessageID, iAuth);
+            if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
         }
         else if (sMesL == "giveholder")
         {
@@ -682,13 +654,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         {
             llRezObject("OC_Leash_Post", llGetPos() + (<1.0, 0, 0.5> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 0> * DEG_TO_RAD), 0);
         }
-        //allow if from leasher or someone outranking them
-        else if (sMesL == "unleash" || sMesL == "unfollow")
-        {
-            //Person holding the leash can always unleash.
-            if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
-                Unleash(kMessageID);
-        }
         else if (sMesL == "yank" && kMessageID == g_kLeashedTo)
         {
             //Person holding the leash can yank.
@@ -698,43 +663,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         {
             //Owner can beckon
             YankTo(kMessageID);
-        }
-        else if (sComm == "length")
-        {
-            float fNewLength = (float)llList2String(lParam, 1);
-            if(fNewLength > 0.0)
-            {
-                //Person holding the leash can always set length.
-                if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
-                {
-                    SetLength(fNewLength);
-                    //tell wearer  
-                    Notify(kMessageID, "Leash length set to " + (string)fNewLength, TRUE);        
-                    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, TOK_LENGTH + "=" + (string)fNewLength, "");
-                }
-            }
-            else Notify(kMessageID, "The current leash length is " + (string)g_fLength + "m.", TRUE);
-        }
-        else if (sComm == "post")
-        {
-            string sChattedTarget = llList2String(lParam, 1);
-            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
-
-            else if (sMesL == sComm) // no parameters were passed
-            {
-                DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_POST_MENU);
-            }       
-            else if((key)sChattedTarget)
-            {
-                list lPoints;
-                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
-                //debug("leash target is key");//could be a post, or could be we specified an av key
-                LeashTo((key)sChattedTarget, kMessageID, iAuth, lPoints);
-            }
-            else
-            {
-                ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_POST_CHAT);
-            }
         }
         else if (sMesL == "stay")
         {
@@ -775,6 +703,79 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             else
             {
                 Notify(kMessageID,"Only the wearer can change the rotate setting", FALSE);
+            }
+        }
+        else jump othermenu;
+        if (g_iReturnMenu) LeashMenu(kMessageID, iAuth);
+        return TRUE;
+        @othermenu;
+        if(sMesL == "leashmenu" || sMessage == "menu " + BUTTON_SUBMENU)
+        {
+            if (CheckCommandAuth(kMessageID, iAuth)) LeashMenu(kMessageID, iAuth);
+            else if (sMesL == "menu " + BUTTON_SUBMENU) {llMessageLinked(LINK_SET, iAuth, "menu " + BUTTON_PARENTMENU, kMessageID); return TRUE;}
+        }
+        else if (sComm == "leashto")
+        {
+            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
+
+            string sChattedTarget = llList2String(lParam, 1);
+            if (sMesL == sComm) // no parameters were passed
+            {
+                DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_LEASH_MENU);
+            }       
+            else if((key)sChattedTarget)
+            {
+                list lPoints;
+                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
+                //debug("leash target is key");//could be a post, or could be we specified an av key
+                LeashTo((key)sChattedTarget, kMessageID, iAuth, lPoints);
+            }
+            else
+            {
+                ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_LEASH_CHAT);
+            }
+        }
+        else if(sComm == "followtarget")
+        {
+            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
+            
+            DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_MENU);
+        }
+        else if (sComm == "length")
+        {
+            float fNewLength = (float)llList2String(lParam, 1);
+            if(fNewLength > 0.0)
+            {
+                //Person holding the leash can always set length.
+                if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
+                {
+                    SetLength(fNewLength);
+                    //tell wearer  
+                    Notify(kMessageID, "Leash length set to " + (string)fNewLength, TRUE);        
+                    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, TOK_LENGTH + "=" + (string)fNewLength, "");
+                }
+            }
+            else Notify(kMessageID, "The current leash length is " + (string)g_fLength + "m.", TRUE);
+        }
+        else if (sComm == "post")
+        {
+            string sChattedTarget = llList2String(lParam, 1);
+            if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
+
+            else if (sMesL == sComm) // no parameters were passed
+            {
+                DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_POST_MENU);
+            }       
+            else if((key)sChattedTarget)
+            {
+                list lPoints;
+                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
+                //debug("leash target is key");//could be a post, or could be we specified an av key
+                LeashTo((key)sChattedTarget, kMessageID, iAuth, lPoints);
+            }
+            else
+            {
+                ActOnChatTarget(sChattedTarget, kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_POST_CHAT);
             }
         }
         return TRUE;
