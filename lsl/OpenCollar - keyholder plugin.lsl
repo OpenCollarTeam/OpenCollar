@@ -4,6 +4,7 @@
 //
 // OC3.7xx by Satomi Ahn
 // - New authed dialogs system.
+// - Removed OCCD stuff.
 //
 // OC3.526.2 by WhiteFire Sondergaard
 // - Safeword Support. DURP.
@@ -122,7 +123,6 @@ integer LINK_WHAT = LINK_SET;
 string g_szSubmenu = "Key Holder"; // Name of the submenu
 string g_szParentmenu = "AddOns"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore ( AddOns or Main is recomended depending on the toy. )
 
-integer g_iConfigMenu = FALSE; // Seperate root config menu? For OCCD and other non-collar toys.
 string g_szKeyConfigMenu = "Key Holder Config";
 string g_szConfigMenu = "Config";
 
@@ -162,11 +162,6 @@ integer g_iGlobalKey = TRUE; // are we on the global key.
 // -- Constants ------------------------------------------
 string TAKEKEY = "*Take Key*";
 string RETURNKEY = "*Return Key*";
-
-// OOCD stuff
-integer COMMAND_OCCD_BITS = -4077;  // tells the bits to change state
-integer COMMAND_OCCD_STATE = -4078; // tells the OCCD module what state the user sent to the bits
-integer COMMAND_OCCD_ALLOW_HIDE = -4079; // tells the OCCD bits module that its allowed to hide the bits when the wearer asks
 
 // Various variables needed by cuffs.
 integer g_nCmdChannel    = -190890;
@@ -478,8 +473,7 @@ DoMenuSpecial(key keyID, integer page, integer special, integer iAuth)
         if (!kh_lockout)
             mybuttons += "Lockout";
 
-        if (!g_iConfigMenu)
-            mybuttons += [ "Configure" ];
+        mybuttons += [ "Configure" ];
     }
     
     // Optional
@@ -1052,8 +1046,6 @@ default
         // send request to main menu and ask other menus if they want to register with us
         llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_szSubmenu, NULL_KEY);
         llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_szParentmenu + "|" + g_szSubmenu, NULL_KEY);
-        if (g_iConfigMenu)
-            llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_szConfigMenu + "|" + g_szKeyConfigMenu, NULL_KEY);
         // get dbprefix from object desc, so that it doesn't need to be hard coded, and scripts between differently-primmed collars can be identical
         g_szPrefix = GetDBPrefix();
         g_keyWearer=llGetOwner();
@@ -1096,8 +1088,6 @@ default
         {
             if (str == g_szParentmenu)
                 llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_szParentmenu + "|" + g_szSubmenu, NULL_KEY);
-            else if (str == g_szConfigMenu && g_iConfigMenu)
-                llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_szConfigMenu + "|" + g_szKeyConfigMenu, NULL_KEY);
 
             if (str == "Main") setMainMenu();
             else if (str == g_szTimerMenu) setTimerMenu();
@@ -1179,15 +1169,12 @@ default
                         llMessageLinked(LINK_WHAT, iAuth, "menu "+g_szParentmenu, av);
                     else if (id == g_keyConfigMenuID)
                     {
-                        if (g_iConfigMenu)
-                            llMessageLinked(LINK_WHAT, iAuth, "menu " + g_szConfigMenu, av);
-                        else
-                            DoMenu(av, 0, iAuth);
+                        DoMenu(av, 0, iAuth);
                     }
                     else if (id == g_keyConfigAutoReturnMenuID)
                         DoMenuConfigure(av, 0, iAuth);
                 }
-                else if (message == "Configure" && !g_iConfigMenu)
+                else if (message == "Configure")
                 {
                     DoMenuConfigure(av, 0, iAuth);
                 }
@@ -1271,27 +1258,6 @@ default
         else if (num == COMMAND_SAFEWORD)
         {
             ReturnKey(llKey2Name(id) + " has safeworded, key auto-returned.", FALSE);
-        }
-        else if (num == COMMAND_OCCD_BITS)
-        {
-            if (str == "hide" || str == "unlocked")
-            {
-                g_iDeviceShown = FALSE;
-                updateVisible();
-            }
-            else if (str == "locked")
-            {
-                g_iDeviceShown = TRUE;
-                updateVisible();
-            }
-        }
-        else if (num == COMMAND_OCCD_STATE)
-        {
-            if (str == "hide")
-            {
-                g_iDeviceShown = FALSE;
-                updateVisible();
-            }
         }
         else if (num == TIMER_EVENT)
         {
