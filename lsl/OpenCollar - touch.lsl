@@ -20,6 +20,9 @@ integer g_iStrideLength = 4;
 integer FLAG_TOUCHSTART = 0x01;
 integer FLAG_TOUCHEND = 0x02;
 
+integer g_iNeedsPose = FALSE;  // should the avatar be forced into a still pose for making touching easier
+string g_sPOSE_ANIM = "turn_180";
+
 ClearUser(key kRCPT, integer iNotify)  
 {
     //find any strides belonging to user and remove them
@@ -35,6 +38,7 @@ ClearUser(key kRCPT, integer iNotify)
         g_lTouchRequests = llDeleteSubList(g_lTouchRequests, iIndex - 1, iIndex - 2 + g_iStrideLength);
         iIndex = llListFindList(g_lTouchRequests, [kRCPT]);
     }
+    if (g_iNeedsPose && [] == g_lTouchRequests) llStopAnimation(g_sPOSE_ANIM);
 }
 
 integer sendPermanentCommandFromLink(integer iLinkNumber, string sType, key kToucher)
@@ -93,6 +97,14 @@ default
 {
     state_entry()
     {
+        integer iAttachPt = llGetAttached();
+        if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
+            llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+    }
+    
+    run_time_permissions(integer iPerm)
+    {
+        if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -105,11 +117,16 @@ default
             integer iAuth = (integer)llList2String(lParams, 2);            
             ClearUser(kRCPT, TRUE);            
             g_lTouchRequests += [kID, kRCPT, iFlags, iAuth];
+            if (g_iNeedsPose) llStartAnimation(g_sPOSE_ANIM);
         }
         else if (iNum == TOUCH_CANCEL)
         {
             integer iIndex = llListFindList(g_lTouchRequests, [kID]);
-            if (~iIndex) g_lTouchRequests = llDeleteSubList(g_lTouchRequests, iIndex, iIndex - 1 + g_iStrideLength);
+            if (~iIndex)
+            {
+                g_lTouchRequests = llDeleteSubList(g_lTouchRequests, iIndex, iIndex - 1 + g_iStrideLength);
+                if (g_iNeedsPose && [] == g_lTouchRequests) llStopAnimation(g_sPOSE_ANIM);
+            }
         }
     }
 
@@ -126,5 +143,10 @@ default
     on_rez(integer iParam)
     {   // safe: does not need to keep settings across relogs (all settings are actually encoded in prim descriptions)
         llResetScript();
+    }
+    
+    attach(key kId)
+    {  // in case it would be attached after being rezed
+        llResetScript();        
     }
 }
