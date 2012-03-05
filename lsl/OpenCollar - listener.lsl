@@ -22,7 +22,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_COLLAR = 499;
 //integer CHAT = 505; //deprecated.  Too laggy to make every single script parse a link message any time anyone says anything
 integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
@@ -41,6 +40,9 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 
 //5000 block is reserved for IM slaves
+
+//EXTERNAL MESSAGE MAP
+integer EXT_COMMAND_COLLAR = 499;
 
 // new g_sSafeWord
 string g_sSafeWord = "SAFEWORD";
@@ -267,7 +269,7 @@ default
                 //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
                 llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, "", (key)UUID);
             }
-            else if (g_iAuth == (string)COMMAND_COLLAR) //command from attachment to AO
+            else if (g_iAuth == (string)EXT_COMMAND_COLLAR) //command from attachment to AO
             {
                 llWhisper(g_iInterfaceChannel, sMsg);
             }
