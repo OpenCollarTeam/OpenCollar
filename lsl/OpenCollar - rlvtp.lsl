@@ -559,7 +559,7 @@ default
             string sCmd = "tpto:";
             sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
             sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, "");
+            llMessageLinked(LINK_SET, RLV_CMD, sCmd, NULL_KEY);
         }
     }
 }

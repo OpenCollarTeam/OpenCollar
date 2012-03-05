@@ -28,7 +28,6 @@ integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
-integer RLVR_CMD = 6010;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..

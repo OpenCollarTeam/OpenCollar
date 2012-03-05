@@ -24,7 +24,7 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-integer RLVR_CMD = 6010; //let's do that for now (note this is not RLV_CMD)
+integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
@@ -287,7 +287,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         list lSubArgs = llParseString2List(sCom,["="],[]);
         string sVal = llList2String(lSubArgs,1);
         string sAck = "ok";
-        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_SET,RLVR_CMD,"clear",kID);
+        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
         else if (sCom == "!version") sAck = "1100";
         else if (sCom == "!implversion") sAck = "OpenCollar 3.7";
         else if (sCom == "!x-orgversions") sAck = "ORG=0003/who=001";
@@ -303,11 +303,11 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         }//probably an ill-formed command, not answering
         else if ((!llSubStringIndex(sCom,"@version"))||(!llSubStringIndex(sCom,"@get"))||(!llSubStringIndex(sCom,"@findfolder"))) //(IsChannelCmd(sCom))
         {
-            if ((integer)sVal) llMessageLinked(LINK_SET,RLVR_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
+            if ((integer)sVal) llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
             else sAck="ko";
         }
         else if (g_iPlayMode&&llGetSubString(sCom,0,0)=="@"&&sVal!="n"&&sVal!="add")
-            llMessageLinked(LINK_SET,RLVR_CMD, llGetSubString(sCom,1,-1), kID);
+            llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID);
         else if (!iAuthed)
         {
             if (iGotWho) return "!x-who/"+(string)kWho+"|"+llDumpList2String(llList2List(lCommands,i,-1),"|");
@@ -318,7 +318,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
             {
-                llMessageLinked(LINK_SET,RLVR_CMD,sBehav+"="+sVal,kID);
+                llMessageLinked(LINK_SET,RLV_CMD,sBehav+"="+sVal,kID);
             }
             else sAck="ko";
         }
@@ -1041,7 +1041,7 @@ default
             key kID = llList2Key(g_lSources,i);
             vector vObjPos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
             if (vObjPos == <0, 0, 0> || llVecDist(vObjPos, vMyPos) > 100) // 100: max shout distance
-                llMessageLinked(LINK_SET,RLVR_CMD,"clear",kID);
+                llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
         }
         llSetTimerEvent(g_iGarbageRate);
         g_lTempBlackList=[];
