@@ -38,7 +38,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 integer COMMAND_BLACKLIST = 520;
@@ -74,6 +73,9 @@ integer DIALOG_TIMEOUT = -9002;
 
 //this can change
 integer WEARERLOCKOUT=620;
+
+//EXTERNAL MESSAGE MAP
+integer EXT_COMMAND_COLLAR = 499;
 
 string UPMENU = "^";
 
@@ -147,6 +149,11 @@ SayOwners() {
     }
 }
 
+sendToAttachmentInterface(string sMsg)
+{
+    llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string) EXT_COMMAND_COLLAR + "|" + sMsg);
+}
+
 list AddUniquePerson(list lContainer, key kID, string sName, string sType)
 {
     integer iIndex = llListFindList(lContainer, [(string)kID]);
@@ -179,14 +186,14 @@ NewPerson(key kID, string sName, string sType)
         g_lOwners = AddUniquePerson(g_lOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sOwnersToken + "=" + llDumpList2String(g_lOwners, ","), "");
         //added for attachment interface to announce owners have changed
-        llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");
+	sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "secowner")
     {
         g_lSecOwners = AddUniquePerson(g_lSecOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sSecOwnersToken + "=" + llDumpList2String(g_lSecOwners, ","), "");
         //added for attachment interface to announce owners have changed
-        llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");
+	sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "blacklist")
     {
@@ -281,8 +288,9 @@ integer in_range(key kID) {
     }
 }
 
-integer UserAuth(string kID, integer attachment)
+integer Auth(string kObjID, integer attachment)
 {
+    string kID = (string)llGetOwnerKey(kObjID); // if kObjID is an avatar key, then kID is the same key
     integer iNum;
     if (g_iWearerlocksOut && kID == (string)g_kWearer && !attachment)
     {
@@ -316,6 +324,10 @@ integer UserAuth(string kID, integer attachment)
         else
             iNum = COMMAND_EVERYONE;
     }
+    else if (g_iGroupEnabled && (string)llGetObjectDetails((key)kObjID, [OBJECT_GROUP]) == (string)g_kGroup && (key)kID != g_kWearer)
+    {//meaning that the command came from an object set to our control group, and is not owned by the wearer
+        iNum = COMMAND_GROUP;
+    }
     else if (llSameGroup(kID) && g_iGroupEnabled && kID != (string)g_kWearer)
     {
         if (in_range((key)kID))
@@ -323,49 +335,6 @@ integer UserAuth(string kID, integer attachment)
         else
             iNum = COMMAND_EVERYONE;
 
-    }
-    else
-    {
-        iNum = COMMAND_EVERYONE;
-    }
-    return iNum;
-}
-
-integer ObjectAuth(key obj, key kObjOwnerKey)
-{
-    integer iNum;
-    if (g_iWearerlocksOut && kObjOwnerKey == g_kWearer)
-    {
-        iNum = COMMAND_WEARERLOCKEDOUT;
-    }
-    else if (~llListFindList(g_lOwners, [(string)kObjOwnerKey]))
-    {
-        iNum = COMMAND_OWNER;
-    }
-    else if (llGetListLength(g_lOwners) == 0 && kObjOwnerKey == g_kWearer)
-    {
-        //if no owners set, then wearer's objects' cmds have owner auth
-        iNum = COMMAND_OWNER;
-    }
-    else if (~llListFindList(g_lBlackList, [(string)kObjOwnerKey]))
-    {
-        iNum = COMMAND_BLACKLIST;
-    }
-    else if (~llListFindList(g_lSecOwners, [(string)kObjOwnerKey]))
-    {
-        iNum = COMMAND_SECOWNER;
-    }
-    else if ((string)llGetObjectDetails(obj, [OBJECT_GROUP]) == (string)g_kGroup && kObjOwnerKey != g_kWearer)
-    {//meaning that the command came from an object set to our control group, and is not owned by the wearer
-        iNum = COMMAND_GROUP;
-    }
-    else if (g_iOpenAccess && llListFindList(g_lBlackList,[kObjOwnerKey])==-1)
-    {
-        iNum = COMMAND_GROUP;
-    }
-    else if (kObjOwnerKey == g_kWearer)
-    {
-        iNum = COMMAND_WEARER;
     }
     else
     {
@@ -415,7 +384,7 @@ list RemovePerson(list lPeople, string sName, string sToken, key kCmdr)
                 }
             }
             //whisper to attachments about owner and secowner changes
-            llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");
+	    sendToAttachmentInterface("OwnerChange");
         }
         //save to db
         if (llGetListLength(lPeople)>0)
@@ -443,7 +412,7 @@ integer isKey(string sIn) {
 integer OwnerCheck(key kID)
 {//checks whether id has owner auth.  returns TRUE if so, else notifies person that they don't have that power
     //used in menu processing for when a non owner clicks an owner-only button
-    if (UserAuth(kID, FALSE) == COMMAND_OWNER)
+    if (Auth((string)kID, FALSE) == COMMAND_OWNER)
     {
         return TRUE;
     }
@@ -734,7 +703,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 AuthMenu(kID, iNum);
             }
             //added for attachment interface to announce owners have changed
-            llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");
+	    sendToAttachmentInterface("OwnerChange");
         }
         else if (sCommand == "setopenaccess")
         {
@@ -746,6 +715,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
+	    sendToAttachmentInterface("OwnerChange");
         }
         else if (sCommand == "unsetopenaccess")
         {
@@ -758,7 +728,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 AuthMenu(kID, iNum);
             }
             //added for attachment interface to announce owners have changed
-            llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");
+	    sendToAttachmentInterface("OwnerChange");
         }
         else if (sCommand == "setlimitrange")
         {
@@ -817,7 +787,7 @@ default
     {  //authenticate messages on COMMAND_NOAUTH
         if (iNum == COMMAND_NOAUTH)
         {
-            integer iAuth = UserAuth((string)kID, FALSE);
+            integer iAuth = Auth((string)kID, FALSE);
             if ((iNum == COMMAND_OWNER || kID == g_kWearer) && (sStr=="reset"))
             {
                 Notify(kID, "The command 'reset' is deprecated. Please use 'runaway' to leave the owner and clear all settings or 'resetscripts' to only reset the script in the collar.", FALSE);
@@ -849,15 +819,6 @@ default
             }
 
             Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
-        }
-        else if (iNum == COMMAND_OBJECT)
-        {   //on object sent a command, see if that object's owner is an owner or secowner in the collar
-            //or if the object is set to the same group, and group is enabled in the collar
-            //or if object is owned by wearer
-            key kObjOwnerKey = llGetOwnerKey(kID);
-            integer iAuth = ObjectAuth(kID, kObjOwnerKey);
-            llMessageLinked(LINK_SET, iAuth, sStr, kID);
-            Debug("noauth: " + sStr + " from object " + (string)kID + " who has auth " + (string)iAuth);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == HTTPDB_RESPONSE)
@@ -939,12 +900,12 @@ default
                 Notify(kOwner, "Your sub " + sSubName + " has used the safeword. Please check on " + sSubFirstName +"'s well-being and if further care is required.",FALSE);
             }
             //added for attachment interface (Garvin)
-            llWhisper(g_iInterfaceChannel, "CollarCommand|499|safeword");
+	    sendToAttachmentInterface("safeword");
         }
         //added for attachment auth (Garvin)
         else if (iNum == ATTACHMENT_REQUEST)
         {
-            integer iAuth = UserAuth((string)kID, TRUE);
+            integer iAuth = Auth((string)kID, TRUE);
             llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, (string)iAuth, kID);
         }
         else if (iNum == WEARERLOCKOUT)
@@ -1249,4 +1210,3 @@ default
         }
     }
 }
-

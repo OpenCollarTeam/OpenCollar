@@ -22,7 +22,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
@@ -219,11 +218,11 @@ default
             {
                 llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
             }
-            // it it is not a ping, it should be a commad for use, to make sure it has to have the key in front of it
+            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (StartsWith(sMsg, (string)g_kWearer + ":"))
             {
                 sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_SET, COMMAND_OBJECT, sMsg, kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
             }
             else
             {
