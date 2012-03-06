@@ -42,15 +42,16 @@ string g_sHTTPDB_Url = "http://data.mycollar.org/"; //defaul OC url, can be chan
 string g_sAnimToken = "currentpose";
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
-integer COMMAND_COLLAR = 499; //added for collar or cuff commands to put ao to pause or standOff
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 integer COMMAND_WEARERLOCKEDOUT = 521;
+
+//EXTERNAL MESSAGE MAP
+integer EXT_COMMAND_COLLAR = 499; //added for collar or cuff commands to put ao to pause or standOff
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
@@ -259,7 +260,7 @@ StartAnim(string sAnim)
             //add anim to list
             g_lAnims = [sAnim] + g_lAnims;//this way, g_lAnims[0] is always the currently playing anim
             llStartAnimation(sAnim);
-            llWhisper(g_iInterfaceChannel, "CollarComand|499|" + AO_OFF);
+            llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_OFF);
             llWhisper(g_iAOChannel, AO_OFF);
 
             if (g_iHeightFix)
@@ -348,7 +349,7 @@ StopAnim(string sAnim)
             }
             else
             {
-                llWhisper(g_iInterfaceChannel, "CollarComand|499|" + AO_ON);
+                llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
                 llWhisper(g_iAOChannel, AO_ON);
             }
         }
@@ -670,7 +671,7 @@ default
         {
             Debug("detached");
             //we were just detached.  clear the anim list and tell the ao to play stands again.
-            llWhisper(g_iInterfaceChannel, "499|" + AO_ON);
+            llWhisper(g_iInterfaceChannel, (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
             llWhisper(g_iAOChannel, AO_ON);
             g_lAnims = [];
         }

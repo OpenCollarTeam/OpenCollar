@@ -22,9 +22,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_COLLAR = 499;
-//integer CHAT = 505; //deprecated.  Too laggy to make every single script parse a link message any time anyone says anything
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
@@ -41,6 +38,9 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 
 //5000 block is reserved for IM slaves
+
+//EXTERNAL MESSAGE MAP
+integer EXT_COMMAND_COLLAR = 499;
 
 // new g_sSafeWord
 string g_sSafeWord = "SAFEWORD";
@@ -218,11 +218,11 @@ default
             {
                 llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
             }
-            // it it is not a ping, it should be a commad for use, to make sure it has to have the key in front of it
+            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (StartsWith(sMsg, (string)g_kWearer + ":"))
             {
                 sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_SET, COMMAND_OBJECT, sMsg, kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
             }
             else
             {
@@ -267,7 +267,7 @@ default
                 //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
                 llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, "", (key)UUID);
             }
-            else if (g_iAuth == (string)COMMAND_COLLAR) //command from attachment to AO
+            else if (g_iAuth == (string)EXT_COMMAND_COLLAR) //command from attachment to AO
             {
                 llWhisper(g_iInterfaceChannel, sMsg);
             }

@@ -104,7 +104,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 integer POPUP_HELP = 1001;
 
@@ -405,18 +404,12 @@ SaveLockAllFlag(integer iSetting)
 
 DoLockAll(key kID)
 {
-    llMessageLinked(LINK_SET, RLV_CMD, "addattach=n", kID);
-    llMessageLinked(LINK_SET, RLV_CMD, "remattach=n", kID);
-    llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=n", kID);
-    llMessageLinked(LINK_SET, RLV_CMD,  "addoutfit=n", kID);
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=n,remattach=n,remoutfit=n,addoutfit=n", NULL_KEY);
 }
 
 DoUnlockAll(key kID)
 {
-    llMessageLinked(LINK_SET, RLV_CMD, "addattach=y", kID);
-    llMessageLinked(LINK_SET, RLV_CMD, "remattach=y", kID);
-    llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=y", kID);
-    llMessageLinked(LINK_SET, RLV_CMD,  "addoutfit=y", kID);
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=y,remattach=y,remoutfit=y,addoutfit=y", NULL_KEY);
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -439,7 +432,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         }
         else
         {
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, kID);
+            llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
             string sParam = llList2String(llParseString2List(sStr, ["="], []), 1);
             integer iIndex = llListFindList(g_lSettings, [sOption]);
@@ -763,7 +756,7 @@ default
                     // SA: we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
                     //    Note for people looking for the auth check: it would have been here, look no further!
                     { //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
@@ -773,7 +766,7 @@ default
                     { //we got a cloth point.
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
@@ -788,7 +781,7 @@ default
                     {    //we got an attach point.  send a message to detach
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", NULL_KEY);
                         //sleep for a sec to let tihngs detach
                         llSleep(0.5);
                         //Return menu

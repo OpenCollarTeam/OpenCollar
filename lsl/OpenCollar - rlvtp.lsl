@@ -61,8 +61,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
-integer COMMAND_OBJECT = 506;
 //integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
@@ -561,7 +559,7 @@ default
             string sCmd = "tpto:";
             sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
             sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, "");
+            llMessageLinked(LINK_SET, RLV_CMD, sCmd, NULL_KEY);
         }
     }
 }

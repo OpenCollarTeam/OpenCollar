@@ -38,7 +38,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
@@ -57,7 +56,6 @@ integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
-integer RLVR_CMD = 6010;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
@@ -722,11 +720,7 @@ state checked {
             {
                 list sCommands=llParseString2List(sStr,[","],[]);
                 integer i;
-                for (i=0;i<llGetListLength(sCommands);i++) HandleCommand(NULL_KEY,llList2String(sCommands,i));
-            }
-            else if (iNum == RLV_CMD||iNum == RLVR_CMD)
-            {
-                HandleCommand(kID,sStr);
+                for (i=0;i<llGetListLength(sCommands);i++) HandleCommand(kID,llList2String(sCommands,i));
             }
             else if (iNum == COMMAND_RLV_RELAY)
             {

@@ -25,8 +25,6 @@ integer MAX_TIME=0x7FFFFFFF;
 integer ATTACHMENT_COMMAND = 602;
 integer ATTACHMENT_FORWARD = 610;
 //these can change
-integer TIMER_TOMESSAGE=609;
-integer TIMER_FROMMESSAGE=610;
 integer REAL_TIME=1;
 integer REAL_TIME_EXACT=5;
 integer ON_TIME=3;
@@ -96,8 +94,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 // added so when the sub is locked out they can use postions
 integer COMMAND_WEARERLOCKEDOUT = 521;
@@ -423,7 +419,6 @@ TimerStart(integer perm)
     g_iWhoCanChangeTime = perm;
     if(g_iRealSetTime)
     {
-        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)REAL_TIME+"|"+(string)(g_iRealSetTime), "");
         g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
         llMessageLinked(LINK_WHAT, WEARERLOCKOUT, "on", "");
         llMessageLinked(LINK_WHAT, TIMER_EVENT, "start", "realtime");
@@ -435,7 +430,6 @@ TimerStart(integer perm)
     }
     if(g_iOnSetTime)
     {
-        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnSetTime), "");
         g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
         llMessageLinked(LINK_WHAT, WEARERLOCKOUT, "on", "");
         llMessageLinked(LINK_WHAT, TIMER_EVENT, "start", "online");
@@ -563,11 +557,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
                     if (g_iOnRunning==1)
                     {
                         g_iOnTimeUpAt += g_iTimeChange;
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnTimeUpAt-g_iLastOnTime), "");
                     }
                     else if(g_iOnRunning==3)
                     {
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnSetTime), "");
                         g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
                         g_iOnRunning=1;
                     }
@@ -589,10 +581,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
                             g_iOnRunning=g_iOnSetTime=g_iOnTimeUpAt=0;
                             TimerWhentOff();
                         }
-                        else
-                        {
-                            //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnTimeUpAt-g_iLastOnTime), "");
-                        }
                     }
                 }
                 else if (llGetSubString(sMsg, 0, 0) == "=")
@@ -604,11 +592,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
                     if (g_iOnRunning==1)
                     {
                         g_iOnTimeUpAt = g_iOnTime + g_iTimeChange;
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnTimeUpAt-g_iLastOnTime), "");
                     }
                     else if(g_iOnRunning==3)
                     {
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnSetTime), "");
                         g_iOnTimeUpAt=g_iOnTime + g_iTimeChange;
                         g_iOnRunning=1;
                     }
@@ -647,7 +633,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
                     if (g_iRealRunning==1) g_iRealTimeUpAt += g_iTimeChange;
                     else if(g_iRealRunning==3)
                     {
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnSetTime), "");
                         g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
                         g_iRealRunning=1;
                     }
@@ -676,7 +661,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
                     if (g_iRealRunning==1) g_iRealTimeUpAt = g_iCurrentTime+g_iRealSetTime;
                     else if(g_iRealRunning==3)
                     {
-                        //llMessageLinked(LINK_WHAT, TIMER_TOMESSAGE, "timer|settimer|"+(string)ON_TIME+"|"+(string)(g_iOnSetTime), "");
                         g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
                         g_iRealRunning=1;
                     }
@@ -704,7 +688,6 @@ default
         }
         g_iFirstOnTime=MAX_TIME;
         g_iFirstRealTime=MAX_TIME;
-        llMessageLinked(LINK_WHAT, TIMER_FROMMESSAGE, "timer|sendtimers", "");
         llWhisper(g_iInterfaceChannel, "timer|sendtimers");
 
         //end of timekeeper
@@ -729,7 +712,6 @@ default
     on_rez(integer iParam)
     {
         g_iLastTime=g_iLastRez=llGetUnixTime();
-        llMessageLinked(LINK_WHAT, TIMER_FROMMESSAGE, "timer|sendtimers", "");
         llWhisper(g_iInterfaceChannel, "timer|sendtimers");
         if (g_iRealRunning == 1 || g_iOnRunning == 1)
         {
@@ -742,7 +724,7 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         list info  = llParseString2List (sStr, ["|"], []);
-        if((iNum==TIMER_TOMESSAGE || iNum==ATTACHMENT_FORWARD)&&llList2String(info, 0)=="timer")//request for us
+        if(iNum==ATTACHMENT_FORWARD && llList2String(info, 0)=="timer")//request for us
         {
             Debug(sStr);
             string sCommand = llList2String(info, 1);
@@ -808,10 +790,6 @@ default
             if(iNum==ATTACHMENT_FORWARD)
             {
                 llWhisper(g_iInterfaceChannel, g_sMessage);//need to wispear
-            }
-            else if(iNum==TIMER_TOMESSAGE)
-            {
-                llMessageLinked(LINK_WHAT, TIMER_FROMMESSAGE, g_sMessage, "");//inside script
             }
         }
         else if(iNum == COMMAND_WEARERLOCKEDOUT && sStr == "menu")
@@ -957,7 +935,6 @@ default
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
             llWhisper(g_iInterfaceChannel, g_sMessage);
-            llMessageLinked(LINK_WHAT, TIMER_FROMMESSAGE, g_sMessage, "");
             
             g_iFirstOnTime=MAX_TIME;
             g_iTimesLength=llGetListLength(g_lTimes);
@@ -982,7 +959,6 @@ default
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
             llWhisper(g_iInterfaceChannel, g_sMessage);
-            llMessageLinked(LINK_WHAT, TIMER_FROMMESSAGE, g_sMessage, "");
             
             g_iFirstRealTime=MAX_TIME;
             g_iTimesLength=llGetListLength(g_lTimes);

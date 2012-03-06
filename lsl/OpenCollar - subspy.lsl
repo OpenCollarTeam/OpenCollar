@@ -31,7 +31,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.
