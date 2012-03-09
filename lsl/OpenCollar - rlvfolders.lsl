@@ -403,44 +403,31 @@ SaveFolder(string sStr)
 handleMultiSearch()
 {
     string sItem=llList2String(g_lSearchList,0);
-    string sSearchStr;
+    string pref1 = llGetSubString(sItem, 0, 0);
+    string pref2 = llGetSubString(sItem, 0, 1);
     g_lSearchList=llDeleteSubList(g_lSearchList,0,0);
-    if (llGetSubString(sItem,0,1)=="++")
+
+    if (pref1 == "+" || pref1 == "&") g_sFolderType = "searchattach";
+    else if (pref1 == "-") g_sFolderType = "searchdetach";
+    else jump next;  // operator was omitted, then repeat last action
+
+    if (pref2 == "++" || pref2 == "--" || pref2 == "&&") 
     {
-        g_sFolderType = "searchattachall";
-        sSearchStr = llToLower(llGetSubString(sItem,2,-1));
+	g_sFolderType += "all";
+        sItem = llToLower(llGetSubString(sItem,2,-1));
     }
-    else if (llGetSubString(sItem,0,0)=="+")
-    {
-        g_sFolderType = "searchattach";
-        sSearchStr = llToLower(llGetSubString(sItem,1,-1));
-    }
-    if (llGetSubString(sItem,0,1)=="&&")
-    {
-        g_sFolderType = "searchattachallover";
-        sSearchStr = llToLower(llGetSubString(sItem,2,-1));
-    }
-    else if (llGetSubString(sItem,0,0)=="&")
-    {
-        g_sFolderType = "searchattachover";
-        sSearchStr = llToLower(llGetSubString(sItem,1,-1));
-    }
-    else if (llGetSubString(sItem,0,1)=="--")
-    {
-        g_sFolderType = "searchdetachall";
-        sSearchStr = llToLower(llGetSubString(sItem,2,-1));
-    }
-    else if (llGetSubString(sItem,0,0)=="-")
-    {
-        g_sFolderType = "searchdetach";
-        sSearchStr = llToLower(llGetSubString(sItem,1,-1));
-    }
+    else sItem = llToLower(llGetSubString(sItem,1,-1));
+
+    if (pref1 == "&") g_sFolderType += "over";
+
+    @next;
+
     //open listener
     g_iFolderRLV = 9999 + llRound(llFrand(9999999.0));
     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
     //start timer
     llSetTimerEvent(g_iTimeOut);
-    llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sSearchStr+"="+(string)g_iFolderRLV, NULL_KEY);       
+    llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, NULL_KEY);       
 }
 
 default
@@ -502,7 +489,7 @@ default
                     llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
                 Notify(kID, "Saved outfit has been restored.", TRUE );
             }
-            else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-")
+            else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&")
             {
                 g_lSearchList=llParseString2List(sStr,[","],[]);
                 handleMultiSearch();
