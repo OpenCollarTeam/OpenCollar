@@ -20,12 +20,12 @@ integer COMMAND_EVERYONE = 504;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -386,7 +386,7 @@ default
                 {
                     lParams = llDeleteSubList(lParams, 0, 0);
                     g_sLabelText = llDumpList2String(lParams, " ");
-                    llMessageLinked(LINK_SET, HTTPDB_SAVE, "label=" + g_sLabelText, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "label=" + g_sLabelText, NULL_KEY);
                     SetLabel(g_sLabelText);
                 }
             }
@@ -405,7 +405,7 @@ default
             //no more needed
             //else if (sStr == "reset")
             //            {
-            //                llMessageLinked(LINK_SET, HTTPDB_DELETE, "label", NULL_KEY);
+            //                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "label", NULL_KEY);
             //                llResetScript();
             //            }
             //
@@ -426,7 +426,7 @@ default
             else return;
             Notify(kID,"Only owners can change the label!", FALSE);
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -457,7 +457,7 @@ default
         /* //no more needed
             else if (iNum == COMMAND_WEARER && sStr == "reset")
             {
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, "label", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "label", NULL_KEY);
                 llResetScript();
             }
         */
@@ -494,7 +494,7 @@ default
                     {
                         g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
                         SetLabel(g_sLabelText);
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDesignPrefix + "font=" + (string)g_kFontTexture, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDesignPrefix + "font=" + (string)g_kFontTexture, NULL_KEY);
                     }
                     FontMenu(kAv, iAuth);
                 }

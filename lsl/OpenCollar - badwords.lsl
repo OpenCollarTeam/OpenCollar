@@ -19,12 +19,12 @@ integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -264,10 +264,10 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if(!iOldLength && iNewLength)
             {
                 g_sIsEnabled = "badwordson=true";
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sIsEnabled, NULL_KEY);
             }
             //save to database
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -281,7 +281,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_sBadWordAnim = sAnim;
                 //Debug(g_sBadWordAnim);
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "badwordsanim=" + g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwordsanim=" + g_sBadWordAnim, NULL_KEY);
                 Notify(kID, "Punishment anim for bad words is now '" + g_sBadWordAnim + "'.",FALSE);
             }
             else
@@ -299,7 +299,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else
             {
                 g_sPenance = llStringTrim(sPenance, STRING_TRIM);
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "penance=" + g_sPenance, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "penance=" + g_sPenance, NULL_KEY);
                 string sPrompt = WordPrompt();
                 Notify(kID, sPrompt,TRUE);
             }
@@ -320,7 +320,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 }
             }
             //save to sDatabase
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -331,8 +331,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 if(llGetListLength(g_lBadWords))
                 {
                     g_sIsEnabled = "badwordson=true";
-                    llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sIsEnabled, NULL_KEY);
-                    //llMessageLinked(LINK_SET, HTTPDB_SAVE, "badwords=" + g_sIsEnabled, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sIsEnabled, NULL_KEY);
+                    //llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=" + g_sIsEnabled, NULL_KEY);
                     ListenControl();
                     Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, "~"),FALSE);
                 }
@@ -343,7 +343,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else if(sValue == "off")
             {
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sIsEnabled, NULL_KEY);
                 ListenControl();
                 Notify(kID, "Badwords are now turned off.",FALSE);
             }
@@ -351,8 +351,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_lBadWords = [];
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sIsEnabled, NULL_KEY);
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "badwords=", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=", NULL_KEY);
                 ListenControl();
                 DialogBadwords(kID, iNum);
                 Notify(kID, "You cleared the badword list and turned it off.",FALSE);
@@ -381,7 +381,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == HTTPDB_RESPONSE)
+        if (iNum == LM_SETTING_RESPONSE)
         {
 
             list lParams = llParseString2List(sStr, ["="], []);
@@ -415,7 +415,7 @@ default
         else if(iNum == COMMAND_SAFEWORD)
         { // safeword disables badwords !
             g_sIsEnabled = "badwords=false";
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sIsEnabled, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sIsEnabled, NULL_KEY);
             ListenControl();
         }
         else if (iNum == MENUNAME_REQUEST)

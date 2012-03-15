@@ -36,12 +36,12 @@ integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -264,17 +264,18 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 DialogSpy(key kID, integer iAuth)
 {
+    string sPrompt;
     if (iAuth != COMMAND_OWNER)
     {
-        string sPromt = "Only an Owner can set and see spy options.";
-        g_kDialogSpyID = Dialog(kID, sPromt, [], [UPMENU], 0, iAuth);
+        sPrompt = "Only an Owner can set and see spy options.";
+        g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
         return;
     }
     list lButtons ;
-    string sPromt = "These are ONLY Primary Owner options:\n";
-    sPromt += "Trace turns on/off notices if the sub teleports.\n";
-    sPromt += "Radar turns on/off a report every "+ (string)((integer)g_iSensorRepeat/60) + " of who joined  or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + "m.\n";
-    sPromt += "Listen turns on/off if you get directly said what " + g_sSubName + " says in public chat.";
+    sPrompt = "These are ONLY Primary Owner options:\n";
+    sPrompt += "Trace turns on/off notices if the sub teleports.\n";
+    sPrompt += "Radar turns on/off a report every "+ (string)((integer)g_iSensorRepeat/60) + " of who joined  or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + "m.\n";
+    sPrompt += "Listen turns on/off if you get directly said what " + g_sSubName + " says in public chat.";
 
     if(Enabled("trace"))
     {
@@ -301,7 +302,7 @@ DialogSpy(key kID, integer iAuth)
         lButtons += ["Listen On"];
     }
     lButtons += ["RadarSettings"];
-    g_kDialogSpyID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
+    g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 DialogRadarSettings(key kID, integer iAuth)
@@ -385,7 +386,7 @@ SaveSetting(string sStr)
     {
         g_lSetttings = llListReplaceList(g_lSetttings, [sValue], iIndex + 1, iIndex + 1);
     }
-    llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
 }
 
 EnforceSettings()
@@ -424,7 +425,7 @@ TurnAllOff()
             g_lSetttings = llListReplaceList(g_lSetttings, ["off"], iIndex + 1, iIndex + 1);
         }
     }
-    llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
 }
 
 integer UserCommand(integer iNum, string sStr, key kID)
@@ -532,7 +533,7 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == HTTPDB_SAVE)
+        else if (iNum == LM_SETTING_SAVE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -543,7 +544,7 @@ default
                 Debug("owners: " + sValue);
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

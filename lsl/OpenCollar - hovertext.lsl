@@ -16,11 +16,11 @@ integer COMMAND_EVERYONE = 504;
 integer POPUP_HELP = 1001;
 integer UPDATE = 10001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -162,7 +162,7 @@ default {
                         } else {
                             ShowText(sNewText);
                             g_iLastRank = iNum;
-                            //llMessageLinked(LINK_ROOT, HTTPDB_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
+                            //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                         }
                     } else {
                         Notify(kID,"You currently have not the right to change the float text, someone with a higher rank set it!", FALSE);
@@ -175,7 +175,7 @@ default {
                     } else {
                         ShowText(sNewText);
                         g_iLastRank = iNum;
-                        //llMessageLinked(LINK_ROOT, HTTPDB_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
+                        //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                     }
                 }
             } else if (sCommand == "textoff") {
@@ -201,12 +201,12 @@ default {
             }
         } else if (iNum == MENUNAME_REQUEST) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
-        } else if (iNum == HTTPDB_RESPONSE) {
+        } else if (iNum == LM_SETTING_RESPONSE) {
             lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             Debug("sToken: " + sToken);
             if (sToken == g_sDBToken) {
-                llMessageLinked(LINK_ROOT, HTTPDB_DELETE, g_sDBToken , NULL_KEY);
+                llMessageLinked(LINK_ROOT, LM_SETTING_DELETE, g_sDBToken , NULL_KEY);
             }
         }
     }

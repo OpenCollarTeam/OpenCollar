@@ -44,12 +44,12 @@ integer COMMAND_RELAY_SAFEWORD = 511;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -377,7 +377,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else if (sStr == "rlvon")
     {
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=1", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=1", NULL_KEY);
         g_iRLVOn = TRUE;
         g_iVerbose = TRUE;
         if (TRUE) state default;
@@ -388,12 +388,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (sOnOff == "on")
         {
             g_iRLVNotify = TRUE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvnotify=1", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvnotify=1", NULL_KEY);
         }
         else if (sOnOff == "off")
         {
             g_iRLVNotify = FALSE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvnotify=0", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvnotify=0", NULL_KEY);
         }
     }
     else if (!g_iRLVOn || !g_iViewerCheck) return TRUE;
@@ -412,7 +412,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else if (sStr == "rlvon")
     {
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=1", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=1", NULL_KEY);
         g_iRLVOn = TRUE;
         g_iVerbose = TRUE;
         if (TRUE) state default;
@@ -422,7 +422,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (iNum == COMMAND_OWNER)
         {
             g_iRLVOn = FALSE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=0", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=0", NULL_KEY);
             SafeWord(TRUE);
             llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
         }
@@ -448,7 +448,7 @@ default{
         g_kWearer = llGetOwner();
         //request setting from DB
         llSleep(1.0);
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, "rlvon", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvon", NULL_KEY);
         SIT_CHANNEL=9999 + llFloor(llFrand(9999999.0));
         // Ensure that menu script knows we're here.
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
@@ -457,7 +457,7 @@ default{
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
 
-        if (iNum == HTTPDB_SAVE)
+        if (iNum == LM_SETTING_SAVE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -468,7 +468,7 @@ default{
                 Debug("owners: " + sValue);
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -505,7 +505,7 @@ default{
                 CheckVersion(FALSE);
             }
         }
-        else if ((iNum == HTTPDB_EMPTY && sStr == "rlvon"))
+        else if ((iNum == LM_SETTING_EMPTY && sStr == "rlvon"))
         {
             CheckVersion(FALSE);
         }
@@ -740,7 +740,7 @@ state checked {
                 llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
                 SafeWord(TRUE);
             }
-            else if (iNum == HTTPDB_SAVE) {
+            else if (iNum == LM_SETTING_SAVE) {
                 list lParams = llParseString2List(sStr, ["="], []);
                 string sToken = llList2String(lParams, 0);
                 string sValue = llList2String(lParams, 1);
@@ -750,7 +750,7 @@ state checked {
                     Debug("owners: " + sValue);
                 }
             }
-            else if (iNum == HTTPDB_RESPONSE)
+            else if (iNum == LM_SETTING_RESPONSE)
             {
                 list lParams = llParseString2List(sStr, ["="], []);
                 string sToken = llList2String(lParams, 0);

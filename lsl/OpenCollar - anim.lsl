@@ -28,7 +28,7 @@ string g_sPoseMenu = "Pose";
 string g_sAOMenu = "AO";
 string g_sGiveAO = "Give AO";
 string g_sTriggerAO = "AO Menu";
-list g_lAnimButtons = ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+list g_lAnimButtons; // initialized in state_entry for OpenSim compatibility (= ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];)
 //added for sAnimlock
 string TICKED = "(*)";
 string UNTICKED = "( )";
@@ -37,7 +37,7 @@ string RELEASE = "*Release*";
 integer g_iAnimLock = FALSE;
 string g_sLockToken = "animlock";
 
-string g_sHTTPDB_Url = "http://data.mycollar.org/"; //defaul OC url, can be changed in defaultsettings notecard and wil be send by settings script if changed
+string g_sAppEngine_Url = "http://data.mycollar.org/"; //defaul OC url, can be changed in defaultsettings notecard and wil be send by settings script if changed
 
 string g_sAnimToken = "currentpose";
 //MESSAGE MAP
@@ -56,18 +56,13 @@ integer EXT_COMMAND_COLLAR = 499; //added for collar or cuff commands to put ao 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -137,7 +132,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     }
     key kID = (sOut + "-0000-0000-0000-000000000000");
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
-	+ llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
 
@@ -369,7 +364,7 @@ DeliverAO(key kID)
     string sName = "OpenCollar Sub AO";
     string sVersion = "0.0";
 
-    string sUrl = g_sHTTPDB_Url + "updater/check?";
+    string sUrl = g_sAppEngine_Url + "updater/check?";
     sUrl += "object=" + llEscapeURL(sName);
     sUrl += "&version=" + llEscapeURL(sVersion);
     llHTTPRequest(sUrl, [HTTP_METHOD, "GET",HTTP_MIMETYPE,"text/plain;charset=utf-8"], "");
@@ -439,7 +434,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iLastRank = iNum;
             llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
             g_sCurrentPose = "";
-            llMessageLinked(LINK_SET, LOCALSETTING_DELETE, g_sAnimToken, "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sAnimToken, "");
         }
     }
     else if (sStr == "animations")
@@ -459,7 +454,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             StopAnim(g_sCurrentPose);
         }
-        llMessageLinked(LINK_SET, LOCALSETTING_DELETE, g_sAnimToken, "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sAnimToken, "");
         llResetScript();
     }
     else if (sStr == "pose")
@@ -473,7 +468,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
         {
             g_iAnimLock = FALSE;
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sLockToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sLockToken, NULL_KEY);
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "You are now able to self-release animations/poses set by owners or secowner.", FALSE);
             if(kID != g_kWearer)
@@ -484,7 +479,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         else
         {
             g_iAnimLock = TRUE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sLockToken + "=1", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sLockToken + "=1", NULL_KEY);
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "You are now locked into animations/poses set by owners or secowner.", FALSE);
             if(kID != g_kWearer)
@@ -500,7 +495,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             integer iIndex = llListFindList(g_lAnimButtons, [UNTICKED + ANIMLOCK]);
             g_iAnimLock = TRUE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sLockToken + "=1", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sLockToken + "=1", NULL_KEY);
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "You are now locked into animations your owner or secowner issues.", FALSE);
             if(kID != g_kWearer)
@@ -512,7 +507,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             integer iIndex = llListFindList(g_lAnimButtons, [TICKED + ANIMLOCK]);
             g_iAnimLock = FALSE;
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sLockToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sLockToken, NULL_KEY);
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer,"You are able to release all animations by yourself.", FALSE);
             if(kID != g_kWearer)
@@ -528,12 +523,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
             {
                 g_iHeightFix = FALSE;
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
             }
             else
             {
                 g_iHeightFix = TRUE;
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sHeightFixToken, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sHeightFixToken, NULL_KEY);
 
             }
             if (g_sCurrentPose != "")
@@ -596,7 +591,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iLastRank = iNum;
             //StartAnim(sStr);
             llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
-            llMessageLinked(LINK_SET, LOCALSETTING_SAVE, g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
         }
         else
         {  //only change if command rank is same or higher (lower integer) than that of person who posed us
@@ -606,7 +601,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
                 g_sCurrentPose = sStr;
                 llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_SAVE, g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
             }
         }
     }
@@ -621,6 +616,7 @@ default
     }
     state_entry()
     {
+        g_lAnimButtons = ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
@@ -712,42 +708,37 @@ default
             {
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
                 g_iAnimLock = FALSE;
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sLockToken, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sLockToken, NULL_KEY);
                 g_sCurrentPose = "";
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sLockToken)
+            if (sToken == g_sAnimToken)
             {
-                if(llList2String(lParams, 1) == "1")
+        list lAnimParams = llParseString2List(sValue, [","], []);
+                //
+                g_sCurrentPose = llList2String(lAnimParams, 0);
+                g_iLastRank = (integer)llList2String(lAnimParams, 1);
+                llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
+            }
+            else if (sToken == g_sLockToken)
+            {
+                if(sValue == "1")
                 {
                     g_iAnimLock = TRUE;
                 }
             }
             else if (sToken == "HTTPDB")
             {
-                g_sHTTPDB_Url = sValue;
+                g_sAppEngine_Url = sValue;
             }
             else if (sToken == g_sHeightFixToken)
             {
                 g_iHeightFix = (integer)sValue;
-            }
-        }
-        else if (iNum == LOCALSETTING_RESPONSE)
-        {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            list sAnimParams = llParseString2List(llList2String(lParams, 1), [","], []);
-            if (sToken == g_sAnimToken)
-            {
-                //
-                g_sCurrentPose = llList2String(sAnimParams, 0);
-                g_iLastRank = (integer)llList2String(sAnimParams, 1);
-                llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
             }
         }
         else if (iNum == DIALOG_RESPONSE)
@@ -760,7 +751,7 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
-		integer iAuth = llList2Integer(lMenuParams, 3);
+        integer iAuth = llList2Integer(lMenuParams, 3);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride

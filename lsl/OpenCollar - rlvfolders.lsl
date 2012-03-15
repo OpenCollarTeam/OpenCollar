@@ -16,18 +16,13 @@ integer COMMAND_EVERYONE = 504;
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-//integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //sStr must be in form of "token=value"
-//integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the settings script will send responses on this channel
-//integer HTTPDB_DELETE = 2003;//delete token from DB
-//integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-integer LOCALSETTING_SAVE = 2500;
-//integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502; //should be a synonym for HTTPDB_RESPONSE, but is not yet
-integer LOCALSETTING_DELETE = 2503;
-//integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -288,8 +283,8 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         iIndex = llGetListLength(g_lFolderLocks)-2;
         doLockFolder(iIndex);
     }
-    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LOCALSETTING_SAVE,  "FolderLocks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
-    else llMessageLinked(LINK_SET, LOCALSETTING_DELETE,  "FolderLocks", NULL_KEY);
+    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  "FolderLocks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  "FolderLocks", NULL_KEY);
 }
     
 doLockFolder(integer iIndex)
@@ -321,8 +316,8 @@ updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);   
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LOCALSETTING_SAVE,  "UnsharedLocks=" + (string) g_iUnsharedLocks, NULL_KEY);
-    else llMessageLinked(LINK_SET, LOCALSETTING_DELETE,  "UnsharedLocks", NULL_KEY);
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  "UnsharedLocks=" + (string) g_iUnsharedLocks, NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  "UnsharedLocks", NULL_KEY);
 }
     
 doLockUnshared()
@@ -708,7 +703,7 @@ default
                 QueryFolders("browse");
             }
         }
-        else if (iNum == HTTPDB_RESPONSE || iNum == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

@@ -13,8 +13,7 @@ integer iStartParam;
 list lScripts;
 
 // list where we'll record all the settings and local settings we're sent, for replay later.
-// they're stored as strings, in form "<cmd>|<data>", where cmd is either HTTPDB_SAVE or
-// LOCALSETTING_SAVE
+// they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list lSettings;
 
 // Return the name and version of an item as a list.  If item has no version, return empty string for that part.
@@ -48,19 +47,12 @@ key GetScriptFullname(string name) {
 
 integer COMMAND_NOAUTH = 0;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
-integer HTTPDB_REQUEST_NOCACHE = 2005;
-
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 debug(string msg) {
     //llOwnerSay(llGetScriptName() + ": " + msg);
@@ -209,13 +201,8 @@ default
                     integer n;
                     integer stop = llGetListLength(lSettings); 
                     for (n = 0; n < stop; n++) {
-                        string item = llList2String(lSettings, n);
-                        list parts = llParseString2List(item, ["|"], []);
-                        integer cmd = (integer)llList2String(parts, 0);
-                        string setting = llList2String(parts, 1);
-                        // cmd will be stored as either HTTPDB_SAVE or LOCALSETTING_SAVE.  Just 
-                        // trust what's in the list.
-                        llMessageLinked(LINK_SET, cmd, setting, "");
+                        string setting = llList2String(lSettings, n);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, setting, "");
                     }
                     
                     // tell scripts to rebuild menus (in case plugins have been removed)
@@ -237,15 +224,10 @@ default
     link_message(integer sender, integer num, string str, key id) {
         // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them 
         // so they can be restored when we're done.
-        if (num == HTTPDB_RESPONSE || num == LOCALSETTING_RESPONSE) {
+        if (num == LM_SETTING_RESPONSE) {
             if (str != "settings=sent") {
-                integer type = HTTPDB_SAVE;
-                if (num == LOCALSETTING_RESPONSE) {
-                    type = LOCALSETTING_SAVE;
-                }
-                string setting = llDumpList2String([type, str], "|");
-                if (llListFindList(lSettings, [setting]) == -1) {
-                    lSettings += [setting];
+                if (llListFindList(lSettings, [str]) == -1) {
+                    lSettings += [str];
                 }
             }
         }

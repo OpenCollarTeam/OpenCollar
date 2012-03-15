@@ -83,12 +83,12 @@ integer COMMAND_RLV_RELAY = 507;
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -479,7 +479,7 @@ SaveBellSettings()
     // ring speed
     sSettings+=(string)llFloor(g_fSpeed*10);
 
-    llMessageLinked(LINK_SET, HTTPDB_SAVE,sSettings,NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE,sSettings,NULL_KEY);
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -661,7 +661,7 @@ default
                 }
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             // some responses from the DB are coming in, check if it is about bell values
             list lParams = llParseString2List(sStr, ["="], []);
@@ -684,21 +684,21 @@ default
             {
                 // bell volume
                 g_fVolume=(float)sValue;
-                llMessageLinked(LINK_SET,HTTPDB_DELETE,g_sVolToken,NULL_KEY);
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sVolToken,NULL_KEY);
                 SaveBellSettings();
             }
             else if (sToken == g_sSpeedToken)
             {
                 // ring speed
                 g_fSpeed=(float)sValue;
-                llMessageLinked(LINK_SET,HTTPDB_DELETE,g_sSpeedToken,NULL_KEY);
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sSpeedToken,NULL_KEY);
                 SaveBellSettings();
             }
             else if (sToken == g_sBellOnOffToken)
             {
                 // should the bell ring
                 g_iBellOn=(integer)sValue;
-                llMessageLinked(LINK_SET,HTTPDB_DELETE,g_sBellOnOffToken,NULL_KEY);
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sBellOnOffToken,NULL_KEY);
                 SaveBellSettings();
             }
             else if (sToken == g_sBellSoundNumberToken)
@@ -706,7 +706,7 @@ default
                 // the number of the sound for ringing
                 g_iCurrentBellSound=(integer)sValue;
                 g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                llMessageLinked(LINK_SET,HTTPDB_DELETE,g_sBellSoundNumberToken,NULL_KEY);
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sBellSoundNumberToken,NULL_KEY);
                 SaveBellSettings();
             }
             else if (sToken == g_sBellShowToken)
@@ -721,7 +721,7 @@ default
                 {// or is hidden
                     SetBellElementAlpha(0.0);
                 }
-                llMessageLinked(LINK_SET,HTTPDB_DELETE,g_sBellShowToken,NULL_KEY);
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sBellShowToken,NULL_KEY);
                 SaveBellSettings();
             }
         }

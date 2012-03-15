@@ -49,12 +49,12 @@ integer ATTACHMENT_RESPONSE = 601;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -184,21 +184,21 @@ NewPerson(key kID, string sName, string sType)
     if (sType == "owner")
     {
         g_lOwners = AddUniquePerson(g_lOwners, kID, sName, g_sRequestType);
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sOwnersToken + "=" + llDumpList2String(g_lOwners, ","), "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sOwnersToken + "=" + llDumpList2String(g_lOwners, ","), "");
         //added for attachment interface to announce owners have changed
 	sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "secowner")
     {
         g_lSecOwners = AddUniquePerson(g_lSecOwners, kID, sName, g_sRequestType);
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sSecOwnersToken + "=" + llDumpList2String(g_lSecOwners, ","), "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSecOwnersToken + "=" + llDumpList2String(g_lSecOwners, ","), "");
         //added for attachment interface to announce owners have changed
 	sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "blacklist")
     {
         g_lBlackList = AddUniquePerson(g_lBlackList, kID, sName, g_sRequestType);
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sBlackListToken + "=" + llDumpList2String(g_lBlackList, ","), "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sBlackListToken + "=" + llDumpList2String(g_lBlackList, ","), "");
     }
 }
 
@@ -389,11 +389,11 @@ list RemovePerson(list lPeople, string sName, string sToken, key kCmdr)
         //save to db
         if (llGetListLength(lPeople)>0)
         {
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, sToken + "=" + llDumpList2String(lPeople, ","), "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, sToken + "=" + llDumpList2String(lPeople, ","), "");
         }
         else
         {
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, sToken, "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, sToken, "");
         }
         Notify(kCmdr, sName + " removed from list.", TRUE);
     }
@@ -540,7 +540,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 NotifyInList(g_lOwners, g_sOwnersToken);
 
                 g_lOwners = [];
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sOwnersToken, "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sOwnersToken, "");
                 Notify(kID, "Everybody was removed from the owner list!",TRUE);
             }
             else
@@ -599,7 +599,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 NotifyInList(g_lSecOwners, g_sSecOwnersToken);
 
                 g_lSecOwners = [];
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, "secowners", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "secowners", "");
                 Notify(kID, "Everybody was removed from the secondary owner list!",TRUE);
             }
             else
@@ -647,7 +647,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else if(llToLower(g_sTmpName) == "remove all")
             {
                 g_lBlackList = [];
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sBlackListToken, "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sBlackListToken, "");
                 Notify(kID, "Everybody was removed from black list!", TRUE);
             }
             else
@@ -671,7 +671,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 
             if (g_kGroup != "")
             {
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "group=" + (string)g_kGroup, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "group=" + (string)g_kGroup, "");
                 g_iGroupEnabled = TRUE;
                 g_kDialoger = kID;
                 g_iDialogerAuth = iNum;
@@ -687,14 +687,14 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (sCommand == "setgroupname")
         {
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "groupname=" + g_sGroupName, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "groupname=" + g_sGroupName, "");
         }
         else if (sCommand == "unsetgroup")
         {
             g_kGroup = "";
             g_sGroupName = "";
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, "group", "");
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, "groupname", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "group", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "groupname", "");
             g_iGroupEnabled = FALSE;
             Notify(kID, "Group unset.", FALSE);
             if(g_iRemenu)
@@ -708,7 +708,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (sCommand == "setopenaccess")
         {
             g_iOpenAccess = TRUE;
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "openaccess=" + (string) g_iOpenAccess, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "openaccess=" + (string) g_iOpenAccess, "");
             Notify(kID, "Open access set.", FALSE);
             if(g_iRemenu)
             {
@@ -720,7 +720,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (sCommand == "unsetopenaccess")
         {
             g_iOpenAccess = FALSE;
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, "openaccess", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "openaccess", "");
             Notify(kID, "Open access unset.", FALSE);
             if(g_iRemenu)
             {
@@ -734,7 +734,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             g_iLimitRange = TRUE;
             // as the default is range limit on, we do not need to store anything for this
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, "limitrange", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "limitrange", "");
             Notify(kID, "Range limited set.", FALSE);
             if(g_iRemenu)
             {
@@ -746,7 +746,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             g_iLimitRange = FALSE;
             // save off state for limited range (default is on)
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "limitrange=" + (string) g_iLimitRange, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "limitrange=" + (string) g_iLimitRange, "");
             Notify(kID, "Range limited unset.", FALSE);
             if(g_iRemenu)
             {
@@ -778,9 +778,9 @@ default
         // because we can easily flood the 64 event limit in LSL's event queue
         // if all the scripts send a ton of link messages at the same time on
         // startup.
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sOwnersToken, "");
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sSecOwnersToken, "");
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sBlackListToken, "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sOwnersToken, "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sSecOwnersToken, "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sBlackListToken, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -821,7 +821,7 @@ default
             Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -1206,7 +1206,7 @@ default
             {
                 Notify(g_kDialoger, "Group set to " + g_sGroupName, FALSE);
             }
-            llMessageLinked(LINK_SET, HTTPDB_SAVE, "groupname=" + g_sGroupName, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "groupname=" + g_sGroupName, "");
         }
     }
 }

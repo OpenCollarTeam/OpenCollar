@@ -27,12 +27,12 @@ integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -187,8 +187,8 @@ default
 
         //llInstantMessage(, "Prefix set to '" + g_sPrefix + "'.", g_kWearer);
         SetListeners();
-        //llMessageLinked(LINK_SET, HTTPDB_REQUEST, "prefix", NULL_KEY);
-        //llMessageLinked(LINK_SET, HTTPDB_REQUEST, "channel", NULL_KEY);
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "prefix", NULL_KEY);
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", NULL_KEY);
     }
 
     attach(key kID)
@@ -336,7 +336,7 @@ default
                     }
                     SetListeners();
                     Notify(kID, "\n" + llKey2Name(g_kWearer) + "'s prefix is '" + g_sPrefix + "'.\nTouch the collar or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
-                    llMessageLinked(LINK_SET, HTTPDB_SAVE, "prefix=" + g_sPrefix, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "prefix=" + g_sPrefix, NULL_KEY);
                 }
                 else if (sCommand == "channel")
                 {
@@ -348,11 +348,11 @@ default
                         Notify(kID, "Now listening on channel " + (string)g_iListenChan + ".", FALSE);
                         if (g_iListenChan0)
                         {
-                            llMessageLinked(LINK_SET, HTTPDB_SAVE, "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
                         }
                         else
                         {
-                            llMessageLinked(LINK_SET, HTTPDB_SAVE, "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
                         }
                     }
                     else if (iNewChan == 0)
@@ -360,14 +360,14 @@ default
                         g_iListenChan0 = TRUE;
                         SetListeners();
                         Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
                     }
                     else if (iNewChan == -1)
                     {
                         g_iListenChan0 = FALSE;
                         SetListeners();
                         Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iListenChan, FALSE);
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
                     }
                     else
                     {  //they left the param blank
@@ -383,7 +383,7 @@ default
                 //                        {
                 //                            g_sSafeWord = sValue;
                 //                            llOwnerSay("You set a new safeword: " + sValue + ".");
-                //                            llMessageLinked(LINK_SET, HTTPDB_SAVE, "safeword=" + sValue, NULL_KEY);
+                //                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "safeword=" + sValue, NULL_KEY);
                 //                        }
                 //                        else
                 //                        {
@@ -405,7 +405,7 @@ default
                     {
                         g_sSafeWord = llList2String(lParams, 1);
                         llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, "safeword=" + g_sSafeWord, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "safeword=" + g_sSafeWord, NULL_KEY);
                     }
                     else
                     {
@@ -419,7 +419,7 @@ default
                 }
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -453,7 +453,7 @@ default
                 //                llOwnerSay("Your g_sSafeWord " + g_sSafeWord + " was loaded from the httpdb.");
             }
         }
-        //        else if (iNum == HTTPDB_EMPTY && sStr == "prefix")
+        //        else if (iNum == LM_SETTING_EMPTY && sStr == "prefix")
         //        {
         //            SetListeners();
         //            Notify(g_kWearer, "\nPrefix set to '" + g_sPrefix + "'.\nTouch the collar or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.");
