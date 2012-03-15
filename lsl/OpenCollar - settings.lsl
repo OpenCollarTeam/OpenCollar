@@ -27,19 +27,14 @@ integer COMMAND_EVERYONE = 504;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
-integer HTTPDB_REQUEST_NOCACHE = 2005;
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
+integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -93,8 +88,7 @@ list SetDefault(list cache, string token, string value) {
     if (idx == -1) {
         cache += [token, value];
         // also let the plugins know about it
-        llMessageLinked(LINK_SET, HTTPDB_RESPONSE, token + "=" + value, NULL_KEY);
-        llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, token + "=" + value, NULL_KEY);        
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, token + "=" + value, NULL_KEY);
     }
     return cache;
 }
@@ -141,14 +135,10 @@ SendValues() {
     for (n = 0; n < iStop; n = n + 2) {
         string token = llList2String(settings_pairs, n);
         string value = llList2String(settings_pairs, n + 1);
-        llMessageLinked(LINK_SET, HTTPDB_RESPONSE, token + "=" + value, NULL_KEY);
-        
-        // also send a local setting response, since we don't know which kind of setting they originally tried to do.
-        // this is a legacy distinction from when we saved some settings to httpdb and kept some locally
-        llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, token + "=" + value, NULL_KEY);        
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, token + "=" + value, NULL_KEY);
     }
 
-    llMessageLinked(LINK_SET, HTTPDB_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
 }
 
 Refresh() {
@@ -237,7 +227,7 @@ default {
 
     link_message(integer sender, integer num, string str, key id)
     {
-        if (num == HTTPDB_SAVE || num == LOCALSETTING_SAVE)
+        if (num == LM_SETTING_SAVE)
         {
             //save the token, value
             list params = llParseString2List(str, ["="], []);
@@ -245,22 +235,19 @@ default {
             string value = llList2String(params, 1);
             settings_pairs = SetSetting(settings_pairs, token, value);
         }
-        else if (num == HTTPDB_REQUEST || num == HTTPDB_REQUEST_NOCACHE || num == LOCALSETTING_REQUEST)
+        else if (num == LM_SETTING_REQUEST)
         {
-            //check the dbcache for the token
-            // responses are sent both as HTTPDB and LOCALSETTING until all scripts can use just SETTING
+            //check the cache for the token
             if (SettingExists(settings_pairs, str))
             {
-                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
             } 
             else
             {
-                llMessageLinked(LINK_SET, HTTPDB_EMPTY, str, NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_EMPTY, str, "");                
+                llMessageLinked(LINK_SET, LM_SETTING_EMPTY, str, NULL_KEY);
             }
         }
-        else if (num == HTTPDB_DELETE || num == LOCALSETTING_DELETE)
+        else if (num == LM_SETTING_DELETE)
         {
             settings_pairs = DelSetting(settings_pairs, str);
         }

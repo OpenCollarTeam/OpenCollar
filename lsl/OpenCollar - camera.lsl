@@ -43,19 +43,12 @@ integer COMMAND_BLACKLIST = 520;
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
                             //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
-integer HTTPDB_REQUEST_NOCACHE = 2005;
-
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -82,7 +75,7 @@ ClearCam()
     llClearCameraParams();
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
-    llMessageLinked(LINK_SET, LOCALSETTING_DELETE, g_sDBToken, "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");    
 }
 
 CamFocus(vector g_vCamPos, rotation g_rCamRot)
@@ -292,7 +285,7 @@ Debug(string sStr)
 
 SaveSetting(string sSetting)
 {
-    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, g_sDBToken + "=" + sSetting + "," + (string)g_iLastNum, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + sSetting + "," + (string)g_iLastNum, "");
 }
 
 ChatCamParams(integer chan)
@@ -448,7 +441,7 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sMyMenu, "");
         }    
-        else if (iNum == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);

@@ -12,18 +12,13 @@ integer COMMAND_WEARER      = 503;
 integer COMMAND_EVERYONE    = 504;
 integer COMMAND_SAFEWORD    = 510;
 integer POPUP_HELP          = 1001;
-// -- SETTINGS (HTTPDB / LOCAL)
+// -- SETTINGS
 // - Setting strings must be in the format: "token=value"
-integer HTTPDB_SAVE             = 2000; // to have settings saved to httpdb
-integer HTTPDB_REQUEST          = 2001; // send requests for settings on this channel
-integer HTTPDB_RESPONSE         = 2002; // responses received on this channel
-integer HTTPDB_DELETE           = 2003; // delete token from DB
-integer HTTPDB_EMPTY            = 2004; // returned when a token has no value in the httpdb
-integer LOCALSETTING_SAVE       = 2500;
-integer LOCALSETTING_REQUEST    = 2501;
-integer LOCALSETTING_RESPONSE   = 2502;
-integer LOCALSETTING_DELETE     = 2503;
-integer LOCALSETTING_EMPTY      = 2504;
+integer LM_SETTING_SAVE             = 2000; // to have settings saved to settings store
+integer LM_SETTING_REQUEST          = 2001; // send requests for settings on this channel
+integer LM_SETTING_RESPONSE         = 2002; // responses received on this channel
+integer LM_SETTING_DELETE           = 2003; // delete token from store
+integer LM_SETTING_EMPTY            = 2004; // returned when a token has no value in the store
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
@@ -138,9 +133,9 @@ Pastel Yellow|<1.00000, 1.00000, 0.44706>"
 key g_kWearer;
 
 key NULLKEY = "";
-key g_kLeashedTo = NULLKEY;
-key g_kLeashToPoint = NULLKEY;
-key g_kParticleTarget = NULLKEY;
+key g_kLeashedTo = ""; //NULLKEY;
+key g_kLeashToPoint = ""; //NULLKEY;
+key g_kParticleTarget = ""; //NULLKEY;
 integer g_bLeasherInRange;
 integer g_bInvisibleLeash = FALSE;
 integer g_iAwayCounter;
@@ -208,7 +203,7 @@ vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
 float g_fBurstRate = 0.04;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
-list g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
+list g_lDefaultSettings;
 
 Particles(integer iLink, key kParticleTarget)
 {
@@ -326,7 +321,7 @@ SaveSettings(string sToken, string sSave, integer bSaveToLocal)
     if (bSaveToLocal)
     {
         string sToSave = "leash=" + llDumpList2String(g_lSettings, ",");
-        llMessageLinked(LINK_THIS, LOCALSETTING_SAVE, sToSave, NULLKEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, sToSave, NULLKEY);
     }
 }
 
@@ -512,6 +507,7 @@ default
 {
     state_entry()
     {
+        g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
         StopParticles(TRUE);
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
@@ -625,7 +621,7 @@ default
                         g_lSettings = g_lDefaultSettings;
                         Notify(kAv, "Leash-settings restored to collar defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
-                        llMessageLinked(LINK_SET, LOCALSETTING_DELETE, "leash", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "leash", NULL_KEY);
                         if (!g_bInvisibleLeash && g_bLeashActive)
                         {
                             StartParticles(g_kParticleTarget);
@@ -808,7 +804,7 @@ default
                 }
             }
         }
-        else if (iNum == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             //debug("LocalSettingsResponse: " + sMessage);
             integer iIndex = llSubStringIndex(sMessage, "=");
@@ -850,45 +846,6 @@ default
                     g_vLeashColor = (vector)llList2CSV(llList2List(lRecievedSettings, iIndex, iIndex + 2));
                     SaveSettings(L_COLOR, Vec2String(g_vLeashColor), FALSE);
                 }
-            }
-        }
-        // All default settings from the settings notecard are sent over "HTTPDB_RESPONSE" channel
-        else if (iNum == HTTPDB_RESPONSE)
-        {
-            //debug("HTTPDBResponse: " + sMessage);
-            integer iIndex = llSubStringIndex(sMessage, "=");
-            string sToken = llGetSubString(sMessage, 0, iIndex -1);
-            string sValue = llGetSubString(sMessage, iIndex + 1, -1);
-
-            if (llGetSubString(sToken, 0, 4) == "leash")
-            {
-                sToken = llGetSubString(sToken, 5, -1);
-                if (sToken == L_TEXTURE)
-                {
-                    SetTexture(sValue, NULLKEY);
-                    SaveDefaultSettings(sToken, sValue);
-                }
-                else if (sToken == L_DENSITY)
-                {
-                    g_fBurstRate = (float)sValue;
-                    SaveDefaultSettings(sToken, sValue);
-                }
-                else if (sToken == L_GRAVITY)
-                {
-                    g_vLeashGravity.z = -(float)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashGravity));
-                }
-                else if (sToken == L_SIZE)
-                {
-                    g_vLeashSize.x = (float)sValue;
-                    g_vLeashSize.y = (float)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashSize));
-                }
-                else if (sToken == L_COLOR)
-                {
-                    g_vLeashColor = (vector)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashColor));
-                }
                 else if (sToken == "Glow")
                 {
                     if (llToLower(sValue) == "off")
@@ -908,7 +865,7 @@ default
                 }
             }
         }
-        else if (iNum == HTTPDB_EMPTY)
+        else if (iNum == LM_SETTING_EMPTY)
         {
             //debug("HTTPDB EMPTY");
             if (sMessage == ("leash" + L_TEXTURE)) // no designer-set texture

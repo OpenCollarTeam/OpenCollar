@@ -37,18 +37,13 @@ integer COMMAND_WEARER      = 503;
 integer COMMAND_EVERYONE    = 504;
 integer COMMAND_SAFEWORD    = 510;
 integer POPUP_HELP          = 1001;
-// -- SETTINGS (HTTPDB / LOCAL)
+// -- SETTINGS (whatever the actual backend)
 // - Setting strings must be in the format: "token=value"
-integer HTTPDB_SAVE             = 2000; // to have settings saved to httpdb
-integer HTTPDB_REQUEST          = 2001; // send requests for settings on this channel
-integer HTTPDB_RESPONSE         = 2002; // responses received on this channel
-integer HTTPDB_DELETE           = 2003; // delete token from DB
-integer HTTPDB_EMPTY            = 2004; // returned when a token has no value in the httpdb
-integer LOCALSETTING_SAVE       = 2500;
-integer LOCALSETTING_REQUEST    = 2501;
-integer LOCALSETTING_RESPONSE   = 2502;
-integer LOCALSETTING_DELETE     = 2503;
-integer LOCALSETTING_EMPTY      = 2504;
+integer LM_SETTING_SAVE             = 2000; // to have settings saved to httpdb
+integer LM_SETTING_REQUEST          = 2001; // send requests for settings on this channel
+integer LM_SETTING_RESPONSE         = 2002; // responses received on this channel
+integer LM_SETTING_DELETE           = 2003; // delete token from DB
+integer LM_SETTING_EMPTY            = 2004; // returned when a token has no value in the httpdb
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
@@ -333,7 +328,7 @@ LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints)
             g_bLeashedToAvi = TRUE;
         }
     }
-    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
     DoLeash(kTarget, iAuth, lPoints, g_bFollowMode);
     
     // Notify Target how to unleash, only if:
@@ -388,7 +383,7 @@ Follow(key kTarget, key kCmdGiver, integer iAuth)
             g_bLeashedToAvi = TRUE;
         }
     }
-    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
     DoLeash(kTarget, iAuth, [], g_bFollowMode); // sending empty list [] for lPoints
 
     // Notify Target how to unleash, only if:
@@ -552,7 +547,7 @@ DoUnleash()
     llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
-    llMessageLinked(LINK_SET, LOCALSETTING_DELETE, TOK_DEST, "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, TOK_DEST, "");
 }
 
 integer KeyIsAv(key id)
@@ -672,7 +667,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             if (g_kWearer == kMessageID)
             {
                 g_iRot = FALSE;
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, TOK_ROT + "=0", "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, TOK_ROT + "=0", "");
             }
             else
             {
@@ -684,7 +679,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             if (g_kWearer == kMessageID)
             {
                 g_iRot = TRUE;
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, TOK_ROT, "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, TOK_ROT, "");
             }
             else
             {
@@ -738,7 +733,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
                     SetLength(fNewLength);
                     //tell wearer  
                     Notify(kMessageID, "Leash length set to " + (string)fNewLength, TRUE);        
-                    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, TOK_LENGTH + "=" + (string)fNewLength, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, TOK_LENGTH + "=" + (string)fNewLength, "");
                 }
             }
             else Notify(kMessageID, "The current leash length is " + (string)g_fLength + "m.", TRUE);
@@ -851,7 +846,7 @@ default
             }
             DoUnleash();
         }
-        else if (iNum == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sTOK = llGetSubString(sMessage, 0, iInd -1);
@@ -871,17 +866,6 @@ default
                 DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints, g_bFollowMode);                
             }
             else if (sTOK == TOK_LENGTH)
-            {
-               g_fLength = (float)sVAL;
-            }
-        }
-        // All default settings from the settings notecard are sent over "HTTPDB_RESPONSE" channel
-        else if (iNum == HTTPDB_RESPONSE)
-        {
-            integer iInd = llSubStringIndex(sMessage, "=");
-            string sTOK = llGetSubString(sMessage, 0, iInd -1);
-            string sVAL = llGetSubString(sMessage, iInd + 1, -1);
-            if (sTOK == TOK_LENGTH)
             {
                 SetLength((float)sVAL);
             }

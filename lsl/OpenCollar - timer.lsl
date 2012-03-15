@@ -102,18 +102,13 @@ integer COMMAND_WEARERLOCKEDOUT = 521;
 integer POPUP_HELP = 1001;
 
 // messages for storing and retrieving values from http db
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
 
 // messages for creating OC menu structure
 integer MENUNAME_REQUEST = 3000;
@@ -797,21 +792,21 @@ default
             if (g_iRealRunning || g_iRealRunning)
                 Notify(kID , "You are locked out of the " + g_sToyName + " until the timer expires", FALSE);
         }
-        else if (iNum == LOCALSETTING_DELETE )
+        else if (iNum == LM_SETTING_DELETE )
         {
             if (sStr == "leashedto")
             {
                 g_iWhoCanChangeLeash=504;
             }
         }
-        else if (iNum == HTTPDB_DELETE)
+        else if (iNum == LM_SETTING_DELETE)
         {
             if (sStr == "locked")
             {
                 g_iCollarLocked=0;
             }
         }
-        else if (iNum == LOCALSETTING_SAVE)
+        else if (iNum == LM_SETTING_SAVE)
         {
             if (llGetSubString(sStr, 0, 8) == "leashedto")
             {
@@ -823,14 +818,14 @@ default
                 }
             }
         }
-        else if (iNum == HTTPDB_SAVE)
+        else if (iNum == LM_SETTING_SAVE)
         {
             if (sStr == "locked=1")
             {
                 g_iCollarLocked=1;
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

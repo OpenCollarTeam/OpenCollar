@@ -15,10 +15,10 @@ integer COMMAND_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, f
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -167,7 +167,7 @@ SaveSettings()
         +",avwhitelistnames:"+llDumpList2String(g_lAvWhiteListNames,"/");
     if ( g_lAvBlackList != [] ) sNewSettings+=",avblacklist:"+llDumpList2String(g_lAvBlackList,"/")
         +",avblacklistnames:"+llDumpList2String(g_lAvBlackListNames,"/");
-    llMessageLinked(LINK_SET, HTTPDB_SAVE, sNewSettings, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, NULL_KEY);
 }
 
 UpdateSettings(string sSettings)
@@ -755,7 +755,7 @@ default
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {   //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
             //first see if this is the token we care about
@@ -780,7 +780,7 @@ default
                 g_lCollarBlackList = llParseString2List(llList2String(lParams, 1), [","], []);
             }
         }
-        else if (iNum == HTTPDB_SAVE)
+        else if (iNum == LM_SETTING_SAVE)
         {   //this is tricky since our db sValue contains equals signs
             //split string on both comma and equals sign
             //first see if this is the sToken we care about
