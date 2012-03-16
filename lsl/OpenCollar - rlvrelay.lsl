@@ -205,19 +205,18 @@ UpdateSettings(string sSettings)
 
 integer Auth(key object, key user)
 {
-
     integer iAuth=1;
     key kOwner = llGetOwnerKey(object);
     //object auth
     integer iSourceIndex=llListFindList(g_lSources,[object]);
     if (~iSourceIndex) {}
     else if (~llListFindList(g_lTempBlackList+g_lObjBlackList,[object])) return -1;
-    else if (~llListFindList(g_lAvBlackList,[kOwner])) return -1;
+    else if (~llListFindList(g_lAvBlackList,[(string)kOwner])) return -1;
     else if (~llListFindList(g_lCollarBlackList,[(string)kOwner])) return -1;
     else if (g_iBaseMode==3) {}
     else if (g_iLandMode && llGetOwnerKey(object)==llGetLandOwnerAt(llGetPos())) {}
     else if (~llListFindList(g_lTempWhiteList+g_lObjWhiteList,[object])) {}
-    else if (~llListFindList(g_lAvWhiteList,[kOwner])) {}
+    else if (~llListFindList(g_lAvWhiteList,[(string)kOwner])) {}
     else if (~llListFindList(g_lCollarOwnersList+g_lCollarSecOwnersList,[(string)kOwner])) {}
 //    else if (g_iBaseMode==1) return -1; we should not block playful in restricted mode
     else iAuth=0;
