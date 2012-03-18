@@ -1,4 +1,11 @@
 //OpenCollar - hovertext
+// ============================================================
+// Revision History
+// ------------------
+// Kisamin 18-MAR-2012 - Fixed issue 1478, multiline text not handling \n correctly.
+//
+// ============================================================
+
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
 
@@ -72,6 +79,7 @@ ShowText(string sNewText) {
         }
     }
     
+    g_sText = sNewText // issue 1478 - Kisamin
     list params = [PRIM_TEXT, g_sText, g_vColor, 1.0];
     
     if (g_iTextPrim > 1) {//don't scale the root prim
