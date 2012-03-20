@@ -1,10 +1,4 @@
 //OpenCollar - hovertext
-// ============================================================
-// Revision History
-// ------------------
-// Kisamin 18-MAR-2012 - Fixed issue 1478, multiline text not handling \n correctly.
-//
-// ============================================================
 
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
@@ -69,19 +63,11 @@ integer SafeRemoveInventory(string sItem) {
 }
 
 ShowText(string sNewText) {
-    g_sText = sNewText;
-    list lTmp = llParseString2List(g_sText, ["\\n"], []);
-    if(llGetListLength(lTmp) > 1) {
-        integer i;
-        sNewText = "";
-        for (i = 0; i < llGetListLength(lTmp); i++) {
-            sNewText += llList2String(lTmp, i) + "\n";
-        }
-    }
-    
-    g_sText = sNewText // issue 1478 - Kisamin
+    // make it possible to insert line breaks in hover text
+    list lTmp = llParseStringKeepNulls(sNewText, ["\\n"], []);
+    g_sText = llDumpList2String(lTmp, "\n");
     list params = [PRIM_TEXT, g_sText, g_vColor, 1.0];
-    
+
     if (g_iTextPrim > 1) {//don't scale the root prim
         params += [PRIM_SIZE, g_vShowScale];
     }
@@ -224,10 +210,14 @@ default {
             llResetScript();
         }
 
-        if (iChange & CHANGED_COLOR) {
-            g_vColor = GetTextPrimColor();
-            if (g_iOn) {
-                ShowText(g_sText);
+        if (iChange & CHANGED_COLOR) { //SA this event is triggered when text is changed (LSL bug?) so we need to check the color really changed if we want to avoid an endless loop
+            vector vNewColor = GetTextPrimColor();
+            if (vNewColor != g_vColor)
+            {
+                g_vColor = vNewColor;
+                if (g_iOn) {
+                    ShowText(g_sText);
+                }
             }
         }
     }
