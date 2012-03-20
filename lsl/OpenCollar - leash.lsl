@@ -209,7 +209,7 @@ LeashMenu(key kIn, integer iAuth)
     g_iReturnMenu = FALSE;
     list lButtons = g_lButtons;
     if (kIn != g_kWearer)
-        lButtons = [BUTTON_LEASH, BUTTON_FOLLOW, BUTTON_YANK]; // Only if not the wearer.
+        lButtons += [BUTTON_LEASH, BUTTON_FOLLOW, BUTTON_YANK]; // Only if not the wearer.
         
     lButtons += [BUTTON_LENGTH, BUTTON_LEASH_TO, BUTTON_FOLLOW_MENU, BUTTON_GIVE_HOLDER, BUTTON_POST, BUTTON_REZ_POST, BUTTON_GIVE_POST];
     
