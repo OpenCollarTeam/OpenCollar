@@ -219,7 +219,7 @@ default {
                 }
                 // wait a sec before sending settings, in case other scripts are
                 // still resetting.
-                llSleep(0.5);
+                llSleep(2.0);
                 Refresh();
             }
         }
