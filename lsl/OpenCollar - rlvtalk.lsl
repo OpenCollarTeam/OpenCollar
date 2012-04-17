@@ -41,6 +41,8 @@ list g_lDescriptions = [ //showing descriptions for commands
 string TURNON = "Allow";
 string TURNOFF = "Forbid";
 
+integer g_iRLVversion = 0;
+
 integer g_iReturnMenu = FALSE;
 
 integer g_iRLVOn=FALSE;
@@ -179,6 +181,8 @@ Menu(key kID)
              (llList2String(g_lRLVcmds, n) == "chatshout" && !iShowChatShout)
              ||
              (llList2String(g_lRLVcmds, n) == "emote" && !iShowEmote)
+             ||
+             (llList2String(g_lRLVcmds, n) == "startim" && g_iRLVversion < 26)
            )
         {
             //Debug("skipping: "+llList2String(g_lRLVcmds, n));
@@ -451,6 +455,10 @@ default
         {
             //clear db and local settings list
             ClearSettings();
+        }
+        else if (iNum == RLV_VERSION)
+        {
+            g_iRLVversion = (integer)sStr;
         }
         else if (iNum == RLV_OFF)// rlvoff -> we have to turn the menu off too
         {
