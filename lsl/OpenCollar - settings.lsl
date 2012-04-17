@@ -114,7 +114,7 @@ list DelSetting(list cache, string token) {
 }
 
 DumpCache() {
-    string sOut = "Settings:";
+    string sOut = "Settings: \n";
 
 
     integer n;
