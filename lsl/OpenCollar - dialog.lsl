@@ -80,14 +80,14 @@ string Integer2String(integer iNum, integer iDigits)
     return sOut;
 }
 
-integer GetStringBytes(string sStr) { // from SL wiki
+integer GetStringBytes(string sStr) {
     sStr = llEscapeURL(sStr);
-    integer i = 0;
-    integer j;
     integer l = llStringLength(sStr);
     list lAtoms = llParseStringKeepNulls(sStr, ["%"], []);
     return l - 2 * llGetListLength(lAtoms) + 2;
 /* too slow!
+    integer i = 0;
+    integer j;
     for (j = l; j > -1; j--)
         if (llGetSubString(sStr, j, j) == "%") i++;
     return l - i - i; */
@@ -310,7 +310,7 @@ ClearUser(key kRCPT)
     while (~iIndex)
     {
         Debug("removed stride for " + (string)kRCPT);
-	g_lMenus = RemoveMenuStride(g_lMenus, iIndex -4);
+    g_lMenus = RemoveMenuStride(g_lMenus, iIndex -4);
         //g_lMenus = llDeleteSubList(g_lMenus, iIndex - 4, iIndex - 5 + g_iStrideLength);
         iIndex = llListFindList(g_lMenus, [kRCPT]);
     }
