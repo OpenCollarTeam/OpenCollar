@@ -85,9 +85,12 @@ integer GetStringBytes(string sStr) { // from SL wiki
     integer i = 0;
     integer j;
     integer l = llStringLength(sStr);
+    list lAtoms = llParseStringKeepNulls(sStr, ["%"], []);
+    return l - 2 * llGetListLength(lAtoms) + 2;
+/* too slow!
     for (j = l; j > -1; j--)
         if (llGetSubString(sStr, j, j) == "%") i++;
-    return l - i - i;
+    return l - i - i; */
 }
 
 string TruncateString(string sStr, integer iBytes){
@@ -124,7 +127,7 @@ Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
     }
     else
     {
-        llInstantMessage(keyID,sMsg);
+        llRegionSayTo(keyID, 0, sMsg);
         if (nAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
@@ -223,7 +226,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     // lUtilityButtons = SanitizeButtons(lUtilityButtons);
     
     integer iChan = RandomUniqueChannel();
-    integer g_iListener = llListen(iChan, "", kRecipient, "");
+    integer iListener = llListen(iChan, "", kRecipient, "");
     llSetTimerEvent(g_iReapeat);
     if (iNumitems > iMyPageSize)
     {
@@ -234,7 +237,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
     }    
     integer ts = llGetUnixTime() + g_iTimeOut;
-    g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth];
+    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth];
 }
 
 list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
@@ -273,8 +276,8 @@ list RemoveMenuStride(list lMenu, integer iIndex)
     //tell this function the menu you wish to remove, identified by list index
     //it will close the listener, remove the menu's entry from the list, and return the new list
     //should be called in the listen event, and on menu timeout    
-    integer g_iListener = llList2Integer(lMenu, iIndex + 2);
-    llListenRemove(g_iListener);
+    integer iListener = llList2Integer(lMenu, iIndex + 2);
+    llListenRemove(iListener);
     return llDeleteSubList(lMenu, iIndex, iIndex + g_iStrideLength - 1);
 }
 
@@ -307,7 +310,8 @@ ClearUser(key kRCPT)
     while (~iIndex)
     {
         Debug("removed stride for " + (string)kRCPT);
-        g_lMenus = llDeleteSubList(g_lMenus, iIndex - 4, iIndex - 5 + g_iStrideLength);
+	g_lMenus = RemoveMenuStride(g_lMenus, iIndex -4);
+        //g_lMenus = llDeleteSubList(g_lMenus, iIndex - 4, iIndex - 5 + g_iStrideLength);
         iIndex = llListFindList(g_lMenus, [kRCPT]);
     }
     Debug(llDumpList2String(g_lMenus, ","));
@@ -362,9 +366,9 @@ default
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
             integer iDigits = ButtonDigits(lButtons);
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);        
-        integer iAuth;
-        if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
-        else iAuth = COMMAND_NOAUTH;
+            integer iAuth;
+            if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
+            else iAuth = COMMAND_NOAUTH;
             
             //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
@@ -372,6 +376,7 @@ default
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth);
             if (iDigits)
             {   
+                integer iLength = GetStringBytes(sPrompt);
                 string sOut = sPrompt;
                 integer iNb = llGetListLength(lButtons);
                 integer iCount;
@@ -381,9 +386,11 @@ default
                     string sButton = llList2String(lButtons, iCount);
                     if ((key)sButton) sButton = Key2Name((key)sButton);
                     sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
-                    if (GetStringBytes(sOut+sLine) >= 1024)
+                    iLength += GetStringBytes(sLine);
+                    if (iLength >= 1024)
                     {
                         Notify(kRCPT, sOut, FALSE);
+                        iLength = 0;
                         sOut = "";
                     }
                     sOut += sLine;
