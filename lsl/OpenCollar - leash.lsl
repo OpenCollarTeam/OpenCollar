@@ -490,12 +490,12 @@ Unleash(key kCmdGiver)
         {
             if (g_bFollowMode)
             {
-                sWearMess = "You stop following " + GetFirstName(sTarget) + ".";
+                sWearMess = "You stop following " + sTarget + ".";
                 sTargetMess = GetFirstName(g_sWearer) + " stops following you.";
             }
             else
             {
-                sWearMess = "You unleash yourself from " + GetFirstName(sTarget) + ".";
+                sWearMess = "You unleash yourself from " + sTarget + "."; // sTarget might be an object
                 sTargetMess = GetFirstName(g_sWearer) + " unleashes from you.";
             }
             if (KeyIsAv(g_kLeashedTo))
@@ -562,12 +562,15 @@ string GetFirstName(string sName)
 
 integer startswith(string haystack, string needle) // http://wiki.secondlife.com/wiki/llSubStringIndex
 {
-    return llDeleteSubString(haystack, llStringLength(needle), -1) == needle;
+// SA: does not work in recent SL servers, as llDeleteSubString now returns an empty string whenever
+// an index is out of bounds (previously, it would return the full string)
+//    return llDeleteSubString(haystack, llStringLength(needle), -1) == needle;
+    return llDeleteSubString(haystack + " ", llStringLength(needle), -1) == needle;
 }
 
 integer endswith(string haystack, string needle) // http://wiki.secondlife.com/wiki/llSubStringIndex
 {
-    return llDeleteSubString(haystack, 0, ~llStringLength(needle)) == needle;
+    return llDeleteSubString(" " + haystack, 0, ~llStringLength(needle)) == needle;
 }
 
 LeashToHelp(key kIn)
