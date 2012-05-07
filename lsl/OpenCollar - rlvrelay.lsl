@@ -847,7 +847,7 @@ default
                     else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
                     else if (sMsg=="Help")
                     {
-                        llGiveInventory(kAv,"OpenCollar RLV Relay Help.md");
+                        llGiveInventory(kAv,"OpenCollar RLV Relay Help");
                         Menu(kAv, iAuth);
                     }
                     else if (sMsg==UPMENU)
