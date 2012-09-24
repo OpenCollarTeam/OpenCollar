@@ -396,12 +396,8 @@ CreateAnimList()
     for (i=0;i<iMax;i++)
     {
         sName=llGetInventoryName(INVENTORY_ANIMATION, i);
-        if (llStringLength(sName) > 24)
-        {
-            Notify (g_kWearer,"The collar contains the animation '"+sName+"'. That name is longer than 24 characters and will not be displayed in the menu. Please remove or change the name.",FALSE);
-        }
         //check here if the anim start with ~ or for some reason does not get a name returned (spares to check that all again in the menu ;)
-        else if (sName != "" && llGetSubString(sName, 0, 0) != "~")
+        if (sName != "" && llGetSubString(sName, 0, 0) != "~")
         {
             g_lPoseList+=[sName];
         }
