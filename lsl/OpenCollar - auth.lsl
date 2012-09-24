@@ -1107,22 +1107,8 @@ default
             for(i = 0; i < iNum_detected; i++)
             {
                 sName = llDetectedName(i);
-                if (llStringLength(sName) <= 24)
-                {
-                    lButtons += [sName];
-                }
-                else
-                {
-                    string s = "The name '" + sName + "' is too long and cannot be added with the menu. Please use the command '" + g_sPrefix;
-                    if (g_sRequestType == g_sOwnerScan)
-                        s += "owner " + sName + "'.";
-                    else if (g_sRequestType == g_sSecOwnerScan)
-                        s += "secowner " + sName + "'.";
-                    else
-                        s += "blacklist " + sName + "'.";
-                    Notify(g_kDialoger,  s, FALSE);
-                }
-
+		//actual label length is taken care of by dialog helper
+                lButtons += [sName];
             }
             //add wearer if not already in button list
             sName = llKey2Name(g_kWearer);
