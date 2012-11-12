@@ -54,7 +54,7 @@ To allow members of your currently-active group to control your collar:
 
     <prefix>setgroup
     
-This will set the group to your current group.  You may need to remove the collar for this to take effect, just rezz it on the ground then pick it back up.
+This will set the group to your current group.  You may need to remove the collar for this to take effect, just detach it on the ground then reattach it back.
 
 To remove your current owners and return the collar to default settings:
 
@@ -170,9 +170,8 @@ Please make sure when running updates or installations to find a sim with Object
  
 4. The collar will pop up a message asking you to verify that you want to update with the nearby updating device.  Click 'Yes'.
 
-5. At this point you will receive a pop-up menu to select which features/plugins you wish to update or install into your OpenCollar. Each of these is called a "bundle".  Select your features, the asterisk in between brackets means that a features has been checked; i.e. (*)RLVMain.
+5. At this point you will receive a pop-up menu with a web link. Open this link and use the checkboxes to select which features/plugins you wish to update or install into your OpenCollar. Each of these is called a "bundle".
 
-6. Click the START button. You can watch the installation progress at the hovering text above the updating device.
+6. Click the "Start Update" button. You can watch the installation progress at the hovering text above the updating device.
 
 7. You will be notified in text chat when your update is complete.  Please do not pick up either device until notified, or bad things(tm) might happen.
-

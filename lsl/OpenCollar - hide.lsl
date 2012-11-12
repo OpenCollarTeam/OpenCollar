@@ -1,4 +1,4 @@
-//OpenCollar - hide - 3.530
+//OpenCollar - hide
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on getting menu request, give element menu
 //on getting element type, give Hide and Show buttons
@@ -12,11 +12,11 @@ list g_lElements;
 key g_kWearer;
 
 key g_kDialogID;
-
+key g_kTouchID;
+ 
 string g_sDBToken = "elementalpha";
 list g_lAlphaSettings;
 string g_sIgnore = "nohide";
-string g_sCurrentElement;
 list g_lButtons;
 
 integer g_iAppLock = FALSE;
@@ -30,26 +30,29 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
+
+integer TOUCH_REQUEST = -9500;
+integer TOUCH_CANCEL = -9501;
+integer TOUCH_RESPONSE = -9502;
+integer TOUCH_EXPIRE = -9503;
 
 //5000 block is reserved for IM slaves
 
@@ -76,28 +79,38 @@ Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
     }
 }
 
+
 key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
+    return (sOut + "-0000-0000-0000-000000000000");
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
+key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAuth)
+{
+    key kID = ShortKey();
+    integer iFlags = 0;
+    if (iTouchStart) iFlags = iFlags | 0x01;
+    if (iTouchEnd) iFlags = iFlags | 0x02;
+    llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kRCPT + "|" + (string)iFlags + "|" + (string)iAuth, kID);
+    return kID;
+} 
 
 SetAllElementsAlpha(float fAlpha)
 {
@@ -156,20 +169,19 @@ SaveAlphaSettings()
     if (llGetListLength(g_lAlphaSettings)>0)
     {
         //dump list to string and do httpdb save
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lAlphaSettings, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lAlphaSettings, ","), NULL_KEY);
     }
     else
     {
         //dump list to string and do httpdb save
-        llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
     }
 
 }
 
-ElementMenu(key kAv)
+ElementMenu(key kAv, integer iAuth)
 {
-    g_sCurrentElement = "";
-    string sPrompt = "Pick which part of the collar you would like to hide or show";
+    string sPrompt = "Pick which part of the collar you would like to hide or show.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
     g_lButtons = [];
     //loop through elements, show appropriate buttons and prompts if hidden or shown
 
@@ -203,7 +215,7 @@ ElementMenu(key kAv)
         }
     }
     g_lButtons += [SHOW + " " + ALL, HIDE + " " + ALL];
-    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0);
+    g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth);
 }
 
 string ElementType(integer linkiNumber)
@@ -309,11 +321,11 @@ default
                     SaveAlphaSettings();
                 }
             }
-            else if (sStr == "hidemenu")
+            else if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu")
             {
                 if (!AppLocked(kID))
                 {
-                    ElementMenu(kID);
+                    ElementMenu(kID, iNum);
                 }
             }
             else if (StartsWith(sStr, "setalpha"))
@@ -383,7 +395,7 @@ default
                 //    llResetScript();
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -410,12 +422,6 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //give element menu
-            ElementMenu(kID);
-        }
-
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID==g_kDialogID)
@@ -425,19 +431,17 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (sMessage == UPMENU)
                 {
-                    if (g_sCurrentElement == "")
-                    {
-                        //main menu
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
-                    }
-                    else
-                    {
-                        g_sCurrentElement = "";
-                        ElementMenu(kAv);
-                    }
+                    //main menu
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                }
+                else if (sMessage == "*Touch*")
+                {
+                    Notify(kAv, "Please touch the part of the collar you want to hide or show. You can press ctr+alt+T to see invisible parts.", FALSE);
+                    g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
                 }
                 else
                 {
@@ -471,8 +475,34 @@ default
                         SetElementAlpha(sElement, fAlpha);
                     }
                     SaveAlphaSettings();
-                    ElementMenu(kAv);
+                    ElementMenu(kAv, iAuth);
                 }
+            }
+        }
+        else if (iNum == TOUCH_RESPONSE)
+        {
+            if (kID == g_kTouchID)
+            {
+                list lParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lParams, 0);
+                integer iAuth = (integer)llList2String(lParams, 1);
+                integer iLinkNumber = (integer)llList2String(lParams, 3);
+                
+                string sElement = ElementType(iLinkNumber);
+                if (sElement != g_sIgnore)
+                {
+                    integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
+                    float fAlpha;
+                    if (iIndex == -1) fAlpha = 1.0; // assuming visible
+                    else fAlpha = (float)llList2String(g_lAlphaSettings, iIndex + 1);
+                    Notify(kAv, "You selected \"" + sElement+"\". Toggling its transparency.", FALSE);
+                    SetElementAlpha(sElement, (float)(!llCeil(fAlpha)));
+                }
+                else
+                {
+                    Notify(kAv, "You selected a prim which is not hideable. You can try again.", FALSE);
+                }
+                ElementMenu(kAv, iAuth);
             }
         }
     }

@@ -1,3 +1,4 @@
+//OpenCollar - update
 //Licensed under the GPLv2, with the additional requirement that these scripts
 //remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
@@ -13,7 +14,7 @@
 // NOTE: As of version 3.706, the update script no longer uses object name or
 // description to tell it the current collar version.  Instead, it looks in the
 // "~version" notecard.  It compares the contents of that notecard with the
-// text at https://raw.github.com/nirea/ocupdater/release/lsl/~version.  If the
+// text at https://raw.github.com/OpenCollarUpdates/ocupdater/release/lsl/~version.  If the
 // version online is newer, then the wearer will be advised that an update is
 // available.
 
@@ -32,15 +33,14 @@ key wearer;
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_WEARER = 503;
-integer HTTPDB_SAVE = 2000;
-integer HTTPDB_REQUEST = 2001;
-integer HTTPDB_RESPONSE = 2002;
-integer HTTPDB_DELETE = 2003;
-integer HTTPDB_EMPTY = 2004;
+integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer UPDATE = 10001;
 
 integer DIALOG = -9000;
@@ -62,7 +62,7 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw.github.com/nirea/ocupdater/release/lsl/~version";
+string version_check_url = "https://raw.github.com/OpenCollarUpdates/ocupdater/release/lsl/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
@@ -75,7 +75,7 @@ key appengine_delivery_request;
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/nirea/ocupdater/master/news.md";
+string news_url = "https://raw.github.com/OpenCollarUpdates/ocupdater/master/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
@@ -88,9 +88,6 @@ key g_kUpdater; // key of avi who asked for the update
 integer g_iUpdatersNearBy = -1;
 integer g_iWillingUpdaters = -1;
 
-//should the menu pop up again?
-integer g_iRemenu = FALSE;
-
 string last_news_time = "0";
 
 Debug(string sMessage)
@@ -98,27 +95,22 @@ Debug(string sMessage)
     //llOwnerSay(llGetScriptName() + ": " + sMessage);
 }
 
-
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -140,7 +132,7 @@ ConfirmUpdate(key kUpdater)
 {
     string sPrompt = "Do you want to update with " + llKey2Name(kUpdater) + " with object key:" + (string)kUpdater +"\n"
     + "Do not rez any items till the update has started.";
-    g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0);
+    g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0, COMMAND_WEARER);
 }
 
 integer IsOpenCollarScript(string sName)
@@ -230,6 +222,47 @@ Init() {
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);    
 }
 
+// returns TRUE if eligible (AUTHED link message number)
+integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, sStr: user command, kID: avatar id
+{
+    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    list cmd_parts = llParseString2List(str, [" "], []);
+    // handle menu clicks
+    if (llList2String(cmd_parts, 0) == "menu") {
+        string submenu = llGetSubString(str, 5, -1);
+        if (submenu == BTN_DO_UPDATE) UserCommand(iNum, "update", id);
+        else if (submenu == BTN_GET_UPDATE)
+        {
+            if (id == wearer)
+                appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
+            else Notify(id,"Only the wearer can request updates for the collar.",FALSE);
+        }
+        else if (submenu == BTN_GET_VERSION) UserCommand(iNum, "version", id);
+        else return TRUE; // drop the command if it is not a menu handled here
+        llMessageLinked(LINK_ROOT, iNum, "menu "+PARENT_MENU, id);
+    } else 
+    if (str == "update") {
+        if (id == wearer) {
+            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
+            g_iUpdatersNearBy = 0;
+            g_iWillingUpdaters = 0;
+            g_kUpdater = id;
+            Notify(id,"Searching for nearby updater",FALSE);
+            g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
+            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+            llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
+        } else {
+            Notify(id,"Only the wearer can update the collar.",FALSE);
+        }
+    } else if (llList2String(cmd_parts, 0) == "version") {
+        Notify(id, "I am running OpenCollar version " + my_version, FALSE);
+    } else if (str == "objectversion") {
+        // ping from an object, we answer to it on the object channel
+        llSay(GetOwnerChannel(id,1111),(string)wearer+":version="+my_version);
+    }
+    return TRUE;
+}
+
 default
 {
     state_entry()
@@ -269,7 +302,7 @@ default
                 if ((float)release_version > (float)my_version) {
                     string prompt = "\nYou are running OpenCollar version " +
                     my_version + ".  There is an update available.";
-                    g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0);
+                    g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
                 }
             } else if (id == appengine_delivery_request) {
                 llOwnerSay("An updater will be delivered to you shortly.");
@@ -309,49 +342,8 @@ default
     }
 
     link_message(integer sender, integer num, string str, key id ) {
-        // handle menu clicks
-        if (num == SUBMENU) {
-            if (str == BTN_DO_UPDATE) {
-                g_iRemenu = TRUE;
-                llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "update", id);
-            } else if (str == BTN_GET_UPDATE) {
-                if (id == wearer) {
-                    appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
-                } else {
-                    Notify(id,"Only the wearer can request updates for the collar.",FALSE);
-                }
-            } else if (str == BTN_GET_VERSION) {
-                // on clicking version button, send link message to self with
-                // chat command
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "version remenu", id);
-            }
-        } else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER) {
-            list cmd_parts = llParseString2List(str, [" "], []);
-            if (str == "update") {
-                if (id == wearer) {
-                    string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
-                    g_iUpdatersNearBy = 0;
-                    g_iWillingUpdaters = 0;
-                    g_kUpdater = id;
-                    Notify(id,"Searching for nearby updater",FALSE);
-                    g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
-                    llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
-                    llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
-                } else {
-                    if (g_iRemenu) llMessageLinked(LINK_ROOT, SUBMENU, PARENT_MENU, id);
-                    g_iRemenu = FALSE;
-                    Notify(id,"Only the wearer can update the collar.",FALSE);
-                }
-            } else if (llList2String(cmd_parts, 0) == "version") {
-                Notify(id, "I am running OpenCollar version " + my_version, FALSE);
-                if (llList2String(cmd_parts, 1) == "remenu") {
-                    llMessageLinked(LINK_SET, SUBMENU, PARENT_MENU, id);
-                }
-            } else if (str == "objectversion") {
-                // ping from an object, we answer to it on the object channel
-                llSay(GetOwnerChannel(id,1111),(string)wearer+":version="+my_version);
-            }
-        }
+        //the command was given by either owner, secowner, group member, or wearer
+        if (UserCommand(num, str, id)) return;
         else if (num == MENUNAME_REQUEST)
         {
             if (str == PARENT_MENU)
