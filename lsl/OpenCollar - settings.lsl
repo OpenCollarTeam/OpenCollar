@@ -1,3 +1,4 @@
+//OpenCollar - settings
 // This script stores settings for other scripts in the collar.  In bygone days
 // it was responsible for storing them to an online database too.  It doesn't
 // do that anymore.  But so long as plugin scripts are still using central
@@ -15,6 +16,7 @@ key defaultslineid;
 key card_key;
 
 list settings_pairs;// stores all settings
+list settings_default; // Default settings placeholder.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -22,27 +24,20 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
-integer HTTPDB_REQUEST_NOCACHE = 2005;
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
+integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 
@@ -92,6 +87,8 @@ list SetDefault(list cache, string token, string value) {
     integer idx = llListFindList(cache, [token]);
     if (idx == -1) {
         cache += [token, value];
+        // also let the plugins know about it
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, token + "=" + value, NULL_KEY);
     }
     return cache;
 }
@@ -110,7 +107,7 @@ list DelSetting(list cache, string token) {
 }
 
 DumpCache() {
-    string sOut = "Settings:";
+    string sOut = "Settings: \n";
 
 
     integer n;
@@ -138,14 +135,10 @@ SendValues() {
     for (n = 0; n < iStop; n = n + 2) {
         string token = llList2String(settings_pairs, n);
         string value = llList2String(settings_pairs, n + 1);
-        llMessageLinked(LINK_SET, HTTPDB_RESPONSE, token + "=" + value, NULL_KEY);
-        
-        // also send a local setting response, since we don't know which kind of setting they originally tried to do.
-        // this is a legacy distinction from when we saved some settings to httpdb and kept some locally
-        llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, token + "=" + value, NULL_KEY);        
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, token + "=" + value, NULL_KEY);
     }
 
-    llMessageLinked(LINK_SET, HTTPDB_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
 }
 
 Refresh() {
@@ -176,6 +169,9 @@ default {
         // resend settings to plugins, if owner hasn't changed, in which case
         // reset the whole lot.
         if (wearer == llGetOwner()) {
+            // wait a sec before sending settings, in case other scripts are
+            // still resetting.
+            llSleep(0.5);
             Refresh();        
         } else {
             llResetScript();
@@ -190,59 +186,93 @@ default {
                     integer idx = llSubStringIndex(data, "=");
                     string token = llGetSubString(data, 0, idx - 1);
                     string value = llGetSubString(data, idx + 1, -1);
-                    settings_pairs = SetDefault(settings_pairs, token, value);
+                    // Take multiple lines and puts them together,
+                    //  workaround for llGetNotecardLine() limitation.
+                    if (SettingExists(settings_default,token))
+                    {
+                        integer loc = llListFindList(settings_default, [token]) + 1;
+                        string sep = ",";
+                        if (token == "oc_colorsettings" ||
+                            token == "aipcpc_colorsettings" ||
+                            token == "oc_textures")
+                        {
+                            sep = "~";
+                        }
+                        value = llList2String(settings_default, loc) + sep + value;
+                    }
+                    settings_default = SetSetting(settings_default, token, value);
                 }
                 defaultsline++;
                 defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
             }
+            else
+            {
+                // Merge defaults with settings.
+                string sToken;
+                string sValue;
+                integer count;
+                for (count = 0; count < llGetListLength(settings_default); count += 2)
+                {
+                    sToken = llList2String(settings_default, count);
+                    sValue = llList2String(settings_default, (count + 1));
+                    settings_pairs = SetDefault(settings_pairs, sToken, sValue);
+                }
+                // wait a sec before sending settings, in case other scripts are
+                // still resetting.
+                llSleep(2.0);
+                Refresh();
+            }
         }
     }
 
-    link_message(integer sender, integer num, string str, key id) {
-        if (num == HTTPDB_SAVE || num == LOCALSETTING_SAVE) {
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == LM_SETTING_SAVE)
+        {
             //save the token, value
             list params = llParseString2List(str, ["="], []);
             string token = llList2String(params, 0);
             string value = llList2String(params, 1);
             settings_pairs = SetSetting(settings_pairs, token, value);
-        } else if (num == HTTPDB_REQUEST || num == HTTPDB_REQUEST_NOCACHE || num == LOCALSETTING_REQUEST) {
-            //check the dbcache for the token
-            // responses are sent both as HTTPDB and LOCALSETTING until all scripts can use just SETTING
-            if (SettingExists(settings_pairs, str)) {
-                llMessageLinked(LINK_SET, HTTPDB_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
-            } else {
-                llMessageLinked(LINK_SET, HTTPDB_EMPTY, str, NULL_KEY);
-                llMessageLinked(LINK_SET, LOCALSETTING_EMPTY, str, "");                
-            }
-        } else if (num == HTTPDB_DELETE || num == LOCALSETTING_DELETE) {
-            settings_pairs = DelSetting(settings_pairs, str);
-        } else if ( (str == "wiki") && (num >= COMMAND_OWNER && num <= COMMAND_WEARER)) {
-            // open the wiki page
-            if  (remenu)
+        }
+        else if (num == LM_SETTING_REQUEST)
+        {
+            //check the cache for the token
+            if (SettingExists(settings_pairs, str))
             {
-                remenu=FALSE;
-                llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, str + "=" + GetSetting(settings_pairs, str), NULL_KEY);
+            } 
+            else
+            {
+                llMessageLinked(LINK_SET, LM_SETTING_EMPTY, str, NULL_KEY);
+            }
+        }
+        else if (num == LM_SETTING_DELETE)
+        {
+            settings_pairs = DelSetting(settings_pairs, str);
+        }
+        else if (num >= COMMAND_OWNER && num <= COMMAND_WEARER)
+        {
+            integer loadurl = FALSE; integer remenu = FALSE;
+            if (str == "wiki") loadurl = TRUE;
+            else if (str == "menu "+WIKI) {loadurl = TRUE; remenu = TRUE;}
+            else if (num == COMMAND_OWNER || id == wearer)
+            {
+                if (str == "cachedump") DumpCache();
+                else if (str == "menu "+DUMPCACHE) { DumpCache(); remenu = TRUE; }
+                else if (str == "reset" || str == "runaway") llResetScript();
+                else return;
+            }
+            else return;
+            if (remenu) llMessageLinked(LINK_SET, num, "menu " + parentmenu, id);
+            if (loadurl)
+            {
                 llSleep(0.2);
+                llLoadURL(id, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
             }
-            llLoadURL(id, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
-        } else if (num == COMMAND_OWNER || ((num > COMMAND_OWNER) && (num < 600) && (id == wearer))) {
-            if (str == "cachedump") {
-                DumpCache();
-            }
-            else if (str == "reset" || str == "runaway") {
-                llResetScript();
-            }
-        } else if (num == SUBMENU) {
-            if (str == DUMPCACHE) {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "cachedump", id);
-
-                llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-            } else if (str == WIKI) {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "wiki", id);
-                remenu = TRUE;
-            }
-        } else if (num == MENUNAME_REQUEST && str == parentmenu) {
+        }
+        else if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + DUMPCACHE, NULL_KEY);
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + WIKI, NULL_KEY);
         }

@@ -1,4 +1,4 @@
-//OpenCollar - color - 3.520
+//OpenCollar - color
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //color
 
@@ -8,58 +8,130 @@ list g_lElements;
 string g_sCurrentElement = "";
 string g_sCurrentCategory = "";
 list g_lCategories = ["Blues", "Browns", "Grays", "Greens", "Purples", "Reds", "Yellows"];
+
+list g_lAllColors = [
+"Light Blue|<0.00000, 0.00000, 1.00000>
+Dark Blue|<0.00000, 0.00000, 0.62745>
+Midnight Blue|<0.08235, 0.10588, 0.32941>
+Dark Slate Blue|<0.16863, 0.21961, 0.33725>
+Sky Blue|<0.40000, 0.59608, 1.00000>
+Light Cyan3|<0.68627, 0.78039, 0.78039>
+Cadet Blue3|<0.46667, 0.74902, 0.78039>
+Turquoise|<0.26275, 0.77647, 0.85882>
+Light Steel Blue2|<0.71765, 0.80784, 0.92549>
+Dark Gray Blue|<0.18039, 0.21176, 0.25490>",
+"Orange|<1.00000, 0.50196, 0.25098>
+Bright Orange|<0.97255, 0.50196, 0.09020>
+Dark Orange|<0.76471, 0.33725, 0.09020>
+Sienna|<0.97255, 0.45490, 0.19216>
+Dark Sienna|<0.76471, 0.34510, 0.09020>
+Brown|<0.50196, 0.25098, 0.00000>
+Brown Sienna|<0.49412, 0.20784, 0.09020>
+Dark Brown|<0.27843, 0.23137, 0.18431>
+Sandy Brown|<0.93333, 0.60392, 0.30196>
+Dark Drab|<0.33333, 0.30980, 0.21176>",
+"Black|<0.00000, 0.00000, 0.00000>
+Gray 1|<0.11111, 0.11111, 0.11111>
+Gray 2|<0.22222, 0.22222, 0.22222>
+Gray 3|<0.33333, 0.33333, 0.33333>
+Gray 4|<0.44444, 0.44444, 0.44444>
+Gray 5|<0.55556, 0.55556, 0.55556>
+Gray 6|<0.66667, 0.66667, 0.66667>
+Gray 7|<0.77778, 0.77778, 0.77778>
+Gray 8|<0.88889, 0.88889, 0.88889>
+White|<1.00000, 1.00000, 1.00000>",
+"Pastel Green|<0.73333, 1.00000, 0.51372>
+Forest Green|<0.50196, 0.50196, 0.00000>
+Light Sea Green|<0.24314, 0.66275, 0.62353>
+Medium Sea Green|<0.18824, 0.40392, 0.32941>
+Dark Sea Green4|<0.38039, 0.48627, 0.34510>
+Dark Green|<0.14510, 0.25490, 0.09020>
+Yellow Green|<0.32157, 0.81569, 0.09020>
+Olive4|<0.40000, 0.48627, 0.14902>
+Chartreuse|<0.54118, 0.98431, 0.09020>
+Olive3|<0.62745, 0.77255, 0.26667>",
+"Light Purple|<1.00000, 0.00000, 0.50196>
+Purple|<0.55686, 0.20784, 0.93725>
+Dark Purple|<0.50196, 0.00000, 0.50196>
+Plum|<0.72549, 0.23137, 0.56078>
+Dark Orchid|<0.27059, 0.14510, 0.27451>
+Magenta|<1.00000, 0.00000, 1.00000>
+Light Plum|<0.90196, 0.66275, 0.92549>
+Pale Violet Red|<0.81961, 0.39608, 0.52941>
+Thistle|<0.91373, 0.81176, 0.92549>
+Lavender|<0.89020, 0.89412, 0.98039>",
+"Burgundy|<0.50196, 0.00000, 0.00000>
+Red|<1.00000, 0.00000, 0.00000>
+Pink|<0.98039, 0.68627, 0.74510>
+Indian Red|<0.89804, 0.32941, 0.31765>
+Firebrick|<0.75686, 0.10588, 0.09020>
+Hot Pink|<0.96471, 0.37647, 0.67059>
+Magenta|<1.00000, 0.00000, 1.00000>
+Violet Red|<0.96471, 0.20784, 0.54118>
+Pink2|<0.90588, 0.63137, 0.69020>
+Dark Red|<0.27843, 0.01569, 0.05490>",
+"Yellow|<1.00000, 1.00000, 0.00000>
+Bright Yellow|<1.00000, 0.98824, 0.09020>
+Pale Khaki|<1.00000, 0.95294, 0.50196>
+Goldenrod|<0.92941, 0.85490, 0.45490>
+Dark Goldenrod|<0.68627, 0.47059, 0.09020>
+Gold|<0.83137, 0.62745, 0.09020>
+Dark Gold|<0.91765, 0.75686, 0.09020>
+Medium Gold|<0.99216, 0.81569, 0.09020>
+Khaki|<0.67843, 0.66275, 0.43137>
+Pastel Yellow|<1.00000, 1.00000, 0.44706>"
+];
+
 list g_lColorSettings;
+
+
+
 string g_sParentMenu = "Appearance";
 string g_sSubMenu = "Colors";
 
 string g_sDBToken = "colorsettings";
 
-key g_kUser;
-key g_kHTTPID;
-
 list g_lColors;
 integer g_iStridelength = 2;
-integer g_iPage = 0;
-integer g_iMenuPage;
-integer g_iPagesize = 10;
 integer g_iLength;
 list g_lButtons;
 list g_lNewButtons;
 
 list g_lMenuIDs;
-
-string g_sHTTPDB_Url = "http://data.mycollar.org/"; //defaul OC url, can be changed in defaultsettings notecard and wil be send by settings script if changed
+key g_kTouchID;
 
 integer g_iAppLock = FALSE;
 string g_sAppLockToken = "AppLock";
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
+integer TOUCH_REQUEST = -9500;
+integer TOUCH_CANCEL = -9501;
+integer TOUCH_RESPONSE = -9502;
+integer TOUCH_EXPIRE = -9503;
 
 
 //5000 block is reserved for IM slaves
@@ -69,27 +141,36 @@ string UPMENU = "^";
 key g_kWearer;
 
 key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer g_iLength = 16;
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
+    return (key) (sOut + "-0000-0000-0000-000000000000");
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer g_iPage)
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)g_iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
+key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAuth)
+{
+    key kID = ShortKey();
+    integer iFlags = 0;
+    if (iTouchStart) iFlags = iFlags | 0x01;
+    if (iTouchEnd) iFlags = iFlags | 0x02;
+    llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kRCPT + "|" + (string)iFlags + "|" + (string)iAuth, kID);
+    return kID;
+} 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -103,25 +184,25 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-CategoryMenu(key kAv)
+CategoryMenu(key kAv, integer iAuth)
 {
     //give kAv a dialog with a list of color cards
     string sPrompt = "Pick a Color.";
-    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lCategories, [UPMENU],0)];
+    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lCategories, [UPMENU],0, iAuth)];
 }
 
-ColorMenu(key kAv)
+ColorMenu(key kAv, integer iAuth)
 {
     string sPrompt = "Pick a Color.";
     list g_lButtons = llList2ListStrided(g_lColors,0,-1,2);
-    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0)];
+    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0, iAuth)];
 }
 
-ElementMenu(key kAv)
+ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the collar you would like to recolor";
+    string sPrompt = "Pick which part of the collar you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
     g_lButtons = llListSort(g_lElements, 1, TRUE);
-    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0)];
+    g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth)];
 }
 
 string ElementType(integer iLinkNumber)
@@ -206,7 +287,7 @@ SetElementColor(string sElement, vector vColor)
         g_lColorSettings = llListReplaceList(g_lColorSettings, [sStrColor], iIndex + 1, iIndex + 1);
     }
     //save to httpdb
-    llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lColorSettings, "~"), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lColorSettings, "~"), NULL_KEY);
     //g_sCurrentElement = "";
 }
 
@@ -255,27 +336,12 @@ default
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
     }
 
-    http_response(key kID, integer iStatus, list lMeta, string sBody)
-    {
-        if (kID == g_kHTTPID)
-        {
-            if (iStatus == 200)
-            {
-                //we'll have gotten several lines like "Chartreuse|<0.54118, 0.98431, 0.09020>"
-                //parse that into 2-strided list of colorname, colorvector
-                g_lColors = llParseString2List(sBody, ["\n", "|"], []);
-                g_lColors = llListSort(g_lColors, 2, TRUE);
-                ColorMenu(g_kUser);
-            }
-        }
-    }
-
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (sStr == "reset" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
         {
             //clear saved settings
-            llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
             llResetScript();
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
@@ -303,21 +369,22 @@ default
                     SetElementColor(sElement, vColor);
                 }
             }
-            else if (sStr == "colors")
+            else if (sStr == "menu "+ g_sSubMenu || sStr == "colors")
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
                     Notify(kID,"You are not allowed to change the colors.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);
+                    llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
                 }
                 else if (g_iAppLock)
                 {
                     Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
                 }
                 else
                 {
                     g_sCurrentElement = "";
-                    ElementMenu(kID);
+                    ElementMenu(kID, iNum);
                 }
             }
             else if (llGetSubString(sStr,0,13) == "lockappearance")
@@ -337,7 +404,7 @@ default
 
         }
         
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -348,10 +415,6 @@ default
                 //llInstantMessage(llGetOwner(), "Loaded color settings.");
                 LoadColorSettings();
             }
-            else if (sToken == "HTTPDB")
-            {
-                g_sHTTPDB_Url = sValue;
-            }
             else if (sToken == g_sAppLockToken)
             {
                 g_iAppLock = (integer)sValue;
@@ -360,11 +423,6 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            //we don't know the authority of the menu requester, so send a message through the auth system
-            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "colors", kID);
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -376,45 +434,50 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer g_iPage = (integer)llList2String(lMenuParams, 2);
+                integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
                     if (g_sCurrentElement == "")
                     {
                         //main menu
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     else if (g_sCurrentCategory == "")
                     {
                         g_sCurrentElement = "";
-                        ElementMenu(kAv);
+                        ElementMenu(kAv, iAuth);
                     }
                     else
                     {
                         g_sCurrentCategory = "";
-                        CategoryMenu(kAv);
+                        CategoryMenu(kAv, iAuth);
                     }
+                }
+                else if (sMessage == "*Touch*")
+                {
+                    Notify(kAv, "Please touch the part of the collar you want to recolor.", FALSE);
+                    g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
                 }
                 else if (g_sCurrentElement == "")
                 {
                     //we just got the element name
                     g_sCurrentElement = sMessage;
-                    g_iPage = 0;
                     g_sCurrentCategory = "";
-                    CategoryMenu(kAv);
+                    CategoryMenu(kAv, iAuth);
                 }
 
                 else if (g_sCurrentCategory == "")
                 {
                     g_lColors = [];
                     g_sCurrentCategory = sMessage;
-                    g_iPage = 0;
-                    //ColorMenu(kID);
-                    g_kUser = kAv;
-                    //g_iLine = 0;
+                    integer iIndex = llListFindList(g_lCategories,[sMessage]);
                     //sDatakID = llGetNotecardLine("colors-" + g_sCurrentCategory, g_iLine);
-                    string sUrl = g_sHTTPDB_Url + "static/colors-" + g_sCurrentCategory + ".txt";
-                    g_kHTTPID = llHTTPRequest(sUrl, [HTTP_METHOD, "GET"], "");
+                    //we'll have gotten several lines like "Chartreuse|<0.54118, 0.98431, 0.09020>"
+                    //parse that into 2-strided list of colorname, colorvector
+                    g_lColors = llParseString2List(llList2String(g_lAllColors, iIndex), ["\n", "|"], []);
+                    g_lColors = llListSort(g_lColors, 2, TRUE);
+                    ColorMenu(kAv,iAuth);
                 }
                 else if (~(integer)llListFindList(g_lColors, [sMessage]))
                 {
@@ -426,7 +489,7 @@ default
                     //root prim is 1, so start at 2
                     SetElementColor(g_sCurrentElement, vColor);
                     //ElementMenu(kID);
-                    ColorMenu(kAv);
+                    ColorMenu(kAv, iAuth);
                 }
             }
         }
@@ -438,7 +501,29 @@ default
                 g_lMenuIDs=llDeleteSubList(g_lMenuIDs,iMenuIndex,iMenuIndex);
             }
         }
-
+        else if (iNum == TOUCH_RESPONSE)
+        {
+            if (kID == g_kTouchID)
+            {
+                list lParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lParams, 0);
+                integer iAuth = (integer)llList2String(lParams, 1);
+                integer iLinkNumber = (integer)llList2String(lParams, 3);
+                
+                string sElement = ElementType(iLinkNumber);
+                if (sElement != "nocolor")
+                {
+                    CategoryMenu(kAv, iAuth);
+                    g_sCurrentElement = sElement;
+                    Notify(kAv, "You selected \""+sElement+"\".", FALSE);
+                }
+                else
+                {
+                    Notify(kAv, "You selected a prim which is not colorable. You can try again.", FALSE);
+                    ElementMenu(kAv, iAuth);
+                }
+            }
+        }
     }
 
     on_rez(integer iParam)
