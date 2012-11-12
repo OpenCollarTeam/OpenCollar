@@ -14,7 +14,7 @@
 // NOTE: As of version 3.706, the update script no longer uses object name or
 // description to tell it the current collar version.  Instead, it looks in the
 // "~version" notecard.  It compares the contents of that notecard with the
-// text at https://raw.github.com/nirea/ocupdater/release/lsl/~version.  If the
+// text at https://raw.github.com/OpenCollarUpdates/ocupdater/release/lsl/~version.  If the
 // version online is newer, then the wearer will be advised that an update is
 // available.
 
@@ -62,7 +62,7 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw.github.com/nirea/ocupdater/release/lsl/~version";
+string version_check_url = "https://raw.github.com/OpenCollarUpdates/ocupdater/release/lsl/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
@@ -75,7 +75,7 @@ key appengine_delivery_request;
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/nirea/ocupdater/master/news.md";
+string news_url = "https://raw.github.com/OpenCollarUpdates/ocupdater/master/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
