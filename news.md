@@ -11,7 +11,7 @@ follow all displayed instructions!
 avatar name, long folder name... ), all choices will also appear in the chat
 console.
 
-3. #RLV Browsing system features a new 'Actions' submenu, making it possible
+3. \#RLV Browsing system features a new 'Actions' submenu, making it possible
 to choose between adding and replacing folders and even un/locking them. Moreover
 2 icons before each folder name give more info about the worn status of a folder
 and subfolders.
