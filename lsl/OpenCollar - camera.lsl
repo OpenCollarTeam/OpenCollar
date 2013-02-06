@@ -36,8 +36,6 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 integer COMMAND_BLACKLIST = 520;
@@ -45,23 +43,15 @@ integer COMMAND_BLACKLIST = 520;
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
                             //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
-integer HTTPDB_REQUEST_NOCACHE = 2005;
-
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-integer LOCALSETTING_EMPTY = 2504;
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
@@ -85,7 +75,7 @@ ClearCam()
     llClearCameraParams();
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
-    llMessageLinked(LINK_SET, LOCALSETTING_DELETE, g_sDBToken, "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");    
 }
 
 CamFocus(vector g_vCamPos, rotation g_rCamRot)
@@ -146,29 +136,24 @@ LockCam()
     ]);  
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-CamMenu(key kID)
+CamMenu(key kID, integer iAuth)
 {
     string sPrompt = "Current camera mode is " + g_sCurrentMode + ".  Select an option";
     list lButtons = ["Clear"];
@@ -180,7 +165,7 @@ CamMenu(key kID)
     }
     
     lButtons += ["Freeze"];
-    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 string Capitalize(string sIn)
@@ -300,7 +285,7 @@ Debug(string sStr)
 
 SaveSetting(string sSetting)
 {
-    llMessageLinked(LINK_SET, LOCALSETTING_SAVE, g_sDBToken + "=" + sSetting + "," + (string)g_iLastNum, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + sSetting + "," + (string)g_iLastNum, "");
 }
 
 ChatCamParams(integer chan)
@@ -317,6 +302,106 @@ ChatCamParams(integer chan)
     {
         llSay(chan, sPosLine);
     }
+}
+
+integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
+{
+    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCommand = llList2String(lParams, 0);
+    string sValue = llList2String(lParams, 1);
+    string sValue2 = llList2String(lParams, 2);
+    if (sStr == "menu " + g_sMyMenu) {
+        CamMenu(kID, iNum);
+    }
+    else if (sCommand == "cam" || sCommand == "camera")
+    {
+        if (sValue == "")
+        {
+            //they just said *cam.  give menu
+            CamMenu(kID, iNum);
+            return TRUE;
+        }
+        if (!(llGetPermissions() & PERMISSION_CONTROL_CAMERA))
+        {
+            Notify(kID, "Permissions error: Can not control camera.", FALSE);
+            return TRUE;
+        }
+        if (g_iLastNum && iNum > g_iLastNum)
+        {
+            Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
+            return TRUE;
+        }   
+        Debug("g_iLastNum=" + (string)g_iLastNum);                        
+        if (sValue == "clear")
+        {
+            ClearCam();
+            Notify(kID, "Cleared camera settings.", TRUE);
+        }
+        else if (sValue == "freeze")
+        {
+            LockCam();
+            Notify(kID, "Freezing current camera position.", TRUE);
+            g_iLastNum = iNum;                    
+            SaveSetting("freeze");                          
+        }
+        else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR)
+        {
+            Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
+            //CamFocus((vector)sValue, (vector)sValue2);
+            g_iLastNum = iNum;                        
+            Debug("newiNum=" + (string)iNum);
+        }
+        else
+        {
+            integer iIndex = llListFindList(g_lModes, [sValue]);
+            if (iIndex != -1)
+            {
+                CamMode(sValue);
+                g_iLastNum = iNum;
+                Notify(kID, "Set " + sValue + " camera mode.", TRUE);
+                SaveSetting(sValue);
+            }
+            else
+            {
+                Notify(kID, "Invalid camera mode: " + sValue, FALSE);
+            }
+        }
+    } 
+    else if (sCommand == "camto")
+    {
+        if (!g_iLastNum || iNum <= g_iLastNum)
+        {
+            CamFocus((vector)sValue, (rotation)sValue2);
+            g_iLastNum = iNum;                    
+        }
+        else
+        {
+            Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
+        }
+    }
+    else if (sCommand == "camdump")
+    {
+        g_rBroadChan = (integer)sValue;
+        integer g_fReapeat = (integer)sValue2;
+        ChatCamParams(g_rBroadChan);
+        if (g_fReapeat)
+        {
+            g_iSync2Me = TRUE;
+            llSetTimerEvent(g_fReapeat);
+        }
+    }
+    else if (iNum == COMMAND_OWNER  || kID == g_kWearer && sStr == "runaway")
+    {
+        ClearCam();
+        llResetScript();
+    }
+    else if (iNum == COMMAND_OWNER && sStr == "reset")
+    {
+        ClearCam();
+        llResetScript();
+    }
+    return TRUE;
 }
 
 default
@@ -346,125 +431,17 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //only respond to owner, secowner, group, wearer
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            string sValue2 = llList2String(lParams, 2);
-            string sLastValue = llList2String(lParams, -1);//with this, the menu can be just a layer over the chat commands. put a "returnmenu" here and user will be given a menu after the command takes effect.
-            if (sCommand == "cam" || sCommand == "camera")
-            {
-                if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)
-                {
-                    if (!g_iLastNum || iNum <= g_iLastNum)
-                    {
-                        Debug("g_iLastNum=" + (string)g_iLastNum);                        
-                        if (sValue == "clear")
-                        {
-                            ClearCam();
-                            Notify(kID, "Cleared camera settings.", TRUE);
-                        }
-                        else if (sValue == "")
-                        {
-                            //they just said *cam.  give menu
-                            CamMenu(kID);
-                        }
-                        else if (sValue == "freeze")
-                        {
-                            LockCam();
-                            Notify(kID, "Freezing current camera position.", TRUE);
-                            g_iLastNum = iNum;                    
-                            SaveSetting("freeze");                          
-                        }
-                        else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR)
-                        {
-                            Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
-                            //CamFocus((vector)sValue, (vector)sValue2);
-                            g_iLastNum = iNum;                        
-                            Debug("newiNum=" + (string)iNum);
-                        }
-                        else
-                        {
-                            integer iIndex = llListFindList(g_lModes, [sValue]);
-                            if (iIndex != -1)
-                            {
-                                CamMode(sValue);
-                                g_iLastNum = iNum;
-                                Notify(kID, "Set " + sValue + " camera mode.", TRUE);
-                                SaveSetting(sValue);
-                            }
-                            else
-                            {
-                                Notify(kID, "Invalid camera mode: " + sValue, FALSE);
-                            }
-                        }
-                    }   
-                    else
-                    {
-                        Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
-                    }   
-                    
-                    if (sLastValue == "returnmenu")
-                    {
-                        //give the cam menu back to kID
-                        CamMenu(kID);
-                    }                              
-                }
-                else
-                {
-                    Notify(kID, "Permissions error: Can not control camera.", FALSE);
-                }
-                
-            } 
-            else if (sCommand == "camto")
-            {
-                if (!g_iLastNum || iNum <= g_iLastNum)
-                {
-                    CamFocus((vector)sValue, (rotation)sValue2);
-                    g_iLastNum = iNum;                    
-                }
-                else
-                {
-                    Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
-                }
-            }
-            else if (sCommand == "camdump")
-            {
-                g_rBroadChan = (integer)sValue;
-                integer g_fReapeat = (integer)sValue2;
-                ChatCamParams(g_rBroadChan);
-                if (g_fReapeat)
-                {
-                    g_iSync2Me = TRUE;
-                    llSetTimerEvent(g_fReapeat);
-                }
-            }
-            else if (kID == g_kWearer && sStr == "runaway")
-            {
-                ClearCam();
-                llResetScript();
-            }
-            else if (iNum == COMMAND_OWNER && sStr == "reset")
-            {
-                ClearCam();
-                llResetScript();
-            }
-        }
+        if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == COMMAND_SAFEWORD)
         {
             ClearCam();
             llResetScript();
         }
-        else if (iNum == SUBMENU && sStr == g_sMyMenu)
-        {
-            CamMenu(kID);
-        }    
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sMyMenu, "");
         }    
-        else if (iNum == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);
@@ -494,14 +471,16 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
-                integer iPage = (integer)llList2String(lMenuParams, 2); 
+                // integer iPage = (integer)llList2String(lMenuParams, 2); 
+                integer iAuth = (integer)llList2String(lMenuParams, 3); 
                 if (sMessage == UPMENU)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 }
                 else
                 {
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "cam " + llToLower(sMessage) + " returnmenu", kAv);
+                    UserCommand(iAuth, "cam " + llToLower(sMessage), kAv);
+                    CamMenu(kAv, iAuth);
                 }                              
             }
         }

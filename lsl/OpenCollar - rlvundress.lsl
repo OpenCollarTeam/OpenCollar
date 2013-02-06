@@ -1,14 +1,12 @@
+//OpenCollar - rlvundress
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
-//give 3 menus:
-//Clothing
-//Attachment
-//Folder
+//gives menus for clothing and attachment, stripping and locking
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
 
 list g_lChildren = ["Rem Clothing","Rem Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
-list g_sSubMenus= [];
+list g_lSubMenus= [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
 list g_lRLVcmds = ["attach","detach","remoutfit", "addoutfit","remattach","addattach"];
@@ -100,26 +98,24 @@ list ATTACH_POINTS = [//these are ordered so that their indices in the list corr
         ];
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -154,11 +150,11 @@ integer g_iRLVTimeOut = 60;
 integer g_iClothRLV = 78465;
 integer g_iAttachRLV = 78466;
 integer g_iListener;
-key g_kMenuUser;
+key g_kMenuUser; // id of the avatar who will get the next menu after asynchronous response from RLV
+integer g_iMenuAuth; // auth level of that user
 
 string g_sDBToken = "undress";
 string g_sDBTokenLockAll = "DressAllLocked";
-integer g_iRemenu = FALSE;
 
 integer g_iRLVOn = FALSE;
 
@@ -168,8 +164,6 @@ list g_lLockedAttach; // list of locked attachmemts
 key g_kWearer;
 string g_sWearerName;
 integer g_iAllLocked = 0;  //1=all clothes are locked on
-
-integer g_iLastAuth; //last auth level
 
 Debug(string sMsg)
 {
@@ -192,29 +186,24 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-MainMenu(key kID)
+MainMenu(key kID, integer iAuth)
 {
     string sPrompt = "Pick an option.";
     list lButtons = g_lChildren;
@@ -231,19 +220,21 @@ MainMenu(key kID)
         lButtons += ["Lock Attachment"];
         lButtons += ["( )Lock All"];
     }
-    g_kMainID = Dialog(kID, sPrompt, lButtons+g_sSubMenus, [UPMENU], 0);
+    g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
 
-QueryClothing()
+QueryClothing(key kAv, integer iAuth)
 {    //open listener
     g_iListener = llListen(g_iClothRLV, "", g_kWearer, "");
     //start timer
     llSetTimerEvent(g_iRLVTimeOut);
     //send rlvcmd
     llMessageLinked(LINK_SET, RLV_CMD, "getoutfit=" + (string)g_iClothRLV, NULL_KEY);
+    g_kMenuUser = kAv;
+    g_iMenuAuth = iAuth;
 }
 
-ClothingMenu(key kID, string sStr)
+ClothingMenu(key kID, string sStr, integer iAuth)
 {
     //str looks like 0110100001111
     //loop through CLOTH_POINTS, look at chaClothingr of str for each
@@ -262,12 +253,11 @@ ClothingMenu(key kID, string sStr)
                 lButtons += item;
         }
     }
-    g_kClothID = Dialog(kID, sPrompt, lButtons, ["Attachments", UPMENU], 0);
+    g_kClothID = Dialog(kID, sPrompt, lButtons, ["Attachments", UPMENU], 0, iAuth);
 }
 
-LockMenu(key kID)
+LockMenu(key kID, integer iAuth)
 {
-    g_iRemenu=FALSE;
     string sPrompt = "Select an article of clothing to un/lock.";
     list lButtons;
     if (llListFindList(g_lLockedItems,[ALL]) == -1)
@@ -283,33 +273,22 @@ LockMenu(key kID)
             lButtons += [UNTICKED+sCloth];
         else  lButtons += [TICKED+sCloth];
     }
-    g_kLockID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kLockID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-QueryAttachments()
+QueryAttachments(key kAv, integer iAuth)
 {    //open listener
     g_iListener = llListen(g_iAttachRLV, "", g_kWearer, "");
     //start timer
     llSetTimerEvent(g_iRLVTimeOut);
     //send rlvcmd
     llMessageLinked(LINK_SET, RLV_CMD, "getattach=" + (string)g_iAttachRLV, NULL_KEY);
+    g_kMenuUser = kAv;
+    g_iMenuAuth = iAuth;
 }
 
-QuerySingleAttachment(string sAttachmetn)
-{    //open listener
-    integer iChan=g_iAttachRLV + llListFindList(ATTACH_POINTS,[sAttachmetn]) +1;
-    if (iChan == g_iAttachRLV) return;
-    g_iListener = llListen((iChan), "", g_kWearer, "");
-    //start timer
-    llSetTimerEvent(g_iRLVTimeOut);
-    //send rlvcmd
-    llMessageLinked(LINK_SET, RLV_CMD, "getattach:"+sAttachmetn+"=" + (string)iChan, NULL_KEY);
-}
-
-
-LockAttachmentMenu(key kID)
+LockAttachmentMenu(key kID, integer iAuth)
 {
-    g_iRemenu=FALSE;
     string sPrompt = "Select an attachment to un/lock.";
     list lButtons;
 
@@ -323,10 +302,10 @@ LockAttachmentMenu(key kID)
             lButtons += [UNTICKED+sAttach];
         else  lButtons += [TICKED+sAttach];
     }
-    g_kLockAttachID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kLockAttachID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-DetachMenu(key kID, string sStr)
+DetachMenu(key kID, string sStr, integer iAuth)
 {
 
     //remember not to add button for current object
@@ -352,7 +331,7 @@ DetachMenu(key kID, string sStr)
             }
         }
     }
-    g_kAttachID = Dialog(kID, sPrompt, lButtons, ["Clothing", UPMENU], 0);
+    g_kAttachID = Dialog(kID, sPrompt, lButtons, ["Clothing", UPMENU], 0, iAuth);
 }
 
 UpdateSettings()
@@ -383,7 +362,8 @@ UpdateSettings()
                 && (llList2String(sOption,0)=="addattach"
                     || llList2String(sOption,0)=="remattach"
                     || llList2String(sOption,0)=="detach")
-                && sValue=="n")
+                && sValue=="n"
+                && (~llListFindList(g_lLockedAttach, [llList2String(sOption,1)])))
                 g_lLockedAttach += [llList2String(sOption,1)];
         }
         //output that string to viewer
@@ -399,7 +379,7 @@ ClearSettings()
     g_lLockedAttach=[];
     SaveLockAllFlag(0);
     //remove tpsettings from DB
-    llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
     //main RLV script will take care of sending @clear to viewer
 }
 
@@ -413,35 +393,249 @@ SaveLockAllFlag(integer iSetting)
     if(iSetting > 0)
     {
         //save the flag to the database
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBTokenLockAll+"=Y", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBTokenLockAll+"=Y", NULL_KEY);
     }
     else
     {
         //delete the flag from the database
-        llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBTokenLockAll, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBTokenLockAll, NULL_KEY);
     }
 }
 
-DolockAll(string sCommand, key kID)
+DoLockAll(key kID)
 {
-    if (sCommand == "lockall")      //lock all clothes and attachement points
-    {
-        //do the actual lockall
-        llMessageLinked(LINK_SET, RLV_CMD, "addattach=n", kID);
-        llMessageLinked(LINK_SET, RLV_CMD, "remattach=n", kID);
-        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=n", kID);
-        llMessageLinked(LINK_SET, RLV_CMD,  "addoutfit=n", kID);
-    }
-    else  if (sCommand == "unlockall") //lock all clothes and attachment points
-    {
-        //remove the lockall
-        llMessageLinked(LINK_SET, RLV_CMD, "addattach=y", kID);
-        llMessageLinked(LINK_SET, RLV_CMD, "remattach=y", kID);
-        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=y", kID);
-        llMessageLinked(LINK_SET, RLV_CMD,  "addoutfit=y", kID);
-    }
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=n,remattach=n,remoutfit=n,addoutfit=n", NULL_KEY);
 }
 
+DoUnlockAll(key kID)
+{
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=y,remattach=y,remoutfit=y,addoutfit=y", NULL_KEY);
+}
+
+// returns TRUE if eligible (AUTHED link message number)
+integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
+{
+    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    list lParams = llParseString2List(sStr, [":", "="], []);
+    string sCommand = llList2String(lParams, 0);
+    //Debug(sStr + " ## " + sCommand);
+    if (sStr == "menu " + g_sSubMenu)
+    {//give this plugin's menu to kID
+        MainMenu(kID, iNum);
+    }
+    else if (llListFindList(g_lRLVcmds, [sCommand]) != -1)
+    {    //we've received an RLV command that we control.  only execute if not sub
+        if (iNum == COMMAND_WEARER)
+        {
+            llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
+        }
+        else
+        {
+            llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
+            string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
+            string sParam = llList2String(llParseString2List(sStr, ["="], []), 1);
+            integer iIndex = llListFindList(g_lSettings, [sOption]);
+            string opt1 = llList2String(llParseString2List(sOption, [":"], []), 0);
+            string opt2 = llList2String(llParseString2List(sOption, [":"], []), 1);
+            if (sParam == "n")
+            {
+                if (iIndex == -1)
+                {   //we don't alread have this exact setting.  add it
+                    g_lSettings += [sOption, sParam];
+                }
+                else
+                {   //we already have a setting for this option.  update it.
+                    g_lSettings = llListReplaceList(g_lSettings, [sOption, sParam], iIndex, iIndex + 1);
+                }
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+            }
+            else if (sParam == "y")
+            {
+                if (iIndex != -1)
+                {   //we already have a setting for this option.  remove it.
+                    g_lSettings = llDeleteSubList(g_lSettings, iIndex, iIndex + 1);
+                }
+                if (llGetListLength(g_lSettings)>0)
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+                else
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
+            }
+        }
+    }
+    else if (sStr == "lockclothingmenu")
+    {
+        if (!g_iRLVOn)
+        {
+            Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+            return TRUE;
+        }
+        LockMenu(kID, iNum);
+    }
+    else if (sStr == "lockattachmentmenu")
+    {
+        if (!g_iRLVOn)
+        {
+            Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+            return TRUE;
+        }
+        LockAttachmentMenu(kID, iNum);
+    }
+    else  if (llGetSubString(sStr, 0, 11) == "lockclothing")            {
+        string sMessage = llGetSubString(sStr, 13, -1);
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for locking clothes.", FALSE);
+        }
+        else if (sMessage==ALL||sStr== "lockclothing")
+        {
+            g_lLockedItems += [ALL];
+            Notify(kID, g_sWearerName+"'s clothing has been locked.", TRUE);
+            llMessageLinked(LINK_SET, iNum,  "remoutfit=n", kID);
+            llMessageLinked(LINK_SET, iNum,  "addoutfit=n", kID);
+        }
+        else if (llListFindList(LOCK_CLOTH_POINTS,[sMessage])!=-1)
+        {
+            g_lLockedItems += sMessage;
+            Notify(kID, g_sWearerName+"'s "+sMessage+" has been locked.", TRUE);
+            llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=n", kID);
+            llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=n", kID);
+        }
+        else Notify(kID, "Sorry you must either specify a cloth name or not use a parameter (which locks all the clothing layers).", FALSE);
+    }
+    else if (llGetSubString(sStr, 0, 13) == "unlockclothing")
+    {
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for unlocking clothes.", FALSE);
+        }
+        else
+        {
+            string sMessage = llGetSubString(sStr, 15, -1);
+            if (sMessage==ALL||sStr=="unlockclothing")
+            {
+                llMessageLinked(LINK_SET, iNum,  "remoutfit=y", kID);
+                llMessageLinked(LINK_SET, iNum,  "addoutfit=y", kID);
+                Notify(kID, g_sWearerName+"'s clothing has been unlocked.", TRUE);
+                integer iIndex = llListFindList(g_lLockedItems,[ALL]);
+                if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
+            }
+            else
+            {
+                llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=y", kID);
+                llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=y", kID);
+                Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
+                integer iIndex = llListFindList(g_lLockedItems,[sMessage]);
+                if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
+            }
+        }
+    }
+    else  if (llGetSubString(sStr, 0, 13) == "lockattachment")
+    {
+        string sPoint = llGetSubString(sStr, 15, -1);
+
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for locking attachments.", FALSE);
+        }
+        else if (llListFindList(ATTACH_POINTS ,[sPoint])!=-1)
+        {
+            if (llListFindList(g_lLockedAttach, [sPoint]) == -1) g_lLockedAttach += [sPoint];
+            Notify(kID, g_sWearerName+"'s "+sPoint+" attachment point is now locked.", TRUE);
+            llMessageLinked(LINK_SET, iNum,  "addattach:" + sPoint + "=n", kID);
+            llMessageLinked(LINK_SET, iNum,  "remattach:" + sPoint + "=n", kID);
+        }
+        else
+        {
+            Notify(kID, "Sorry you must either specify a attachment name.", FALSE);
+        }
+    }
+    else  if (sStr == "lockall")
+    {
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for locking attachments.", FALSE);
+        }
+        else
+        {
+            DoLockAll(kID); //lock all clothes and attachment points
+            SaveLockAllFlag(1);
+            Notify(kID, g_sWearerName+"'s clothing and attachements have been locked.", TRUE);
+        }
+    }
+    else  if (sStr == "unlockall")
+    {
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for unlocking attachments.", FALSE);
+        }
+        else
+        {
+            DoUnlockAll(kID); //unlock all clothes and attachment points
+            SaveLockAllFlag(0);
+            Notify(kID, g_sWearerName+"'s clothing and attachements have been unlocked.", TRUE);
+        }
+    }
+    else if (llGetSubString(sStr, 0, 15) == "unlockattachment")
+    {
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(kID, "Sorry you need owner privileges for unlocking attachments.", FALSE);
+        }
+        else
+        {
+            string sMessage = llGetSubString(sStr, 17, -1);
+        {
+            llMessageLinked(LINK_SET, iNum,  "addattach:" + sMessage + "=y", kID);
+            llMessageLinked(LINK_SET, iNum,  "remattach:" + sMessage + "=y", kID);
+            Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
+            integer iIndex = llListFindList(g_lLockedAttach,[sMessage]);
+            if (iIndex!=-1) g_lLockedAttach = llDeleteSubList(g_lLockedAttach,iIndex,iIndex);
+        }
+        }
+    }
+    else if (sStr == "refreshmenu")
+    {
+        g_lSubMenus = [];
+        llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+    }
+    else if (sStr == "undress")
+    {
+        if (!g_iRLVOn)
+        {
+            Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+            return TRUE;
+        }
+
+        MainMenu(kID, iNum);
+    }
+    else if (sStr == "clothing")
+    {
+        if (!g_iRLVOn)
+        {
+            Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+            return TRUE;
+        }
+        QueryClothing(kID, iNum);
+    }
+    else if (sStr == "attachment")
+    {
+        if (!g_iRLVOn)
+        {
+            Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+            return TRUE;
+        }
+        QueryAttachments(kID, iNum);
+    }
+    // rlvoff -> we have to turn the menu off too
+    else if (iNum>=COMMAND_OWNER && sStr=="rlvoff") g_iRLVOn=FALSE;
+    return TRUE;
+}
 
 default
 {
@@ -456,255 +650,17 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {   //the command was given by either owner, secowner, group member, or wearer
-            list lParams = llParseString2List(sStr, [":", "="], []);
-            string sCommand = llList2String(lParams, 0);
-            //Debug(sStr + " ## " + sCommand);
-            if (llListFindList(g_lRLVcmds, [sCommand]) != -1)
-            {    //we've received an RLV command that we control.  only execute if not sub
-                if (iNum == COMMAND_WEARER)
-                {
-                    llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
-                }
-                else
-                {
-                    llMessageLinked(LINK_SET, RLV_CMD, sStr, kID);
-                    string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
-                    string sParam = llList2String(llParseString2List(sStr, ["="], []), 1);
-                    integer iIndex = llListFindList(g_lSettings, [sOption]);
-                    string opt1 = llList2String(llParseString2List(sOption, [":"], []), 0);
-                    string opt2 = llList2String(llParseString2List(sOption, [":"], []), 1);
-                    if (sParam == "n")
-                    {
-                        if (iIndex == -1)
-                        {   //we don't alread have this exact setting.  add it
-                            g_lSettings += [sOption, sParam];
-                        }
-                        else
-                        {   //we already have a setting for this option.  update it.
-                            g_lSettings = llListReplaceList(g_lSettings, [sOption, sParam], iIndex, iIndex + 1);
-                        }
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
-                    }
-                    else if (sParam == "y")
-                    {
-                        if (iIndex != -1)
-                        {   //we already have a setting for this option.  remove it.
-                            g_lSettings = llDeleteSubList(g_lSettings, iIndex, iIndex + 1);
-                        }
-                        if (llGetListLength(g_lSettings)>0)
-                            llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
-                        else
-                            llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
-                    }
-                    if (g_iRemenu)
-                    {
-                        g_iRemenu = FALSE;
-                        MainMenu(kID);
-                    }
-                }
-            }
-            else if (sStr == "lockclothingmenu")
-            {
-                if (!g_iRLVOn)
-                {
-                    Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                    return;
-                }
-                g_kMenuUser = kID;
-                LockMenu(kID);
-            }
-            else if (sStr == "lockattachmentmenu")
-            {
-                if (!g_iRLVOn)
-                {
-                    Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                    return;
-                }
-                g_kMenuUser = kID;
-                LockAttachmentMenu(kID);
-            }
-            else  if (llGetSubString(sStr, 0, 11) == "lockclothing")            {
-                string sMessage = llGetSubString(sStr, 13, -1);
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for locking clothes.", FALSE);
-                }
-                else if (sMessage==ALL||sStr== "lockclothing")
-                {
-                    g_lLockedItems += [ALL];
-                    Notify(kID, g_sWearerName+"'s clothing has been locked.", TRUE);
-                    llMessageLinked(LINK_SET, iNum,  "remoutfit=n", kID);
-                    llMessageLinked(LINK_SET, iNum,  "addoutfit=n", kID);
-                }
-                else if (llListFindList(LOCK_CLOTH_POINTS,[sMessage])!=-1)
-                {
-                    g_lLockedItems += sMessage;
-                    Notify(kID, g_sWearerName+"'s "+sMessage+" has been locked.", TRUE);
-                    llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=n", kID);
-                    llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=n", kID);
-                }
-                else Notify(kID, "Sorry you must either specify a cloth name or not use a parameter (which locks all the clothing layers).", FALSE);
-                if (g_iRemenu) LockMenu(kID);
-            }
-            else if (llGetSubString(sStr, 0, 13) == "unlockclothing")
-            {
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for unlocking clothes.", FALSE);
-                }
-                else
-                {
-                    string sMessage = llGetSubString(sStr, 15, -1);
-                    if (sMessage==ALL||sStr=="unlockclothing")
-                    {
-                        llMessageLinked(LINK_SET, iNum,  "remoutfit=y", kID);
-                        llMessageLinked(LINK_SET, iNum,  "addoutfit=y", kID);
-                        Notify(kID, g_sWearerName+"'s clothing has been unlocked.", TRUE);
-                        integer iIndex = llListFindList(g_lLockedItems,[ALL]);
-                        if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
-                    }
-                    else
-                    {
-                        llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=y", kID);
-                        llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=y", kID);
-                        Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
-                        integer iIndex = llListFindList(g_lLockedItems,[sMessage]);
-                        if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
-                    }
-                }
-                if (g_iRemenu) LockMenu(kID);
-            }
-            else  if (llGetSubString(sStr, 0, 13) == "lockattachment")
-            {
-                string sMessage = llGetSubString(sStr, 15, -1);
-
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for locking attachments.", FALSE);
-                    if (g_iRemenu) LockAttachmentMenu(kID);
-                }
-                else if (llListFindList(ATTACH_POINTS ,[sMessage])!=-1)
-                {
-                    g_iLastAuth = iNum;
-                    QuerySingleAttachment(sMessage);
-                }
-                else
-                {
-                    Notify(kID, "Sorry you must either specify a attachment name.", FALSE);
-                    if (g_iRemenu) LockAttachmentMenu(kID);
-                }
-            }
-            else  if (sStr == "lockall")      //lock all clothes and attachement points
-            {
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for locking attachments.", FALSE);
-                }
-                else
-                {
-                    DolockAll(sStr, kID);
-                    SaveLockAllFlag(1);
-                    Notify(kID, g_sWearerName+"'s clothing and attachements have been locked.", TRUE);
-                }
-                if (g_iRemenu) MainMenu(kID);   //redraw the menu if the lockall button was pressed
-                g_iRemenu = FALSE;
-            }
-            else  if (sStr == "unlockall") //lock all clothes and attachment points
-            {
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for unlocking attachments.", FALSE);
-                }
-                else
-                {
-                    DolockAll(sStr, kID);
-                    SaveLockAllFlag(0);
-                    Notify(kID, g_sWearerName+"'s clothing and attachements have been unlocked.", TRUE);
-                }
-                if (g_iRemenu) MainMenu(kID);   //redraw the menu if the unlockall button was pressed
-                g_iRemenu = FALSE;
-
-            }
-
-            else if (llGetSubString(sStr, 0, 15) == "unlockattachment")
-            {
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "Sorry you need owner privileges for unlocking attachments.", FALSE);
-                }
-                else
-                {
-                    string sMessage = llGetSubString(sStr, 17, -1);
-                {
-                    llMessageLinked(LINK_SET, iNum,  "addattach:" + sMessage + "=y", kID);
-                    llMessageLinked(LINK_SET, iNum,  "remattach:" + sMessage + "=y", kID);
-                    Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
-                    integer iIndex = llListFindList(g_lLockedAttach,[sMessage]);
-                    if (iIndex!=-1) g_lLockedAttach = llDeleteSubList(g_lLockedAttach,iIndex,iIndex);
-                }
-                }
-                if (g_iRemenu) LockAttachmentMenu(kID);
-            }
-            else if (sStr == "refreshmenu")
-            {
-                g_sSubMenus = [];
-                llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-            }
-            else if (sStr == "undress")
-            {
-                if (!g_iRLVOn)
-                {
-                    Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                    return;
-                }
-
-                MainMenu(kID);
-            }
-            else if (sStr == "clothing")
-            {
-                if (!g_iRLVOn)
-                {
-                    Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                    return;
-                }
-                g_kMenuUser = kID;
-                QueryClothing();
-            }
-            else if (sStr == "attachment")
-            {
-                if (!g_iRLVOn)
-                {
-                    Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-                    llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
-                    return;
-                }
-                g_kMenuUser = kID;
-                QueryAttachments();
-            }
-        }
-        // rlvoff -> we have to turn the menu off too
-        else if (iNum>=COMMAND_OWNER && sStr=="rlvoff") g_iRLVOn=FALSE;
-
+        //the command was given by either owner, secowner, group member, or wearer
+        if (UserCommand(iNum, sStr, kID)) return;
         // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_OFF) g_iRLVOn=FALSE;
         // rlvon -> we have to turn the menu on again
         else if (iNum == RLV_ON) g_iRLVOn=TRUE;
-
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {//give this plugin's menu to kID
-            MainMenu(kID);
-        }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {   //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
             //first see if this is the token we care about
@@ -713,7 +669,7 @@ default
             {
                 //re-apply the lockall after a re-log
                 g_iAllLocked = 1;
-                DolockAll("lockall", kID);
+                DoLockAll(kID);
             }
 
             if (llList2String(lParams, 0) == g_sDBToken)
@@ -728,7 +684,7 @@ default
         {//rlvmain just started up.  Tell it about our current restrictions
             g_iRLVOn = TRUE;
             if(g_iAllLocked > 0)       //is everything locked?
-                DolockAll("lockall", kID);  //lock everything on a RLV_REFRESH
+                DoLockAll(kID);  //lock everything on a RLV_REFRESH
 
             UpdateSettings();
         }
@@ -743,10 +699,10 @@ default
             {
                 string child = llList2String(lParams, 1);
                 //only add submenu if not already present
-                if (llListFindList(g_sSubMenus, [child]) == -1)
+                if (llListFindList(g_lSubMenus, [child]) == -1)
                 {
-                    g_sSubMenus += [child];
-                    g_sSubMenus = llListSort(g_sSubMenus, 1, TRUE);
+                    g_lSubMenus += [child];
+                    g_lSubMenus = llListSort(g_lSubMenus, 1, TRUE);
                 }
             }
         }
@@ -757,11 +713,11 @@ default
             string child = llList2String(lParams, 1);
             if (llList2String(lParams, 0)==g_sSubMenu)
             {
-                integer iIndex = llListFindList(g_sSubMenus, [child]);
+                integer iIndex = llListFindList(g_lSubMenus, [child]);
                 //only remove if it's there
                 if (iIndex != -1)
                 {
-                    g_sSubMenus = llDeleteSubList(g_sSubMenus, iIndex, iIndex);
+                    g_lSubMenus = llDeleteSubList(g_lSubMenus, iIndex, iIndex);
                 }
             }
         }
@@ -773,47 +729,19 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+        integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (kID == g_kMainID)
                 {
-                    if (sMessage == UPMENU)
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == "Rem Clothing") QueryClothing(kAv, iAuth);
+                    else if (sMessage == "Rem Attachment") QueryAttachments(kAv, iAuth);
+                    else if (sMessage == "Lock Clothing") LockMenu(kAv, iAuth);
+                    else if (sMessage == "Lock Attachment") LockAttachmentMenu(kAv, iAuth);
+                    else if (sMessage == "( )Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "(*)Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
-                    }
-                    else if (sMessage == "Rem Clothing")
-                    {
-                        g_kMenuUser = kAv;
-                        QueryClothing();
-                    }
-                    else if (sMessage == "Rem Attachment")
-                    {
-                        g_kMenuUser = kAv;
-                        QueryAttachments();
-                    }
-                    else if (sMessage == "Lock Clothing")
-                    {
-                        g_kMenuUser = kAv;
-                        LockMenu(kAv);
-                    }
-                    else if (sMessage == "Lock Attachment")
-                    {
-                        g_kMenuUser = kAv;
-                        LockAttachmentMenu(kAv);
-                    }
-                    else if (sMessage == "( )Lock All")
-                    {
-                        //forward this command to the other section - it came from the menu button
-                        g_iRemenu = TRUE;
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "lockall", kAv);
-                    }
-                    else if (sMessage == "(*)Lock All")
-                    {
-                        //forward this command to the other section - it came from the menu button
-                        g_iRemenu = TRUE;
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "unlockall", kAv);
-                    }
-                    else if (llListFindList(g_sSubMenus,[sMessage]) != -1)
-                    {
-                        llMessageLinked(LINK_SET, SUBMENU, sMessage, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
                     }
                     else
                     {
@@ -822,92 +750,79 @@ default
                 }
                 else if (kID == g_kClothID)
                 {
-                    if (sMessage == UPMENU)
-                    {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
-                    }
-                    else if (sMessage == "Attachments") QueryAttachments();
-                    else if (sMessage == ALL)
+                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
+                    else if (sMessage == "Attachments") QueryAttachments(kAv, iAuth);
+                    else if (sMessage == ALL) 
+                    // SA: we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
+                    //    Note for people looking for the auth check: it would have been here, look no further!
                     { //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
-                        g_kMenuUser = kAv;
-                        QueryClothing();
+                        QueryClothing(kAv, iAuth);
                     }
                     else
                     { //we got a cloth point.
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
-                        g_kMenuUser = kAv;
-                        QueryClothing();
+                        QueryClothing(kAv, iAuth);
                     }
                 }
                 else if (kID == g_kAttachID)
                 {
-                    if (sMessage == UPMENU)
-                    {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
-                    }
-                    else if (sMessage == "Clothing") QueryClothing();
-                    else
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sSubMenu, kAv);
+                    else if (sMessage == "Clothing") QueryClothing(kAv, iAuth);
+                    else //SA: same remark here, people who are able to get the menu happen to be the ones who have the permission to detach
                     {    //we got an attach point.  send a message to detach
-                        //we got a cloth point.
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", kAv);
+                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", NULL_KEY);
                         //sleep for a sec to let tihngs detach
                         llSleep(0.5);
                         //Return menu
                         g_kMenuUser = kAv;
-                        QueryAttachments();
+                        QueryAttachments(kAv, iAuth);
                     }
                 }
                 else if (kID == g_kLockID)
                 {
-                    if (sMessage == UPMENU)
-                    {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
-                    }
+                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                     else
                     { //we got a cloth point.
                         string cstate = llGetSubString(sMessage,0,llStringLength(TICKED) - 1);
                         sMessage=llGetSubString(sMessage,llStringLength(TICKED),-1);
                         if (cstate==UNTICKED)
                         {
-                            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "lockclothing "+sMessage, kAv);
+                            UserCommand(iAuth, "lockclothing "+sMessage, kAv);
                         }
                         else if (cstate==TICKED)
                         {
-                            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "unlockclothing "+sMessage, kAv);
+                            UserCommand(iAuth, "unlockclothing "+sMessage, kAv);
                         }
-                        g_iRemenu = TRUE;
+                        LockMenu(kAv, iAuth);
                     }
                 }
                 else if (kID == g_kLockAttachID)
                 {
-                    if (sMessage == UPMENU)
-                    {
-                        llMessageLinked(LINK_SET, SUBMENU, g_sSubMenu, kAv);
-                    }
+                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                     else
                     { //we got a cloth point.
                         string cstate = llGetSubString(sMessage,0,llStringLength(TICKED) - 1);
                         sMessage=llGetSubString(sMessage,llStringLength(TICKED),-1);
                         if (cstate==UNTICKED)
                         {
-                            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "lockattachment "+sMessage, kAv);
+                            UserCommand(iAuth, "lockattachment "+sMessage, kAv);
                         }
                         else if (cstate==TICKED)
                         {
-                            llMessageLinked(LINK_SET, COMMAND_NOAUTH, "unlockattachment "+sMessage, kAv);
+                            UserCommand(iAuth, "unlockattachment "+sMessage, kAv);
                         }
-                        g_iRemenu = TRUE;
+                        LockAttachmentMenu(kAv, iAuth);
                     }
                 }
             }
@@ -920,28 +835,11 @@ default
         llSetTimerEvent(0.0);
         if (iChan == g_iClothRLV)
         {   //llOwnerSay(sMessage);
-            ClothingMenu(g_kMenuUser, sMessage);
+            ClothingMenu(g_kMenuUser, sMessage, g_iMenuAuth);
         }
         else if (iChan == g_iAttachRLV)
         {
-            DetachMenu(g_kMenuUser, sMessage);
-        }
-        else if (iChan > g_iAttachRLV && iChan <= g_iAttachRLV + llGetListLength(ATTACH_POINTS))
-        {
-            integer iIndex = iChan - g_iAttachRLV -1;
-            string sPoint = llList2String(ATTACH_POINTS, iIndex);
-            g_lLockedAttach += [sPoint];
-            if ((integer) sMessage)
-            {
-                Notify(kID, g_sWearerName+"'s "+sPoint+" has been locked in place.", TRUE);
-                llMessageLinked(LINK_SET, g_iLastAuth,  "remattach:" + sPoint + "=n", kID);
-            }
-            else
-            {
-                Notify(kID, g_sWearerName+"'s "+sPoint+" has been locked empty.", TRUE);
-                llMessageLinked(LINK_SET, g_iLastAuth,  "addattach:" + sPoint + "=n", kID);
-            }
-            if (g_iRemenu) LockAttachmentMenu(g_kMenuUser);
+            DetachMenu(g_kMenuUser, sMessage, g_iMenuAuth);
         }
     }
 

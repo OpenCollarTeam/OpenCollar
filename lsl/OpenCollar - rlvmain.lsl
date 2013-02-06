@@ -1,3 +1,4 @@
+//OpenCollar - rlvmain
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //new viewer checking method, as of 2.73
 //on rez, restart script
@@ -16,7 +17,6 @@ float g_fVersionTimeOut = 60.0;
 integer g_iVersionChan = 293847;
 integer g_iRlvVersion;
 integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
-integer g_iReturnMenu;
 string g_sRLVString = "RestrainedLife viewer v1.20";
 
 //"checked" state - HANDLING RLV SUBMENUS AND COMMANDS
@@ -38,27 +38,24 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
 
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
-integer RLVR_CMD = 6010;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
@@ -117,7 +114,7 @@ CheckVersion(integer iSecond)
     llOwnerSay("@versionnum=" + (string)g_iVersionChan);
 }
 
-DoMenu(key kID)
+DoMenu(key kID, integer iAuth)
 {
     list lButtons;
     if (g_iRLVOn)
@@ -131,30 +128,25 @@ DoMenu(key kID)
 
     string sPrompt = "Restrained Love Viewer Options.";
     if (g_iRlvVersion) sPrompt += "\nDetected version of RLV API: "+(string)g_iRlvVersion;
-    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
 // http://wiki.secondlife.com/wiki/llSubStringIndex
 integer StartsWith(string sHayStack, string sNeedle) {
@@ -363,16 +355,100 @@ SafeWord(integer iCollarToo) {
         llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
     }
 }
-
-
 // End of book keeping functions
+
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    // SA: TODO delete this when transition is finished
+    if (iNum == COMMAND_NOAUTH) {llMessageLinked(LINK_SET, iNum, sStr, kID); return TRUE;}
+    // /SA
+    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llList2String(lParams, 0);
+    string sValue = llToLower(llList2String(lParams, 1));
+
+    Debug("cmd: " + sStr);
+
+    if (sStr == llToLower(g_sSubMenu) || (sCmd == "menu" && llToUpper(sValue) == g_sSubMenu))
+    {
+        //someone clicked "RLV" on the main menu.  Give them our menu now
+        DoMenu(kID, iNum);
+    }
+    else if (sStr == "rlvon")
+    {
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=1", NULL_KEY);
+        g_iRLVOn = TRUE;
+        g_iVerbose = TRUE;
+        if (TRUE) state default;
+    }
+    else if (StartsWith(sStr, "rlvnotify"))
+    {
+        string sOnOff = llList2String(llParseString2List(sStr, [" "], []), 1);
+        if (sOnOff == "on")
+        {
+            g_iRLVNotify = TRUE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvnotify=1", NULL_KEY);
+        }
+        else if (sOnOff == "off")
+        {
+            g_iRLVNotify = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvnotify=0", NULL_KEY);
+        }
+    }
+    else if (!g_iRLVOn || !g_iViewerCheck) return TRUE;
+    // commands after this should only work when RLV is enabled and verified
+    if (sStr == "clear")
+    {
+        if (iNum == COMMAND_WEARER)
+        {
+            Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
+        }
+        else
+        {
+            llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
+            SafeWord(TRUE);
+        }
+    }
+    else if (sStr == "rlvon")
+    {
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=1", NULL_KEY);
+        g_iRLVOn = TRUE;
+        g_iVerbose = TRUE;
+        if (TRUE) state default;
+    }
+    else if (sStr == "rlvoff")
+    {
+        if (iNum == COMMAND_OWNER)
+        {
+            g_iRLVOn = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvon=0", NULL_KEY);
+            SafeWord(TRUE);
+            llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+        }
+        else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
+    }
+    else if (sStr=="showrestrictions")
+    {
+        string sOut="You are being restricted by the following object";
+        if (llGetListLength(g_lSources)==2) sOut+=":";
+        else sOut+="s:";
+        integer i;
+        for (i=0;i<llGetListLength(g_lSources);i++)
+            if (llList2String(g_lSources,i)!=NULL_KEY) sOut+="\n"+llKey2Name((key)llList2String(g_lSources,i))+" ("+llList2String(g_lSources,i)+"): "+llList2String(g_lRestrictions,i);
+        else sOut+="\nThis collar: "+llList2String(g_lRestrictions,i);
+        Notify(kID,sOut,FALSE);
+    }
+    return TRUE;
+}
+
 
 default{
     state_entry() {
         g_kWearer = llGetOwner();
         //request setting from DB
         llSleep(1.0);
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, "rlvon", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvon", NULL_KEY);
         SIT_CHANNEL=9999 + llFloor(llFrand(9999999.0));
         // Ensure that menu script knows we're here.
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
@@ -381,7 +457,7 @@ default{
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
 
-        if (iNum == HTTPDB_SAVE)
+        if (iNum == LM_SETTING_SAVE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -392,7 +468,7 @@ default{
                 Debug("owners: " + sValue);
             }
         }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -429,7 +505,7 @@ default{
                 CheckVersion(FALSE);
             }
         }
-        else if ((iNum == HTTPDB_EMPTY && sStr == "rlvon"))
+        else if ((iNum == LM_SETTING_EMPTY && sStr == "rlvon"))
         {
             CheckVersion(FALSE);
         }
@@ -437,18 +513,10 @@ default{
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            if (iNum == SUBMENU)
-            {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
-                Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
-                llResetScript();//Nan: why do we reset here?!
-            }
-            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)//Nan: this code can't even execute! EVER!
-            {//someone used "RLV" chat command.  Tell them we're not ready yet.
-                Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
-                llResetScript();
-            }
+        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER && sStr == "menu "+g_sSubMenu)
+        {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
+            Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
+            llResetScript();//Nan: why do we reset here?! SA: maybe so we retry querying RLV?
         }
     }
 
@@ -580,40 +648,8 @@ state checked {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        // added chat command for menu:
-        else if (llToUpper(sStr) == g_sSubMenu) {
-            if (iNum == SUBMENU) {
-                //someone clicked "RLV" on the main menu.  Give them our menu
-                //now
-                DoMenu(kID);
-            }
-            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) { 
-                //someone used the chat command
-                DoMenu(kID);
-            }
-        }
-        else if (sStr == "rlvon") {
-            if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=1", NULL_KEY);
-                g_iRLVOn = TRUE;
-                g_iVerbose = TRUE;
-                state default;
-            }
-        }
-        else if (StartsWith(sStr, "rlvnotify") && iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            string sOnOff = llList2String(llParseString2List(sStr, [" "], []), 1);
-            if (sOnOff == "on")
-            {
-                g_iRLVNotify = TRUE;
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvnotify=1", NULL_KEY);
-            }
-            else if (sOnOff == "off")
-            {
-                g_iRLVNotify = FALSE;
-                llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvnotify=0", NULL_KEY);
-            }
-        }
+        else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
+        else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == DIALOG_RESPONSE)
         {
             Debug(sStr);
@@ -623,36 +659,30 @@ state checked {
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 Debug(sMsg);
                 if (sMsg == TURNON)
                 {
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "rlvon", kAv);
+                    UserCommand(iAuth, "rlvon", kAv);
                 }
                 else if (sMsg == TURNOFF)
                 {
-                    g_iReturnMenu = TRUE;
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "rlvoff", kAv);
+                    UserCommand(iAuth, "rlvoff", kAv);
+                    DoMenu(kAv, iAuth);
                 }
                 else if (sMsg == CLEAR)
                 {
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "clear", kAv);
-                    DoMenu(kAv);
+                    UserCommand(iAuth, "clear", kAv);
+                    DoMenu(kAv, iAuth);
                 }
                 else if (sMsg == UPMENU)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                 }
                 else if (llListFindList(g_lMenu, [sMsg]) != -1 && g_iRLVOn)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, sMsg, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
                 }
-            }
-        }
-        else if (iNum == DIALOG_TIMEOUT)
-        {
-            if (kID == kMenuID)
-            {
-                g_iReturnMenu = FALSE;
             }
         }
 
@@ -690,11 +720,7 @@ state checked {
             {
                 list sCommands=llParseString2List(sStr,[","],[]);
                 integer i;
-                for (i=0;i<llGetListLength(sCommands);i++) HandleCommand(NULL_KEY,llList2String(sCommands,i));
-            }
-            else if (iNum == RLV_CMD||iNum == RLVR_CMD)
-            {
-                HandleCommand(kID,sStr);
+                for (i=0;i<llGetListLength(sCommands);i++) HandleCommand(kID,llList2String(sCommands,i));
             }
             else if (iNum == COMMAND_RLV_RELAY)
             {
@@ -709,68 +735,12 @@ state checked {
                 list iRestr=llParseString2List(llList2String(g_lOldRestrictions,iSourceNum),["/"],[]);
                 for (j=0;j<llGetListLength(iRestr);j++) AddRestriction(kID,llList2String(iRestr,j));
             }
-            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-            {
-                Debug("cmd: " + sStr);
-                if (sStr == "clear")
-                {
-                    if (iNum == COMMAND_WEARER)
-                    {
-                        Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
-                    }
-                    else
-                    {
-                        llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
-                        SafeWord(TRUE);
-                    }
-                }
-                else if (sStr == "rlvon")
-                {
-                    llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=1", NULL_KEY);
-                    g_iRLVOn = TRUE;
-                    g_iVerbose = TRUE;
-                    state default;
-                }
-                else if (sStr == "rlvoff")
-                {
-                    if (iNum == COMMAND_OWNER)
-                    {
-                        g_iRLVOn = FALSE;
-                        llMessageLinked(LINK_SET, HTTPDB_SAVE, "rlvon=0", NULL_KEY);
-                        SafeWord(TRUE);
-                        llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
-
-
-                    }
-                    else
-                    {
-                        Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
-                    }
-
-                    if (g_iReturnMenu)
-                    {
-                        g_iReturnMenu = FALSE;
-                        DoMenu(kID);
-                    }
-                }
-                else if (sStr=="showrestrictions")
-                {
-                    string sOut="You are being restricted by the following object";
-                    if (llGetListLength(g_lSources)==2) sOut+=":";
-                    else sOut+="s:";
-                    integer i;
-                    for (i=0;i<llGetListLength(g_lSources);i++)
-                        if (llList2String(g_lSources,i)!=NULL_KEY) sOut+="\n"+llKey2Name((key)llList2String(g_lSources,i))+" ("+llList2String(g_lSources,i)+"): "+llList2String(g_lRestrictions,i);
-                    else sOut+="\nThis collar: "+llList2String(g_lRestrictions,i);
-                    Notify(kID,sOut,FALSE);
-                }
-            }
             else if (iNum == COMMAND_SAFEWORD)
             {// safeWord used, clear rlv settings
                 llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
                 SafeWord(TRUE);
             }
-            else if (iNum == HTTPDB_SAVE) {
+            else if (iNum == LM_SETTING_SAVE) {
                 list lParams = llParseString2List(sStr, ["="], []);
                 string sToken = llList2String(lParams, 0);
                 string sValue = llList2String(lParams, 1);
@@ -780,7 +750,7 @@ state checked {
                     Debug("owners: " + sValue);
                 }
             }
-            else if (iNum == HTTPDB_RESPONSE)
+            else if (iNum == LM_SETTING_RESPONSE)
             {
                 list lParams = llParseString2List(sStr, ["="], []);
                 string sToken = llList2String(lParams, 0);
@@ -811,10 +781,8 @@ state checked {
         if (iChan==SIT_CHANNEL)
         {
             g_kSitTarget=(key)sMsg;
-
             llListenRemove(g_iSitListener);
         }
-
     }
 
     timer()

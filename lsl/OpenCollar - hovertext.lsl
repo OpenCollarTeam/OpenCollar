@@ -1,3 +1,5 @@
+//OpenCollar - hovertext
+
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
 
@@ -5,25 +7,24 @@ string g_sFeatureName = "FloatText";
 integer g_iUpdatePin = 4711;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer SEND_IM = 1000;
+//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 integer UPDATE = 10001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 
 vector g_vHideScale = <.02,.02,.02>;
 vector g_vShowScale = <.02,.02,1.0>;
@@ -62,18 +63,11 @@ integer SafeRemoveInventory(string sItem) {
 }
 
 ShowText(string sNewText) {
-    g_sText = sNewText;
-    list lTmp = llParseString2List(g_sText, ["\\n"], []);
-    if(llGetListLength(lTmp) > 1) {
-        integer i;
-        sNewText = "";
-        for (i = 0; i < llGetListLength(lTmp); i++) {
-            sNewText += llList2String(lTmp, i) + "\n";
-        }
-    }
-    
+    // make it possible to insert line breaks in hover text
+    list lTmp = llParseStringKeepNulls(sNewText, ["\\n"], []);
+    g_sText = llDumpList2String(lTmp, "\n");
     list params = [PRIM_TEXT, g_sText, g_vColor, 1.0];
-    
+
     if (g_iTextPrim > 1) {//don't scale the root prim
         params += [PRIM_SIZE, g_vShowScale];
     }
@@ -145,7 +139,11 @@ default {
         string sCommand = llList2String(lParams, 0);
         string sValue = llToLower(llList2String(lParams, 1));
         if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
-            if (sCommand == "text") {
+            if (sStr == "menu " + g_sFeatureName) {
+                //popup help on how to set label
+                llMessageLinked(LINK_ROOT, POPUP_HELP, "To set floating text , say _PREFIX_text followed by the text you wish to set.  \nExample: _PREFIX_text I have text above my head!", kID);
+                llMessageLinked(LINK_ROOT, iNum, "menu " + g_sParentMenu, kID);
+            } else if (sCommand == "text") {
                 //llSay(0, "got text command");
                 lParams = llDeleteSubList(lParams, 0, 0);//pop off the "text" command
                 string sNewText = llDumpList2String(lParams, " ");
@@ -158,7 +156,7 @@ default {
                         } else {
                             ShowText(sNewText);
                             g_iLastRank = iNum;
-                            //llMessageLinked(LINK_ROOT, HTTPDB_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
+                            //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                         }
                     } else {
                         Notify(kID,"You currently have not the right to change the float text, someone with a higher rank set it!", FALSE);
@@ -171,7 +169,7 @@ default {
                     } else {
                         ShowText(sNewText);
                         g_iLastRank = iNum;
-                        //llMessageLinked(LINK_ROOT, HTTPDB_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
+                        //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                     }
                 }
             } else if (sCommand == "textoff") {
@@ -197,15 +195,12 @@ default {
             }
         } else if (iNum == MENUNAME_REQUEST) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
-        } else if (iNum == SUBMENU && sStr == g_sFeatureName) {
-            //popup help on how to set label
-            llMessageLinked(LINK_ROOT, POPUP_HELP, "To set floating text , say _PREFIX_text followed by the text you wish to set.  \nExample: _PREFIX_text I have text above my head!", kID);
-        } else if (iNum == HTTPDB_RESPONSE) {
+        } else if (iNum == LM_SETTING_RESPONSE) {
             lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             Debug("sToken: " + sToken);
             if (sToken == g_sDBToken) {
-                llMessageLinked(LINK_ROOT, HTTPDB_DELETE, g_sDBToken , NULL_KEY);
+                llMessageLinked(LINK_ROOT, LM_SETTING_DELETE, g_sDBToken , NULL_KEY);
             }
         }
     }
@@ -215,10 +210,14 @@ default {
             llResetScript();
         }
 
-        if (iChange & CHANGED_COLOR) {
-            g_vColor = GetTextPrimColor();
-            if (g_iOn) {
-                ShowText(g_sText);
+        if (iChange & CHANGED_COLOR) { //SA this event is triggered when text is changed (LSL bug?) so we need to check the color really changed if we want to avoid an endless loop
+            vector vNewColor = GetTextPrimColor();
+            if (vNewColor != g_vColor)
+            {
+                g_vColor = vNewColor;
+                if (g_iOn) {
+                    ShowText(g_sText);
+                }
             }
         }
     }
