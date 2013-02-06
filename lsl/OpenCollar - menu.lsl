@@ -1,4 +1,3 @@
-//OpenCollar - menu - 3.520
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -29,21 +28,19 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-integer CHAT = 505;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent when a token has no value in the httpdb
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
@@ -66,29 +63,24 @@ Debug(string text)
     //llOwnerSay(llGetScriptName() + ": " + text);
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-Menu(string sName, key kID)
+Menu(string sName, key kID, integer iAuth)
 {
     integer iMenuIndex = llListFindList(g_lMenuNames, [sName]);
     Debug((string)iMenuIndex);    
@@ -105,7 +97,7 @@ Menu(string sName, key kID)
             lUtility = [UPMENU];
         }
         
-        key kMenuID = Dialog(kID, sPrompt, lItems, lUtility, 0);
+        key kMenuID = Dialog(kID, sPrompt, lItems, lUtility, 0, iAuth);
         
         integer iIndex = llListFindList(g_lMenuIDs, [kID]);
         if (~iIndex)
@@ -177,6 +169,50 @@ HandleMenuResponse(string entry)
     }
 }
 
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    // SA: TODO delete this when transition is finished
+    if (iNum == COMMAND_NOAUTH) {llMessageLinked(LINK_SET, iNum, sStr, kID); return TRUE;}
+    // /SA
+    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llList2String(lParams, 0);
+
+    if (sStr == "menu") Menu("Main", kID, iNum);
+    else if (sCmd == "menu")
+    {
+        string sSubmenu = llGetSubString(sStr, 5, -1);
+        if (llListFindList(g_lMenuNames, [sSubmenu]) != -1);
+        Menu(sSubmenu, kID, iNum);
+    }
+    else if (sStr == "help") llGiveInventory(kID, HELPCARD);                
+    else if (sStr == "addons") Menu("AddOns", kID, iNum);
+    else if (sStr == "debug") Menu("Help/Debug", kID, iNum);
+    else if (sCmd == "menuto") 
+    {
+        // SA: with the new authentification method, I do not like this request for auth at this stage.
+        // what happens here is that up to this point, we consider that the wearer is the one
+        // who issued "menuto", and then change auth to that of the clicker.
+        // My opinion is that the wearer should never play a role in this and that there should be
+        // only one request for auth: in the listener script.
+        // This could already be done, but it would still be ugly to have this exception for "menuto"
+        // in listener. I would rather have a generic way for another attachment to query an arbitrary
+        // command (not only "menu") on behalf of an arbitrary avatar.
+        // TODO: change the "HUD channel protocol" in order to make this possible.
+        key kAv = (key)llList2String(lParams, 1);
+        if (KeyIsAv(kAv)) llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);
+    }
+    else if (sCmd == "refreshmenu")
+    {
+        llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);
+        //MenuInit();
+        llResetScript();
+    }
+    return TRUE;
+}
+
 default
 {
     state_entry()
@@ -186,49 +222,12 @@ default
         MenuInit();      
     }
     
-    touch_start(integer iNum)
-    {
-        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", llDetectedKey(0));
-    }
-    
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCmd = llList2String(lParams, 0);
-            string sValue = llToLower(llList2String(lParams, 1));
-            if (sStr == "menu")
-            {
-                Menu("Main", kID);
-            }
-            else if (sStr == "help")
-            {
-                llGiveInventory(kID, HELPCARD);                
-            }
-            if (sStr == "addons")
-            {
-                Menu("AddOns", kID);
-            }
-            if (sStr == "debug")
-            {
-               Menu("Help/Debug", kID);
-            }
-            else if (sCmd == "menuto")
-            {
-                key kAv = (key)llList2String(lParams, 1);
-                if (KeyIsAv(kAv))
-                {
-                    Menu("Main", kAv);
-                }
-            }
-            else if (sCmd == "refreshmenu")
-            {
-                llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);
-                //MenuInit();
-                llResetScript();
-            }
-        }
+        // SA: delete this after transition is finished
+        if (iNum == COMMAND_NOAUTH) return;
+        // /SA
+        if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == MENUNAME_RESPONSE)
         {
             //sStr will be in form of "parent|menuname"
@@ -254,13 +253,6 @@ default
                 }        
             }
         }
-        else if (iNum == SUBMENU)
-        {
-            if (llListFindList(g_lMenuNames, [sStr]) != -1)
-            {
-                Menu(sStr, kID);
-            }
-        }
         else if (iNum == DIALOG_RESPONSE)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -271,6 +263,7 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
@@ -279,26 +272,26 @@ default
                 //process response
                 if (sMessage == UPMENU)
                 {
-                    Menu("Main", kAv);
+                    Menu("Main", kAv, iAuth);
                 }
                 else
                 {
                     if (sMessage == GIVECARD)
                     {
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "help", kAv);
-                        Menu("Help/Debug", kAv);
+                        UserCommand(iAuth, "help", kAv);
+                        Menu("Help/Debug", kAv, iAuth);
                     }
                     else if (sMessage == REFRESH_MENU)
                     {//send a command telling other plugins to rebuild their menus
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "refreshmenu", kAv);
+                        UserCommand(iAuth, "refreshmenu", kAv);
                     }
                     else if (sMessage == RESET_MENU)
                     {//send a command to reset scripts
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "resetscripts", kAv);
+                        UserCommand(iAuth, "resetscripts", kAv);
                     }
                     else
                     {
-                        llMessageLinked(LINK_SET, SUBMENU, sMessage, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
                 }
             }

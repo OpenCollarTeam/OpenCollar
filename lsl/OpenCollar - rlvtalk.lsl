@@ -1,4 +1,4 @@
-//OpenCollar - rlvtalk - 3.525
+//OpenCollar - rlvtalk
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Talk";
@@ -10,6 +10,7 @@ list g_lRLVcmds = [
     "sendchat",
     "chatshout",
     "chatnormal",
+    "startim",
     "sendim",
     "recvchat",
     "recvim",
@@ -21,7 +22,8 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
     "Chat",
     "Shouting",
     "Normal",
-    "IM",
+    "StartIM",
+    "SendIM",
     "RcvChat",
     "RcvIM",
     "Emote",
@@ -31,7 +33,8 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
 list g_lDescriptions = [ //showing descriptions for commands
     "Ability to Send Chat",
     "Ability to Shout Chat",
-    "Disable = Forced whisper",
+    "Ability to Speak Without Whispering",
+    "Ability to Start IM Sessions",
     "Ability to Send IM",
     "Ability to Receive Chat",
     "Ability to Receive IM",
@@ -42,37 +45,32 @@ list g_lDescriptions = [ //showing descriptions for commands
 string TURNON = "Allow";
 string TURNOFF = "Forbid";
 
-integer g_iReturnMenu = FALSE;
-
 integer g_iRLVOn=FALSE;
 
 key g_kWearer;
 key g_kDialogID;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
-integer COMMAND_OBJECT = 506;
-integer COMMAND_RLV_RELAY = 507;
+//integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
@@ -108,34 +106,29 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     }
 }
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-     
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
-{
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
 
-Menu(key kID)
+Menu(key kID, integer iAuth)
 {
     if (!g_iRLVOn)
     {
         Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-        llMessageLinked(LINK_SET, SUBMENU, "RLV", kID);
+        llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
 
@@ -249,7 +242,7 @@ Menu(key kID)
     //give an Allow All button
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
-    g_kDialogID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 UpdateSettings()
@@ -297,9 +290,9 @@ SaveSettings()
 {
     //save to DB
     if (llGetListLength(g_lSettings)>0)
-        llMessageLinked(LINK_SET, HTTPDB_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
     else
-        llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
 }
 
 ClearSettings()
@@ -307,33 +300,78 @@ ClearSettings()
     //clear settings list
     g_lSettings = [];
     //remove tpsettings from DB
-    llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
     //main RLV script will take care of sending @clear to viewer
 }
 
-list RestackMenu(list in)
-{ //adds empty buttons until the list length is multiple of 3, to max of 12
-    while (llGetListLength(in) % 3 != 0 && llGetListLength(in) < 12)
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    /* //no more needed
+        else if ((sStr == "reset" || sStr == "runaway") && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
+        {
+            //clear db, reset script
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, NULL_KEY);
+            llResetScript();
+        }
+    */
+    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+    if (sStr == "menu "+g_sSubMenu || llToLower(sStr) == "talk")
     {
-        in += [" "];
+        Menu(kID, iNum);
+        return TRUE;
     }
-    //look for ^ and > in the menu
-    integer u = llListFindList(in, [UPMENU]);
-    if (u != -1)
+    //do simple pass through for chat commands
+
+    //since more than one RLV command can come on the same line, loop through them
+    list lItems = llParseString2List(sStr, [","], []);
+    integer n;
+    integer iStop = llGetListLength(lItems);
+    integer iChange = FALSE;//set this to true if we see a setting that concerns us
+    for (n = 0; n < iStop; n++)
     {
-        in = llDeleteSubList(in, u, u);
+        //split off the parameters (anything after a : or =)
+        //and see if the thing being set concerns us
+        string sThisItem = llList2String(lItems, n);
+        string sBehavior = llList2String(llParseString2List(sThisItem, ["="], []), 0);//removed ":" as exceptions will pick it up now
+        if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
+        {
+            //this is a behavior that we handle.
+
+            //filter commands from wearer
+            if (iNum == COMMAND_WEARER)
+            {
+                llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
+                return TRUE;
+            }
+
+            string sOption = llList2String(llParseString2List(sThisItem, ["="], []), 0);
+            string sParam = llList2String(llParseString2List(sThisItem, ["="], []), 1);
+            integer iIndex = llListFindList(g_lSettings, [sOption]);
+            if (iIndex == -1)
+            {
+                //we don't alread have this exact setting.  add it
+                g_lSettings += [sOption, sParam];
+            }
+            else
+            {
+                //we already have a setting for this option.  update it.
+                g_lSettings = llListReplaceList(g_lSettings, [sOption, sParam], iIndex, iIndex + 1);
+            }
+            iChange = TRUE;
+        }
+        else if (sBehavior == "clear" && iNum == COMMAND_OWNER)
+        {
+            ClearSettings();
+        }
     }
-    //re-orders a list so dialog buttons start in the top row
-    list sOut = llList2List(in, 9, 11);
-    sOut += llList2List(in, 6, 8);
-    sOut += llList2List(in, 3, 5);
-    sOut += llList2List(in, 0, 2);
-    //make sure we move ^ and > to position 1 and 2
-    if (u != -1)
+
+    if (iChange)
     {
-        sOut = llListInsertList(sOut, [UPMENU], 1);
+        UpdateSettings();
+        SaveSettings();
     }
-    return sOut;
+    return TRUE;
 }
 
 default
@@ -341,10 +379,6 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
-
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sDBToken, NULL_KEY);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -353,82 +387,8 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == SUBMENU && sStr == g_sSubMenu)
-        {
-            Menu(kID);
-        }
-        /* //no more needed
-            else if ((sStr == "reset" || sStr == "runaway") && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
-            {
-                //clear db, reset script
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sDBToken, NULL_KEY);
-                llMessageLinked(LINK_SET, HTTPDB_DELETE, g_sExToken, NULL_KEY);
-                llResetScript();
-            }
-        */
-            else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-            {//added for short chat-menu command
-                if (llToLower(sStr) == "talk")
-                {
-                    Menu(kID);
-                    return;
-                }
-                //do simple pass through for chat commands
-
-                //since more than one RLV command can come on the same line, loop through them
-                list lItems = llParseString2List(sStr, [","], []);
-                integer n;
-                integer iStop = llGetListLength(lItems);
-                integer iChange = FALSE;//set this to true if we see a setting that concerns us
-                for (n = 0; n < iStop; n++)
-                {
-                    //split off the parameters (anything after a : or =)
-                    //and see if the thing being set concerns us
-                    string sThisItem = llList2String(lItems, n);
-                    string sBehavior = llList2String(llParseString2List(sThisItem, ["="], []), 0);//removed ":" as exceptions will pick it up now
-                    if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
-                    {
-                        //this is a behavior that we handle.
-
-                        //filter commands from wearer
-                        if (iNum == COMMAND_WEARER)
-                        {
-                            llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
-                            return;
-                        }
-
-                        string sOption = llList2String(llParseString2List(sThisItem, ["="], []), 0);
-                        string sParam = llList2String(llParseString2List(sThisItem, ["="], []), 1);
-                        integer iIndex = llListFindList(g_lSettings, [sOption]);
-                        if (iIndex == -1)
-                        {
-                            //we don't alread have this exact setting.  add it
-                            g_lSettings += [sOption, sParam];
-                        }
-                        else
-                        {
-                            //we already have a setting for this option.  update it.
-                            g_lSettings = llListReplaceList(g_lSettings, [sOption, sParam], iIndex, iIndex + 1);
-                        }
-                        iChange = TRUE;
-                    }
-                    else if (sBehavior == "clear")
-                    {
-                        ClearSettings();
-                    }
-                }
-
-                if (iChange)
-                {
-                    UpdateSettings();
-                    SaveSettings();
-                    if (g_iReturnMenu)
-                    {
-                        Menu(kID);
-                    }
-                }
-            }
-        else if (iNum == HTTPDB_RESPONSE)
+        else if (UserCommand(iNum, sStr, kID)) return;
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
@@ -461,13 +421,6 @@ default
         {
             g_iRLVOn=TRUE;                
         }
-        else if (iNum == DIALOG_TIMEOUT)
-        {
-            if (kID == g_kDialogID)
-            {
-                g_iReturnMenu = FALSE;
-            }
-        }
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID == g_kDialogID)
@@ -476,10 +429,10 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);                
+                integer iAuth = (integer)llList2String(lMenuParams, 3);                
                 if (sMessage == UPMENU)
                 {
-                    llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kAv);
-                    g_iReturnMenu = FALSE;
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 }
                 else
                 {
@@ -517,8 +470,8 @@ default
                             }
                             sOut += llList2String(g_lRLVcmds, n) + "=" + ONOFF;
                         }
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, sOut, kAv);
-                        g_iReturnMenu = TRUE;
+                        UserCommand(iAuth, sOut, kAv);
+                        Menu(kAv, iAuth);
                     }
                     else if (iIndex != -1)
                     {
@@ -533,8 +486,8 @@ default
                             sOut += "n";
                         }
                         //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, sOut, kAv);
-                        g_iReturnMenu = TRUE;
+                        UserCommand(iAuth, sOut, kAv);
+                        Menu(kAv, iAuth);
                     }
                     else
                     {

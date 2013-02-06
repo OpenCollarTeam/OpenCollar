@@ -1,9 +1,10 @@
+//OpenCollar - leashParticle
 //leash particle script for the Open Collar Project (c)
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //Split from the leash script in April 2010 by Garvin Twine
 
 // - MESSAGE MAP
-integer COMMAND_NOAUTH      = 0;
+//integer COMMAND_NOAUTH      = 0;
 integer COMMAND_OWNER       = 500;
 integer COMMAND_SECOWNER    = 501;
 integer COMMAND_GROUP       = 502;
@@ -11,22 +12,16 @@ integer COMMAND_WEARER      = 503;
 integer COMMAND_EVERYONE    = 504;
 integer COMMAND_SAFEWORD    = 510;
 integer POPUP_HELP          = 1001;
-// -- SETTINGS (HTTPDB / LOCAL)
+// -- SETTINGS
 // - Setting strings must be in the format: "token=value"
-integer HTTPDB_SAVE             = 2000; // to have settings saved to httpdb
-integer HTTPDB_REQUEST          = 2001; // send requests for settings on this channel
-integer HTTPDB_RESPONSE         = 2002; // responses received on this channel
-integer HTTPDB_DELETE           = 2003; // delete token from DB
-integer HTTPDB_EMPTY            = 2004; // returned when a token has no value in the httpdb
-integer LOCALSETTING_SAVE       = 2500;
-integer LOCALSETTING_REQUEST    = 2501;
-integer LOCALSETTING_RESPONSE   = 2502;
-integer LOCALSETTING_DELETE     = 2503;
-integer LOCALSETTING_EMPTY      = 2504;
+integer LM_SETTING_SAVE             = 2000; // to have settings saved to settings store
+integer LM_SETTING_REQUEST          = 2001; // send requests for settings on this channel
+integer LM_SETTING_RESPONSE         = 2002; // responses received on this channel
+integer LM_SETTING_DELETE           = 2003; // delete token from store
+integer LM_SETTING_EMPTY            = 2004; // returned when a token has no value in the store
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
-integer SUBMENU_CHANNEL     = 3002;
 integer MENUNAME_REMOVE     = 3003;
 
 integer DIALOG              = -9000;
@@ -55,23 +50,92 @@ string L_DEFAULTS   = "ResetDefaults";
 list g_lSettings; //["tex", "texName", "size", "0.07", "color", "1,1,1", "gravity", "1.0", "density", "0.04", "Glow", "1"]
 
 string g_sCurrentMenu = "";
-string g_sMenuUser;
 key g_kDialogID;
 
 string g_sCurrentCategory = "";
 list g_lCategories = ["Blues", "Browns", "Grays", "Greens", "Purples", "Reds", "Yellows"];
 list g_lColors;
-key g_kHTTPID;
-string g_sHTTPDB_Url = "http://data.mycollar.org/";
+list g_lAllColors = [
+"Light Blue|<0.00000, 0.00000, 1.00000>
+Dark Blue|<0.00000, 0.00000, 0.62745>
+Midnight Blue|<0.08235, 0.10588, 0.32941>
+Dark Slate Blue|<0.16863, 0.21961, 0.33725>
+Sky Blue|<0.40000, 0.59608, 1.00000>
+Light Cyan3|<0.68627, 0.78039, 0.78039>
+Cadet Blue3|<0.46667, 0.74902, 0.78039>
+Turquoise|<0.26275, 0.77647, 0.85882>
+Light Steel Blue2|<0.71765, 0.80784, 0.92549>
+Dark Gray Blue|<0.18039, 0.21176, 0.25490>",
+"Orange|<1.00000, 0.50196, 0.25098>
+Bright Orange|<0.97255, 0.50196, 0.09020>
+Dark Orange|<0.76471, 0.33725, 0.09020>
+Sienna|<0.97255, 0.45490, 0.19216>
+Dark Sienna|<0.76471, 0.34510, 0.09020>
+Brown|<0.50196, 0.25098, 0.00000>
+Brown Sienna|<0.49412, 0.20784, 0.09020>
+Dark Brown|<0.27843, 0.23137, 0.18431>
+Sandy Brown|<0.93333, 0.60392, 0.30196>
+Dark Drab|<0.33333, 0.30980, 0.21176>",
+"Black|<0.00000, 0.00000, 0.00000>
+Gray 1|<0.11111, 0.11111, 0.11111>
+Gray 2|<0.22222, 0.22222, 0.22222>
+Gray 3|<0.33333, 0.33333, 0.33333>
+Gray 4|<0.44444, 0.44444, 0.44444>
+Gray 5|<0.55556, 0.55556, 0.55556>
+Gray 6|<0.66667, 0.66667, 0.66667>
+Gray 7|<0.77778, 0.77778, 0.77778>
+Gray 8|<0.88889, 0.88889, 0.88889>
+White|<1.00000, 1.00000, 1.00000>",
+"Pastel Green|<0.73333, 1.00000, 0.51372>
+Forest Green|<0.50196, 0.50196, 0.00000>
+Light Sea Green|<0.24314, 0.66275, 0.62353>
+Medium Sea Green|<0.18824, 0.40392, 0.32941>
+Dark Sea Green4|<0.38039, 0.48627, 0.34510>
+Dark Green|<0.14510, 0.25490, 0.09020>
+Yellow Green|<0.32157, 0.81569, 0.09020>
+Olive4|<0.40000, 0.48627, 0.14902>
+Chartreuse|<0.54118, 0.98431, 0.09020>
+Olive3|<0.62745, 0.77255, 0.26667>",
+"Light Purple|<1.00000, 0.00000, 0.50196>
+Purple|<0.55686, 0.20784, 0.93725>
+Dark Purple|<0.50196, 0.00000, 0.50196>
+Plum|<0.72549, 0.23137, 0.56078>
+Dark Orchid|<0.27059, 0.14510, 0.27451>
+Magenta|<1.00000, 0.00000, 1.00000>
+Light Plum|<0.90196, 0.66275, 0.92549>
+Pale Violet Red|<0.81961, 0.39608, 0.52941>
+Thistle|<0.91373, 0.81176, 0.92549>
+Lavender|<0.89020, 0.89412, 0.98039>",
+"Burgundy|<0.50196, 0.00000, 0.00000>
+Red|<1.00000, 0.00000, 0.00000>
+Pink|<0.98039, 0.68627, 0.74510>
+Indian Red|<0.89804, 0.32941, 0.31765>
+Firebrick|<0.75686, 0.10588, 0.09020>
+Hot Pink|<0.96471, 0.37647, 0.67059>
+Magenta|<1.00000, 0.00000, 1.00000>
+Violet Red|<0.96471, 0.20784, 0.54118>
+Pink2|<0.90588, 0.63137, 0.69020>
+Dark Red|<0.27843, 0.01569, 0.05490>",
+"Yellow|<1.00000, 1.00000, 0.00000>
+Bright Yellow|<1.00000, 0.98824, 0.09020>
+Pale Khaki|<1.00000, 0.95294, 0.50196>
+Goldenrod|<0.92941, 0.85490, 0.45490>
+Dark Goldenrod|<0.68627, 0.47059, 0.09020>
+Gold|<0.83137, 0.62745, 0.09020>
+Dark Gold|<0.91765, 0.75686, 0.09020>
+Medium Gold|<0.99216, 0.81569, 0.09020>
+Khaki|<0.67843, 0.66275, 0.43137>
+Pastel Yellow|<1.00000, 1.00000, 0.44706>"
+];
 
 // ----- collar -----
 //string g_sWearerName;
 key g_kWearer;
 
 key NULLKEY = "";
-key g_kLeashedTo = NULLKEY;
-key g_kLeashToPoint = NULLKEY;
-key g_kParticleTarget = NULLKEY;
+key g_kLeashedTo = ""; //NULLKEY;
+key g_kLeashToPoint = ""; //NULLKEY;
+key g_kParticleTarget = ""; //NULLKEY;
 integer g_bLeasherInRange;
 integer g_bInvisibleLeash = FALSE;
 integer g_iAwayCounter;
@@ -139,7 +203,7 @@ vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
 float g_fBurstRate = 0.04;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
-list g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
+list g_lDefaultSettings;
 
 Particles(integer iLink, key kParticleTarget)
 {
@@ -257,7 +321,7 @@ SaveSettings(string sToken, string sSave, integer bSaveToLocal)
     if (bSaveToLocal)
     {
         string sToSave = "leash=" + llDumpList2String(g_lSettings, ",");
-        llMessageLinked(LINK_THIS, LOCALSETTING_SAVE, sToSave, NULLKEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, sToSave, NULLKEY);
     }
 }
 
@@ -315,24 +379,24 @@ integer KeyIsAv(key id)
 // Create a random "key" for dialog uniqueness
 // "chars" provides hexadecimal characters for the function to choose from
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage)
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-    //debug("dialog:"+(string)llGetFreeMemory( ));
-    string sChars = "0123456789abcdef";
+    //key generation
+    //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
     string sOut;
     integer n;
-    for (n = 0; n < 8; n++)
+    for (n = 0; n < 8; ++n)
     {
         integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
+        sOut += llGetSubString( "0123456789abcdef", iIndex, iIndex);
     }
-    key kID = (key)(sOut + "-0000-0000-0000-000000000000");
-
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`"), kID);
+    key kID = (sOut + "-0000-0000-0000-000000000000");
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+        + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-}
+} 
 
-OptionsMenu(key kIn)
+OptionsMenu(key kIn, integer iAuth)
 {
     g_sCurrentMenu = SUBMENU;
     list lButtons = [L_TEXTURE, L_DENSITY, L_GRAVITY, L_COLOR, L_SIZE];
@@ -346,54 +410,54 @@ OptionsMenu(key kIn)
     }
     lButtons += [L_DEFAULTS];
     string sPrompt = "Leash Options (Owner Only)\n";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-DensityMenu(key kIn)
+DensityMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-"];
     g_sCurrentMenu = L_DENSITY;
     string sPrompt = "Choose '+' for more and '-' for less particles\n'Default' to revert to the default\n";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-GravityMenu(key kIn)
+GravityMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-", "noGravity"];
     g_sCurrentMenu = L_GRAVITY;
     string sPrompt = "Choose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default\nCurrent Gravity = ";
     string sCurrentGravity = llGetSubString((string)g_vLeashGravity.z, 1, 3);
     sPrompt += sCurrentGravity + "\nDefault: 1.0";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-SizeMenu(key kIn)
+SizeMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-", "minimum"];
     g_sCurrentMenu = L_SIZE;
     string sPrompt = "Choose '+' for bigger and '-' for smaller size of the leash texture\n'Default' to revert to the default\n'minium' for the smallest possible\nCurrent Size = ";
     string sCurrentSize = llGetSubString((string)g_vLeashSize.x, 0, 3);
     sPrompt += sCurrentSize + "\nDefault: 0.07 (0.03 steps)";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-ColorCategoryMenu(key kIn)
+ColorCategoryMenu(key kIn, integer iAuth)
 {
     //give kAv a dialog with a list of color cards
     string sPrompt = "Pick a Color Category.\n";
     g_sCurrentMenu = "L-ColorCat";
-    g_kDialogID = Dialog(kIn, sPrompt, g_lCategories, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, g_lCategories, [UPMENU], 0, iAuth);
 }
 
-ColorMenu(key kIn)
+ColorMenu(key kIn, integer iAuth)
 {
     string sPrompt = "Pick a Color.\n";
     list lButtons = llList2ListStrided(g_lColors,0,-1,2);
     g_sCurrentMenu = L_COLOR;
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-TextureMenu(key kIn)
+TextureMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default"];
     integer iLoop;
@@ -423,7 +487,7 @@ TextureMenu(key kIn)
     g_sCurrentMenu = L_TEXTURE;
     string sPrompt = "Choose a texture\nnoTexture does default SL particle dots\nnoLeash means no particle leash at all\ncurrent Texture = ";
     sPrompt += g_sParticleTexture + "\n";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0);
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 LMSay()
@@ -443,6 +507,7 @@ default
 {
     state_entry()
     {
+        g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
         StopParticles(TRUE);
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
@@ -456,9 +521,9 @@ default
         llResetScript();
     }
 
-    link_message(integer iSenderPrim, integer iAuth, string sMessage, key kMessageID)
+    link_message(integer iSenderPrim, integer iNum, string sMessage, key kMessageID)
     {
-        if (iAuth == COMMAND_PARTICLE)
+        if (iNum == COMMAND_PARTICLE)
         {
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash")
@@ -499,49 +564,48 @@ default
                 }
             }
         }
-        else if (iAuth >= COMMAND_OWNER && iAuth <= COMMAND_WEARER)
+        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
             if (llToLower(sMessage) == llToLower(SUBMENU))
             {
-                if(iAuth == COMMAND_OWNER)
-                {
-                    OptionsMenu(kMessageID);
-                }
+                if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
+                else Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
+            }
+            else if (sMessage == "menu "+SUBMENU)
+            {
+                if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
                 else
                 {
                     Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
+                    llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
         }
-        else if (iAuth == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
         }
-        else if (iAuth == SUBMENU_CHANNEL && sMessage == UPMENU)
-        {
-            llMessageLinked(LINK_SET, SUBMENU_CHANNEL, PARENTMENU , NULL_KEY);
-        }
-        else if (iAuth == DIALOG_RESPONSE)
+        else if (iNum == DIALOG_RESPONSE)
         {
             if (kMessageID == g_kDialogID)
             {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
-                key kAV = (key)llList2String(lMenuParams, 0);
+                key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
-                g_sMenuUser = kAV;
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sButton == UPMENU)
                 {
                     if(g_sCurrentMenu == SUBMENU)
                     {
-                        llMessageLinked(LINK_SET, SUBMENU_CHANNEL, PARENTMENU, kAV);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
                     }
                     else if (g_sCurrentMenu == L_COLOR)
                     {
-                        ColorCategoryMenu(kAV);
+                        ColorCategoryMenu(kAv, iAuth);
                     }
                     else
                     {
-                        OptionsMenu(kAV);
+                        OptionsMenu(kAv, iAuth);
                     }
                 }
                 else if (g_sCurrentMenu == "L-Options")
@@ -555,34 +619,34 @@ default
                         g_vLeashColor = (vector)GetDefaultSetting(L_COLOR);
                         g_bParticleGlow = TRUE;
                         g_lSettings = g_lDefaultSettings;
-                        Notify(g_sMenuUser, "Leash-settings restored to collar defaults.", FALSE);
+                        Notify(kAv, "Leash-settings restored to collar defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
-                        llMessageLinked(LINK_SET, LOCALSETTING_DELETE, "leash", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "leash", NULL_KEY);
                         if (!g_bInvisibleLeash && g_bLeashActive)
                         {
                             StartParticles(g_kParticleTarget);
                         }
-                        OptionsMenu(kAV);
+                        OptionsMenu(kAv, iAuth);
                     }
                     else if (sButton == L_TEXTURE)
                     {
-                        TextureMenu(kAV);
+                        TextureMenu(kAv, iAuth);
                     }
                     else if (sButton == L_COLOR)
                     {
-                        ColorCategoryMenu(kAV);
+                        ColorCategoryMenu(kAv, iAuth);
                     }
                     else if (sButton == L_DENSITY)
                     {
-                        DensityMenu(kAV);
+                        DensityMenu(kAv, iAuth);
                     }
                     else if (sButton == L_GRAVITY)
                     {
-                        GravityMenu(kAV);
+                        GravityMenu(kAv, iAuth);
                     }
                     else if (sButton == L_SIZE)
                     {
-                        SizeMenu(kAV);
+                        SizeMenu(kAv, iAuth);
                     }
                     else if (llGetSubString(sButton, 0, 3) == "Glow")
                     {
@@ -592,16 +656,16 @@ default
                         {
                             StartParticles(g_kParticleTarget);
                         }
-                        OptionsMenu(kAV);
+                        OptionsMenu(kAv, iAuth);
                     }
                 }
                 else if (g_sCurrentMenu == "L-ColorCat")
                 {
-                    g_lColors = [];
                     g_sCurrentCategory = sButton;
-                    g_sMenuUser = kAV;
-                    string sUrl = g_sHTTPDB_Url + "static/colors-" + g_sCurrentCategory + ".txt";
-                    g_kHTTPID = llHTTPRequest(sUrl, [HTTP_METHOD, "GET"], "");
+                    integer iIndex = llListFindList(g_lCategories,[sButton]);
+                    g_lColors = llParseString2List(llList2String(g_lAllColors, iIndex), ["\n", "|"], []);
+                    g_lColors = llListSort(g_lColors, 2, TRUE);
+                    ColorMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_COLOR)
                 {
@@ -615,41 +679,41 @@ default
                     {
                         StartParticles(g_kParticleTarget);
                     }
-                    ColorMenu(kAV);
+                    ColorMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_TEXTURE)
                 {
                     g_bInvisibleLeash = FALSE;
                     if (sButton == "Default")
                     {
-                        SetTexture(GetDefaultSetting(L_TEXTURE), g_sMenuUser);
+                        SetTexture(GetDefaultSetting(L_TEXTURE), kAv);
                     }
                     else if (sButton == "chain")
                     {
-                        SetTexture(sButton, g_sMenuUser);
+                        SetTexture(sButton, kAv);
                     }
                     else if(sButton == "rope")
                     {
-                        SetTexture(sButton, g_sMenuUser);
+                        SetTexture(sButton, kAv);
                     }
                     else if (sButton == "noTexture")
                     {
-                        SetTexture(sButton, g_sMenuUser);
+                        SetTexture(sButton, kAv);
                     }
                     else if (sButton == "noLeash")
                     {
-                        SetTexture(sButton, g_sMenuUser);
+                        SetTexture(sButton, kAv);
                     }
                     else
                     {
                         sButton = "leash_" + sButton;
                         if (llGetInventoryKey(sButton)) //the texture exists
                         {
-                            SetTexture(sButton, g_sMenuUser);
+                            SetTexture(sButton, kAv);
                         }
                     }
                     SaveSettings(L_TEXTURE, g_sParticleTexture, TRUE);
-                    TextureMenu(kAV);
+                    TextureMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_DENSITY)
                 {
@@ -670,7 +734,7 @@ default
                         StartParticles(g_kParticleTarget);
                     }
                     SaveSettings(L_DENSITY, (string)g_fBurstRate, TRUE);
-                    DensityMenu(kAV);
+                    DensityMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_GRAVITY)
                 {
@@ -686,7 +750,7 @@ default
                     {
                         if (g_vLeashGravity == <0.0,0.0,0.0>)
                         {
-                            Notify(kAV, "You have reached already 0 leash-gravity.", FALSE);
+                            Notify(kAv, "You have reached already 0 leash-gravity.", FALSE);
                         }
                         else
                         {
@@ -702,7 +766,7 @@ default
                         StartParticles(g_kParticleTarget);
                     }
                     SaveSettings(L_GRAVITY, (string)g_vLeashGravity.z, TRUE);
-                    GravityMenu(kAV);
+                    GravityMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_SIZE)
                 {
@@ -719,7 +783,7 @@ default
                     {
                         if (g_vLeashSize == <0.04,0.04,0.0>)
                         {
-                            Notify(kAV, "You have reached the minimum size for particles.", FALSE);
+                            Notify(kAv, "You have reached the minimum size for particles.", FALSE);
                         }
                         else
                         {
@@ -736,11 +800,11 @@ default
                         StartParticles(g_kParticleTarget);
                     }
                     SaveSettings(L_SIZE, (string)g_vLeashSize.x, TRUE);
-                    SizeMenu(kAV);
+                    SizeMenu(kAv, iAuth);
                 }
             }
         }
-        else if (iAuth == LOCALSETTING_RESPONSE)
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             //debug("LocalSettingsResponse: " + sMessage);
             integer iIndex = llSubStringIndex(sMessage, "=");
@@ -782,45 +846,6 @@ default
                     g_vLeashColor = (vector)llList2CSV(llList2List(lRecievedSettings, iIndex, iIndex + 2));
                     SaveSettings(L_COLOR, Vec2String(g_vLeashColor), FALSE);
                 }
-            }
-        }
-        // All default settings from the settings notecard are sent over "HTTPDB_RESPONSE" channel
-        else if (iAuth == HTTPDB_RESPONSE)
-        {
-            //debug("HTTPDBResponse: " + sMessage);
-            integer iIndex = llSubStringIndex(sMessage, "=");
-            string sToken = llGetSubString(sMessage, 0, iIndex -1);
-            string sValue = llGetSubString(sMessage, iIndex + 1, -1);
-
-            if (llGetSubString(sToken, 0, 4) == "leash")
-            {
-                sToken = llGetSubString(sToken, 5, -1);
-                if (sToken == L_TEXTURE)
-                {
-                    SetTexture(sValue, NULLKEY);
-                    SaveDefaultSettings(sToken, sValue);
-                }
-                else if (sToken == L_DENSITY)
-                {
-                    g_fBurstRate = (float)sValue;
-                    SaveDefaultSettings(sToken, sValue);
-                }
-                else if (sToken == L_GRAVITY)
-                {
-                    g_vLeashGravity.z = -(float)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashGravity));
-                }
-                else if (sToken == L_SIZE)
-                {
-                    g_vLeashSize.x = (float)sValue;
-                    g_vLeashSize.y = (float)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashSize));
-                }
-                else if (sToken == L_COLOR)
-                {
-                    g_vLeashColor = (vector)sValue;
-                    SaveDefaultSettings(sToken, Vec2String(g_vLeashColor));
-                }
                 else if (sToken == "Glow")
                 {
                     if (llToLower(sValue) == "off")
@@ -840,7 +865,7 @@ default
                 }
             }
         }
-        else if (iAuth == HTTPDB_EMPTY)
+        else if (iNum == LM_SETTING_EMPTY)
         {
             //debug("HTTPDB EMPTY");
             if (sMessage == ("leash" + L_TEXTURE)) // no designer-set texture
@@ -925,21 +950,6 @@ default
             {//slow down the sensor:
                 g_iAwayCounter = 1;
                 llSetTimerEvent(11.0);
-            }
-        }
-    }
-
-    http_response(key kID, integer iStatus, list lMeta, string sBody)
-    {
-        if (kID == g_kHTTPID)
-        {
-            if (iStatus == 200)
-            {
-                //we'll have gotten several g_iLines like "Chartreuse|<0.54118, 0.98431, 0.09020>"
-                //parse that into 2-strided list of g_lColorsName, colorvector
-                g_lColors = llParseString2List(sBody, ["\n", "|"], []);
-                g_lColors = llListSort(g_lColors, 2, TRUE);
-                ColorMenu(g_sMenuUser);
             }
         }
     }
