@@ -4,12 +4,10 @@ Hello everybody. A few highlights on this new release.
 
 On the user point of view:
 
-1. The modular updater now has a web interface. Just carefully follow instructions!
-
-2. When a dialog button has a too long label (long avatar name, long folder name... ),
+1. When a dialog button has a too long label (long avatar name, long folder name... ),
 full text for all choices will appear in the chat console.
 
-3. New 'Actions' submenu in #RLV Browsing, proposing to choose between adding
+2. New 'Actions' submenu in #RLV Browsing, proposing to choose between adding
 and replacing folders and even locking them. 2 icons before each folder name for complete
 worn status.
 
