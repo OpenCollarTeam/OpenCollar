@@ -1,0 +1,68 @@
+================
+OpenCollar - Quick Guide
+================
+
+Your prefix are the first letter of your firstname and the first letter of your surname. If you don't have a surname, your surname will always be "Resident".
+
+    - Wendy Starfall (wendy.starfall)'s prefix is: ws
+    - wendy4u (wendy4u Resident)'s prefix is: wr
+    - ????i? ?l?? (fraulein.fapalot)'s prefix is: ff
+ 
+Your prefix is used to issue commands in the Nearby Chat.
+ 
+    <prefix>menu
+    <prefix>pose
+    <prefix>kneel
+    <prefix>release
+    <prefix>grab
+    <prefix>yank
+    <prefix>unleash
+    <prefix>sitnow
+ 
+If you don't like your prefix, you can change it.
+ 
+    wsprefix wen
+    wrprefix we
+    jsprefix sex
+ 
+You can also issue commands on channel 1.
+ 
+    /1<prefix>menu
+ 
+Or if you don't like channel 1 set a different channel.
+ 
+    <prefix>channel 2
+    <prefix>channel 3
+    <prefix>channel 69
+    <prefix>channel 9001
+ 
+If you are considerate about lag, you can also turn off the Nearby Chat listener.
+ 
+    <prefix>channel -1
+ 
+Your collar also has a safeword which you simply type in the nearby chat. This will lift all RLV resctrictions, unpose, unleash and unlock you. It will also send your Owner a message to check for your well being.
+ 
+    RED
+ 
+RED in capital letters is the default safeword.
+ 
+If that's too hard to remember you can easily change it.
+
+    <prefix>safeword Mayday!
+    <prefix>safeword taxi
+    <prefix>safeword BANANA
+
+Too much to type? There is also a menu that has buttons for all these many commands. The menu can be opened in multiple ways.
+
+    1. <prefix>menu
+    2. Click the collar!
+    3. If you use the Sub AO, it's menu has a button.
+    4. If you are an Owner, use the Owner HUD.
+    
+Yay! Now that you know how to use your prefix, your channel, chat commands and the menu, you are ready to find an Owner. If things don't turn out all that great:
+
+    <prefix>runaway
+    
+===============================    
+ For a full manual, please visit www.opencollar.at
+===============================

@@ -1,0 +1,56 @@
+ITEM|~version
+ITEM|OpenCollar Guide
+ITEM|OpenCollar License
+ITEM|defaultsettings
+ITEM|Temple
+ITEM|Tranquility
+ITEM|!totallytransparent
+ITEM|chain
+ITEM|rope
+ITEM|Leash Holder
+ITEM|Grabby Post
+ITEM|~bottom
+ITEM|~foot-bottom
+ITEM|~foot-top
+ITEM|~hug
+ITEM|~kiss-bottom
+ITEM|~kiss-top
+ITEM|~leap-bottom
+ITEM|~leap-top
+ITEM|~love-bottom
+ITEM|~love-top
+ITEM|~top
+ITEM|attention
+ITEM|belly
+ITEM|bendover
+ITEM|booty
+ITEM|cutie
+ITEM|davinci
+ITEM|display
+ITEM|dive
+ITEM|doggie
+ITEM|faint
+ITEM|kneel
+ITEM|nadu
+ITEM|naduw
+ITEM|rise
+ITEM|stomp
+ITEM|tower
+ITEM|coupleanims
+SCRIPT|OpenCollar - cleanup
+SCRIPT|OpenCollar - menu
+SCRIPT|OpenCollar - auth
+SCRIPT|OpenCollar - getavi
+SCRIPT|OpenCollar - listener
+SCRIPT|OpenCollar - dialog
+SCRIPT|OpenCollar - update
+SCRIPT|OpenCollar - settings
+SCRIPT|OpenCollar - anim
+SCRIPT|OpenCollar - touch
+SCRIPT|OpenCollar - leash
+SCRIPT|OpenCollar - leashParticle
+SCRIPT|OpenCollar - lock
+SCRIPT|OpenCollar - coupleanim1
+SCRIPT|OpenCollar - coupleanim2
+SCRIPT|OpenCollar - appearance
+SCRIPT|OpenCollar - hide
