@@ -55,7 +55,10 @@ ITEM|~footkiss
 ITEM|~hug-feminine
 ITEM|~jumphold
 ITEM|~jumphug
-ITEM|~kiss
+ITEM|~kiss-top
+ITEM|~kiss-bottom
+ITEM|~love-top
+ITEM|~love-bottom
 ITEM|~kiss-feminine
 ITEM|~kneelhug
 ITEM|~kneelhug-dom
@@ -64,12 +67,11 @@ ITEM|~pet_the_pet
 ITEM|~sub-hug
 ITEM|~sub-pet
 ITEM|beautystand
-ITEM|bracelets
 ITEM|open
 ITEM|plead
 ITEM|sleep
 ITEM|squirm
-ITEM|submit
 ITEM|subsit
 ITEM|underground
+ITEM|shock
 ITEM|OC_Leash_Post
