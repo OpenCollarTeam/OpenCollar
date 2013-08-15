@@ -1,6 +1,6 @@
-Issue: 20130809.1
+Issue: 20130815.1
 
-Welcome to OpenCollar 3.900
+Welcome to OpenCollar 3.910 HOTFIX
 
 Features & Bugfixes:
 
@@ -24,6 +24,14 @@ Content Upgrade:
 - Leash Holder V and Grabby Post
 - Quick Guide Updated
 - Chain Texture and Lock Sound Revamped
+
+HOTFIX 3.910:
+
+- Couple Animations Fixed & Renamed
+- Pose "bracelets" Re-added
+- New Animations Added
+- Informative Sign on Updater
+- Minor Cosmetic Changes on Base Collar
 
 Tripple Thank You:
 
