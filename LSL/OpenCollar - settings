@@ -27,6 +27,8 @@ string WIKI = "Website";
 string UPMENU = "^";
 key g_kMenuID;
 key g_kWearer;
+string g_sStoredLine;
+string g_sLINE_CONTINUATION = "&&";
 
 string defaultscard = "defaultsettings";
 integer defaultsline = 0;
@@ -239,9 +241,9 @@ DumpCache()
         tok = PeelToken(tok, 1);
         add += tok + "~" + val;
         c = llStringLength(out) + llStringLength(add) + 2;
-        if (c > 1024) // 1024 string limit
+        if (c > 255) // 1024 string limit (but only 255 allowed to be read from a notecard)
         {
-            llWhisper(0, out);
+            WhisperLine(out);
             add = "";
             out = "\n" + DESIGN_ID + sid + "=" + tok + "~" + val;
         }
@@ -265,13 +267,23 @@ DumpCache()
         tok = PeelToken(tok, 1);
         add += tok + "~" + val;
         c = llStringLength(out) + llStringLength(add) + 2;
-        if (c >= 1024) // 1024 string limit
+        if (c >= 255) // 1024 string limit (but only 255 allowed to be read from a notecard)
         {
-            llWhisper(0, out);
+            WhisperLine( out);
             add = "";
             out = "\nUser_" + sid + "=" + tok + "~" + val;
         }
         else out += add;
+    }
+    WhisperLine( out);
+}
+
+WhisperLine( string out )
+{
+    while ( llStringLength( out ) > 250 )
+    {
+        llWhisper( 0, llGetSubString( out, 0, 249 ) + g_sLINE_CONTINUATION );
+        out = "\n" + llDeleteSubString( out, 0, 249 ) ;
     }
     llWhisper(0, out);
 }
@@ -384,11 +396,30 @@ default
             string tok;
             string val;
             integer i;
+            if (data == EOF && g_sStoredLine != "" )
+            {
+                data = g_sStoredLine ;
+                g_sStoredLine = "" ;
+                Debug( "Dataserver EOF, stored line used, data = " + data ) ;
+            }
             if (data != EOF)
             {
+                if ( g_sStoredLine != "" ) 
+                {
+                    data = g_sStoredLine + data ;
+                    g_sStoredLine = "" ;
+                    Debug( "Dataserver - Appending line - data = " + data ) ;
+                }
                 data = llStringTrim(data, STRING_TRIM_HEAD);
+                if ( llGetSubString(data, -2, -1) == g_sLINE_CONTINUATION )
+                {
+                    g_sStoredLine = llDeleteSubString( data, -2, -1 ) ;
+                    data = "" ;
+                    Debug( "Dataserver - Continuation - stored line = " + g_sStoredLine );
+                }
                 // first we can filter out & skip blank lines & remarks
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
+                Debug( "Dataserver - Processing line = " + data );
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
                 i = llSubStringIndex(data, "_");
