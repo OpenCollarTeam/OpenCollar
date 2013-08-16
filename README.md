@@ -1,4 +1,5 @@
-OpenCollarUpdater
-=================
+OpenCollarUpdater Dev/Beta/RC
+=============================
 
-The repository for the OpenCollar main release channel.
+'Tis the beta branch. Keep the pull requests coming!
+Each itsy bit of help is greatly appreciated. <3
