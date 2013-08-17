@@ -1,0 +1,3 @@
+#---Designer Defaults---
+jsbmc_leashParticle=Texture~leash_psych~Color~<1,0,1>~Glow~1~Gravity~-0.04~Density~0.5~Size~0.04
+jsbmc_Global=CType~implant
