@@ -12,7 +12,7 @@ list g_lTextures;
 list g_lTextureDefaults;
 string g_sParentMenu = "Appearance";
 string g_sSubMenu = "Textures";
-
+string CTYPE = "collar";
 integer iLength;
 list lButtons;
 list g_lNewButtons;//is this used? 2010/01/14 Starship
@@ -60,6 +60,7 @@ integer TOUCH_EXPIRE = -9503;
 string UPMENU = "^";
 
 key g_kWearer;
+string g_sScript;
 
 // texture name element divider, put constant in so can be changed throughout the script with one change.
 string SEPARATOR = "~";
@@ -71,18 +72,7 @@ Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 string GetDefaultTexture(string ele)
 {
     integer i = llListFindList(g_lTextureDefaults, [ele]);
@@ -172,36 +162,19 @@ list BuildTexButtons()
     return out;
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -231,7 +204,7 @@ TextureMenu(key kID, integer iPage, integer iAuth)
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the collar you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
+    string sPrompt = "Pick which part of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
     lButtons = llListSort(g_lElements, 1, TRUE);
     g_kElementID = Dialog(kAv, sPrompt, lButtons, ["*Touch*", UPMENU], 0, iAuth);
 }
@@ -271,7 +244,7 @@ SetElementTexture(string sElement, string sTex)
     if (~iIndex) g_lTextures = llListReplaceList(g_lTextures, [sTex], iIndex + 1, iIndex + 1);
     else g_lTextures += [s_CurrentElement, sTex];
     //save to settings
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + sElement + "=" + sTex, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sElement + "=" + sTex, NULL_KEY);
 }
 string DumpSettings(string sep)
 {
@@ -290,7 +263,7 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
-
+		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         //loop through non-root prims, build element list
         integer n;
         integer iLinkCount = llGetNumberOfPrims();
@@ -319,13 +292,13 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the textures.", FALSE);
+                    Notify(kID, "You are not allowed to change the textures.", FALSE);
                     if (!llSubStringIndex(sStr, "menu "))
                         llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                     if (!llSubStringIndex(sStr, "menu "))
                         llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
                 }
@@ -349,40 +322,31 @@ default
                 //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
                 llResetScript();
             }
-            else if (sStr == "settings")
+            else if (kID != g_kWearer && iNum != COMMAND_OWNER) return;
+            if (sStr == "settings") Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
+            else if (g_iAppLock)
             {
-                Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
+                Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
             }
-            else if (StartsWith(sStr, "settexture"))
+            else
             {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+                list lParams = llParseString2List(sStr, [" "], []);
+                string sElement = llList2String(lParams, 1);
+                string sTex = llList2String(lParams, 2);
+                // subroutine to make chat entry of element non-case sensitive
+                string test;
+                integer l = 2;
+                for (; l <= llGetNumberOfPrims(); l++)
                 {
-                    Notify(kID,"You are not allowed to change the textures.", FALSE);
-                }
-                else if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-                }
-                else
-                {
-                    list lParams = llParseString2List(sStr, [" "], []);
-                    string sElement = llList2String(lParams, 1);
-                    string sTex = llList2String(lParams, 2);
-                    // subroutine to make chat entry of element non-case sensitive
-                    string test;
-                    integer l = 2;
-                    for (; l <= llGetNumberOfPrims(); l++)
+                    test = ElementType(l);
+                    if (llToLower(test) == llToLower(sElement))
                     {
-                        test = ElementType(l);
-                        if (llToLower(test) == llToLower(sElement))
-                        {
-                            sElement = test;
-                            jump break;
-                        }
+                        sElement = test;
+                        jump break;
                     }
-                    @break;
-                    SetElementTexture(sElement, sTex);
                 }
+                @break;
+                SetElementTexture(sElement, sTex);
             }
         }
         else if (iNum == LM_SETTING_RESPONSE)
@@ -390,14 +354,16 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
-            else if (PeelToken(sToken, 0) == GetScriptID())
+			integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1); // element
-                integer i = llListFindList(g_lTextureDefaults, [sToken]);
+                sToken = llGetSubString(sToken, i + 1, -1);
+                i = llListFindList(g_lTextureDefaults, [sToken]);
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
                 else g_lTextureDefaults += [sToken, sValue];
             }
+			else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
+			else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -422,7 +388,7 @@ default
                     }
                     else if (sMessage == "*Touch*")
                     {
-                        Notify(kAv, "Please touch the part of the collar you want to retexture. You can press ctr+alt+T to see invisible parts.", FALSE);
+                        Notify(kAv, "Please touch the part of the " + CTYPE + " you want to retexture. You can press ctr+alt+T to see invisible parts.", FALSE);
                         g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
                     }
                     else

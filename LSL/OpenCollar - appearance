@@ -73,8 +73,8 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-//string UPMENU = "↑";//when your menu hears this, give the parent menu
 string UPMENU = "^";
+string CTYPE = "collar";
 
 key g_kWearer;
 
@@ -86,36 +86,19 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 } 
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -123,18 +106,7 @@ Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 integer MinMaxUnscaled(vector vSize, float fScale)
 {
     if (fScale < 1.0)
@@ -150,9 +122,9 @@ integer MinMaxUnscaled(vector vSize, float fScale)
     {
         if (vSize.x >= 10.0)
             return TRUE;
-        if (vSize.x >= 10.0)
+        if (vSize.y >= 10.0)
             return TRUE;
-        if (vSize.x >= 10.0)
+        if (vSize.z >= 10.0)
             return TRUE;
     }
     return FALSE;
@@ -173,9 +145,9 @@ integer MinMaxScaled(vector vSize, float fScale)
     {
         if (vSize.x > 10.0)
             return TRUE;
-        if (vSize.x > 10.0)
+        if (vSize.y > 10.0)
             return TRUE;
-        if (vSize.x > 10.0)
+        if (vSize.z > 10.0)
             return TRUE;
     }
     return FALSE;
@@ -273,7 +245,7 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
         }
         g_iScaleFactor = iScale;
         g_iSizedByScript = TRUE;
-        Notify(kAV, "Scaling finished, the collar is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
+        Notify(kAV, "Scaling finished, the " + CTYPE + " is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
     }
 }
 
@@ -305,7 +277,7 @@ AdjustRot(vector vDelta)
 
 RotMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar rotation.";
+    string sPrompt = "Adjust the " + CTYPE + " rotation.";
     list lMyButtons = ["tilt up", "right", "tilt left", "tilt down", "left", "tilt right"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -322,7 +294,7 @@ RotMenu(key kAv, integer iAuth)
 
 PosMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar position:\nChoose the size of the nudge (S/M/L), and move the collar in one of the three directions (X/Y/Z).\nCurrent nudge size is: ";
+    string sPrompt = "Adjust the " + CTYPE + " position:\nChoose the size of the nudge (S/M/L), and move the collar in one of the three directions (X/Y/Z).\nCurrent nudge size is: ";
     list lMyButtons = ["left", "up", "forward", "right", "down", "backward"];// ria iChange
     if (g_fNudge!=g_fSmallNudge) lMyButtons+=["Nudge: S"];
     else sPrompt += "Small.";
@@ -346,7 +318,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar scale. It is based on the size the collar has on rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
+    string sPrompt = "Adjust the " + CTYPE + " scale. It is based on the size the collar has on rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -367,12 +339,12 @@ DoMenu(key kAv, integer iAuth)
     string sPrompt;
     if (g_iAppLock)
     {
-        sPrompt = "The appearance of the collar has be locked. To modified it a owner has to unlock it.";
+        sPrompt = "The appearance of the " + CTYPE + " has be locked. To modified it a owner has to unlock it.";
         lMyButtons = [TICKED + APPLOCK];
     }
     else
     {
-        sPrompt = "Which aspect of the appearance would you like to modify? Owners can lock the appearance of the collar, so it cannot be changed at all.\n";
+        sPrompt = "Which aspect of the appearance would you like to modify? Owners can lock the appearance of the " + CTYPE + ", so it cannot be changed at all.\n";
     
         lMyButtons = [UNTICKED + APPLOCK];
         lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
@@ -437,7 +409,7 @@ default
                 //give this plugin's menu to id
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
+                    Notify(kID,"You are not allowed to change the " + CTYPE + " appearance.", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
                 }
                 else DoMenu(kID, iNum);
@@ -451,7 +423,7 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
+                    Notify(kID,"You are not allowed to change the " + CTYPE + " appearance.", FALSE);
                 }
                 else DoMenu(kID, iNum);
             }
@@ -459,11 +431,11 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar rotation.", FALSE);
+                    Notify(kID,"You are not allowed to change the " + CTYPE + " rotation.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                     DoMenu(kID, iNum);
                 }
                 else RotMenu(kID, iNum);
@@ -472,11 +444,11 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar position.", FALSE);
+                    Notify(kID,"You are not allowed to change the " + CTYPE + " position.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                     DoMenu(kID, iNum);
                 }
                 else PosMenu(kID, iNum);
@@ -485,11 +457,11 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar size.", FALSE);
+                    Notify(kID,"You are not allowed to change the " + CTYPE + " size.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                     DoMenu(kID, iNum);
                 }
                 else SizeMenu(kID, iNum);
@@ -510,8 +482,8 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-
-            if (sToken == g_sAppLockToken)
+			if (sToken == Global_CType) CTYPE = sValue;
+            else if (sToken == g_sAppLockToken)
             {
                 g_iAppLock = (integer)sValue;
             }
@@ -690,7 +662,7 @@ default
                                 // ResSize requested
                                 if (g_iScaleFactor == 100)
                                 {
-                                    Notify(kAv, "The collar is already at rez size, resizing canceled.", FALSE); 
+                                    Notify(kAv, "The " + CTYPE + " is already at rez size, resizing canceled.", FALSE); 
                                 }
                                 else
                                 {

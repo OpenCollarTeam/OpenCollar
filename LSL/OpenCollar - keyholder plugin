@@ -127,20 +127,10 @@ integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
 integer WEARERLOCKOUT=620;
 
 integer TIMER_EVENT = -10000; // str = "start" or "end". For start, either "online" or "realtime".
+string g_sScript;
 
 //===============================================================================
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 BuildLockElementList() // EB :kc was here
 {
     integer n;
@@ -186,36 +176,19 @@ string strReplace(string str, string search, string replace) {
 //= return        :    none
 //= description  :    notify targeted id and maybe the wearer
 //===============================================================================
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -238,6 +211,17 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
+}
+
+string Float2String(float in)
+{
+    string out = (string)in;
+    integer i = llSubStringIndex(out, ".");
+    while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
+    {
+        out = llGetSubString(out, 0, -2);
+    }
+    return out;
 }
 
 string CheckBox(string name, integer value)
@@ -522,20 +506,11 @@ updateVisible()
 //===============================================================================
 saveSettings()
 {
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE,
-        GetScriptID() + "list" + "=" +
-        llDumpList2String([
-            kh_on,
-            kh_range,
-            kh_disable_openaccess,
-            kh_lock_collar,
-            kh_public_key,
-            kh_main_menu,
-            kh_return_on_timer,
-            kh_auto_return_timer,
-            kh_auto_return_time,
-            g_iGlobalKey
-            ], ","), NULL_KEY);
+    string out;
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "list" + "=" +
+        llDumpList2String([kh_on, Float2String(kh_range), kh_disable_openaccess, kh_lock_collar,
+            kh_public_key, kh_main_menu, kh_return_on_timer, kh_auto_return_timer,
+            kh_auto_return_time, g_iGlobalKey], ","), NULL_KEY);
 }
 
 loadSettings(string sSettings)
@@ -699,6 +674,7 @@ default
 {
     state_entry()
     {
+		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // sleep a second to allow all scripts to be initialized
         llSleep(1.0);
         // send request to main menu and ask other menus if they want to register with us
@@ -845,9 +821,10 @@ default
             list params = llParseString2List(str, ["="], []);
             string token = llList2String(params, 0);
             string value = llList2String(params, 1);
-            if (PeelToken(token, 0) == GetScriptID())
+            integer i = llSubStringIndex(token, "_");
+            if (llGetSubString(token, 0, i) == g_sScript)
             {
-                token = PeelToken(token, 1);
+                token = llGetSubString(token, i + 1, -1);
                 if (token == "list") loadSettings(value);
             }
             else if (token == "auth_openaccess") oc_openaccess = (integer)value;

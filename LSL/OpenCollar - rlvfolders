@@ -88,57 +88,29 @@ list g_lSearchList; //list of folders to search
 integer g_iLastFolderState;
 
 key g_kWearer;
-
+string g_sScript;
 
 Debug(string sMsg)
 {
     //llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
     }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
-    }
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 ParentFolder() {
     list lFolders = llParseString2List(g_sCurrentFolder,["/"],[]);
     g_iPage = 0; // changing the folder also means going back to first page
@@ -300,8 +272,8 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         iIndex = llGetListLength(g_lFolderLocks)-2;
         doLockFolder(iIndex);
     }
-    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  GetScriptID() + "Locks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  GetScriptID() + "Locks", NULL_KEY);
+    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sScript + "Locks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
 }
 
 doLockFolder(integer iIndex)
@@ -333,8 +305,8 @@ updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Unshared=" + (string) g_iUnsharedLocks, NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "Unshared", NULL_KEY);
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Unshared=" + (string) g_iUnsharedLocks, NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "Unshared", NULL_KEY);
 }
 
 doLockUnshared()
@@ -517,6 +489,7 @@ default
 {
     state_entry()
     {
+		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         integer i;
         for (i=0;i < llGetListLength(g_lChildren);i++)
@@ -725,9 +698,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+			if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "Locks")
                 {
                     g_lFolderLocks = llParseString2List(sValue, [","], []);

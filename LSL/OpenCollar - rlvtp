@@ -8,7 +8,7 @@ key g_kLMID;//store the request id here when we look up  a LM
 
 key kMenuID;
 key lmkMenuID;
-
+string CTYPE = "collar";
 list g_lOwners;
 
 string g_sParentMenu = "RLV";
@@ -93,53 +93,26 @@ integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "^";
 //string MORE = ">";
+string g_sScript;
 
 Debug(string sMsg)
 {
     //llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -155,7 +128,7 @@ Menu(key kID, integer iAuth)
 {
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -284,7 +257,7 @@ UpdateSettings()
 
 SaveSettings()
 {
-    string token = GetScriptID() + "List";
+    string token = g_sScript + "List";
     //save to DB
     if (llGetListLength(g_lSettings)>0)
     {
@@ -301,7 +274,7 @@ ClearSettings()
     //clear settings list
     g_lSettings = [];
     //remove tpsettings from DB... now done by httpdb itself
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "List", NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", NULL_KEY);
     //main RLV script will take care of sending @clear to viewer
     //avoid race conditions
     llSleep(1.0);
@@ -342,7 +315,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         if (!found)
         {
-            Notify(kID,"The landmark '"+llList2String(lParams, 1)+"' has not been found in the collar of "+llKey2Name(g_kWearer)+".",FALSE);
+            Notify(kID,"The landmark '"+llList2String(lParams, 1)+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
         }
     }
     else
@@ -417,6 +390,7 @@ default
 
     state_entry()
     {
+		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
 
         //llSleep(1.0);
@@ -440,13 +414,14 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == GetScriptID() + "List")
+            if (sToken == g_sScript + "List")
             {
                 //throw away first element
                 //everything else is real settings (should be even number)
                 g_lSettings = llParseString2List(sValue, [","], []);
                 UpdateSettings();
             }
+			else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == RLV_REFRESH)
         {
