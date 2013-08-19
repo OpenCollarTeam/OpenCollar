@@ -1,0 +1,20 @@
+Because of SL limitations you have to be within the same Region to control a collar wearer.
+
+To send someone to a different Sim, you need to have a landmark in your Owners Hud first.
+You can then force them to that location BEFORE you Teleport yourself.
+You can add up to 10 Landmarks for locations to the HUD, just drop them into the HUD's contents through edit. (limited to 512 total characters including spaces total)
+The hud does not like multiple locations all starting the same as it only uses the first 8 letters for uniqueness. So please don't have -
+My Deep Dungeon Rack
+My Deep Dungeon Stocks
+My Deep Dungeon Cross
+have
+My Rack
+My Stocks
+My Cross
+
+This is useful to send multiple subs to the same landmark at once.
+
+Or you can send a TP invite (lure) through IM's once you get there.
+
+
+North Glenwalker

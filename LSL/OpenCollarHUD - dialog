@@ -12,22 +12,11 @@ integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
-//integer CHAT = 505;//deprecated
 integer COMMAND_OBJECT = 506;
 integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
-
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
-
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
-
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU = 3002;
@@ -38,7 +27,6 @@ integer RLVR_CMD = 6010;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
-
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
@@ -63,8 +51,6 @@ integer pagesize = 12;
 string MORE = ">";
 string PREV = "<";
 string UPMENU = "^"; // string to identify the UPMENU button in the utility buttons
-//string SWAPBTN = "swap";
-//string SYNCBTN = "sync";
 string BLANK = " ";
 integer timeout = 300;
 integer repeat = 5;//how often the timer will go off, in seconds
@@ -96,21 +82,6 @@ Notify(key keyID, string szMsg, integer nAlsoNotifyWearer)
         }
     }
 }
-
-NewURL()
-{
-    //llMessageLinked(LINK_SET, SEND_CMD_ALL_SUBS, "remotemenu:off", "");
-    //llMessageLinked(LINK_SET, SEND_CMD_NEARBY_SUBS, "remotemenu:off", ""); // I do not think we need it as many times.
-    llMessageLinked(LINK_SET, SEND_CMD_NEARBY_SUBS, "remotemenu:off", "");//makesure the local ones clear it.
-    if(llGetFreeURLs() == 0)
-    {
-        //Debug("Unable to generate new url because there are not enough free urls");
-        return;
-    }
-    //Debug("Requesting new url. Remaining urls: " + (string)llGetFreeURLs());
-    g_kNewUrlRequest = llRequestURL();
-}
-
 
 list CharacterCountCheck(list in, key ID)
     // checks if any of the times is over 24 characters and removes them if needed
@@ -188,16 +159,6 @@ Dialog(key recipient, string prompt, list menuitems, list utilitybuttons, intege
     {
         thisprompt= prompt;
     }
-
-    //integer stop = llGetListLength(currentitems);
-    //integer n;
-    //for (n = 0; n < stop; n++)
-    //{
-    //    string name = llList2String(menuitems, start + n);
-    //    buttons += [name];
-    //}
-
-
 
     buttons = SanitizeButtons(buttons);
     utilitybuttons = SanitizeButtons(utilitybuttons);
@@ -294,7 +255,7 @@ CleanList()
     for (n = length - stridelength; n >= 0; n -= stridelength)
     {
         integer dietime = llList2Integer(menus, n + 3);
-        //debug("dietime: " + (string)dietime);
+
         if (now > dietime)
         {
             debug("menu timeout");
@@ -326,7 +287,7 @@ ClearUser(key rcpt)
 
 debug(string str)
 {
-    //llOwnerSay(llGetScriptName() + ": " + str);
+       // llOwnerSay(llGetScriptName() + ": " + str);
 }
 
 default
@@ -334,67 +295,12 @@ default
     state_entry()
     {
         g_keyWearer=llGetOwner();
-        NewURL();
     }
 
     on_rez(integer param)
     {
         llResetScript();
     }
-
-    changed(integer c)
-    {
-        if (c & (CHANGED_REGION | CHANGED_REGION_START | CHANGED_TELEPORT) )
-        {
-            //Debug("Changed Event!");
-            NewURL();
-        }
-    }
-
-    http_request(key kID, string sMethod, string sBody)
-    {debug("httprequest");
-            if ((sMethod == URL_REQUEST_GRANTED) && (kID == g_kNewUrlRequest) )
-            {
-                g_sCurrentUrl = sBody;
-                g_kNewUrlRequest = NULL_KEY;
-                //Debug("Obtained URL: " + g_sCurrentUrl);
-                llMessageLinked(LINK_SET, DIALOG_URL, sBody, "");//
-            }
-            else if ((sMethod == URL_REQUEST_DENIED) && (kID == g_kNewUrlRequest))
-            {
-                //Debug("There was a problem, and an URL was not assigned: " + sBody);
-                g_kNewUrlRequest = NULL_KEY;
-            }
-            else if (g_sCurrentUrl == "")
-            {
-                //Debug("Got Command While Offline: " + sBody);
-                llHTTPResponse(kID,403,"Forbidden");
-            }
-            else if (sMethod == "POST")
-            {//give a dialog with the options on the button labels
-                //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons
-                debug(sBody);
-                list params = llParseStringKeepNulls(sBody, ["|"], []);
-                key rcpt = (key)llList2String(params, 0);
-                if (rcpt == "")
-                {
-                    rcpt = g_keyWearer;
-                }
-                string prompt = llList2String(params, 1);
-                integer page = (integer)llList2String(params, 2);
-                list lbuttons = CharacterCountCheck(llParseStringKeepNulls(llList2String(params, 3), ["`"], []), rcpt);
-                list ubuttons = llParseStringKeepNulls(llList2String(params, 4), ["`"], []);
-                key menuid = llList2Key(params, 5);
-                string sub = llGetHTTPHeader(kID, "x-secondlife-owner-key");
-                g_lRemoteMenus += [menuid, sub];
-                debug(llList2CSV(g_lRemoteMenus));
-                //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
-                ClearUser(rcpt);
-                //now give the dialog and save the new stride
-                Dialog(rcpt, prompt, lbuttons, ubuttons, page, menuid);
-                llHTTPResponse(kID,202,"");//say we got it to the collar and prevet 502 error
-            }
-        }
 
     link_message(integer sender, integer num, string str, key id)
     {

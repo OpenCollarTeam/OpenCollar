@@ -122,8 +122,6 @@ DoTextures(string _style)
     // -- If we don't select "White" as the style, remove tintable flag
     if(_style != "White") tintable = FALSE;
     
-    // -- Get the actual texture setting ready
-    // integer _primNum = llGetNumberOfPrims(); // -- Yes this can be used, however, since the textures are hard-coded, no point.
     integer _primNum = 5;
     integer _i = 0;
     
@@ -215,12 +213,10 @@ DefinePosition()
 
 DoButtonOrder()
 {   // -- Set the button order and reset display
-    // -- llOwnerSay("Old Position: "+(string)(oldPos)+" :: New Position: "+(string)(newPos));
+
     list _tempList = [];
     integer _oldPos = llList2Integer(primOrder,oldPos);
-    // -- llOwnerSay("Position "+(string)oldPos+" in 'primOrder' is "+(string)_oldPos);
     integer _newPos = llList2Integer(primOrder,newPos);
-    // -- llOwnerSay("Position "+(string)newPos+" in 'primOrder' is "+(string)_newPos);
     
     integer _length = llGetListLength(primOrder);
     integer i = 2;
@@ -245,7 +241,6 @@ DoButtonOrder()
     
     primOrder = [];
     primOrder = _tempList;
-    // -- llOwnerSay(llList2CSV(_tempList));
     oldPos = -1;
     newPos = -1;
     
@@ -297,7 +292,6 @@ default
     {        
         if (attached==NULL_KEY)  // Being detached
         {
-            // -- Hidden = FALSE; -- Fixes Issue 615:       HUD forgets hide setting on relog.
             return;
         }
         
@@ -321,10 +315,7 @@ default
     }
     
     link_message(integer sender, integer num, string str, key id)
-    {
-        
-        // -- llOwnerSay(llGetScriptName()+": ["+(string)num+"] "+str+" ("+(string)id+")");
-        
+    {   
         if(num == SUBMENU && str == submenu)
         {
             currentmenu = submenu;
@@ -383,7 +374,6 @@ default
                         text += "change the color of the HUD buttons.\n";
                         if(tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
                         if(!tintable)text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                     
                         list buttons = [];
                         buttons += ["Gray Square"];
@@ -403,7 +393,6 @@ default
                         
                         string text = "This is the order menu, simply select the\n";
                         text += "button which you want to re-order.\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                         
                         list buttons = [];
                         integer i;
@@ -426,7 +415,6 @@ default
                     else if (response == "Reset")
                     {
                         string text = "Confirm reset of the entire HUD.\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                         list buttons = [];
                         buttons += ["Confirm"];
                         buttons += ["Cancel"];
@@ -475,7 +463,6 @@ default
                         string text = "Select the color you wish to tint the HUD.\n";
                         text += "If you don't see a color you enjoy, simply edit\n";
                         text += "and select a color under the menu you wish.\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                         
                         list buttons = [];
                         buttons += ["Orange"];
@@ -501,12 +488,8 @@ default
                     }
                     else if(response == "Menu")
                     {
-                        oldPos = llListFindList(primOrder, [2]);
-                        // -- llOwnerSay(response+" listed as position: "+(string)oldPos);
-                        
-                        string text = "Select the new position for "+response+"\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
-                        
+                        oldPos = llListFindList(primOrder, [2]);                       
+                        string text = "Select the new position for "+response+"\n\n";                     
                         list buttons = [];
                         
                         integer i = 2;
@@ -531,10 +514,7 @@ default
                     else if(response == "TPSubs")
                     {
                         oldPos = llListFindList(primOrder, [3]);
-                        // -- llOwnerSay(response+" listed as position: "+(string)oldPos);
                         string text = "Select the new position for "+response+"\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
-                        
                         list buttons = [];
                         
                         integer i = 2;
@@ -559,9 +539,7 @@ default
                     else if(response == "Cage")
                     {
                         oldPos = llListFindList(primOrder, [4]);
-                        // -- llOwnerSay(response+" listed as position: "+(string)oldPos);
                         string text = "Select the new position for "+response+"\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                         
                         list buttons = [];
                         
@@ -587,10 +565,7 @@ default
                     else if(response == "Couples")
                     {
                         oldPos = llListFindList(primOrder, [5]);
-                        // -- llOwnerSay(response+" listed as position: "+(string)oldPos);
-                        string text = "Select the new position for "+response+"\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
-                        
+                        string text = "Select the new position for "+response+"\n\n";  
                         list buttons = [];
                         
                         integer i = 2;
@@ -615,10 +590,7 @@ default
                     else if(response == "Leash")
                     {
                         oldPos = llListFindList(primOrder, [6]);
-                        // -- llOwnerSay(response+" listed as position: "+(string)oldPos);
-                        string text = "Select the new position for "+response+"\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
-                        
+                        string text = "Select the new position for "+response+"\n\n"; 
                         list buttons = [];
                         
                         integer i = 2;
@@ -643,7 +615,6 @@ default
                     else if (response == "Reset")
                     {
                         string text = "Confirm reset of the button order to default.\n\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                         list buttons = [];
                         buttons += ["Confirm"];
                         buttons += ["Cancel"];
@@ -677,7 +648,6 @@ default
                         text += "change the color of the HUD buttons.\n";
                         if(tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
                         if(!tintable)text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
-                        // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                     
                         list buttons = [];
                         buttons += ["Gray Square"];
@@ -731,7 +701,7 @@ default
         {
             if(id == menuid)
             {
-                llInstantMessage(llGetOwner(),"Menu timed out!");                
+                llOwnerSay("Options Menu timed out!");               
             }
         }
         
@@ -752,6 +722,6 @@ default
     
     timer()
     {
-        // -- New dialog system depreceates this function
+        //
     }
-} // End standard
+}

@@ -9,33 +9,7 @@
 // --- 06-17-2009 by Betsy Hastings
 // --- 
 // -----------------------------------------------------------
-
 // ------------------- constants & variables -----------------
-
-// This script has been modified slightly to work with the new Owners HUD 3.4
-
-// The cool color text and tinting was unfortunatly removed for two reasons: =(
-// A) The text was off the screen if positioned on top, or cut off of the button was close to the side.
-// B) If the user was using a tinted hud/texture, the color tint would be modified.
-// Id like to go back and add in a small/invis prim that changes position on placement for this.
-// It could aso display other HUD messages.
-
-// Changelog:
-// 1) Removed: touch(integer total_number) completly
-// 2) Script moved to root
-// 3) llSetLinkColor(3 -changed to- llSetLinkColor(4
-// 4) llSetLinkColor(4,<1,0,0>,ALL_SIDES);  -changed to- llSetLinkColor(4,<1,1,1>,ALL_SIDES);
-// 5) llSetText -changed to- //llSetText
-// 6) llSetLinkColor -changed to- //llSetLinkColor
-// 7) checks if the victim is using a RLViewer instead of checking for a relay (see below)
-// integer answerchannel = 1812221819;
-// integer answerlisten;
-// line 243 llOWnerSay (message) = found avis
-// line 247 check for viewer verrsion instead of answer from relay
-// increased listener timeout to 10 seconds (line 250)
-// listen event changed accordingly to listen on answerchannel for answer of viewer
-// line 292 llOwnerSay(msg); = found avis with viewer
-
 // --- integer ---
 integer commchannel = -987654321;
 integer count = 0;
@@ -62,7 +36,7 @@ key victimkey;
 key menuid;
 
 // --- float ---
-float range=20.0;  // as far as llSay carries
+float range=20.0;  // So we don't scan to far away
 
 // --- list ---
 list buttons;
@@ -86,8 +60,6 @@ string victim;
 // --- vector ---
 vector pos;
 rotation rot;
-
-// ------------------------------------------------------------------
 
 // --- functions ---
 key ShortKey()
@@ -229,7 +201,6 @@ default
 
     listen(integer channel,string name,key id,string message)
     {
-        //debug("that comes back on RLVRSchannel: "+ " ,name: " + name+ " ,message: "+message);
         cmd = llGetSubString(message,0,6);
         if (channel == relaychannel && cmd == "locator")
         {
@@ -255,15 +226,15 @@ default
             found = found + [llDetectedName(i)]; // add name to list 'found'
             message += llDetectedName(i)+"\n";
             relaylisten = llListen(relaychannel,"",NULL_KEY,"");
-            llSay(relaychannel,"locator,"+(string)llDetectedKey(i)+",!version");//query for a RLVRS
+            llRegionSayTo((string)llDetectedKey(i),relaychannel,"locator,"+(string)llDetectedKey(i)+",!version");//query for a RLVRS...NG changed to RegionSayTo
         }
-        llSetTimerEvent(5.0);
+        llSetTimerEvent(1.0); //reduced this time since we are using RegionSayTo
         
     }
 
     no_sensor()
     {
-        llOwnerSay("No avis within range at this time. Try again in a bit.");
+        llOwnerSay("No avis within range at this time.");
         llResetScript();
     }
 
@@ -274,13 +245,13 @@ default
         llListenControl(relaylisten,FALSE);
         if(victims == []) // we heared no message from a RLVrelay
         {
-            llOwnerSay("No avis with RLV in range at this time. Try again in a bit.");
+            llOwnerSay("No RLV relays found. Check the sub has RLV relay installed it is turned on, and set to auto.");
             llResetScript();
         }
         else
         {
             msg = "";
-            msg =  "Found "+(string)llGetListLength(found)+ " Avatars in Range\n" + (string)(llGetListLength(victims)/2)+ " of these use RLV.\n";
+            llOwnerSay ("Found "+(string)llGetListLength(found)+ " Avatars in Range. " + (string)(llGetListLength(victims)/2)+ " of these use RLV.");//NG lets say what we have found
             found = [];
             for(i = 0; i< llGetListLength(victims); i = i+2)
             {
@@ -349,7 +320,7 @@ state launch
         {
             if(id == menuid)
             {
-                llOwnerSay("Menu timed out!");
+                llOwnerSay("Cager Menu timed out!");
             }
         }
     }

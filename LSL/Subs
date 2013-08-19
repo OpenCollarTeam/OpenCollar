@@ -1,0 +1,13 @@
+# You need to add the name and UUID of each person you wish to add to the hud
+# The subname can be shortened to a name you like
+# The subid is their Key which can be obtained from their profile
+# This only adds the names to your hud, it does not mean you have access to their collar
+# empty lines and lines beginning with "#" are ignored
+
+
+subname = sub1
+subid = 11223234-640c-47c6-9839-f4e2149cbcf4
+subname = sub2
+subid = ddffee11-ac4d-4408-afb6-2f969bd07619
+subname = sub3
+subid = 77553388-f66c-4915-8c97-8a53731a7aa1
