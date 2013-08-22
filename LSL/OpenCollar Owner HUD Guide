@@ -1,4 +1,4 @@
-Guide for the OpenCollar Owner HUD  Vers.  3.900
+Guide for the OpenCollar Owner HUD  Vers.  3.910
 
 ??
  
@@ -45,7 +45,6 @@ The 6 HUD Buttons: (Left to Right when at default setting)
 <<The HUD Main menu:>>
 
 [CollarMenu] - Allows you to select from any registered collar menu's from your subs around.
-[Couples] - Opens the couple animation menu to choose an animation.
 [LeashMenu] - Opens the Leash/Unleash menu
 [Options] - Opens the HUD style/position/order options.
 [OwnerMenu] - This is a menu for owners to add their own commonly used collar commands

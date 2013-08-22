@@ -1,3 +1,8 @@
+New changes since 3.900
+
+- Fixed "To many open listens in Hudmain" this was a rare bug and has taken a while to find a fix
+- Couple animations removed from Hud and now all controlled by the collar.
+
 New changes since 3.800
 
 -    New collar link direct to RLV main menu - Update linking into Un/Dress menu instead.
