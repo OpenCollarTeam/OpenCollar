@@ -83,7 +83,7 @@ debug(string str)
     if (debugging) llOwnerSay(str);
 }
 
-// Yay for Cleo and Jessenia – Personal Object Channel!
+// Yay for Cleo and Jessenia â€“ Personal Object Channel!
 integer getPersonalChannel(key owner, integer nOffset)
 {
     integer chan = (integer)("0x"+llGetSubString((string)owner,2,7)) + nOffset;
@@ -208,7 +208,6 @@ key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer p
  "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
     return id;
 }
-
 
 SubMenu(key id) // Single page menu
 {
@@ -400,12 +399,10 @@ default
     state_entry()
     {
         wearer = llGetOwner();  //Who are we
-        wearerName = llKey2Name(wearer);  //thats out real name
+        wearerName = llKey2Name(wearer);  //thats our real name
         listener=llListen(getPersonalChannel(wearer,1111),"","",""); //lets listen here
         
-        subs = [];
- 
-        llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+//        subs = []; //this clears the subs list on reset
         llSleep(1.0);//giving time for others to reset before populating menu
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
@@ -443,7 +440,9 @@ default
             }
             else if (str =="reset")
             {
-             llResetScript(); //lets reset things
+                subs = [];
+                llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+                llResetScript(); //lets reset things
             }
         }
         else if (num == MENUNAME_REQUEST && str == parentmenu)
@@ -549,7 +548,7 @@ default
                      {
                        SendCommand(llList2Key(AGENTS, i)); //kick off "sendCommand" for each uuid
                      }
-                        SubMenu(id); //return to SubMenu
+                     SubMenu(id); //return to SubMenu
                     }
                     else if (message == dumpsubs) //lets do a dump for adding to the Subs Notecard
                     {
@@ -619,6 +618,7 @@ default
             if (menuindex != -1)
             {
                 llOwnerSay("Main Menu timed out!");
+                state two;
             }
         }
         else if (num == DIALOG_URL)
@@ -641,7 +641,13 @@ default
     }
     on_rez(integer param)
     {
-        if (llGetOwner()!=wearer) llResetScript();;//if new owner lets reset everything
+        llSleep(2.0);
+        llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+        if (llGetOwner()!=wearer) 
+        {
+            subs = [];
+            llResetScript();;//if new owner lets reset everything
+        }
     }
     timer()//clear things after ping
     {
@@ -653,5 +659,13 @@ default
         if(request_id == notecardQueryId)
             processConfiguration(data);
 
+    }
+}
+//this is a dirty fix to clear all lllitens at the end of a scan
+state two
+{
+    state_entry()
+    {
+        state default;
     }
 }

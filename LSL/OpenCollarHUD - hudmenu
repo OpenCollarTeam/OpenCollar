@@ -136,7 +136,7 @@ default
             }
             else if (button == "Couples")
             {
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"couples", id);
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", NULL_KEY);
             }
             else if (button == "Leash")
             {
