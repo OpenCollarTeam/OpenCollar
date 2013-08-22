@@ -6,6 +6,10 @@ New Goals:
 -----------------------
 - Look into implentation of llEmail to send grid wide.
 
+3.910 Owners Hud bug fix
+------------------------
+- Fixed rare bug with the hud erroring with "to many listeners" in hudmain script. This was a known rare bug but has taken upto now to find a fix. (NG)
+- Removed all Couple animation scripts and now pointing to the collar for all animations. (NG)
 
 3.900 Owners Hud Finished items:
 -------------------------------
