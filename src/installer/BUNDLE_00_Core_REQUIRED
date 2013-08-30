@@ -1,7 +1,6 @@
 ITEM|~version
 ITEM|OpenCollar Guide
 ITEM|OpenCollar License
-ITEM|defaultsettings
 ITEM|Temple
 ITEM|Tranquility
 ITEM|!totallytransparent
@@ -53,7 +52,6 @@ SCRIPT|OpenCollar - dialog
 SCRIPT|OpenCollar - update
 SCRIPT|OpenCollar - settings
 SCRIPT|OpenCollar - anim
-SCRIPT|OpenCollar - touch
 SCRIPT|OpenCollar - leash
 SCRIPT|OpenCollar - leashParticle
 SCRIPT|OpenCollar - lock
