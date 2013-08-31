@@ -1,4 +1,4 @@
-//OpenCollar - rlvmisc
+﻿//OpenCollar - rlvmisc
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Misc";
@@ -46,8 +46,7 @@ list g_lDescriptions = [ //showing descriptions for commands
     "View Scripts",
     "View Textures",
     "See hover text from Hud objects",
-    "See hover text from ojects in world",
-    "See collar's titler"
+    "See hover text from ojects in world"
         ];
 
 
@@ -101,61 +100,33 @@ string UPMENU = "^";
 //string MORE = ">";
 
 key g_kWearer;
-
+string g_sScript;
+string CTYPE = "collar";
 Debug(string in)
 {
     //llOwnerSay(in);
 }
 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 Menu(key kID, integer iAuth)
 {
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -240,7 +211,7 @@ UpdateSettings()
 
 SaveSetting(string token, string value)
 {
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, GetScriptID() + token + "=" + value, NULL_KEY);
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + token + "=" + value, NULL_KEY);
 }
 
 ClearSettings()
@@ -248,7 +219,7 @@ ClearSettings()
     integer i = 0;
     for (; i < llGetListLength(g_lSettings); i += 2)
     {
-        string token = GetScriptID() + llList2String(g_lSettings, i);
+        string token = g_sScript + llList2String(g_lSettings, i);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, NULL_KEY);
     }
     g_lSettings = [];
@@ -325,6 +296,7 @@ default
 
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         integer i = 1;
         integer c = llGetNumberOfPrims();
         for (; i <= c; i++)
@@ -336,6 +308,7 @@ default
             }
         }
         g_kWearer = llGetOwner();
+        g_lDescriptions += ["See hover text from " + CTYPE];
         // llSleep(1.0);
         // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, NULL_KEY);
@@ -354,15 +327,17 @@ default
             //split string on both comma and equals sign
             //first see if this is the token we care about
             list lParams = llParseString2List(sStr, ["="], []);
-            string token = llList2String(lParams, 0);
-            string value = llList2String(lParams, 1);
-            if (PeelToken(token, 0) == GetScriptID())
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                token = PeelToken(token, 1);
-                integer i = llListFindList(g_lSettings, [token]);
-                if (~i) g_lSettings = llListReplaceList(g_lSettings, [value], i+1, i+1);
-                else g_lSettings += [token, value];
+                sToken = llGetSubString(sToken, i + 1, -1);
+                i = llListFindList(g_lSettings, [sToken]);
+                if (~i) g_lSettings = llListReplaceList(g_lSettings, [sValue], i+1, i+1);
+                else g_lSettings += [sToken, sValue];
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sStr == "settings=set") UpdateSettings();
         }
         else if (iNum == RLV_REFRESH)

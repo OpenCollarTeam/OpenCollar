@@ -1,4 +1,4 @@
-//OpenCollar - dialog
+﻿//OpenCollar - dialog
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
@@ -65,18 +65,8 @@ list MRSBUN = []; // blatant monty python reference - list of those who do not l
 string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+string g_sScript;
+
 string Key2Name(key kId)
 {
     string sOut = llGetDisplayName(kId);
@@ -131,36 +121,19 @@ string TruncateString(string sStr, integer iBytes)
     return llUnescapeURL(sOut);
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -378,8 +351,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             Notify(kID, "Verbose Feature de-activated for you.", FALSE);
         }
         else return TRUE; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, GetScriptID() + SPAMSWITCH, NULL_KEY);
-        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, GetScriptID() + SPAMSWITCH + "=" + llList2CSV(MRSBUN), NULL_KEY);
+        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + SPAMSWITCH, NULL_KEY);
+        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + SPAMSWITCH + "=" + llList2CSV(MRSBUN), NULL_KEY);
         return TRUE;
     }
     return FALSE;
@@ -389,6 +362,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();
     }
 
@@ -500,7 +474,7 @@ default
             list lParams = llParseString2List(llToLower(sStr), ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == GetScriptID() + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
+            if (sToken == g_sScript + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
         }
     }
     

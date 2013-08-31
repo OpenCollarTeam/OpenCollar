@@ -1,4 +1,4 @@
-//OpenCollar - label
+﻿//OpenCollar - label
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "Label";
@@ -34,12 +34,10 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-
-
 integer g_iCharLimit = 12;
 
 string UPMENU = "^";
-
+string CTYPE = "collar";
 key g_kDialogID;
 
 string g_sLabelText = "OpenCollar";
@@ -119,8 +117,8 @@ key     null_key        = NULL_KEY;
 //key g_kFontTexture = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe";//verily serif 40 etched, on white
 key g_kFontTexture = NULL_KEY;
 list g_lFonts = [
-    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da",
-    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc",
+//    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
+//    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc", //not ideally aligned
     "Serif 1", "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c",
     "Serif 2", "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe",
     "LCD", "014291dc-7fd5-4587-413a-0d690a991ae1"
@@ -129,6 +127,7 @@ list g_lFonts = [
 // All displayable characters.  Default to ASCII order.
 string g_sCharIndex;
 list g_lDecode=[]; // to handle special characters from CP850 page for european countries // SALAHZAR
+string g_sScript;
 
 /////////// END GLOBAL VARIABLES ////////////
 
@@ -144,22 +143,11 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 FontMenu(key kID, integer iAuth)
 {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
-    string sPrompt = "Select the font for the collar's label.  (Not all collars have a label that can use this feature.)";
+    string sPrompt = "Select the font for the " + CTYPE + "'s label.  (Not all collars have a label that can use this feature.)";
 
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -282,36 +270,19 @@ SetLabel(string sText)
     GetLabelPrim(sText);
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -336,7 +307,7 @@ SetOffsets(key font)
             }
             else if (t == PRIM_TYPE_CYLINDER)
             {
-                if (font == NULL_KEY) font = "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c"; // Serif 2 default for cyl
+                if (font == NULL_KEY) font = "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c"; // Serif default for cyl
                 g_vGridOffset = <-0.725, 0.425, 0.0>;
                 g_vRepeats = <1.434, 0.05, 0>;
                 g_vOffset = <0.037, 0.003, 0>;
@@ -360,7 +331,7 @@ default
 {
     state_entry()
     {   // Initialize the character index.
-
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         ResetCharIndex();
         SetOffsets(NULL_KEY);
@@ -387,7 +358,7 @@ default
             {
                 //popup help on how to set label
                 llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
-                llMessageLinked(LINK_SET, POPUP_HELP, "To set the label on the collar, say _PREFIX_label followed by the text you wish to set.\nExample: _PREFIX_label I Rock!", kID);
+                llMessageLinked(LINK_SET, POPUP_HELP, "To set the label on the " + CTYPE + ", say _PREFIX_label followed by the text you wish to set.\nExample: _PREFIX_label I Rock!", kID);
             }
             else if (sStr == "menu " + g_sFontMenu)
             {
@@ -410,13 +381,13 @@ default
             {
                 if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                 }
                 else
                 {
                     lParams = llDeleteSubList(lParams, 0, 0);
                     g_sLabelText = llDumpList2String(lParams, " ");
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Text=" + g_sLabelText, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, NULL_KEY);
                     SetLabel(g_sLabelText);
                 }
             }
@@ -424,7 +395,7 @@ default
             {
                 if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                 }
                 else FontMenu(kID, iNum);
             }
@@ -450,9 +421,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "Text") g_sLabelText = sValue;
                 else if (sToken == "Font") SetOffsets((key)sValue);
             }
@@ -460,6 +432,7 @@ default
             {
                 g_iAppLock = (integer)sValue;
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "settings")
             {
                 if (sValue == "sent")
@@ -468,24 +441,17 @@ default
                 }
             }
         }
-        /* //no more needed
-            else if (iNum == COMMAND_WEARER && sStr == "reset")
+        else if (iNum == MENUNAME_REQUEST)
+        {
+            if (sStr == g_sParentMenu)
             {
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "label", NULL_KEY);
-                llResetScript();
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
             }
-        */
-            else if (iNum == MENUNAME_REQUEST)
+            else if (sStr == g_sFontParent)
             {
-                if (sStr == g_sParentMenu)
-                {
-                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-                }
-                else if (sStr == g_sFontParent)
-                {
-                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
-                }
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
             }
+        }
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID==g_kDialogID)
@@ -508,7 +474,7 @@ default
                     {
                         SetOffsets((key)llList2String(g_lFonts, iIndex + 1));
                         SetLabel(g_sLabelText);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Font=" + (string)g_kFontTexture, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Font=" + (string)g_kFontTexture, NULL_KEY);
                     }
                     FontMenu(kAv, iAuth);
                 }

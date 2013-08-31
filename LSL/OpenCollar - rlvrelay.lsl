@@ -1,4 +1,4 @@
-//OpenCollar - rlvrelay
+﻿//OpenCollar - rlvrelay
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 integer RELAY_CHANNEL = -1812221819;
@@ -83,7 +83,7 @@ integer CMD_REMSRC = 12;
 //string g_sOwnerssToken = "owner";
 //string g_sSecOwnerssToken = "secowners";
 //string g_sBlackListsToken = "blacklist";
-
+string CTYPE = "collar";
 list g_lCollarOwnersList;
 list g_lCollarSecOwnersList;
 list g_lCollarBlackList;
@@ -100,20 +100,8 @@ integer g_iLandMode = 1;
 integer g_iPlayMode = 0;
 
 key g_kDebugRcpt = NULL_KEY; // recipient key for relay chat debugging (useful since you cannot eavesdrop llRegionSayTo)
+string g_sScript;
 
-
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
 // Sanitizes a key coming from the outside, so that only valid
 // keys are returned, and invalid ones are mapped to NULL_KEY
 key SanitizeKey(string uuid)
@@ -153,42 +141,26 @@ string Mode2String(integer iMin)
     }
     return sOut;
 }
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
     }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
-    }
 }
 
 SaveSettings()
 {
-    string sNewSettings= GetScriptID() + "settings=mode:"
+    string sNewSettings= g_sScript + "settings=mode:"
         +(string)(512 * g_iMinPlayMode + 256 * g_iMinLandMode + 128 * g_iMinSafeMode + 32 * g_iMinBaseMode
         + 16 * g_iPlayMode + 8 * g_iLandMode + 4 * g_iSafeMode + g_iBaseMode);
 //    if ( g_lObjWhiteList != [] ) sNewSettings+=",objwhitelist:"+llDumpList2String(g_lObjWhiteList,"/");
@@ -318,7 +290,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         string sAck = "ok";
         if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
         else if (sCom == "!version") sAck = "1100";
-        else if (sCom == "!implversion") sAck = "OpenCollar 3.7";
+        else if (sCom == "!implversion") sAck = "OpenCollar 3.9";
         else if (sCom == "!x-orgversions") sAck = "ORG=0003/who=001";
         else if (llGetSubString(sCom,0,6)=="!x-who/") {kWho = SanitizeKey(llGetSubString(sCom,7,42)); iGotWho=TRUE;}
         else if (llGetSubString(sCom,0,0) == "!") sAck = "ko"; // ko unknown meta-commands
@@ -427,6 +399,7 @@ Menu(key kID, integer iAuth)
     }
     lButtons+=["Access Lists", "MinMode", "Help"];
     sPrompt+="\n\nMake a choice:";
+
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -607,7 +580,7 @@ CleanQueue()
     Dequeue();
 }
 
-// returns TRUE if it was a user command, FALSE if it is a LM�from another subsystem
+// returns TRUE if it was a user command, FALSE if it is a LM from another subsystem
 integer UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum<COMMAND_OWNER || iNum>COMMAND_WEARER) return FALSE;
@@ -619,18 +592,19 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     if (!g_iRLV)
     {
-        Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
     }
     else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") MinModeMenu(kID, iNum);
     else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
-        llInstantMessage(kID, "Sorry, only the wearer of the collar or their owner can change the relay options.");
+        llInstantMessage(kID, "Sorry, only the wearer of the " + CTYPE + " or their owner can change the relay options.");
     else if (sStr=="safeword") SafeWord();
     else if (sStr=="relay getdebug")
     {
         g_kDebugRcpt = kID;
         Notify(kID, "Relay messages will be forwarded to "+llKey2Name(kID)+".", TRUE);
+
         return TRUE;
     }
     else if (sStr=="relay stopdebug")
@@ -759,6 +733,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
@@ -785,21 +760,24 @@ default
             //split string on both comma and equals sign
             //first see if this is the token we care about
             list lParams = llParseString2List(sStr, ["="], []);
-            string iToken = llList2String(lParams, 0);
-            if (iToken == GetScriptID() + "settings") UpdateSettings(llList2String(lParams, 1));
-            else if (iToken == "auth_owner") g_lCollarOwnersList = llParseString2List(llList2String(lParams, 1), [","], []);
-            else if (iToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(llList2String(lParams, 1), [","], []);
-            else if (iToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(llList2String(lParams, 1), [","], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if (sToken == g_sScript + "settings") UpdateSettings(sValue);
+            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
         }
         else if (iNum == LM_SETTING_SAVE)
         {   //this is tricky since our db sValue contains equals signs
             //split string on both comma and equals sign
             //first see if this is the sToken we care about
             list lParams = llParseString2List(sStr, ["="], []);
-            string iToken = llList2String(lParams, 0);
-            if (iToken == "auth_owner") g_lCollarOwnersList = llParseString2List(llList2String(lParams, 1), [","], []);
-            else if (iToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(llList2String(lParams, 1), [","], []);
-            else if (iToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(llList2String(lParams, 1), [","], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
         }
         // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_OFF)

@@ -1,8 +1,8 @@
-//OpenCollar - rlvex
+﻿//OpenCollar - rlvex
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life. See "OpenCollar License" for details.
 
 key g_kLMID;//store the request id here when we look up a LM
-
+string CTYPE = "collar";
 key g_kMenuID;
 key g_kSensorMenuID;
 key g_kPersonMenuID;
@@ -122,60 +122,33 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-//string UPMENU = "?";
-//string MORE = "?";
+integer FIND_AGENT = -9005;
 string UPMENU = "^";
-//string MORE = ">";
+
+key REQUEST_KEY;
+string g_sScript;
 
 Debug(string sMsg)
 {
    //llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
     }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
-    }
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -188,7 +161,7 @@ Menu(key kID, string sWho, integer iAuth)
 {
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -229,7 +202,7 @@ ExMenu(key kID, string sWho, integer iAuth)
     Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -300,24 +273,24 @@ SaveDefaults()
     if (OWNER_DEFUALT == g_iOwnerDefault && SECOWNER_DEFUALT == g_iSecOwnerDefault)
     {
         Debug("Defaults");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "owner", NULL_KEY);
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "secowner", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "owner", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "secowner", NULL_KEY);
         return;
     }
     Debug("ownerdef: " + (string)g_iOwnerDefault + "\nsecdef: " + (string)g_iSecOwnerDefault);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "owner=" + (string)g_iOwnerDefault, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "secowner=" + (string)g_iSecOwnerDefault, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "owner=" + (string)g_iOwnerDefault, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "secowner=" + (string)g_iSecOwnerDefault, NULL_KEY);
 }
 SaveSettings()
 {
     //save to local settings
     if (llGetListLength(g_lSettings))
     {
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "List=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "List=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
     }
     else
     {
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "List", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", NULL_KEY);
     }
 }
 
@@ -326,8 +299,8 @@ ClearSettings()
     //clear settings list
     g_lSettings = [];
     //remove tpsettings from DB... now done by httpdb itself
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "owner", NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "secowner", NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "owner", NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "secowner", NULL_KEY);
     //main RLV script will take care of sending @clear to viewer
     //avoid race conditions
     llSleep(1.0);
@@ -354,7 +327,8 @@ MakeNamesList()
 
 FetchAvi(integer auth, string type, string name, key user)
 {
-    string out = llList2CSV(["getavi_", GetScriptID(), "add", type, name]) + "|";
+    if (name == "") name = " ";
+    string out = llDumpList2String(["getavi_", g_sScript, user, auth, type, name], "|");
     integer i = 0;
     list src = g_lNames;
     list exclude; // build list of existing-listed keys to exclude from name search
@@ -362,9 +336,11 @@ FetchAvi(integer auth, string type, string name, key user)
     {
         exclude += [llList2String(src, i)];
     }
-    out += llList2CSV(exclude);
-    llMessageLinked(LINK_THIS, auth, out, user);
+    if (llGetListLength(exclude))
+        out += "|" + llDumpList2String(exclude, ",");
+    llMessageLinked(LINK_THIS, FIND_AGENT, out, REQUEST_KEY = llGenerateKey());
 }
+
 AddName(string sKey)
 {
     if (~llListFindList(g_lNames, [sKey])) jump AddDone; // prevent dupes
@@ -548,17 +524,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         Menu(kID, "", iNum);
         jump UCDone;
     }
-    list lParts = llCSV2List(sStr);
-    if (llList2String(lParts, 0) == GetScriptID())
-    {
-        if (llList2String(lParts, 2) == "add" && llList2String(lParts, 3) == "ex")
-        {
-            g_kTmpKey = kID;
-            AddName(llList2String(lParts, 4));
-            return TRUE;
-        }
-    }
-    lParts = llParseString2List(sStr, [" "], []); // ex,add,first,last at most
+    list lParts = llParseString2List(sStr, [" "], []); // ex,add,first,last at most
     integer iInd = llGetListLength(lParts);
     if (iInd < 1 || iInd > 4 || llList2String(lParts, 0) != "ex") return FALSE;
     lParts = llDeleteSubList(lParts, 0, 0); // no longer need the "ex"
@@ -714,6 +680,7 @@ default
 
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
@@ -737,9 +704,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") g_iOwnerDefault = (integer)sValue;
                 else if (sToken == "secowner") g_iSecOwnerDefault = (integer)sValue;
                 else if (sToken == "List")
@@ -748,6 +716,7 @@ default
                     MakeNamesList();
                 }
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_secowner") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "settings")
@@ -919,6 +888,14 @@ default
                     //g_lScan = [];
                 }
             }
+        }
+        else if (iNum == FIND_AGENT)
+        {
+            if (kID != REQUEST_KEY) return;
+            list params = llParseString2List(sStr, ["|"], []);
+            if (llList2String(params, 0) != g_sScript) return;
+            g_kTmpKey = (key)llList2String(params, 2);
+            AddName(llList2String(params, 5));
         }
     }
     dataserver(key kID, string sData)

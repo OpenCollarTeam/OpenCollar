@@ -69,7 +69,7 @@ key g_kActionsID;
 key g_kRootActionsID;
 integer g_iPage = 0;//Having a global is nice, if you redisplay the menu after an action on a folder.
 
-integer g_iListener;//Nan:do we still need this? -- SA:�of course. It's where the viewer talks.
+integer g_iListener;//Nan:do we still need this? -- SA: of course. It's where the viewer talks.
 
 // Asynchronous menu request. Alas still needed since some menus are triggered after an answer from the viewer.
 key g_kAsyncMenuUser;
@@ -88,6 +88,7 @@ list g_lSearchList; //list of folders to search
 integer g_iLastFolderState;
 
 key g_kWearer;
+string g_sScript;
 
 
 Debug(string sMsg)
@@ -95,50 +96,22 @@ Debug(string sMsg)
     //llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
     }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
-    }
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 ParentFolder() {
     list lFolders = llParseString2List(g_sCurrentFolder,["/"],[]);
     g_iPage = 0; // changing the folder also means going back to first page
@@ -170,9 +143,9 @@ QueryFolders(string sType)
 string lockFolderButton(integer iLockState, integer iLockNum, integer iAuth)
 {
     string sOut;
-    if ((iLockState >> (4 + iLockNum)) & 0x1) sOut = "?";
-    else if ((iLockState >> iLockNum) & 0x1) sOut = "?";
-    else sOut = "?";
+    if ((iLockState >> (4 + iLockNum)) & 0x1) sOut = "☔";
+    else if ((iLockState >> iLockNum) & 0x1) sOut = "✔";
+    else sOut = "✘";
     if (iLockNum == 0) sOut += LOCK_ATTACH;
     else if (iLockNum == 1) sOut += LOCK_DETACH;
     else if (iLockNum == 2) sOut += LOCK_ATTACH_ALL;
@@ -184,8 +157,8 @@ string lockFolderButton(integer iLockState, integer iLockNum, integer iAuth)
 string lockUnsharedButton(integer iLockNum, integer iAuth)
 {
     string sOut;
-    if ((g_iUnsharedLocks >> iLockNum) & 0x1) sOut = "?";
-    else sOut = "?";
+    if ((g_iUnsharedLocks >> iLockNum) & 0x1) sOut = "✔";
+    else sOut = "✘";
     if (iLockNum == 1) sOut += "Lk Unsh Wear";
     else if  (iLockNum == 0) sOut += "Lk Unsh Remove";
     if (iAuth > COMMAND_GROUP) sOut = "("+sOut+")";
@@ -241,16 +214,16 @@ string folderIcon(integer iState)
     string sOut = "";
     integer iStateThis = iState / 10;
     integer iStateSub = iState % 10;
-    if  (iStateThis==0) sOut += "?"; //?";
-    else if (iStateThis==1) sOut += "?";
-    else if (iStateThis==2) sOut += "?";
-    else if (iStateThis==3) sOut += "?";
+    if  (iStateThis==0) sOut += "⬚"; //▪";
+    else if (iStateThis==1) sOut += "◻";
+    else if (iStateThis==2) sOut += "◩";
+    else if (iStateThis==3) sOut += "◼";
     else sOut += " ";
     //    sOut += "/";
-    if (iStateSub==0) sOut += "?"; //?";
-    else if (iStateSub==1) sOut += "?";
-    else if (iStateSub==2) sOut += "?";
-    else if (iStateSub==3) sOut += "?";
+    if (iStateSub==0) sOut += "⬚"; //▪";
+    else if (iStateSub==1) sOut += "◻";
+    else if (iStateSub==2) sOut += "◩";
+    else if (iStateSub==3) sOut += "◼";
     else sOut += " ";
     return sOut;
 }
@@ -260,13 +233,13 @@ integer StateFromButton(string sButton)
     string sIconThis = llGetSubString(sButton, 0, 0);
     string sIconSub = llGetSubString(sButton, 1, 1);
     integer iState;
-    if (sIconThis=="?") iState = 1;
-    else if (sIconThis=="?") iState = 2;
-    else if (sIconThis=="?") iState = 3;
+    if (sIconThis=="◻") iState = 1;
+    else if (sIconThis=="◩") iState = 2;
+    else if (sIconThis=="◼") iState = 3;
     iState *= 10;
-    if (sIconSub=="?") iState +=1;
-    else if (sIconSub=="?") iState +=2;
-    else if (sIconSub=="?") iState += 3;
+    if (sIconSub=="◻") iState +=1;
+    else if (sIconSub=="◩") iState +=2;
+    else if (sIconSub=="◼") iState += 3;
     return iState;
 }
 
@@ -300,8 +273,8 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         iIndex = llGetListLength(g_lFolderLocks)-2;
         doLockFolder(iIndex);
     }
-    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  GetScriptID() + "Locks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  GetScriptID() + "Locks", NULL_KEY);
+    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sScript + "Locks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
 }
 
 doLockFolder(integer iIndex)
@@ -333,8 +306,8 @@ updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Unshared=" + (string) g_iUnsharedLocks, NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "Unshared", NULL_KEY);
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Unshared=" + (string) g_iUnsharedLocks, NULL_KEY);
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "Unshared", NULL_KEY);
 }
 
 doLockUnshared()
@@ -517,6 +490,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         integer i;
         for (i=0;i < llGetListLength(g_lChildren);i++)
@@ -725,9 +699,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "Locks")
                 {
                     g_lFolderLocks = llParseString2List(sValue, [","], []);

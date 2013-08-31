@@ -1,4 +1,4 @@
-//OpenCollar - camera
+﻿//OpenCollar - camera
 //allows dom to set different camera mode
 //responds to commands from modes list
 
@@ -59,19 +59,8 @@ integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "^";
 //string MORE = ">";
+string g_sScript;
 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
 CamMode(string sMode)
 {
     llClearCameraParams();
@@ -86,7 +75,7 @@ ClearCam()
     llClearCameraParams();
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "all", "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");    
 }
 
 CamFocus(vector g_vCamPos, rotation g_rCamRot)
@@ -266,36 +255,19 @@ string TightListTypeDump(list lInput, string sSeperators) {//This function is da
     return sSeperators + sCumulator;
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -306,7 +278,7 @@ Debug(string sStr)
 
 SaveSetting(string sToken)
 {
-    sToken = GetScriptID() + sToken;
+    sToken = g_sScript + sToken;
     string sValue = (string)g_iLastNum;
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, sToken + "=" + sValue, "");
 }
@@ -431,6 +403,7 @@ default
     
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         if (llGetAttached())
         {
             llRequestPermissions(llGetOwner(), PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
@@ -464,9 +437,10 @@ default
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)
                 {
                     if (sToken == "freeze") LockCam();

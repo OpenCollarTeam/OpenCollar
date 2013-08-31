@@ -27,6 +27,7 @@ integer MENUNAME_REMOVE     = 3003;
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
+
 integer LOCKMEISTER         = -8888;
 integer LOCKGUARD           = -9119;
 integer g_iLMListener;
@@ -130,6 +131,7 @@ Pastel Yellow|<1.00000, 1.00000, 0.44706>"
 
 // ----- collar -----
 //string g_sWearerName;
+string CTYPE = "collar";
 key g_kWearer;
 
 key NULLKEY = "";
@@ -149,23 +151,13 @@ list g_lLeashPrims;
 
 //global integer used for loops
 integer g_iLoop;
+string g_sScript;
 
 debug(string sText)
 {
     //llOwnerSay(llGetScriptName() + " DEBUG: " + sText);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 FindLinkedPrims()
 {
     integer linkcount = llGetNumberOfPrims();
@@ -284,36 +276,19 @@ StopParticles(integer iEnd)
     }
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -333,10 +308,15 @@ string Vec2String(vector vVec)
     }
     return "<" + llDumpList2String(lParts, ",") + ">";
 }
+
 string Float2String(float in)
 {
     string out = (string)in;
-    while (~llSubStringIndex(out, ".") && (llGetSubString(out, -1, -1) == "0" || llGetSubString(out, -1, -1) == ".")) out = llGetSubString(out, 0, -2);
+    integer i = llSubStringIndex(out, ".");
+    while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
+    {
+        out = llGetSubString(out, 0, -2);
+    }
     return out;
 }
 
@@ -354,7 +334,7 @@ SaveSettings(string sToken, string sSave, integer bSaveToLocal)
     }
     if (bSaveToLocal)
     {
-        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, GetScriptID() + sToken + "=" + sSave, NULLKEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sToken + "=" + sSave, NULLKEY);
     }
 }
 
@@ -528,6 +508,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
         StopParticles(TRUE);
         FindLinkedPrims();
@@ -598,14 +579,14 @@ default
             if (llToLower(sMessage) == llToLower(SUBMENU))
             {
                 if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
-                else Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
+                else Notify(kMessageID, "Leash Options can only be changed by " + CTYPE + " Owners.", FALSE);
             }
             else if (sMessage == "menu "+SUBMENU)
             {
                 if(iNum == COMMAND_OWNER) OptionsMenu(kMessageID, iNum);
                 else
                 {
-                    Notify(kMessageID, "Leash Options can only be changed by Collar Owners.", FALSE);
+                    Notify(kMessageID, "Leash Options can only be changed by " + CTYPE + " Owners.", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
@@ -648,9 +629,9 @@ default
                         g_vLeashColor = (vector)GetDefaultSetting(L_COLOR);
                         g_bParticleGlow = (integer)GetDefaultSetting("Glow");
                         g_lSettings = g_lDefaultSettings;
-                        Notify(kAv, "Leash-settings restored to collar defaults.", FALSE);
+                        Notify(kAv, "Leash-settings restored to " + CTYPE + " defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "all", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", NULL_KEY);
                         if (!g_bInvisibleLeash && g_bLeashActive)
                         {
                             StartParticles(g_kParticleTarget);
@@ -836,13 +817,14 @@ default
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);
+            i = llSubStringIndex(sToken, "_");
             if (sToken == "leash_leashedto")
             {
                 g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
             }
-            else if (PeelToken(sToken, 0) == GetScriptID())
+            else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "Texture")
                 {
                     SetTexture(sValue, NULLKEY);
@@ -877,8 +859,9 @@ default
                 }
                 SaveDefaultSettings(sToken, sValue);
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             // in case wearer is currently leashed
-            if (sMessage == "settings=sent" && g_kLeashedTo != NULLKEY)
+            else if (sMessage == "settings=sent" && g_kLeashedTo != NULLKEY)
             {
                 StartParticles(g_kParticleTarget);
             }

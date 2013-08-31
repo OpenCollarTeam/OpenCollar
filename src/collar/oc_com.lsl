@@ -6,14 +6,11 @@ integer g_iListenChan = 1;
 integer g_iListenChan0 = TRUE;
 string g_sPrefix = ".";
 
-integer g_iHUDChan = -1334245234; // instead this should be the new channel to be used by any object not from the wearer itself. For attachments of the wearer use the interface channel. This channel wil be personlaized below
-
 integer g_iLockMeisterChan = -8888;
 
 integer g_iListener1;
 integer g_iListener2;
 integer g_iLockMesiterListener;
-integer g_iHUDListener;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -46,7 +43,7 @@ integer EXT_COMMAND_COLLAR = 499;
 string g_sSafeWord = "RED";
 
 //added for attachment auth
-integer g_iInterfaceChannel = -12587429;
+integer g_iInterfaceChannel = -12587429; // AO Backwards Compatibility
 integer g_iListenHandleAtt;
 
 integer ATTACHMENT_REQUEST = 600;
@@ -58,31 +55,20 @@ string g_sSeparator = "|";
 string g_iAuth;
 string UUID;
 string g_sCmd;
+string g_sScript;
+string CTYPE = "collar";
 
 Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + " Debug: " + sStr);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 SetListeners()
 {
     llListenRemove(g_iListener1);
     llListenRemove(g_iListener2);
     llListenRemove(g_iLockMesiterListener);
     llListenRemove(g_iListenHandleAtt);
-
-    llListenRemove(g_iHUDListener);
 
     if(g_iListenChan0 == TRUE)
     {
@@ -93,9 +79,6 @@ SetListeners()
     g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
     g_iListener2 = llListen(g_iListenChan, "", NULL_KEY, "");
     g_iLockMesiterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
-
-    g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,"");
-
 }
 
 SetPrefix(string sValue)
@@ -159,17 +142,13 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -197,9 +176,9 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         SetPrefix("auto");
-        g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // persoalized channel for this sub
         SetListeners();
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_prefix", NULL_KEY);
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", NULL_KEY);
@@ -219,49 +198,20 @@ default
 
     listen(integer iChan, string sName, key kID, string sMsg)
     {
-        // new object/HUD channel block
-        if (iChan == g_iHUDChan)
-        {
-            //check for a ping, if we find one we request auth and answer in LMs with a pong
-            if (sMsg==(string)g_kWearer + ":ping")
-            {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
-            }
-            // an object wants to know the version, we check if it is allowed to
-            if (sMsg==(string)g_kWearer + ":version")
-            {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
-            }
-            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
-            else if (StartsWith(sMsg, (string)g_kWearer + ":"))
-            {
-                sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-            }
-            else
-            {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
-            }
-            return;
-        }
-
         if (iChan == g_iLockMeisterChan)
         {
             llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
             return;
         }
-        if(kID == g_kWearer)
+        if(llGetOwnerKey(kID) == g_kWearer) // also works for attachments
         {
             string sw = sMsg; // we'll have to shave pieces off as we go to test
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
-            if (StartsWith(sw, "((")) sw = llGetSubString(sw, 2, -1);
-            if (llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 0, -3);
+            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))")
+                sw = llGetSubString(sw, 2, -3);
             if (StartsWith(sw, g_sPrefix))
-            {
-                integer i = llStringLength(g_sPrefix);
-                sw = llGetSubString(sw, i, -1);
-            }
+                sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord)
             {
                 llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", NULL_KEY);
@@ -362,7 +312,7 @@ default
                     }
                     SetPrefix(value);
                     SetListeners();
-                    Notify(kID, "\n" + llKey2Name(g_kWearer) + "'s prefix is '" + g_sPrefix + "'.\nTouch the collar or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
+                    Notify(kID, "\n" + llKey2Name(g_kWearer) + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, NULL_KEY);
                 }
                 else if (sCommand == "channel")
@@ -375,11 +325,11 @@ default
                         Notify(kID, "Now listening on channel " + (string)g_iListenChan + ".", FALSE);
                         if (g_iListenChan0)
                         {
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
                         }
                         else
                         {
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
                         }
                     }
                     else if (iNewChan == 0)
@@ -387,14 +337,14 @@ default
                         g_iListenChan0 = TRUE;
                         SetListeners();
                         Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
                     }
                     else if (iNewChan == -1)
                     {
                         g_iListenChan0 = FALSE;
                         SetListeners();
                         Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iListenChan, FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
                     }
                     else
                     {  //they left the param blank
@@ -410,7 +360,7 @@ default
                     {
                         g_sSafeWord = llList2String(lParams, 1);
                         llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "safeword=" + g_sSafeWord, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "safeword=" + g_sSafeWord, NULL_KEY);
                     }
                     else
                     {
@@ -424,15 +374,17 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+            integer i = llSubStringIndex(sToken, "_");
             if (sToken == "Global_prefix")
             {
                 if (sValue == "") sValue = "auto";
                 SetPrefix(sValue);
                 SetListeners();
             }
-            else if (PeelToken(sToken, 0) == GetScriptID())
+            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "channel")
                 {
                     g_iListenChan = (integer)sValue;

@@ -1,4 +1,4 @@
-//OpenCollar - lock
+﻿//OpenCollar - lock
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 list g_lOwners;
@@ -55,36 +55,21 @@ integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon
 integer g_bDetached = FALSE;
 
 key g_kWearer;
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
+string CTYPE = "collar";
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -241,9 +226,9 @@ default
                     Lock();
                     //            owner = kID; //need to store the one who locked (who has to be also owner) here
                     Notify(kID, "Locked.", FALSE);
-                    if (kID!=g_kWearer) llOwnerSay("Your collar has been locked.");
+                    if (kID!=g_kWearer) llOwnerSay("Your " + CTYPE + " has been locked.");
                 }
-                else Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
+                else Notify(kID, "Sorry, only primary owners and wearer can lock the " + CTYPE + ".", FALSE);
             }
             else if (sStr == "runaway" || sStr == "unlock" || (g_iLocked && sStr == "togglelock"))
             {
@@ -251,9 +236,9 @@ default
                 {  //primary owners can lock and unlock. no one else
                     Unlock();
                     Notify(kID, "Unlocked.", FALSE);
-                    if (kID!=g_kWearer) llOwnerSay("Your collar has been unlocked.");
+                    if (kID!=g_kWearer) llOwnerSay("Your " + CTYPE + " has been unlocked.");
                 }
-                else Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
+                else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
             }
             
             else if (sStr == "menu " + LOCK)
@@ -262,9 +247,9 @@ default
                 {   //primary owners and wearer can lock. no one else
                     Lock();
                     Notify(kID, "Locked.", FALSE);
-                    if (kID!=g_kWearer) llOwnerSay("Your collar has been locked.");
+                    if (kID!=g_kWearer) llOwnerSay("Your " + CTYPE + " has been locked.");
                 }
-                else Notify(kID, "Sorry, only primary owners and wearer can lock the collar.", FALSE);
+                else Notify(kID, "Sorry, only primary owners and wearer can lock the " + CTYPE + ".", FALSE);
                 llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
             }
             else if (sStr == "menu " + UNLOCK)
@@ -273,9 +258,9 @@ default
                 {  //primary owners can unlock. no one else
                     Unlock();
                     Notify(kID, "Unlocked.", FALSE);
-                    if (kID!=g_kWearer) llOwnerSay("Your collar has been unlocked.");
+                    if (kID!=g_kWearer) llOwnerSay("Your " + CTYPE + " has been unlocked.");
                 }
-                else Notify(kID, "Sorry, only primary owners can unlock the collar.", FALSE);
+                else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
                 llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
             }
         }
@@ -302,6 +287,7 @@ default
                 SetLockElementAlpha(); //EB
 
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);

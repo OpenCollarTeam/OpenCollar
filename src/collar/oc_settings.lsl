@@ -1,4 +1,4 @@
-//OpenCollar - settings
+﻿//OpenCollar - settings
 // This script stores settings for other scripts in the collar.  In bygone days
 // it was responsible for storing them to an online database too.  It doesn't
 // do that anymore.  But so long as plugin scripts are still using central
@@ -23,14 +23,14 @@ string SUBMENU = "Setting"; // "settings" in chat will call a mini dump .. this 
 string DUMPCACHE = "Dump Cache";
 string PREFUSER = "Pref User";
 string PREFDESI = "Pref Desig"; // yes, I hate cutoff buttons
-string WIKI = "Website";
+string WIKI = "Online Guide";
 string UPMENU = "^";
 key g_kMenuID;
 key g_kWearer;
-string g_sStoredLine;
-string g_sLINE_CONTINUATION = "&&";
+string g_sScript;
 
 string defaultscard = "defaultsettings";
+string split_line; // to parse lines that were split due to lsl constraints
 integer defaultsline = 0;
 key defaultslineid;
 key card_key;
@@ -61,31 +61,22 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
+integer INTERFACE_CHANNEL;
 
-string WIKI_URL = "http://www.opencollar.at";
+string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 string DESIGN_ID;
 list DESIGN_SETTINGS;
 list USER_SETTINGS;
 integer USER_PREF = FALSE; // user switch
 integer SCRIPTCOUNT; // number of scripts, to resend if the count changes
 
+integer SAY_LIMIT = 1024; // lsl "say" string limit
+integer CARD_LIMIT = 255; // lsl card-line string limit
+string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
+
 Debug (string str)
 {
     //llOwnerSay(llGetScriptName() + ": " + str);
-}
-
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
 }
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -93,17 +84,13 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
@@ -117,7 +104,7 @@ DoMenu(key keyID, integer iAuth)
 {
     string sPrompt = "Pick an option.\nClick '" + DUMPCACHE + "' to dump all current settings to chat";
     sPrompt += "\n(You can then copy + paste them, overwriting your defaultsettings notecard)\n";
-    sPrompt += "Click '" + WIKI + "' to get a link to the OpenCollar website.\n";
+    sPrompt += "Click '" + WIKI + "' to get a link to the OpenCollar online user guide\n";
     list lButtons = [DUMPCACHE, WIKI];
     if (USER_PREF)
     {
@@ -132,14 +119,8 @@ DoMenu(key keyID, integer iAuth)
     g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
 // Get Group or Token, 0=Group, 1=Token
-string PeelToken(string in, integer slot)
+string SplitToken(string in, integer slot)
 {
     integer i = llSubStringIndex(in, "_");
     if (!slot) return llGetSubString(in, 0, i - 1);
@@ -148,12 +129,12 @@ string PeelToken(string in, integer slot)
 // To add new entries at the end of Groupings
 integer GroupIndex(list cache, string token)
 {
-    string group = PeelToken(token, 0);
+    string group = SplitToken(token, 0);
     integer i = llGetListLength(cache) - 1;
     // start from the end to find last instance, +2 to get behind the value
     for (; ~i ; i -= 2)
     {
-        if (PeelToken(llList2String(cache, i - 1), 0) == group) return i + 1;
+        if (SplitToken(llList2String(cache, i - 1), 0) == group) return i + 1;
     }
     return -1;
 }
@@ -190,17 +171,83 @@ string GetSetting(string token)
     if (~d) return llList2String(DESIGN_SETTINGS, d + 1);
     return llList2String(USER_SETTINGS, i + 1);
 }
+// per = number of entries to put in each bracket
+list ListCombineEntries(list in, string add, integer per)
+{
+    list out;
+    while (llGetListLength(in))
+    {
+        list item;
+        integer i;
+        for (; i < per; i++) item += llList2List(in, i, i);
+        out += [llDumpList2String(item, add)];
+        in = llDeleteSubList(in, 0, per - 1);
+    }
+    return out;
+}
+
+DumpGroupSettings(string group, key id)
+{
+    list sets;
+    list out;
+    string tok;
+    string val;
+    integer i;
+    integer x;
+    if (!USER_PREF) jump user;
+    @designer;
+    for (i = 0; i < llGetListLength(DESIGN_SETTINGS); i += 2)
+    {
+        tok = llList2String(DESIGN_SETTINGS, i);
+        if (SplitToken(tok, 0) == group)
+        {
+            tok = SplitToken(tok, 1);
+            val = llList2String(DESIGN_SETTINGS, i + 1);
+            if (~x=llListFindList(out, [tok])) out = llListReplaceList(out, [val], x + 1, x + 1);
+            else out += [tok, val];
+        }
+    }
+    if (!USER_PREF) jump done;
+    @user;
+    for (i = 0; i < llGetListLength(USER_SETTINGS); i += 2)
+    {
+        tok = llList2String(USER_SETTINGS, i);
+        if (SplitToken(tok, 0) == group)
+        {
+            tok = SplitToken(tok, 1);
+            val = llList2String(USER_SETTINGS, i + 1);
+            if (~x=llListFindList(out, [tok])) out = llListReplaceList(out, [val], x + 1, x + 1);
+            else out += [tok, val];
+        }
+    }
+    if (!USER_PREF) jump designer;
+    @done;
+    out = ListCombineEntries(out, "=", 2);
+    tok = (string)id + "\\" + group+ " settings\\";
+    while (llGetListLength(out))
+    {
+        val = llList2String(out, 0);
+        if (llStringLength(tok + val) + 2 > SAY_LIMIT)
+        {
+            llRegionSayTo(id, 0, tok);
+            tok = (string)id + "\\" + group + " settings\\" + val;
+        }
+        else tok += ";" + val;
+        out = llDeleteSubList(out, 0, 0);
+    }
+    llRegionSayTo(id, INTERFACE_CHANNEL, tok);
+}
 
 DelSetting(string token) // we'll only ever delete user settings
 {
     integer i = llGetListLength(USER_SETTINGS) - 1;
-    if (PeelToken(token, 1) == "all")
+    if (SplitToken(token, 1) == "all")
     {
-        token = PeelToken(token, 0);
+        token = SplitToken(token, 0);
         string var;
         for (; ~i; i -= 2)
         {
-            if (PeelToken(llList2String(USER_SETTINGS, i - 1), 0) == token)
+            if (SplitToken(llList2String(USER_SETTINGS, i - 1), 0) == token)
                 USER_SETTINGS = llDeleteSubList(USER_SETTINGS, i - 1, i);
         }
         return;
@@ -209,83 +256,84 @@ DelSetting(string token) // we'll only ever delete user settings
     if (~i) USER_SETTINGS = llDeleteSubList(USER_SETTINGS, i, i + 1);
 }
 
-DumpCache()
+// run delimiters & add escape-characters for DumpCache
+list Add2OutList(list in)
 {
-    string out = "\nSettings (Designer defaults, followed by User Entries)\n";
-    out += "The below can be copied and pasted to \"defaultsettings\" notecard\n";
-    out += "Replacing old entries, but must include Designer defaults (if present):";
-    llWhisper(0, out);
-    out = "\n#---Designer Defaults---";// prepended with # so that it can be pasted to NC
-    string add;
+    if (!llGetListLength(in)) return [];
+    string set = DESIGN_ID;
+    list out = ["#---Designer Defaults---#"];
+    if (in == USER_SETTINGS)
+    {
+        set = "User_";
+        out = ["#---My Settings---#"];
+    }
+    string new;
+    string temp;
     string sid;
+    string pre;
+    string group;
     string tok;
     string val;
-    integer i = llGetListLength(DESIGN_SETTINGS);
-    integer c;
-    integer n = 0;
-    if (i < 1)
+    integer i;
+    for (; i < llGetListLength(in); i += 2)
     {
-        out = "\n#---No Designer Defaults---";
-        jump UserSets;
+        tok = llList2String(in, i);
+        val = llList2String(in, i + 1);
+        group = SplitToken(tok, 0);
+        tok = SplitToken(tok, 1);
+        if (group != sid) // new group
+        {
+            sid = group;
+            pre = "\n" + set + sid + "=";
+        }
+        else pre = "~";
+        temp = pre + tok + "~" + val;
+        while (llStringLength(temp))
+        {
+            new = temp;
+            if (llStringLength(temp) > CARD_LIMIT)
+            {
+                new = llGetSubString(temp, 0, CARD_LIMIT - 2) + ESCAPE_CHAR;
+                temp = llDeleteSubString(temp, 0, CARD_LIMIT - 2);
+            }
+            else temp = "";
+            out += [new];
+        }
     }
-    for (; n < i; n += 2)
-    {
-        tok = llList2String(DESIGN_SETTINGS, n);
-        val = llList2String(DESIGN_SETTINGS, n + 1);
-        if (PeelToken(tok, 0) != sid) // new Group
-        {
-            sid = PeelToken(tok, 0);
-            add = "\n" + DESIGN_ID + sid + "=";
-        }
-        else add = "~";
-        tok = PeelToken(tok, 1);
-        add += tok + "~" + val;
-        c = llStringLength(out) + llStringLength(add) + 2;
-        if (c > 255) // 1024 string limit (but only 255 allowed to be read from a notecard)
-        {
-            WhisperLine(out);
-            add = "";
-            out = "\n" + DESIGN_ID + sid + "=" + tok + "~" + val;
-        }
-        else out += add;
-    }
-    add = sid = tok = val = "";
-    @UserSets;
-    i = llGetListLength(USER_SETTINGS);
-    if (!i) out += "#---No Personal Settings---";
-    else out += "\n#---My Settings---";
-    for (n = 0; n < i; n += 2)
-    {
-        tok = llList2String(USER_SETTINGS, n);
-        val = llList2String(USER_SETTINGS, n + 1);
-        if (PeelToken(tok, 0) != sid) // new Group
-        {
-            sid = PeelToken(tok, 0);
-            add = "\nUser_" + sid + "=";
-        }
-        else add = "~";
-        tok = PeelToken(tok, 1);
-        add += tok + "~" + val;
-        c = llStringLength(out) + llStringLength(add) + 2;
-        if (c >= 255) // 1024 string limit (but only 255 allowed to be read from a notecard)
-        {
-            WhisperLine( out);
-            add = "";
-            out = "\nUser_" + sid + "=" + tok + "~" + val;
-        }
-        else out += add;
-    }
-    WhisperLine( out);
+    out = llListReplaceList(out, [llList2String(out, -1)], -1, -1);
+    return out;
 }
 
-WhisperLine( string out )
+DumpCache(key id)
 {
-    while ( llStringLength( out ) > 250 )
+    // compile everything into one list, so we can tell the user everything seamlessly
+    list out;
+    list say = ["Settings (Designer defaults, followed by User Entries)\n"];
+    say += ["The below can be copied and pasted to \"defaultsettings\" notecard\n"];
+    say += ["Replacing old entries, but must include Designer defaults (if present):\n"];
+    say += Add2OutList(DESIGN_SETTINGS) + ["\n"];
+    say += Add2OutList(USER_SETTINGS);
+    string old;
+    string new;
+    integer c;
+    while (llGetListLength(say))
     {
-        llWhisper( 0, llGetSubString( out, 0, 249 ) + g_sLINE_CONTINUATION );
-        out = "\n" + llDeleteSubString( out, 0, 249 ) ;
+        new = llList2String(say, 0);
+        c = llStringLength(old + new) + 2;
+        if (c > SAY_LIMIT)
+        {
+            out += [old];
+            old = "";
+        }
+        old += new;
+        say = llDeleteSubList(say, 0, 0);
     }
-    llWhisper(0, out);
+    out += [old];
+    while (llGetListLength(out))
+    {
+        Notify(id, llList2String(out, 0), TRUE);
+        out = llDeleteSubList(out, 0, 0);
+    }
 }
 
 SendValues()
@@ -330,29 +378,36 @@ Refresh()
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+    if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) return FALSE;
     if (sStr == "menu " + SUBMENU || llToLower(sStr) == llToLower(SUBMENU))
     {
         DoMenu(kID, iNum);
         return TRUE;
     }
+    if (llToLower(llGetSubString(sStr, 0, 4)) == "dump_")
+    {
+        sStr = llToLower(llGetSubString(sStr, 5, -1));
+        if (sStr == "cache") DumpCache(kID);
+        else DumpGroupSettings(sStr, kID);
+        return TRUE;
+    }
     integer i = llSubStringIndex(sStr, " ");
     string sid = llToLower(llGetSubString(sStr, 0, i - 1)) + "_";
-    if (sid != llToLower(GetScriptID())) return FALSE;
+    if (sid != llToLower(g_sScript)) return TRUE;
     string C = llToLower(llGetSubString(sStr, i + 1, -1));
     if (C == llToLower(PREFUSER))
     {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, GetScriptID() + "Pref", "User");
+        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
         USER_PREF = TRUE;
     }
     else if (C == llToLower(PREFDESI))
     {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, GetScriptID() + "Pref", "Designer");
+        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
         USER_PREF = FALSE;
     }
     else if (C == llToLower(DUMPCACHE))
     {
-        DumpCache();
+        DumpCache(kID);
     }
     else return FALSE;
     return TRUE;
@@ -362,9 +417,13 @@ default
 {
     state_entry()
     {
-        // Ensure that settings resets AFTER every other script, so that they don't reset after tehy get settings
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
+        INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
+        if (INTERFACE_CHANNEL > 0) INTERFACE_CHANNEL *= -1;
+        if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;
         defaultsline = 0;
         defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
         SCRIPTCOUNT=llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -396,30 +455,26 @@ default
             string tok;
             string val;
             integer i;
-            if (data == EOF && g_sStoredLine != "" )
-            {
-                data = g_sStoredLine ;
-                g_sStoredLine = "" ;
-                Debug( "Dataserver EOF, stored line used, data = " + data ) ;
-            }
             if (data != EOF)
             {
-                if ( g_sStoredLine != "" ) 
-                {
-                    data = g_sStoredLine + data ;
-                    g_sStoredLine = "" ;
-                    Debug( "Dataserver - Appending line - data = " + data ) ;
-                }
                 data = llStringTrim(data, STRING_TRIM_HEAD);
-                if ( llGetSubString(data, -2, -1) == g_sLINE_CONTINUATION )
-                {
-                    g_sStoredLine = llDeleteSubString( data, -2, -1 ) ;
-                    data = "" ;
-                    Debug( "Dataserver - Continuation - stored line = " + g_sStoredLine );
-                }
                 // first we can filter out & skip blank lines & remarks
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
-                Debug( "Dataserver - Processing line = " + data );
+                // check for "continued" line pieces
+                i = llSubStringIndex(data, ESCAPE_CHAR);
+                if (~i || llStringLength(split_line))
+                {
+                    split_line += data; // append string
+                    // if there is an escape character, lop it off and go to next line
+                    if (~i)
+                    {
+                        split_line = llGetSubString(split_line, 0, -2);
+                        jump nextline;
+                    }
+                    // if not, clear the temp string & process this data
+                    data = split_line;
+                    split_line = "";
+                }
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
                 i = llSubStringIndex(data, "_");
@@ -434,7 +489,7 @@ default
                 {
                     tok = llList2String(lData, i);
                     val = llList2String(lData, i + 1);
-                    if (sid == GetScriptID()) // a setting for this script
+                    if (sid == g_sScript) // a setting for this script
                     {
                         if (tok == "Pref" && val == "User") USER_PREF = TRUE;
                     }
@@ -503,21 +558,25 @@ default
                 if (sMessage == WIKI)
                 {
                     llSleep(0.2);
-                    llLoadURL(kAv, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
+                    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
                     return;
                 }
                 if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
                 if (sMessage == PREFDESI)
                 {
                     USER_PREF = FALSE;
-                    USER_SETTINGS = SetSetting(USER_SETTINGS, GetScriptID() + "Pref", "Designer");
+                    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
                 }
                 else if (sMessage == PREFUSER)
                 {
                     USER_PREF = TRUE;
-                    USER_SETTINGS = SetSetting(USER_SETTINGS, GetScriptID() + "Pref", "User");
+                    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
                 }
-                else if (sMessage == DUMPCACHE) DumpCache();
+                else if (sMessage == DUMPCACHE)
+                {
+                    if (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER) DumpCache(kAv);
+                    else Notify(kAv, "Only Owners & Wearer may access this feature", FALSE);
+                }
                 DoMenu(kAv, iAuth);
             }
         }

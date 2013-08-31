@@ -1,4 +1,4 @@
-//OpenCollar - badwords
+﻿//OpenCollar - badwords
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //if list isn't blank, open listener on channel 0, with sub's key <== only for the first badword???
 
@@ -40,6 +40,7 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 //5000 block is reserved for IM slaves
+string CTYPE = "collar";
 
 key g_kWearer;
 
@@ -53,23 +54,13 @@ string g_sIsEnabled = "badwordson=false";
 
 //added to stop abdword anim only if it was started by using a badword
 integer g_iHasSworn = FALSE;
+string g_sScript;
 
 Debug(string sMsg)
 {
     //Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
 }
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -121,7 +112,7 @@ DialogHelp(key kID, integer iAuth)
     sMessage += "badword <badword> where <badword> is the word you want to add.\n";
     sMessage += "rembadword <badword> where <badword> is the word you want to remove.\n";
     sMessage += "penance <what your sub has to say to get release from the badword anim.\n";
-    sMessage += "badwordsanim <anim name> , make sure the animation is inside the collar.";
+    sMessage += "badwordsanim <anim name> , make sure the animation is inside the " + CTYPE + ".";
     g_kDialog=Dialog(kID, sMessage, ["Ok"], [], 0, iAuth);
 }
 
@@ -207,36 +198,19 @@ string right(string sSrc, string sDivider) {
     return sSrc;
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -288,10 +262,10 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if(!iOldLength && iNewLength)
             {
                 g_sIsEnabled = "badwordson=true";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
             }
             //save to database
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -305,7 +279,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_sBadWordAnim = sAnim;
                 //Debug(g_sBadWordAnim);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "badwordsanim=" + g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwordsanim=" + g_sBadWordAnim, NULL_KEY);
                 Notify(kID, "Punishment anim for bad words is now '" + g_sBadWordAnim + "'.",FALSE);
             }
             else
@@ -323,7 +297,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else
             {
                 g_sPenance = llStringTrim(sPenance, STRING_TRIM);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "penance=" + g_sPenance, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "penance=" + g_sPenance, NULL_KEY);
                 string sPrompt = WordPrompt();
                 Notify(kID, sPrompt,TRUE);
             }
@@ -344,7 +318,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 }
             }
             //save to sDatabase
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -355,8 +329,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 if(llGetListLength(g_lBadWords))
                 {
                     g_sIsEnabled = "badwordson=true";
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
-                    //llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=" + g_sIsEnabled, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
                     ListenControl();
                     Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, "~"),FALSE);
                 }
@@ -367,7 +340,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else if(sValue == "off")
             {
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
                 ListenControl();
                 Notify(kID, "Badwords are now turned off.",FALSE);
             }
@@ -375,8 +348,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_lBadWords = [];
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "badwords=", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=", NULL_KEY);
                 ListenControl();
                 DialogBadwords(kID, iNum);
                 Notify(kID, "You cleared the badword list and turned it off.",FALSE);
@@ -400,6 +373,7 @@ default
 
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();
     }
 
@@ -411,9 +385,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "badwordson")
                 {
                     g_sIsEnabled = "badwordson" + "=" + sValue;
@@ -433,6 +408,7 @@ default
                     g_sPenance = sValue;
                 }
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
         }
         // no more self - resets
         //    else if ((iNum == COMMAND_OWNER || iNum == COMMAND_WEARER) && (sStr == "reset" || sStr == "runaway"))
@@ -443,7 +419,7 @@ default
         else if(iNum == COMMAND_SAFEWORD)
         { // safeword disables badwords !
             g_sIsEnabled = "badwords=false";
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
             ListenControl();
         }
         else if (iNum == MENUNAME_REQUEST)

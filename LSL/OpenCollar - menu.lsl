@@ -1,4 +1,4 @@
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+﻿//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
 //on menu request, give dialog, with alphabetized list of submenus
@@ -177,20 +177,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (sStr == "help") llGiveInventory(kID, HELPCARD);                
     else if (sStr == "addons") Menu("AddOns", kID, iNum);
     else if (sStr == "debug") Menu("Help/Debug", kID, iNum);
-    else if (sCmd == "menuto") 
-    {
-        // SA: with the new authentification method, I do not like this request for auth at this stage.
-        // what happens here is that up to this point, we consider that the wearer is the one
-        // who issued "menuto", and then change auth to that of the clicker.
-        // My opinion is that the wearer should never play a role in this and that there should be
-        // only one request for auth: in the listener script.
-        // This could already be done, but it would still be ugly to have this exception for "menuto"
-        // in listener. I would rather have a generic way for another attachment to query an arbitrary
-        // command (not only "menu") on behalf of an arbitrary avatar.
-        // TODO: change the "HUD channel protocol" in order to make this possible.
-        key kAv = (key)llList2String(lParams, 1);
-        if (KeyIsAv(kAv)) llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);
-    }
     else if (sCmd == "refreshmenu")
     {
         llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);

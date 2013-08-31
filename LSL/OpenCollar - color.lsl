@@ -1,4 +1,4 @@
-//OpenCollar - color
+﻿//OpenCollar - color
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //color
 
@@ -96,21 +96,10 @@ integer TOUCH_EXPIRE = -9503;
 //5000 block is reserved for IM slaves
 
 string UPMENU = "^";
-
+string CTYPE = "collar";
 key g_kWearer;
+string g_sScript;
 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -129,36 +118,19 @@ key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAu
     return kID;
 } 
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 
@@ -178,7 +150,7 @@ ColorMenu(key kAv, integer iAuth)
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the collar you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
+    string sPrompt = "Pick which part of the " + CTYPE + " you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
     g_lButtons = llListSort(g_lElements, 1, TRUE);
     g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth)];
 }
@@ -243,7 +215,7 @@ SetElementColor(string sElement, vector vColor)
         g_lColorSettings = llListReplaceList(g_lColorSettings, [sStrColor], iIndex + 1, iIndex + 1);
     }
     //save to settings
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + sElement + "=" + sStrColor, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sElement + "=" + sStrColor, NULL_KEY);
     //g_sCurrentElement = "";
 }
 
@@ -276,6 +248,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         //loop through non-root prims, build element list
         BuildElementList();
@@ -290,7 +263,7 @@ default
         if (sStr == "reset" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
         {
             //clear saved settings
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "all", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", NULL_KEY);
             llResetScript();
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
@@ -315,7 +288,7 @@ default
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                 }
                 else
                 {
@@ -335,7 +308,7 @@ default
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
                 }
                 else
@@ -366,14 +339,17 @@ default
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
             string sValue = llGetSubString(sStr, i + 1, -1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                SetElementColor(PeelToken(sToken, 1), (vector)sValue);
+                sToken = llGetSubString(sToken, i + 1, -1);
+                SetElementColor(sToken, (vector)sValue);
             }
             else if (sToken == g_sAppLockToken)
             {
                 g_iAppLock = (integer)sValue;
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -411,7 +387,7 @@ default
                 }
                 else if (sMessage == "*Touch*")
                 {
-                    Notify(kAv, "Please touch the part of the collar you want to recolor.", FALSE);
+                    Notify(kAv, "Please touch the part of the " + CTYPE + " you want to recolor.", FALSE);
                     g_kTouchID = TouchRequest(kAv, TRUE, FALSE, iAuth);
                 }
                 else if (g_sCurrentElement == "")

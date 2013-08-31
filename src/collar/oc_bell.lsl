@@ -1,4 +1,4 @@
-//OpenCollar - bell
+﻿//OpenCollar - bell
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //Collar Cuff Menu
 
@@ -104,8 +104,8 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "^";//when your menu hears this, give the parent menu
-
-
+string CTYPE = "collar";
+string g_sScript;
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
@@ -114,54 +114,26 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
+
 string AutoPrefix()
 {
     list sName = llParseString2List(llKey2Name(llGetOwner()), [" "], []);
     return llToLower(llGetSubString(llList2String(sName, 0), 0, 0)) + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
 }
 
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else
     {
-        llInstantMessage(kID,sMsg);
+        llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
         }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
 Debug(string sMsg)
@@ -351,7 +323,7 @@ ShowHelp(key kID)
 {
 
     string sPrompt = "Help for bell chat command:\n";
-    sPrompt += "All commands for the bell of the collar of "+llKey2Name(g_kWearer)+" start with \""+g_sSubPrefix+g_sBellChatPrefix+"\" followed by the command and the value, if needed.\n";
+    sPrompt += "All commands for the bell of the " + CTYPE + " of "+llKey2Name(g_kWearer)+" start with \""+g_sSubPrefix+g_sBellChatPrefix+"\" followed by the command and the value, if needed.\n";
     sPrompt += "Examples: \""+g_sSubPrefix+g_sBellChatPrefix+" show\" or \""+g_sSubPrefix+g_sBellChatPrefix+" volume 10\"\n\n";
     sPrompt += "Commands:\n";
     sPrompt += "on: Enable bell sound.\n";
@@ -380,11 +352,11 @@ ShowHelp(key kID)
 
 SaveBellSettings()
 {
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "on=" + (string)g_iBellOn, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "show=" + (string)g_iBellShow, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "sound=" + (string)g_iCurrentBellSound, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "vol=" + (string)llFloor(g_fVolume*10), NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "speed=" + (string)llFloor(g_fSpeed*10), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), NULL_KEY);
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -517,6 +489,7 @@ default
 {
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // key of the owner
         g_kWearer=llGetOwner();
         g_sSubPrefix=AutoPrefix();
@@ -561,9 +534,10 @@ default
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
             string sValue = llGetSubString(sStr, i + 1, -1);
-            if (PeelToken(sToken, 0) == GetScriptID())
+            i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-                sToken = PeelToken(sToken, 1);
+                sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "on")
                 {
                     g_iBellOn=(integer)sValue;
@@ -591,14 +565,15 @@ default
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             }
-            else if (sToken == "Golobal_prefix") g_sSubPrefix=sValue;
+            else if (sToken == "Global_prefix") g_sSubPrefix=sValue;
+            else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == LM_SETTING_SAVE)
         {
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
             string sValue = llGetSubString(sStr, i + 1, -1);
-            if (sToken == "Golobal_prefix") g_sSubPrefix=sValue;
+            if (sToken == "Global_prefix") g_sSubPrefix=sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
