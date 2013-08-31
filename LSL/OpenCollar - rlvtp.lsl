@@ -1,4 +1,4 @@
-﻿//OpenCollar - rlvtp
+//OpenCollar - rlvtp
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 //3.004 - adding "accepttp" support.  No button, just automatically turned on for owner.
@@ -418,7 +418,7 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, NULL_KEY);
@@ -447,10 +447,6 @@ default
                 g_lSettings = llParseString2List(sValue, [","], []);
                 UpdateSettings();
             }
-<<<<<<< HEAD:LSL/OpenCollar - rlvtp.lsl
-=======
-            else if (sToken == "Global_CType") CTYPE = sValue;
->>>>>>> origin/evolution:LSL/OpenCollar - rlvtp.lsl
         }
         else if (iNum == RLV_REFRESH)
         {

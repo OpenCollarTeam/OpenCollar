@@ -1,4 +1,4 @@
-﻿//OpenCollar - texture
+//OpenCollar - texture
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life. See "OpenCollar License" for details.
 //color
 
@@ -231,11 +231,7 @@ TextureMenu(key kID, integer iPage, integer iAuth)
 
 ElementMenu(key kAv, integer iAuth)
 {
-<<<<<<< HEAD:LSL/OpenCollar - texture.lsl
     string sPrompt = "Pick which part of the collar you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
-=======
-    string sPrompt = "Pick which part of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
->>>>>>> origin/evolution:LSL/OpenCollar - texture.lsl
     lButtons = llListSort(g_lElements, 1, TRUE);
     g_kElementID = Dialog(kAv, sPrompt, lButtons, ["*Touch*", UPMENU], 0, iAuth);
 }
@@ -265,7 +261,6 @@ SetElementTexture(string sElement, string sTex)
     integer n;
     integer iLinkCount = llGetNumberOfPrims();
     for (n = 2; n <= iLinkCount; n++)
-
     {
         string thiselement = ElementType(n);
         if (thiselement == sElement) llSetLinkTexture(n, sTex, ALL_SIDES);
@@ -295,11 +290,7 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
-<<<<<<< HEAD:LSL/OpenCollar - texture.lsl
 
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - texture.lsl
         //loop through non-root prims, build element list
         integer n;
         integer iLinkCount = llGetNumberOfPrims();
@@ -358,7 +349,6 @@ default
                 //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
                 llResetScript();
             }
-<<<<<<< HEAD:LSL/OpenCollar - texture.lsl
             else if (sStr == "settings")
             {
                 Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
@@ -372,14 +362,6 @@ default
                 else if (g_iAppLock)
                 {
                     Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
-=======
-            else if (kID != g_kWearer && iNum != COMMAND_OWNER) return;
-            {
-                if (sStr == "settings") Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
-                else if (g_iAppLock)
-                {
-                    Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - texture.lsl
                 }
                 else
                 {
@@ -408,24 +390,14 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-<<<<<<< HEAD:LSL/OpenCollar - texture.lsl
             if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
             else if (PeelToken(sToken, 0) == GetScriptID())
-=======
-            integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
->>>>>>> origin/evolution:LSL/OpenCollar - texture.lsl
             {
                 sToken = PeelToken(sToken, 1); // element
                 integer i = llListFindList(g_lTextureDefaults, [sToken]);
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
                 else g_lTextureDefaults += [sToken, sValue];
             }
-<<<<<<< HEAD:LSL/OpenCollar - texture.lsl
-=======
-            else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
-            else if (sToken == "Global_CType") CTYPE = sValue;
->>>>>>> origin/evolution:LSL/OpenCollar - texture.lsl
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -501,6 +473,7 @@ default
             }
         }
     }
+
     on_rez(integer iParam)
     {
         llResetScript();

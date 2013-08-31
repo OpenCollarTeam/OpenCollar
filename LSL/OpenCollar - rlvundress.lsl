@@ -1,4 +1,4 @@
-﻿//OpenCollar - rlvundress
+//OpenCollar - rlvundress
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //gives menus for clothing and attachment, stripping and locking
 
@@ -483,11 +483,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {
         if (!g_iRLVOn)
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
             Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-=======
-            Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
             return TRUE;
         }
@@ -497,11 +493,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {
         if (!g_iRLVOn)
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
             Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-=======
-            Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
             return TRUE;
         }
@@ -627,11 +619,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {
         if (!g_iRLVOn)
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
             Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-=======
-            Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
             return TRUE;
         }
@@ -642,11 +630,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {
         if (!g_iRLVOn)
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
             Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-=======
-            Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
             return TRUE;
         }
@@ -656,11 +640,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {
         if (!g_iRLVOn)
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
             Notify(kID, "RLV features are now disabled in this collar. You can enable those in RLV submenu. Opening it now.", FALSE);
-=======
-            Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
             return TRUE;
         }
@@ -675,10 +655,6 @@ default
 {
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
         g_kWearer = llGetOwner();
         g_sWearerName = llKey2Name(g_kWearer);
         llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
@@ -793,11 +769,7 @@ default
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                     else if (sMessage == "Attachments") QueryAttachments(kAv, iAuth);
                     else if (sMessage == ALL) 
-<<<<<<< HEAD:LSL/OpenCollar - rlvundress.lsl
                     // SA:� we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
-=======
-                    // SA:Â we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
->>>>>>> origin/evolution:LSL/OpenCollar - rlvundress.lsl
                     //    Note for people looking for the auth check: it would have been here, look no further!
                     { //send the RLV command to remove it.
                         llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);

@@ -699,10 +699,6 @@ default
 {
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - keyholder.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - keyholder.lsl
         // sleep a second to allow all scripts to be initialized
         llSleep(1.0);
         // send request to main menu and ask other menus if they want to register with us

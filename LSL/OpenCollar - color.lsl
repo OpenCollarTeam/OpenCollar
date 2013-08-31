@@ -1,4 +1,4 @@
-﻿//OpenCollar - color
+//OpenCollar - color
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //color
 
@@ -178,11 +178,7 @@ ColorMenu(key kAv, integer iAuth)
 
 ElementMenu(key kAv, integer iAuth)
 {
-<<<<<<< HEAD:LSL/OpenCollar - color.lsl
     string sPrompt = "Pick which part of the collar you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the collar.";
-=======
-    string sPrompt = "Pick which part of the " + CTYPE + " you would like to recolor.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
->>>>>>> origin/evolution:LSL/OpenCollar - color.lsl
     g_lButtons = llListSort(g_lElements, 1, TRUE);
     g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth)];
 }
@@ -280,10 +276,6 @@ default
 {
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - color.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - color.lsl
         g_kWearer = llGetOwner();
         //loop through non-root prims, build element list
         BuildElementList();
@@ -343,7 +335,7 @@ default
                 }
                 else if (g_iAppLock)
                 {
-                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+                    Notify(kID,"The appearance of the collar is locked. You cannot access this menu now!", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
                 }
                 else
@@ -374,26 +366,14 @@ default
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
             string sValue = llGetSubString(sStr, i + 1, -1);
-<<<<<<< HEAD:LSL/OpenCollar - color.lsl
             if (PeelToken(sToken, 0) == GetScriptID())
             {
                 SetElementColor(PeelToken(sToken, 1), (vector)sValue);
-=======
-            i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
-            {
-                sToken = llGetSubString(sToken, i + 1, -1);
-                SetElementColor(sToken, (vector)sValue);
->>>>>>> origin/evolution:LSL/OpenCollar - color.lsl
             }
             else if (sToken == g_sAppLockToken)
             {
                 g_iAppLock = (integer)sValue;
             }
-<<<<<<< HEAD:LSL/OpenCollar - color.lsl
-=======
-            else if (sToken == "Global_CType") CTYPE = sValue;
->>>>>>> origin/evolution:LSL/OpenCollar - color.lsl
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {

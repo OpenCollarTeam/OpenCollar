@@ -1,4 +1,4 @@
-﻿//OpenCollar - rlvex
+//OpenCollar - rlvex
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life. See "OpenCollar License" for details.
 
 key g_kLMID;//store the request id here when we look up a LM
@@ -122,12 +122,8 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
 //string UPMENU = "?";
 //string MORE = "?";
-=======
-integer FIND_AGENT = -9005;
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
 string UPMENU = "^";
 //string MORE = ">";
 
@@ -358,12 +354,7 @@ MakeNamesList()
 
 FetchAvi(integer auth, string type, string name, key user)
 {
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
     string out = llList2CSV(["getavi_", GetScriptID(), "add", type, name]) + "|";
-=======
-    if (name == "") name = " ";
-    string out = llDumpList2String(["getavi_", g_sScript, user, auth, type, name], "|");
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
     integer i = 0;
     list src = g_lNames;
     list exclude; // build list of existing-listed keys to exclude from name search
@@ -371,14 +362,8 @@ FetchAvi(integer auth, string type, string name, key user)
     {
         exclude += [llList2String(src, i)];
     }
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
     out += llList2CSV(exclude);
     llMessageLinked(LINK_THIS, auth, out, user);
-=======
-    if (llGetListLength(exclude))
-        out += "|" + llDumpList2String(exclude, ",");
-    llMessageLinked(LINK_THIS, FIND_AGENT, out, REQUEST_KEY = llGenerateKey());
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
 }
 AddName(string sKey)
 {
@@ -729,10 +714,6 @@ default
 
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
@@ -756,12 +737,7 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
             if (PeelToken(sToken, 0) == GetScriptID())
-=======
-            integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
             {
                 sToken = PeelToken(sToken, 1);
                 if (sToken == "owner") g_iOwnerDefault = (integer)sValue;
@@ -772,10 +748,6 @@ default
                     MakeNamesList();
                 }
             }
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
-=======
-            else if (sToken == "Global_CType") CTYPE = sValue;
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_secowner") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "settings")
@@ -948,17 +920,6 @@ default
                 }
             }
         }
-<<<<<<< HEAD:LSL/OpenCollar - rlvex.lsl
-=======
-        else if (iNum == FIND_AGENT)
-        {
-            if (kID != REQUEST_KEY) return;
-            list params = llParseString2List(sStr, ["|"], []);
-            if (llList2String(params, 0) != g_sScript) return;
-            g_kTmpKey = (key)llList2String(params, 2);
-            AddName(llList2String(params, 5));
-        }
->>>>>>> origin/evolution:LSL/OpenCollar - rlvex.lsl
     }
     dataserver(key kID, string sData)
     {

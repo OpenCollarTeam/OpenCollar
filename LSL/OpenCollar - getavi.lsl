@@ -55,7 +55,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
     else if (llGetAgentSize(kID) != ZERO_VECTOR)
     {
-        llInstantMessage(kID, sMsg);
+        llInstantMessage(kID,sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);
@@ -79,10 +79,7 @@ list FindAvis(string in, list ex)
     list out = llGetAgentList(AGENT_LIST_REGION, []);
     string name;
     integer i = llGetListLength(out) - 1;
-<<<<<<< HEAD:LSL/OpenCollar - getavi.lsl
     integer x = 0;
-=======
->>>>>>> origin/evolution:LSL/OpenCollar - getavi.lsl
     while(~i)
     {
         name = llKey2Name(llList2Key(out, i));
@@ -164,20 +161,11 @@ default
     }
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - getavi.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - getavi.lsl
         g_kWearer = llGetOwner();
         AVIS = [];
     }
     link_message(integer link, integer num, string mess, key id)
     {
-<<<<<<< HEAD:LSL/OpenCollar - getavi.lsl
-=======
-        integer i;
-        list params = llParseString2List(mess, ["|"], []);
->>>>>>> origin/evolution:LSL/OpenCollar - getavi.lsl
         if (num == DIALOG_RESPONSE && id == g_kMenuID)
         {
             list params = llParseString2List(mess, ["|"], []);
@@ -190,12 +178,13 @@ default
                 return;
             }
             else if (name == "No") return;
+            integer i = 0;
             for (; i < llGetListLength(AVIS); i++)
             {
                 key avi = llList2Key(AVIS, i);
                 if (avi == name)
                 {
-                    SendResult(avi);
+                    SendKey(auth, avi, user);
                     return;
                 }
             }

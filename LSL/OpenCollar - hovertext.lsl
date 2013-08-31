@@ -1,4 +1,4 @@
-﻿//OpenCollar - hovertext
+//OpenCollar - hovertext
 
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
@@ -63,7 +63,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
     else if (llGetAgentSize(kID) != ZERO_VECTOR)
     {
-        llInstantMessage(kID, sMsg);
+        llInstantMessage(kID,sMsg);
         if (iAlsoNotifyWearer)
         {
             llOwnerSay(sMsg);

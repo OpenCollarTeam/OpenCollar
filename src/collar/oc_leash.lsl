@@ -1,4 +1,4 @@
-﻿//OpenCollar - leash
+//OpenCollar - leash
 //leash script for the Open Collar Project (c)
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
@@ -120,11 +120,6 @@ key g_kCmdGiver;
 key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
-<<<<<<< HEAD:LSL/OpenCollar - leash.lsl
-=======
-string g_sScript;
-string CTYPE = "collar";
->>>>>>> origin/evolution:LSL/OpenCollar - leash.lsl
 
 list g_lLengths = ["1", "2", "3", "4", "5", "8","10" , "15", "20", "25", "30"];
 //list g_lPartPoints; // DoLeash function- priority given to last item in list. so if list is ["collar", "handle"], and we've heard from the handle and particles are going there, we'll ignore any responses from "collar"
@@ -364,16 +359,12 @@ Follow(key kTarget, key kCmdGiver, integer iAuth)
 {
     debug("Follow target=" + llList2CSV([kTarget, kCmdGiver, iAuth]));
     // can't leash wearer to self.
-<<<<<<< HEAD:LSL/OpenCollar - leash.lsl
     if (kTarget == g_kWearer) 
         return;
     
     // TODO: why this??  It seems to have something to do with getting commands from objects.
     if (kTarget == kCmdGiver && llGetOwnerKey(kCmdGiver) == g_kWearer) 
         return;
-=======
-    if (kTarget == g_kWearer) return;
->>>>>>> origin/evolution:LSL/OpenCollar - leash.lsl
 
     // Send notices to wearer, leasher, and target
     // Only send notices if Leasher is an AV, as objects normally handle their own messages for such things
@@ -745,10 +736,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         else if (sComm == "length")
         {
             float fNewLength = (float)sVal;
-<<<<<<< HEAD:LSL/OpenCollar - leash.lsl
-=======
-            sVal = Float2String(fNewLength);
->>>>>>> origin/evolution:LSL/OpenCollar - leash.lsl
             if(fNewLength > 0.0)
             {
                 //Person holding the leash can always set length.
@@ -826,10 +813,6 @@ default
 {
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - leash.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - leash.lsl
         //debug("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
         g_sWearer = llKey2Name(g_kWearer);

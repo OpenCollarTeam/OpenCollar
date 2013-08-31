@@ -1,4 +1,4 @@
-﻿//OpenCollar - camera
+//OpenCollar - camera
 //allows dom to set different camera mode
 //responds to commands from modes list
 
@@ -431,10 +431,6 @@ default
     
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - camera.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - camera.lsl
         if (llGetAttached())
         {
             llRequestPermissions(llGetOwner(), PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
@@ -468,12 +464,7 @@ default
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-<<<<<<< HEAD:LSL/OpenCollar - camera.lsl
             if (PeelToken(sToken, 0) == GetScriptID())
-=======
-            integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
->>>>>>> origin/evolution:LSL/OpenCollar - camera.lsl
             {
                 sToken = PeelToken(sToken, 1);
                 if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)

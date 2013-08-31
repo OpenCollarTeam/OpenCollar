@@ -1,4 +1,4 @@
-﻿//OpenCollar - rlvtalk
+//OpenCollar - rlvtalk
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Talk";
@@ -401,10 +401,6 @@ default
 {
     state_entry()
     {
-<<<<<<< HEAD:LSL/OpenCollar - rlvtalk.lsl
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - rlvtalk.lsl
         g_kWearer = llGetOwner();
     }
 

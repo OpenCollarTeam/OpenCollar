@@ -1,4 +1,4 @@
-﻿//OpenCollar - rlvsit
+//OpenCollar - rlvsit
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Sit";
@@ -340,10 +340,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
         string sBehavior = llList2String(llParseString2List(sThisItem, ["=", ":"], []), 0);
         if (sStr == "unsit=force")
         {
-<<<<<<< HEAD:LSL/OpenCollar - rlvsit.lsl
-=======
-            sStr = "unsit=force";
->>>>>>> origin/evolution:LSL/OpenCollar - rlvsit.lsl
             //this one's just weird
             //llOwnerSay("forcing stand");
             if (iNum == COMMAND_WEARER)
@@ -415,11 +411,7 @@ default
     state_entry()
     {
         llSetTimerEvent(0.0);
-<<<<<<< HEAD:LSL/OpenCollar - rlvsit.lsl
 
-=======
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
->>>>>>> origin/evolution:LSL/OpenCollar - rlvsit.lsl
         g_kWearer = llGetOwner();
         
     }
@@ -504,11 +496,6 @@ default
             //split string on both comma and equals sign
             //first see if this is the token we care about
             list lParams = llParseString2List(sStr, ["="], []);
-<<<<<<< HEAD:LSL/OpenCollar - rlvsit.lsl
-=======
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
->>>>>>> origin/evolution:LSL/OpenCollar - rlvsit.lsl
             integer iChange = FALSE;
             if (llList2String(lParams, 0) == GetScriptID() + "List")
             {
@@ -517,10 +504,6 @@ default
                 g_lSettings = llParseString2List(llList2String(lParams, 1), [","], []);
                 UpdateSettings();
             }
-<<<<<<< HEAD:LSL/OpenCollar - rlvsit.lsl
-=======
-            else if (sToken == "Global_CType") CTYPE = sValue;
->>>>>>> origin/evolution:LSL/OpenCollar - rlvsit.lsl
         }
         else if (iNum == RLV_REFRESH)
         {
@@ -689,6 +672,5 @@ default
     {
         //nothing close by to sit on, tell g_kMenuUser
         Notify(g_kMenuUser, "Unable to find sit targets.", FALSE);
-
     }
 }
