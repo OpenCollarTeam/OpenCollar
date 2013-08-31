@@ -62,7 +62,11 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 
+<<<<<<< HEAD:LSL/OpenCollar - settings.lsl
 string WIKI_URL = "http://www.opencollar.at";
+=======
+string WIKI_URL = "http://www.opencollar.at/user-guide.html";
+>>>>>>> origin/evolution:LSL/OpenCollar - settings.lsl
 string DESIGN_ID;
 list DESIGN_SETTINGS;
 list USER_SETTINGS;
@@ -503,7 +507,7 @@ default
                 if (sMessage == WIKI)
                 {
                     llSleep(0.2);
-                    llLoadURL(kAv, "Read the online documentation, see the release note, get tips and infos for designers or report bugs on our website.", WIKI_URL);
+                    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
                     return;
                 }
                 if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;

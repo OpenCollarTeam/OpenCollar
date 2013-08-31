@@ -1,4 +1,4 @@
-//OpenCollar - lock
+﻿//OpenCollar - lock
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 list g_lOwners;
@@ -302,6 +302,7 @@ default
                 SetLockElementAlpha(); //EB
 
             }
+            else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);

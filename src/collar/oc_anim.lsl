@@ -1,4 +1,4 @@
-//OpenCollar - anim
+﻿//OpenCollar - anim
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
 //needs to handle anim requests from sister scripts as well
@@ -56,7 +56,6 @@ integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on th
 integer LM_SETTING_DELETE = 2003;//delete token from DB
 integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
@@ -79,6 +78,11 @@ integer g_iInterfaceChannel = -12587429;
 string AO_ON = "ZHAO_STANDON";
 string AO_OFF = "ZHAO_STANDOFF";
 string AO_MENU = "ZHAO_MENU";
+<<<<<<< HEAD:LSL/OpenCollar - anim.lsl
+=======
+
+string CTYPE = "collar";
+>>>>>>> origin/evolution:LSL/OpenCollar - anim.lsl
 
 key g_kWearer;
 
@@ -240,6 +244,7 @@ StartAnim(string sAnim)
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
         {   //get and stop currently playing anim
             if (llGetListLength(g_lAnims))
+
             {
                 string s_Current = llList2String(g_lAnims, 0);
                 llStopAnimation(s_Current);
@@ -523,6 +528,10 @@ default
     }
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - anim.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - anim.lsl
         g_lAnimButtons = ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
@@ -593,6 +602,10 @@ default
         { // saefword command recieved, release animation
             if(llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION)
             {
+<<<<<<< HEAD:LSL/OpenCollar - anim.lsl
+=======
+                g_iLastRank = 0;
+>>>>>>> origin/evolution:LSL/OpenCollar - anim.lsl
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + g_sLockToken, NULL_KEY);
@@ -604,7 +617,12 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+<<<<<<< HEAD:LSL/OpenCollar - anim.lsl
             if (PeelToken(sToken, 0) == GetScriptID())
+=======
+            integer i = llSubStringIndex(sToken, "_");
+            if (llGetSubString(sToken, 0, i) == g_sScript)
+>>>>>>> origin/evolution:LSL/OpenCollar - anim.lsl
             {
                 sToken = PeelToken(sToken, 1);
                 if (sToken == g_sAnimToken)
@@ -626,6 +644,10 @@ default
                     g_sAppEngine_Url = sValue;
                 }
             }
+<<<<<<< HEAD:LSL/OpenCollar - anim.lsl
+=======
+            else if (sToken == "Global_CType") CTYPE = sValue;
+>>>>>>> origin/evolution:LSL/OpenCollar - anim.lsl
         }
         else if (iNum == DIALOG_RESPONSE)
         {

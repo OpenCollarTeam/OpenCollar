@@ -1,4 +1,4 @@
-//OpenCollar - rlvmisc
+﻿//OpenCollar - rlvmisc
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Misc";
@@ -101,7 +101,12 @@ string UPMENU = "^";
 //string MORE = ">";
 
 key g_kWearer;
+<<<<<<< HEAD:LSL/OpenCollar - rlvmisc.lsl
 
+=======
+string g_sScript;
+string CTYPE = "collar";
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmisc.lsl
 Debug(string in)
 {
     //llOwnerSay(in);
@@ -325,6 +330,10 @@ default
 
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - rlvmisc.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmisc.lsl
         integer i = 1;
         integer c = llGetNumberOfPrims();
         for (; i <= c; i++)
@@ -336,6 +345,7 @@ default
             }
         }
         g_kWearer = llGetOwner();
+        g_lDescriptions += ["See hover text from " + CTYPE];
         // llSleep(1.0);
         // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, NULL_KEY);

@@ -68,14 +68,14 @@ key github_version_request;
 // A request to this URL will trigger delivery of an updater.  We omit the
 // "version=blah" parameter because we don't want the server deciding whether
 // we should get an updater or not.  We just want one.
-string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
+string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater%20Dev%2FBeta%2FRC&update=yes";
 key appengine_delivery_request;
 
 // The news system is back!  Only smarter this time.  News will be kept in a
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/opencollar/OpenCollarUpdater/beta/news.md";
+string news_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/evolution/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
@@ -150,7 +150,12 @@ SayUpdatePin(key orb)
 
 string LeftOfDecimal(string str) {
     integer idx = llSubStringIndex(str, ".");
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     if (idx == -1) {
+=======
+    if (idx == -1)
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         return str;
     }
     return llGetSubString(str, 0, idx - 1);
@@ -158,7 +163,12 @@ string LeftOfDecimal(string str) {
 
 string RightOfDecimal(string str) {
     integer idx = llSubStringIndex(str, ".");
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     if (idx == -1) {
+=======
+    if (idx == -1)
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         return "0";
     }
     return llGetSubString(str, idx + 1, -1);
@@ -175,7 +185,12 @@ integer SecondStringBigger(string s1, string s2) {
     integer i1 = (integer)LeftOfDecimal(s1);
     integer i2 = (integer)LeftOfDecimal(s2);
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     if (i2 == i1) {
+=======
+    if (i2 == i1)
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         // pre-decimal parts are the same.  Need to compare the bits after.
         integer j1 = (integer)RightOfDecimal(s1);
         integer j2 = (integer)RightOfDecimal(s2);
@@ -183,6 +198,10 @@ integer SecondStringBigger(string s1, string s2) {
     } else {
         return i2 > i1;
     }
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
+=======
+    else return i2 > i1;
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
 }
 
 // used in the 'objectversion' command.
@@ -200,7 +219,8 @@ integer GetOwnerChannel(key kOwner, integer iOffset)
     return iChan;
 }
 
-Init() {
+Init()
+{
     // check if we're current version or not by reading notecard.
     my_version_request = llGetNotecardLine("~version", 0); 
     
@@ -219,21 +239,34 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
     if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
     list cmd_parts = llParseString2List(str, [" "], []);
     // handle menu clicks
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     if (llList2String(cmd_parts, 0) == "menu") {
+=======
+    if (llList2String(cmd_parts, 0) == "menu")
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         string submenu = llGetSubString(str, 5, -1);
         if (submenu == BTN_DO_UPDATE) UserCommand(iNum, "update", id);
         else if (submenu == BTN_GET_UPDATE)
         {
             if (id == wearer)
                 appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
-            else Notify(id,"Only the wearer can request updates for the collar.",FALSE);
+            else Notify(id,"Only the wearer can request updates for the " + CTYPE + ".",FALSE);
         }
         else if (submenu == BTN_GET_VERSION) UserCommand(iNum, "version", id);
         else return TRUE; // drop the command if it is not a menu handled here
         llMessageLinked(LINK_ROOT, iNum, "menu "+PARENT_MENU, id);
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     } else 
     if (str == "update") {
         if (id == wearer) {
+=======
+    }
+    else if (str == "update")
+    {
+        if (id == wearer)
+        {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
             string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
             g_iUpdatersNearBy = 0;
             g_iWillingUpdaters = 0;
@@ -245,11 +278,25 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
         } else {
             Notify(id,"Only the wearer can update the collar.",FALSE);
         }
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     } else if (llList2String(cmd_parts, 0) == "version") {
         Notify(id, "I am running OpenCollar version " + my_version, FALSE);
     } else if (str == "objectversion") {
+=======
+        else
+        {
+            Notify(id,"Only the wearer can update the " + CTYPE + ".",FALSE);
+        }
+    }
+    else if (llList2String(cmd_parts, 0) == "version")
+    {
+        Notify(id, "I am running OpenCollar version " + my_version, FALSE);
+    }
+    else if (str == "objectversion")
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         // ping from an object, we answer to it on the object channel
-        llSay(GetOwnerChannel(id,1111),(string)wearer+":version="+my_version);
+        llSay(GetOwnerChannel(id,1111),(string)wearer+"\\version="+my_version);
     }
     return TRUE;
 }
@@ -262,18 +309,24 @@ default
 
         //check if we're in an updater.  if so, then just shut self down and
         //don't do regular startup routine.
-        if (llSubStringIndex(llGetObjectName(), "Updater") != -1) {
+        if (llSubStringIndex(llGetObjectName(), "Updater") != -1)
+        {
             llSetScriptState(llGetScriptName(), FALSE);
         }
-
         // we just started up.  Remember owner.
         wearer = llGetOwner();
-        
         Init();
     }
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     dataserver(key id, string data) {
         if (id == my_version_request) {
+=======
+    dataserver(key id, string data)
+    {
+        if (id == my_version_request)
+        {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
             // we only ever read one notecard ("~version"), and it only ever has
             // one line.  So whatever we got back, that's our version.
             my_version = data;        
@@ -283,6 +336,7 @@ default
         }
     }
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     http_response(key id, integer status, list meta, string body) {
         // if we just got version information from github, then compare to what
         // we have in notecard.
@@ -291,13 +345,37 @@ default
                 // strip the newline off the end of the text
                 string release_version = llGetSubString(body, 0, -2);
                 if ((float)release_version > (float)my_version) {
+=======
+    http_response(key id, integer status, list meta, string body)
+    {
+        // if we just got version information from github, then compare to what
+        // we have in notecard.
+        if (status == 200)
+        { // be silent on failures.
+            if (id == github_version_request)
+            {
+                // strip the newline off the end of the text
+                string release_version = llGetSubString(body, 0, -2);
+                if ((float)release_version > (float)my_version)
+                {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
                     string prompt = "\nYou are running OpenCollar version " +
                     my_version + ".  There is an update available.";
                     g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
                 }
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
             } else if (id == appengine_delivery_request) {
                 llOwnerSay("An updater will be delivered to you shortly.");
             } else if (id == news_request) {
+=======
+            }
+            else if (id == appengine_delivery_request)
+            {
+                llOwnerSay("An updater will be delivered to you shortly.");
+            }
+            else if (id == news_request)
+            {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
                 // We got a response back from the news page on Github.  See if
                 // it's new enough to report to the user.
                 string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
@@ -310,7 +388,12 @@ default
                 // So we can compare timestamps that way.  
                 string this_news_time = llList2String(firstline_parts, -1);
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
                 if (SecondStringBigger(last_news_time, this_news_time)) {
+=======
+                if (SecondStringBigger(last_news_time, this_news_time))
+                {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
                     string news = "Newsflash " + body;
                     Notify(llGetOwner(), news, FALSE);
                     // last news time is remembered in memory.  We used to
@@ -322,9 +405,17 @@ default
         }
     }
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     on_rez(integer param) {
         // only reset if owner has changed
         if (wearer != llGetOwner()) {
+=======
+    on_rez(integer param)
+    {
+        // only reset if owner has changed
+        if (wearer != llGetOwner())
+        {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
             llResetScript();
         }
         
@@ -332,7 +423,12 @@ default
         Init();
     }
 
+<<<<<<< HEAD:LSL/OpenCollar - update.lsl
     link_message(integer sender, integer num, string str, key id ) {
+=======
+    link_message(integer sender, integer num, string str, key id )
+    {
+>>>>>>> origin/evolution:LSL/OpenCollar - update.lsl
         //the command was given by either owner, secowner, group member, or wearer
         if (UserCommand(num, str, id)) return;
         else if (num == MENUNAME_REQUEST)
@@ -372,6 +468,13 @@ default
                 }
             }
         }
+        else if (num == LM_SETTING_RESPONSE)
+        {
+            list lParams = llParseString2List(str, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if (sToken == "Global_CType") CTYPE = sValue;
+        }
     }
 
     listen(integer channel, string name, key id, string message)
@@ -403,10 +506,14 @@ default
         Debug("timer");
         llSetTimerEvent(0.0);
         llListenRemove(g_iUpdateHandle);
-        if (g_iUpdatersNearBy > -1) {
-            if (!g_iUpdatersNearBy) {
+        if (g_iUpdatersNearBy > -1)
+        {
+            if (!g_iUpdatersNearBy)
+            {
                 Notify(g_kUpdater,"No updaters found.  Please rez an updater within 10m and try again",FALSE);
-            } else if (g_iWillingUpdaters > 1) {
+            }
+            else if (g_iWillingUpdaters > 1)
+            {
                     Notify(g_kUpdater,"Multiple updaters were found within 10m.  Please remove all but one and try again",FALSE);
             }
             g_iUpdatersNearBy = -1;

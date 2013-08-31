@@ -1,4 +1,4 @@
-// OpenCollar - touch
+﻿// OpenCollar - touch
 //
 // This script is under the GPLv2 license with additional requirement that when it is distributed,
 // either as is or in a modified form, within SecondLife or any virtual world with similar permissions system,
@@ -98,7 +98,7 @@ default
     state_entry()
     {
         integer iAttachPt = llGetAttached();
-        if ((iAttachPt > 0� && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
+        if ((iAttachPt > 0Â && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
     }
     

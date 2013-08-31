@@ -27,6 +27,7 @@ integer MENUNAME_REMOVE     = 3003;
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
+
 integer LOCKMEISTER         = -8888;
 integer LOCKGUARD           = -9119;
 integer g_iLMListener;
@@ -528,6 +529,10 @@ default
 {
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - leashParticle.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - leashParticle.lsl
         g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
         StopParticles(TRUE);
         FindLinkedPrims();
@@ -836,6 +841,10 @@ default
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);
+<<<<<<< HEAD:LSL/OpenCollar - leashParticle.lsl
+=======
+            i = llSubStringIndex(sToken, "_");
+>>>>>>> origin/evolution:LSL/OpenCollar - leashParticle.lsl
             if (sToken == "leash_leashedto")
             {
                 g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
@@ -877,6 +886,10 @@ default
                 }
                 SaveDefaultSettings(sToken, sValue);
             }
+<<<<<<< HEAD:LSL/OpenCollar - leashParticle.lsl
+=======
+            else if (sToken == "Global_CType") CTYPE = sValue;
+>>>>>>> origin/evolution:LSL/OpenCollar - leashParticle.lsl
             // in case wearer is currently leashed
             if (sMessage == "settings=sent" && g_kLeashedTo != NULLKEY)
             {

@@ -1,4 +1,4 @@
-//OpenCollar - bell
+﻿//OpenCollar - bell
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //Collar Cuff Menu
 
@@ -114,6 +114,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
+<<<<<<< HEAD:LSL/OpenCollar - bell.lsl
 string GetScriptID()
 {
     // strip away "OpenCollar - " leaving the script's individual name
@@ -126,6 +127,9 @@ string PeelToken(string in, integer slot)
     if (!slot) return llGetSubString(in, 0, i);
     return llGetSubString(in, i + 1, -1);
 }
+=======
+
+>>>>>>> origin/evolution:LSL/OpenCollar - bell.lsl
 string AutoPrefix()
 {
     list sName = llParseString2List(llKey2Name(llGetOwner()), [" "], []);
@@ -517,6 +521,10 @@ default
 {
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - bell.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - bell.lsl
         // key of the owner
         g_kWearer=llGetOwner();
         g_sSubPrefix=AutoPrefix();
@@ -591,7 +599,12 @@ default
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             }
+<<<<<<< HEAD:LSL/OpenCollar - bell.lsl
             else if (sToken == "Golobal_prefix") g_sSubPrefix=sValue;
+=======
+            else if (sToken == "Global_prefix") g_sSubPrefix=sValue;
+            else if (sToken == "Global_CType") CTYPE = sValue;
+>>>>>>> origin/evolution:LSL/OpenCollar - bell.lsl
         }
         else if (iNum == LM_SETTING_SAVE)
         {

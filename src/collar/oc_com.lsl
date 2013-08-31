@@ -46,7 +46,11 @@ integer EXT_COMMAND_COLLAR = 499;
 string g_sSafeWord = "RED";
 
 //added for attachment auth
+<<<<<<< HEAD:LSL/OpenCollar - listener.lsl
 integer g_iInterfaceChannel = -12587429;
+=======
+integer g_iInterfaceChannel = -12587429; // AO Backwards Compatibility
+>>>>>>> origin/evolution:LSL/OpenCollar - listener.lsl
 integer g_iListenHandleAtt;
 
 integer ATTACHMENT_REQUEST = 600;
@@ -82,8 +86,11 @@ SetListeners()
     llListenRemove(g_iLockMesiterListener);
     llListenRemove(g_iListenHandleAtt);
 
+<<<<<<< HEAD:LSL/OpenCollar - listener.lsl
     llListenRemove(g_iHUDListener);
 
+=======
+>>>>>>> origin/evolution:LSL/OpenCollar - listener.lsl
     if(g_iListenChan0 == TRUE)
     {
         g_iListener1 = llListen(0, "", NULL_KEY, "");
@@ -197,6 +204,10 @@ default
 {
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - listener.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - listener.lsl
         g_kWearer = llGetOwner();
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // persoalized channel for this sub
@@ -424,13 +435,22 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+<<<<<<< HEAD:LSL/OpenCollar - listener.lsl
+=======
+            integer i = llSubStringIndex(sToken, "_");
+>>>>>>> origin/evolution:LSL/OpenCollar - listener.lsl
             if (sToken == "Global_prefix")
             {
                 if (sValue == "") sValue = "auto";
                 SetPrefix(sValue);
                 SetListeners();
             }
+<<<<<<< HEAD:LSL/OpenCollar - listener.lsl
             else if (PeelToken(sToken, 0) == GetScriptID())
+=======
+            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (llGetSubString(sToken, 0, i) == g_sScript)
+>>>>>>> origin/evolution:LSL/OpenCollar - listener.lsl
             {
                 sToken = PeelToken(sToken, 1);
                 if (sToken == "channel")

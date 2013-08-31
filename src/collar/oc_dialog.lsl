@@ -1,4 +1,4 @@
-//OpenCollar - dialog
+﻿//OpenCollar - dialog
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
@@ -389,6 +389,10 @@ default
 {
     state_entry()
     {
+<<<<<<< HEAD:LSL/OpenCollar - dialog.lsl
+=======
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+>>>>>>> origin/evolution:LSL/OpenCollar - dialog.lsl
         g_kWearer=llGetOwner();
     }
 

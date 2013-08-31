@@ -1,4 +1,4 @@
-//OpenCollar - badwords
+﻿//OpenCollar - badwords
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //if list isn't blank, open listener on channel 0, with sub's key <== only for the first badword???
 
@@ -121,7 +121,7 @@ DialogHelp(key kID, integer iAuth)
     sMessage += "badword <badword> where <badword> is the word you want to add.\n";
     sMessage += "rembadword <badword> where <badword> is the word you want to remove.\n";
     sMessage += "penance <what your sub has to say to get release from the badword anim.\n";
-    sMessage += "badwordsanim <anim name> , make sure the animation is inside the collar.";
+    sMessage += "badwordsanim <anim name> , make sure the animation is inside the " + CTYPE + ".";
     g_kDialog=Dialog(kID, sMessage, ["Ok"], [], 0, iAuth);
 }
 
@@ -355,8 +355,12 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 if(llGetListLength(g_lBadWords))
                 {
                     g_sIsEnabled = "badwordson=true";
+<<<<<<< HEAD:LSL/OpenCollar - badwords.lsl
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + g_sIsEnabled, NULL_KEY);
                     //llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords=" + g_sIsEnabled, NULL_KEY);
+=======
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+>>>>>>> origin/evolution:LSL/OpenCollar - badwords.lsl
                     ListenControl();
                     Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, "~"),FALSE);
                 }
@@ -400,6 +404,7 @@ default
 
     state_entry()
     {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();
     }
 
@@ -433,6 +438,10 @@ default
                     g_sPenance = sValue;
                 }
             }
+<<<<<<< HEAD:LSL/OpenCollar - badwords.lsl
+=======
+            else if (sToken == "Global_CType") CTYPE = sValue;
+>>>>>>> origin/evolution:LSL/OpenCollar - badwords.lsl
         }
         // no more self - resets
         //    else if ((iNum == COMMAND_OWNER || iNum == COMMAND_WEARER) && (sStr == "reset" || sStr == "runaway"))

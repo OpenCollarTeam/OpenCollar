@@ -1,4 +1,4 @@
-//OpenCollar - rlvmain
+ï»¿//OpenCollar - rlvmain
 
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //new viewer checking method, as of 2.73
@@ -160,7 +160,7 @@ DoMenu(key kID, integer iAuth)
     }
 
     string sPrompt = "Restrained Love Viewer Options.";
-    if (g_iRlvVersion) sPrompt += "\nDetected version of RLVÂ API: "+(string)g_iRlvVersion;
+    if (g_iRlvVersion) sPrompt += "\nDetected version of RLVÃ‚ API: "+(string)g_iRlvVersion;
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -244,11 +244,11 @@ AddRestriction(key kID, string sBehav)
     }
     else
     {
-        list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]);
+        list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["Â§"],[]);
         iRestr=llListFindList(lSrcRestr, [sBehav]);
         if (iRestr==-1)
         {
-            g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr+[sBehav],"§")],iSource, iSource);
+            g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr+[sBehav],"Â§")],iSource, iSource);
         }
     }
     if (iRestr==-1)
@@ -280,7 +280,7 @@ RemRestriction(key kID, string sBehav)
     integer iRestr;
     if (iSource!=-1)
     {
-        list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]);
+        list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["Â§"],[]);
         iRestr=llListFindList(lSrcRestr,[sBehav]);
         if (iRestr!=-1)
         {
@@ -293,7 +293,7 @@ RemRestriction(key kID, string sBehav)
             else
             {
                 lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);
-                g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource,iSource);
+                g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"Â§")] ,iSource,iSource);
             }
             if (sBehav=="unsit"&&g_kSitter==kID)
             {
@@ -317,13 +317,13 @@ ApplyRem(string sBehav)
         integer iFound=FALSE;
         for (i=0;i<=llGetListLength(g_lRestrictions);i++)
         {
-            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,i),["§"],[]);
+            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,i),["Â§"],[]);
             if (llListFindList(lSrcRestr, [sBehav])!=-1) iFound=TRUE;
         }
         if (!iFound)
         {
             g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr);
-            //if (sBehav!="no_hax")  removed:Â issue 1040
+            //if (sBehav!="no_hax")  removed:Ã‚ issue 1040
             SendCommand(sBehav+"=y");
         }
     }
@@ -334,7 +334,7 @@ Release(key kID, string sPattern)
 {
     integer iSource=llListFindList(g_lSources,[kID]);
     if (iSource!=-1) {
-        list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]);
+        list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource),["Â§"],[]);
         integer i;
         if (sPattern!="") {
             for (i=0;i<=llGetListLength(lSrcRestr);i++) {
@@ -461,7 +461,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
 
 default{
-    state_entry() {
+    state_entry()
+    {
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         //request setting from DB
         llSleep(1.0);
@@ -489,12 +491,21 @@ default{
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+<<<<<<< HEAD:LSL/OpenCollar - rlvmain.lsl
+=======
+            integer i = llSubStringIndex(sToken, "_");
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmain.lsl
             if(sToken == "auth_owner" && llStringLength(sValue) > 0)
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
                 Debug("owners: " + sValue);
             }
+<<<<<<< HEAD:LSL/OpenCollar - rlvmain.lsl
             else if (PeelToken(sToken, 0) == GetScriptID())
+=======
+            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (llGetSubString(sToken, 0, i) == g_sScript)
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmain.lsl
             {
                 sToken = PeelToken(sToken, 1);
                 if (sToken == "on")
@@ -770,14 +781,24 @@ state checked {
                 list lParams = llParseString2List(sStr, ["="], []);
                 string sToken = llList2String(lParams, 0);
                 string sValue = llList2String(lParams, 1);
+<<<<<<< HEAD:LSL/OpenCollar - rlvmain.lsl
+=======
+                integer i = llSubStringIndex(sToken, "_");
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmain.lsl
                 if(sToken == "auth_owner" && llStringLength(sValue) > 0)
                 {
                     g_lOwners = llParseString2List(sValue, [","], []);
                     Debug("owners: " + sValue);
                 }
+<<<<<<< HEAD:LSL/OpenCollar - rlvmain.lsl
                 else if (PeelToken(sToken, 0) == GetScriptID())
                 {
                     sToken = PeelToken(sToken, 1);
+=======
+                else if (llGetSubString(sToken, 0, i) == g_sScript)
+                {
+                    sToken = llGetSubString(sToken, i + 1, -1);
+>>>>>>> origin/evolution:LSL/OpenCollar - rlvmain.lsl
                     if (sToken == "notify") g_iRLVNotify = (integer)sValue;
                 }
             }
