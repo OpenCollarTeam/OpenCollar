@@ -1,6 +1,6 @@
-Issue: 20130831.1
+Issue: 20130831.2
 
-OpenCollar Dev/Beta/RC 3.918
+OpenCollar Dev/Beta/RC 3.919
 
 Thank you for installing a beta version and helping us improve the collar. This version is based in it's entirety on OpenCollar Evolution source, in all it's glory and with all the new challenges it brings.
 
