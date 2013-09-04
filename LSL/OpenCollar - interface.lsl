@@ -1,15 +1,15 @@
 // OpenCollar - interface
 // Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 
-// Message format for remotes = Toucher_UUID:Command[:AuthLow:AuthHigh]
+// Message format for remotes = Toucher_UUID:Command[\\AuthLow\\AuthHigh]
 // Command will be authed for Toucher, if falls between Low & High.
 //  - Low >= 500 (OWNER), High <= 504 (EVERYONE).
 //  - optional, but if used, BOTH values must be present
-//  - [:500:500] would check for owner only auth
+//  - [\\500\\500] would check for owner only auth
 // Returned message (where applicable) will be Toucher_UUID:Response:Auth
 //  - where Auth = auth level of the toucher.
 //  - Keep in mind that most commands will not trigger a response message
-// Ping-Pong. UUID:ping  will be responded to with UUID:pong:iAuth
+// Ping-Pong. UUID\\ping  will be responded to with UUID\\pong\\iAuth
 //  - IF iAuth falls above 504 or below 500, there will be no response
 
 //OpenCollar MESSAGE MAP
@@ -44,7 +44,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 MessageRemote(key kID, string sMsg, key kTouch)
 {
-    llRegionSayTo(kID, INTERFACE_CHANNEL, (string)kTouch + ":" + sMsg);
+    llRegionSayTo(kID, INTERFACE_CHANNEL, (string)kTouch + "\\" + sMsg);
 }
 integer GetOwnerChannel(key kOwner, integer iOffset)
 {
@@ -75,7 +75,7 @@ default
     listen (integer iChan, string sName, key kID, string sMsg)
     {
         if (iChan != INTERFACE_CHANNEL) return;
-        list lParams = llParseString2List(sMsg, [":"], []);
+        list lParams = llParseString2List(sMsg, ["\\"], []);
         integer i = llGetListLength(lParams);
         key kTouch = (key)llList2String(lParams, 0);
         sMsg = llList2String(lParams, 1);
@@ -93,7 +93,7 @@ default
         }
         else
         {
-            Notify(kID, "Syntax Error! Request must be <uuid>:<command>", FALSE);
+            Notify(kID, "Syntax Error! Request must be <uuid>\\<command>", FALSE);
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -122,7 +122,7 @@ default
         {
             iAuth = (integer)llGetSubString(sCommand, 6, -1);
             if (iAuthHigh < iAuth || iAuth < iAuthLow) return; 
-            if (sRemReq == "ping") MessageRemote(kRemote, "pong:" + (string)iAuth, kID);
+            if (sRemReq == "ping") MessageRemote(kRemote, "pong\\" + (string)iAuth, kID);
             else llMessageLinked(LINK_THIS, iAuth, sRemReq, kID);
             return;
         }
