@@ -24,7 +24,6 @@ integer INTERFACE_REQUEST  = -9006;
 integer INTERFACE_RESPONSE = -9007;
 
 integer INTERFACE_CHANNEL;
-list NONO = ["setopenaccess"]; // security
 key g_kWearer;
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -45,7 +44,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 MessageRemote(key kID, string sMsg, key kTouch)
 {
-    llRegionSayTo(kID, INTERFACE_CHANNEL, (string)kTouch + "\\" + sMsg);
+    llRegionSayTo(kID, INTERFACE_CHANNEL, (string)kTouch + ":" + sMsg);
 }
 integer GetOwnerChannel(key kOwner, integer iOffset)
 {
@@ -76,12 +75,11 @@ default
     listen (integer iChan, string sName, key kID, string sMsg)
     {
         if (iChan != INTERFACE_CHANNEL) return;
-        list lParams = llParseString2List(sMsg, ["\\"], []);
+        list lParams = llParseString2List(sMsg, [":"], []);
         integer i = llGetListLength(lParams);
-        key kTouch = llGetOwnerKey(kID);
-        sMsg = llList2String(lParams, 0);
-        if (llListFindList(NONO, [sMsg])) return; // security
-        if (i > 1) 
+        key kTouch = (key)llList2String(lParams, 0);
+        sMsg = llList2String(lParams, 1);
+        if (i > 2) 
         {
             string sAuthLow = llList2String(lParams, 1);
             string sAuthHigh = sAuthLow;
@@ -91,11 +89,11 @@ default
         if (kTouch)
         {
             string out = llDumpList2String(["auth_", "level", sMsg, kID], "|");
-            llMessageLinked(LINK_THIS, INTERFACE_REQUEST, out, kTouch);
+            llMessageLinked(LINK_THIS, INTERFACE_REQUEST, out, kID);
         }
         else
         {
-            Notify(kID, "Syntax Error! Request must be <uuid>\\<command>", FALSE);
+            Notify(kID, "Syntax Error! Request must be <uuid>:<command>", FALSE);
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -124,7 +122,7 @@ default
         {
             iAuth = (integer)llGetSubString(sCommand, 6, -1);
             if (iAuthHigh < iAuth || iAuth < iAuthLow) return; 
-            if (sRemReq == "ping") MessageRemote(kRemote, "pong\\" + (string)iAuth, kID);
+            if (sRemReq == "ping") MessageRemote(kRemote, "pong:" + (string)iAuth, kID);
             else llMessageLinked(LINK_THIS, iAuth, sRemReq, kID);
             return;
         }
