@@ -1,4 +1,6 @@
-﻿//OpenCollar - texture
+﻿//version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
+
+//OpenCollar - texture
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life. See "OpenCollar License" for details.
 //color
 
@@ -337,6 +339,7 @@ default
                     string sTex = llList2String(lParams, 2);
                     // subroutine to make chat entry of element non-case sensitive
                     string test;
+                    integer ok; //This is to check if the element actually appears in the collar... otherwise this function will take ANY arbitrary bunch of junk, menu options, everything basically, and think it's a texture setting. 
                     integer l = 2;
                     for (; l <= llGetNumberOfPrims(); l++)
                     {
@@ -344,11 +347,12 @@ default
                         if (llToLower(test) == llToLower(sElement))
                         {
                             sElement = test;
+                            ok=TRUE;
                             jump break;
                         }
                     }
                     @break;
-                    SetElementTexture(sElement, sTex);
+                    if(ok) SetElementTexture(sElement, sTex);
                 }
             }
         }
