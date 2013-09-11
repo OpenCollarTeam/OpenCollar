@@ -337,7 +337,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     {
         llOwnerSay(sMsg);
     }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
+    else if (llGetAgentSize(kID) == ZERO_VECTOR)
     {
         llInstantMessage(kID,sMsg);
         if (iAlsoNotifyWearer)
