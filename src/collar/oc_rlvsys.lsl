@@ -1,5 +1,5 @@
 ﻿//OpenCollar - rlvmain
-
+//3.934 MD comments. line 16, halved query timer to 30s * 2. line 510, removed llResetScript(). line 560, i_OwnerCount added to remove llGetListLength from a loop.
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 //new viewer checking method, as of 2.73
 //on rez, restart script
@@ -14,7 +14,7 @@ integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features o
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
-float g_fVersionTimeOut = 60.0;
+float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
 integer g_iVersionChan = 293847;
 integer g_iRlvVersion;
 integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
@@ -508,7 +508,7 @@ default{
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER && sStr == "menu "+g_sSubMenu)
         {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
             Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
-            llResetScript();//Nan: why do we reset here?! SA: maybe so we retry querying RLV?
+           // llResetScript();//Nan: why do we reset here?! SA: maybe so we retry querying RLV? MD: I'm removing this, cos it means that if someone attempts to get the RLV menu while querying, restrictions list will be cleared, and hence owner will not be notified. Also protection from people menu mashing out of confusion. 1 minute (2 before I changed it!) is enough for querying, surely?
         }
     }
 
@@ -558,14 +558,15 @@ default{
             Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
                 string sMsg = llKey2Name(g_kWearer)+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
-                if (llGetListLength(g_lOwners) == 2) {
+                integer i_OwnerCount=llGetListLength(g_lOwners);
+                if (i_OwnerCount == 2) {
                     // only 1 owner
                     Notify(g_kWearer,"Your owner has been notified.",FALSE);
                     Notify(llList2Key(g_lOwners,0), sMsg, FALSE);
                 } else {
                         Notify(g_kWearer,"Your owners have been notified.",FALSE);
                     integer i;
-                    for(i=0; i < llGetListLength(g_lOwners); i+=2) {
+                    for(i=0; i < i_OwnerCount; i+=2) {
                         Notify(llList2Key(g_lOwners,i), sMsg, FALSE);
                     }
                 }

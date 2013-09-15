@@ -10,7 +10,10 @@ integer g_iLockMeisterChan = -8888;
 
 integer g_iListener1;
 integer g_iListener2;
-integer g_iLockMesiterListener;
+integer g_iLockMeisterListener;
+
+integer g_iHUDListener;
+integer g_iHUDChan;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -33,6 +36,11 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+
+
+integer INTERFACE_REQUEST = -9006;
+integer INTERFACE_RESPONSE = -9007;
+
 
 //5000 block is reserved for IM slaves
 
@@ -58,6 +66,9 @@ string g_sCmd;
 string g_sScript;
 string CTYPE = "collar";
 
+
+
+
 Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + " Debug: " + sStr);
@@ -67,7 +78,7 @@ SetListeners()
 {
     llListenRemove(g_iListener1);
     llListenRemove(g_iListener2);
-    llListenRemove(g_iLockMesiterListener);
+    llListenRemove(g_iLockMeisterListener);
     llListenRemove(g_iListenHandleAtt);
 
     if(g_iListenChan0 == TRUE)
@@ -78,7 +89,8 @@ SetListeners()
     if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
     g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
     g_iListener2 = llListen(g_iListenChan, "", NULL_KEY, "");
-    g_iLockMesiterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
+    g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
+    g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,""); //reinstated
 }
 
 SetPrefix(string sValue)
@@ -123,17 +135,12 @@ integer StartsWith(string sHayStack, string sNeedle) // http://wiki.secondlife.c
     return llDeleteSubString(sHayStack, llStringLength(sNeedle), -1) == sNeedle;
 }
 
+
+
 integer GetOwnerChannel(key kOwner, integer iOffset)
 {
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
+    integer iChan = -llAbs((integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset);
+    if (iChan > -10000) iChan -= 30000;
     return iChan;
 }
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -179,6 +186,7 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         SetPrefix("auto");
+         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_prefix", NULL_KEY);
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", NULL_KEY);
@@ -198,6 +206,30 @@ default
 
     listen(integer iChan, string sName, key kID, string sMsg)
     {
+        if (iChan == g_iHUDChan)
+        {
+            //check for a ping, if we find one we request auth and answer in LMs with a pong
+            if (sMsg==(string)g_kWearer + ":ping")
+            {
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
+            }
+            // an object wants to know the version, we check if it is allowed to
+            if (sMsg==(string)g_kWearer + ":version")
+            {
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
+            }
+            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
+            else if (StartsWith(sMsg, (string)g_kWearer + ":"))
+            {
+                sMsg = llGetSubString(sMsg, 37, -1);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+            }
+            else
+            {
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+            }
+            return;
+        }
         if (iChan == g_iLockMeisterChan)
         {
             llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
@@ -283,7 +315,11 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
+        if (iNum==INTERFACE_RESPONSE)
+        {
+            if (sStr == "safeword") llRegionSay(g_iHUDChan, "safeword");
+        }
+        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
@@ -297,7 +333,7 @@ default
             else if (sStr == "ping")
                 // ping from an object, we answer to it on the object channel
             {
-                llSay(GetOwnerChannel(kID,1111),(string)g_kWearer+":pong");
+                llSay(g_iHUDChan,(string)g_kWearer+":pong");
             }
             //handle changing prefix and channel from owner
             else if (iNum == COMMAND_OWNER)
