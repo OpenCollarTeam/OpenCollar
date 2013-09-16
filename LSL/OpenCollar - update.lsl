@@ -7,7 +7,7 @@ integer willingUpdaters = -1;
 key wearer;
 integer updatersNearby = -1;
 key updater;
-string updatemethod = "inplace";
+string updatemethod = "replace";
 integer updatehandle;
 integer updateChannel;
 key httprequest;
