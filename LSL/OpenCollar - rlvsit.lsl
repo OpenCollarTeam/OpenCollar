@@ -1,4 +1,6 @@
 ﻿//OpenCollar - rlvsit
+//3.925 Revision Proposal, Medea Destiny. ISSUE: Sit Now button will not return all objects. What's going on? It's a bit of an oddity about the way sensors work. The SCRIPTED sensor flag only returns active scripted items, i.e. scripts actually doing something like listening. A work-around that seems to work is to search for PASSIVE|SCRIPTED in the sensor, then filter by llDetectedType, which gives SCRIPTED for non-active scripts. I've implemented that in this script. The downside is you'll get fewer objects returned to the SIT_NOW menu as the sensor will pick up the nearest 16 PASSIVE or SCRIPTED items, so you'll have to be nearer to the object. So, pro: you'll now be able to find dumb sit scripts. Con: you'll have to be nearer the item. Is this a good trade-off?
+
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Sit";
@@ -536,7 +538,7 @@ default
                             //have scripts in them
                             g_kMenuUser = kAv;
                             g_iMenuAuth = iAuth;
-                            llSensor("", NULL_KEY, SCRIPTED, g_fScanRange, PI);
+                            llSensor("", NULL_KEY, SCRIPTED|PASSIVE, g_fScanRange, PI);
                         }
                         else if (sMessage == "StandNow")
                         {
@@ -634,7 +636,7 @@ default
             //don't add things named "Object"
             if (llDetectedName(n) != "Object")
             {
-                lSitButtons += [llDetectedKey(n)];
+                if (llDetectedType(n)&SCRIPTED) lSitButtons += [llDetectedKey(n)];
             }
         }
 
