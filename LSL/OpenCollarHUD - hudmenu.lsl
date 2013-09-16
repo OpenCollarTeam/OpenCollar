@@ -105,7 +105,7 @@ default
         //add "CollarMenu","CuffMenu" and RLVMenu buttons to main menu
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CollarMenu", NULL_KEY);
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|UnDressMenu", NULL_KEY);
-//        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CuffMenu", NULL_KEY); //placeholder for now
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CuffMenu", NULL_KEY); 
     }
 
     touch_start(integer num)
@@ -211,7 +211,7 @@ default
             }
             else if (str == "CuffMenu") //place holder for now
             {
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "cuff", NULL_KEY);
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "cmenu", NULL_KEY);
             }
         }
         else if (num == COMMAND_OWNER)
