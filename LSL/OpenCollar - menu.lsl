@@ -4,7 +4,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-list g_lMenuNames = ["Main", "Help/Debug", "AddOns"];
+list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "Website"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
 list g_lMenuPrompts = [
 "Pick an option.\n",
@@ -54,6 +54,9 @@ string UPMENU = "^";
 string GIVECARD = "Guide";
 string HELPCARD = "OpenCollar Guide";
 string REFRESH_MENU = "Fix Menus";
+
+string WIKI = "Website";
+string WIKI_URL = "http://www.opencollar.at/";
 
 Debug(string text)
 {
@@ -237,6 +240,13 @@ default
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
+                
+                if (sMessage == WIKI)
+                {
+                    llSleep(0.2);
+                    llLoadURL(kAv, "Visit our website for the current User Guide, Chat Forums, Support and News.", WIKI_URL);
+                    return;
+                }
                 
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
