@@ -1,12 +1,12 @@
-Issue: 20130911.1
+Issue: 20130916.1
 
-OpenCollar Dev/Beta/RC 3.923
+OpenCollar Dev/Beta/RC 3.924
 
 Thank you for installing a beta version and helping us improve the collar!
 
 MISSION GOALS
 
-High priority: interface removal (Yes/No?); § or : or \\
+High priority: interface removed -> need to regain/check full integration for HUD and AO!
 
 Medium priority: appearance script still has pre-evolution artefacts; documentation for the touch feature
 
