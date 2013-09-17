@@ -12,7 +12,7 @@ https://github.com/OpenCollar/OpenCollarUpdater/issues?state=open
 
 IMPORTANT: What we are working on here will be the final version of the OpenCollar as we know it. Those who will want to participate for 4.0 will have to be familiar with the old system and you all have now one more time the chance to take a look at it from the inside out together with us.
 
-Contributors (so far): Joy Stipe, Kire Faulkes, Rebbie, Mickey Drayman, North Glenwalker, Kittyn Davidson, Medea Destiny, LoveMeNow2012, Marissa Mistwallow and Wendy Starfall
+Contributors (so far): Joy Stipe, Kire Faulkes, Rebbie, Mickey Drayman, North Glenwalker, Corwin Davidson, Medea Destiny, LoveMeNow2012, Marissa Mistwallow and Wendy Starfall
 
 http://www.opencollar.at/
 http://www.opencollar.at/forum.html#!/tinkerbox

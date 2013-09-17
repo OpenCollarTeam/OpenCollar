@@ -335,6 +335,9 @@ default
                 else
                 {
                     list lParams = llParseString2List(sStr, [" "], []);
+                    
+                    if (llGetListLength(lParams) > 3) //Corwin Davidson: Verify you have the correct number of parameters otherwise you pass bogus data here, such as dialog response stringes for buttons clicked.
+                    {
                     string sElement = llList2String(lParams, 1);
                     string sTex = llList2String(lParams, 2);
                     // subroutine to make chat entry of element non-case sensitive
@@ -356,6 +359,7 @@ default
                 }
             }
         }
+    }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
