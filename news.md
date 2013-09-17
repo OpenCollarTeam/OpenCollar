@@ -1,12 +1,12 @@
-Issue: 20130917.1
+Issue: 20130917.2
 
-OpenCollar Dev/Beta/RC 3.926
+OpenCollar Dev/Beta/RC 3.927
 
 Thank you for installing a beta version and helping us improve the collar!
 
 We have now regained full integration for AO and HUD.
 
-Please check the issue tracker for current questions/goals/known bugs:
+No more known bugs, please use the issue tracker to report anything you find:
 
 https://github.com/OpenCollar/OpenCollarUpdater/issues?state=open
 
