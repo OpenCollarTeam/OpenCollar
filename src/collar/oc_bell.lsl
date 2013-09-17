@@ -1,5 +1,8 @@
 ﻿//OpenCollar - bell
 //Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+
+//3.927 MD: Update g_kOwners in on_rez event, as we don't necessarily reset this script and currently we may get failed permission requests targeting the wrong avatar! See line 513. Added check for runaway, if bell should be hidden, sleep for 4 seconds then re-hide the bell elements. This is to avoid other scripts resetting visibility. See line 712. Added changed event: INVENTORY changes mean more sounds may be available, so redo prepareSounds(), and LINK to redo BuildBellElementList(). See line 753
+
 //Collar Cuff Menu
 
 //=============================================================================
@@ -508,7 +511,11 @@ default
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
 
     }
-
+    on_rez(integer param)
+    {
+        g_kWearer=llGetOwner();
+        g_sSubPrefix=AutoPrefix();
+    }
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -703,6 +710,14 @@ default
 
             }
         }
+        else if(iNum=COMMAND_OWNER && sStr=="runaway")
+        {
+            if (!g_iBellShow)
+            {
+                llSleep(4);
+                SetBellElementAlpha(0.0);
+            }
+        }
     }
 
     control( key kID, integer nHeld, integer nChange )
@@ -736,4 +751,10 @@ default
 
         }
     }
+    changed(integer change)
+    {
+        if(change & CHANGED_LINK) BuildBellElementList();
+        else if (change & CHANGED_INVENTORY) PrepareSounds();
+    }
+
 }

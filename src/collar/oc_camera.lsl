@@ -1,4 +1,6 @@
 ﻿//OpenCollar - camera
+//3.927 MD: added perms check before attempting to clear camera params in case of reset when collar not worn.
+
 //allows dom to set different camera mode
 //responds to commands from modes list
 
@@ -72,7 +74,7 @@ CamMode(string sMode)
 
 ClearCam()
 {
-    llClearCameraParams();
+    if (llGetPermissions()&PERMISSION_CONTROL_CAMERA) llClearCameraParams();
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");    
