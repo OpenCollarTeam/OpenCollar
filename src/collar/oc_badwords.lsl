@@ -408,7 +408,7 @@ default
                 {
                     g_sBadWordAnim = sValue;
                 }
-                else if (sToken = "badwords")
+                else if (sToken == "badwords")
                 {
                     g_lBadWords = llParseString2List(llToLower(sValue), ["~"], []);
                     ListenControl();
