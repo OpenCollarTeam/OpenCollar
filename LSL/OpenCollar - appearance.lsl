@@ -231,12 +231,12 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
         vSize = llList2Vector(g_lPrimStartSizes,0);
         if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize)
         {
-            Notify(kAV, "Prims already on minimum or maximum size, the object cannot be scaled as you requested.", TRUE);
+            Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
             return;
         }
         else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize)
         {
-            Notify(kAV, "Prims would extend minimum or maximum size, the object cannot be scaled as you requested.", TRUE);
+            Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
             return;
         }
         else
@@ -256,12 +256,12 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
 
                 if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale))
                 {
-                    Notify(kAV, "Prims already on minimum or maximum size, the object cannot be scaled as you requested.", TRUE);
+                    Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
                     return;
                 }
                 else if (MinMaxScaled(fScale * vPrimScale, fScale))
                 {
-                    Notify(kAV, "Prims would extend minimum or maximum size, the object cannot be scaled as you requested.", TRUE);
+                    Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
                     return;
                 }
             }
@@ -357,7 +357,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar scale. It is based on the size the collar has on rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
+    string sPrompt = "Adjust the collar scale. It is based on the size the collar has upon rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -378,12 +378,12 @@ DoMenu(key kAv, integer iAuth)
     string sPrompt;
     if (g_iAppLock)
     {
-        sPrompt = "The appearance of the collar has be locked. To modified it a owner has to unlock it.";
+        sPrompt = "The appearance of the collar has been locked. An owner must unlock it to allow modification.";
         lMyButtons = [TICKED + APPLOCK];
     }
     else
     {
-        sPrompt = "Which aspect of the appearance would you like to modify? Owners can lock the appearance of the collar, so it cannot be changed at all.\n";
+        sPrompt = "Which aspect of the collar's appearance would you like to modify? Owners can lock the appearance of the collar, so it cannot be changed at all.\n";
     
         lMyButtons = [UNTICKED + APPLOCK];
         lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
@@ -448,7 +448,7 @@ default
                 //give this plugin's menu to id
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
+                    Notify(kID,"You are not allowed to change the collar's appearance.", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
                 }
                 else DoMenu(kID, iNum);
@@ -462,7 +462,7 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar appearance.", FALSE);
+                    Notify(kID,"You are not allowed to change the collar's appearance.", FALSE);
                 }
                 else DoMenu(kID, iNum);
             }
@@ -470,7 +470,7 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar rotation.", FALSE);
+                    Notify(kID,"You are not allowed to change the collar's rotation.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
@@ -483,7 +483,7 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar position.", FALSE);
+                    Notify(kID,"You are not allowed to change the collar's position.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
@@ -496,7 +496,7 @@ default
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
                 {
-                    Notify(kID,"You are not allowed to change the collar size.", FALSE);
+                    Notify(kID,"You are not allowed to change the collar's size.", FALSE);
                 }
                 else if (g_iAppLock)
                 {
@@ -701,7 +701,7 @@ default
                                 // ResSize requested
                                 if (g_iScaleFactor == 100)
                                 {
-                                    Notify(kAv, "The collar is already at rez size, resizing canceled.", FALSE); 
+                                    Notify(kAv, "Resizing canceled; the collar is already at original size.", FALSE); 
                                 }
                                 else
                                 {
