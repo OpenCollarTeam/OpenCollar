@@ -1,4 +1,15 @@
-﻿//OpenCollar - camera
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                              OpenCollar - camera                               //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 //3.927 MD: added perms check before attempting to clear camera params in case of reset when collar not worn.
 
 //allows dom to set different camera mode

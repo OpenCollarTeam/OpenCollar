@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                           OpenCollarUpdater - Master                           //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // This is the master updater script.  It complies with the update handshake
 // protocol that OC has been using for quite some time, and should therefore be
 // compatible with current OC collars.  the internals of this script, and the

@@ -1,4 +1,15 @@
-//OpenCollar - UpdateShim
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollar - UpdateShim                             //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // This script is like a kamikaze missile.  It sits dormant in the updater
 // until an update process starts.  Once the initial handshake is done, it's
 // then inserted into the object being updated, where it chats with the bundle

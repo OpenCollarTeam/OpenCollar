@@ -1,5 +1,14 @@
-﻿//OpenCollar - bell
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                               OpenCollar - bell                                //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
 
 //3.927 MD: Update g_kOwners in on_rez event, as we don't necessarily reset this script and currently we may get failed permission requests targeting the wrong avatar! See line 513. Added check for runaway, if bell should be hidden, sleep for 4 seconds then re-hide the bell elements. This is to avoid other scripts resetting visibility. See line 712. Added changed event: INVENTORY changes mean more sounds may be available, so redo prepareSounds(), and LINK to redo BuildBellElementList(). See line 753
 

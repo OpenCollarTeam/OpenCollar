@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                        OpenCollarUpdater - BundleGiver                         //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // this script receives DO_BUNDLE messages that contain the uuid of the collar being updated, 
 // the name of a bundle notecard, the talkchannel on which the collar shim script is listening, and
 // the script pin set by the shim.  This script then loops over the items listed in the notecard

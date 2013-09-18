@@ -1,8 +1,16 @@
-﻿//version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
+﻿////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                             OpenCollar - texture                               //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
 
-//OpenCollar - texture
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life. See "OpenCollar License" for details.
-//color
+//version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
 
 //set textures by uuid, and save uuids instead of texture names to DB
 

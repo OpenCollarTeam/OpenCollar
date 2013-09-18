@@ -1,6 +1,16 @@
-﻿//OpenCollar - rlvmain
-//3.934 MD comments. line 16, halved query timer to 30s * 2. line 510, removed llResetScript(). line 560, i_OwnerCount added to remove llGetListLength from a loop.
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                             OpenCollar - rlvmain                               //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
+//3.924 MD comments. line 16, halved query timer to 30s * 2. line 510, removed llResetScript(). line 560, i_OwnerCount added to remove llGetListLength from a loop.
 //new viewer checking method, as of 2.73
 //on rez, restart script
 //on script start, query db for rlvon setting

@@ -1,9 +1,15 @@
-﻿// OpenCollar - touch
-//
-// This script is under the GPLv2 license with additional requirement that when it is distributed,
-// either as is or in a modified form, within SecondLife or any virtual world with similar permissions system,
-// then its copies must keep all permissions allowed by the platform (in SecondLife: copy, transfer, modify).
-//
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                               OpenCollar - touch                               //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // This script handles the touch_start and touch_end events and sends relevant commands as LMs to other plugins.
 //
 

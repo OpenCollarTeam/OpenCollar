@@ -1,4 +1,15 @@
-//OpenCollar - cleanup
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                              OpenCollar - cleanup                              //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // This script exists to clean up some legacy cruft in old collars:
   // - delete the hovertext script that is in a child prim
   // - delete the mis-named "OpenCollar - remoteserver- 3.481" script (missing a space in the name pattern)

@@ -1,7 +1,17 @@
-﻿//OpenCollar - rlvsit
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                              OpenCollar - rlvsit                               //
+//                                 version 3.928                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 //3.928 -- addition to 3.925, sensor is called in two separate places (ugh), fix to apply 3.925 change to both. Spotted by Edgar Yven. -- 3.925 Revision Proposal, Medea Destiny. ISSUE: Sit Now button will not return all objects. What's going on? It's a bit of an oddity about the way sensors work. The SCRIPTED sensor flag only returns active scripted items, i.e. scripts actually doing something like listening. A work-around that seems to work is to search for PASSIVE|SCRIPTED in the sensor, then filter by llDetectedType, which gives SCRIPTED for non-active scripts. I've implemented that in this script. The downside is you'll get fewer objects returned to the SIT_NOW menu as the sensor will pick up the nearest 16 PASSIVE or SCRIPTED items, so you'll have to be nearer to the object. So, pro: you'll now be able to find dumb sit scripts. Con: you'll have to be nearer the item. Is this a good trade-off?
 
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Sit";
 
