@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - keyholder                             //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -853,6 +853,8 @@ default
         else if (num == COMMAND_SAFEWORD)
         {
             ReturnKey(llKey2Name(id) + " has safeworded, key auto-returned.", FALSE);
+            llMessageLinked(LINK_THIS, WEARERLOCKOUT, "off", "");
+            kh_lockout = FALSE;
         }
         else if (num == TIMER_EVENT)
         {
