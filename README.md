@@ -29,7 +29,9 @@ simple way to do it would be:
 5. When editing a file in SL, use the "save to hard disk" feature in the
    script editor so you can easily save your work to your local working directory.
    (i.e. on win7 this would be C:\Users\user\Documents\GitHub\OpenCollarUpdater\LSL)
-6. Your changes should be immediately reflected in your github app and ready to commit!
+6. Your changes should be immediately reflected in your github app and ready to commit.
+7. Commit your changes to your own forked repo and Sync.
+8. At this point all you need to do is open a pull request for us. Check out those two links: https://help.github.com/articles/creating-a-pull-request and https://help.github.com/articles/using-pull-requests 
 
 Contributing Changes
 --------------------
