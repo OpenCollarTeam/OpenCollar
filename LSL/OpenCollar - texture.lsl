@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,8 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+//3.929 fixes MD: fixing that messed up chat retextureing command with "settexture element texture" format to do it properly. See notes to 3.921 below, this kills the scriptiness. Also, removes arbitrary warning when appearance is locked which was spamming the message on unfiltered link messages from wearer. 
 
 //version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
 
@@ -336,38 +338,61 @@ default
             else if (kID != g_kWearer && iNum != COMMAND_OWNER) return;
             {
                 if (sStr == "settings") Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
-                else if (g_iAppLock)
-                {
-                    Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
-                }
+
                 else
                 {
                     list lParams = llParseString2List(sStr, [" "], []);
                     
-                    if (llGetListLength(lParams) > 3) //Corwin Davidson: Verify you have the correct number of parameters otherwise you pass bogus data here, such as dialog response stringes for buttons clicked.
+                    if (llToLower(llList2String(lParams,0))=="settexture")
                     {
-                    string sElement = llList2String(lParams, 1);
-                    string sTex = llList2String(lParams, 2);
-                    // subroutine to make chat entry of element non-case sensitive
-                    string test;
-                    integer ok; //This is to check if the element actually appears in the collar... otherwise this function will take ANY arbitrary bunch of junk, menu options, everything basically, and think it's a texture setting. 
-                    integer l = 2;
-                    for (; l <= llGetNumberOfPrims(); l++)
-                    {
-                        test = ElementType(l);
-                        if (llToLower(test) == llToLower(sElement))
+                        if (g_iAppLock)
                         {
-                            sElement = test;
-                            ok=TRUE;
-                            jump break;
+                            Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot change textures now!", FALSE);
+                            return;
+                        }
+                        string sElement = llList2String(lParams, 1);
+                        string sTex = llList2String(lParams, 2);
+                        integer ok;
+                        integer x=llGetListLength(g_lElements);
+                        string test;
+                        while(x)
+                        {
+                            --x;
+                            test=llList2String(g_lElements,x);
+                            if(llToLower(sElement)==llToLower(test))
+                            {
+                                sElement=test;
+                                x=0;
+                                ok=TRUE;
+                            }
+                        }
+                       if(!ok) Notify(kID, "The element " + sElement + " wasn't recognized, please check your command and try again.",FALSE);
+                        else
+                        {
+                            ok=FALSE;
+                            if((key)sTex) ok=TRUE;
+                            else 
+                            {
+                                x=llGetInventoryNumber(INVENTORY_TEXTURE);
+                                while(x)
+                                {
+                                    --x;
+                                    test=llGetInventoryName(INVENTORY_TEXTURE,x);
+                                    if(llToLower(sTex)==llToLower(test))
+                                    {
+                                        ok=TRUE;
+                                        sTex=test;
+                                        x=0;
+                                    }
+                                }
+                            }
+                            if(ok) SetElementTexture(sElement, sTex);
+                            else Notify(kID, "The texture " + sTex + " wasn't found in "+CTYPE+" inventory, please check your command and try again.",FALSE);
                         }
                     }
-                    @break;
-                    if(ok) SetElementTexture(sElement, sTex);
                 }
             }
         }
-    }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
