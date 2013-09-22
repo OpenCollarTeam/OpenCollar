@@ -10,6 +10,9 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//3.939 PROVISIONAL. "Force Return" was added to menu for owners, but wasn't actually being checked for. Should be fixed, see line 801, but so far untested. Other bugs... I can't find any. Need more info.
+
+
 // -- Toy Configuration ----------------------------------------
 integer g_iHideLockWhenOff=TRUE; // set to FALSE to not hide the lock when the module is off and the collar is unlocked. :kc
 string g_sToyName = "collar";
@@ -796,6 +799,11 @@ default
                     if (av != g_kWearer)
                         DoMenu(av, FALSE, iAuth);
                 }
+                else if (message == "Force Return")
+                {
+                    UserCommand(iAuth, "khforcereturn",av);
+                }
+                    
                 else if (llGetListLength(llParseString2List(message, [":" ], [])) > 2)
                 {
                     UserCommand(iAuth, "khtime "+llDeleteSubString(message,0,2), av);
