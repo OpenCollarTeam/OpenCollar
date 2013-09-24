@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - getavi                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -55,6 +55,8 @@ integer AUTH;        // Requesting agent's auth
 string REQ;            // Requesting script id
 string TYPE;        // requesting for what use?
 list AVIS;            // List of Avis in region, matching requested criteria
+
+string UPMENU = "⏏";
 
 string g_sScript;
 
@@ -113,7 +115,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 NamesMenu(list lAvs)
 {
-    string sPrompt = "Select an avatar to add";
+    string sPrompt = "\n\nChoose the person you like to add.";
     g_kMenuID = Dialog(USER, sPrompt, lAvs, [], 0, AUTH);
 }
 
@@ -178,11 +180,11 @@ default
         {
             mess = "Could not find any avatars ";
             if (find != "") mess += "starting with \"" + find + "\" ";
-            Notify(USER, mess + "in the region", FALSE);
+            Notify(USER, mess + "in this region.", FALSE);
         }
         else if (i == 1 && llList2Key(AVIS, 0) == USER)
         {
-            g_kMenuID = Dialog(USER, "You are the only one in this region. Add yourself?", ["Yes", "No"], [], 0, AUTH);
+            g_kMenuID = Dialog(USER, "\n\nYou are the only one in this region. Add yourself?", ["Yes", "No"], [], 0, AUTH);
         }
         else NamesMenu(AVIS);
     }
