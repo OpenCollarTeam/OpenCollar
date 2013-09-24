@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - settings                              //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -32,10 +32,10 @@ string PARENT_MENU = "Help/Debug";
 string SUBMENU = "Setting"; // "settings" in chat will call a mini dump .. this is to prevent double-up
 
 string DUMPCACHE = "Dump Cache";
-string PREFUSER = "Pref User";
-string PREFDESI = "Pref Desig"; // yes, I hate cutoff buttons
+string PREFUSER = "☐ Personal";
+string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
 string WIKI = "Online Guide";
-string UPMENU = "^";
+string UPMENU = "⏏";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
@@ -113,18 +113,18 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 DoMenu(key keyID, integer iAuth)
 {
-    string sPrompt = "Pick an option.\nClick '" + DUMPCACHE + "' to dump all current settings to chat";
-    sPrompt += "\n(You can then copy + paste them, overwriting your defaultsettings notecard)\n";
-    sPrompt += "Click '" + WIKI + "' to get a link to the OpenCollar online user guide\n";
+    string sPrompt = "\n\nClick '" + DUMPCACHE + "' to dump all current settings to chat.";
+    sPrompt += "\n(copy/paste them to backup your defaultsettings)\n";
+    sPrompt += "\nClick '" + WIKI + "' to get a link to the User Guide.\n";
     list lButtons = [DUMPCACHE, WIKI];
     if (USER_PREF)
     {
-        sPrompt += "Click '" + PREFDESI + "' to give Designer settings priority\n";
+        sPrompt += "\nUncheck " + PREFDESI + " to give designer settings priority.\n";
         lButtons += [PREFDESI];
     }
     else
     {
-        sPrompt += "Click '" + PREFUSER + "' to give your personal settings priority\n";
+        sPrompt += "\nCheck " + PREFUSER + " to give your personal settings priority.\n";
         lButtons += [PREFUSER];
     }
     g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
