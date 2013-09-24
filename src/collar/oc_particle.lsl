@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollar - leashParticle                           //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -46,10 +46,10 @@ integer COMMAND_PARTICLE = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
 
 // --- menu tokens ---
-string UPMENU       = "^";
-string MORE         = ">";
+string UPMENU       = "⏏";
+//string MORE         = ">";
 string PARENTMENU   = "Leash";
-string SUBMENU      = "L-Options";
+string SUBMENU      = "Advanced";
 string L_TEXTURE    = "Texture";
 string L_DENSITY    = "Density";
 string L_COLOR      = "Color";
@@ -63,79 +63,42 @@ string g_sCurrentMenu = "";
 key g_kDialogID;
 
 string g_sCurrentCategory = "";
-list g_lCategories = ["Blues", "Browns", "Grays", "Greens", "Purples", "Reds", "Yellows"];
+list g_lCategories = ["Shades", "Bright", "Soft"];
 list g_lColors;
 list g_lAllColors = [
-"Light Blue|<0.00000, 0.00000, 1.00000>
-Dark Blue|<0.00000, 0.00000, 0.62745>
-Midnight Blue|<0.08235, 0.10588, 0.32941>
-Dark Slate Blue|<0.16863, 0.21961, 0.33725>
-Sky Blue|<0.40000, 0.59608, 1.00000>
-Light Cyan3|<0.68627, 0.78039, 0.78039>
-Cadet Blue3|<0.46667, 0.74902, 0.78039>
-Turquoise|<0.26275, 0.77647, 0.85882>
-Light Steel Blue2|<0.71765, 0.80784, 0.92549>
-Dark Gray Blue|<0.18039, 0.21176, 0.25490>",
-"Orange|<1.00000, 0.50196, 0.25098>
-Bright Orange|<0.97255, 0.50196, 0.09020>
-Dark Orange|<0.76471, 0.33725, 0.09020>
-Sienna|<0.97255, 0.45490, 0.19216>
-Dark Sienna|<0.76471, 0.34510, 0.09020>
-Brown|<0.50196, 0.25098, 0.00000>
-Brown Sienna|<0.49412, 0.20784, 0.09020>
-Dark Brown|<0.27843, 0.23137, 0.18431>
-Sandy Brown|<0.93333, 0.60392, 0.30196>
-Dark Drab|<0.33333, 0.30980, 0.21176>",
-"Black|<0.00000, 0.00000, 0.00000>
-Gray 1|<0.11111, 0.11111, 0.11111>
-Gray 2|<0.22222, 0.22222, 0.22222>
-Gray 3|<0.33333, 0.33333, 0.33333>
-Gray 4|<0.44444, 0.44444, 0.44444>
-Gray 5|<0.55556, 0.55556, 0.55556>
-Gray 6|<0.66667, 0.66667, 0.66667>
-Gray 7|<0.77778, 0.77778, 0.77778>
-Gray 8|<0.88889, 0.88889, 0.88889>
+"Light Shade|<0.82745, 0.82745, 0.82745>
+Gray Shade|<0.70588, 0.70588, 0.70588>
+Dark Shade|<0.20784, 0.20784, 0.20784>
+Brown Shade|<0.65490, 0.58431, 0.53333>
+Red Shade|<0.66275, 0.52549, 0.52549>
+Blue Shade|<0.64706, 0.66275, 0.71765>
+Green Shade|<0.62353, 0.69412, 0.61569>
+Pink Shade|<0.74510, 0.62745, 0.69020>
+Gold Shade|<0.69020, 0.61569, 0.43529>
+Black|<0.00000, 0.00000, 0.00000>
 White|<1.00000, 1.00000, 1.00000>",
-"Pastel Green|<0.73333, 1.00000, 0.51372>
-Forest Green|<0.50196, 0.50196, 0.00000>
-Light Sea Green|<0.24314, 0.66275, 0.62353>
-Medium Sea Green|<0.18824, 0.40392, 0.32941>
-Dark Sea Green4|<0.38039, 0.48627, 0.34510>
-Dark Green|<0.14510, 0.25490, 0.09020>
-Yellow Green|<0.32157, 0.81569, 0.09020>
-Olive4|<0.40000, 0.48627, 0.14902>
-Chartreuse|<0.54118, 0.98431, 0.09020>
-Olive3|<0.62745, 0.77255, 0.26667>",
-"Light Purple|<1.00000, 0.00000, 0.50196>
-Purple|<0.55686, 0.20784, 0.93725>
-Dark Purple|<0.50196, 0.00000, 0.50196>
-Plum|<0.72549, 0.23137, 0.56078>
-Dark Orchid|<0.27059, 0.14510, 0.27451>
-Magenta|<1.00000, 0.00000, 1.00000>
-Light Plum|<0.90196, 0.66275, 0.92549>
-Pale Violet Red|<0.81961, 0.39608, 0.52941>
-Thistle|<0.91373, 0.81176, 0.92549>
-Lavender|<0.89020, 0.89412, 0.98039>",
-"Burgundy|<0.50196, 0.00000, 0.00000>
-Red|<1.00000, 0.00000, 0.00000>
-Pink|<0.98039, 0.68627, 0.74510>
-Indian Red|<0.89804, 0.32941, 0.31765>
-Firebrick|<0.75686, 0.10588, 0.09020>
-Hot Pink|<0.96471, 0.37647, 0.67059>
-Magenta|<1.00000, 0.00000, 1.00000>
-Violet Red|<0.96471, 0.20784, 0.54118>
-Pink2|<0.90588, 0.63137, 0.69020>
-Dark Red|<0.27843, 0.01569, 0.05490>",
-"Yellow|<1.00000, 1.00000, 0.00000>
-Bright Yellow|<1.00000, 0.98824, 0.09020>
-Pale Khaki|<1.00000, 0.95294, 0.50196>
-Goldenrod|<0.92941, 0.85490, 0.45490>
-Dark Goldenrod|<0.68627, 0.47059, 0.09020>
-Gold|<0.83137, 0.62745, 0.09020>
-Dark Gold|<0.91765, 0.75686, 0.09020>
-Medium Gold|<0.99216, 0.81569, 0.09020>
-Khaki|<0.67843, 0.66275, 0.43137>
-Pastel Yellow|<1.00000, 1.00000, 0.44706>"
+"Magenta|<1.00000, 0.00000, 0.50196>
+Pink|<1.00000, 0.14902, 0.50980>
+Hot Pink|<1.00000, 0.05490, 0.72157>
+Firefighter|<0.88627, 0.08627, 0.00392>
+Sun|<1.00000, 1.00000, 0.18039>
+Flame|<0.92941, 0.43529, 0.00000>
+Matrix|<0.07843, 1.00000, 0.07843>
+Electricity|<0.00000, 0.46667, 0.92941>
+Violet Wand|<0.63922, 0.00000, 0.78824>
+Black|<0.00000, 0.00000, 0.00000>
+White|<1.00000, 1.00000, 1.00000>",
+"Baby Blue|<0.75686, 0.75686, 1.00000>
+Baby Pink|<1.00000, 0.52157, 0.76078>
+Rose|<0.93333, 0.64314, 0.72941>
+Beige|<0.86667, 0.78039, 0.71765>
+Earth|<0.39608, 0.27451, 0.18824>
+Ocean|<0.25882, 0.33725, 0.52549>
+Yolk|<0.98824, 0.73333, 0.29412>
+Wasabi|<0.47059, 1.00000, 0.65098>
+Lavender|<0.89020, 0.65882, 0.99608>
+Black|<0.00000, 0.00000, 0.00000>
+White|<1.00000, 1.00000, 1.00000>"
 ];
 
 // ----- collar -----
@@ -420,7 +383,7 @@ OptionsMenu(key kIn, integer iAuth)
         lButtons += "GlowOn";
     }
     lButtons += [L_DEFAULTS];
-    string sPrompt = "Leash Options (Owner Only)\n";
+    string sPrompt = "\n\nAdvanced Leash Options\n";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -428,7 +391,7 @@ DensityMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-"];
     g_sCurrentMenu = L_DENSITY;
-    string sPrompt = "Choose '+' for more and '-' for less particles\n'Default' to revert to the default\nCurrent Density = ";
+    string sPrompt = "\n\nChoose '+' for more and '-' for less particles\n'Default' to revert to the default\n\nCurrent Density = ";
     sPrompt += Float2String(-g_fBurstRate);// BurstRate is opposite the implied effect of density
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -437,7 +400,7 @@ GravityMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-", "noGravity"];
     g_sCurrentMenu = L_GRAVITY;
-    string sPrompt = "Choose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default\nCurrent Gravity = ";
+    string sPrompt = "\n\nChoose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default\n\nCurrent Gravity = ";
     sPrompt += Float2String(g_vLeashGravity.z) + "\nDefault: 1.0";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -446,7 +409,7 @@ SizeMenu(key kIn, integer iAuth)
 {
     list lButtons = ["Default", "+", "-", "minimum"];
     g_sCurrentMenu = L_SIZE;
-    string sPrompt = "Choose '+' for bigger and '-' for smaller size of the leash texture\n'Default' to revert to the default\n'minium' for the smallest possible\nCurrent Size = ";
+    string sPrompt = "\n\nChoose '+' for bigger and '-' for smaller size of the leash texture\n'Default' to revert to the default\n'minium' for the smallest possible\n\nCurrent Size = ";
     sPrompt += Float2String(g_vLeashSize.x) + "\nDefault: 0.07 (0.03 steps)";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -454,14 +417,14 @@ SizeMenu(key kIn, integer iAuth)
 ColorCategoryMenu(key kIn, integer iAuth)
 {
     //give kAv a dialog with a list of color cards
-    string sPrompt = "Pick a Color Category.\n";
+    string sPrompt = "\n\nChoose a color category.\n";
     g_sCurrentMenu = "L-ColorCat";
     g_kDialogID = Dialog(kIn, sPrompt, g_lCategories, [UPMENU], 0, iAuth);
 }
 
 ColorMenu(key kIn, integer iAuth)
 {
-    string sPrompt = "Pick a Color.\n";
+    string sPrompt = "\n\nChoose a color.\n";
     list lButtons = llList2ListStrided(g_lColors,0,-1,2);
     g_sCurrentMenu = L_COLOR;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -495,7 +458,7 @@ TextureMenu(key kIn, integer iAuth)
     }
     lButtons += ["noTexture", "noLeash"];
     g_sCurrentMenu = L_TEXTURE;
-    string sPrompt = "Choose a texture\nnoTexture does default SL particle dots\nnoLeash means no particle leash at all\ncurrent Texture = ";
+    string sPrompt = "\n\nChoose a texture\nnoTexture does default SL particle dots\nnoLeash means no particle leash at all\n\nCurrent Texture = ";
     sPrompt += g_sParticleTexture + "\n";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -627,7 +590,7 @@ default
                         OptionsMenu(kAv, iAuth);
                     }
                 }
-                else if (g_sCurrentMenu == "L-Options")
+                else if (g_sCurrentMenu == "Advanced")
                 {
                     if (sButton == L_DEFAULTS)
                     {
