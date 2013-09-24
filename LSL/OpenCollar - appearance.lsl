@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - appearance                             //
-//                                 version 3.929                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -39,10 +39,10 @@ list g_lPrimStartSizes; // area for initial prim sizes (stored on rez)
 integer g_iScaleFactor = 100; // the size on rez is always regarded as 100% to preven problem when scaling an item +10% and than - 10 %, which would actuall lead to 99% of the original size
 integer g_iSizedByScript = FALSE; // prevent reseting of the script when the item has been chnged by the script
 
-string TICKED = "(*)";
-string UNTICKED = "( )";
+string TICKED = "☒ ";
+string UNTICKED = "☐ ";
 
-string APPLOCK = "Lock Appearance";
+string APPLOCK = "LooksLock";
 integer g_iAppLock = FALSE;
 string g_sAppLockToken = "Appearance_Lock";
 
@@ -85,7 +85,7 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 //string UPMENU = "â†‘";//when your menu hears this, give the parent menu
-string UPMENU = "^";
+string UPMENU = "⏏";
 
 key g_kWearer;
 
@@ -316,8 +316,8 @@ AdjustRot(vector vDelta)
 
 RotMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar rotation.";
-    list lMyButtons = ["tilt up", "right", "tilt left", "tilt down", "left", "tilt right"];// ria change
+    string sPrompt = "\n\nAdjust the collar rotation.";
+    list lMyButtons = ["tilt up ↻", "right ↷", "tilt left ↙", "tilt down ↺", "left ↶", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, ROTMENU];
@@ -333,14 +333,14 @@ RotMenu(key kAv, integer iAuth)
 
 PosMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar position:\nChoose the size of the nudge (S/M/L), and move the collar in one of the three directions (X/Y/Z).\nCurrent nudge size is: ";
-    list lMyButtons = ["left", "up", "forward", "right", "down", "backward"];// ria iChange
-    if (g_fNudge!=g_fSmallNudge) lMyButtons+=["Nudge: S"];
-    else sPrompt += "Small.";
-    if (g_fNudge!=g_fMediumNudge) lMyButtons+=["Nudge: M"];
-    else sPrompt += "Medium.";
-    if (g_fNudge!=g_fLargeNudge) lMyButtons+=["Nudge: L"];
-    else sPrompt += "Large.";
+    string sPrompt = "\n\nAdjust the collar position:\n\nSet the strength for the nudge ▸/▸▸/▸▸▸.\nNudge the collar in one of the directions.\n\nCurrent nudge strength is: ";
+    list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
+    if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▸"];
+    else sPrompt += "▸";
+    if (g_fNudge!=g_fMediumNudge) lMyButtons+=["▸▸"];
+    else sPrompt += "▸▸";
+    if (g_fNudge!=g_fLargeNudge) lMyButtons+=["▸▸▸"];
+    else sPrompt += "▸▸▸";
     
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -357,7 +357,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Adjust the collar scale. It is based on the size the collar has upon rezzing. You can change back to this size by using '100%'.\nCurrent size: " + (string)g_iScaleFactor + "%\n\nATTENTION! May break the design of collars. Make a copy of the collar before using!";
+    string sPrompt = "\n\nAdjust the collar scale.\n\nIt is based on the size the collar has upon rezzing. You can change back to this size by using '100%'.\n\nCurrent size: " + (string)g_iScaleFactor + "%\n\nWARNING: Make a backup copy of your collar first! Considering the massive variation of designs, this feature is not granted to work in all cases. Possible rendering bugs mean having to right-click your collar first to see the actual result.";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -378,12 +378,12 @@ DoMenu(key kAv, integer iAuth)
     string sPrompt;
     if (g_iAppLock)
     {
-        sPrompt = "The appearance of the collar has been locked. An owner must unlock it to allow modification.";
+        sPrompt = "\n\nThe appearance of the collar has been locked.\nAn owner must unlock it to allow modification.";
         lMyButtons = [TICKED + APPLOCK];
     }
     else
     {
-        sPrompt = "Which aspect of the collar's appearance would you like to modify? Owners can lock the appearance of the collar, so it cannot be changed at all.\n";
+        sPrompt = "\n\nChange looks, adjustment and size.\n\nAdjustments are based on the neck attachment spot.";
     
         lMyButtons = [UNTICKED + APPLOCK];
         lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
@@ -600,27 +600,27 @@ default
                     }
                     else if (llGetAttached())
                     {
-                        if (sMessage == "forward")
+                        if (sMessage == "forward ↳")
                         {
                             AdjustPos(<g_fNudge, 0, 0>);
                         }
-                        else if (sMessage == "left")
+                        else if (sMessage == "left ←")
                         {
                             AdjustPos(<0, g_fNudge, 0>);                
                         }
-                        else if (sMessage == "up")
+                        else if (sMessage == "up ↑")
                         {
                             AdjustPos(<0, 0, g_fNudge>);                
                         }            
-                        else if (sMessage == "backward")
+                        else if (sMessage == "backward ↲")
                         {
                             AdjustPos(<-g_fNudge, 0, 0>);                
                         }            
-                        else if (sMessage == "right")
+                        else if (sMessage == "right →")
                         {
                             AdjustPos(<0, -g_fNudge, 0>);                    
                         }            
-                        else if (sMessage == "down")
+                        else if (sMessage == "down ↓")
                         {
                             AdjustPos(<0, 0, -g_fNudge>);                
                         }                            
@@ -652,27 +652,27 @@ default
                     }
                     else if (llGetAttached())
                     {
-                        if (sMessage == "tilt right") // was tilt up
+                        if (sMessage == "tilt right ↘") // was tilt up
                         {
                             AdjustRot(<g_fRotNudge, 0, 0>);
                         }
-                        else if (sMessage == "tilt up") // was right
+                        else if (sMessage == "tilt up ↻") // was right
                         {
                             AdjustRot(<0, g_fRotNudge, 0>);             
                         }
-                        else if (sMessage == "right") // was tilt left
+                        else if (sMessage == "right ↷") // was tilt left
                         {
                             AdjustRot(<0, 0, g_fRotNudge>);           
                         }            
-                        else if (sMessage == "tilt left") // was tilt down
+                        else if (sMessage == "tilt left ↙") // was tilt down
                         {
                             AdjustRot(<-g_fRotNudge, 0, 0>);              
                         }            
-                        else if (sMessage == "tilt down") // was left
+                        else if (sMessage == "tilt down ↺") // was left
                         {
                             AdjustRot(<0, -g_fRotNudge, 0>);              
                         }            
-                        else if (sMessage == "left") // was tilt right
+                        else if (sMessage == "left ↶") // was tilt right
                         {
                             AdjustRot(<0, 0, -g_fRotNudge>);            
                         }                        
