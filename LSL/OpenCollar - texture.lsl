@@ -69,7 +69,7 @@ integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 //5000 block is reserved for IM slaves
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
 key g_kWearer;
 string g_sScript;
@@ -210,13 +210,13 @@ key TouchRequest(key kRCPT, integer iTouchStart, integer iTouchEnd, integer iAut
 
 TextureMenu(key kID, integer iPage, integer iAuth)
 {
-    string sPrompt = "Choose the texture to apply.";
+    string sPrompt = "\n\nChoose the texture to apply.\n\n";
     g_ktextureID = Dialog(kID, sPrompt, BuildTexButtons(), [UPMENU], iPage, iAuth);
 }
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
+    string sPrompt = "\n\nChoose the element of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
     lButtons = llListSort(g_lElements, 1, TRUE);
     g_kElementID = Dialog(kAv, sPrompt, lButtons, ["*Touch*", UPMENU], 0, iAuth);
 }
