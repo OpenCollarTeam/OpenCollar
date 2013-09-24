@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - coupleanim1                            //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -11,8 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 string g_sParentMenu = "Animations";
-string g_sSubMenu = "Couples";
-string UPMENU = "^";
+string g_sSubMenu = " Couples";
+string UPMENU = "⏏";
 //string MORE = ">";
 key g_kAnimmenu;
 key g_kPart;
@@ -22,8 +22,8 @@ integer g_iMenuTimeOut = 60;
 
 key g_kWearer;
 
-string STOP_COUPLES = "Stop";
-string TIME_COUPLES = "Time";
+string STOP_COUPLES = "◾";
+string TIME_COUPLES = "TIME";
 
 integer g_iLine;
 key g_kDataID;
@@ -123,13 +123,13 @@ string Float2String(float in)
 
 PartnerMenu(key kID, list kAvs, integer iAuth)
 {
-    string sPrompt = "Pick a partner.";
+    string sPrompt = "\n\nChoose a partner.";
     g_kPart=Dialog(kID, sPrompt, kAvs, [UPMENU],0, iAuth);
 }
 
 CoupleAnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Pick an animation to play.";
+    string sPrompt = "\n\nChoose an animation to play.\n\n◾: stop the animation\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
@@ -137,10 +137,10 @@ CoupleAnimMenu(key kID, integer iAuth)
 
 TimerMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Pick an time to play.";
+    string sPrompt = "\n\nChoose the duration for couple animations.";
     list lButtons = ["10", "20", "30"];
     lButtons += ["40", "50", "60"];
-    lButtons += ["90", "120", "endless"];
+    lButtons += ["90", "120", "∞"];
     g_kPart=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
@@ -572,11 +572,12 @@ state ready
                     Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
-                else if (sMessage == "endless")
+                else if (sMessage == "∞")
                 {
                     g_fTimeOut = 0.0;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), NULL_KEY);
-                    Notify (kAv, "Couple Anmiations play now for ever. Use the menu or type *stopcouples to stop them again.",TRUE);
+                    Notify (kAv, "Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",TRUE);
+                    CoupleAnimMenu(kAv, iAuth);
                 }
                 else
                 {
