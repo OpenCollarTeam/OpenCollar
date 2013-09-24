@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -130,7 +130,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 ConfirmUpdate(key kUpdater)
 {
-    string sPrompt = "Do you want to update with " + llKey2Name(kUpdater) + " with object key:" + (string)kUpdater +"\n"
+    string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:" + (string)kUpdater +"\n"
     + "Do not rez any items till the update has started.";
     g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0, COMMAND_WEARER);
 }
@@ -314,7 +314,7 @@ default
                 string release_version = llGetSubString(body, 0, -2);
                 if ((float)release_version > (float)my_version)
                 {
-                    string prompt = "\nYou are running OpenCollar version " +
+                    string prompt = "\n\nYou are running OpenCollar version " +
                     my_version + ".  There is an update available.";
                     g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
                 }
