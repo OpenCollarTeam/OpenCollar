@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -33,7 +33,7 @@ string g_sSubMenu = "Bell";
 string g_sParentMenu = "AddOns";
 key g_kDialogID;
 
-list g_lLocalButtons = ["Vol +","Vol -","Delay +","Delay -","Next Sound","~Chat Help","Ring It"];
+list g_lLocalButtons = ["Vol +","Vol -","Delay +","Delay -"," Next Sound","  Quick Help","Ring it!"];
 
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
@@ -48,13 +48,13 @@ string GLOBAL = "Global_";
 string g_sSubPrefix;
 
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
-string g_sBellOn="*Bell On*"; // menu text of bell on
-string g_sBellOff="*Bell Off*"; // menu text of bell on
+string g_sBellOn="    ON"; // menu text of bell on
+string g_sBellOff="    OFF"; // menu text of bell on
 integer g_iBellAvailable=FALSE;
 
 integer g_iBellShow=TRUE; // is the bell visible
-string g_sBellShow="Bell Show"; //menu text of bell visible
-string g_sBellHide="Bell Hide"; //menu text of bell hidden
+string g_sBellShow="    SHOW"; //menu text of bell visible
+string g_sBellHide="   HIDE"; //menu text of bell hidden
 
 list g_listBellSounds=["7b04c2ee-90d9-99b8-fd70-8e212a72f90d","b442e334-cb8a-c30e-bcd0-5923f2cb175a","1acaf624-1d91-a5d5-5eca-17a44945f8b0","5ef4a0e7-345f-d9d1-ae7f-70b316e73742","da186b64-db0a-bba6-8852-75805cb10008","d4110266-f923-596f-5885-aaf4d73ec8c0","5c6dd6bc-1675-c57e-0847-5144e5611ef9","1dc1e689-3fd8-13c5-b57f-3fedd06b827a"]; // list with bell sounds
 key g_kCurrentBellSound ; // curent bell sound key
@@ -115,7 +115,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";//when your menu hears this, give the parent menu
+string UPMENU = "⏏";//when your menu hears this, give the parent menu
 string CTYPE = "collar";
 string g_sScript;
 
@@ -181,7 +181,7 @@ integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.
 
 DoMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Pick an option.\n";
+    string sPrompt = "\n\n";
     // sPrompt += "(Menu will time out in " + (string)g_iTimeOut + " seconds.)\n";
     list lMyButtons = g_lLocalButtons + g_lButtons;
 
@@ -205,12 +205,12 @@ DoMenu(key kID, integer iAuth)
         if (g_iBellShow) // the bell is hidden
         {
             lMyButtons+= g_sBellHide;
-            sPrompt += " and shown.\n";
+            sPrompt += " and shown.\n\n";
         }
         else
         {
             lMyButtons+= g_sBellShow;
-            sPrompt += " and NOT shown.\n";
+            sPrompt += " and NOT shown.\n\n";
         }
     }
     else
@@ -334,8 +334,8 @@ PrepareSounds()
 ShowHelp(key kID)
 {
 
-    string sPrompt = "Help for bell chat command:\n";
-    sPrompt += "All commands for the bell of the " + CTYPE + " of "+llKey2Name(g_kWearer)+" start with \""+g_sSubPrefix+g_sBellChatPrefix+"\" followed by the command and the value, if needed.\n";
+    string sPrompt = "\n\nHelp for bell chat command:\n";
+    sPrompt += "\nAll commands for the bell of the " + CTYPE + " of "+llKey2Name(g_kWearer)+" start with \""+g_sSubPrefix+g_sBellChatPrefix+"\" followed by the command and the value, if needed.\n";
     sPrompt += "Examples: \""+g_sSubPrefix+g_sBellChatPrefix+" show\" or \""+g_sSubPrefix+g_sBellChatPrefix+" volume 10\"\n\n";
     sPrompt += "Commands:\n";
     sPrompt += "on: Enable bell sound.\n";
@@ -652,7 +652,7 @@ default
                         }
                         SaveBellSettings();
                     }
-                    else if (sMessage == "Next Sound")
+                    else if (sMessage == " Next Sound")
                         // choose another sound for the bell
                     {
                         g_iCurrentBellSound++;
@@ -665,12 +665,12 @@ default
                         SaveBellSettings();
                     }
                     // show help
-                    else if (sMessage=="~Chat Help")
+                    else if (sMessage=="  Quick Help")
                     {
                         ShowHelp(kAV);
                     }
                     //added a button to ring the bell. same call as when walking.
-                    else if (sMessage == "Ring It")
+                    else if (sMessage == "Ring it!")
                     {
                         // update variable for time check
                         g_fNextRing=llGetTime()+g_fSpeed;
