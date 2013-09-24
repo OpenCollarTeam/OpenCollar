@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - anim                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -26,16 +26,16 @@ string g_sCurrentPose = "";
 integer g_iLastRank = 0; //in this integer, save the rank of the person who posed the av, according to message map.  0 means unposed
 string g_sRootMenu = "Main";
 string g_sAnimMenu = "Animations";
-string g_sPoseMenu = "Pose";
+string g_sPoseMenu = " Pose";
 string g_sAOMenu = "AO";
 string g_sGiveAO = "Give AO";
 string g_sTriggerAO = "AO Menu";
 list g_lAnimButtons; // initialized in state_entry for OpenSim compatibility (= ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];)
 //added for sAnimlock
-string TICKED = "(*)";
-string UNTICKED = "( )";
+string TICKED = "☒ ";
+string UNTICKED = "☐ ";
 string ANIMLOCK = "AnimLock";
-string RELEASE = "*Release*";
+string RELEASE = "◾";
 integer g_iAnimLock = FALSE;
 string g_sLockToken = "animlock";
 
@@ -80,7 +80,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
 integer g_iAOChannel = -782690;
 integer g_iInterfaceChannel = -12587429;
@@ -98,7 +98,7 @@ integer g_iMenuStride = 3;
 
 string ANIMMENU = "Anim";
 string AOMENU = "AO";
-string POSEMENU = "Pose";
+string POSEMENU = " Pose";
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -131,21 +131,21 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 AnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Choose an option.\n";
+    string sPrompt = "\n\n";
     list lButtons;
     if(g_iAnimLock)
     {
-        sPrompt += TICKED + ANIMLOCK + " is an Owner only option.\n";
-        sPrompt += "Owner issued animations/poses are locked and only the Owner can release the sub now.";
+        sPrompt += TICKED + ANIMLOCK + " is turned on:\n";
+        sPrompt += "Only owners can change or stop poses now.";
         lButtons = [TICKED + ANIMLOCK];
     }
     else
     {
-        sPrompt += UNTICKED + ANIMLOCK + " is an Owner only option.\n";
-        sPrompt += "The sub is free to self-release or change poses as well as any secowner.";
+        sPrompt += UNTICKED + ANIMLOCK + " is turned off:\n";
+        sPrompt += "The wearer is free to change or stop poses on their own.";
         lButtons = [UNTICKED + ANIMLOCK];
     }
-    sPrompt += "\nATTENTION!!!!!!\nYou need the OpenCollar sub AO 2.6 or higher to work with this " + CTYPE + " menu!";
+    sPrompt += "\nAO features require one of the following:\n\na) OpenCollar Sub AO\nb) Firestorm Bridge + Internal AO\nc) A drop'n'go script for ZHAOII based AOs";
     lButtons += llListSort(g_lAnimButtons, 1, TRUE);
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
     list lNewStride = [kID, kMenuID, ANIMMENU];
@@ -168,7 +168,7 @@ AOMenu(key kID, integer iAuth) // wrapper to send menu back to the AO's menu
 
 PoseMenu(key kID, integer iPage, integer iAuth)
 { //create a list
-    string sPrompt = "Choose an anim to play.";
+    string sPrompt = "\n\nChoose a pose to play.\n\n◾: stop the pose\n\n";
     key kMenuID = Dialog(kID, sPrompt, g_lPoseList, [RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -347,7 +347,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         else if (sSubmenu == g_sAOMenu) AOMenu(kID, iNum);
         else if (sSubmenu == g_sAnimMenu) AnimMenu(kID, iNum);
     }
-    else if (sStr == "release")
+    else if (sStr == "release" || sStr == "stop")
     { //only release if person giving command outranks person who posed us
         if (iNum <= g_iLastRank || !g_iAnimLock)
         {
@@ -390,10 +390,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iAnimLock = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, NULL_KEY);
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer, "You are now able to self-release animations/poses set by owners or secowner.", FALSE);
+            Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
             if(kID != g_kWearer)
             {
-                Notify(kID, llKey2Name(g_kWearer) + " is able to self-release animations/poses set by owners or secowner.", FALSE);
+                Notify(kID, llKey2Name(g_kWearer) + " is free to change or stop poses on their own.", FALSE);
             }
         }
         else
@@ -401,10 +401,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iAnimLock = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", NULL_KEY);
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer, "You are now locked into animations/poses set by owners or secowner.", FALSE);
+            Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
             if(kID != g_kWearer)
             {
-                Notify(kID, llKey2Name(g_kWearer) + " is now locked into animations/poses set by owners or secowner.", FALSE);
+                Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
             }
         }
         AnimMenu(kID, iNum);
@@ -417,10 +417,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iAnimLock = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", NULL_KEY);
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer, "You are now locked into animations your owner or secowner issues.", FALSE);
+            Notify(g_kWearer, "You are now locked into poses set by others.", FALSE);
             if(kID != g_kWearer)
             {
-                Notify(kID, llKey2Name(g_kWearer) + " is now locked in animations/poses set by owners or secowner and cannot self-release.", FALSE);
+                Notify(kID, llKey2Name(g_kWearer) + " is now locked into poses set by others and cannot change or stop them on their own.", FALSE);
             }
         }
         else if(sValue == "off" && g_iAnimLock)
@@ -429,10 +429,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iAnimLock = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, NULL_KEY);
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer,"You are able to release all animations by yourself.", FALSE);
+            Notify(g_kWearer,"You are able to change and stop all poses on your own.", FALSE);
             if(kID != g_kWearer)
             {
-                Notify(kID, llKey2Name(g_kWearer) + " is able to self-release animations/poses set by owners or secowner.", FALSE);
+                Notify(kID, llKey2Name(g_kWearer) + " is able to change and stop poses set by others.", FALSE);
             }
         }
     }
@@ -508,7 +508,7 @@ default
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_lAnimButtons = ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+        g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
@@ -637,13 +637,13 @@ default
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sRootMenu, kAv);
                     }
-                    else if (sMessage == "Pose")
+                    else if (sMessage == " Pose")
                     {
                         PoseMenu(kAv, 0, iAuth);
                     }
                     else if (sMessage == g_sTriggerAO)
                     {
-                        Notify(kAv, "Attempting to trigger the AO menu.  This will only work if " + llKey2Name(g_kWearer) + " is wearing the OpenCollar Sub AO.", FALSE);
+                        Notify(kAv, "Attempting to trigger the AO menu.  This will only work if " + llKey2Name(g_kWearer) + " is meeting the a) or c) requirement for AO features.", FALSE);
                         AOMenu(kAv, iAuth);
                     }
                     else if (sMessage == g_sGiveAO)
@@ -674,7 +674,7 @@ default
                         AnimMenu(kAv, iAuth);
                         return;
                     }
-                    else if (sMessage == "*Release*")
+                    else if (sMessage == RELEASE)
                     {
                         UserCommand(iAuth, "release", kAv);
                     }
