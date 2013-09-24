@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - badwords                              //
-//                                 version 3.929                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -59,7 +59,7 @@ string g_sSubMenu = "Badwords";
 string g_sParentMenu = "AddOns";
 //string UPMENU = "?";
 //string MORE = "?";
-string UPMENU = "^";
+string UPMENU = "⏏";
 string g_sIsEnabled = "badwordson=false";
 
 //added to stop abdword anim only if it was started by using a badword
@@ -96,21 +96,21 @@ integer Enabled()
 DialogBadwords(key kID, integer iAuth)
 {
     string sText;
-    list lButtons = ["List Words", "Clear ALL", "Say Penance"];
+    list lButtons = ["List Words", "Clear All", "Say Penance"];
     if(Enabled())
     {
         lButtons += ["OFF"];
-        sText += "Badwords are turned ON.\n";
+        sText += "\n\nBadwords are turned on.\n";
     }
     else
     {
         lButtons += ["ON"];
-        sText += "Badwords are turned OFF.\n";
+        sText += "\n\nBadwords are turned off.\n";
     }
-    sText += "'List Words' show you all badwords.\n";
-    sText += "'Clear ALL' will delete all set badwords.\n";
-    sText += "'Say Penance' will tell you the current penance phrase.\n";
-    sText += "'Quick Help' will give you a brief help how to add or remove badwords.\n";
+    sText += "\nList Words: Shows all badwords.\n";
+    sText += "Clear All: Deletes all set badwords.\n";
+    sText += "Say Penance: Tells the current penance phrase.\n";
+    sText += "Quick Help: Opens a mini tutorial in a pop-up.\n";
     lButtons += ["Quick Help"];
     g_kDialog=Dialog(kID, sText, lButtons, [UPMENU],0, iAuth);
 }
