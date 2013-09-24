@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -15,12 +15,12 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "Website"];
+list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "ℹ"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
 list g_lMenuPrompts = [
-"Pick an option.\n",
-"Click 'Guide' to receive a help notecard.\nClick any other button for a quick popup help about the chosen topic.\n",
-"Please choose your AddOn:\n"
+"\n\nWelcome to the Main Menu!",
+"\n\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html\n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",
+"\n\nThis menu grants access to every installed AddOn.\n"
 ];
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
@@ -60,13 +60,17 @@ integer DIALOG_TIMEOUT = -9002;
 
 //5000 block is reserved for IM slaves
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 //string MORE = ">";
-string GIVECARD = "Guide";
+string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
 string REFRESH_MENU = "Fix Menus";
+string DEV_GROUP = "➟ R&D";
+string USER_GROUP = "➟ Chatter";
+string DEV_GROUP_ID = "c5e0525c-29a9-3b66-e302-34fe1bc1bd43";
+string USER_GROUP_ID = "0f6f3627-d9cb-a1db-b770-f66fce70d1ef";
 
-string WIKI = "Website";
+string WIKI = "ℹ";
 string WIKI_URL = "http://www.opencollar.at/";
 
 Debug(string text)
@@ -140,7 +144,9 @@ MenuInit()
     //give the help menu GIVECARD and REFRESH_MENU buttons    
     HandleMenuResponse("Help/Debug|" + GIVECARD);
     HandleMenuResponse("Help/Debug|" + REFRESH_MENU);      
-    
+    HandleMenuResponse("Help/Debug|" + DEV_GROUP);
+    HandleMenuResponse("Help/Debug|" + USER_GROUP);
+      
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
 }
 
@@ -193,7 +199,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (sStr == "debug") Menu("Help/Debug", kID, iNum);
     else if (sCmd == "refreshmenu")
     {
-        llDialog(kID, "Rebuilding menu.  This may take several seconds.", [], -341321);
+        llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321);
         //MenuInit();
         llResetScript();
     }
@@ -255,7 +261,7 @@ default
                 if (sMessage == WIKI)
                 {
                     llSleep(0.2);
-                    llLoadURL(kAv, "Visit our website for the current User Guide, Chat Forums, Support and News.", WIKI_URL);
+                    llLoadURL(kAv, "\n\nLicensed under the GPLv2 with additional requirements specific to Second Life® and other virtual metaverse environments. -> www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
                     return;
                 }
                 
@@ -264,6 +270,7 @@ default
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                
                 
                 //process response
+                
                 if (sMessage == UPMENU)
                 {
                     Menu("Main", kAv, iAuth);
@@ -273,6 +280,16 @@ default
                     if (sMessage == GIVECARD)
                     {
                         UserCommand(iAuth, "help", kAv);
+                        Menu("Help/Debug", kAv, iAuth);
+                    }
+                    else if (sMessage == DEV_GROUP)
+                    {
+                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + DEV_GROUP_ID + "/about " + "for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
+                        Menu("Help/Debug", kAv, iAuth);
+                    }
+                    else if (sMessage == USER_GROUP)
+                    {
+                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + USER_GROUP_ID + "/about " + "for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
                         Menu("Help/Debug", kAv, iAuth);
                     }
                     else if (sMessage == REFRESH_MENU)
