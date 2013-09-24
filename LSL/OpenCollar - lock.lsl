@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - lock                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,8 +28,8 @@ string g_sClosedLockPrimName="ClosedLock"; // Prim description of elements that 
 list g_lClosedLockElements; //to store the locks prim to hide or show //EB
 list g_lOpenLockElements; //to store the locks prim to hide or show //EB
 
-string LOCK = "*Lock*";
-string UNLOCK = "*Unlock*";
+string LOCK = " LOCK";
+string UNLOCK = " UNLOCK";
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
