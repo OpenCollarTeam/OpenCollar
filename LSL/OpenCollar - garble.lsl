@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - garble                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -50,7 +50,7 @@ string GARBLE = "Garble On";
 string UNGARBLE = "Garble Off";
 integer g_nDebugMode=FALSE; // set to TRUE to enable Debug messages
 
-string SAFE = "SAFEWORD";
+string SAFE = "RED";
 key gkWear;
 string gsWear;
 string gsPref;
