@@ -53,9 +53,9 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 integer iPagesize = 12;
-string MORE = ">";
-string PREV = "<";
-string UPMENU = "^"; // string to identify the UPMENU button in the utility lButtons
+string MORE = "►";
+string PREV = "◄";
+string UPMENU = "⏏"; // string to identify the UPMENU button in the utility lButtons
 //string SWAPBTN = "swap";
 //string SYNCBTN = "sync";
 string BLANK = " ";
@@ -175,7 +175,8 @@ integer RandomUniqueChannel()
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth)
 {
-    string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
+    //string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
+    string sThisPrompt;
     list lButtons;
     list lCurrentItems;
     integer iNumitems = llGetListLength(lMenuItems);
