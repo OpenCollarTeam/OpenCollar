@@ -236,8 +236,8 @@ string Float2String(float in)
 
 string CheckBox(string name, integer value)
 {
-    if (value) return "(*)" + name;
-    else return "( )" + name;
+    if (value) return "☒" + name;
+    else return "☐" + name;
 }
 
 //===============================================================================
@@ -642,12 +642,12 @@ integer UserCommand(integer num, string str, key id) // here iNum: auth value, s
         }
     }
     // "Return Key" buttons from timer plugin.
-    else if (str == "menu (*)Return Key")
+    else if (str == "menu ☒Return Key")
     {
         UserCommand(num, "khunsettimerreturnkey", id);
         llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
     }
-    else if (str == "menu ( )Return Key")
+    else if (str == "menu ☐Return Key")
     {
         UserCommand(num, "khsettimerreturnkey", id);
         llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
@@ -813,11 +813,11 @@ default
                 {
                     // Handle checkboxes.
                     string cmd;
-                    if (llGetSubString(message, 0, 2) == "( )")
+                    if (llGetSubString(message, 0, 2) == "☐")
                     {
                         cmd += "khset"+llGetSubString(message, 3, -1);
                     }
-                    else if (llGetSubString(message, 0, 2) == "(*)")
+                    else if (llGetSubString(message, 0, 2) == "☒")
                     {
                         cmd += "khunset" + llGetSubString(message, 3, -1);
                     }
