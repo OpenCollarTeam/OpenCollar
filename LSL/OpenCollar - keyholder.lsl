@@ -31,7 +31,7 @@ string g_szConfigMenu = "Config";
 string g_szTimerMenu = "Timer";
 
 // menu option to go one step back in menustructure
-string UPMENU = "^";//when your menu hears this, give the parent menu
+string UPMENU = "⏏";//when your menu hears this, give the parent menu
 
 // -- State Information ----------------------------------------
 key kh_key = NULL_KEY; // id key of the person that has the key
@@ -59,8 +59,8 @@ integer g_iGlobalKey = TRUE; // are we on the global key.
 // integer kh_present = FALSE; // Requires the keyholder be present or the key is returned. TODO
 
 // -- Constants ------------------------------------------
-string TAKEKEY = "*Take Key*";
-string RETURNKEY = "*Return Key*";
+string TAKEKEY = " TAKE KEY";
+string RETURNKEY = " RETURN KEY";
 
 // Various variables needed by cuffs.
 integer g_iInterfaceChannel = -12587429; // OC attachments
