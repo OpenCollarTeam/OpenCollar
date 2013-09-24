@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - label                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -46,7 +46,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 integer g_iCharLimit = 12;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 string CTYPE = "collar";
 key g_kDialogID;
 
@@ -157,7 +157,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 FontMenu(key kID, integer iAuth)
 {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
-    string sPrompt = "Select the font for the " + CTYPE + "'s label.  (Not all collars have a label that can use this feature.)";
+    string sPrompt = "\n\nSelect the font for the " + CTYPE + "'s label.\n\nNote: This feature requires a design with label prims. If the worn design doesn't have any of those, it is recommended to uninstall LooksLabel with the updater.";
 
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
