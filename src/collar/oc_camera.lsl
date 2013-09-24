@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - camera                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -70,7 +70,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 //string MORE = ">";
 string g_sScript;
 
@@ -159,8 +159,8 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 CamMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Current camera mode is " + g_sCurrentMode + ".  Select an option";
-    list lButtons = ["Clear"];
+    string sPrompt = "\n\nCurrent camera mode is " + g_sCurrentMode + ".\n";
+    list lButtons = ["CLEAR"];
     integer n;
     integer stop = llGetListLength(g_lModes);    
     for (n = 0; n < stop; n +=2)
@@ -168,7 +168,7 @@ CamMenu(key kID, integer iAuth)
         lButtons += [Capitalize(llList2String(g_lModes, n))];
     }
     
-    lButtons += ["Freeze"];
+    lButtons += ["FREEZE"];
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
