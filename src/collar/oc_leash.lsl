@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -67,7 +67,7 @@ integer COMMAND_PARTICLE     = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
 
 // --- menu button tokens ---
-string BUTTON_UPMENU       = "^";
+string BUTTON_UPMENU       = "⏏";
 string BUTTON_PARENTMENU   = "Main";
 string BUTTON_SUBMENU      = "Leash";
 string BUTTON_LEASH        = "Grab";
@@ -247,13 +247,13 @@ LeashMenu(key kIn, integer iAuth)
     }
 
         
-    string sPrompt = "Leash Options";
+    string sPrompt = "\n\nLeash Options:\n\nClick Advanced for more options.";
     g_kMainDialogID = Dialog(kIn, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
 }
 
 LengthMenu(key kIn, integer iAuth)
 {
-    string sPrompt = "Set a leash length in meter:\nCurrent length is: " + (string)g_fLength + "m";
+    string sPrompt = "\n\nSet a leash length in meter:\nCurrent length is: " + (string)g_fLength + "m";
     g_kSetLengthDialogID = Dialog(kIn, sPrompt, g_lLengths, [BUTTON_UPMENU], 0, iAuth);
 }
 
@@ -955,7 +955,7 @@ default
             {
                 lAVs += [llDetectedKey(iLoop)];
             }
-            string sPrompt = "Pick someone/thing to leash to.";
+            string sPrompt = "\n\nWho shall we leash to?\n";
             g_kLeashTargetDialogID = Dialog(g_kMenuUser, sPrompt, lAVs, [BUTTON_UPMENU], 0, g_iLastRank);
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_FOLLOW_MENU)
@@ -965,7 +965,7 @@ default
             {
                 lAVs += [llDetectedKey(iLoop)];
             }
-            string sPrompt = "Pick someone/thing to follow.";
+            string sPrompt = "\n\nWho shall be followed?\n";
             g_kFollowTargetDialogID = Dialog(g_kMenuUser, sPrompt, lAVs, [BUTTON_UPMENU], 0, g_iLastRank);
         }
         else if (g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_LEASH_CHAT)
@@ -1004,7 +1004,7 @@ default
         else if(g_iSensorMode == SENSORMODE_FIND_TARGET_FOR_POST_MENU)
         {
             list lButtons = [];
-            string sPrompt = "Pick the object that you would like the sub to be leashed to.  If it's not in the list, have the sub move closer and try again.\n";
+            string sPrompt = "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n";
             for (iLoop = 0; iLoop < iSense; iLoop ++)
             {
                 if(llDetectedName(iLoop) != "Object") lButtons += [llDetectedKey(iLoop)];
