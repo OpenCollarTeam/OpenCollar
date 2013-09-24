@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - hide                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -65,9 +65,9 @@ integer TOUCH_EXPIRE = -9503;
 
 //5000 block is reserved for IM slaves
 string CTYPE = "collar";
-string HIDE = "Hide";
-string SHOW = "Show";
-string UPMENU = "^";
+string HIDE = "☒";
+string SHOW = "☐";
+string UPMENU = "⏏";
 string SHOWN = "Shown";
 string HIDDEN = "Hidden";
 string ALL = "All";
@@ -181,7 +181,7 @@ SaveAlphaSettings()
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick which part of the " + CTYPE + " you would like to hide or show.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
+    string sPrompt = "\n\nWhich element of the " + CTYPE + " would you like to hide or show?\n\n☒: element is shown\n☐: element is hidden\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
     g_lButtons = [];
     //loop through elements, show appropriate buttons and prompts if hidden or shown
 
@@ -214,7 +214,7 @@ ElementMenu(key kAv, integer iAuth)
             }
         }
     }
-    g_lButtons += [SHOW + " " + ALL, HIDE + " " + ALL];
+    g_lButtons += ["Show" + " " + ALL, "Hide" + " " + ALL];
     g_kDialogID=Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth);
 }
 
@@ -444,11 +444,11 @@ default
 
                     if (sElement == ALL)
                     {
-                        if (sCmd == SHOW)
+                        if (sCmd == "Show")
                         {
                             SetAllElementsAlpha(1.0);
                         }
-                        else if (sCmd == HIDE)
+                        else if (sCmd == "Hide")
                         {
                             SetAllElementsAlpha(0.0);
                         }
