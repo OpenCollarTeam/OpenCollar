@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -92,24 +92,24 @@ integer WEARERLOCKOUT=620;
 //EXTERNAL MESSAGE MAP
 integer EXT_COMMAND_COLLAR = 499;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
 string CTYPE = "collar";
 
-string g_sSetOwner = "Add Owner";
-string g_sSetSecOwner = "Add Secowner";
-string g_sSetBlackList = "Add Blacklisted";
-string g_sSetGroup = "Set Group";
+string g_sSetOwner = "✓ Owner";
+string g_sSetSecOwner = "✓ Secowner";
+string g_sSetBlackList = "✓ Blacklisted";
+string g_sSetGroup = "Group ☐";
 string g_sReset = "Reset All";
-string g_sRemOwner = "Rem Owner";
-string g_sRemSecOwner = "Rem Secowner";
-string g_sRemBlackList = "Rem Blacklisted";
-string g_sUnsetGroup = "Unset Group";
+string g_sRemOwner = "✗ Owner";
+string g_sRemSecOwner = "✗ Secowner";
+string g_sRemBlackList = "✗ Blacklisted";
+string g_sUnsetGroup = "Group ☒";
 string g_sListOwners = "List Owners";
-string g_sSetOpenAccess = "SetOpenAccess";
-string g_sUnsetOpenAccess = "UnsetOpenAccess";
-string g_sSetLimitRange = "LimitRange";
-string g_sUnsetLimitRange = "UnLimitRange";
+string g_sSetOpenAccess = "Public ☐";
+string g_sUnsetOpenAccess = "Public ☒";
+string g_sSetLimitRange = "LimitRange ☐";
+string g_sUnsetLimitRange = "LimitRange ☒";
 
 //request types
 string g_sOwnerScan = "ownerscan";
@@ -266,7 +266,7 @@ FetchAvi(integer auth, string type, string name, key user)
 
 AuthMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Pick an option.";
+    string sPrompt = "\n\n✓: add someone\n✗: remove someone\n☐: option is off\n☒: option is on";
     list lButtons = [g_sSetOwner, g_sSetSecOwner, g_sSetBlackList, g_sRemOwner, g_sRemSecOwner, g_sRemBlackList];
 
     if (g_kGroup=="") lButtons += [g_sSetGroup];    //set group
@@ -289,7 +289,7 @@ AuthMenu(key kAv, integer iAuth)
 RemPersonMenu(key kID, list lPeople, string sType, integer iAuth)
 {
     g_sRequestType = sType;
-    string sPrompt = "Choose the person to remove.";
+    string sPrompt = "\n\nChoose the person to remove.";
     list lButtons;
     //build a button list with the dances, and "More"
     //get number of secowners
@@ -614,7 +614,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_sTmpName = llDumpList2String(lParams, " ");
             if (llGetListLength(g_lSecOwners) == 20)
             {
-                Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup",FALSE);
+                Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup.",FALSE);
             }
             else
             {
@@ -687,7 +687,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_lBlackList = [];
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sBlackListToken, "");
-                Notify(kID, "Everybody was removed from black list!", TRUE);
+                Notify(kID, "Everybody was removed from the blacklist!", TRUE);
             }
             else
             {
@@ -748,7 +748,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "openaccess=" + (string) g_iOpenAccess, "");
-            Notify(kID, "Open access set.", FALSE);
+            Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
             if(g_iRemenu)
             {
                 g_iRemenu = FALSE;
@@ -760,7 +760,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "openaccess", "");
-            Notify(kID, "Open access unset.", FALSE);
+            Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
             if(g_iRemenu)
             {
                 g_iRemenu = FALSE;
@@ -774,7 +774,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_iLimitRange = TRUE;
             // as the default is range limit on, we do not need to store anything for this
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
-            Notify(kID, "Range limited set.", FALSE);
+            Notify(kID, "Range is limited.", FALSE);
             if(g_iRemenu)
             {
                 g_iRemenu = FALSE;
@@ -786,7 +786,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_iLimitRange = FALSE;
             // save off state for limited range (default is on)
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
-            Notify(kID, "Range limited unset.", FALSE);
+            Notify(kID, "Range is simwide.", FALSE);
             if(g_iRemenu)
             {
                 g_iRemenu = FALSE;
@@ -1217,7 +1217,7 @@ default
             }
             else
             {
-                Notify(g_kDialoger, "Group set to " + g_sGroupName, FALSE);
+                Notify(g_kDialoger, "Group set to " + g_sGroupName + ".", FALSE);
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
         }
