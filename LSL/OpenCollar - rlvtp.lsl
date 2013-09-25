@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvtp                                //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -100,7 +100,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 //string MORE = ">";
 string g_sScript;
 
@@ -144,9 +144,7 @@ Menu(key kID, integer iAuth)
 
     //build prompt showing current settings
     //make enable/disable buttons
-    //    string sPrompt = "Pick an option";
-    //    sPrompt += " (Menu will expire in " + (string)g_iTimeOut + " seconds.)";
-    string sPrompt = "Current Settings: ";
+    string sPrompt = "\n\nCurrent Settings: \n";
     list lButtons;
 
     integer n;
@@ -209,7 +207,7 @@ LandmarkMenu(key kAv, integer iAuth)
         lButtons += [sName];
     }
 
-    lmkMenuID = Dialog(kAv, "Pick a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);
+    lmkMenuID = Dialog(kAv, "\n\nChoose a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);
 }
 
 integer AtLeastVersion(string sCutOff, string sCheckMe)
