@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvfolders                             //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -45,12 +45,12 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string PARENT = "..\tparent";
+string PARENT = "⏎";
 string ACTIONS_CURRENT = "Actions";
 string ROOT_ACTIONS = "Global Actions";
 
-string UPMENU = "^";
-string MORE = ">";
+string UPMENU = "⏏";
+//string MORE = ">";
 
 // Folder actions
 //string ALL = "*All*";
@@ -177,7 +177,7 @@ string lockUnsharedButton(integer iLockNum, integer iAuth)
 RootActionsMenu(key kAv, integer iAuth)
 {
     list lActions = [lockUnsharedButton(0, iAuth), lockUnsharedButton(1, iAuth), "Save", "Restore"];
-    string sPrompt = "You are at the #RLV shared root.\nFrom here, you can restrict wearing or removing not shared items, you can also save the list of worn shared folders or make the currently saved list be worn again.\n\nWhat do you want to do?";
+    string sPrompt = "\n\nYou are at the #RLV shared root.\n\nFrom here, you can restrict wearing or removing not shared items, you can also save the list of worn shared folders or make the currently saved list be worn again.\n\nWhat do you want to do?";
     g_kRootActionsID = Dialog(kAv, sPrompt, lActions, [UPMENU], 0, iAuth);
 }
 
@@ -209,11 +209,11 @@ FolderActionsMenu(integer iState, key kAv, integer iAuth)
         if ( iStateSub == 2 || iStateSub == 3) // there are items that can be removed from descendant folders
             lActions += [DETACH_ALL,  lockFolderButton(iLock, 3, iAuth)];
     }
-    string sPrompt = "Current folder is ";
+    string sPrompt = "\n\nCurrent folder is ";
     if (g_sCurrentFolder == "") sPrompt += "root";
     else sPrompt += g_sCurrentFolder;
     sPrompt += ".\n";
-    sPrompt += "What do you want to do?\n\n";
+    sPrompt += "\nWhat do you want to do?\n\n";
 
     g_kActionsID = Dialog(kAv, sPrompt, lActions, [UPMENU], 0, iAuth);
 }
@@ -333,7 +333,7 @@ FolderBrowseMenu(string sStr)
 {
     g_iAsyncMenuRequested = FALSE;
     list lUtilityButtons = [UPMENU];
-    string sPrompt = "Current folder is ";
+    string sPrompt = "\n\nCurrent folder is ";
     if (g_sCurrentFolder == "")
     {
         sPrompt += "root";
@@ -353,10 +353,10 @@ FolderBrowseMenu(string sStr)
         lItem=llParseString2List(sFirst,["|"],[]);
         iWorn=llList2Integer(lItem,0);
         g_iLastFolderState=iWorn;
-        if (iWorn / 10 == 1 ) sPrompt += "It has wearable items";
-        else if (iWorn / 10 == 2 ) sPrompt += "It has wearable and removable items";
-        else if (iWorn / 10 == 3 ) sPrompt += "It has removable items";
-        else if (iWorn / 10 == 0 ) sPrompt += "It does not directly have any wearable or removable item";
+        if (iWorn / 10 == 1 ) sPrompt += "\n\nIt has wearable items";
+        else if (iWorn / 10 == 2 ) sPrompt += "\n\nIt has wearable and removable items";
+        else if (iWorn / 10 == 3 ) sPrompt += "\n\nIt has removable items";
+        else if (iWorn / 10 == 0 ) sPrompt += "\n\nIt does not directly have any wearable or removable item";
         sPrompt += ".\n\n";
         lUtilityButtons += [ACTIONS_CURRENT];
     }
@@ -370,7 +370,7 @@ FolderBrowseMenu(string sStr)
             lFolders += [folderIcon(iWorn) + sFolder];
         }
     }
-    sPrompt += "- Click "+ACTIONS_CURRENT+" to manage this folder content.\n- Click one of the subfolders to browse it.\n";
+    sPrompt += "\n- Click "+ACTIONS_CURRENT+" to manage this folder content.\n- Click one of the subfolders to browse it.\n";
     if (g_sCurrentFolder!="") {sPrompt += "- Click "+PARENT+" to browse parent folder."; lUtilityButtons += [PARENT];}
     sPrompt += "\n- Click "+UPMENU+" to go back to "+g_sParentMenu+".\n\n";
     g_kBrowseID = Dialog(g_kAsyncMenuUser, sPrompt, lFolders, lUtilityButtons, g_iPage, g_iAsyncMenuAuth);
