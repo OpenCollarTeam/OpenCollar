@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvsit                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -98,7 +98,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
 key g_kWearer;
 string g_sScript;
@@ -156,8 +156,7 @@ Menu(key kID, integer iAuth)
 
      //build prompt showing current settings
     //make enable/disable buttons
-    string sPrompt = "Pick an option";
-    sPrompt += "\nCurrent Settings: ";
+    string sPrompt = "\n\nCurrent Settings: \n";
     list lButtons;
 
 
