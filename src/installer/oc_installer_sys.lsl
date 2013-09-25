@@ -205,7 +205,7 @@ ReadVersionLine() {
 
 SetInstructionsText() {
     llSetText("1 - Create a backup copy of your collar.\n" +
-              "2 - Rez your collar next to me or wear me.\n" +
+              "2 - Rez your collar next to me.\n" +
               "3 - Touch the collar.\n" + 
               "4 - In the menu, select Help/Debug > Update.\n"
                , <1,1,1>, 1.0);
