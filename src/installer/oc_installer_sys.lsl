@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.928                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -56,10 +56,10 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string BTN_REQUIRED = "(@)";
-string BTN_INSTALL = "(*)";
-string BTN_UNINSTALL = "( )";
-string BTN_DEPRECATED = "(X)";
+string BTN_REQUIRED = " ★ ";
+string BTN_INSTALL = " ☒ ";
+string BTN_UNINSTALL = " ☐ ";
+string BTN_DEPRECATED = " ♻ ";
 string INSTALL_METHOD = "RLV";
 
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
@@ -155,8 +155,8 @@ SetInstallmode(string type) {
 BundleMenu(integer page) {
     // Give the plugin selection/start menu.
     
-    string prompt = "Add/remove plugins by clicking the buttons below.";
-    prompt += "\nClick START when you're ready to update.";  
+    string prompt = "\n\nAdd/remove plugins by checking the boxes below.";
+    prompt += "\n\nClick START when you're ready to update.\n";  
     
     // build list of buttons from list of bundles
     integer n;
@@ -175,19 +175,19 @@ BundleMenu(integer page) {
         } else if (status == "REMOVE") {
             choices += [BTN_UNINSTALL + " " + name];
         } else if (status == "DEPRECATED") {
-            choices += [BTN_DEPRECATED + " "+ name];
+            choices += [BTN_DEPRECATED + " " + name];
         }
     }
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"], page);
 }
 
 GiveMethodMenu() {
-    string prompt = "\nChose Your Install method.";
-    prompt += "\nCurrent method chosen : \""+INSTALL_METHOD+"\"\n";
-    prompt += "\nRLV (Recommended): All you need for a fun BDSM experience on SL, including relay.";
-    prompt += "\nNo RLV: Install just the basics without any RestrainedLove features at all.";
-    prompt += "\nCustom: Your own selection of features. Useful for uninstalling plugins that are never used.";
-    prompt += "\nDeveloper: WARNING! This will install everything and beyond, only recommended for tinkering.";
+    string prompt = "\n\nChose Your Install method.";
+    prompt += "\n\nCurrent method chosen : \""+INSTALL_METHOD+"\"\n";
+    prompt += "\nRLV (Recommended): All you need for a fun BDSM experience on SL, including relay.\n";
+    prompt += "\nNo RLV: Install just the basics without any RestrainedLove features at all.\n";
+    prompt += "\nCustom: Your own selection of features. Useful for uninstalling plugins that are never used.\n";
+    prompt += "\nDeveloper: WARNING! This will install everything and beyond, only recommended for tinkering.\n";
     list choices = ["RLV","No RLV","Custom", "Developer"];
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"],0);
 }
