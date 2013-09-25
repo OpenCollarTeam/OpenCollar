@@ -22,7 +22,7 @@
 // NOTE: As of version 3.706, the update script no longer uses object name or
 // description to tell it the current collar version.  Instead, it looks in the
 // "~version" notecard.  It compares the contents of that notecard with the
-// text at https://raw.github.com/nirea/ocupdater/release/lsl/~version.  If the
+// text at https://raw.github.com/opencollar/OpenCollarUpdater/beta/LSL/~version.  If the
 // version online is newer, then the wearer will be advised that an update is
 // available.
 
@@ -130,8 +130,8 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 ConfirmUpdate(key kUpdater)
 {
-    string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:" + (string)kUpdater +"\n"
-    + "Do not rez any items till the update has started.";
+    string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:\n\n" + (string)kUpdater +"\n"
+    + "\n3 Golden Rules for Updates:\n\n1.Create a Backup\n2.Rezzed is safer than Worn\n3.Low Lag regions make happy Updates\n\n(These rules apply to any kind of scripted item, not just collars or bondage and kink items!)\n\nATTENTION: Do not rez any other collars till the update has started.";
     g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0, COMMAND_WEARER);
 }
 
