@@ -143,8 +143,7 @@ Menu(key kID, integer iAuth)
 
     //build prompt showing current settings
     //make enable/disable buttons
-    string sPrompt = "\n\nRLV - Miscellanious\n";
-    sPrompt += "\nCurrent Settings: \n";
+    string sPrompt = "\n\nCurrent Settings: \n";
     list lButtons;
 
 
