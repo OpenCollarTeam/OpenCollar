@@ -18,7 +18,7 @@
 list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "ℹ"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
 list g_lMenuPrompts = [
-"\n\nWelcome to the Main Menu!",
+"\n\nWelcome to the Main Menu",
 "\n\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html\n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",
 "\n\nThis menu grants access to every installed AddOn.\n"
 ];
