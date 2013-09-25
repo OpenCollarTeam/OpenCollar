@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - subspy                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -59,7 +59,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 string g_sDBToken = "List";
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "Spy";
 
@@ -275,15 +275,15 @@ DialogSpy(key kID, integer iAuth)
     string sPrompt;
     if (iAuth != COMMAND_OWNER)
     {
-        sPrompt = "Only an Owner can set and see spy options.";
+        sPrompt = "\n\nACCESS DENIED: Primary Owners Only";
         g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
         return;
     }
     list lButtons ;
-    sPrompt = "These are ONLY Primary Owner options:\n";
-    sPrompt += "Trace turns on/off notices if the sub teleports.\n";
-    sPrompt += "Radar turns on/off a report every "+ (string)((integer)g_iSensorRepeat/60) + " of who joined  or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + "m.\n";
-    sPrompt += "Listen turns on/off if you get directly said what " + g_sSubName + " says in public chat.";
+    sPrompt = "\n\n- Access Granted to Primary Owners Only -\n";
+    sPrompt += "\nTrace notifies if " + g_sSubName + " teleports.\n";
+    sPrompt += "\nRadar sends a report every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined  or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters.\n";
+    sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!";
 
     if(Enabled("trace"))
     {
@@ -316,10 +316,10 @@ DialogSpy(key kID, integer iAuth)
 DialogRadarSettings(key kID, integer iAuth)
 {
     list lButtons;
-    string sPromt = "Choose the radar repeat and sensor range:\n";
-    sPromt += "Current Radar Range is: " + (string)((integer)g_iSensorRange) + " meter.\n";
-    sPromt += "Current Radar Frequenz is: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
-    lButtons += ["5 meter", "8 meter", "10 meter", "15 meter"];
+    string sPromt = "\n\nSetup for the Radar Repeats and Sensors:\n";
+    sPromt += "\nRadar Range is set to: " + (string)((integer)g_iSensorRange) + " meters.\n";
+    sPromt += "\nRadar Frequency is set to: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
+    lButtons += ["5 meters", "8 meters", "10 meters", "15 meters"];
     lButtons += ["2 minutes", "5 minutes", "8 minutes", "10 minutes"];
     g_kDialogRadarSettingsID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
 }
