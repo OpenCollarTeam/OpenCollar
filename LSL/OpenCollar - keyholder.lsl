@@ -59,8 +59,8 @@ integer g_iGlobalKey = TRUE; // are we on the global key.
 // integer kh_present = FALSE; // Requires the keyholder be present or the key is returned. TODO
 
 // -- Constants ------------------------------------------
-string TAKEKEY = " TAKE KEY";
-string RETURNKEY = " RETURN KEY";
+string TAKEKEY = "*Take Key*";
+string RETURNKEY = "*Return Key*";
 
 // Various variables needed by cuffs.
 integer g_iInterfaceChannel = -12587429; // OC attachments
@@ -236,8 +236,8 @@ string Float2String(float in)
 
 string CheckBox(string name, integer value)
 {
-    if (value) return "☒" + name;
-    else return "☐" + name;
+    if (value) return "(*)" + name;
+    else return "( )" + name;
 }
 
 //===============================================================================
@@ -260,21 +260,21 @@ DoMenu(key kID, integer iPublicMenu, integer iAuth)
     //fill in your button list and additional prompt here
     if (!kh_on)
     {
-        prompt = "This module is turned off. An Owner can turn it on from the Configure menu.";
+        prompt = "\n\nThis module is turned off. An Owner can turn it on from the Configure menu.";
     }
     else if (kID == kh_key)
     {
-        prompt = "You hold the key! You may return it to the lock if you wish.";
+        prompt = "\n\nYou hold the key! You may return it to the lock if you wish.";
         mybuttons = [ "Return Key" ] + mybuttons;
     }
     else if (kh_key == NULL_KEY)
     {
-        prompt = "The key is available for the taking!";
+        prompt = "\n\nThe key is available for the taking!";
         mybuttons = [ "Take Key" ] + mybuttons;
     }
     else if (iAuth == COMMAND_OWNER)
     {
-        prompt = "The key is held by " + kh_name + "\n\nOwners can force a key return.";
+        prompt = "\n\nThe key is held by " + kh_name + "\n\nOwners can force a key return.";
         mybuttons = [ "Force Return" ] + mybuttons;
     }
 
@@ -313,8 +313,8 @@ DoMenuAutoReturnConfig(key keyID, integer iAuth)
     integer i;
     integer max_times = llGetListLength(times);
 
-    prompt = "Key Auto Return Configuration Turn this feature off, or pick a time to return the key in automatically. ";
-    prompt += "Times in: Days, Hours:Minutes:Seconds. Only the owner may change these.";
+    prompt = "\n\nKey Auto Return Configuration Turn this feature off, or pick a time to return the key in automatically. ";
+    prompt += "\n\nTimes in: Days, Hours:Minutes:Seconds. Only the owner may change these.";
     //fill in your button list and additional prompt here
     mybuttons += CheckBox("Auto Off", !kh_auto_return_timer);
 
@@ -331,11 +331,11 @@ DoMenuConfigure(key keyID, integer iAuth)
     string prompt;
     list mybuttons;
 
-    prompt = "Key Holder Configuration Lock - Does the " + g_sToyName + " lock when someone takes the key? ";
-    prompt += "No Open - Does the " + g_sToyName + " disable open access when someone takes the key? ";
-    prompt += "On - Is the keyholder module turned on? Pub. Key - Is the key public even when Open Access is turned off? ";
-    prompt += "Main Menu - Is the main menu changed for ease of access. Global - Is this on the global key system? ";
-    prompt += "Only the owner may change these.";
+    prompt = "\n\nKey Holder Configuration Lock - Does the " + g_sToyName + " lock when someone takes the key? ";
+    prompt += "\nNo Open - Does the " + g_sToyName + " disable open access when someone takes the key? ";
+    prompt += "\nOn - Is the keyholder module turned on? Pub. Key - Is the key public even when Open Access is turned off? ";
+    prompt += "\nMain Menu - Is the main menu changed for ease of access. Global - Is this on the global key system? ";
+    prompt += "\n\nOnly the owner may change these.";
     //fill in your button list and additional prompt here
     mybuttons += CheckBox("On", kh_on);
     mybuttons += CheckBox("Lock", kh_lock_collar);
@@ -642,12 +642,12 @@ integer UserCommand(integer num, string str, key id) // here iNum: auth value, s
         }
     }
     // "Return Key" buttons from timer plugin.
-    else if (str == "menu ☒Return Key")
+    else if (str == "menu (*)Return Key")
     {
         UserCommand(num, "khunsettimerreturnkey", id);
         llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
     }
-    else if (str == "menu ☐Return Key")
+    else if (str == "menu ( )Return Key")
     {
         UserCommand(num, "khsettimerreturnkey", id);
         llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
@@ -813,11 +813,11 @@ default
                 {
                     // Handle checkboxes.
                     string cmd;
-                    if (llGetSubString(message, 0, 2) == "☐")
+                    if (llGetSubString(message, 0, 2) == "( )")
                     {
                         cmd += "khset"+llGetSubString(message, 3, -1);
                     }
-                    else if (llGetSubString(message, 0, 2) == "☒")
+                    else if (llGetSubString(message, 0, 2) == "(*)")
                     {
                         cmd += "khunset" + llGetSubString(message, 3, -1);
                     }
