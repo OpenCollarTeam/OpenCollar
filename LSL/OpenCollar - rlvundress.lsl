@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvundress                             //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -142,11 +142,11 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
-string ALL = "*All*";
-string TICKED = "(*)";
-string UNTICKED = "( )";
+string ALL = " ALL";
+string TICKED = "☒ ";
+string UNTICKED = "☐ ";
 
 //variables for storing our various dialog ids
 key g_kMainID;
@@ -204,20 +204,20 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 MainMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Pick an option.";
+    string sPrompt = "\n\nNote: Keep in mind that mesh clothing is worn as attachments and in most cases together with alpha masks which are worn as clothing layers. It is recommended to explore the possibilities of #RLV Folders for a smooth un/dressing experience.\n";
     list lButtons = g_lChildren;
 
     if (g_iAllLocked)  //are all clothing and attachements locked?
     {
         sPrompt += "\n all clothes and attachments are currently locked.";
         //skip the LockClothing and the LockAttachment buttons
-        lButtons += ["(*)Lock All"];
+        lButtons += ["☒ Lock All"];
     }
     else
     {
         lButtons += ["Lock Clothing"];
         lButtons += ["Lock Attachment"];
-        lButtons += ["( )Lock All"];
+        lButtons += ["☐ Lock All"];
     }
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
@@ -739,8 +739,8 @@ default
                     else if (sMessage == "Rem Attachment") QueryAttachments(kAv, iAuth);
                     else if (sMessage == "Lock Clothing") LockMenu(kAv, iAuth);
                     else if (sMessage == "Lock Attachment") LockAttachmentMenu(kAv, iAuth);
-                    else if (sMessage == "( )Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
-                    else if (sMessage == "(*)Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "☐ Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
