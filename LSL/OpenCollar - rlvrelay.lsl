@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvrelay                              //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -46,9 +46,9 @@ integer DIALOG_TIMEOUT = -9002;
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
 
-string UPMENU = "^";
+string UPMENU = "⏏";
 
-string ALL = "*All*";
+string ALL = " ALL";
 
 key g_kWearer;
 
@@ -278,7 +278,7 @@ Dequeue()
         lButtons+=["Trust User","Ban User"];
         sPrompt+="\n"+llKey2Name(llGetSubString(sCommand,7,42))+" is currently using this device.";
     }
-    sPrompt+="\nDo you want to allow this?";
+    sPrompt+="\n\nDo you want to allow this?";
     g_iAuthPending = TRUE;
     g_kAuthMenuID = Dialog(g_kWearer, sPrompt, lButtons, [], 0, COMMAND_WEARER); // should be enough to dequeue...
 }
@@ -381,16 +381,16 @@ SafeWord()
 //----Menu functions section---//
 Menu(key kID, integer iAuth)
 {
-    string sPrompt = "\nCurrent mode is: " + Mode2String(FALSE);
+    string sPrompt = "\n\nCurrent mode is: " + Mode2String(FALSE);
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iBaseMode,g_iBaseMode);
     if (g_lSources != []) lButtons = llDeleteSubList(lButtons,0,0);
-    if (g_iPlayMode) lButtons+=["(*)Playful"];
-    else lButtons+=["( )Playful"];
-    if (g_iLandMode) lButtons+=["(*)Land"];
-    else lButtons+=["( )Land"];
+    if (g_iPlayMode) lButtons+=["☒ Playful"];
+    else lButtons+=["☐ Playful"];
+    if (g_iLandMode) lButtons+=["☒ Land"];
+    else lButtons+=["☐ Land"];
     if (g_lSources!=[])
     {
-        sPrompt+="\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";
+        sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";
         if (g_lSources==[1]) sPrompt+="."; // Note: only list LENGTH is compared here
         else sPrompt+="s.";
         lButtons+=["Grabbed by"];
@@ -398,12 +398,12 @@ Menu(key kID, integer iAuth)
     }
     else if (kID == g_kWearer)
     {
-        if (g_iSafeMode) lButtons+=["(*)Safeword"];
-        else lButtons+=["( )Safeword"];
+        if (g_iSafeMode) lButtons+=["☒ Safeword"];
+        else lButtons+=["☐ Safeword"];
     }
     if (g_lQueue!=[])
     {
-        sPrompt+="\nYou have pending requests.";
+        sPrompt+="\n\nYou have pending requests.";
         lButtons+=["Pending"];
     }
     lButtons+=["Access Lists", "MinMode", "Help"];
@@ -415,20 +415,20 @@ Menu(key kID, integer iAuth)
 MinModeMenu(key kID, integer iAuth)
 {
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iMinBaseMode,g_iMinBaseMode);
-    string sPrompt = "\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
-    if (g_iMinPlayMode) lButtons+=["(*)Playful"];
-    else lButtons+=["( )Playful"];
-    if (g_iMinLandMode) lButtons+=["(*)Land"];
-    else lButtons+=["( )Land"];
-    if (g_iMinSafeMode) lButtons+=["(*)Safeword"];
-    else lButtons+=["( )Safeword"];
-    sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed go under.\n(owner only)";
+    string sPrompt = "\n\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
+    if (g_iMinPlayMode) lButtons+=["☒ Playful"];
+    else lButtons+=["☐ Playful"];
+    if (g_iMinLandMode) lButtons+=["☒ Land"];
+    else lButtons+=["☐ Land"];
+    if (g_iMinSafeMode) lButtons+=["☒ Safeword"];
+    else lButtons+=["☐ Safeword"];
+    sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed to go under.\n(owner only)";
     g_kMinModeMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 ListsMenu(key kID, integer iAuth)
 {
-    string sPrompt="What list do you want to remove items from?";
+    string sPrompt="\n\nWhat list do you want to remove items from?";
     list lButtons=["Trusted Object","Banned Object","Trusted Avatar","Banned Avatar",UPMENU];
     sPrompt+="\n\nMake a choice:";
     g_kListMenuID = Dialog(kID, sPrompt, lButtons, [], 0, iAuth);
@@ -448,7 +448,7 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     {
         lOList=g_lObjWhiteList;
         lOListNames=g_lObjWhiteListNames;
-        sPrompt="What object do you want to stop trusting?";
+        sPrompt="\n\nWhat object do you want to stop trusting?";
         if (lOListNames == []) sPrompt+="\n\nNo object in list.";
         else  sPrompt+="\n\nObserve chat for the list.";
     }
@@ -456,7 +456,7 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     {
         lOList=g_lObjBlackList;
         lOListNames=g_lObjBlackListNames;
-        sPrompt="What object do you want not to ban anymore?";
+        sPrompt="\n\nWhat object do you want not to ban anymore?";
         if ( lOListNames == []) sPrompt+="\n\nNo object in list.";
         else sPrompt+="\n\nObserve chat for the list.";
     }
@@ -464,7 +464,7 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     {
         lOList=g_lAvWhiteList;
         lOListNames=g_lAvWhiteListNames;
-        sPrompt="What avatar do you want to stop trusting?";
+        sPrompt="\n\nWhat avatar do you want to stop trusting?";
         if (lOListNames == []) sPrompt+="\n\nNo avatar in list.";
         else sPrompt+="\n\nObserve chat for the list.";
     }
@@ -472,7 +472,7 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     {
         lOList=g_lAvBlackList;
         lOListNames=g_lAvBlackListNames;
-        sPrompt="What avatar do you want not to ban anymore?";
+        sPrompt="\n\nWhat avatar do you want not to ban anymore?";
         if (lOListNames == []) sPrompt+="\n\nNo avatar in list.";
         else sPrompt+="\n\nObserve chat for the list.";
     }
@@ -817,7 +817,7 @@ default
                 if (kID==g_kMenuID || kID == g_kMinModeMenuID)
                 {
                     llSetTimerEvent(g_iGarbageRate);
-                    integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "( )Safeword", "(*)Safeword","( )Playful","(*)Playful","( )Land","(*)Land"],[sMsg]);
+                    integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "☐ Safeword", "☒ Safeword","☐ Playful","☒ Playful","☐ Land","☒ Land"],[sMsg]);
                     if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
                     else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
                     else if (~iIndex)
