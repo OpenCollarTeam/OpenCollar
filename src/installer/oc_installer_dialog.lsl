@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Dialog                           //
-//                                 version 3.928                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -54,9 +54,9 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 integer iPagesize = 12;
-string MORE = ">";
-string PREV = "<";
-string UPMENU = "^"; // string to identify the UPMENU button in the utility lButtons
+string MORE = "►";
+string PREV = "◄";
+string UPMENU = "⏏"; // string to identify the UPMENU button in the utility lButtons
 //string SWAPBTN = "swap";
 //string SYNCBTN = "sync";
 string BLANK = " ";
@@ -128,7 +128,8 @@ integer RandomUniqueChannel()
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID)
 {
-    string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
+    //string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
+    string sThisPrompt;
     list lButtons;
     list lCurrentItems;
     integer iNumitems = llGetListLength(lMenuItems);
