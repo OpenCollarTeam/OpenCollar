@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvmain                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -81,10 +81,10 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "^";
-string TURNON = "*Turn On*";
-string TURNOFF = "*Turn Off*";
-string CLEAR = "*Clear All*";
+string UPMENU = "⏏";
+string TURNON = "  ON";
+string TURNOFF = " OFF";
+string CLEAR = "CLEAR ALL";
 string CTYPE = "collar";
 key g_kWearer;
 string g_sScript;
@@ -143,8 +143,8 @@ DoMenu(key kID, integer iAuth)
         lButtons += [TURNON];
     }
 
-    string sPrompt = "Restrained Love Viewer Options.";
-    if (g_iRlvVersion) sPrompt += "\nDetected version of RLVÂ API: "+(string)g_iRlvVersion;
+    string sPrompt = "\n\n- Restrained Love Viewer Options -\n";
+    if (g_iRlvVersion) sPrompt += "\n- Detected version of RLV API: "+(string)g_iRlvVersion;
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
