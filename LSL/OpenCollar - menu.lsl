@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.929                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -18,7 +18,8 @@
 list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "ℹ"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
 list g_lMenuPrompts = [
-"\n\nWelcome to the Main Menu",
+//WS: let's query for version properly; the static number is supposed to be a reminder not a solution
+"\n\nWelcome to the Main Menu\nOpenCollar Version 3.930",
 "\n\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html\n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",
 "\n\nThis menu grants access to every installed AddOn.\n"
 ];
@@ -261,7 +262,7 @@ default
                 if (sMessage == WIKI)
                 {
                     llSleep(0.2);
-                    llLoadURL(kAv, "\n\nLicensed under the GPLv2 with additional requirements specific to Second Life® and other virtual metaverse environments. -> www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
+                    llLoadURL(kAv, "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®. www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
                     return;
                 }
                 
