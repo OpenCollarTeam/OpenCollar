@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - timer                               //
-//                                 version 3.928                                  //
+//                                 version 3.929                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -150,8 +150,8 @@ integer WEARERLOCKOUT=620;
 
 
 // menu option to go one step back in menustructure
-string UPMENU = "^";
-string MORE = ">";
+string UPMENU = "⏏";
+//string MORE = ">";
 
 string GetScriptID()
 {
@@ -256,7 +256,7 @@ DoMenu(key keyID, integer iAuth)
     }
 
     Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "Pick an option.";
+    string sPrompt = "\n\n- Timer Menu -\n";
     list lMyButtons = g_lLocalButtons + lButtons;
 
     //fill in your button list and additional prompt here
@@ -290,7 +290,7 @@ DoMenu(key keyID, integer iAuth)
     else
     {
         sPrompt += "\n When EITHER the online or realtime timer go off:";
-        lMyButtons += ["()bothtime"];
+        lMyButtons += ["( )bothtime"];
     }
     if (g_iRealRunning || g_iOnRunning)
     {
@@ -308,7 +308,7 @@ DoMenu(key keyID, integer iAuth)
     else
     {
         sPrompt += "\n\t the " + g_sToyName + " will NOT be unlocked";
-        lMyButtons += ["()unlock"];
+        lMyButtons += ["( )unlock"];
     }
     if (g_iUnleash)
     {
@@ -318,7 +318,7 @@ DoMenu(key keyID, integer iAuth)
     else
     {
         sPrompt += "\n\t the " + g_sToyName + " will NOT be unleashed";
-        lMyButtons += ["()unleash"];
+        lMyButtons += ["( )unleash"];
     }
     if (g_iClearRLVRestions)
     {
@@ -328,7 +328,7 @@ DoMenu(key keyID, integer iAuth)
     else
     {
         sPrompt += "\n\t the RLV restions will NOT be cleared";
-        lMyButtons += ["()clearRLV"];
+        lMyButtons += ["( )clearRLV"];
     }
 
     llListSort(g_lLocalButtons, 1, TRUE); // resort menu buttons alphabetical
@@ -340,7 +340,7 @@ DoOnMenu(key keyID, integer iAuth)
 {
     if (keyID == NULL_KEY) return;
     
-    string sPrompt = "Pick an option.";
+    string sPrompt = "\n\n- Online Time Menu -\n";
     sPrompt += "\n Online timer - "+Int2Time(g_iOnSetTime);
     if (g_iOnRunning)
     {
@@ -357,7 +357,7 @@ DoRealMenu(key keyID, integer iAuth)
 {
     if (keyID == NULL_KEY) return;
 
-    string sPrompt = "Pick an option.";
+    string sPrompt = "\n\n- Realtime Menu -\n";
     //fill in your button list and additional prompt here
     sPrompt += "\n Realtime timer - " + Int2Time(g_iRealSetTime);
     if (g_iRealRunning)
@@ -496,7 +496,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iBoth = FALSE;
             DoMenu(kID, iNum);
         }
-        else if (sMsg == "()bothtime")
+        else if (sMsg == "( )bothtime")
         {
             g_iBoth = TRUE;
             DoMenu(kID, iNum);
@@ -510,7 +510,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="()unlock")
+        else if(sMsg=="( )unlock")
         {
             if(iNum == COMMAND_OWNER) g_iUnlockCollar=1;
             else
@@ -528,7 +528,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else g_iClearRLVRestions=0;
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="()clearRLV")
+        else if(sMsg=="( )clearRLV")
         {
             if(iNum == COMMAND_WEARER)
             {
@@ -546,7 +546,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="()unleash")
+        else if(sMsg=="( )unleash")
         {
             if(iNum <= g_iWhoCanChangeLeash) g_iUnleash=1;
             else
