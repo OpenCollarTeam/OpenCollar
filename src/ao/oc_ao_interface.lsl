@@ -125,7 +125,7 @@ default
         }
         else if (num == COMMAND_TO_COLLAR)
         {
-            llWhisper(objectchannel,(string)wearer + "\\" + str);
+            llWhisper(objectchannel, str);
         }
         else if (num == COMMAND_NOAUTH)
         {
