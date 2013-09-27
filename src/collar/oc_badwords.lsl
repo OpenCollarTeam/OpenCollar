@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - badwords                              //
-//                                 version 3.930                                  //
+//                                 version 3.931                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -455,7 +455,7 @@ default
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     return;
                 }
-                else if(sMessage == "Clear ALL") UserCommand(iAuth, "badwords clearall", kAv);
+                else if(sMessage == "Clear All") UserCommand(iAuth, "badwords clearall", kAv);
                 else if(sMessage == "ON")
                 {
                     UserCommand(iAuth, "badwords on", kAv);
