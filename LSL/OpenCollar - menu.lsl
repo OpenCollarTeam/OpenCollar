@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.930                                  //
+//                                 version 3.931                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -19,7 +19,7 @@ list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "ℹ"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
 list g_lMenuPrompts = [
 //WS: let's query for version properly; the static number is supposed to be a reminder not a solution
-"\n\nWelcome to the Main Menu\nOpenCollar Version 3.930",
+"\n\nWelcome to the Main Menu\nOpenCollar Version 3.931",
 "\n\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html\n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",
 "\n\nThis menu grants access to every installed AddOn.\n"
 ];
