@@ -27,7 +27,12 @@
 // ZHAO_GROUNDSITS                     Select a ground sit
 // ZHAO_WALKS                          Select a walk
 //
-
+//
+// ZHAO_SITANYWHERE_ON                 Sit Anywhere mod On 
+// ZHAO_SITANYWHERE_OFF                Sit Anywhere mod Off 
+//
+// ZHAO_TYPE_ON                        Typing AO On 
+// ZHAO_TYPE_OFF                       Typing AO Off 
 
 
 // Added for OCCuffs:
@@ -84,7 +89,7 @@
 // key disabler;//the key of th eobject that turned us off.  will be needed for a workaround later
 
 // Help notecard
-string helpNotecard = "OpenCollar AO Guide"
+string helpNotecard = "OpenCollar AO Guide";
 string license = "OpenCollar AO License";
 
 // How long before flipping stand animations
@@ -112,6 +117,7 @@ integer sitOverride = TRUE;
 integer sitAnywhere = FALSE;
 integer StandAO = TRUE; // store state of standing ao
 integer randomStands = FALSE;
+integer typingOverrideOn = TRUE;            // Whether we're overriding typing or not
 integer wasDetached;
 
 //Left here for backwards compatiblity... to be removed sooner than later
@@ -284,6 +290,14 @@ DoMenu(key id, integer page)
         {
             mainMenu += ["SitAnyON"];
         }
+        if (typingOverrideOn)
+        {
+            mainMenu += ["TypingOFF"];
+        }
+        else
+        {
+            mainMenu += ["TypingON"];
+        }
         if (zhaoOn)
         {
             mainMenu += ["AO OFF"];
@@ -342,6 +356,18 @@ TurnOff()
     //llSetLinkColor(2, offColor, ALL_SIDES);
     llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_AOOFF", "");
     llMessageLinked(LINK_SET, OPTIONS, "ZHAO_AOOFF", "");
+}
+
+ToggleTyping()
+{
+    if (typingOverrideOn == TRUE) 
+    {
+        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_OFF", NULL_KEY);
+    } else 
+    {
+        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_ON", NULL_KEY);
+    }
+    typingOverrideOn = !typingOverrideOn;
 }
 
 ToggleSitAnywhere()
@@ -601,6 +627,11 @@ default {
                     {
                         //toggleSitAnywhere() by Marcus Gray
                         ToggleSitAnywhere();
+                    }
+                    else if ( _message == "TypingON" || _message == "TypingOFF" ) 
+                    {
+                        //toggleTyping() by Marcus Gray
+                        ToggleTyping();
                     }
                     else if ( _message == "Rand/Seq" ) 
                     {
