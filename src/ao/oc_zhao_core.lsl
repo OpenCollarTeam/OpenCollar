@@ -26,6 +26,9 @@
 //
 // ZHAO_SITANYWHERE_ON                 Sit Anywhere mod On //added to OC sub AO hud by melanie Burnstein
 // ZHAO_SITANYWHERE_OFF                Sit Anywhere mod Off //added to OC sub AO hud by melanie Burnstein
+//
+// ZHAO_TYPE_ON                        Typing AO On
+// ZHAO_TYPE_OFF                       Typing AO Off
 
 
 
@@ -101,6 +104,7 @@
 // [ Swimming Forward ]
 // [ Swimming Up ]
 // [ Swimming Down ]
+// [ Typing ]
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +206,8 @@ list tokens = [
     "[ Swimming Down ]",        // 21
     "[ Swimming Up ]",          // 22
     "[ Swimming Forward ]",     // 23
-    "[ Floating ]"              // 24
+    "[ Floating ]",             // 24
+    "[ Typing ]"                // 25
 ];
 
 // The tokens for which we allow multiple animations
@@ -230,6 +235,7 @@ integer swimdownIndex   = 21;
 integer swimupIndex     = 22;
 integer swimmingIndex   = 23;
 integer waterTreadIndex = 24;
+integer typingIndex     = 25;
 
 // list of animations that have a different value when underwater
 list underwaterAnim = [ hoverIndex, flyingIndex, flyingslowIndex, hoverupIndex, hoverdownIndex ];
@@ -258,8 +264,8 @@ float timerEventLength = 0.25;
 // much more aggressively, and needs to be throttled by this script
 float minEventDelay = 0.25;
 
-// The key for the typing animation
-key typingAnim = "c541c47f-e0c0-058b-ad1a-d6ae3a4584d9";
+// The key for the typing animation // No longer needed with typing override.
+// key typingAnim = "c541c47f-e0c0-058b-ad1a-d6ae3a4584d9";
 
 // Inline check for hackGetAnimList to save a few bytes
 
@@ -269,6 +275,9 @@ integer listenChannel = -91234;
 // GLOBALS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+integer typingStatus = FALSE;               // status of avatar typing
+
+integer numTyping;                          // Number of typing anims
 integer numStands;                          // Number of stands - needed for auto cycle
 integer randomStands = FALSE;               // Whether stands cycle randomly
 integer curStandIndex;                      // Current stand - needed for cycling
@@ -276,6 +285,7 @@ string curStandAnim = "";                   // Current Stand animation
 string curSitAnim = "";                     // Current sit animation
 string curWalkAnim = "";                    // Current walk animation
 string curGsitAnim = "";                    // Current ground sit animation
+string curTypingAnim = "";                  // Current typing animation
 
 list overrides = [];                        // List of animations we override
 key notecardLineKey;                        // notecard reading keys
@@ -303,6 +313,7 @@ integer haveWalkingAnim = FALSE;            // Hack to get it so we face the rig
 integer sitOverride = TRUE;                 // Whether we're overriding sit or not
 
 integer standOverride = TRUE;                 // Whether we're overriding stand or not
+integer typingOverrideOn = TRUE;            // Whether we're overriding typing or not
 /// Sit Anywhere mod by Marcus Gray
 /// just one var to overrider stands... let's see how this works out 0o
 integer sitAnywhereOn = FALSE;
@@ -324,6 +335,7 @@ string EMPTY = "";
 string SEPARATOR = "|";
 string TRYAGAIN = "Please correct the notecard and try again.";
 string S_SIT_AW = "Sit anywhere: ";
+string S_TYPING = "Typing override: ";
 string MULTIANIM = "MultiAnimMenu";
 
 
@@ -554,6 +566,22 @@ doNextStand(integer fromUI) {
     }
 
     llResetTime();
+}
+
+// Start or stop typing animation
+typingOverride(integer isTyping) {
+    if(isTyping) {  
+        integer curTypingIndex = 0;
+        if(numTyping > 1) {
+            curTypingIndex = llFloor( llFrand(numTyping) );
+        }
+        curTypingAnim = findMultiAnim( typingIndex, curTypingIndex );
+        startAnimationList(curTypingAnim);
+    }
+    else
+    {  
+        stopAnimationList(curTypingAnim);
+    }
 }
 
 // Displays menu of animation choices
@@ -983,6 +1011,20 @@ default {
             if ( lastAnimState == "Standing" )
                 startNewAnimation( curStandAnim, standingIndex, lastAnimState );
 
+        } else if ( _message == "ZHAO_TYPEAO_ON" ) {
+            // Turning on typing override
+            typingOverrideOn = TRUE;
+            llOwnerSay( S_TYPING + "On" );                    
+            typingStatus = FALSE;
+            
+        } else if ( _message == "ZHAO_TYPEAO_OFF" ) {
+            // Turning off typing override
+            typingOverrideOn = FALSE;
+            llOwnerSay( S_TYPING + "Off" );
+            if ( typingStatus ) {
+                stopAnimationList(curTypingAnim);
+                typingStatus = FALSE;
+            }   
         } else if ( _message == "ZHAO_RANDOMSTANDS" ) {
                 // Cycling to next stand - sequential or random
                 randomStands = TRUE;
@@ -1004,7 +1046,17 @@ default {
             if ( randomStands == TRUE ) {
                 notifymessage += "\n" + "Stand cycling: Random";
             } else {
-                    notifymessage += "\n" + "Stand cycling: Sequential";
+                notifymessage += "\n" + "Stand cycling: Sequential";
+            }
+            if ( sitAnywhereOn == TRUE ) {
+                notifymessage += "\n" + S_SIT_AW + "On";
+            } else {
+                notifymessage += "\n" + S_SIT_AW + "Off";
+            }
+            if ( typingOverrideOn == TRUE ) {
+                notifymessage += "\n" + S_TYPING + "On";
+            } else {
+                notifymessage += "\n" + S_TYPING + "Off";
             }
             notifymessage += "\n" + "Stand cycle time: " + (string)standTime + " seconds";
             Notify(whoid, notifymessage,FALSE);
@@ -1092,6 +1144,9 @@ default {
             curStandIndex = 0;
             numStands = llGetListLength( llParseString2List(llList2String(overrides, standingIndex), 
                                          [SEPARATOR], []) );
+                                         
+            numTyping = llGetListLength( llParseString2List(llList2String(overrides, typingIndex), 
+                                             [SEPARATOR], []) );
 
             curStandAnim = findMultiAnim( standingIndex, 0 );
             curWalkAnim = findMultiAnim( walkingIndex, 0 );
@@ -1229,13 +1284,21 @@ default {
     }
 
     timer() {
+        // Typing AO ported from MB2.
+        if(numTyping > 0 && typingOverrideOn) {            
+            integer typingTemp = llGetAgentInfo(Owner) & AGENT_TYPING; // are we typing?
+            if (typingTemp != typingStatus) { //status changed since last checked?
+                typingOverride(typingTemp);
+                typingStatus = typingTemp;//save the current status.
+            }
+        }
         if ( checkAndOverride() ) {
             // Is it time to switch stand animations?
             // Stand cycling can be turned off
             if ( (standTime != 0) && (llGetTime() > standTime) ) {
-                // Don't interrupt the typing animation with a stand change. Not from
-                // UI, no feedback
-                if ( llListFindList(llGetAnimationList(Owner), [typingAnim]) == -1 )
+                // Don't interrupt the typing animation with a stand change. 
+                // Not from UI, no feedback
+                if ( !typingStatus )
                     doNextStand( FALSE );
             }
         }
