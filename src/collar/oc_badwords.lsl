@@ -361,7 +361,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=", NULL_KEY);
                 ListenControl();
-                DialogBadwords(kID, iNum);
+                //DialogBadwords(kID, iNum); This was duplicated since the dialog is called at the end of the link_message event.
                 Notify(kID, "You cleared the badword list and turned it off.",FALSE);
             }
         }
@@ -455,7 +455,10 @@ default
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     return;
                 }
-                else if(sMessage == "Clear All") UserCommand(iAuth, "badwords clearall", kAv);
+                else if(sMessage == "Clear All")
+                {
+                    UserCommand(iAuth, "badwords clearall", kAv);
+                }
                 else if(sMessage == "ON")
                 {
                     UserCommand(iAuth, "badwords on", kAv);
@@ -472,7 +475,10 @@ default
                 {
                     Notify(kAv, "The penance phrase to release the sub from the punishment anim is:\n" + g_sPenance,FALSE);
                 }
-                else if(sMessage == "Quick Help") { DialogHelp(kAv, iAuth); return; }
+                else if(sMessage == "Quick Help")
+                {
+                    DialogHelp(kAv, iAuth); return; 
+                }
                 DialogBadwords(kAv, iAuth);                    
             }
         }
