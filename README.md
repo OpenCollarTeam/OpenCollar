@@ -1,5 +1,5 @@
-OpenCollarUpdater Dev/Beta/RC
-=============================
+OpenCollarUpdater
+=================
 
 This project contains the code for the OpenCollar Updater.  It uses new
 filenames that are more friendly to offline editing.  Version numbers have been
