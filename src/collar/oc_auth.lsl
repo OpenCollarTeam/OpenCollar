@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.930                                  //
+//                                 version 3.931                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -1086,6 +1086,7 @@ default
                     else if (sMessage == g_sReset)
                     { // separate routine
                         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
+                    return;
                     }
                     AuthMenu(kAv, iAuth);
                 }
