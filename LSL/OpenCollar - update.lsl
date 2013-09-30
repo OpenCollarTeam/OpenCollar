@@ -71,20 +71,20 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/LSL/~version";
+string version_check_url = "https://raw.github.com/opencollar/OpenCollarUpdater/beta/LSL/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
 // "version=blah" parameter because we don't want the server deciding whether
 // we should get an updater or not.  We just want one.
-string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
+string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater%20Dev%2FBeta%2FRC&update=yes";
 key appengine_delivery_request;
 
 // The news system is back!  Only smarter this time.  News will be kept in a
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/news.md";
+string news_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/beta/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
@@ -231,15 +231,29 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
     if (llList2String(cmd_parts, 0) == "menu")
     {
         string submenu = llGetSubString(str, 5, -1);
-        if (submenu == BTN_DO_UPDATE) UserCommand(iNum, "update", id);
+        if (submenu == BTN_DO_UPDATE) 
+        {
+            return UserCommand(iNum, "update", id);
+        }
         else if (submenu == BTN_GET_UPDATE)
         {
             if (id == wearer)
+            {
                 appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
-            else Notify(id,"Only the wearer can request updates for the " + CTYPE + ".",FALSE);
+            }
+            else
+            {
+                Notify(id,"Only the wearer can request updates for the " + CTYPE + ".",FALSE);
+            }
         }
-        else if (submenu == BTN_GET_VERSION) UserCommand(iNum, "version", id);
-        else return TRUE; // drop the command if it is not a menu handled here
+        else if (submenu == BTN_GET_VERSION)
+        {
+            UserCommand(iNum, "version", id);
+        }
+        else
+        {
+            return TRUE; // drop the command if it is not a menu handled here
+        }
         llMessageLinked(LINK_ROOT, iNum, "menu "+PARENT_MENU, id);
     }
     else if (str == "update")
