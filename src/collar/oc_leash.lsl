@@ -703,6 +703,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             if (sVal == "") // no parameters were passed
             {
                 DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_LEASH_MENU);
+                g_iReturnMenu = FALSE;
             }       
             else if((key)sVal)
             {
@@ -720,6 +721,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         {
             if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
             DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_FOLLOW_MENU);
+            g_iReturnMenu = FALSE;
         }
         else if (sComm == "length")
         {
@@ -745,6 +747,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
             else if (sVal == "") // no parameters were passed
             {
                 DisplayTargetMenu(kMessageID, iAuth, SENSORMODE_FIND_TARGET_FOR_POST_MENU);
+                g_iReturnMenu = FALSE;
             }       
             else if((key)sVal)
             {
@@ -914,7 +917,7 @@ default
                     if (CheckCommandAuth(g_kCmdGiver, g_iLastRank))
                         LeashTo(g_kLeashedTo, g_kCmdGiver, g_iLastRank, ["collar", "handle"]);
                 }
-                if (!g_iReturnMenu) return;
+                if (g_iReturnMenu) return;
             }
             else if (kMessageID == g_kFollowTargetDialogID)
             {
@@ -924,12 +927,12 @@ default
                     g_kLeashedTo = (key)sButton;
                     Follow(g_kLeashedTo, g_kCmdGiver, g_iLastRank);
                 }
-                if (!g_iReturnMenu) return;
+                if (g_iReturnMenu) return;
             }
             else if (kMessageID == g_kPostTargetDialogID)
             {
                 if ((key)sButton) UserCommand(iAuth, "post " + sButton, kAV);
-                if (!g_iReturnMenu) return;
+                if (g_iReturnMenu) return; //if (!g_iReturnMenu) return;
             }
             else if (kMessageID == g_kSetLengthDialogID)
             {
