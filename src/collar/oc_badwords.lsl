@@ -275,7 +275,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
             }
             //save to database
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -328,7 +328,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 }
             }
             //save to sDatabase
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, "~"), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -341,7 +341,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     g_sIsEnabled = "badwordson=true";
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
                     ListenControl();
-                    Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, "~"),FALSE);
+                    Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, ","),FALSE);
                 }
                 else
                     Notify(kID, "There are no badwords set. Define at least one badword before turning it on.",FALSE);
@@ -391,8 +391,7 @@ default
     {
         if (iNum == LM_SETTING_RESPONSE)
         {
-
-            list lParams = llParseString2List(sStr, ["="], []);
+            list lParams = llParseString2List(sStr, ["="], []);	
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
@@ -410,7 +409,11 @@ default
                 }
                 else if (sToken == "badwords")
                 {
-                    g_lBadWords = llParseString2List(llToLower(sValue), ["~"], []);
+					//use lines in defaultsettings NC like this:
+					//User_badwords=badwordson~true~badwords~test-badword1,test-badword2,test-badword3~penance~tis 's the testpenance!
+					//did not test badwords with special char  - but:
+					//badwords holding ',' may give problems with dump settings and esp. with/in defaultsettings NC
+                    g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                     ListenControl();
                 }
                 else if (sToken == "penance")
@@ -469,7 +472,7 @@ default
                 }
                 else if(sMessage == "List Words")
                 {
-                    Notify(kAv, "Badwords are: " + llDumpList2String(g_lBadWords, " or "),FALSE);
+                    Notify(kAv, "Badwords are: " + llDumpList2String(g_lBadWords, ", "),FALSE);
                 }
                 else if(sMessage == "Say Penance")
                 {
