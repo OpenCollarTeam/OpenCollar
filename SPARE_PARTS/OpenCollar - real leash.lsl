@@ -16,6 +16,48 @@
 // Date: 03-Dec-2011
 // Last edited by: Satomi Ahn
 
+//modified by: Zopf Resident - Ray Zopf (Raz)
+//Additions: only cosmetic
+//03. Okt 2013 v0.2
+//
+//Files:
+//OpenCollar - real leash.lsl
+//
+//Prequisites: OC, RLV enabled
+//Notecard format:
+//basic help:
+
+//bug: does not get message that leash is enabled
+
+//todo: remove references to httpdb
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//===============================================
+//FIRESTORM SPECIFIC DEBUG STUFF
+//===============================================
+
+//#define FSDEBUG
+//#include "fs_debug.lsl"
+
+
+//===============================================
+//GLOBAL VARIABLES
+//===============================================
+
+//debug variables
+//-----------------------------------------------
+
+integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
+
+//user changeable variables
+//-----------------------------------------------
+
+//internal variables
+//-----------------------------------------------
+
+//ADDON SETUP
 string VERSION="V0.2";
 string HELP_NOTECARD="OpenCollar - Real Leash - User's Guide";
 
@@ -23,7 +65,6 @@ string g_sSubmenu = "Real Leash"; // Name of the submenu
 string g_sParentmenu = "AddOns"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string g_sChatCommand = "realleash"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 key g_kMenuID;  // menu handler
-integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 
 key g_kWearer; // key of the current wearer to reset only on owner changes
 
@@ -60,7 +101,8 @@ key g_kOwner=NULL_KEY;          // for teleport exception
 // for leashto command and target picked by menu
 string TOK_DEST = "leashedto"; // format: uuid,rank
 
-//OpenCollar MESSAGE MAP
+
+//OC MESSAGE MAP
 // messages for authenticating users
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -126,7 +168,14 @@ integer RLV_OFF = 6100; // sent to inform plugins that RLV is disabled now, no s
 
 
 // menu option to go one step back in menustructure
+//string UPMENU = "⏏";//when your menu hears this, give the parent menu
 string UPMENU = "^";//when your menu hears this, give the parent menu
+
+
+//===============================================
+//PREDEFINED FUNCTIONS
+//===============================================
+
 
 //===============================================================================
 //= parameters   :    string    sMsg    message string received
@@ -141,7 +190,8 @@ string UPMENU = "^";//when your menu hears this, give the parent menu
 Debug(string sMsg)
 {
     if (!g_iDebugMode) return;
-    llOwnerSay(llGetScriptName() + ": " + sMsg);
+	//replacement from badwords-addon
+    //Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
 }
 
 //===============================================================================
@@ -364,6 +414,9 @@ string GetDBPrefix()
     return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
 }
 
+//most important function
+//-----------------------------------------------
+
 DoRLV(string commands)
 {
     Debug("RLV: " + commands);
@@ -410,6 +463,7 @@ SetLeashHolder(key k)
 
     g_kLeashHolder = k;
 }
+
 
 ApplyRestrictions(integer yes)
 {
@@ -528,6 +582,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
+
+//===============================================
+//===============================================
+//MAIN
+//===============================================
+//===============================================
+
 default
 {
     state_entry()
@@ -576,8 +637,9 @@ default
         }
     }
 
+//listen for linked messages from OC scripts
+//-----------------------------------------------
 
-    // listen for linked messages from OC scripts
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentmenu)
