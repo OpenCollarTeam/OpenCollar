@@ -17,8 +17,8 @@
 // Last edited by: Satomi Ahn
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
-//Additions: only cosmetic
-//03. Okt 2013 v0.2
+//Additions: only cosmetic, changed all save settings to former HTTPDB, reflect changes in rlvmain_on (beta, test!) and leash_leashto
+//06. Okt 2013 v0.3
 //
 //Files:
 //OpenCollar - real leash.lsl
@@ -30,6 +30,11 @@
 //bug: does not get message that leash is enabled
 
 //todo: remove references to httpdb
+//todo: don't leave OC menu after enabling addon
+//todo: check ApplyRestrictions() (yes, rlvcommand=n)
+//todo: RLV support is OFF, so Real Leash will not work properly. ?!!!!; rlvmain=on~1;   else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
+//todo: is that correct? OpenCollar - real leash - 0.2: LOCALSETTING/HTTPDB_SAVE: oc_realleash=1|fartouch,sittp,tplm,tplure,tploc
+//todo: check RLV: tplure:00000000-0000-0000-0000-000000000000=rem
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -49,7 +54,7 @@
 //debug variables
 //-----------------------------------------------
 
-integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
+integer g_iDebugMode=TRUE; // set to TRUE to enable Debug messages
 
 //user changeable variables
 //-----------------------------------------------
@@ -58,7 +63,7 @@ integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 //-----------------------------------------------
 
 //ADDON SETUP
-string VERSION="V0.2";
+string VERSION="V0.3";
 string HELP_NOTECARD="OpenCollar - Real Leash - User's Guide";
 
 string g_sSubmenu = "Real Leash"; // Name of the submenu
@@ -99,7 +104,7 @@ key g_kLeashHolder=NULL_KEY;    // for teleport exception
 key g_kOwner=NULL_KEY;          // for teleport exception
 
 // for leashto command and target picked by menu
-string TOK_DEST = "leashedto"; // format: uuid,rank
+string TOK_DEST = "leash_leashedto"; // format: uuid,rank
 
 
 //OC MESSAGE MAP
@@ -123,20 +128,34 @@ integer COMMAND_PARTICLE     = 20000;
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bit of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
 
-// messages for storing and retrieving values from http db
-integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer HTTPDB_DELETE = 2003;//delete token from DB
-//integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//// messages for storing and retrieving values from http db
+//integer HTTPDB_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+////str must be in form of "token=value"
+//integer HTTPDB_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer HTTPDB_RESPONSE = 2002;//the httpdb script will send responses on this channel
+//integer HTTPDB_DELETE = 2003;//delete token from DB
+////integer HTTPDB_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-// same as HTTPDB_*, but for storing settings locally in the settings script
-integer LOCALSETTING_SAVE = 2500;
-integer LOCALSETTING_REQUEST = 2501;
-integer LOCALSETTING_RESPONSE = 2502;
-integer LOCALSETTING_DELETE = 2503;
-//integer LOCALSETTING_EMPTY = 2504;
+//debug !!!!! (does this still work?)
+//// same as HTTPDB_*, but for storing settings locally in the settings script
+//integer LOCALSETTING_SAVE = 2500;
+//integer LOCALSETTING_REQUEST = 2501;
+//integer LOCALSETTING_RESPONSE = 2502;
+//integer LOCALSETTING_DELETE = 2503;
+////integer LOCALSETTING_EMPTY = 2504;
+
+
+//replacement???????
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
+//str must be in form of "token=value"
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from store
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
+integer LM_SETTING_REQUEST_NOCACHE = 2005;
+
+
+
 
 
 // messages for creating OC menu structure
@@ -168,8 +187,8 @@ integer RLV_OFF = 6100; // sent to inform plugins that RLV is disabled now, no s
 
 
 // menu option to go one step back in menustructure
-//string UPMENU = "⏏";//when your menu hears this, give the parent menu
-string UPMENU = "^";//when your menu hears this, give the parent menu
+string UPMENU = "⏏";//when your menu hears this, give the parent menu
+//string UPMENU = "^";//old; when your menu hears this, give the parent menu
 
 
 //===============================================
@@ -186,13 +205,13 @@ string UPMENU = "^";//when your menu hears this, give the parent menu
 //=
 //===============================================================================
 
-
 Debug(string sMsg)
 {
     if (!g_iDebugMode) return;
 	//replacement from badwords-addon
-    //Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
+    Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
 }
+
 
 //===============================================================================
 //= parameters   :    key       kID                key of the avatar that receives the message
@@ -221,6 +240,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
+
 //===============================================================================
 //= parameters   :    none
 //=
@@ -229,7 +249,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 //= description  :    random key generator, not complety unique, but enough for use in dialogs
 //=
 //===============================================================================
-
 
 key ShortKey()
 {//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
@@ -246,6 +265,7 @@ key ShortKey()
     return (key)(sOut + "-0000-0000-0000-000000000000");
 }
 
+
 //===============================================================================
 //= parameters   :    key   kRCPT  recipient of the dialog
 //=                   string  sPrompt    dialog prompt
@@ -259,13 +279,13 @@ key ShortKey()
 //=
 //===============================================================================
 
-
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = ShortKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`")+"|"+(string) iAuth, kID);
     return kID;
 }
+
 
 //===============================================================================
 //= parameters   :    string    sMsg    message string received
@@ -280,6 +300,7 @@ integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.
 {
     return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
 }
+
 
 //===============================================================================
 //= parameters   :    string    keyID   key of person requesting the menu
@@ -338,6 +359,7 @@ DoMenu(key kAv, integer iAuth)
     // and dispay the menu
     g_kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
+
 
 ForbidAll()
 {
@@ -400,6 +422,7 @@ CheckMenuButton(string sMessage, key kAv, integer iAuth)
     Debug(llDumpList2String(g_lRestrictions, ","));
 }
 
+
 //===============================================================================
 //= parameters   :    none
 //=
@@ -414,6 +437,7 @@ string GetDBPrefix()
     return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
 }
 
+
 //most important function
 //-----------------------------------------------
 
@@ -422,6 +446,7 @@ DoRLV(string commands)
     Debug("RLV: " + commands);
     llMessageLinked(LINK_SET, RLV_CMD, commands, NULL_KEY);
 }
+
 
 SetOwner(key k)
 {
@@ -441,7 +466,6 @@ SetOwner(key k)
 
     g_kOwner = k;
 }
-
 
 SetLeashHolder(key k)
 {
@@ -464,7 +488,6 @@ SetLeashHolder(key k)
     g_kLeashHolder = k;
 }
 
-
 ApplyRestrictions(integer yes)
 {
     // don't spam the user if RLV is not used or Real Leash is off
@@ -474,11 +497,12 @@ ApplyRestrictions(integer yes)
     // do nothing if we have an empty restriction list
     if (g_lRestrictions == [])
         return;
-
+Debug("apply RLV?: "+ (string)yes);
     string commands;
-    if(yes)
+    if(yes) {
+Debug("RLV-commands =n");
         commands = llDumpList2String(g_lRestrictions,"=n,") + "=n";
-    else
+    }else
     {
         commands = llDumpList2String(g_lRestrictions,"=y,") + "=y";
         SetLeashHolder(NULL_KEY);
@@ -502,7 +526,7 @@ SetRLV(integer yes)
 // save settings for the Real Leash on HTTP
 SaveRealLeashSettings()
 {
-    llMessageLinked(LINK_THIS, HTTPDB_SAVE, g_sRealLeashSaveToken+"="+(string) g_iRealLeashOn + "|" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sRealLeashSaveToken+"="+(string) g_iRealLeashOn + "|" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
 }
 
 // restore settings for the Real Leash from HTTP
@@ -553,11 +577,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (sValue == "on")
         {
             g_iRealLeashOn=TRUE;
+//debug!!!!
             if(g_iLeashed)
             {
                 ApplyRestrictions(TRUE);
                 // re-query leash holder
-                llMessageLinked(LINK_SET, LOCALSETTING_REQUEST, "leashedto", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
             }
             Notify(kID,"Real Leash enabled.",FALSE);
         }
@@ -617,11 +642,12 @@ default
         // send request to main menu and ask other menus if they want to register with us
         llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubmenu, NULL_KEY);
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, g_sRealLeashSaveToken, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sRealLeashSaveToken, NULL_KEY);
         // NOTE: shouldn't we ask for the DB-Prefixed value?
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, "rlvon", NULL_KEY);
-        llMessageLinked(LINK_SET, HTTPDB_REQUEST, "owner", NULL_KEY);
-        llMessageLinked(LINK_SET, LOCALSETTING_REQUEST, "leashedto", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvmain_on", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "owner", NULL_KEY);
+//debug !!!!
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
     }
 
     // reset the script if wearer changes. By only reseting on owner change we can keep most of our
@@ -642,10 +668,11 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
+	Debug("link_message string: " + (string)sStr);
+
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentmenu)
             // our parent menu requested to receive buttons, so send ours
         {
-
             llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE)
@@ -743,7 +770,8 @@ default
             }
         }
         // local setting changed
-        else if (iNum == LOCALSETTING_RESPONSE || iNum == HTTPDB_RESPONSE)
+//debug !!!
+        else if (iNum == LM_SETTING_RESPONSE)
         {
             // parse the answer
             list lParams = llParseString2List(sStr, ["="], []);
@@ -752,7 +780,7 @@ default
 
             Debug("Local Setting or HTTPDB received: "+sToken+": "+sValue);
 
-            if (sToken == "leashedto")
+            if (sToken == "leash_leashedto")
             {
                 g_iLeashed = TRUE;
                 ApplyRestrictions(TRUE);
@@ -765,7 +793,7 @@ default
                 RestoreRealLeashSettings(sValue);
             }
             // or check for specific values from the collar like "owner" (for owners) "secowners" (or secondary owners) etc
-            else if (sToken == "rlvon")
+            else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
             {
                 // remember if RLV was enabled or disabled
                 SetRLV((integer) sValue);
@@ -776,12 +804,17 @@ default
                 SetOwner(llGetSubString(sValue,0,35));
             }
         }
+		
+		
         // A leash target picked by menu won't trigger a message,
         // so we have this workaround further here. But really,
         // it should trigger the message, so this needs to be
         // fixed in the leash script. We can simplify this code
         // when that's done.
-        else if (iNum == LOCALSETTING_SAVE || iNum == HTTPDB_SAVE)
+		
+//main leash detection code?
+
+        else if (iNum == LM_SETTING_SAVE)
         {
             Debug("LOCALSETTING/HTTPDB_SAVE: "+sStr);
             // format: leashedto=uuid,rank
@@ -799,12 +832,14 @@ default
                 Debug("leashto target found");
                 // leash was tied to a person
                 g_iLeashed=TRUE;
+				
+//debug here !!!
                 ApplyRestrictions(TRUE);
                 // check if we are leashed to a person
                 SetLeashHolder(k);
             }
         }
-        else if (iNum == LOCALSETTING_DELETE || iNum == HTTPDB_DELETE)
+        else if (iNum == LM_SETTING_DELETE)
         {
             Debug("HTTPDB_DELETE: "+sStr);
             // format: command=uuid,param
