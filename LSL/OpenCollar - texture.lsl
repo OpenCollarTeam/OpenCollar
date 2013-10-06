@@ -114,7 +114,7 @@ string GetLongName(string ele, string sTex) // find the full texture name given 
         test = llList2String(work, l);
         if (~llSubStringIndex(test, sTex))
         {
-            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, llToLower(ele) + SEPARATOR)) return test;
+            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, ele + SEPARATOR)) return test; //KW rem llToLower
         }
     }
     return ""; // this should only happen if chat command is used with invalid texture
@@ -139,7 +139,7 @@ list BuildTextureNames(integer short) // set short TRUE to lop off all prefixes 
 
 integer GetElementHasTexs(string ele) // check if textures exist with labels for the specified element
 {
-    ele = llToLower(ele) + SEPARATOR;
+    ele = ele + SEPARATOR;//KW rem llToLower
     integer l = 0;
     for (; l < llGetInventoryNumber(INVENTORY_TEXTURE); l++)
     {
@@ -153,7 +153,7 @@ list BuildTexButtons()
     list tex = BuildTextureNames(FALSE);
     list out = [];
     if (~llListFindList(g_lTextureDefaults, [s_CurrentElement])) out = ["Default"];
-    string ele = llToLower(s_CurrentElement) + SEPARATOR;
+    string ele = s_CurrentElement + SEPARATOR;//KW rem llToLower
     string but;
     integer l = 0;
     for (; l < llGetListLength(tex); l++)
