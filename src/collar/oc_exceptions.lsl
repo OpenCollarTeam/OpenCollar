@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,8 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+//3.934 notes. I've overhauled the menu appearance as it wasn't really that easy to understand, following the RLV terminology which is a bit of a headache for scripters, let alone users. Descriptions are clearer and now represent the current state, and we use unicode ☐ and ☒ to indicate selected/deselected state on the buttons, common with unicode enhancements to other menus. ALL buttons indicators swapped to make clearer the effect of pressing them, and the person to whom the exceptions will be added/removed is now named at the top of the menu. Finally, I've cleared up remenuing a little. When someone who is not an owner/secowner is set to default and removed from the list, we now return the personlist, and when a new person is added, we remenu. -Medea
 
 key g_kLMID;//store the request id here when we look up a LM
 string CTYPE = "collar";
@@ -29,8 +31,8 @@ string g_sParentMenu = "RLV";
 string g_sSubMenu = "Exceptions";
 
 //statics to compare
-integer OWNER_DEFUALT = 63;//1+2+4+8+16+32;//all on
-integer SECOWNER_DEFUALT = 0;//all off
+integer OWNER_DEFAULT = 63;//1+2+4+8+16+32;//all on
+integer SECOWNER_DEFAULT = 0;//all off
 
 
 integer g_iOwnerDefault = 63;//1+2+4+8+16+32;//all on
@@ -43,12 +45,12 @@ list g_lNames;
 
 
 list g_lRLVcmds = [
-    "sendim",
-    "recvim",
-    "recvchat",
-    "recvemote",
-    "tplure",
-    "accepttp"
+    "sendim",  //1
+    "recvim",  //2
+    "recvchat", //4
+    "recvemote", //8
+    "tplure",   //16
+    "accepttp"   //32
         ];
         
 list g_lBinCmds = [ //binary values for each item in g_lRLVcmds
@@ -69,17 +71,25 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
     "refuseTP"
         ];
 
-list g_lDescriptions = [ //showing descriptions for commands
-    "Restriction on Send IM",
-    "Restriction on Receive IM",
-    "Restriction on Receive Chat",
-    "Restriction on Receive Emote",
-    "Restriction on Teleport by Friend",
-    "Sub able to refuse a tp offer"
+list g_lDescriptionsOn = [ //showing descriptions for commands when exempted
+    "Can send them IMs even when blocked",
+    "Can receive their IMs even when blocked",
+    "Can see their Chat even when blocked",
+    "Can see their Emotes even when blocked",
+    "Can receive their Teleport offers even when blocked",
+    "Sub cannot refuse a tp offer from them"  //counter-intuitive, but other exceptions stop restrictions from working for subject, while this one adds its own restriction.
         ];
+list g_lDescriptionsOff =[ //descriptions of commands when not exempted.
+    "Sending IMs to them can be blocked",
+    "Receiving IMs from them can be blocked",
+    "Seeing chat from them can be blocked",
+    "Seeing emotes from them can be blocked",
+    "Teleport offers from them can be blocked",
+    "Sub can refuse their tp offers"
+        ];      
 
-string TURNON = "Exempt";
-string TURNOFF = "Enforce";
+string TURNON = "☐";
+string TURNOFF = "☒";
 string DESTINATIONS = "Destinations";
 
 integer g_iRLVOn=FALSE;
@@ -176,7 +186,7 @@ Menu(key kID, string sWho, integer iAuth)
     }
     
     list lButtons = ["Owner", "Secowner", "Other"];
-    string sPrompt = "\n\nSet exceptions for the restrictions for RLV commands. Exceptions can be changed for owners, secowners and specific ones for other people. Use \"Other\" to set the specific restrictions for them later.";
+    string sPrompt = "\n\nSet exemptions to the restrictions for RLV commands. Exemptions can be changed for owners, secowners and specific ones for other people. Use \"Other\" to set the specific exemptions for them later.";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -205,12 +215,12 @@ PersonMenu(key kID, list lPeople, string sType, integer iAuth)
     g_lPersonMenu = lPeople;
     g_kPersonMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
-
+  
 ExMenu(key kID, string sWho, integer iAuth)
 {
     Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn)
-    {
+    { 
         Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
@@ -229,7 +239,11 @@ ExMenu(key kID, string sWho, integer iAuth)
     {
         iExSettings = llList2Integer(g_lSettings, iInd + 1);
     }
-    string sPrompt = "\nCurrent Settings: ";
+    string sName;
+    integer _i=llListFindList(g_lNames,[sWho]);
+    if(~_i) sName=llList2String(g_lNames,_i+1);
+    else sName=sWho;
+    string sPrompt = "\nCurrent Settings for "+sName+": ";
     if (sWho != "owner" && sWho != "secowner") sPrompt = "[Defaults] will remove this person from the \"Others\" list." + sPrompt;
     list lButtons;
     integer n;
@@ -239,16 +253,15 @@ ExMenu(key kID, string sWho, integer iAuth)
         //see if there's a setting for this in the settings list
         string sCmd = llList2String(g_lRLVcmds, n);
         string sPretty = llList2String(g_lPrettyCmds, n);
-        string sDesc = llList2String(g_lDescriptions, n);
         if (iExSettings & llList2Integer(g_lBinCmds, n))
         {
             lButtons += [TURNOFF + " " + sPretty];
-            sPrompt += "\n" + sPretty + " = Exempted (" + sDesc + ")";
+            sPrompt += "\n" + llList2String(g_lDescriptionsOn,n)+".";
         }
         else
         {
             lButtons += [TURNON + " " + sPretty];
-            sPrompt += "\n" + sPretty + " = Enforced (" + sDesc + ")";
+            sPrompt += "\n" + llList2String(g_lDescriptionsOff,n)+".";
         }
     }
     //give an Allow All button
@@ -279,7 +292,7 @@ SaveDefaults()
 {
     // these are lists of rlv exceptions, not to be confused with auth_owner listings
     //save to DB
-    if (OWNER_DEFUALT == g_iOwnerDefault && SECOWNER_DEFUALT == g_iSecOwnerDefault)
+    if (OWNER_DEFAULT == g_iOwnerDefault && SECOWNER_DEFAULT == g_iSecOwnerDefault)
     {
         Debug("Defaults");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "owner", NULL_KEY);
@@ -400,6 +413,7 @@ SetOwnersExs(string sVal)
         {
             sCmd = [];
             string sTmpOwner = llList2String(g_lOwners, n);
+                
             if (llListFindList(g_lSettings, [sTmpOwner]) != -1)
             {
                 for (i = 0; i<iStop; i++)
@@ -633,7 +647,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             iBin = llList2Integer(g_lBinCmds, iRLV);
             if (sWho == "owner")
             {
-                if (sCom == "defaults") g_iOwnerDefault = OWNER_DEFUALT;
+                if (sCom == "defaults") g_iOwnerDefault = OWNER_DEFAULT;
                 else if (sVal == "n") g_iOwnerDefault = g_iOwnerDefault | iBin;
                 else if (sVal == "y") g_iOwnerDefault = g_iOwnerDefault & ~iBin;
                 bChange = bChange | 1;
@@ -641,7 +655,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             else if (sWho == "secowner")
             {
-                if (sCom == "defaults") g_iSecOwnerDefault = SECOWNER_DEFUALT;
+                if (sCom == "defaults") g_iSecOwnerDefault = SECOWNER_DEFAULT;
                 else if (sVal == "n") g_iSecOwnerDefault = g_iSecOwnerDefault | iBin;
                 else if (sVal == "y") g_iSecOwnerDefault = g_iSecOwnerDefault & ~iBin;
                 bChange = bChange | 1;
@@ -839,8 +853,8 @@ default
                         //handle the "Allow All" and "Forbid All" commands
                         sOut += "all";
                         //decide whether we need to switch to "y" or "n"
-                        if (sSwitch == TURNOFF) sOut += "=y"; // exempt
-                        else if (sSwitch == TURNON) sOut += "=n"; // enforce
+                        if (sSwitch == TURNON) sOut += "=y"; // counter-intuitive, but we're using the off/on symbol to display current state on other buttons, so for ALL it makes sense to sync visually. Clicking the ALL button with a given symbol will now set all other buttons to match that symbol.
+                        else if (sSwitch == TURNOFF) sOut += "=n"; 
                         UserCommand(iAuth, sOut, kAv);
                         ExMenu(kAv, sMenu, iAuth);
                     }
@@ -857,7 +871,8 @@ default
                     else if (sMessage == "Defaults")
                     {
                         UserCommand(iAuth, sOut + "defaults", kAv);
-                        ExMenu(kAv, sMenu, iAuth);
+                        if(~llListFindList(g_lNames,[sMenu])) PersonMenu(kAv, g_lNames, "", iAuth); // person removed, let's go back to the person menu.
+                        else ExMenu(kAv, sMenu, iAuth);
                     }
                     else if (sMessage == "List")
                     {
@@ -915,7 +930,11 @@ default
             llSetTimerEvent(0);
             g_lNames = llListReplaceList(g_lNames, [sData], iIndex, iIndex);
             if (g_sUserCommand != "") UserCommand(g_iAuth, g_sUserCommand, g_kTmpKey);
-            if (g_kTmpKey != NULL_KEY) Notify(g_kTmpKey, "Successfully added " + sData + " to exemptions user list.", FALSE);
+            if (g_kTmpKey != NULL_KEY)
+            {
+                Notify(g_kTmpKey, "Successfully added " + sData + " to exemptions user list.", FALSE);
+                PersonMenu(g_kTmpKey, g_lNames, "", g_iAuth); //let's give them a menu now, they probably want to use it.
+            }
             g_iAuth = 0;
             g_kTmpKey = g_kTestKey = NULL_KEY;
             g_sTmpName = g_sUserCommand = "";
