@@ -1,3 +1,7 @@
+//OC AO version number 3.902 or something
+// Anyway. This version has Wendy's request to offer a menu when the
+// ao is reset/has a new owner, asking the user to pick the correct notecard. MD 
+
 // ZHAO-II-core - Ziggy Puff, 07/07
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +151,7 @@
 // CONSTANTS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Default notecard we read on script_entry
-string defaultNoteCard = "Default";
+string defaultNoteCard = "Girl";
 
 // List of all the animation states
 list animState = [ "Sitting on Ground", "Sitting", "Striding", "Crouching", "CrouchWalking",
@@ -352,6 +356,10 @@ key whoid;
 //Did we just rez?
 integer g_iJustRezed;
 
+
+key g_kSetDefault; //menu id for setting  default notecard.
+string helpNotecard = "OpenCollar AO Guide"; //we need these two here now as well for the above.
+string license = "OpenCollar AO License";
 // CODE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -775,6 +783,21 @@ Notify(key id, string msg, integer alsoNotifyWearer) {
     }    
 }
 
+
+askDefault() //added to provide a menu to ask for default notecard and 
+{
+    list animSets;
+    integer n = llGetInventoryNumber( INVENTORY_NOTECARD );
+    integer i;
+    for ( i = 0; i < n; i++ ) 
+    {
+        string notecardName = llGetInventoryName( INVENTORY_NOTECARD, i );
+        if ( notecardName != helpNotecard && notecardName != license)
+        animSets += [ notecardName ];
+    }
+    g_kSetDefault = Dialog(Owner, "New or reset AO. Please pick your default animation set.", animSets, [], 0);
+
+}
 // STATE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -803,10 +826,7 @@ default {
         }
         randomStands = FALSE;
         initialize();
-        notecardName = defaultNoteCard;
-        loadInProgress = TRUE;
-        whoid=Owner;
-        loadNoteCard();
+        askDefault();
 
         // turn off the auto-stop anim hack
         if ( autoStopTime == 0 )
@@ -838,6 +858,7 @@ default {
     link_message( integer _sender, integer _num, string _message, key _id) {
         if(_num == DIALOG_RESPONSE)
         {
+            
             integer menuindex = llListFindList(menuids, [_id]);
             if (menuindex != -1)
             {
@@ -891,229 +912,254 @@ default {
                 }
                 
             }
+            else if(_id==g_kSetDefault)
+            {
+                list menuparams = llParseString2List(_message, ["|"], []);
+                _message = llList2String(menuparams, 1);
+                if(llGetInventoryType(_message)==INVENTORY_NOTECARD)
+                {
+                    _id=Owner;
+                    defaultNoteCard=_message;
+                    _message="ZHAO_LOAD|"+_message;
+                    
+                }
+                else return; //shouldn't ever get here.
+            }
         }
         else if(_num == DIALOG_TIMEOUT)
         {
+            if(_id==g_kSetDefault)
+            {
+                    _message="ZHAO_LOAD|"+defaultNoteCard;
+                    _id=Owner;
+                    llOwnerSay("Menu timed out whilst asking for your default notecard. Setting it to "+defaultNoteCard+" for now. Select load from the AO menu to change.");
+            }
+                
             integer menuindex = llListFindList(menuids, [_id]);
-            
             // if it's greater than 0, we know it's for us (this script)
             if (menuindex != -1)
             {
                 llInstantMessage(llGetOwner(),"SubAO Menu has timed out. Pressing a menu entry will not do anything.");
             }
+           
         }
-
-    if ( llGetSubString(_message, 0, 4) == "ZHAO_" )
-        // now process zhao messages
-    {
-    
-
-        // thius line cause the IM error, as it was called when ANY LinkedMessage was received,, i hope it is fixed when we oly react on "ZHAO" messages
-        if (_id) whoid = _id;
         
-        // Coming from an interface script
-        if ( _message == "ZHAO_RESET" ) {
-            Notify(whoid, "Resetting...", FALSE );
-            // -- Prevent getting stuck by resetting mid-animation
-            llSetTimerEvent( 0 );
-            animOverrideOn = FALSE;
-            startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
-            lastAnim = EMPTY;
-            lastAnimSet = EMPTY;
-            lastAnimIndex = noAnimIndex;
-            lastAnimState = EMPTY;
-            // -- End change
-            llSleep(1);
-            llResetScript();
+        if ( llGetSubString(_message, 0, 4) == "ZHAO_" )
+        // now process zhao messages
+        {
+               
 
-        } else if ( _message == "ZHAO_AOON" && _num == 42) {
-                // AO On
-                llSetTimerEvent( timerEventLength );
-            animOverrideOn = TRUE;
-            checkAndOverride();
-
-        } else if ( _message == "ZHAO_AOOFF" && _num == 42 ) {
+             // thius line cause the IM error, as it was called when ANY LinkedMessage was received,, i hope it is fixed when we oly react on "ZHAO" messages
+            if (_id) whoid = _id;
+        
+            // Coming from an interface script
+            if ( _message == "ZHAO_RESET" ) {
+                Notify(whoid, "Resetting...", FALSE );
+                // -- Prevent getting stuck by resetting mid-animation
                 llSetTimerEvent( 0 );
-            animOverrideOn = FALSE;
-            startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
-            lastAnim = EMPTY;
-            lastAnimSet = EMPTY;
-            lastAnimIndex = noAnimIndex;
-            lastAnimState = EMPTY;
-
-            // Added for OCCuffs: Pause mode to wake AO from sleep
-        } else if ( _message == "ZHAO_UNPAUSE" ) {
-                animOverridePause=FALSE;
-            if (animOverrideOn)
-            {
-                llSetTimerEvent( timerEventLength );
-                checkAndOverride();
-            }
-            animOverridePause=FALSE;
-
-        } else if ( _message == "ZHAO_PAUSE" ) {
-                // Added for OCCuffs: Pause mode to wake AO from sleep
-                animOverridePause=TRUE;
-            if (animOverrideOn)
-            {
-                llSetTimerEvent( 0 );
+                animOverrideOn = FALSE;
                 startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
                 lastAnim = EMPTY;
                 lastAnimSet = EMPTY;
                 lastAnimIndex = noAnimIndex;
                 lastAnimState = EMPTY;
-            }
-            // end of OCCuffs
-
-        } else if ( _message == "ZHAO_STANDON" ) {
-                // Turning on sit override
-                standOverride = TRUE;
-            if ( lastAnimState == "Standing" )
-                startNewAnimation( curStandAnim, sittingIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_STANDOFF" ) {
-                // Turning off sit override
-                standOverride = FALSE;
-            if (sitAnywhereOn)
-            {
-                sitAnywhereOn = FALSE;
-            }
-            if ( lastAnimState == "Standing" )
+                // -- End change
+                llSleep(1);
+                llResetScript();
+    
+            } else if ( _message == "ZHAO_AOON" && _num == 42) {
+                    // AO On
+                    llSetTimerEvent( timerEventLength );
+                animOverrideOn = TRUE;
+                checkAndOverride();
+    
+            } else if ( _message == "ZHAO_AOOFF" && _num == 42 ) {
+                    llSetTimerEvent( 0 );
+                animOverrideOn = FALSE;
                 startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_SITON" ) {
-                // Turning on sit override
-                sitOverride = TRUE;
-            Notify(whoid, "Sit override: On", FALSE );
-            if ( lastAnimState == "Sitting" )
-                startNewAnimation( curSitAnim, sittingIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_SITOFF" ) {
-                // Turning off sit override
-                sitOverride = FALSE;
-            Notify(whoid, "Sit override: Off", FALSE );
-            if ( lastAnimState == "Sitting" )
-                startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_SITANYWHERE_ON" ) {
-                // Turning on sit anywhre mod
-                sitAnywhereOn = TRUE;
-            standOverride = FALSE;
-            //llOwnerSay( S_SIT_AW + "On" );
-            if ( lastAnimState == "Standing" )
-                startNewAnimation( curGsitAnim, sitgroundIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_SITANYWHERE_OFF" ) {
-                // Turning off sit anywhere mod
-                sitAnywhereOn = FALSE;
-            standOverride = TRUE;
-            //llOwnerSay( S_SIT_AW + "Off" );
-            if ( lastAnimState == "Standing" )
-                startNewAnimation( curStandAnim, standingIndex, lastAnimState );
-
-        } else if ( _message == "ZHAO_TYPEAO_ON" ) {
-            // Turning on typing override
-            typingOverrideOn = TRUE;
-            llOwnerSay( S_TYPING + "On" );                    
-            typingStatus = FALSE;
-            
-        } else if ( _message == "ZHAO_TYPEAO_OFF" ) {
-            // Turning off typing override
-            typingOverrideOn = FALSE;
-            llOwnerSay( S_TYPING + "Off" );
-            if ( typingStatus ) {
-                stopAnimationList(curTypingAnim);
-                typingStatus = FALSE;
-            }   
-        } else if ( _message == "ZHAO_RANDOMSTANDS" ) {
-                // Cycling to next stand - sequential or random
-                randomStands = TRUE;
-            Notify(whoid, "Stand cycling: Random", FALSE );
-
-        } else if ( _message == "ZHAO_SEQUENTIALSTANDS" ) {
-                // Cycling to next stand - sequential or random
-                randomStands = FALSE;
-            Notify(whoid, "Stand cycling: Sequential", FALSE );
-
-        } else if ( _message == "ZHAO_SETTINGS" ) {
-                // Print settings
-                string notifymessage;
-            if ( sitOverride == TRUE ) {
-                notifymessage += "Sit override: On";
-            } else {
-                    notifymessage += "Sit override: Off";
-            }
-            if ( randomStands == TRUE ) {
-                notifymessage += "\n" + "Stand cycling: Random";
-            } else {
-                notifymessage += "\n" + "Stand cycling: Sequential";
-            }
-            if ( sitAnywhereOn == TRUE ) {
-                notifymessage += "\n" + S_SIT_AW + "On";
-            } else {
-                notifymessage += "\n" + S_SIT_AW + "Off";
-            }
-            if ( typingOverrideOn == TRUE ) {
-                notifymessage += "\n" + S_TYPING + "On";
-            } else {
-                notifymessage += "\n" + S_TYPING + "Off";
-            }
-            notifymessage += "\n" + "Stand cycle time: " + (string)standTime + " seconds";
-            Notify(whoid, notifymessage,FALSE);
-
-        } else if ( _message == "ZHAO_NEXTSTAND" ) {
-                // Cycling to next stand - sequential or random. This is from UI, so we
-                // want feedback
-                whoid=_id;
-            doNextStand( TRUE );
-            // -- Quick hack for Remenu
-            llMessageLinked(LINK_THIS, 500, "ZHAO_MENU", whoid);
-
-        } else if ( llGetSubString(_message, 0, 14) == "ZHAO_STANDTIME|" ) {
-            // Stand time change
-            standTime = (integer)llGetSubString(_message, 15, -1);
-            Notify(whoid, "Stand cycle time: " + (string)standTime + " seconds", FALSE );
-            // -- Quick hack for Remenu
-            llMessageLinked(LINK_THIS, 500, "ZHAO_MENU", whoid);
-
-        } else if ( llGetSubString(_message, 0, 9) == "ZHAO_LOAD|" ) {
-                // Can't load while we're in the middle of a load
-                if ( loadInProgress == TRUE ) {
-                    Notify(whoid, "Cannot load new notecard, still reading notecard '" + notecardName + "'", FALSE );
-                    return;
+                lastAnim = EMPTY;
+                lastAnimSet = EMPTY;
+                lastAnimIndex = noAnimIndex;
+                lastAnimState = EMPTY;
+    
+                // Added for OCCuffs: Pause mode to wake AO from sleep
+            } else if ( _message == "ZHAO_UNPAUSE" ) {
+                    animOverridePause=FALSE;
+                if (animOverrideOn)
+                {
+                    llSetTimerEvent( timerEventLength );
+                    checkAndOverride();
                 }
-
-            // Notecard menu
-            g_iJustRezed = FALSE;
-            loadInProgress = TRUE;
-            notecardName = llGetSubString(_message, 10, -1);
-            whoid=_id;
-            loadNoteCard();
-
-        } else if ( _message == "ZHAO_SITS" ) {
-                // Selecting new sit anim
-
-                // Move these to a common function
-                doMultiAnimMenu(_id, sittingIndex, "Sitting", curSitAnim );
-
-            listenState = 1;
-
-        } else if ( _message == "ZHAO_WALKS" ) {
-                // Same thing for the walk
-
-                // Move these to a common function
-                doMultiAnimMenu(_id, walkingIndex, "Walking", curWalkAnim );
-
-            listenState = 2;
-        } else if ( _message == "ZHAO_GROUNDSITS" ) {
-                // And the ground sit
-
-                // Move these to a common function
-                doMultiAnimMenu(_id, sitgroundIndex, "Sitting On Ground", curGsitAnim );
-
-            listenState = 3;
+                animOverridePause=FALSE;
+    
+            } else if ( _message == "ZHAO_PAUSE" ) {
+                    // Added for OCCuffs: Pause mode to wake AO from sleep
+                    animOverridePause=TRUE;
+                if (animOverrideOn)
+                {
+                    llSetTimerEvent( 0 );
+                    startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
+                    lastAnim = EMPTY;
+                    lastAnimSet = EMPTY;
+                    lastAnimIndex = noAnimIndex;
+                    lastAnimState = EMPTY;
+                }
+                // end of OCCuffs
+    
+            } else if ( _message == "ZHAO_STANDON" ) {
+                    // Turning on sit override
+                    standOverride = TRUE;
+                if ( lastAnimState == "Standing" )
+                    startNewAnimation( curStandAnim, sittingIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_STANDOFF" ) {
+                    // Turning off sit override
+                    standOverride = FALSE;
+                if (sitAnywhereOn)
+                {
+                    sitAnywhereOn = FALSE;
+                }
+                if ( lastAnimState == "Standing" )
+                    startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_SITON" ) {
+                    // Turning on sit override
+                    sitOverride = TRUE;
+                Notify(whoid, "Sit override: On", FALSE );
+                if ( lastAnimState == "Sitting" )
+                    startNewAnimation( curSitAnim, sittingIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_SITOFF" ) {
+                    // Turning off sit override
+                    sitOverride = FALSE;
+                Notify(whoid, "Sit override: Off", FALSE );
+                if ( lastAnimState == "Sitting" )
+                    startNewAnimation( EMPTY, noAnimIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_SITANYWHERE_ON" ) {
+                    // Turning on sit anywhre mod
+                    sitAnywhereOn = TRUE;
+                standOverride = FALSE;
+                //llOwnerSay( S_SIT_AW + "On" );
+                if ( lastAnimState == "Standing" )
+                    startNewAnimation( curGsitAnim, sitgroundIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_SITANYWHERE_OFF" ) {
+                    // Turning off sit anywhere mod
+                    sitAnywhereOn = FALSE;
+                standOverride = TRUE;
+                //llOwnerSay( S_SIT_AW + "Off" );
+                if ( lastAnimState == "Standing" )
+                    startNewAnimation( curStandAnim, standingIndex, lastAnimState );
+    
+            } else if ( _message == "ZHAO_TYPEAO_ON" ) {
+                // Turning on typing override
+                typingOverrideOn = TRUE;
+                llOwnerSay( S_TYPING + "On" );                    
+                typingStatus = FALSE;
+                
+            } else if ( _message == "ZHAO_TYPEAO_OFF" ) {
+                // Turning off typing override
+                typingOverrideOn = FALSE;
+                llOwnerSay( S_TYPING + "Off" );
+                if ( typingStatus ) {
+                    stopAnimationList(curTypingAnim);
+                    typingStatus = FALSE;
+                }   
+            } else if ( _message == "ZHAO_RANDOMSTANDS" ) {
+                    // Cycling to next stand - sequential or random
+                    randomStands = TRUE;
+                Notify(whoid, "Stand cycling: Random", FALSE );
+    
+            } else if ( _message == "ZHAO_SEQUENTIALSTANDS" ) {
+                    // Cycling to next stand - sequential or random
+                    randomStands = FALSE;
+                Notify(whoid, "Stand cycling: Sequential", FALSE );
+    
+            } else if ( _message == "ZHAO_SETTINGS" ) {
+                    // Print settings
+                    string notifymessage;
+                if ( sitOverride == TRUE ) {
+                    notifymessage += "Sit override: On";
+                } else {
+                        notifymessage += "Sit override: Off";
+                }
+                if ( randomStands == TRUE ) {
+                    notifymessage += "\n" + "Stand cycling: Random";
+                } else {
+                    notifymessage += "\n" + "Stand cycling: Sequential";
+                }
+                if ( sitAnywhereOn == TRUE ) {
+                    notifymessage += "\n" + S_SIT_AW + "On";
+                } else {
+                    notifymessage += "\n" + S_SIT_AW + "Off";
+                }
+                if ( typingOverrideOn == TRUE ) {
+                    notifymessage += "\n" + S_TYPING + "On";
+                } else {
+                    notifymessage += "\n" + S_TYPING + "Off";
+                }
+                notifymessage += "\n" + "Stand cycle time: " + (string)standTime + " seconds";
+                Notify(whoid, notifymessage,FALSE);
+    
+            } else if ( _message == "ZHAO_NEXTSTAND" ) {
+                    // Cycling to next stand - sequential or random. This is from UI, so we
+                    // want feedback
+                    whoid=_id;
+                doNextStand( TRUE );
+                // -- Quick hack for Remenu
+                llMessageLinked(LINK_THIS, 500, "ZHAO_MENU", whoid);
+    
+            } else if ( llGetSubString(_message, 0, 14) == "ZHAO_STANDTIME|" ) {
+                // Stand time change
+                standTime = (integer)llGetSubString(_message, 15, -1);
+                Notify(whoid, "Stand cycle time: " + (string)standTime + " seconds", FALSE );
+                // -- Quick hack for Remenu
+                llMessageLinked(LINK_THIS, 500, "ZHAO_MENU", whoid);
+    
+            } 
+            
+            else if ( llGetSubString(_message, 0, 9) == "ZHAO_LOAD|" ) {
+                   
+                    // Can't load while we're in the middle of a load
+                    if ( loadInProgress == TRUE ) {
+                        Notify(whoid, "Cannot load new notecard, still reading notecard '" + notecardName + "'", FALSE );
+                        return;
+                    }
+    
+                // Notecard menu
+                g_iJustRezed = FALSE;
+                loadInProgress = TRUE;
+                notecardName = llGetSubString(_message, 10, -1);
+                whoid=_id;
+                loadNoteCard();
+                
+    
+            }
+             else if ( _message == "ZHAO_SITS" ) {
+                    // Selecting new sit anim
+    
+                    // Move these to a common function
+                    doMultiAnimMenu(_id, sittingIndex, "Sitting", curSitAnim );
+    
+                listenState = 1;
+    
+            } else if ( _message == "ZHAO_WALKS" ) {
+                    // Same thing for the walk
+    
+                    // Move these to a common function
+                    doMultiAnimMenu(_id, walkingIndex, "Walking", curWalkAnim );
+    
+                listenState = 2;
+            } else if ( _message == "ZHAO_GROUNDSITS" ) {
+                    // And the ground sit
+    
+                    // Move these to a common function
+                    doMultiAnimMenu(_id, sitgroundIndex, "Sitting On Ground", curGsitAnim );
+    
+                listenState = 3;
+            }
         }
-    }
     }
 
     dataserver( key _query_id, string _data ) {
@@ -1302,5 +1348,10 @@ default {
                     doNextStand( FALSE );
             }
         }
+    }
+    
+    changed (integer change)
+    {
+        if(change&CHANGED_OWNER) askDefault();
     }
 }
