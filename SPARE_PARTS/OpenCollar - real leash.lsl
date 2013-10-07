@@ -82,13 +82,13 @@ string g_sRealLeashOff="*Switch Off*";
 string g_sRealLeashSaveToken="realleash";
 
 list g_lRestrictionList=
-[
-    "Touch","fartouch",
-    "Sit","sittp",
-    "LM","tplm",
-    "Lure","tplure",
-    "Loc","tploc"
-];
+	[
+		"Touch","fartouch",
+	"Sit","sittp",
+	"LM","tplm",
+	"Lure","tplure",
+	"Loc","tploc"
+		];
 list g_lRestrictions=[];
 string g_sAllowAll;
 
@@ -207,9 +207,9 @@ string UPMENU = "⏏";//when your menu hears this, give the parent menu
 
 Debug(string sMsg)
 {
-    if (!g_iDebugMode) return;
+	if (!g_iDebugMode) return;
 	//replacement from badwords-addon
-    Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
+	Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
 }
 
 
@@ -226,18 +226,18 @@ Debug(string sMsg)
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
-    if (kID == g_kWearer)
-    {
-        llOwnerSay(sMsg);
-    }
-    else
-    {
-        llInstantMessage(kID,sMsg);
-        if (iAlsoNotifyWearer)
-        {
-            llOwnerSay(sMsg);
-        }
-    }
+	if (kID == g_kWearer)
+	{
+		llOwnerSay(sMsg);
+	}
+	else
+	{
+		llInstantMessage(kID,sMsg);
+		if (iAlsoNotifyWearer)
+		{
+			llOwnerSay(sMsg);
+		}
+	}
 }
 
 
@@ -252,17 +252,17 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 key ShortKey()
 {//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
-    string sOut;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
-    }
+	string sChars = "0123456789abcdef";
+	integer iLength = 16;
+	string sOut;
+	integer n;
+	for (n = 0; n < 8; n++)
+	{
+		integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
+		sOut += llGetSubString(sChars, iIndex, iIndex);
+	}
 
-    return (key)(sOut + "-0000-0000-0000-000000000000");
+	return (key)(sOut + "-0000-0000-0000-000000000000");
 }
 
 
@@ -281,9 +281,9 @@ key ShortKey()
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-    key kID = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`")+"|"+(string) iAuth, kID);
-    return kID;
+	key kID = ShortKey();
+	llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`")+"|"+(string) iAuth, kID);
+	return kID;
 }
 
 
@@ -298,7 +298,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
 {
-    return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
+	return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
 }
 
 
@@ -313,113 +313,113 @@ integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.
 
 DoMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "Real Leash Version "+VERSION+".\n\n";
-    list lMyButtons = g_lLocalbuttons + g_lButtons;
+	string sPrompt = "Real Leash Version "+VERSION+".\n\n";
+	list lMyButtons = g_lLocalbuttons + g_lButtons;
 
-    //fill in your button list and additional prompt here
+	//fill in your button list and additional prompt here
 
-    // Show the button for switching the Real Leash on and off
-    if (g_iRealLeashOn==TRUE)
-    {
-        lMyButtons = g_sRealLeashOff + lMyButtons;
-        sPrompt += "Real Leash is active";
-    }
-    else
-    {
-        lMyButtons = g_sRealLeashOn + lMyButtons;
-        sPrompt += "Real Leash is NOT active";
-    }
+	// Show the button for switching the Real Leash on and off
+	if (g_iRealLeashOn==TRUE)
+	{
+		lMyButtons = g_sRealLeashOff + lMyButtons;
+		sPrompt += "Real Leash is active";
+	}
+	else
+	{
+		lMyButtons = g_sRealLeashOn + lMyButtons;
+		sPrompt += "Real Leash is NOT active";
+	}
 
-    // Add restriction list if the add-on is enabled and the wearer unleashed
-    if((g_iRealLeashOn && !g_iLeashed) || kAv!=g_kWearer)
-    {
-        integer pos;
-        string name;
-        integer index;
-        for(index=0;index<(llGetListLength(g_lRestrictionList));index+=2)
-        {
-            name=llList2String(g_lRestrictionList,index);
-            pos=llListFindList(g_lRestrictions,[llList2String(g_lRestrictionList,index+1)]);
-            if(pos==-1)
-                name=g_sForbid+" "+name;
-            else
-                name=g_sAllow+" "+name;
-            lMyButtons+=[name];
-        }
-        lMyButtons+=[g_sForbid+" "+g_sAll,g_sAllow+" "+g_sAll];
-    }
+	// Add restriction list if the add-on is enabled and the wearer unleashed
+	if((g_iRealLeashOn && !g_iLeashed) || kAv!=g_kWearer)
+	{
+		integer pos;
+		string name;
+		integer index;
+		for(index=0;index<(llGetListLength(g_lRestrictionList));index+=2)
+		{
+			name=llList2String(g_lRestrictionList,index);
+			pos=llListFindList(g_lRestrictions,[llList2String(g_lRestrictionList,index+1)]);
+			if(pos==-1)
+				name=g_sForbid+" "+name;
+			else
+				name=g_sAllow+" "+name;
+			lMyButtons+=[name];
+		}
+		lMyButtons+=[g_sForbid+" "+g_sAll,g_sAllow+" "+g_sAll];
+	}
 
-    sPrompt += "\n";
+	sPrompt += "\n";
 
-    if(g_iRLVOn==FALSE)
-    {
-        sPrompt+="RLV support is OFF, so Real Leash will not work properly.\n";
-    }
+	if(g_iRLVOn==FALSE)
+	{
+		sPrompt+="RLV support is OFF, so Real Leash will not work properly.\n";
+	}
 
-    // and dispay the menu
-    g_kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
+	// and dispay the menu
+	g_kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
 
 
 ForbidAll()
 {
-    g_lRestrictions = [];
-    integer index;
-    for (index=0; index < llGetListLength(g_lRestrictionList); index += 2)
-    {
-        g_lRestrictions += llList2String(g_lRestrictionList, index + 1);
-    }
+	g_lRestrictions = [];
+	integer index;
+	for (index=0; index < llGetListLength(g_lRestrictionList); index += 2)
+	{
+		g_lRestrictions += llList2String(g_lRestrictionList, index + 1);
+	}
 }
 
 CheckMenuButton(string sMessage, key kAv, integer iAuth)
 {
-    Debug("Checking for " + sMessage);
+	Debug("Checking for " + sMessage);
 
-    if (sMessage == g_sForbid + " " + g_sAll)
-    {
-        ForbidAll();
-    }
-    else if(sMessage == g_sAllow + " " + g_sAll)
-    {
-        g_lRestrictions = [];
-    }
-    else
-    {
-        integer pos = llSubStringIndex(sMessage," ");
-        if (pos == -1)
-            return;
+	if (sMessage == g_sForbid + " " + g_sAll)
+	{
+		ForbidAll();
+	}
+	else if(sMessage == g_sAllow + " " + g_sAll)
+	{
+		g_lRestrictions = [];
+	}
+	else
+	{
+		integer pos = llSubStringIndex(sMessage," ");
+		if (pos == -1)
+			return;
 
-        string action = llGetSubString(sMessage, 0, pos - 1);
-        string name = llGetSubString(sMessage, pos + 1, -1);
+		string action = llGetSubString(sMessage, 0, pos - 1);
+		string name = llGetSubString(sMessage, pos + 1, -1);
 
-        pos = llListFindList(g_lRestrictionList, [name]);
-        if (pos == -1)
-            return;
-        string behav = llList2String(g_lRestrictionList, pos + 1);
+		pos = llListFindList(g_lRestrictionList, [name]);
+		if (pos == -1)
+			return;
+		string behav = llList2String(g_lRestrictionList, pos + 1);
 
-        if (action == g_sAllow)
-        {
-            pos = llListFindList(g_lRestrictions, [behav]);
-            if (pos != -1 )
-                g_lRestrictions = llDeleteSubList(g_lRestrictions, pos, pos);
-        }
-        else if (action == g_sForbid)
-        {
-            pos = llListFindList(g_lRestrictions, [behav]);
-            if (pos == -1 )
-                g_lRestrictions += [behav];
-        }
-    }
-    // save the new settings
-    SaveRealLeashSettings();
- 
-    // update restrictions
-    DoRLV(g_sAllowAll);
-    ApplyRestrictions(g_iLeashed);
+		if (action == g_sAllow)
+		{
+			pos = llListFindList(g_lRestrictions, [behav]);
+			if (pos != -1 )
+				g_lRestrictions = llDeleteSubList(g_lRestrictions, pos, pos);
+		}
+		else if (action == g_sForbid)
+		{
+			pos = llListFindList(g_lRestrictions, [behav]);
+			if (pos == -1 )
+				g_lRestrictions += [behav];
+		}
+	}
+	// save the new settings
+	SaveRealLeashSettings();
 
-    // and restart the menu
-    DoMenu(kAv, iAuth);
-    Debug(llDumpList2String(g_lRestrictions, ","));
+	// update restrictions
+	DoRLV(g_sAllowAll);
+	ApplyRestrictions(g_iLeashed);
+
+	// and restart the menu
+	DoMenu(kAv, iAuth);
+	Debug(llDumpList2String(g_lRestrictions, ","));
 }
 
 
@@ -434,7 +434,7 @@ CheckMenuButton(string sMessage, key kAv, integer iAuth)
 
 string GetDBPrefix()
 {//get db prefix from list in object desc
-    return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
+	return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
 }
 
 
@@ -443,168 +443,168 @@ string GetDBPrefix()
 
 DoRLV(string commands)
 {
-    Debug("RLV: " + commands);
-    llMessageLinked(LINK_SET, RLV_CMD, commands, NULL_KEY);
+	Debug("RLV: " + commands);
+	llMessageLinked(LINK_SET, RLV_CMD, commands, NULL_KEY);
 }
 
 
 SetOwner(key k)
 {
-    // don't do anything if the owner hasn't changed
-    if (k == g_kOwner)
-        return;
+	// don't do anything if the owner hasn't changed
+	if (k == g_kOwner)
+		return;
 
-    Debug("Owner is now: " + (string) k);
+	Debug("Owner is now: " + (string) k);
 
-    // only remove the @tplure exception if the former owner is
-    // not the leash holder
-    if (g_kOwner != g_kLeashHolder)
-        DoRLV("tplure:" + (string) g_kOwner + "=rem");
+	// only remove the @tplure exception if the former owner is
+	// not the leash holder
+	if (g_kOwner != g_kLeashHolder)
+		DoRLV("tplure:" + (string) g_kOwner + "=rem");
 
-    if (k != NULL_KEY)
-        DoRLV("tplure:" + (string) k + "=add");
+	if (k != NULL_KEY)
+		DoRLV("tplure:" + (string) k + "=add");
 
-    g_kOwner = k;
+	g_kOwner = k;
 }
 
 SetLeashHolder(key k)
 {
-    // don't do anything if the leash holder hasn't changed
-    if (k == g_kLeashHolder)
-        return;
+	// don't do anything if the leash holder hasn't changed
+	if (k == g_kLeashHolder)
+		return;
 
-    Debug("Leash holder is now: " + (string) k);
+	Debug("Leash holder is now: " + (string) k);
 
-    DoRLV("tplure:" + (string) g_kLeashHolder + "=rem");
+	DoRLV("tplure:" + (string) g_kLeashHolder + "=rem");
 
-    if (llGetAgentSize(k) != ZERO_VECTOR && k != NULL_KEY)
-    {
-        DoRLV("tplure:" + (string) k + "=add");
-        // make sure that the owner can always use @tplure
-        if (g_kOwner != NULL_KEY)
-            DoRLV("tplure:" + (string) g_kOwner + "=add");
-    }
+	if (llGetAgentSize(k) != ZERO_VECTOR && k != NULL_KEY)
+	{
+		DoRLV("tplure:" + (string) k + "=add");
+		// make sure that the owner can always use @tplure
+		if (g_kOwner != NULL_KEY)
+			DoRLV("tplure:" + (string) g_kOwner + "=add");
+	}
 
-    g_kLeashHolder = k;
+	g_kLeashHolder = k;
 }
 
 ApplyRestrictions(integer yes)
 {
-    // don't spam the user if RLV is not used or Real Leash is off
-    if (!g_iRLVOn || !g_iRealLeashOn)
-        return;
+	// don't spam the user if RLV is not used or Real Leash is off
+	if (!g_iRLVOn || !g_iRealLeashOn)
+		return;
 
-    // do nothing if we have an empty restriction list
-    if (g_lRestrictions == [])
-        return;
-Debug("apply RLV?: "+ (string)yes);
-    string commands;
-    if(yes) {
-Debug("RLV-commands =n");
-        commands = llDumpList2String(g_lRestrictions,"=n,") + "=n";
-    }else
-    {
-        commands = llDumpList2String(g_lRestrictions,"=y,") + "=y";
-        SetLeashHolder(NULL_KEY);
-    }
+	// do nothing if we have an empty restriction list
+	if (g_lRestrictions == [])
+		return;
+	Debug("apply RLV?: "+ (string)yes);
+	string commands;
+	if(yes) {
+		Debug("RLV-commands =n");
+		commands = llDumpList2String(g_lRestrictions,"=n,") + "=n";
+	}else
+{
+	commands = llDumpList2String(g_lRestrictions,"=y,") + "=y";
+	SetLeashHolder(NULL_KEY);
+}
 
-    DoRLV(commands);
+	DoRLV(commands);
 }
 
 SetRLV(integer yes)
 {
-    g_iRLVOn = yes;
+	g_iRLVOn = yes;
 
-    // if Real Leash is off, don't bother with restrictions
-    if (!g_iRealLeashOn)
-        return;
+	// if Real Leash is off, don't bother with restrictions
+	if (!g_iRealLeashOn)
+		return;
 
-    // update restrictions
-    ApplyRestrictions(g_iLeashed);
+	// update restrictions
+	ApplyRestrictions(g_iLeashed);
 }
 
 // save settings for the Real Leash on HTTP
 SaveRealLeashSettings()
 {
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sRealLeashSaveToken+"="+(string) g_iRealLeashOn + "|" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
+	llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sRealLeashSaveToken+"="+(string) g_iRealLeashOn + "|" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
 }
 
 // restore settings for the Real Leash from HTTP
 RestoreRealLeashSettings(string values)
 {
-    list params = llParseString2List(values, ["|"], []);
-    g_iRealLeashOn = (integer) llList2String(params, 0);
-    string restrictions = llList2String(params, 1);
-    g_lRestrictions = llParseString2List(restrictions, [","], []);
+	list params = llParseString2List(values, ["|"], []);
+	g_iRealLeashOn = (integer) llList2String(params, 0);
+	string restrictions = llList2String(params, 1);
+	g_lRestrictions = llParseString2List(restrictions, [","], []);
 
-    if(g_iRealLeashOn)
-        Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
-    else
-        Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
+	if(g_iRealLeashOn)
+		Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
+	else
+		Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
 }
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
-    list lParams = llParseString2List(sStr, [" "], []);
-    string sCommand = llToLower(llList2String(lParams, 0));
-    string sValue = llToLower(llList2String(lParams, 1));
+	if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+	list lParams = llParseString2List(sStr, [" "], []);
+	string sCommand = llToLower(llList2String(lParams, 0));
+	string sValue = llToLower(llList2String(lParams, 1));
 
-    Debug("Command received: "+sCommand+": "+sValue);
+	Debug("Command received: "+sCommand+": "+sValue);
 
-    // So commands can accept a value
-    if (sStr == "reset")
-        // it is a request for a reset
-    {
-        if (iNum == COMMAND_WEARER || iNum == COMMAND_OWNER)
-        {   //only owner and wearer may reset
-            llResetScript();
-        }
-    }
-    else if (sStr == g_sChatCommand || sStr == "menu " + g_sSubmenu)
-        // an authorized user requested the plugin menu by typing the menu's chat command
-    {
-        DoMenu(kID, iNum);
-    }
-    else if (sCommand == "realleash")
-    {
-        if (sValue != "on" && sValue != "off")
-        {
-            Notify(kID,"Unknown option: '"+sValue+"'. The realleash command only understands the following options: on, off",FALSE);
-            return TRUE;
-        }
+	// So commands can accept a value
+	if (sStr == "reset")
+		// it is a request for a reset
+	{
+		if (iNum == COMMAND_WEARER || iNum == COMMAND_OWNER)
+		{   //only owner and wearer may reset
+			llResetScript();
+		}
+	}
+	else if (sStr == g_sChatCommand || sStr == "menu " + g_sSubmenu)
+		// an authorized user requested the plugin menu by typing the menu's chat command
+	{
+		DoMenu(kID, iNum);
+	}
+	else if (sCommand == "realleash")
+	{
+		if (sValue != "on" && sValue != "off")
+		{
+			Notify(kID,"Unknown option: '"+sValue+"'. The realleash command only understands the following options: on, off",FALSE);
+			return TRUE;
+		}
 
-        if (sValue == "on")
-        {
-            g_iRealLeashOn=TRUE;
-//debug!!!!
-            if(g_iLeashed)
-            {
-                ApplyRestrictions(TRUE);
-                // re-query leash holder
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
-            }
-            Notify(kID,"Real Leash enabled.",FALSE);
-        }
-        else
-        {
-            if (g_iLeashed)
-            {
-                if (iNum == COMMAND_WEARER)
-                {
-                    Notify(kID, "You can't disable Real Leash while leashed.",FALSE);
-                    return TRUE;
-                }
-                ApplyRestrictions(FALSE);
-            }
-            g_iRealLeashOn=FALSE;
-            Notify(kID,"Real Leash disabled.",FALSE);
-        }
+		if (sValue == "on")
+		{
+			g_iRealLeashOn=TRUE;
+			//debug!!!!
+			if(g_iLeashed)
+			{
+				ApplyRestrictions(TRUE);
+				// re-query leash holder
+				llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
+			}
+			Notify(kID,"Real Leash enabled.",FALSE);
+		}
+		else
+		{
+			if (g_iLeashed)
+			{
+				if (iNum == COMMAND_WEARER)
+				{
+					Notify(kID, "You can't disable Real Leash while leashed.",FALSE);
+					return TRUE;
+				}
+				ApplyRestrictions(FALSE);
+			}
+			g_iRealLeashOn=FALSE;
+			Notify(kID,"Real Leash disabled.",FALSE);
+		}
 
-        // save status to central settings
-        SaveRealLeashSettings();
-    }
-    return TRUE;
+		// save status to central settings
+		SaveRealLeashSettings();
+	}
+	return TRUE;
 }
 
 
@@ -616,253 +616,253 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
 default
 {
-    state_entry()
-    {
-        // store key of wearer
-        g_kWearer = llGetOwner();
+	state_entry()
+	{
+		// store key of wearer
+		g_kWearer = llGetOwner();
 
-        // Default is to apply all restrictions
-        ForbidAll();
+		// Default is to apply all restrictions
+		ForbidAll();
 
-        // Create a static "Allow All" RLV string
-        integer index;
-        for (index=0; index < llGetListLength(g_lRestrictionList); index += 2)
-        {
-            if (g_sAllowAll != "")
-                g_sAllowAll += ",";
-            g_sAllowAll += llList2String(g_lRestrictionList, index + 1) + "=y";
-        }
+		// Create a static "Allow All" RLV string
+		integer index;
+		for (index=0; index < llGetListLength(g_lRestrictionList); index += 2)
+		{
+			if (g_sAllowAll != "")
+				g_sAllowAll += ",";
+			g_sAllowAll += llList2String(g_lRestrictionList, index + 1) + "=y";
+		}
 
-        // update sTokens for httpdb_skAving
-        string s=GetDBPrefix();
-        g_sRealLeashSaveToken = s + g_sRealLeashSaveToken;
+		// update sTokens for httpdb_skAving
+		string s=GetDBPrefix();
+		g_sRealLeashSaveToken = s + g_sRealLeashSaveToken;
 
-        // sleep a second to allow all scripts to be initialized
-        llSleep(1.0);
-        // send request to main menu and ask other menus if they want to register with us
-        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubmenu, NULL_KEY);
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sRealLeashSaveToken, NULL_KEY);
-        // NOTE: shouldn't we ask for the DB-Prefixed value?
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvmain_on", NULL_KEY);
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "owner", NULL_KEY);
-//debug !!!!
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
-    }
+		// sleep a second to allow all scripts to be initialized
+		llSleep(1.0);
+		// send request to main menu and ask other menus if they want to register with us
+		llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubmenu, NULL_KEY);
+		llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
+		llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sRealLeashSaveToken, NULL_KEY);
+		// NOTE: shouldn't we ask for the DB-Prefixed value?
+		llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvmain_on", NULL_KEY);
+		llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "owner", NULL_KEY);
+		//debug !!!!
+		llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "leash_leashedto", NULL_KEY);
+	}
 
-    // reset the script if wearer changes. By only reseting on owner change we can keep most of our
-    // configuration in the script itself as global variables, so that we don't loose anything in case
-    // the httpdb server isn't available
-    // Cleo: As per Nan this should be a reset on every rez, this has to be handled as needed, but be prepared that the user can reset your script anytime using the OC menus
-    on_rez(integer iParam)
-    {
-        if (llGetOwner()!=g_kWearer)
-        {
-            // Reset if wearer changed
-            llResetScript();
-        }
-    }
+	// reset the script if wearer changes. By only reseting on owner change we can keep most of our
+	// configuration in the script itself as global variables, so that we don't loose anything in case
+	// the httpdb server isn't available
+	// Cleo: As per Nan this should be a reset on every rez, this has to be handled as needed, but be prepared that the user can reset your script anytime using the OC menus
+	on_rez(integer iParam)
+	{
+		if (llGetOwner()!=g_kWearer)
+		{
+			// Reset if wearer changed
+			llResetScript();
+		}
+	}
 
-//listen for linked messages from OC scripts
-//-----------------------------------------------
+	//listen for linked messages from OC scripts
+	//-----------------------------------------------
 
-    link_message(integer iSender, integer iNum, string sStr, key kID)
-    {
-	Debug("link_message string: " + (string)sStr);
+	link_message(integer iSender, integer iNum, string sStr, key kID)
+	{
+		Debug("link_message string: " + (string)sStr);
 
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentmenu)
-            // our parent menu requested to receive buttons, so send ours
-        {
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
-        }
-        else if (iNum == MENUNAME_RESPONSE)
-            // a button is sent to be added to a menu
-        {
-            list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubmenu)
-            {//someone wants to stick something in our menu
-                string button = llList2String(lParts, 1);
-                if (llListFindList(g_lButtons, [button]) == -1)
-                    // if the button isn't in our menu yet, then we add it
-                {
-                    g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
-                }
-            }
-        }
-        else if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == COMMAND_SAFEWORD)
-            // Safeword has been received, release any restricitions that should be released
-        {
-            ApplyRestrictions(FALSE);
-        }
-        else if (iNum == DIALOG_RESPONSE)
-            // answer from menu system
-            // careful, don't use the variable kID to identify the user, it is the UUID we generated when calling the dialog
-            // you have to parse the answer from the dialog system and use the parsed variable kAv
-        {
-            if (kID == g_kMenuID)
-            {
-                //got a menu response meant for us, extract the values
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                // request to switch to parent menu
-                if (sMessage == UPMENU)
-                {
-                    //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentmenu, kAv);
-                }
-                else if (~llListFindList(g_lLocalbuttons, [sMessage]))
-                {
-                    //we got a response for something we handle locally
-                    if (sMessage == "Help")
-                    {
-                        // Deliver Help Notecard
-                        if (llGetInventoryType(HELP_NOTECARD) == INVENTORY_NOTECARD)
-                        {
-                            llGiveInventory(kAv, HELP_NOTECARD);
-                        }
-                        else
-                        {
-                            // no notecard found, so give a short help text
-                            Notify(kAv,"(Missing Notecard: '"+HELP_NOTECARD+"') Real Leash is an OpenCollar add-on that automatically sets a number of restrictions on your collar when you are leashed. This makes the experience more real, because you won't be able to teleport, sit on far away objects or touch anything that's not close to you. This add-oon requires RLV to work properly.",FALSE);
-                            // and restart the menu
-                            DoMenu(kAv, iAuth);
-                        }
-                    }
-                }
-                else if (~llListFindList(g_lButtons, [sMessage]))
-                {
-                    //we got a button which another plugin put into into our menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + sMessage, kAv);
-                }
-                else
-                {
-                    // handle everything else
-                    if (sMessage == g_sRealLeashOn)
-                    {
-                        UserCommand(iAuth, "realleash on", kAv);
-                        DoMenu(kID, iNum);
+		if (iNum == MENUNAME_REQUEST && sStr == g_sParentmenu)
+			// our parent menu requested to receive buttons, so send ours
+		{
+			llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentmenu + "|" + g_sSubmenu, NULL_KEY);
+		}
+		else if (iNum == MENUNAME_RESPONSE)
+			// a button is sent to be added to a menu
+		{
+			list lParts = llParseString2List(sStr, ["|"], []);
+			if (llList2String(lParts, 0) == g_sSubmenu)
+			{//someone wants to stick something in our menu
+				string button = llList2String(lParts, 1);
+				if (llListFindList(g_lButtons, [button]) == -1)
+					// if the button isn't in our menu yet, then we add it
+				{
+					g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
+				}
+			}
+		}
+		else if (UserCommand(iNum, sStr, kID)) return;
+		else if (iNum == COMMAND_SAFEWORD)
+			// Safeword has been received, release any restricitions that should be released
+		{
+			ApplyRestrictions(FALSE);
+		}
+		else if (iNum == DIALOG_RESPONSE)
+			// answer from menu system
+			// careful, don't use the variable kID to identify the user, it is the UUID we generated when calling the dialog
+			// you have to parse the answer from the dialog system and use the parsed variable kAv
+		{
+			if (kID == g_kMenuID)
+			{
+				//got a menu response meant for us, extract the values
+				list lMenuParams = llParseString2List(sStr, ["|"], []);
+				key kAv = (key)llList2String(lMenuParams, 0);
+				string sMessage = llList2String(lMenuParams, 1);
+				integer iPage = (integer)llList2String(lMenuParams, 2);
+				integer iAuth = (integer)llList2String(lMenuParams, 3);
+				// request to switch to parent menu
+				if (sMessage == UPMENU)
+				{
+					//give av the parent menu
+					llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentmenu, kAv);
+				}
+				else if (~llListFindList(g_lLocalbuttons, [sMessage]))
+				{
+					//we got a response for something we handle locally
+					if (sMessage == "Help")
+					{
+						// Deliver Help Notecard
+						if (llGetInventoryType(HELP_NOTECARD) == INVENTORY_NOTECARD)
+						{
+							llGiveInventory(kAv, HELP_NOTECARD);
+						}
+						else
+						{
+							// no notecard found, so give a short help text
+							Notify(kAv,"(Missing Notecard: '"+HELP_NOTECARD+"') Real Leash is an OpenCollar add-on that automatically sets a number of restrictions on your collar when you are leashed. This makes the experience more real, because you won't be able to teleport, sit on far away objects or touch anything that's not close to you. This add-oon requires RLV to work properly.",FALSE);
+							// and restart the menu
+							DoMenu(kAv, iAuth);
+						}
+					}
+				}
+				else if (~llListFindList(g_lButtons, [sMessage]))
+				{
+					//we got a button which another plugin put into into our menu
+					llMessageLinked(LINK_THIS, iAuth, "menu " + sMessage, kAv);
+				}
+				else
+				{
+					// handle everything else
+					if (sMessage == g_sRealLeashOn)
+					{
+						UserCommand(iAuth, "realleash on", kAv);
+						DoMenu(kID, iNum);
 
-                    }
-                    else if (sMessage == g_sRealLeashOff)
-                    {
-                        UserCommand(iAuth, "realleash off", kAv);
-                        DoMenu(kID, iNum);
-                    }
-                    else
-                    {
-                        // check restriction buttons in the menu
-                        CheckMenuButton(sMessage, kAv, iAuth);
-                    }
-                }
-            }
-        }
-        else if (iNum == DIALOG_TIMEOUT)
-            // timeout from menu system, you do not have to react on this, but you can
-        {
-            if (kID == g_kMenuID)
-                // if you react, make sure the timeout is from your menu by checking the g_kMenuID variable
-            {
-                Debug("The user was to slow or lazy, we got a timeout!");
-            }
-        }
-        // local setting changed
-//debug !!!
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
-            // parse the answer
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
+					}
+					else if (sMessage == g_sRealLeashOff)
+					{
+						UserCommand(iAuth, "realleash off", kAv);
+						DoMenu(kID, iNum);
+					}
+					else
+					{
+						// check restriction buttons in the menu
+						CheckMenuButton(sMessage, kAv, iAuth);
+					}
+				}
+			}
+		}
+		else if (iNum == DIALOG_TIMEOUT)
+			// timeout from menu system, you do not have to react on this, but you can
+		{
+			if (kID == g_kMenuID)
+				// if you react, make sure the timeout is from your menu by checking the g_kMenuID variable
+			{
+				Debug("The user was to slow or lazy, we got a timeout!");
+			}
+		}
+		// local setting changed
+		//debug !!!
+		else if (iNum == LM_SETTING_RESPONSE)
+		{
+			// parse the answer
+			list lParams = llParseString2List(sStr, ["="], []);
+			string sToken = llList2String(lParams, 0);
+			string sValue = llList2String(lParams, 1);
 
-            Debug("Local Setting or HTTPDB received: "+sToken+": "+sValue);
+			Debug("Local Setting or HTTPDB received: "+sToken+": "+sValue);
 
-            if (sToken == "leash_leashedto")
-            {
-                g_iLeashed = TRUE;
-                ApplyRestrictions(TRUE);
-                // uuid,rank
-                SetLeashHolder((key) llGetSubString(sValue,0,35));
-            }
-            else if (sToken == g_sRealLeashSaveToken )
-            {
-                // restore settings
-                RestoreRealLeashSettings(sValue);
-            }
-            // or check for specific values from the collar like "owner" (for owners) "secowners" (or secondary owners) etc
-            else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
-            {
-                // remember if RLV was enabled or disabled
-                SetRLV((integer) sValue);
-            }
-            else if (sToken == "owner")
-            {
-                // remember if RLV was enabled or disabled
-                SetOwner(llGetSubString(sValue,0,35));
-            }
-        }
-		
-		
-        // A leash target picked by menu won't trigger a message,
-        // so we have this workaround further here. But really,
-        // it should trigger the message, so this needs to be
-        // fixed in the leash script. We can simplify this code
-        // when that's done.
-		
-//main leash detection code?
+			if (sToken == "leash_leashedto")
+			{
+				g_iLeashed = TRUE;
+				ApplyRestrictions(TRUE);
+				// uuid,rank
+				SetLeashHolder((key) llGetSubString(sValue,0,35));
+			}
+			else if (sToken == g_sRealLeashSaveToken )
+			{
+				// restore settings
+				RestoreRealLeashSettings(sValue);
+			}
+			// or check for specific values from the collar like "owner" (for owners) "secowners" (or secondary owners) etc
+			else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
+			{
+				// remember if RLV was enabled or disabled
+				SetRLV((integer) sValue);
+			}
+			else if (sToken == "owner")
+			{
+				// remember if RLV was enabled or disabled
+				SetOwner(llGetSubString(sValue,0,35));
+			}
+		}
 
-        else if (iNum == LM_SETTING_SAVE)
-        {
-            Debug("LOCALSETTING/HTTPDB_SAVE: "+sStr);
-            // format: leashedto=uuid,rank
-            list params=llParseString2List(sStr,["=",","],[]);
-            string command=llList2String(params,0);
-            if (command=="owner")
-            {
-                key k=(key) llList2String(params,1);
-                SetOwner(k);
-            }
-            else if (command == TOK_DEST)
-            {
-                key k=(key) llList2String(params,1);
 
-                Debug("leashto target found");
-                // leash was tied to a person
-                g_iLeashed=TRUE;
-				
-//debug here !!!
-                ApplyRestrictions(TRUE);
-                // check if we are leashed to a person
-                SetLeashHolder(k);
-            }
-        }
-        else if (iNum == LM_SETTING_DELETE)
-        {
-            Debug("HTTPDB_DELETE: "+sStr);
-            // format: command=uuid,param
-            if (sStr=="owner")
-            {
-                SetOwner(NULL_KEY);
-            }
-            else if (sStr == TOK_DEST)
-            {
-                // leash was removed
-                g_iLeashed=FALSE;
-                ApplyRestrictions(FALSE);                
-            }
-        }
-        else if (iNum == RLV_OFF)
-        {
-            // remember that RLV is not active
-            SetRLV(FALSE);
-        }
-        else if (iNum == RLV_ON)
-        {
-            // remember that RLV is active
-            SetRLV(TRUE);
-        }
-    }
+		// A leash target picked by menu won't trigger a message,
+		// so we have this workaround further here. But really,
+		// it should trigger the message, so this needs to be
+		// fixed in the leash script. We can simplify this code
+		// when that's done.
+
+		//main leash detection code?
+
+		else if (iNum == LM_SETTING_SAVE)
+		{
+			Debug("LOCALSETTING/HTTPDB_SAVE: "+sStr);
+			// format: leashedto=uuid,rank
+			list params=llParseString2List(sStr,["=",","],[]);
+			string command=llList2String(params,0);
+			if (command=="owner")
+			{
+				key k=(key) llList2String(params,1);
+				SetOwner(k);
+			}
+			else if (command == TOK_DEST)
+			{
+				key k=(key) llList2String(params,1);
+
+				Debug("leashto target found");
+				// leash was tied to a person
+				g_iLeashed=TRUE;
+
+				//debug here !!!
+				ApplyRestrictions(TRUE);
+				// check if we are leashed to a person
+				SetLeashHolder(k);
+			}
+		}
+		else if (iNum == LM_SETTING_DELETE)
+		{
+			Debug("HTTPDB_DELETE: "+sStr);
+			// format: command=uuid,param
+			if (sStr=="owner")
+			{
+				SetOwner(NULL_KEY);
+			}
+			else if (sStr == TOK_DEST)
+			{
+				// leash was removed
+				g_iLeashed=FALSE;
+				ApplyRestrictions(FALSE);
+			}
+		}
+		else if (iNum == RLV_OFF)
+		{
+			// remember that RLV is not active
+			SetRLV(FALSE);
+		}
+		else if (iNum == RLV_ON)
+		{
+			// remember that RLV is active
+			SetRLV(TRUE);
+		}
+	}
 }
