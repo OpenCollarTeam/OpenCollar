@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - real leash                             //
-//                                 version 0.310                                  //
+//                                 version 0.351                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -16,11 +16,11 @@
 // Last edited by: Satomi Ahn
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
-//Additions: only cosmetic+indent changes, changed all save settings to former HTTPDB, reflect changes in rlvmain_on (beta, test!) and leash_leashto
-//08. Okt 2013 v0.35
+//Additions: cosmetic+indent changes, changes on save settings, reflect changes in rlvmain_on and leash_leashto, etc.
+//08. Okt 2013 v0.351
 //
 //Files:
-//OpenCollar - real leash.lsl
+//OpenCollar - realleash.lsl
 //
 //Prequisites: OC, RLV enabled
 //Notecard format: ---
@@ -28,13 +28,11 @@
 
 //bug: ???
 //bug: does not get message that leash is enabled, check if fixed
-//bug: restrictions get applied at reallesh "on" ... i broke it!
+//bug: restrictions get applied at reallesh "on" ... check... maybe restrictions only struck by unknown reason - caue: renaming script while restrictions were still applied?
 
-//todo: adjust filename to new script naming convention "OpenCollar - realleash.lsl"
-//todo: don't leave OC menu after enabling addon
 //todo: check ApplyRestrictions() (yes, rlvcommand=n)
 //todo: RLV support is OFF, so Real Leash will not work properly. ?!!!!; rlvmain=on~1;   else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
-//todo: is that correct? OpenCollar - real leash - 0.2: LOCALSETTING/HTTPDB_SAVE: oc_reFalleash=1|fartouch,sittp,tplm,tplure,tploc
+//todo: check if settings are stored correctly / defaultsettings NC
 //todo: check RLV: tplure:00000000-0000-0000-0000-000000000000=rem
 //todo: check applyrestrictions () - dorvl(allowall), as this is only done once
 //todo: check real leash -x: settings delete: garble_Binder; saves everyting on 2002?!
@@ -57,7 +55,7 @@
 //debug variables
 //-----------------------------------------------
 
-integer g_iDebugMode=TRUE; // set to TRUE to enable Debug messages
+integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 
 
 //user changeable variables
@@ -68,7 +66,7 @@ integer g_iDebugMode=TRUE; // set to TRUE to enable Debug messages
 //-----------------------------------------------
 
 //ADDON SETUP
-string VERSION="V0.35";
+string VERSION="V0.351";
 string HELP_NOTECARD="OpenCollar - Real Leash - User's Guide";
 
 //menu labels
@@ -97,7 +95,7 @@ list g_lRestrictionList=
 		];
 list g_lRestrictions=[];
 string g_sAllowAll="fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y";
-list g_sForbidAll=["fartouch","sittp","tplm","tplure","tploc"];
+list g_lForbidAll=["fartouch","sittp","tplm","tplure","tploc"];
 string g_sAll="All";
 string g_sForbid="Forbid";
 string g_sAllow="Allow";
@@ -237,7 +235,7 @@ key ShortKey()
 		integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
 		sOut += llGetSubString(sChars, iIndex, iIndex);
 	} 
-	Debug("ShortKey");
+	Debug("ShortKey generation");
 	return (key)(sOut + "-0000-0000-0000-000000000000");
 }
 
@@ -264,21 +262,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 
 //===============================================================================
-//= parameters   :    string    sMsg    message string received
-//=
-//= return        :    integer TRUE/FALSE
-//=
-//= description  :    checks if a string begin with another string
-//=
-//===============================================================================
-
-integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-	return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
-}
-
-
-//===============================================================================
 //= parameters   :    string    keyID   key of person requesting the menu
 //=
 //= return        :    none
@@ -289,6 +272,7 @@ integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.
 
 DoMenu(key kAv, integer iAuth)
 {
+	Debug("DoMenu...");
 	string sPrompt = "Real Leash Version "+VERSION+".\n\n";
 	list lMyButtons = g_lLocalbuttons + g_lButtons;
 
@@ -330,7 +314,7 @@ DoMenu(key kAv, integer iAuth)
 CheckMenuButton(string sMessage, key kAv, integer iAuth)
 {
 	Debug("Checking for " + sMessage);
-	if (g_sForbid + " " + g_sAll == sMessage) g_lRestrictions = g_sForbidAll;
+	if (g_sForbid + " " + g_sAll == sMessage) g_lRestrictions = g_lForbidAll;
 		else if(g_sAllow + " " + g_sAll == sMessage) g_lRestrictions = [];
 			else {
 				integer pos = llSubStringIndex(sMessage," ");
@@ -362,22 +346,6 @@ CheckMenuButton(string sMessage, key kAv, integer iAuth)
 	// and restart the menu
 	DoMenu(kAv, iAuth);
 	Debug(llDumpList2String(g_lRestrictions, ","));
-}
-
-
-//===============================================================================
-//= parameters   :    none
-//=
-//= return        :   string     DB prefix from the description of the collar
-//=
-//= description  :    prefix from the description of the collar
-//=
-//===============================================================================
-
-string GetDBPrefix()
-{//get db prefix from list in object desc
-	Debug("GetDBPrefix");
-	return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
 }
 
 
@@ -464,8 +432,6 @@ SetRLV(integer yes)
 SaveRealLeashSettings()
 {
 	Debug("Save settings");
-//	llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
-//	llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
 	llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iRealLeashOn, NULL_KEY);
 	llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "restrictions=" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
 }
@@ -476,8 +442,9 @@ RestoreRealLeashSettings(string token, string values, integer index)
 {
 	Debug("Restore settings -- check/debug delimeter: "+token+" - "+values);
 	token = llGetSubString(token, index + 1, -1);
+	Debug("token to restore: "+token);
     if ("on" == token) {
-		if ("1" == token)	g_iRealLeashOn = TRUE;
+		if ("1" == values) g_iRealLeashOn = TRUE;
 			else g_iRealLeashOn = FALSE;
 		} else if ("restrictions" == token) g_lRestrictions = llParseString2List(llToLower(values), [","], []);
 
@@ -532,6 +499,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
 			// save status to central settings
 			SaveRealLeashSettings();
 			}
+			Debug("End of UserCommand, settings saved");
 	return TRUE;
 }
 
@@ -546,12 +514,12 @@ default
 {
 	state_entry()
 	{
-		// store key of wearer
 		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+		// store key of wearer
 		g_kWearer = llGetOwner();
 
 		// Default is to use all restrictions
-		g_lRestrictions = g_sForbidAll;
+		g_lRestrictions = g_lForbidAll;
 		
 		// sleep a second to allow all scripts to be initialized
 		llSleep(1.0);
@@ -628,15 +596,11 @@ default
 										if (sMessage == g_sRealLeashOn) {
 											Debug("Realleash on pressed");
 											UserCommand(iAuth, "realleash on", kAv);
-											Debug("create menu after Realleash on pressed");
-											//DoMenu(kID, iNum);
-											DoMenu(kID, iAuth);
+											DoMenu(kAv, iAuth);
 										} else if (sMessage == g_sRealLeashOff) {
 											Debug("Realleash off pressed");
 											UserCommand(iAuth, "realleash off", kAv);
-											Debug("create menu after Realleash off pressed");
-											//DoMenu(kID, iNum);
-											DoMenu(kID, iAuth);
+											DoMenu(kAv, iAuth);
 										} else CheckMenuButton(sMessage, kAv, iAuth);
 										// check restriction buttons in the menu
 									}
