@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - real leash                             //
-//                                 version 0.350                                  //
+//                                 version 0.351                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -17,7 +17,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: cosmetic+indent changes, changes on save settings, reflect changes in rlvmain_on and leash_leashto, etc.
-//08. Okt 2013 v0.35
+//08. Okt 2013 v0.351
 //
 //Files:
 //OpenCollar - realleash.lsl
@@ -29,7 +29,6 @@
 //bug: ???
 //bug: does not get message that leash is enabled, check if fixed
 //bug: restrictions get applied at reallesh "on" ... check... maybe restrictions only struck by unknown reason - caue: renaming script while restrictions were still applied?
-//bug: don't leave OC menu after enabling addon
 
 //todo: check ApplyRestrictions() (yes, rlvcommand=n)
 //todo: RLV support is OFF, so Real Leash will not work properly. ?!!!!; rlvmain=on~1;   else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
@@ -67,7 +66,7 @@ integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 //-----------------------------------------------
 
 //ADDON SETUP
-string VERSION="V0.35";
+string VERSION="V0.351";
 string HELP_NOTECARD="OpenCollar - Real Leash - User's Guide";
 
 //menu labels
@@ -273,6 +272,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 DoMenu(key kAv, integer iAuth)
 {
+	Debug("DoMenu...");
 	string sPrompt = "Real Leash Version "+VERSION+".\n\n";
 	list lMyButtons = g_lLocalbuttons + g_lButtons;
 
@@ -499,6 +499,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
 			// save status to central settings
 			SaveRealLeashSettings();
 			}
+			Debug("End of UserCommand, settings saved");
 	return TRUE;
 }
 
@@ -595,15 +596,11 @@ default
 										if (sMessage == g_sRealLeashOn) {
 											Debug("Realleash on pressed");
 											UserCommand(iAuth, "realleash on", kAv);
-											Debug("create menu after Realleash on pressed");
-											//DoMenu(kID, iNum);
-											DoMenu(kID, iAuth);
+											DoMenu(kAv, iAuth);
 										} else if (sMessage == g_sRealLeashOff) {
 											Debug("Realleash off pressed");
 											UserCommand(iAuth, "realleash off", kAv);
-											Debug("create menu after Realleash off pressed");
-											//DoMenu(kID, iNum);
-											DoMenu(kID, iAuth);
+											DoMenu(kAv, iAuth);
 										} else CheckMenuButton(sMessage, kAv, iAuth);
 										// check restriction buttons in the menu
 									}
