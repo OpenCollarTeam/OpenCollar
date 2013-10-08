@@ -16,11 +16,11 @@
 // Last edited by: Satomi Ahn
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
-//Additions: only cosmetic+indent changes, changed all save settings to former HTTPDB, reflect changes in rlvmain_on (beta, test!) and leash_leashto
+//Additions: cosmetic+indent changes, changes on save settings, reflect changes in rlvmain_on and leash_leashto, etc.
 //08. Okt 2013 v0.35
 //
 //Files:
-//OpenCollar - real leash.lsl
+//OpenCollar - realleash.lsl
 //
 //Prequisites: OC, RLV enabled
 //Notecard format: ---
@@ -28,12 +28,12 @@
 
 //bug: ???
 //bug: does not get message that leash is enabled, check if fixed
-//bug: restrictions get applied at reallesh "on" ... check... maybe restrictions only struck by unknown reason
+//bug: restrictions get applied at reallesh "on" ... check... maybe restrictions only struck by unknown reason - caue: renaming script while restrictions were still applied?
+//bug: don't leave OC menu after enabling addon
 
-//todo: don't leave OC menu after enabling addon
 //todo: check ApplyRestrictions() (yes, rlvcommand=n)
 //todo: RLV support is OFF, so Real Leash will not work properly. ?!!!!; rlvmain=on~1;   else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
-//todo: is that correct? OpenCollar - real leash - 0.2: LOCALSETTING/HTTPDB_SAVE: oc_reFalleash=1|fartouch,sittp,tplm,tplure,tploc
+//todo: check if settings are stored correctly / defaultsettings NC
 //todo: check RLV: tplure:00000000-0000-0000-0000-000000000000=rem
 //todo: check applyrestrictions () - dorvl(allowall), as this is only done once
 //todo: check real leash -x: settings delete: garble_Binder; saves everyting on 2002?!
@@ -236,7 +236,7 @@ key ShortKey()
 		integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
 		sOut += llGetSubString(sChars, iIndex, iIndex);
 	} 
-	Debug("ShortKey");
+	Debug("ShortKey generation");
 	return (key)(sOut + "-0000-0000-0000-000000000000");
 }
 
@@ -259,21 +259,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 	key kID = ShortKey();
 	llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`")+"|"+(string) iAuth, kID);
 	return kID;
-}
-
-
-//===============================================================================
-//= parameters   :    string    sMsg    message string received
-//=
-//= return        :    integer TRUE/FALSE
-//=
-//= description  :    checks if a string begin with another string
-//=
-//===============================================================================
-
-integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-	return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
 }
 
 
@@ -364,22 +349,6 @@ CheckMenuButton(string sMessage, key kAv, integer iAuth)
 }
 
 
-//===============================================================================
-//= parameters   :    none
-//=
-//= return        :   string     DB prefix from the description of the collar
-//=
-//= description  :    prefix from the description of the collar
-//=
-//===============================================================================
-
-string GetDBPrefix()
-{//get db prefix from list in object desc
-	Debug("GetDBPrefix");
-	return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
-}
-
-
 //most important functions
 //-----------------------------------------------
 
@@ -463,8 +432,6 @@ SetRLV(integer yes)
 SaveRealLeashSettings()
 {
 	Debug("Save settings");
-//	llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
-//	llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
 	llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iRealLeashOn, NULL_KEY);
 	llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "restrictions=" + llDumpList2String(g_lRestrictions, ","), NULL_KEY);
 }
@@ -475,8 +442,9 @@ RestoreRealLeashSettings(string token, string values, integer index)
 {
 	Debug("Restore settings -- check/debug delimeter: "+token+" - "+values);
 	token = llGetSubString(token, index + 1, -1);
+	Debug("token to restore: "+token);
     if ("on" == token) {
-		if ("1" == token)	g_iRealLeashOn = TRUE;
+		if ("1" == values) g_iRealLeashOn = TRUE;
 			else g_iRealLeashOn = FALSE;
 		} else if ("restrictions" == token) g_lRestrictions = llParseString2List(llToLower(values), [","], []);
 
@@ -545,8 +513,8 @@ default
 {
 	state_entry()
 	{
-		// store key of wearer
 		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+		// store key of wearer
 		g_kWearer = llGetOwner();
 
 		// Default is to use all restrictions
