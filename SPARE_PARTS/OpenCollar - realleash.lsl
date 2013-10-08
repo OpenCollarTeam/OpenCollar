@@ -20,7 +20,7 @@
 //08. Okt 2013 v0.35
 //
 //Files:
-//OpenCollar - real leash.lsl
+//OpenCollar - realleash.lsl
 //
 //Prequisites: OC, RLV enabled
 //Notecard format: ---
@@ -56,7 +56,7 @@
 //debug variables
 //-----------------------------------------------
 
-integer g_iDebugMode=TRUE; // set to TRUE to enable Debug messages
+integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 
 
 //user changeable variables
