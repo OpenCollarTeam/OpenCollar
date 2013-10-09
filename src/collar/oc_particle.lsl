@@ -12,6 +12,8 @@
 
 //Split from the leash script in April 2010 by Garvin Twine
 
+//3.934 replace g_sParticleTextureID with texture name if NULL_KEY. This is for non full perms textures, which return a null key, giving a blank particle. This should still work for linked leash points if the texture is added to the leash point as well. 
+
 // - MESSAGE MAP
 //integer COMMAND_NOAUTH      = 0;
 integer COMMAND_OWNER       = 500;
@@ -336,6 +338,7 @@ SetTexture(string sIn, key kIn)
     }
     debug("particleTexture= " + sIn);
     g_sParticleTextureID = llGetInventoryKey(sIn);
+    if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
     debug("particleTextureID= " + (string)g_sParticleTextureID);
     if (kIn)
     {
@@ -689,7 +692,7 @@ default
                     else
                     {
                         sButton = "leash_" + sButton;
-                        if (llGetInventoryKey(sButton)) //the texture exists
+                        if (llGetInventoryType(sButton)==INVENTORY_TEXTURE) //the texture exists
                         {
                             SetTexture(sButton, kAv);
                         }
