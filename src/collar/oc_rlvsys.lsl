@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvmain                               //
-//                                 version 3.930                                  //
+//                                 version 3.931                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -735,7 +735,7 @@ state checked {
                 integer iSourceNum=llListFindList(g_lOldSources, [kID]);
                 if (iSourceNum == -1) return; // Unknown source decided to answer to this ping while uninvited. Better ignore it.
                 integer j;
-                list iRestr=llParseString2List(llList2String(g_lOldRestrictions,iSourceNum),["/"],[]);
+                list iRestr=llParseString2List(llList2String(g_lOldRestrictions,iSourceNum),["§"],[]);
                 for (j=0;j<llGetListLength(iRestr);j++) AddRestriction(kID,llList2String(iRestr,j));
             }
             else if (iNum == COMMAND_SAFEWORD)
