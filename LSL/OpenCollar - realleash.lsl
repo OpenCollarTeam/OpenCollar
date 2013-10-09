@@ -444,12 +444,14 @@ RestoreRealLeashSettings(string token, string values, integer index)
     token = llGetSubString(token, index + 1, -1);
     Debug("token to restore: "+token);
     if ("on" == token) {
-        if ("1" == values) g_iRealLeashOn = TRUE;
-            else g_iRealLeashOn = FALSE;
-        } else if ("restrictions" == token) g_lRestrictions = llParseString2List(llToLower(values), [","], []);
-
-    if(g_iRealLeashOn) Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
-        else Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
+        if ("1" == values) {
+			g_iRealLeashOn = TRUE;
+			Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
+		} else {
+			g_iRealLeashOn = FALSE;
+			Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
+		}
+    } else if ("restrictions" == token) g_lRestrictions = llParseString2List(llToLower(values), [","], []);
 }
 
 
