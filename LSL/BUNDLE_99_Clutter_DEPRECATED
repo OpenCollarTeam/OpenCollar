@@ -5,6 +5,8 @@ SCRIPT|OpenCollar - anim/pose
 SCRIPT|OpenCollar - cmdupdate
 SCRIPT|OpenCollar - techlabel
 SCRIPT|OpenCollar - BMC
+SCRIPT|OpenCollar - real leash - 0.1
+SCRIPT|OpenCollar - real leash - 0.2
 ITEM|brushedmetal-hshaded-contrasty
 ITEM|brushedmetal-hshaded
 ITEM|brushedmetal-roundshaded
