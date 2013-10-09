@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.930                                  //
+//                                 version 3.933                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -60,7 +60,7 @@ string BTN_REQUIRED = " ★ ";
 string BTN_INSTALL = " ☒ ";
 string BTN_UNINSTALL = " ☐ ";
 string BTN_DEPRECATED = " ♻ ";
-string INSTALL_METHOD = "RLV";
+string INSTALL_METHOD = "Standard";
 
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
@@ -116,7 +116,7 @@ SetBundleStatus(string bundlename, string status) {
 
 SetInstallmode(string type) {
     //user clicked default.. restore Bundle Status
-    if(type == "RLV") {
+    if(type == "Standard") {
         lBundles = [];
         integer n;
         integer stop = llGetInventoryNumber(INVENTORY_NOTECARD);
@@ -132,8 +132,8 @@ SetInstallmode(string type) {
     string newstatus;
     integer n;
     integer stop = llGetListLength(lBundles);
-    //user clicked No RLV.. set Bundle Status
-    if(type == "No RLV")
+    //user clicked Basic.. set Bundle Status
+    if(type == "Basic")
     {
         newstatus = "REMOVE";
     }
@@ -182,13 +182,13 @@ BundleMenu(integer page) {
 }
 
 GiveMethodMenu() {
-    string prompt = "\n\nChose Your Install method.";
-    prompt += "\n\nCurrent method chosen : \""+INSTALL_METHOD+"\"\n";
-    prompt += "\nRLV (Recommended): All you need for a fun BDSM experience on SL, including relay.\n";
-    prompt += "\nNo RLV: Install just the basics without any RestrainedLove features at all.\n";
-    prompt += "\nCustom: Your own selection of features. Useful for uninstalling plugins that are never used.\n";
-    prompt += "\nDeveloper: WARNING! This will install everything and beyond, only recommended for tinkering.\n";
-    list choices = ["RLV","No RLV","Custom", "Developer"];
+    //string prompt = "\n\nChoose your install method:\n";
+    string prompt = "\n\nStandard: \"All you need for a fun BDSM experience on SL. The most popular features, full RLV support and a relay.\"\n";
+    prompt += "\nBasic: \"Just the basic modular collar framework and essential core features.\"\n";
+    prompt += "\nCustom: \"Add features for custom elements like label or bell. Un/install poses, couple animator or texture support and select advanced features like Spy.\"\n";
+    //prompt += "\n[Developer]\n\"WARNING! This will install the full development workspace.\"\n";
+prompt += "\n\nThe currently selected method is ["+INSTALL_METHOD+"]\n";
+    list choices = ["Standard","Basic","Custom", "Developer"];
     kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"],0);
 }
 
@@ -307,7 +307,7 @@ default {
                     llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        
 
                 }
-                else if (button == "No RLV" || button == "RLV" || button == "Developer")
+                else if (button == "Basic" || button == "Standard" || button == "Developer")
                 {
                     INSTALL_METHOD = button;
                     SetInstallmode(button);

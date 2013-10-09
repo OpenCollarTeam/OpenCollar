@@ -8,41 +8,7 @@ ITEM|chain
 ITEM|rope
 ITEM|Leash Holder
 ITEM|Grabby Post
-ITEM|~bottom
-ITEM|~foot-bottom
-ITEM|~foot-top
-ITEM|~hug
-ITEM|~kiss
-ITEM|~jump-bottom
-ITEM|~jump-top
-ITEM|~top
-ITEM|~boot-top
-ITEM|~boot-bottom
-ITEM|fetal
-ITEM|dejected
-ITEM|submit
-ITEM|shy
-ITEM|bracelets
-ITEM|arch
-ITEM|table
-ITEM|doormat
-ITEM|attention
-ITEM|belly
-ITEM|bendover
-ITEM|booty
-ITEM|cutie
-ITEM|davinci
-ITEM|display
-ITEM|dive
-ITEM|doggie
-ITEM|faint
 ITEM|kneel
-ITEM|nadu
-ITEM|naduw
-ITEM|rise
-ITEM|stomp
-ITEM|tower
-ITEM|coupleanims
 SCRIPT|OpenCollar - cleanup
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
@@ -55,8 +21,6 @@ SCRIPT|OpenCollar - anim
 SCRIPT|OpenCollar - leash
 SCRIPT|OpenCollar - leashParticle
 SCRIPT|OpenCollar - lock
-SCRIPT|OpenCollar - coupleanim1
-SCRIPT|OpenCollar - coupleanim2
 SCRIPT|OpenCollar - appearance
 SCRIPT|OpenCollar - hide
 SCRIPT|OpenCollar - touch

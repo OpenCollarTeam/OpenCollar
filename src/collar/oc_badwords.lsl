@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - badwords                              //
-//                                 version 3.932                                  //
+//                                 version 3.933                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -391,7 +391,7 @@ default
     {
         if (iNum == LM_SETTING_RESPONSE)
         {
-            list lParams = llParseString2List(sStr, ["="], []);	
+            list lParams = llParseString2List(sStr, ["="], []);    
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
@@ -409,10 +409,10 @@ default
                 }
                 else if (sToken == "badwords")
                 {
-					//use lines in defaultsettings NC like this:
-					//User_badwords=badwordson~true~badwords~test-badword1,test-badword2,test-badword3~penance~tis 's the testpenance!
-					//did not test badwords with special char  - but:
-					//badwords holding ',' may give problems with dump settings and esp. with/in defaultsettings NC
+                    //use lines in defaultsettings NC like this:
+                    //User_badwords=badwordson~true~badwords~test-badword1,test-badword2,test-badword3~penance~tis 's the testpenance!
+                    //did not test badwords with special char  - but:
+                    //badwords holding ',' may give problems with dump settings and esp. with/in defaultsettings NC
                     g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                     ListenControl();
                 }
