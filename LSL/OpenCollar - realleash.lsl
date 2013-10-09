@@ -66,7 +66,7 @@ integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
 //-----------------------------------------------
 
 //ADDON SETUP
-string VERSION="V0.351";
+string VERSION="V0.352";
 string HELP_NOTECARD="OpenCollar - Real Leash - User's Guide";
 
 //menu labels
