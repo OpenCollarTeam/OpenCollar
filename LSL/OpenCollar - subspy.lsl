@@ -12,7 +12,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup
-//09. Okt 2013 3.930-
+//10. Okt 2013 3.930-51
 //
 //Files:
 //OpenCollar - subspy.lsl
@@ -556,6 +556,7 @@ TurnAllOff(string command)
 			}
 		llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
     }
+	Notify(g_kWearer,"Spy add-on is now disabled",FALSE);
 }
 
 
@@ -647,6 +648,9 @@ default
         g_lOwners = [g_kWearer, g_sSubName];  // initially self-owned until we hear a db message otherwise
 		
 		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+		
+		llSleep(4.0);
+		Notify(g_kWearer,"OpenCollar SPY add-on INSTALLED and AVAILABLE",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
