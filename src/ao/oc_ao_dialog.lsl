@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                             OpenCollarAO - Dialog                              //
+//                                 version 3.900                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
@@ -45,9 +57,9 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 integer pagesize = 12;
-string MORE = ">";
-string PREV = "<";
-string UPMENU = "^"; // string to identify the UPMENU button in the utility buttons
+string MORE = "►";
+string PREV = "◄";
+string UPMENU = "⏏"; // string to identify the UPMENU button in the utility buttons
 //string SWAPBTN = "swap";
 //string SYNCBTN = "sync";
 string BLANK = " ";
