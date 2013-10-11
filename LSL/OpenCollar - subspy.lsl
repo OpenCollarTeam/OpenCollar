@@ -10,6 +10,45 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//modified by: Zopf Resident - Ray Zopf (Raz)
+//Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup
+//10. Okt 2013 3.930-51
+//
+//Files:
+//OpenCollar - subspy.lsl
+//
+//Prequisites: OC
+//Notecard format: ---
+//basic help:
+
+//bug: ???
+
+//todo: rework link_message{}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//===============================================
+//FIRESTORM SPECIFIC DEBUG STUFF
+//===============================================
+
+//#define FSDEBUG
+//#include "fs_debug.lsl"
+
+
+//===============================================
+//GLOBAL VARIABLES
+//===============================================
+
+//debug variables
+//-----------------------------------------------
+
+integer g_iDebugMode=FALSE; // set to TRUE to enable Debug messages
+
+
+//internal variables
+//-----------------------------------------------
+
 //put all reporting on an interval of 30 or 60 secs.  That way we won't get behind with IM delays.
 //use sensorrepeat as a second timer to do the reporting (since regular timer is already used by menu system
 //if radar is turned off, just don't report avs when the sensor or no_sensor event goes off
@@ -27,10 +66,10 @@ integer g_iListener;
 
 string g_sLoc;
 integer g_iFirstReport = TRUE;//if this is true when spy settings come in, then record current position in g_lTPBuffer and set to false
-integer g_iSensorRange = 8;
-integer g_iSensorRepeat = 120;
+integer g_iSensorRange = 4;
+integer g_iSensorRepeat = 900;
 
-//MESSAGE MAP
+//OC MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
@@ -57,37 +96,59 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string g_sDBToken = "List";
+string g_sScript;
 
 string UPMENU = "⏏";
 string g_sParentMenu = "AddOns";
-string g_sSubMenu = "Spy";
+string g_sSubMenu = "SubSpy";
 
 list g_lOwners;
 string g_sSubName;
-list g_lSetttings;
+list g_lSettings;
 
 key g_kDialogSpyID;
 key g_kDialogRadarSettingsID;
 
 key g_kWearer;
 
-Debug(string sStr)
+
+//===============================================
+//PREDEFINED FUNCTIONS
+//===============================================
+
+
+//===============================================================================
+//= parameters   :    string    sMsg    message string received
+//=
+//= return        :    none
+//=
+//= description  :    output debug messages
+//=
+//===============================================================================
+
+Debug(string sMsg)
 {
-    //llOwnerSay(llGetScriptName() + ": " + sStr);
+    if (!g_iDebugMode) return;
+    Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
 }
+
+
 string GetScriptID()
 {
     // strip away "OpenCollar - " leaving the script's individual name
     list parts = llParseString2List(llGetScriptName(), ["-"], []);
     return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
 }
+
+
 string PeelToken(string in, integer slot)
 {
     integer i = llSubStringIndex(in, "_");
     if (!slot) return llGetSubString(in, 0, i);
     return llGetSubString(in, i + 1, -1);
 }
+
+
 DoReports()
 {
     Debug("doing reports");
@@ -162,6 +223,7 @@ DoReports()
     g_lTPBuffer = [];
 }
 
+
 UpdateSensor()
 {
     llSensorRemove();
@@ -173,6 +235,7 @@ UpdateSensor()
         llSensorRepeat("" ,"" , AGENT, g_iSensorRange, PI, g_iSensorRepeat);
     }
 }
+
 
 UpdateListener()
 {
@@ -208,16 +271,18 @@ UpdateListener()
     }
 }
 
+
 integer Enabled(string sToken)
 {
-    integer iIndex = llListFindList(g_lSetttings, [sToken]);
+    integer iIndex = llListFindList(g_lSettings, [sToken]);
+	Debug("enabled; Settings: "+(string)g_lSettings + " Token: "+ sToken + " -- Position: " + (string)iIndex);
     if(iIndex == -1)
     {
         return FALSE;
     }
     else
     {
-        if(llList2String(g_lSetttings, iIndex + 1) == "on")
+        if(llList2String(g_lSettings, iIndex + 1) == "on")
         {
             return TRUE;
         }
@@ -225,12 +290,14 @@ integer Enabled(string sToken)
     }
 }
 
+
 string GetTimestamp() // Return a string of the date and time
 {
     integer t = (integer)llGetWallclock(); // seconds since midnight
 
     return GetPSTDate() + " " + (string)(t / 3600) + ":" + PadNum((t % 3600) / 60) + ":" + PadNum(t % 60);
 }
+
 
 string PadNum(integer sValue)
 {
@@ -240,6 +307,7 @@ string PadNum(integer sValue)
     }
     return (string)sValue;
 }
+
 
 string GetPSTDate()
 { //Convert the date from UTC to PST if GMT time is less than 8 hours after midnight (and therefore tomorow's date).
@@ -256,11 +324,13 @@ string GetPSTDate()
     return llGetDate();
 }
 
+
 string GetLocation() {
     vector g_vPos = llGetPos();
     return llList2String(llGetParcelDetails(llGetPos(), [PARCEL_DETAILS_NAME]),0) + " (" + llGetRegionName() + " <" +
         (string)((integer)g_vPos.x)+","+(string)((integer)g_vPos.y)+","+(string)((integer)g_vPos.z)+">)";
 }
+
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
@@ -269,6 +339,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
+
 
 DialogSpy(key kID, integer iAuth)
 {
@@ -313,16 +384,18 @@ DialogSpy(key kID, integer iAuth)
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
+
 DialogRadarSettings(key kID, integer iAuth)
 {
     list lButtons;
     string sPromt = "\n\nSetup for the Radar Repeats and Sensors:\n";
     sPromt += "\nRadar Range is set to: " + (string)((integer)g_iSensorRange) + " meters.\n";
     sPromt += "\nRadar Frequency is set to: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
-    lButtons += ["5 meters", "8 meters", "10 meters", "15 meters"];
-    lButtons += ["2 minutes", "5 minutes", "8 minutes", "10 minutes"];
+    lButtons += ["4 meters", "8 meters", "18 meters"];
+    lButtons += ["5 minutes", "9 minutes", "15 minutes", "21 minutes"];
     g_kDialogRadarSettingsID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
 }
+
 
 integer GetOwnerChannel(key kOwner, integer iOffset)
 {
@@ -337,6 +410,8 @@ integer GetOwnerChannel(key kOwner, integer iOffset)
     }
     return iChan;
 }
+
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
@@ -357,6 +432,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
+
 BigNotify(key kID, string sMsg)
 {//if sMsg iLength > 1024, split into bite sized pieces and IM each individually
     Debug("bignotify");
@@ -375,6 +451,7 @@ BigNotify(key kID, string sMsg)
         Notify(kID, llDumpList2String(lTmp, "\n"), FALSE);
     }
 }
+
 
 NotifyOwners(string sMsg)
 {
@@ -398,32 +475,42 @@ NotifyOwners(string sMsg)
     }
 }
 
+
 SaveSetting(string sStr)
 {
     list lTemp = llParseString2List(sStr, [" "], []);
     string sOption = llList2String(lTemp, 0);
     string sValue = llList2String(lTemp, 1);
-    integer iIndex = llListFindList(g_lSetttings, [sOption]);
+    integer iIndex = llListFindList(g_lSettings, [sOption]);
+	
     if(iIndex == -1)
     {
-        g_lSetttings += lTemp;
+        g_lSettings += lTemp;
     }
     else
     {
-        g_lSetttings = llListReplaceList(g_lSetttings, [sValue], iIndex + 1, iIndex + 1);
+        g_lSettings = llListReplaceList(g_lSettings, [sValue], iIndex + 1, iIndex + 1);
     }
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sValue, NULL_KEY);
+	//radar, listen, trace, meters, minutes
 }
+
 
 EnforceSettings()
 {
     integer i;
-    integer iListLength = llGetListLength(g_lSetttings);
-    for(i = 1; i < iListLength; i += 2)
+    integer iListLength = llGetListLength(g_lSettings);
+
+	Debug("enforce settings, length: "+ (string)iListLength);
+	
+    for(i = 0; i < iListLength; i += 2)
     {
-        string sOption = llList2String(g_lSetttings, i);
-        string sValue = llList2String(g_lSetttings, i + 1);
-        if(sOption == "meter")
+        string sOption = llList2String(g_lSettings, i);
+        string sValue = llList2String(g_lSettings, i + 1);
+		
+		Debug("Option, value: "+sOption+sValue);
+		
+        if(sOption == "meters")
         {
             g_iSensorRange = (integer)sValue;
         }
@@ -436,30 +523,50 @@ EnforceSettings()
     UpdateListener();
 }
 
-TurnAllOff()
+
+TurnAllOff(string command)
 { // set all values to off and remove sensor and listener
+	Debug("Turn all off: " + command);
     llSensorRemove();
     llListenRemove(g_iListener);
-    list lTemp = ["radar", "listen", "trace"];
+	list lTemp;
+	string sStatus;
+	if ("runaway" == command) {
+		g_iSensorRange = 4;
+		g_iSensorRepeat = 900;
+		lTemp = ["radar", "listen", "trace", "meters", "minutes"];
+	} else {
+		lTemp = ["radar", "listen", "trace"];
+	}
     integer i;
     for (i=0; i < llGetListLength(lTemp); i++)
     {
         string sOption = llList2String(lTemp, i);
-        integer iIndex = llListFindList(g_lSetttings, [sOption]);
-        if(iIndex != -1)
-        {
-            g_lSetttings = llListReplaceList(g_lSetttings, ["off"], iIndex + 1, iIndex + 1);
-        }
+        integer iIndex = llListFindList(g_lSettings, [sOption]);
+		
+		if ("meters" == sOption) sStatus = (string)g_iSensorRange;
+			else if ("minutes" == sOption) sStatus = (string)g_iSensorRepeat;
+				else { 
+					sStatus = "off";
+				}
+				
+		if(iIndex == -1) g_lSettings += [ sOption , sStatus];
+			else {	
+            g_lSettings = llListReplaceList(g_lSettings, [sStatus], iIndex + 1, iIndex + 1);
+			}
+		llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
     }
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sDBToken + "=" + llDumpList2String(g_lSetttings, ","), NULL_KEY);
+	Notify(g_kWearer,"Spy add-on is now disabled",FALSE);
 }
+
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
+	Debug("UserCommand: "+ (string)iNum+" -- "+sStr);
     if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
     //only a primary owner can use this !!
     sStr = llToLower(sStr);
-    if (sStr == "spy" || sStr == "menu " + llToLower(g_sSubMenu)) DialogSpy(kID, iNum);
+    if (sStr == "subspy" || sStr == "menu " + llToLower(g_sSubMenu)) DialogSpy(kID, iNum);
     else if (iNum != COMMAND_OWNER)
     { 
         if(~llListFindList(g_lCmds, [sStr]))
@@ -467,10 +574,11 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else // COMMAND_OWNER
     {
+		Debug("UserCommand - COMMAND_OWNER");
         if (sStr == "radarsettings")//request for the radar settings menu
         {
             DialogRadarSettings(kID, iNum);
-        }
+        } else if ("runaway" == sStr) TurnAllOff(sStr);
         else if (~llListFindList(g_lCmds, [sStr]))//received an actual spy command
         {
             if(sStr == "trace on")
@@ -518,6 +626,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
+
+//===============================================
+//===============================================
+//MAIN
+//===============================================
+//===============================================
+
 default
 {
     on_rez(integer iNum)
@@ -531,7 +646,11 @@ default
         g_sSubName = llKey2Name(g_kWearer);
         g_sLoc=llGetRegionName();
         g_lOwners = [g_kWearer, g_sSubName];  // initially self-owned until we hear a db message otherwise
-        g_sDBToken = GetScriptID() + g_sDBToken;
+		
+		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+		
+		llSleep(4.0);
+		Notify(g_kWearer,"OpenCollar SPY add-on INSTALLED and AVAILABLE",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
@@ -557,8 +676,13 @@ default
         }
     }
 
+	//listen for linked messages from OC scripts
+    //-----------------------------------------------
+	
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
+	    Debug("link_message: Sender = "+ (string)iSender + ", iNum = "+ (string)iNum + ", string = " + (string)sStr +", ID = " + (string)kID);
+
         if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_SAVE)
         {
@@ -576,15 +700,24 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+	        integer i = llSubStringIndex(sToken, "_");
+
+            Debug("parse settings: "+sToken+" -- "+sValue);
+			
             if(sToken == "auth_owner" && llStringLength(sValue) > 0)
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
                 Debug("owners: " + sValue);
             }
-            else if (sToken == g_sDBToken)
-            { //llOwnerSay("Loading Spy Settings: " + sValue + " from Database.");
-                Debug("got settings from db: " + sValue);
-                g_lSetttings = llParseString2List(sValue, [","], []);
+            else if (llGetSubString(sToken, 0, i) == g_sScript)
+            {
+			    string sOption = llToLower(llGetSubString(sToken, i+1, -1));
+                Debug("got settings from db: " + sOption + sValue);
+				integer iIndex = llListFindList(g_lSettings, [sOption]);
+				if(iIndex == -1) g_lSettings += [ sOption , llToLower(sValue)];
+					else g_lSettings = llListReplaceList(g_lSettings, [llToLower(sValue)], iIndex + 1, iIndex + 1);
+				Debug("new g_lSettings: " + (string)g_lSettings);		
+				if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption+"!",FALSE);
                 EnforceSettings();
 
                 if (g_iFirstReport)
@@ -605,7 +738,7 @@ default
         }
         else if(iNum == COMMAND_SAFEWORD)
         {//we recieved a safeword sCommand, turn all off
-            TurnAllOff();
+            TurnAllOff("safeword");
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -634,7 +767,7 @@ default
                         list lTemp = llParseString2List(sMessage, [" "], []);
                         integer sValue = (integer)llList2String(lTemp,0);
                         string sOption = llList2String(lTemp,1);
-                        if(sOption == "meter")
+                        if(sOption == "meters")
                         {
                             g_iSensorRange = sValue;
                             SaveSetting(sOption + " " + (string)sValue);
