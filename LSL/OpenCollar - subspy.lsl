@@ -471,7 +471,7 @@ NotifyOwners(string sMsg)
         }
         else
         {
-			if (g_sOffMsg == sMsg) Notify(kAv, sMsg, FALSE);
+			if (llSubStringIndex(sMsg, g_sOffMsg) != ERR_GENERIC && kAv != g_kWearer) Notify(kAv, sMsg, FALSE);
             Debug((string)kAv + " is right next to you! not notifying.");
         }
     }
@@ -558,7 +558,7 @@ TurnAllOff(string command)
 			}
 		llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
     }
-	if ("safeword" == command) NotifyOwners(g_sOffMsg);
+	if ("safeword" == command) NotifyOwners(g_sOffMsg+" on "+g_sSubName);
 	Notify(g_kWearer,g_sOffMsg,FALSE);
 }
 
