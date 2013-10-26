@@ -276,7 +276,7 @@ UpdateListener()
 integer Enabled(string sToken)
 {
     integer iIndex = llListFindList(g_lSettings, [sToken]);
-	Debug("enabled; Settings: "+(string)g_lSettings + " Token: "+ sToken + " -- Position: " + (string)iIndex);
+    Debug("enabled; Settings: "+(string)g_lSettings + " Token: "+ sToken + " -- Position: " + (string)iIndex);
     if(iIndex == -1)
     {
         return FALSE;
@@ -471,7 +471,7 @@ NotifyOwners(string sMsg)
         }
         else
         {
-			if (llSubStringIndex(sMsg, g_sOffMsg) != ERR_GENERIC && kAv != g_kWearer) Notify(kAv, sMsg, FALSE);
+            if (llSubStringIndex(sMsg, g_sOffMsg) != ERR_GENERIC && kAv != g_kWearer) Notify(kAv, sMsg, FALSE);
             Debug((string)kAv + " is right next to you! not notifying.");
         }
     }
@@ -484,7 +484,7 @@ SaveSetting(string sStr)
     string sOption = llList2String(lTemp, 0);
     string sValue = llList2String(lTemp, 1);
     integer iIndex = llListFindList(g_lSettings, [sOption]);
-	
+    
     if(iIndex == -1)
     {
         g_lSettings += lTemp;
@@ -494,7 +494,7 @@ SaveSetting(string sStr)
         g_lSettings = llListReplaceList(g_lSettings, [sValue], iIndex + 1, iIndex + 1);
     }
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sValue, NULL_KEY);
-	//radar, listen, trace, meters, minutes
+    //radar, listen, trace, meters, minutes
 }
 
 
@@ -503,15 +503,15 @@ EnforceSettings()
     integer i;
     integer iListLength = llGetListLength(g_lSettings);
 
-	Debug("enforce settings, length: "+ (string)iListLength);
-	
+    Debug("enforce settings, length: "+ (string)iListLength);
+    
     for(i = 0; i < iListLength; i += 2)
     {
         string sOption = llList2String(g_lSettings, i);
         string sValue = llList2String(g_lSettings, i + 1);
-		
-		Debug("Option, value: "+sOption+sValue);
-		
+        
+        Debug("Option, value: "+sOption+sValue);
+        
         if(sOption == "meters")
         {
             g_iSensorRange = (integer)sValue;
@@ -528,44 +528,44 @@ EnforceSettings()
 
 TurnAllOff(string command)
 { // set all values to off and remove sensor and listener
-	Debug("Turn all off: " + command);
+    Debug("Turn all off: " + command);
     llSensorRemove();
     llListenRemove(g_iListener);
-	list lTemp;
-	string sStatus;
-	if ("runaway" == command) {
-		g_iSensorRange = 4;
-		g_iSensorRepeat = 900;
-		lTemp = ["radar", "listen", "trace", "meters", "minutes"];
-	} else {
-		lTemp = ["radar", "listen", "trace"];
-	}
+    list lTemp;
+    string sStatus;
+    if ("runaway" == command) {
+        g_iSensorRange = 4;
+        g_iSensorRepeat = 900;
+        lTemp = ["radar", "listen", "trace", "meters", "minutes"];
+    } else {
+        lTemp = ["radar", "listen", "trace"];
+    }
     integer i;
     for (i=0; i < llGetListLength(lTemp); i++)
     {
         string sOption = llList2String(lTemp, i);
         integer iIndex = llListFindList(g_lSettings, [sOption]);
-		
-		if ("meters" == sOption) sStatus = (string)g_iSensorRange;
-			else if ("minutes" == sOption) sStatus = (string)g_iSensorRepeat;
-				else { 
-					sStatus = "off";
-				}
-				
-		if(iIndex == -1) g_lSettings += [ sOption , sStatus];
-			else {	
+        
+        if ("meters" == sOption) sStatus = (string)g_iSensorRange;
+            else if ("minutes" == sOption) sStatus = (string)g_iSensorRepeat;
+                else { 
+                    sStatus = "off";
+                }
+                
+        if(iIndex == -1) g_lSettings += [ sOption , sStatus];
+            else {    
             g_lSettings = llListReplaceList(g_lSettings, [sStatus], iIndex + 1, iIndex + 1);
-			}
-		llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
+            }
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
     }
-	if ("safeword" == command) NotifyOwners(g_sOffMsg+" on "+g_sSubName);
-	Notify(g_kWearer,g_sOffMsg,FALSE);
+    if ("safeword" == command) NotifyOwners(g_sOffMsg+" on "+g_sSubName);
+    Notify(g_kWearer,g_sOffMsg,FALSE);
 }
 
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-	Debug("UserCommand: "+ (string)iNum+" -- "+sStr);
+    Debug("UserCommand: "+ (string)iNum+" -- "+sStr);
     if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
     //only a primary owner can use this !!
     sStr = llToLower(sStr);
@@ -577,7 +577,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else // COMMAND_OWNER
     {
-		Debug("UserCommand - COMMAND_OWNER");
+        Debug("UserCommand - COMMAND_OWNER");
         if (sStr == "radarsettings")//request for the radar settings menu
         {
             DialogRadarSettings(kID, iNum);
@@ -649,11 +649,11 @@ default
         g_sSubName = llKey2Name(g_kWearer);
         g_sLoc=llGetRegionName();
         g_lOwners = [g_kWearer, g_sSubName];  // initially self-owned until we hear a db message otherwise
-		
-		g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-		
-		llSleep(4.0);
-		Notify(g_kWearer,"OpenCollar SPY add-on INSTALLED and AVAILABLE",FALSE);
+        
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        
+        llSleep(4.0);
+        Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
@@ -679,12 +679,12 @@ default
         }
     }
 
-	//listen for linked messages from OC scripts
+    //listen for linked messages from OC scripts
     //-----------------------------------------------
-	
+    
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-	    Debug("link_message: Sender = "+ (string)iSender + ", iNum = "+ (string)iNum + ", string = " + (string)sStr +", ID = " + (string)kID);
+        Debug("link_message: Sender = "+ (string)iSender + ", iNum = "+ (string)iNum + ", string = " + (string)sStr +", ID = " + (string)kID);
 
         if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_SAVE)
@@ -703,10 +703,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-	        integer i = llSubStringIndex(sToken, "_");
+            integer i = llSubStringIndex(sToken, "_");
 
             Debug("parse settings: "+sToken+" -- "+sValue);
-			
+            
             if(sToken == "auth_owner" && llStringLength(sValue) > 0)
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
@@ -714,13 +714,13 @@ default
             }
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
-			    string sOption = llToLower(llGetSubString(sToken, i+1, -1));
+                string sOption = llToLower(llGetSubString(sToken, i+1, -1));
                 Debug("got settings from db: " + sOption + sValue);
-				integer iIndex = llListFindList(g_lSettings, [sOption]);
-				if(iIndex == -1) g_lSettings += [ sOption , llToLower(sValue)];
-					else g_lSettings = llListReplaceList(g_lSettings, [llToLower(sValue)], iIndex + 1, iIndex + 1);
-				Debug("new g_lSettings: " + (string)g_lSettings);		
-				if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption+"!",FALSE);
+                integer iIndex = llListFindList(g_lSettings, [sOption]);
+                if(iIndex == -1) g_lSettings += [ sOption , llToLower(sValue)];
+                    else g_lSettings = llListReplaceList(g_lSettings, [llToLower(sValue)], iIndex + 1, iIndex + 1);
+                Debug("new g_lSettings: " + (string)g_lSettings);        
+                if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption+"!",FALSE);
                 EnforceSettings();
 
                 if (g_iFirstReport)
