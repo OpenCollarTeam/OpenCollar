@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvfolders                             //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,6 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//3.934 removed many newlines from browse folder prompts, it was getting ridiculously big! -MD
 string g_sParentMenu = "Un/Dress";
 
 list g_lChildren = ["Browse #RLV"];
@@ -353,11 +354,11 @@ FolderBrowseMenu(string sStr)
         lItem=llParseString2List(sFirst,["|"],[]);
         iWorn=llList2Integer(lItem,0);
         g_iLastFolderState=iWorn;
-        if (iWorn / 10 == 1 ) sPrompt += "\n\nIt has wearable items";
-        else if (iWorn / 10 == 2 ) sPrompt += "\n\nIt has wearable and removable items";
-        else if (iWorn / 10 == 3 ) sPrompt += "\n\nIt has removable items";
-        else if (iWorn / 10 == 0 ) sPrompt += "\n\nIt does not directly have any wearable or removable item";
-        sPrompt += ".\n\n";
+        if (iWorn / 10 == 1 ) sPrompt += "It has wearable items";
+        else if (iWorn / 10 == 2 ) sPrompt += "It has wearable and removable items";
+        else if (iWorn / 10 == 3 ) sPrompt += "It has removable items";
+        else if (iWorn / 10 == 0 ) sPrompt += "It does not directly have any wearable or removable item";
+        sPrompt += ".\n";
         lUtilityButtons += [ACTIONS_CURRENT];
     }
     else lUtilityButtons += [ROOT_ACTIONS];
@@ -371,8 +372,8 @@ FolderBrowseMenu(string sStr)
         }
     }
     sPrompt += "\n- Click "+ACTIONS_CURRENT+" to manage this folder content.\n- Click one of the subfolders to browse it.\n";
-    if (g_sCurrentFolder!="") {sPrompt += "- Click "+PARENT+" to browse parent folder."; lUtilityButtons += [PARENT];}
-    sPrompt += "\n- Click "+UPMENU+" to go back to "+g_sParentMenu+".\n\n";
+    if (g_sCurrentFolder!="") {sPrompt += "- Click "+PARENT+" to browse parent folder.\n"; lUtilityButtons += [PARENT];}
+    sPrompt += "- Click "+UPMENU+" to go back to "+g_sParentMenu+".\n";
     g_kBrowseID = Dialog(g_kAsyncMenuUser, sPrompt, lFolders, lUtilityButtons, g_iPage, g_iAsyncMenuAuth);
 }
 
