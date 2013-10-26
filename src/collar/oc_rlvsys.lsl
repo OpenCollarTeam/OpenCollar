@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvmain                               //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.924 MD comments. line 16, halved query timer to 30s * 2. line 510, removed llResetScript(). line 560, i_OwnerCount added to remove llGetListLength from a loop.
+//3.934: Something situation could cause the viewer check to get stuck. Not clear what, but I've thrown in a few robustness measures that hopefully should sort that out.
 //new viewer checking method, as of 2.73
 //on rez, restart script
 //on script start, query db for rlvon setting
@@ -89,6 +89,9 @@ string CTYPE = "collar";
 key g_kWearer;
 string g_sScript;
 
+string g_sRlvVersionString="(unknown)";
+
+
 integer g_iLastDetach; //unix time of the last detach: used for checking if the detached time was small enough for not triggering the ping mechanism
 
 
@@ -120,7 +123,8 @@ CheckVersion(integer iSecond)
     }
     if (g_iVerbose)
     {
-        Notify(g_kWearer, "Attempting to enable Restrained Love Viewer functions.  " + g_sRLVString+ " or higher is required for all features to work.", TRUE);
+        //Notify(g_kWearer, "Attempting to enable Restrained Love Viewer functions.  " + g_sRLVString+ " or higher is required for all features to work.", TRUE);
+        llOwnerSay( "Checking you out for hotness (and RLV), please wait a moment before use.");
     }
     //open listener
     g_iListener = llListen(g_iVersionChan, "", g_kWearer, "");
@@ -144,8 +148,16 @@ DoMenu(key kID, integer iAuth)
     }
 
     string sPrompt = "\n\n- Restrained Love Viewer Options -\n";
-    if (g_iRlvVersion) sPrompt += "\n- Detected version of RLV API: "+(string)g_iRlvVersion;
+    if (g_iRlvVersion) sPrompt += "\n- Detected version of RLV API: "+g_sRlvVersionString;
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+}
+string PrettyVersion(string iVersion)
+{
+    integer i=(integer)iVersion;
+    string s3=llGetSubString((string)(i/100),-2,-1);
+    string s2=llGetSubString((string)(i/10000),-2,-1);
+    string s1=llGetSubString((string)(i/1000000),-2,-1);
+    return s1+"."+s2+"."+s3;
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
@@ -364,6 +376,11 @@ SafeWord(integer iCollarToo) {
 integer UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    if(sStr=="runaway") // some scripts reset on runaway, we want to resend RLV state.
+    {
+        llSleep(2); //give some time for scripts to get ready.
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on="+(string)g_iRLVOn, NULL_KEY);
+    }
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llList2String(lParams, 0);
@@ -447,6 +464,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
 default{
     state_entry()
     {
+        llSetTimerEvent(0);
+        g_iCheckCount = 0; 
+        // Above just in case we somehow get dumped to checked mid versioncheck and then come back. Not sure this is necessary, but should stop eternal loops in  CheckVersion() if things get odd. 
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         //request setting from DB
@@ -492,8 +512,10 @@ default{
                     {
                         //RLV is turned off in DB.  just switch to checked state without checking viewer
                         //llOwnerSay("rlvdb false");
-                        state checked;
+                        g_iViewerCheck = FALSE;
+                        g_iRLVOn = FALSE; //force values, just in case.
                         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+                        state checked;
                     }
                     else
                     {
@@ -519,6 +541,7 @@ default{
         {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
             Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
            // llResetScript();//Nan: why do we reset here?! SA: maybe so we retry querying RLV? MD: I'm removing this, cos it means that if someone attempts to get the RLV menu while querying, restrictions list will be cleared, and hence owner will not be notified. Also protection from people menu mashing out of confusion. 1 minute (2 before I changed it!) is enough for querying, surely?
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "on", NULL_KEY); //MD: Why? In case we've got a timing screwup on an update/reset. This should resolve the llResetScript() question above.
         }
     }
 
@@ -532,6 +555,7 @@ default{
             g_iCheckCount = 0;
             //send the version to rlv plugins
             g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2);
+            g_sRlvVersionString=PrettyVersion(sMsg);
             llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
             //this is already TRUE if rlvon=1 in the DB, but not if rlvon was unset.  set it to true here regardless, since we're setting rlvon=1 in the DB
             g_iRLVOn = TRUE;
@@ -621,6 +645,7 @@ state checked {
 
     state_entry()
     {
+        
         g_lMenu = [];//clear this list now in case there are old entries in it
         //we only need to request submenus if rlv is turned on and running
         if (g_iRLVOn && g_iViewerCheck)
