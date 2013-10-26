@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - settings                              //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,17 +28,24 @@
 //  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
 //      texture_Base=steel,texture_Ring=stripes (in the scripts)
 
-string PARENT_MENU = "Help/Debug";
-string SUBMENU = "Setting"; // "settings" in chat will call a mini dump .. this is to prevent double-up
+//3.934 Added a load defaults button to menu to user to reload the settings from the defaults notecard without having to open the notecard, edit it, and save it again, as script is only being reset on a changed owner. This allows people to restore settings more easily, for example if they change appearance or if they runaway and want to restore the owner settings from the defaults card. -MD
+//3.934 Menu Changes: the help/debug > settings setup removed, now help goes into the help/about menu and these functions appear in the Options menu under main. For the sake of simplicity, Fix Menus is now handled here, by using llResetOtherScript(); -MD
+
+
+string PARENT_MENU = "Main";
+string SUBMENU = "Options"; 
 
 string DUMPCACHE = "Dump Cache";
 string PREFUSER = "☐ Personal";
 string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
-string WIKI = "Online Guide";
+//string WIKI = "Online Guide";
+string LOADCARD="Load Defaults";
+string REFRESH_MENU = "Fix Menus";
 string UPMENU = "⏏";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
+string g_sMenuScript="OpenCollar - menu"; //for fixmenus
 
 string defaultscard = "defaultsettings";
 string split_line; // to parse lines that were split due to lsl constraints
@@ -74,7 +81,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 integer INTERFACE_CHANNEL;
 
-string WIKI_URL = "http://www.opencollar.at/user-guide.html";
+//string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 string DESIGN_ID;
 list DESIGN_SETTINGS;
 list USER_SETTINGS;
@@ -113,10 +120,11 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 DoMenu(key keyID, integer iAuth)
 {
-    string sPrompt = "\n\nClick '" + DUMPCACHE + "' to dump all current settings to chat.";
-    sPrompt += "\n(copy/paste them to backup your defaultsettings)\n";
-    sPrompt += "\nClick '" + WIKI + "' to get a link to the User Guide.\n";
-    list lButtons = [DUMPCACHE, WIKI];
+    string sPrompt = "\nClick '" + DUMPCACHE + "' to dump all current settings to chat.";
+    sPrompt += "\n(copy/paste them to backup your defaultsettings)";
+    //sPrompt += "\nClick '" + WIKI + "' to get a link to the User Guide.";
+    sPrompt += "\nClick '" +LOADCARD+"' to restore values from defaultsettings notecard";
+    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU];
     if (USER_PREF)
     {
         sPrompt += "\nUncheck " + PREFDESI + " to give designer settings priority.\n";
@@ -127,6 +135,7 @@ DoMenu(key keyID, integer iAuth)
         sPrompt += "\nCheck " + PREFUSER + " to give your personal settings priority.\n";
         lButtons += [PREFUSER];
     }
+    sPrompt +="\n(Looking for help or updating? Pick the About menu)";
     g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -420,6 +429,20 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         DumpCache(kID);
     }
+    else if (C == llToLower(LOADCARD))
+    {
+        defaultsline = 0;
+        defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
+    }
+    else if (C == llToLower(REFRESH_MENU))
+    {
+        if(llGetInventoryType(g_sMenuScript)==INVENTORY_SCRIPT)
+        {
+            llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
+            llResetOtherScript(g_sMenuScript);
+        }
+        else Notify(kID,"Menu script is missing or has been renamed. Cannot fix menus!",FALSE);
+    }        
     else return FALSE;
     return TRUE;
 }
@@ -566,28 +589,54 @@ default
                     llMessageLinked(LINK_THIS, iAuth, "menu "+ PARENT_MENU, kAv);
                     return;
                 }
-                if (sMessage == WIKI)
-                {
-                    llSleep(0.2);
-                    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
-                    return;
-                }
+               // if (sMessage == WIKI) //moved to menu script
+               // {
+                //    llSleep(0.2);
+                //    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
+                //    return;
+               // }
                 if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
-                if (sMessage == PREFDESI)
-                {
-                    USER_PREF = FALSE;
-                    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
+                
+                if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
+                { //moving everything to UserCommand to save doubling up on code.
+                    UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv);
                 }
-                else if (sMessage == PREFUSER)
-                {
-                    USER_PREF = TRUE;
-                    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
-                }
-                else if (sMessage == DUMPCACHE)
-                {
-                    if (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER) DumpCache(kAv);
-                    else Notify(kAv, "Only Owners & Wearer may access this feature", FALSE);
-                }
+                else Notify(kAv,"Sorry, only Owners & Wearers may acces this feature.",FALSE);
+                
+                //if (sMessage == PREFDESI)
+                //{
+                //    USER_PREF = FALSE;
+                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
+                //}
+                //else if (sMessage == PREFUSER)
+                //{
+                //    USER_PREF = TRUE;
+                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
+                //}
+                //else if (sMessage == DUMPCACHE)
+                //{
+                //    if (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER) DumpCache(kAv);
+                //    else Notify(kAv, "Only Owners & Wearer may access this feature.", FALSE);
+                //}
+                //else if (sMessage == LOADCARD)
+                //{
+                //    if(kAv==g_kWearer)
+                //    {
+                //        defaultsline = 0;
+                //        defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
+                //    }
+                //    else Notify(kAv,"Only the collar wearer may reload defaults.",FALSE);
+                //}
+                // else if (sMessage == REFRESH_MENU)
+                //{
+                //     if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
+                //   {
+                //       llDialog(kAv, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
+                //        llResetOtherScript(g_sMenuScript);
+                //    }
+                //    else Notify(kAv,"Only the collar wearer and owners may refresh menus.",FALSE);
+                //}
+                    
                 DoMenu(kAv, iAuth);
             }
         }
