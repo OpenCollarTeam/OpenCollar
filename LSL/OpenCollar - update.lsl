@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,8 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+//3.924 version check now sends LM_SETTINGS_RESPONSE collarversion=versionnumber=isLatestVersion(TRUE/FALSE). this is read by the menu script to put the actual version number in menus, and allow prompts to indicate if an update is available. -MD
 
 // This script does 4 things:
 // 1 - On rez, check whether there's an update to the collar available.
@@ -55,10 +57,10 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string PARENT_MENU = "Help/Debug";
+string PARENT_MENU = "Help/About";
 string BTN_DO_UPDATE = "Update";
 string BTN_GET_UPDATE = "Get Updater";
-string BTN_GET_VERSION = "Get Version";
+//string BTN_GET_VERSION = "Get Version";
 
 key g_kMenuID;
 string CTYPE = "collar";
@@ -130,8 +132,8 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 ConfirmUpdate(key kUpdater)
 {
-    //string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:\n\n" + (string)kUpdater +"\n"
-    string sPrompt = "\n3 Golden Rules for Updates:\n\n1.Create a Backup\n2.Rezzed is safer than Worn\n3.Low Lag regions make happy Updates\n\n(These rules apply to any kind of scripted item, not just collars or bondage and kink items!)\n\nATTENTION: Do not rez any other collars till the update has started.\n\nReady?";
+    string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:\n\n" + (string)kUpdater +"\n"
+    + "\n3 Golden Rules for Updates:\n\n1.Create a Backup\n2.Rezzed is safer than Worn\n3.Low Lag regions make happy Updates\n\n(These rules apply to any kind of scripted item, not just collars or bondage and kink items!)\n\nATTENTION: Do not rez any other collars till the update has started.";
     g_kConfirmUpdate = Dialog(wearer, sPrompt, ["Yes", "No"], [], 0, COMMAND_WEARER);
 }
 
@@ -219,7 +221,7 @@ Init()
     // register menu buttons
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);    
+    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);    
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -246,10 +248,10 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
                 Notify(id,"Only the wearer can request updates for the " + CTYPE + ".",FALSE);
             }
         }
-        else if (submenu == BTN_GET_VERSION)
-        {
-            UserCommand(iNum, "version", id);
-        }
+       // else if (submenu == BTN_GET_VERSION)
+       // {
+       //    UserCommand(iNum, "version", id);
+       // }
         else
         {
             return TRUE; // drop the command if it is not a menu handled here
@@ -331,7 +333,9 @@ default
                     string prompt = "\n\nYou are running OpenCollar version " +
                     my_version + ".  There is an update available.";
                     g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
+                    llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=FALSE","");
                 }
+                else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=TRUE","");
             }
             else if (id == appengine_delivery_request)
             {
@@ -386,7 +390,7 @@ default
             {
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
+               // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
             }
         }
         else if (num == DIALOG_RESPONSE)
