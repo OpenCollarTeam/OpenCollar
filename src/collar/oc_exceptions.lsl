@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,7 +10,10 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.934 notes. I've overhauled the menu appearance as it wasn't really that easy to understand, following the RLV terminology which is a bit of a headache for scripters, let alone users. Descriptions are clearer and now represent the current state, and we use unicode ☐ and ☒ to indicate selected/deselected state on the buttons, common with unicode enhancements to other menus. ALL buttons indicators swapped to make clearer the effect of pressing them, and the person to whom the exceptions will be added/removed is now named at the top of the menu. Finally, I've cleared up remenuing a little. When someone who is not an owner/secowner is set to default and removed from the list, we now return the personlist, and when a new person is added, we remenu. -Medea
+//3.934 notes. I've overhauled the menu appearance as it wasn't really that easy to understand, following the RLV terminology which is a bit of a headache for scripters, let alone users. Descriptions are clearer and now represent the current state, and we use unicode ☐ and ☒ to indicate selected/deselected state on the buttons, common with unicode enhancements to other menus. ALL buttons indicators swapped to make clearer the effect of pressing them, and the person to whom the exceptions will be added/removed is now named at the top of the menu. Finally, I've cleared up remenuing a little. When someone who is not an owner/secowner is set to default and removed from the list, we now return the personlist, and when a new person is added, we remenu. - Medea
+
+//3.934 notes. Removed SetOwnerExs as it's never called. Added a check to setAllExs to  avoid setting exceptions for wearer (for example if the wearer is set as an owner) as they're pointless. - Medea
+
 
 key g_kLMID;//store the request id here when we look up a LM
 string CTYPE = "collar";
@@ -395,7 +398,7 @@ AddName(string sKey)
     g_kTmpKey = g_kTestKey = NULL_KEY;
     g_sTmpName = g_sUserCommand = "";
 }
-
+/* This function is never called, duplicated in setAllExs anyway.
 SetOwnersExs(string sVal)
 {
     if (!g_iRLVOn)
@@ -435,7 +438,7 @@ SetOwnersExs(string sVal)
         }
     }
 }
-
+*/
 SetAllExs(string sVal)
 {//llOwnerSay("allvars");
     if (!g_iRLVOn)
@@ -453,7 +456,7 @@ SetAllExs(string sVal)
         {
             sCmd = [];
             string sTmpOwner = llList2String(g_lOwners, n);
-            if (llListFindList(g_lSettings, [sTmpOwner]) == -1)
+            if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer)
             {
                 for (i = 0; i<iStop; i++)
                 {
@@ -483,7 +486,7 @@ SetAllExs(string sVal)
         {
             sCmd = [];
             string sTmpOwner = llList2String(g_lSecOwners, n);
-            if (llListFindList(g_lSettings, [sTmpOwner]) == -1)
+            if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer)
             {
                 for (i = 0; i<iStop; i++)
                 {
@@ -513,6 +516,7 @@ SetAllExs(string sVal)
         {
             sCmd = [];
             string sTmpOwner = llList2String(g_lSettings, n);
+            if(sTmpOwner==g_kWearer) jump skip;
             integer iTmpOwner = llList2Integer(g_lSettings, n+1);
             for (i = 0; i<iStop; i++)
             {
@@ -529,6 +533,7 @@ SetAllExs(string sVal)
             //llOwnerSay("sending " + sStr);
             //llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             llOwnerSay("@" + sStr);
+            @skip;
         }
     }
 }
