@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,6 +12,9 @@
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
+//3.934 PRE notes. Project:despam! NOT READY FOR RELEASE, still needs a small logic check at minimum, not to mention a little testing to see how effective it is! What is Project: despam!? It's about making certain menus less spammy. Previously, if any button options were sent to dialog where the button length is too long, the dialog system would add numbers to the buttons, and send the list of them to Noftify, so the menu user has a key to truncated buttons. Example: #RLV browsing, you might have buttons for Black Leather Skirt and Black Leather Cuffs. This would then become "1.Black Leath" and "2.Black Leath" as buttons, and the chat would include "1. Black Leather Skirt", "2. Black Leather Cuffs". Necessary for identifying truncated buttons, but horribly spammy! 
+//So, Project: despam does this. Instead of listing out all the buttons after the dialog is sent, as current, the listing process is now done in the dialog function. Advantages: removed doubling up of various functions used both in the dialog routine and in the spamming routine, the list now only provides a list for the current page when selected to reduce spamminess, and best of all, if there's enough room, the list will be displayed in the menu prompt and not sent to local chat at all. -MD
+//3.934 Added PrettyMain to make main menu look better. -MD
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -177,12 +180,13 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
 {
     //string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
     string sThisPrompt;
+    string sNumberedButtons;
+    integer iNBPromptlen;
     list lButtons;
     list lCurrentItems;
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart;
-    integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
-        
+    integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons); 
     //slice the menuitems by page
     if (iNumitems > iMyPageSize)
     {
@@ -194,34 +198,71 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     else iStart = 0;
     integer iEnd = iStart + iMyPageSize - 1;
     if (iEnd >= iNumitems) iEnd = iNumitems - 1;
-    if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
-        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) {
+    // check prompt lengths
+    integer iPromptlen=GetStringBytes(sPrompt);
+    if (iWithNums && !~llListFindList(MRSBUN, [kRecipient])) 
+    { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
+        
+        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) 
+        {
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) sButton = Key2Name((key)sButton);
             sButton = Integer2String(iCur, iWithNums) + " " + sButton;
+            sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
             lButtons += [sButton];
+        }
+        iNBPromptlen=GetStringBytes(sNumberedButtons);
+        if(iPromptlen+iNBPromptlen>511)
+        {
+            if(iNBPromptlen<1015) Notify(kRecipient,"Menu key:\n"+sNumberedButtons,FALSE);
+            else 
+            {
+                integer m=llGetListLength(lButtons);
+                integer iLen;
+                integer x;
+                string sOut="Menu key:";
+                string sLine;
+                while(x<m)
+                {
+                   sLine="/n"+llList2String(lButtons,x);
+                   iLen+=GetStringBytes(sLine);
+                   if(iLen>1024)
+                   {
+                       Notify(kRecipient,sOut,FALSE);
+                       sOut="";
+                       iLen=0;
+                    }
+                    sOut+=sLine;
+                    ++x;
+                }
+                Notify(kRecipient,sOut,FALSE);
+            }
         }
     }
     else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
     else lButtons = lMenuItems;
-    
-    // check promt lenghtes
-    integer iPromptlen=GetStringBytes(sPrompt);
+                    
     if (iPromptlen>511)
     {
         Notify(kRecipient,"The dialog prompt message is longer than 512 characters. It will be truncated to 512 characters.",TRUE);
-        sPrompt=TruncateString(sPrompt,510);
-        sThisPrompt = sPrompt;
+        sThisPrompt=TruncateString(sPrompt,510);
+        //sThisPrompt = sPrompt;
     }
-    else if (iPromptlen + GetStringBytes(sThisPrompt)< 512)
+    else //give us the best prompt we can fit into the space!
     {
-        sThisPrompt= sPrompt + sThisPrompt;
+        string sMkey="";
+        if(iNBPromptlen) sMkey="\nMenu Key:\n";
+        integer iMkeylen=GetStringBytes(sMkey);
+        integer iAll=iPromptlen + iNBPromptlen +iMkeylen + GetStringBytes(sThisPrompt);
+        if(iAll<513) sThisPrompt = sPrompt + sMkey + sNumberedButtons + sThisPrompt;
+        else if (iAll-iMkeylen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons + sThisPrompt;
+        else if(iPromptlen+iNBPromptlen+iMkeylen<513) sThisPrompt = sPrompt + sMkey + sNumberedButtons;
+        else if (iPromptlen+iNBPromptlen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons;
+        else if (iAll-iNBPromptlen-iMkeylen<513) sThisPrompt= sPrompt + sThisPrompt;
+        else sThisPrompt= sPrompt;
     }
-    else
-    {
-        sThisPrompt= sPrompt;
-    }
+
     
     //integer stop = llGetListLength(lCurrentItems);
     //integer n;
@@ -256,6 +297,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
 
 list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 {//returns a list formatted to that "options" will start in the top left of a dialog, and "utilitybuttons" will start in the bottom right
+    if(~llListFindList(lOptions,["Help/About"])) lOptions=PrettyMain(lOptions); //Quick and dirty way to check for main menu.
     list lSpacers;
     list lCombined = lOptions + lUtilityButtons + iPagebuttons;
     while (llGetListLength(lCombined) % 3 != 0 && llGetListLength(lCombined) < 12)
@@ -283,7 +325,27 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 
     return lOut;
 }
+list PrettyMain(list lOptions)
+{
+    integer iA=llListFindList(lOptions,["Access"]);
+    integer iO=llListFindList(lOptions,["Options"]);
+    integer iH=llListFindList(lOptions,["Help/About"]);
+    
+    if(~iA && ~iO && ~iH) //all three buttons found. Otherwise menu isn't main or is messed up, and we return
+    {
+       lOptions=llDeleteSubList(lOptions,iA,iA);
+       if(iO>iA) --iO;
+       if(iH>iA) --iH;
+       lOptions=llDeleteSubList(lOptions,iO,iO);
+       if (iH>iO) --iH;
+       lOptions=llDeleteSubList(lOptions,iH,iH);
+       return lOptions+["Access","Options","Help/About"];
+    }
+    else return lOptions;
+}
+       
 
+    
 
 list RemoveMenuStride(list lMenu, integer iIndex)
 {
@@ -408,8 +470,9 @@ default
             integer iPage = (integer)llList2String(lParams, 2);
             // SA: why should we keep nulls? Discarding them now saves us the use of SanitizeButtons()
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
-            integer iDigits;
-            if (!~llListFindList(MRSBUN, [kRCPT])) iDigits = ButtonDigits(lButtons);
+           // integer iDigits;
+            //if (!~llListFindList(MRSBUN, [kRCPT]))
+            integer iDigits = ButtonDigits(lButtons);
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
             integer iAuth = COMMAND_NOAUTH;
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
@@ -417,29 +480,29 @@ default
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth);
-            if (iDigits)
-            {
-                integer iLength = GetStringBytes(sPrompt);
-                string sOut = sPrompt;
-                integer iNb = llGetListLength(lButtons);
-                integer iCount;
-                string sLine;
-                for (iCount = 0; iCount < iNb; iCount++)
-                {
-                    string sButton = llList2String(lButtons, iCount);
-                    if ((key)sButton) sButton = Key2Name((key)sButton);
-                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
-                    iLength += GetStringBytes(sLine);
-                    if (iLength >= 1024)
-                    {
-                        Notify(kRCPT, sOut, FALSE);
-                        iLength = 0;
-                        sOut = "";
-                    }
-                    sOut += sLine;
-                }
-                Notify(kRCPT, sOut, FALSE);
-            }
+//            if (iDigits) //Removed for Project: despam!
+//            {
+//                integer iLength = GetStringBytes(sPrompt);
+//                string sOut = sPrompt;
+//                integer iNb = llGetListLength(lButtons);
+//                integer iCount;
+//                string sLine;
+//                for (iCount = 0; iCount < iNb; iCount++)
+//                {
+//                    string sButton = llList2String(lButtons, iCount);
+//                    if ((key)sButton) sButton = Key2Name((key)sButton);
+//                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
+//                    iLength += GetStringBytes(sLine);
+//                    if (iLength >= 1024)
+//                    {
+//                        Notify(kRCPT, sOut, FALSE);
+//                        iLength = 0;
+//                        sOut = "";
+//                    }
+//                    sOut += sLine;
+//                }
+//                Notify(kRCPT, sOut, FALSE);
+//            }
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
