@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.932                                  //
+//                                 version 3.933                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,8 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+//3.934 submenu name changed to "access" for menu updates and chat command for submenu updated to match (now works with both <prefix>owners and <prefix>access. Much bigger update to this script is in the works, but I think that's all that's needed for this release.
 
 key g_kWearer;
 list g_lOwners;//strided list in form key,name
@@ -21,7 +23,7 @@ string g_sTmpName; //used temporarily to store new owner or secowner name while 
 
 string  g_sWikiURL = "http://www.opencollar.at/user-guide.html";
 string g_sParentMenu = "Main";
-string g_sSubMenu = "Owners";
+string g_sSubMenu = "Access";
 
 string g_sRequestType; //may be "owner" or "secowner" or "remsecowner"
 key g_kHTTPID;
@@ -526,7 +528,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         }
         else Notify(kID, "Only Owners & Wearer may access this command",FALSE);
     }
-    else if (sStr == "owners")
+    else if (sStr == "owners" || sStr == "access")
     {   //give owner menu
         AuthMenu(kID, iNum);
     }
