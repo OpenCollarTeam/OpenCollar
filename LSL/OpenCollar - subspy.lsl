@@ -12,7 +12,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup
-//10. Okt 2013 3.930-51
+//25. Okt 2013 3.930-51
 //
 //Files:
 //OpenCollar - subspy.lsl
@@ -63,6 +63,7 @@ integer g_iOldAVBufferCount = -1; // number of AVs previously found, only send r
 list g_lCmds = ["trace on","trace off", "radar on", "radar off", "listen on", "listen off"];
 integer g_iListenCap = 1500;//throw away old chat lines once we reach this many chars, to prevent stack/heap collisions
 integer g_iListener;
+string g_sOffMsg = "Spy add-on is now disabled";
 
 string g_sLoc;
 integer g_iFirstReport = TRUE;//if this is true when spy settings come in, then record current position in g_lTPBuffer and set to false
@@ -470,6 +471,7 @@ NotifyOwners(string sMsg)
         }
         else
         {
+			if (llSubStringIndex(sMsg, g_sOffMsg) != ERR_GENERIC && kAv != g_kWearer) Notify(kAv, sMsg, FALSE);
             Debug((string)kAv + " is right next to you! not notifying.");
         }
     }
@@ -556,7 +558,8 @@ TurnAllOff(string command)
 			}
 		llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sStatus, NULL_KEY);
     }
-	Notify(g_kWearer,"Spy add-on is now disabled",FALSE);
+	if ("safeword" == command) NotifyOwners(g_sOffMsg+" on "+g_sSubName);
+	Notify(g_kWearer,g_sOffMsg,FALSE);
 }
 
 
