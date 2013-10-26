@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,19 +10,22 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+// 3.934 reimplemented Menuto function for hud channel. This seems to have been lost by the wayside in the interface channel mods. I've added a check to see if the object owner is the same as the menuto target key, as this will mean a new auth is not required and saves double authing in that situation (probably the most common). -MD
+// 3.934 Menu changes. help/debug is now replaced with Options menu, operated from the settings script. Refresh menus is now done from the Options menu in settings, using llResetOtherScript instead of from here, to keep things simple. Info button in main menu is now a Help/About menu, which has links to wiki in a button in it, and gets the various help buttons formerly in the help/debug menu. Update script now sends the current version and whether there's an update available. The actual version number is now reported in main and in help/about, and the prompt text for all three menus is returned by a function now instead of stored in a list, which allows us to keep up to date, and notify in help/about prompt when an update is available.  -MD
+//3.934 Added button in Help/About to give license notecard and another to open Defaultsettings help URL.
+
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-list g_lMenuNames = ["Main", "Help/Debug", "AddOns", "ℹ"];
+string g_sCollarVersion="3.934";
+integer g_iLatestVersion=TRUE;
+
+
+list g_lMenuNames = ["Main", "AddOns", "Help/About"];
 list g_lMenus;//exists in parallel to g_lMenuNames, each entry containing a pipe-delimited string with the items for the corresponding menu
-list g_lMenuPrompts = [
-//WS: let's query for version properly; the static number is supposed to be a reminder not a solution
-"\n\nWelcome to the Main Menu\nOpenCollar Version 3.933",
-"\n\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html\n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",
-"\n\nThis menu grants access to every installed AddOn.\n"
-];
+list g_lMenuPrompts;
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
@@ -65,14 +68,20 @@ string UPMENU = "⏏";
 //string MORE = ">";
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
-string REFRESH_MENU = "Fix Menus";
-string DEV_GROUP = "➟ R&D";
-string USER_GROUP = "➟ Chatter";
+//string REFRESH_MENU = "Fix Menus";
+string DEV_GROUP = "Join R&D";
+string USER_GROUP = "Join Support";
+string BUGS="Report Bug";
 string DEV_GROUP_ID = "c5e0525c-29a9-3b66-e302-34fe1bc1bd43";
 string USER_GROUP_ID = "0f6f3627-d9cb-a1db-b770-f66fce70d1ef";
-
+//string UPDATE="Get Update";
 string WIKI = "ℹ";
 string WIKI_URL = "http://www.opencollar.at/";
+string BUGS_URL = "http://www.opencollar.at/forum.html#!/support";
+string LICENSECARD="OpenCollar License";
+string LICENSE="License";
+string SETTINGSHELP="Settings Help";
+string SETTINGSHELP_URL="http://www.opencollar.at/";
 
 Debug(string text)
 {
@@ -95,7 +104,7 @@ Menu(string sName, key kID, integer iAuth)
     {
         list lItems = llParseString2List(llList2String(g_lMenus, iMenuIndex), ["|"], []);
 
-        string sPrompt = llList2String(g_lMenuPrompts, iMenuIndex);
+        string sPrompt = GetPrompt(iMenuIndex);
         
         list lUtility = [];
         
@@ -125,6 +134,20 @@ integer KeyIsAv(key kID)
     return llGetAgentSize(kID) != ZERO_VECTOR;
 }
 
+string GetPrompt(integer index) //return prompt for menu, index of g_lMenuNames
+{
+    if(index==0) return "\n\nWelcome to the Main Menu\nOpenCollar Version "+g_sCollarVersion; //main
+    else if (index==1) return "\n\nThis menu grants access to features of Add-on scripts.\n"; //add-ons
+    else //help/about
+    {
+        string sTemp="\nOpenCollar version "+g_sCollarVersion+"\n";
+        if(!g_iLatestVersion) sTemp+="Update available!";
+        return sTemp + "\nClick "+GIVECARD+" for a quick help notecard, or "+WIKI+" for on-line help. "+SETTINGSHELP+" for a guide to  defaultsettings.\nGet Updater to receive an Updater object, and Update to start the update process when one is rezzed nearby. \nClick "+USER_GROUP+" to join the in-world support group or "+DEV_GROUP+" for the developer's group. \n"+LICENSE+" for a copy of the OpenCollar license.\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html";
+//moved to bugs button response
+// \n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)";
+    }
+}
+    
 MenuInit()
 {
     g_lMenus = ["","",""];
@@ -142,11 +165,15 @@ MenuInit()
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, sName, NULL_KEY);            
         }
     }
-    //give the help menu GIVECARD and REFRESH_MENU buttons    
-    HandleMenuResponse("Help/Debug|" + GIVECARD);
-    HandleMenuResponse("Help/Debug|" + REFRESH_MENU);      
-    HandleMenuResponse("Help/Debug|" + DEV_GROUP);
-    HandleMenuResponse("Help/Debug|" + USER_GROUP);
+    //give the help menu GIVECARD and REFRESH_MENU buttons 
+    HandleMenuResponse("Help/About|" + WIKI);  
+    HandleMenuResponse("Help/About|" + GIVECARD);
+    //HandleMenuResponse("Options|" + REFRESH_MENU);      
+    HandleMenuResponse("Help/About|" + DEV_GROUP);
+    HandleMenuResponse("Help/About|" + USER_GROUP);
+    HandleMenuResponse("Help/About|" + BUGS);
+    HandleMenuResponse("Help/About|" + LICENSE);
+    HandleMenuResponse("Help/About|" + SETTINGSHELP);
       
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
 }
@@ -195,14 +222,34 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (llListFindList(g_lMenuNames, [sSubmenu]) != -1);
         Menu(sSubmenu, kID, iNum);
     }
-    else if (sStr == "help") llGiveInventory(kID, HELPCARD);                
+    else if (sStr == "help") llGiveInventory(kID, HELPCARD); 
+    else if (sStr =="about" || sStr=="help/about") Menu("Help/About",kID,iNum);               
     else if (sStr == "addons") Menu("AddOns", kID, iNum);
-    else if (sStr == "debug") Menu("Help/Debug", kID, iNum);
-    else if (sCmd == "refreshmenu")
-    {
-        llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321);
+   // else if (sStr == "options") Menu("Options", kID, iNum);
+    //else if (sCmd == "refreshmenu")
+    //{
+    //    llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321);
         //MenuInit();
-        llResetScript();
+    //    llResetScript();
+   // }
+    else if (sCmd == "menuto") 
+    {
+        // SA: with the new authentification method, I do not like this request for auth at this stage.
+        // what happens here is that up to this point, we consider that the wearer is the one
+        // who issued "menuto", and then change auth to that of the clicker.
+        // My opinion is that the wearer should never play a role in this and that there should be
+        // only one request for auth: in the listener script.
+        // This could already be done, but it would still be ugly to have this exception for "menuto"
+        // in listener. I would rather have a generic way for another attachment to query an arbitrary
+        // command (not only "menu") on behalf of an arbitrary avatar.
+        // TODO: change the "HUD channel protocol" in order to make this possible.
+        key kAv = (key)llList2String(lParams, 1);
+        if (KeyIsAv(kAv))
+        {
+            if(llGetOwnerKey(kID)==kAv) Menu("Main", kID, iNum);
+            else  llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);
+        }
+        //MD: Put this back in, we still need menuto function. The auth roundtrip is an issue which could be solved by parsing kAv in the listener for menuto, but this is really no good. We can't trust arbitrary objects to supply a key. This would allow people to make a menu spammer that let them send a menu to the collar's owner without the source of the request being auth'd. Probably we need to auth hud commands on the minumum auth of object owner/key sent. I think we can deal with this in 0c4.0 though.
     }
     return TRUE;
 }
@@ -259,13 +306,6 @@ default
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 
-                if (sMessage == WIKI)
-                {
-                    llSleep(0.2);
-                    llLoadURL(kAv, "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®. www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
-                    return;
-                }
-                
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                
@@ -280,28 +320,79 @@ default
                 {
                     if (sMessage == GIVECARD)
                     {
-                        UserCommand(iAuth, "help", kAv);
-                        Menu("Help/Debug", kAv, iAuth);
+                        llGiveInventory(kID, HELPCARD);
+                        Menu("Help/About", kAv, iAuth);
                     }
+                    else if (sMessage == LICENSE)
+                    {
+                        if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kID,LICENSECARD);
+                        else llRegionSayTo(kID,0,"License notecard missing from collar, sorry."); 
+                        Menu("Help/About", kAv, iAuth);
+                    }
+                    else if(sMessage == SETTINGSHELP)
+                    {
+                        llSleep(0.2);
+                        llLoadURL(kAv, "\n\nSettings can be permanently stored even over an update or script reset by saving them to the defaultsettings notecard inside your collar. For instructions, click the link ("+SETTINGSHELP_URL+").", SETTINGSHELP_URL);
+                        return;
+                    }
+                    else if (sMessage == WIKI)
+                    {
+                        llSleep(0.2);
+                        llLoadURL(kAv, "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®. www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
+                        return;
+                    }
+                    else if (sMessage == BUGS)
+                    {
+                        llDialog(kAv,"Please help us to improve OpenCollar by reporting any bugs you see bugs. Click to open our support board at: \n"+BUGS_URL+"\n Or even better, use our github resource where you can create issues for bug reporting  / feature requests. \n https://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",[],-39457);
+                        return;
+                    }
+                        
                     else if (sMessage == DEV_GROUP)
                     {
                         llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + DEV_GROUP_ID + "/about " + "for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
-                        Menu("Help/Debug", kAv, iAuth);
+                        Menu("Help/About", kAv, iAuth);
                     }
                     else if (sMessage == USER_GROUP)
                     {
                         llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + USER_GROUP_ID + "/about " + "for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
-                        Menu("Help/Debug", kAv, iAuth);
+                        Menu("Help/About", kAv, iAuth);
                     }
-                    else if (sMessage == REFRESH_MENU)
-                    {//send a command telling other plugins to rebuild their menus
-                        UserCommand(iAuth, "refreshmenu", kAv);
-                    }
+                    //else if (sMessage == REFRESH_MENU)
+                    //{//send a command telling other plugins to rebuild their menus
+                    //    UserCommand(iAuth, "refreshmenu", kAv);
+                    //}
                     else
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
                 }
+            }
+        }
+        else if (iNum == LM_SETTING_RESPONSE)
+        {
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            if(sToken == "collarversion")
+            {
+                g_sCollarVersion=llList2String(lParams,1);
+                //integer iLatest=(integer)llList2String(lParams,2);
+                // if(iLatest!=g_iLatestVersion)
+                //{
+                //    if(!g_iLatestVersion) HandleMenuResponse("Help/About|" + UPDATE);
+                //    else
+                //    {
+                //        list lGuts = llParseString2List(llList2String(g_lMenus,2), ["|"], []);
+                //        integer gutiIndex = llListFindList(lGuts, [UPDATE]);
+                //        if (gutiIndex != -1)        
+                //        {
+                //            lGuts = llDeleteSubList(lGuts, gutiIndex, gutiIndex);
+                //            g_lMenus = llListReplaceList(g_lMenus, [llDumpList2String(lGuts, "|")], 2, 2);  
+                //        }
+                //     }
+                //     g_iLatestVersion=iLatest; 
+                //}
+                //Changed my mind about the above code. I was going to be all smart about it, but frankly we want the updater button there all the time anyway, no reason not to have it. And I can't be bothered to mess around with re-routing the commands from update right now. :D -MD 
+                g_iLatestVersion=(integer)llList2String(lParams,2);
             }
         }
         else if (iNum == DIALOG_TIMEOUT)
