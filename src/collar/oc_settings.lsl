@@ -39,9 +39,11 @@ string DUMPCACHE = "Dump Cache";
 string PREFUSER = "☐ Personal";
 string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
 //string WIKI = "Online Guide";
+string SETTINGSHELP="Settings Help";
+string SETTINGSHELP_URL="http://www.opencollar.at/settings-guide.html";
 string LOADCARD="Load Defaults";
 string REFRESH_MENU = "Fix Menus";
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
@@ -123,8 +125,8 @@ DoMenu(key keyID, integer iAuth)
     string sPrompt = "\nClick '" + DUMPCACHE + "' to dump all current settings to chat.";
     sPrompt += "\n(copy/paste them to backup your defaultsettings)";
     //sPrompt += "\nClick '" + WIKI + "' to get a link to the User Guide.";
-    sPrompt += "\nClick '" +LOADCARD+"' to restore values from defaultsettings notecard";
-    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU];
+    sPrompt += "\nClick '" +LOADCARD+"' to restore values from defaultsettings notecard.";
+    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,SETTINGSHELP];
     if (USER_PREF)
     {
         sPrompt += "\nUncheck " + PREFDESI + " to give designer settings priority.\n";
@@ -135,7 +137,7 @@ DoMenu(key keyID, integer iAuth)
         sPrompt += "\nCheck " + PREFUSER + " to give your personal settings priority.\n";
         lButtons += [PREFUSER];
     }
-    sPrompt +="\n(Looking for help or updating? Pick the About menu)";
+    sPrompt +="\nNote: No worries, Settings backups are entirely optional.";
     g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -595,6 +597,12 @@ default
                 //    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
                 //    return;
                // }
+               if(sMessage == SETTINGSHELP)
+                    {
+                        llSleep(0.2);
+                        llLoadURL(kAv, "\n\nSettings can be permanently stored and backed up even over a manual script reset by saving them to the defaultsettings notecard inside your collar. For instructions, please visit this page on our website.", SETTINGSHELP_URL);
+                        return;
+                    }
                 if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
                 
                 if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
