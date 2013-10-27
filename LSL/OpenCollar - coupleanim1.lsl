@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - coupleanim1                            //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,7 +12,7 @@
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 //string MORE = ">";
 key g_kAnimmenu;
 key g_kPart;
@@ -22,7 +22,7 @@ integer g_iMenuTimeOut = 60;
 
 key g_kWearer;
 
-string STOP_COUPLES = "◾";
+string STOP_COUPLES = "STOP";
 string TIME_COUPLES = "TIME";
 
 integer g_iLine;
@@ -129,7 +129,7 @@ PartnerMenu(key kID, list kAvs, integer iAuth)
 
 CoupleAnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nChoose an animation to play.\n\n◾: stop the animation\n";
+    string sPrompt = "\n\nChoose an animation to play.\n\nSTOP: release the animation\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
@@ -140,7 +140,7 @@ TimerMenu(key kID, integer iAuth)
     string sPrompt = "\n\nChoose the duration for couple animations.";
     list lButtons = ["10", "20", "30"];
     lButtons += ["40", "50", "60"];
-    lButtons += ["90", "120", "∞"];
+    lButtons += ["90", "120", "ENDLESS"];
     g_kPart=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
@@ -572,7 +572,7 @@ state ready
                     Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
-                else if (sMessage == "∞")
+                else if (sMessage == "ENDLESS")
                 {
                     g_fTimeOut = 0.0;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), NULL_KEY);

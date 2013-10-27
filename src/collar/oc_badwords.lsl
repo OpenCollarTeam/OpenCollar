@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - badwords                              //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -59,7 +59,7 @@ string g_sSubMenu = "Badwords";
 string g_sParentMenu = "AddOns";
 //string UPMENU = "?";
 //string MORE = "?";
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 string g_sIsEnabled = "badwordson=false";
 
 //added to stop abdword anim only if it was started by using a badword

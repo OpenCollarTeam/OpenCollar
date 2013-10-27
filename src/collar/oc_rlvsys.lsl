@@ -81,7 +81,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";

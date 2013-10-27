@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - getavi                               //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -56,7 +56,7 @@ string REQ;            // Requesting script id
 string TYPE;        // requesting for what use?
 list AVIS;            // List of Avis in region, matching requested criteria
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 string g_sScript;
 

@@ -50,7 +50,7 @@ string PARENT = "⏎";
 string ACTIONS_CURRENT = "Actions";
 string ROOT_ACTIONS = "Global Actions";
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 //string MORE = ">";
 
 // Folder actions

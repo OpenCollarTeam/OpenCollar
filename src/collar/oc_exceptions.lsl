@@ -145,7 +145,7 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 integer FIND_AGENT = -9005;
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 key REQUEST_KEY;
 string g_sScript;

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.932                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -67,7 +67,7 @@ integer COMMAND_PARTICLE     = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
 
 // --- menu button tokens ---
-string BUTTON_UPMENU       = "⏏";
+string BUTTON_UPMENU       = "BACK";
 string BUTTON_PARENTMENU   = "Main";
 string BUTTON_SUBMENU      = "Leash";
 string BUTTON_LEASH        = "Grab";

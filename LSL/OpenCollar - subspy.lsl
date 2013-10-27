@@ -99,7 +99,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 string g_sScript;
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "SubSpy";
 

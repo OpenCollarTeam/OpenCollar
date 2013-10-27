@@ -78,7 +78,7 @@ integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 //5000 block is reserved for IM slaves
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 key g_kWearer;
 string g_sScript;

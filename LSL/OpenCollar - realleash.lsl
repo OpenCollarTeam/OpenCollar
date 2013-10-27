@@ -170,7 +170,7 @@ integer RLV_OFF = 6100; // sent to inform plugins that RLV is disabled now, no s
 //integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
 
 // menu option to go one step back in menustructure
-string UPMENU = "⏏";//when your menu hears this, give the parent menu
+string UPMENU = "BACK";//when your menu hears this, give the parent menu
 //string UPMENU = "^";//old; when your menu hears this, give the parent menu
 
 
@@ -445,12 +445,12 @@ RestoreRealLeashSettings(string token, string values, integer index)
     Debug("token to restore: "+token);
     if ("on" == token) {
         if ("1" == values) {
-			g_iRealLeashOn = TRUE;
-			Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
-		} else {
-			g_iRealLeashOn = FALSE;
-			Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
-		}
+            g_iRealLeashOn = TRUE;
+            Notify(g_kWearer,"Real Leash add-on enabled.",FALSE);
+        } else {
+            g_iRealLeashOn = FALSE;
+            Notify(g_kWearer,"Real Leash add-on disabled.",FALSE);
+        }
     } else if ("restrictions" == token) g_lRestrictions = llParseString2List(llToLower(values), [","], []);
 }
 

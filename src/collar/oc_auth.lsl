@@ -94,7 +94,7 @@ integer WEARERLOCKOUT=620;
 //EXTERNAL MESSAGE MAP
 integer EXT_COMMAND_COLLAR = 499;
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 string CTYPE = "collar";
 
