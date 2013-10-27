@@ -64,7 +64,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 //5000 block is reserved for IM slaves
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 //string MORE = ">";
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
@@ -75,13 +75,13 @@ string BUGS="Report Bug";
 string DEV_GROUP_ID = "c5e0525c-29a9-3b66-e302-34fe1bc1bd43";
 string USER_GROUP_ID = "0f6f3627-d9cb-a1db-b770-f66fce70d1ef";
 //string UPDATE="Get Update";
-string WIKI = "ℹ";
+string WIKI = "Website";
 string WIKI_URL = "http://www.opencollar.at/";
 string BUGS_URL = "http://www.opencollar.at/forum.html#!/support";
 string LICENSECARD="OpenCollar License";
 string LICENSE="License";
-string SETTINGSHELP="Settings Help";
-string SETTINGSHELP_URL="http://www.opencollar.at/";
+//string SETTINGSHELP="Settings Help";
+//string SETTINGSHELP_URL="http://www.opencollar.at/";
 
 Debug(string text)
 {
@@ -142,7 +142,7 @@ string GetPrompt(integer index) //return prompt for menu, index of g_lMenuNames
     {
         string sTemp="\nOpenCollar version "+g_sCollarVersion+"\n";
         if(!g_iLatestVersion) sTemp+="Update available!";
-        return sTemp + "\nClick "+GIVECARD+" for a quick help notecard, or "+WIKI+" for on-line help. "+SETTINGSHELP+" for a guide to  defaultsettings.\nGet Updater to receive an Updater object, and Update to start the update process when one is rezzed nearby. \nClick "+USER_GROUP+" to join the in-world support group or "+DEV_GROUP+" for the developer's group. \n"+LICENSE+" for a copy of the OpenCollar license.\nSource Code: https://github.com/OpenCollar\nOnline Guide: http://www.opencollar.at/user-guide.html";
+        return sTemp + "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n";
 //moved to bugs button response
 // \n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)";
     }
@@ -173,7 +173,7 @@ MenuInit()
     HandleMenuResponse("Help/About|" + USER_GROUP);
     HandleMenuResponse("Help/About|" + BUGS);
     HandleMenuResponse("Help/About|" + LICENSE);
-    HandleMenuResponse("Help/About|" + SETTINGSHELP);
+    //HandleMenuResponse("Help/About|" + SETTINGSHELP);
       
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
 }
@@ -222,6 +222,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (llListFindList(g_lMenuNames, [sSubmenu]) != -1);
         Menu(sSubmenu, kID, iNum);
     }
+    else if (sStr == "license") llGiveInventory(kID, LICENSECARD);    
     else if (sStr == "help") llGiveInventory(kID, HELPCARD); 
     else if (sStr =="about" || sStr=="help/about") Menu("Help/About",kID,iNum);               
     else if (sStr == "addons") Menu("AddOns", kID, iNum);
@@ -320,25 +321,27 @@ default
                 {
                     if (sMessage == GIVECARD)
                     {
-                        llGiveInventory(kID, HELPCARD);
+                        //llGiveInventory(kID, HELPCARD);
+                        UserCommand(iAuth, "help", kAv);
                         Menu("Help/About", kAv, iAuth);
                     }
                     else if (sMessage == LICENSE)
                     {
-                        if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kID,LICENSECARD);
-                        else llRegionSayTo(kID,0,"License notecard missing from collar, sorry."); 
+                        //if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kID,LICENSECARD);
+                        //else llRegionSayTo(kID,0,"License notecard missing from collar, sorry.");
+                        UserCommand(iAuth, "license", kAv); 
                         Menu("Help/About", kAv, iAuth);
                     }
-                    else if(sMessage == SETTINGSHELP)
-                    {
-                        llSleep(0.2);
-                        llLoadURL(kAv, "\n\nSettings can be permanently stored even over an update or script reset by saving them to the defaultsettings notecard inside your collar. For instructions, click the link ("+SETTINGSHELP_URL+").", SETTINGSHELP_URL);
-                        return;
-                    }
+                   // else if(sMessage == SETTINGSHELP)
+                   // {
+                   //     llSleep(0.2);
+                   //     llLoadURL(kAv, "\n\nSettings can be permanently stored even over an update or script reset by saving them to the defaultsettings notecard inside your collar. For instructions, click the link ("+SETTINGSHELP_URL+").", SETTINGSHELP_URL);
+                   //     return;
+                   // }
                     else if (sMessage == WIKI)
                     {
                         llSleep(0.2);
-                        llLoadURL(kAv, "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®. www.opencollar.at/license.html\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n", WIKI_URL);
+                        llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", WIKI_URL);
                         return;
                     }
                     else if (sMessage == BUGS)
