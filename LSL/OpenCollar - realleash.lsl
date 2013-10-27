@@ -29,8 +29,11 @@
 //bug: ???
 //bug: does not get message that leash is enabled, check if fixed
 //bug: restrictions get applied at reallesh "on" ... check... maybe restrictions only struck by unknown reason - caue: renaming script while restrictions were still applied?
+//bug: restrictions stay active even if leash holder logs off - check if leashed to object or person + online status
 
+//todo: add big warning about above bug on restrictions still active when leash holder logs off
 //todo: check ApplyRestrictions() (yes, rlvcommand=n)
+//todo: check if wearer now gets message on real leash enable by owners
 //todo: RLV support is OFF, so Real Leash will not work properly. ?!!!!; rlvmain=on~1;   else if (sToken == "rlvmain_on") //double check if that is correct now!!!!!
 //todo: check if settings are stored correctly / defaultsettings NC
 //todo: check RLV: tplure:00000000-0000-0000-0000-000000000000=rem
@@ -486,7 +489,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                         Debug("chat-enabled realleash, wearer is leashed, apply restrictions");
                         ApplyRestrictions(TRUE);
                     }
-                    Notify(kID,"Real Leash enabled.",FALSE);
+                    Notify(kID,"Real Leash enabled.",TRUE);
                 } else {
                     if (g_iLeashed) {
                         if (iNum == COMMAND_WEARER) {
@@ -671,6 +674,7 @@ default
                     ApplyRestrictions(TRUE);
                     // check if we are leashed to a person
                     SetLeashHolder(k);
+					//enable some kind of sensor to check if leash holder is still on (on and close, on and same SIM)- else disable restrictions (and sensor?! - what about relogging?)
                 }
             } else if (iNum == LM_SETTING_DELETE) {
                 Debug("jump into settings delete: "+ (string)iNum+" - " +sStr);
