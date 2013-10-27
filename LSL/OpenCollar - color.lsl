@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - color                                //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -103,7 +103,7 @@ integer TOUCH_EXPIRE = -9503;
 
 //5000 block is reserved for IM slaves
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 string CTYPE = "collar";
 key g_kWearer;
 string g_sScript;

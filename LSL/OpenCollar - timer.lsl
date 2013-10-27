@@ -150,7 +150,7 @@ integer WEARERLOCKOUT=620;
 
 
 // menu option to go one step back in menustructure
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 //string MORE = ">";
 
 string GetScriptID()

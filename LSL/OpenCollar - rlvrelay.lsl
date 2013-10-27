@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvrelay                              //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -46,7 +46,7 @@ integer DIALOG_TIMEOUT = -9002;
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 string ALL = " ALL";
 

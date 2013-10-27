@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - hide                                //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -67,7 +67,7 @@ integer TOUCH_EXPIRE = -9503;
 string CTYPE = "collar";
 string HIDE = "☒";
 string SHOW = "☐";
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 string SHOWN = "Shown";
 string HIDDEN = "Hidden";
 string ALL = "All";

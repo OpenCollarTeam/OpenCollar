@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.930                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -115,7 +115,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "⏏";//when your menu hears this, give the parent menu
+string UPMENU = "BACK";//when your menu hears this, give the parent menu
 string CTYPE = "collar";
 string g_sScript;
 

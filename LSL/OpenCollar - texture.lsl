@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -13,6 +13,8 @@
 //3.929 fixes MD: fixing that messed up chat retextureing command with "settexture element texture" format to do it properly. See notes to 3.921 below, this kills the scriptiness. Also, removes arbitrary warning when appearance is locked which was spamming the message on unfiltered link messages from wearer. 
 
 //version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
+
+//Version 3.934 New Feature. Allow textures to be specified in a texture notecard. Notecard must contain textures on a separate line per texture, in the format name,uuid. -MD
 
 //set textures by uuid, and save uuids instead of texture names to DB
 
@@ -28,6 +30,13 @@ string CTYPE = "collar";
 integer iLength;
 list lButtons;
 list g_lNewButtons;//is this used? 2010/01/14 Starship
+
+list g_lNotecardTextures;
+list g_lNotecardTextureKeys;
+integer g_iNotecardLine;
+key g_kTextureCardUUID;
+string g_sTextureCard="textures";
+key g_kNotecardRead;
 
 //dialog handles
 key g_kElementID;
@@ -69,7 +78,7 @@ integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 //5000 block is reserved for IM slaves
 
-string UPMENU = "⏏";
+string UPMENU = "BACK";
 
 key g_kWearer;
 string g_sScript;
@@ -84,6 +93,21 @@ Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
+loadNotecardTextures()
+{
+    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD)
+    {
+        g_kTextureCardUUID=NULL_KEY;
+        return;
+    }
+    g_lNotecardTextures=[];
+    g_lNotecardTextureKeys=[];
+    g_iNotecardLine=0;
+    g_kTextureCardUUID=llGetInventoryKey(g_sTextureCard);
+    g_kNotecardRead=llGetNotecardLine(g_sTextureCard,g_iNotecardLine);
+}
+    
+
 
 string GetDefaultTexture(string ele)
 {
@@ -114,7 +138,7 @@ string GetLongName(string ele, string sTex) // find the full texture name given 
         test = llList2String(work, l);
         if (~llSubStringIndex(test, sTex))
         {
-            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, ele + SEPARATOR)) return test; //KW rem llToLower
+            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, llToLower(ele) + SEPARATOR)) return test;
         }
     }
     return ""; // this should only happen if chat command is used with invalid texture
@@ -125,7 +149,8 @@ list BuildTextureNames(integer short) // set short TRUE to lop off all prefixes 
     list out = [];
     string name;
     integer l = 0;
-    for (; l < llGetInventoryNumber(INVENTORY_TEXTURE); l++)
+    integer max=llGetInventoryNumber(INVENTORY_TEXTURE);
+    for (; l < max; l++)
     {
         name = llGetInventoryName(INVENTORY_TEXTURE, l);
         if (!GetIsLeashTex(name)) // we want to ignore particle textures
@@ -134,16 +159,31 @@ list BuildTextureNames(integer short) // set short TRUE to lop off all prefixes 
             out += [name];
         }
     }
+    l=0;
+    max=llGetListLength(g_lNotecardTextures);
+    for (; l < max; l++)
+    {
+        name=llList2String(g_lNotecardTextures,l);
+        if (short) name = GetShortName(name);
+        out += [name];
+    }   
     return out;
 }
 
 integer GetElementHasTexs(string ele) // check if textures exist with labels for the specified element
 {
-    ele = ele + SEPARATOR;//KW rem llToLower
+    ele = llToLower(ele) + SEPARATOR;
     integer l = 0;
-    for (; l < llGetInventoryNumber(INVENTORY_TEXTURE); l++)
+    integer max=llGetInventoryNumber(INVENTORY_TEXTURE);
+    for (; l < max; l++)
     {
         if (~llSubStringIndex(llGetInventoryName(INVENTORY_TEXTURE, l), ele)) return TRUE;
+    }
+    l=0;
+    max=llGetListLength(g_lNotecardTextures);
+    for (; l < max; l++)
+    {
+         if (~llSubStringIndex(llList2String(g_lNotecardTextures,l), ele)) return TRUE;
     }
     return FALSE;
 }
@@ -153,7 +193,7 @@ list BuildTexButtons()
     list tex = BuildTextureNames(FALSE);
     list out = [];
     if (~llListFindList(g_lTextureDefaults, [s_CurrentElement])) out = ["Default"];
-    string ele = s_CurrentElement + SEPARATOR;//KW rem llToLower
+    string ele = llToLower(s_CurrentElement) + SEPARATOR;
     string but;
     integer l = 0;
     for (; l < llGetListLength(tex); l++)
@@ -245,6 +285,8 @@ SetElementTexture(string sElement, string sTex)
 {
     integer n;
     integer iLinkCount = llGetNumberOfPrims();
+    integer i=llListFindList(g_lNotecardTextures,[sTex]);
+    if(~i) sTex=llList2String(g_lNotecardTextureKeys,i);
     for (n = 2; n <= iLinkCount; n++)
 
     {
@@ -277,6 +319,7 @@ default
     {
         g_kWearer = llGetOwner();
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        loadNotecardTextures();
         //loop through non-root prims, build element list
         integer n;
         integer iLinkCount = llGetNumberOfPrims();
@@ -385,9 +428,24 @@ default
                                         x=0;
                                     }
                                 }
+                                if(!ok)
+                                {
+                                    x=llGetListLength(g_lNotecardTextures);
+                                    while(x)
+                                    {
+                                        --x;
+                                        test=llList2String(g_lNotecardTextures,x);
+                                        if(llToLower(sTex)==llToLower(test) || llToLower(GetShortName(test))==llToLower(sTex))
+                                        {
+                                            ok=TRUE;
+                                            sTex=test;
+                                            x=0;
+                                        }
+                                    }
+                                }
                             }
                             if(ok) SetElementTexture(sElement, sTex);
-                            else Notify(kID, "The texture " + sTex + " wasn't found in "+CTYPE+" inventory, please check your command and try again.",FALSE);
+                            else Notify(kID, "The texture " + sTex + " wasn't found in "+CTYPE+" inventory or the textures notecard, please check your command and try again.",FALSE);
                         }
                     }
                 }
@@ -483,8 +541,51 @@ default
             }
         }
     }
+    dataserver(key kID, string sData)
+    {
+        if(kID==g_kNotecardRead)
+        {
+            if(sData!=EOF)
+            {
+                if(llStringTrim(sData,STRING_TRIM)!="" && llGetSubString(sData,0,1)!="//")
+                {   
+                    list lThisLine=llParseString2List(sData,[","],[]);
+                    key kTextureKey=(key)llStringTrim(llList2String(lThisLine,1),STRING_TRIM);
+                    string sTextureName=llStringTrim(llList2String(lThisLine,0),STRING_TRIM);
+                    if(kTextureKey)
+                    {
+                        if(llStringLength(GetShortName(sTextureName))>23)
+                        {
+                            llOwnerSay("Texture name "+sTextureName+" in textures notecard too long, dropping.");
+                        }
+                        else if(llGetInventoryType(sTextureName)!=INVENTORY_TEXTURE) // let's not add things that are in inventory.
+                        {
+                            g_lNotecardTextures+=sTextureName;
+                            g_lNotecardTextureKeys+=kTextureKey;
+                         }
+                         else llOwnerSay(sTextureName+" in notecard ignored as already found in inventory. If you remove this texture from inventory, edit the textures notecard (add and delete a blank line) then save the card again to re-read it.");
+                     }
+                     else llOwnerSay("Texture key for "+sTextureName+" in textures notecard not recognised, dropping.");
+                }
+                ++g_iNotecardLine;
+                g_kNotecardRead=llGetNotecardLine(g_sTextureCard,g_iNotecardLine);
+            }
+        }
+    }  
+    /*   
     on_rez(integer iParam)
     {
         llResetScript();
+    }
+    //Is this necessary for anything? Removing for now, we'll see.
+    
+    */
+    changed(integer change)
+    {
+        if(change&CHANGED_LINK) llResetScript();
+        else if (change & CHANGED_INVENTORY)
+        {
+            if(llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) loadNotecardTextures();
+        }
     }
 }

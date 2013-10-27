@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollar - leashParticle                           //
-//                                 version 3.933                                  //
+//                                 version 3.934                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -48,7 +48,7 @@ integer COMMAND_PARTICLE = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
 
 // --- menu tokens ---
-string UPMENU       = "⏏";
+string UPMENU       = "BACK";
 //string MORE         = ">";
 string PARENTMENU   = "Leash";
 string SUBMENU      = "Advanced";
