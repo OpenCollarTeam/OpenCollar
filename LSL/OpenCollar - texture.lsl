@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.934                                  //
+//                                 version 3.935                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,11 +10,13 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.929 fixes MD: fixing that messed up chat retextureing command with "settexture element texture" format to do it properly. See notes to 3.921 below, this kills the scriptiness. Also, removes arbitrary warning when appearance is locked which was spamming the message on unfiltered link messages from wearer. 
-
-//version 3.921 a -- same as version 3.921 but with Medea's (first go! Don't blame me if it's wrong!) fix for the dump cache/texture setting bug. Previous version was basically treating everything as a texture setting to an arbitrary element, because it didn't check to see if the element exists. Note: I hate the current technique this is using, it's over-scripty and will hit that routine way too often, but this fixes the bug. I think.
 
 //Version 3.934 New Feature. Allow textures to be specified in a texture notecard. Notecard must contain textures on a separate line per texture, in the format name,uuid. -MD
+
+//Version 3.935 Added support for texture notecard named textures_custom which will be read instead of the standard texture notecard if present. Also put MENUNAME_RESPONSE into onrez in place of reset. This menu building system is... uh... yeah. -MD
+
+//Version 3.935 removed llToLower() in GetLongName(), GetElementHasTexs() and BuildTexButtons() functions. This commit makes textureable elements case sensitive; we need that if textures are exclusive to specific elements on the collar otherwhise those textures would have to be named like the element but in lower caps - Karo Weirsider
+// Flip side, now it relies on them being the same. Risk of breaking some existing content here? I'm inclined to say it would be better to put llToLower on both sides of the test comparisons, no? -Medea Destiny.
 
 //set textures by uuid, and save uuids instead of texture names to DB
 
@@ -36,6 +38,7 @@ list g_lNotecardTextureKeys;
 integer g_iNotecardLine;
 key g_kTextureCardUUID;
 string g_sTextureCard="textures";
+string g_sDefTextureCard="textures";
 key g_kNotecardRead;
 
 //dialog handles
@@ -95,6 +98,8 @@ Debug(string sStr)
 }
 loadNotecardTextures()
 {
+    g_sTextureCard=g_sDefTextureCard+"_custom";
+    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard=g_sDefTextureCard; 
     if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD)
     {
         g_kTextureCardUUID=NULL_KEY;
@@ -138,7 +143,8 @@ string GetLongName(string ele, string sTex) // find the full texture name given 
         test = llList2String(work, l);
         if (~llSubStringIndex(test, sTex))
         {
-            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, llToLower(ele) + SEPARATOR)) return test;
+            //if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, llToLower(ele) + SEPARATOR)) return test;
+            if (!GetElementHasTexs(ele) || ~llSubStringIndex(test, ele + SEPARATOR)) return test; //KW
         }
     }
     return ""; // this should only happen if chat command is used with invalid texture
@@ -172,7 +178,8 @@ list BuildTextureNames(integer short) // set short TRUE to lop off all prefixes 
 
 integer GetElementHasTexs(string ele) // check if textures exist with labels for the specified element
 {
-    ele = llToLower(ele) + SEPARATOR;
+    //ele = llToLower(ele) + SEPARATOR;
+    ele = ele + SEPARATOR; //KW
     integer l = 0;
     integer max=llGetInventoryNumber(INVENTORY_TEXTURE);
     for (; l < max; l++)
@@ -193,7 +200,8 @@ list BuildTexButtons()
     list tex = BuildTextureNames(FALSE);
     list out = [];
     if (~llListFindList(g_lTextureDefaults, [s_CurrentElement])) out = ["Default"];
-    string ele = llToLower(s_CurrentElement) + SEPARATOR;
+    //string ele = llToLower(s_CurrentElement) + SEPARATOR;
+    string ele = s_CurrentElement + SEPARATOR;//KW
     string but;
     integer l = 0;
     for (; l < llGetListLength(tex); l++)
@@ -572,14 +580,17 @@ default
             }
         }
     }  
-    /*   
+      
     on_rez(integer iParam)
     {
-        llResetScript();
+        //llResetScript();
+        llSleep(1.5);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
     }
     //Is this necessary for anything? Removing for now, we'll see.
+    //yeah it was necessary cos our menu structuring is MESSED UP and relies on all sorts of scripts resetting. This should do the trick instead, however.
     
-    */
+    
     changed(integer change)
     {
         if(change&CHANGED_LINK) llResetScript();
