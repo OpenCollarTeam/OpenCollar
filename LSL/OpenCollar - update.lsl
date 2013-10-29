@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.934                                  //
+//                                 version 3.935                                 //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.924 version check now sends LM_SETTINGS_RESPONSE collarversion=versionnumber=isLatestVersion(TRUE/FALSE). this is read by the menu script to put the actual version number in menus, and allow prompts to indicate if an update is available. -MD
+//3.935 Bugfix for sending collarversion to menu script, 1 and 0 instead of TRUE and FALSE;
 
 // This script does 4 things:
 // 1 - On rez, check whether there's an update to the collar available.
@@ -312,7 +312,7 @@ default
             // we only ever read one notecard ("~version"), and it only ever has
             // one line.  So whatever we got back, that's our version.
             my_version = data;        
-    
+            //Debug("version:"+my_version);
             // now request the version from github.
             CheckForUpdate();            
         }
@@ -328,14 +328,15 @@ default
             {
                 // strip the newline off the end of the text
                 string release_version = llGetSubString(body, 0, -2);
+                //Debug("release:"+release_version);
                 if ((float)release_version > (float)my_version)
                 {
                     string prompt = "\n\nYou are running OpenCollar version " +
                     my_version + ".  There is an update available.";
                     g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
-                    llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=FALSE","");
+                    llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=0","");
                 }
-                else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=TRUE","");
+                else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=1","");
             }
             else if (id == appengine_delivery_request)
             {
