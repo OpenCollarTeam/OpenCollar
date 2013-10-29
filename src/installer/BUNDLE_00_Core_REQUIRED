@@ -9,6 +9,7 @@ ITEM|rope
 ITEM|Leash Holder
 ITEM|Grabby Post
 ITEM|kneel
+ITEM|~PostureOverride
 SCRIPT|OpenCollar - cleanup
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
