@@ -12,7 +12,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup
-//25. Okt 2013 3.930-51
+//03. Nov 2013
 //
 //Files:
 //OpenCollar - subspy.lsl
@@ -654,6 +654,7 @@ default
         
         llSleep(4.0);
         Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
+		Notify(g_kWearer,"\n\nOpenCollar SPY add-on INSTALLED and AVAILABLE",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
@@ -720,7 +721,8 @@ default
                 if(iIndex == -1) g_lSettings += [ sOption , llToLower(sValue)];
                     else g_lSettings = llListReplaceList(g_lSettings, [llToLower(sValue)], iIndex + 1, iIndex + 1);
                 Debug("new g_lSettings: " + (string)g_lSettings);        
-                if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption+"!",FALSE);
+                if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption + "!",FALSE);
+					else Notify(g_kWearer,"Spy add-on -" + sOption + "- is disabled",FALSE);
                 EnforceSettings();
 
                 if (g_iFirstReport)
