@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.934                                  //
+//                                 version 3.935                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,9 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+//3.934d fix for kID instead of kAv for inventory giving. Duh.
+
 
 // 3.934 reimplemented Menuto function for hud channel. This seems to have been lost by the wayside in the interface channel mods. I've added a check to see if the object owner is the same as the menuto target key, as this will mean a new auth is not required and saves double authing in that situation (probably the most common). -MD
 // 3.934 Menu changes. help/debug is now replaced with Options menu, operated from the settings script. Refresh menus is now done from the Options menu in settings, using llResetOtherScript instead of from here, to keep things simple. Info button in main menu is now a Help/About menu, which has links to wiki in a button in it, and gets the various help buttons formerly in the help/debug menu. Update script now sends the current version and whether there's an update available. The actual version number is now reported in main and in help/about, and the prompt text for all three menus is returned by a function now instead of stored in a list, which allows us to keep up to date, and notify in help/about prompt when an update is available.  -MD
@@ -19,7 +22,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.934";
+string g_sCollarVersion="3.935";
 integer g_iLatestVersion=TRUE;
 
 
@@ -321,15 +324,13 @@ default
                 {
                     if (sMessage == GIVECARD)
                     {
-                        //llGiveInventory(kID, HELPCARD);
-                        UserCommand(iAuth, "help", kAv);
+                        llGiveInventory(kAv, HELPCARD);
                         Menu("Help/About", kAv, iAuth);
                     }
                     else if (sMessage == LICENSE)
                     {
-                        //if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kID,LICENSECARD);
-                        //else llRegionSayTo(kID,0,"License notecard missing from collar, sorry.");
-                        UserCommand(iAuth, "license", kAv); 
+                        if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kAv,LICENSECARD);
+                        else llRegionSayTo(kAv,0,"License notecard missing from collar, sorry."); 
                         Menu("Help/About", kAv, iAuth);
                     }
                    // else if(sMessage == SETTINGSHELP)

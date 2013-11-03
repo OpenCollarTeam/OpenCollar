@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - lock                                //
-//                                 version 3.930                                  //
+//                                 version 3.935                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,15 +10,20 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//3.935 New feature: Added support for setting in defaultsettings notecard User_lock=locksound~<value> and User_lock=unlocksound~<value> accepting either a UUID or a sound in inventory or "default", which restores the sounds to the default setting: User_lock=locksound~default . Shall we put something in Options menu to set this? Or keep it as a designer's thing? Or play a sound called "lock" if found in inventory regardless of settings? -MD
+
+//3.935 Other enchancements: Memory limit set to llGetUsedMemory (after building list)+6000 should enough memory, but THIS NEEDS WATCHING! Minor efficiency improvement to SetLockElementAlpha (using g_iLocked and !g_iLocked for alpha values instead of fAlpha). Removed unnecessary on_rez event. Fixed GetPSTDate so that conversion on the 1st of the month before 8am UST doesn't return the 0th of the month. Fix foolishly does not account for centuries not being leap years, yes, yes, I know I was lazy, but we've got 86 years to fix this. -MD
+
 list g_lOwners;
 
 string g_sParentMenu = "Main";
 
-string g_sRequestType; //may be "owner" or "secowner" or "rem secowner"
-key g_kHTTPID;
 
-integer g_iListenChan = 802930;//just something i randomly chose
-integer g_iListener;
+//commented out cos unused.
+//string g_sRequestType; //may be "owner" or "secowner" or "rem secowner"
+//key g_kHTTPID;
+//integer g_iListenChan = 802930;//just something i randomly chose
+//integer g_iListener;
 
 integer g_iLocked = FALSE;
 
@@ -30,6 +35,11 @@ list g_lOpenLockElements; //to store the locks prim to hide or show //EB
 
 string LOCK = " LOCK";
 string UNLOCK = " UNLOCK";
+
+string g_sDefaultLockSound="caa78697-8493-ead3-4737-76dcc926df30";
+string g_sDefaultUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
+string g_sLockSound="caa78697-8493-ead3-4737-76dcc926df30";
+string g_sUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -108,7 +118,18 @@ string GetPSTDate()
         integer year = llList2Integer(DateList, 0);
         integer month = llList2Integer(DateList, 1);
         integer day = llList2Integer(DateList, 2);
-        day = day - 1;
+       // day = day - 1; //Remember, remember, the 0th of November!
+       if(day==1)
+       {
+           if(month==1) return (string)(year-1) + "-01-31";
+           else
+           {
+                --month;
+                if(month==2) day = 28+(year%4==FALSE); //To do: fix before 28th feb 2100.
+                else day = 30+ (!~llListFindList([4,6,9,11],[month])); //31 days hath == TRUE
+            }
+        }
+        else --day;
         return (string)year + "-" + (string)month + "-" + (string)day;
     }
     return llGetDate();
@@ -165,17 +186,17 @@ SetLockElementAlpha() //EB
 {
     //loop through stored links, setting alpha if element type is lock
     integer n;
-    float fAlpha;
-    if (g_iLocked) fAlpha = 1.0; else fAlpha = 0.0;
+    //float fAlpha;
+    //if (g_iLocked) fAlpha = 1.0; else fAlpha = 0.0; //Let's just use g_iLocked!
     integer iLinkElements = llGetListLength(g_lOpenLockElements);
     for (n = 0; n < iLinkElements; n++)
     {
-        llSetLinkAlpha(llList2Integer(g_lOpenLockElements,n), 1.0 - fAlpha, ALL_SIDES);
+        llSetLinkAlpha(llList2Integer(g_lOpenLockElements,n), !g_iLocked, ALL_SIDES);
     }
     iLinkElements = llGetListLength(g_lClosedLockElements);
     for (n = 0; n < iLinkElements; n++)
     {
-        llSetLinkAlpha(llList2Integer(g_lClosedLockElements,n), fAlpha, ALL_SIDES);
+        llSetLinkAlpha(llList2Integer(g_lClosedLockElements,n), g_iLocked, ALL_SIDES);
     }
 }
 
@@ -185,7 +206,7 @@ Lock()
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", NULL_KEY);
     llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
-    llPlaySound("caa78697-8493-ead3-4737-76dcc926df30", 1.0);
+    llPlaySound(g_sLockSound, 1.0);
     llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + LOCK, NULL_KEY);
     SetLockElementAlpha();//EB
 }
@@ -196,7 +217,7 @@ Unlock()
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", NULL_KEY);
     llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
-    llPlaySound("ff09cab4-3358-326e-6426-ec8d3cd3b98e", 1.0);
+    llPlaySound(g_sUnlockSound, 1.0);
     llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
     SetLockElementAlpha(); //EB
 }
@@ -209,13 +230,14 @@ default
     {   //until set otherwise, wearer is owner
         g_kWearer = llGetOwner();
         //        g_lOwnersName = llKey2Name(llGetOwner());   //NEVER used
-        g_iListenChan = -1 - llRound(llFrand(9999999.0));
+        // g_iListenChan = -1 - llRound(llFrand(9999999.0)); //unused
         //no more needed
         //        llSleep(1.0);//giving time for others to reset before populating menu
         //        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
         
         BuildLockElementList();//EB
         SetLockElementAlpha(); //EB
+        llSetMemoryLimit(llGetUsedMemory()+6000); //should be plenty, but let's keep an eye on this.
 
     }
 
@@ -301,6 +323,16 @@ default
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
             }
+            else if(sToken =="lock_locksound")
+            {
+                if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
+                else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
+            }
+            else if(sToken =="lock_unlocksound")
+            {
+                if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
+                else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
+            }
         }
         else if (iNum == LM_SETTING_SAVE)
         {
@@ -370,7 +402,7 @@ default
             llResetScript();
         }
     }
-
+/*
     on_rez(integer start_param)
     {
         // stop IMs going wild
@@ -378,5 +410,11 @@ default
         {
             llResetScript();
         }
+        
+        //This part isn't necessary cos the setting will get pushed on rez from saved settings. I've included it here cos I'm commenting out the entire on_rez section as we reset the script on changed owner so the above doesn't seem necessary, and Iwant the below here cos if at some point we tidy up on the settings on rez business, it would be a good idea to have this check here.
+
+        if((key)g_sLocksound==NULL_KEY && llGetInventoryType(g_sLocksound)!=INVENTORY_SOUND) g_sLockSound=g_sDefaultLockSound;
+        if((key)g_sUnLocksound==NULL_KEY && llGetInventoryType(g_sUnLocksound)!=INVENTORY_SOUND) g_sLockSound=g_sDefaultUnLockSound;
     }
+    */
 }
