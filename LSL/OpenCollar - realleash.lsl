@@ -17,7 +17,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: cosmetic+indent changes, changes on save settings, reflect changes in rlvmain_on and leash_leashto, etc.
-//08. Okt 2013 v0.351
+//03. Nov 2013
 //
 //Files:
 //OpenCollar - realleash.lsl
