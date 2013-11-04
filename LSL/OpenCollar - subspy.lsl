@@ -654,7 +654,7 @@ default
         
         llSleep(4.0);
         Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
-		Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated features...",FALSE);
+		Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
