@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvtalk                               //
-//                                 version 3.934                                  //
+//                                 version 3.936                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -23,7 +23,6 @@ list g_lRLVcmds = [
     "sendim",
     "recvchat",
     "recvim",
-    "emote",
     "recvemote"
         ];
 
@@ -35,7 +34,6 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
     "SendIM",
     "RcvChat",
     "RcvIM",
-    "Emote",
     "RcvEmote"
         ];
 
@@ -47,7 +45,6 @@ list g_lDescriptions = [ //showing descriptions for commands
     "Ability to Send IM",
     "Ability to Receive Chat",
     "Ability to Receive IM",
-    "Allowed length of Emotes",
     "Ability to Receive Emote"
         ];
 
@@ -194,54 +191,26 @@ Menu(key kID, integer iAuth)
 
             if (iIndex == -1)
             {
-                //if this cmd not set, then give button to enable
-                if (sPretty=="Emote"){
-                    //When sendchat='n' then emote defaults to short mode (rem), so you allow long emotes(add)......
-                    sPrompt += "\n" + sPretty + " = Short (" + sDesc + ")";
-                    lButtons += [TURNON + " " + llList2String(g_lPrettyCmds, n)];
-                }
-                else
-                {
                     sPrompt += "\n" + sPretty + " = Enabled (" + sDesc + ")";
                     lButtons += [TURNOFF + " " + llList2String(g_lPrettyCmds, n)];
-                }
-                
             }
             else
             {
                 //else this cmd is set, then show in prompt, and make button do opposite
                 //get value of setting
                 string sValue1 = llList2String(g_lSettings, iIndex + 1);
-
-                //For some odd reason, the emote command uses add (short;16 char max) and rem (no limit)
-                if (sValue1 == "y" || (sPretty=="Emote" && sValue1 == "add"))
+                if (sValue1 == "y")
                 {
-                    {
-                        if (sPretty=="Emote") {
-                            sPrompt += "\n" + sPretty + " = Long (" + sDesc + ")";
-                        }
-                        else {
-                            sPrompt += "\n" + sPretty + " = Enabled (" + sDesc + ")";
-                        }
-                        
-                        lButtons += [TURNOFF + " " + llList2String(g_lPrettyCmds, n)];
-                    }
+                    sPrompt += "\n" + sPretty + " = Enabled (" + sDesc + ")";
+                    lButtons += [TURNOFF + " " + llList2String(g_lPrettyCmds, n)];
                 }
-                else if (sValue1 == "n" || (sPretty=="Emote" && sValue1 == "rem"))
+                else if (sValue1 == "n")
                 {
-                    {
-                        if (sPretty=="Emote") {
-                            sPrompt += "\n" + sPretty + " = Short (" + sDesc + ")";
-                        }
-                        else {
-                            sPrompt += "\n" + sPretty + " = Disabled (" + sDesc + ")";
-                        }
-                        
-                        lButtons += [TURNON + " " + llList2String(g_lPrettyCmds, n)];
-                    }
+                    sPrompt += "\n" + sPretty + " = Disabled (" + sDesc + ")";
+                    lButtons += [TURNON + " " + llList2String(g_lPrettyCmds, n)];
                 }
             }
-            //end process as usual
+           
         }
     }
     //give an Allow All button
@@ -265,19 +234,6 @@ UpdateSettings()
         {
             string sToken = llList2String(g_lSettings, n);
             string sValue = llList2String(g_lSettings, n + 1);
-
-            if (sToken == "emote")
-            {
-                if (sValue == "y")
-                {
-                    sValue = "add";
-                }
-                else if (sValue == "n")
-                {
-                    sValue = "rem";
-                }
-            }
-
             lNewList += [sToken + "=" + sValue];
             if (sValue!="y")
             {
