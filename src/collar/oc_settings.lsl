@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - settings                              //
-//                                 version 3.934                                  //
+//                                 version 3.936                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,6 +28,7 @@
 //  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
 //      texture_Base=steel,texture_Ring=stripes (in the scripts)
 
+//3.936 Fixed up multiline and multi-item cache dump to text to properly use new line characters at the start of each line so that the output list is properly NOT concatenated into a single line per script despite continuation characters.
 //3.934 Added a load defaults button to menu to user to reload the settings from the defaults notecard without having to open the notecard, edit it, and save it again, as script is only being reset on a changed owner. This allows people to restore settings more easily, for example if they change appearance or if they runaway and want to restore the owner settings from the defaults card. -MD
 //3.934 Menu Changes: the help/debug > settings setup removed, now help goes into the help/about menu and these functions appear in the Options menu under main. For the sake of simplicity, Fix Menus is now handled here, by using llResetOtherScript(); -MD
 
@@ -289,7 +290,7 @@ list Add2OutList(list in)
         set = "User_";
         out = ["#---My Settings---#"];
     }
-    string new;
+    string buffer;
     string temp;
     string sid;
     string pre;
@@ -297,32 +298,53 @@ list Add2OutList(list in)
     string tok;
     string val;
     integer i;
-    for (; i < llGetListLength(in); i += 2)
+    
+    for (i=0 ; i < llGetListLength(in); i += 2)
     {
         tok = llList2String(in, i);
         val = llList2String(in, i + 1);
         group = SplitToken(tok, 0);
         tok = SplitToken(tok, 1);
-        if (group != sid) // new group
+        integer bIsSplit = FALSE ;
+        integer iAddedLength = llStringLength(buffer) + llStringLength(val) 
+            + llStringLength(sid) +llStringLength(set) + 2;
+        if (group != sid || llStringLength(buffer) == 0 || iAddedLength >= CARD_LIMIT ) // new group
         {
+            // Starting a new group.. flush the buffer to the output.
+            if ( llStringLength(buffer) ) out += [buffer] ;
             sid = group;
             pre = "\n" + set + sid + "=";
         }
-        else pre = "~";
+        else pre = buffer + "~";
         temp = pre + tok + "~" + val;
         while (llStringLength(temp))
         {
-            new = temp;
+            buffer = temp;
             if (llStringLength(temp) > CARD_LIMIT)
             {
-                new = llGetSubString(temp, 0, CARD_LIMIT - 2) + ESCAPE_CHAR;
-                temp = llDeleteSubString(temp, 0, CARD_LIMIT - 2);
+                bIsSplit = TRUE ;
+                buffer = llGetSubString(temp, 0, CARD_LIMIT - 2) + ESCAPE_CHAR;
+                temp = "\n" + llDeleteSubString(temp, 0, CARD_LIMIT - 2);
             }
             else temp = "";
-            out += [new];
+            if ( bIsSplit ) 
+            {
+                // if this is either a split buffer or one of it's continuation
+                // line outputs, 
+                out += [buffer];
+                buffer = "" ;
+            }
         }
     }
-    out = llListReplaceList(out, [llList2String(out, -1)], -1, -1);
+
+    // If there's anything left in the buffer, flush it to output.
+    if ( llStringLength(buffer) ) out += [buffer] ;
+    
+    // Possibly this line was supposed to reallocate the list to keep it from taking too
+    // much space. Logically, this is a 'do nothing' line - replacing the last item in 
+    // the 'out' list with the last item in the out list, with no changes.
+//////    out = llListReplaceList(out, [llList2String(out, -1)], -1, -1);
+
     return out;
 }
 
@@ -491,26 +513,28 @@ default
             string tok;
             string val;
             integer i;
+            if (data == EOF && split_line != "" )
+            {
+                data = split_line ;
+                split_line = "" ;
+            }
             if (data != EOF)
             {
-                data = llStringTrim(data, STRING_TRIM_HEAD);
-                // first we can filter out & skip blank lines & remarks
-                if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
                 // check for "continued" line pieces
-                i = llSubStringIndex(data, ESCAPE_CHAR);
-                if (~i || llStringLength(split_line))
-                {
-                    split_line += data; // append string
-                    // if there is an escape character, lop it off and go to next line
-                    if (~i)
-                    {
-                        split_line = llGetSubString(split_line, 0, -2);
-                        jump nextline;
-                    }
-                    // if not, clear the temp string & process this data
-                    data = split_line;
-                    split_line = "";
+                if ( llStringLength(split_line) ) 
+                { 
+                    data = split_line + data ;
+                    split_line = "" ;
                 }
+                if ( llGetSubString( data, -1, -1) == ESCAPE_CHAR )
+                {
+                    split_line = llDeleteSubString( data, -1, -1) ;
+                    jump nextline ;
+                }
+                // first we can filter out & skip blank lines & remarks
+                data = llStringTrim(data, STRING_TRIM_HEAD);
+                if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
+                    
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
                 i = llSubStringIndex(data, "_");

@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.935                                  //
+//                                 version 3.936                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-
+//3.936 reset script on owner change
 //Version 3.934 New Feature. Allow textures to be specified in a texture notecard. Notecard must contain textures on a separate line per texture, in the format name,uuid. -MD
 
 //Version 3.935 Added support for texture notecard named textures_custom which will be read instead of the standard texture notecard if present. Also put MENUNAME_RESPONSE into onrez in place of reset. This menu building system is... uh... yeah. -MD
@@ -598,5 +598,6 @@ default
         {
             if(llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) loadNotecardTextures();
         }
+        else if (change&CHANGED_OWNER) llResetScript();
     }
 }
