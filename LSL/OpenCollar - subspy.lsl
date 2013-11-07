@@ -11,8 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
-//Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup
-//25. Okt 2013 3.930-51
+//Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup; better handling of para rp
+//07. Nov 2013
 //
 //Files:
 //OpenCollar - subspy.lsl
@@ -22,8 +22,10 @@
 //basic help:
 
 //bug: ???
+//bug: heap collision on too much chat text
 
 //todo: rework link_message{}
+//todo: rework listener reporting, currently much text is just discarded
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -61,7 +63,8 @@ string g_sOldAVBuffer; // AVs previously found, only send radar if this has chan
 integer g_iOldAVBufferCount = -1; // number of AVs previously found, only send radar if this has changed, setting to -1 at startup
 
 list g_lCmds = ["trace on","trace off", "radar on", "radar off", "listen on", "listen off"];
-integer g_iListenCap = 1500;//throw away old chat lines once we reach this many chars, to prevent stack/heap collisions
+integer g_iListenCap = 1000;//throw away old chat lines once we reach this many chars, to prevent stack/heap collisions
+integer g_iReportChar = 450;
 integer g_iListener;
 string g_sOffMsg = "Spy add-on is now disabled";
 
@@ -150,16 +153,16 @@ string PeelToken(string in, integer slot)
 }
 
 
-DoReports()
+DoReports(integer iBufferFull)
 {
-    Debug("doing reports");
+    Debug("doing reports, iBufferFull: "+(string)iBufferFull);
     //build a report containing:
     //who is nearby (as listed in g_lAvBuffer)
     //where the sub has TPed (s stored in g_lTPBuffer)
     //what the sub has sakID (as stored in g_lChatBuffer)
     string sReport;
 
-    if (Enabled("radar"))
+    if (Enabled("radar") && !iBufferFull)
     {
         //Debug("Old: "+(string)g_iOldAVBufferCount+";"+g_sOldAVBuffer);
         integer kAvcount = llGetListLength(g_lAvBuffer);
@@ -193,7 +196,7 @@ DoReports()
         }
     }
 
-    if (Enabled("trace"))
+    if (Enabled("trace") && !iBufferFull)
     {
         integer iLength = llGetListLength(g_lTPBuffer);
         if (iLength)
@@ -219,9 +222,10 @@ DoReports()
     }
 
     //flush buffers
-    g_lAvBuffer = [];
+	Debug("flush buffers");
+    if (!iBufferFull) g_lAvBuffer = [];
     g_lChatBuffer = [];
-    g_lTPBuffer = [];
+    if (!iBufferFull) g_lTPBuffer = [];
 }
 
 
@@ -354,8 +358,8 @@ DialogSpy(key kID, integer iAuth)
     list lButtons ;
     sPrompt = "\n\n- Access Granted to Primary Owners Only -\n";
     sPrompt += "\nTrace notifies if " + g_sSubName + " teleports.\n";
-    sPrompt += "\nRadar sends a report every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined  or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters.\n";
-    sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!";
+    sPrompt += "\nRadar and Listen sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
+    sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!\n - Messages may get capped and not all text may get transmitted -";
 
     if(Enabled("trace"))
     {
@@ -389,9 +393,9 @@ DialogSpy(key kID, integer iAuth)
 DialogRadarSettings(key kID, integer iAuth)
 {
     list lButtons;
-    string sPromt = "\n\nSetup for the Radar Repeats and Sensors:\n";
+    string sPromt = "\n\nSetup for the Radar Repeats, Sensors and Report Frequency:\n";
     sPromt += "\nRadar Range is set to: " + (string)((integer)g_iSensorRange) + " meters.\n";
-    sPromt += "\nRadar Frequency is set to: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
+    sPromt += "\nRadar and Listen report frequency is set to: " + (string)((integer)g_iSensorRepeat/60) + " minutes.\n";
     lButtons += ["4 meters", "8 meters", "18 meters"];
     lButtons += ["5 minutes", "9 minutes", "15 minutes", "21 minutes"];
     g_kDialogRadarSettingsID = Dialog(kID, sPromt, lButtons, [UPMENU], 0, iAuth);
@@ -654,6 +658,7 @@ default
         
         llSleep(4.0);
         Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
+		Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
     }
 
     listen(integer channel, string sName, key kID, string sMessage)
@@ -661,6 +666,14 @@ default
         if(kID == g_kWearer && channel == 0)
         {
             Debug("g_kWearer: " + sMessage);
+			if(llStringLength(sMessage) > g_iReportChar) {
+				sMessage = llDeleteSubString(sMessage, g_iReportChar-74, -1) +"\n***Wearer wrote too much, text discarded***";
+				//Debug("was too much text: " + (string)llStringLength(sMessage));
+			}
+			if(llStringLength(sMessage) + llStringLength(llDumpList2String(g_lChatBuffer, "\n")) > g_iListenCap-75) {
+				//Debug("too much text: "+ (string)llStringLength(sMessage)+ " - " +(string)llStringLength(llDumpList2String(g_lChatBuffer, "\n")));
+				DoReports(TRUE);
+			}
             if(llGetSubString(sMessage, 0, 3) == "/me ")
             {
                 g_lChatBuffer += [g_sSubName + llGetSubString(sMessage, 3, -1)];
@@ -669,7 +682,8 @@ default
             {
                 g_lChatBuffer += [g_sSubName + ": " + sMessage];
             }
-
+			
+			//should no longer be needed, but leaving as fallback
             //do the listencap to avoid running out of memory
             while (llStringLength(llDumpList2String(g_lChatBuffer, "\n")) > g_iListenCap)
             {
@@ -684,7 +698,7 @@ default
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        Debug("link_message: Sender = "+ (string)iSender + ", iNum = "+ (string)iNum + ", string = " + (string)sStr +", ID = " + (string)kID);
+        //Debug("link_message: Sender = "+ (string)iSender + ", iNum = "+ (string)iNum + ", string = " + (string)sStr +", ID = " + (string)kID);
 
         if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_SAVE)
@@ -720,7 +734,7 @@ default
                 if(iIndex == -1) g_lSettings += [ sOption , llToLower(sValue)];
                     else g_lSettings = llListReplaceList(g_lSettings, [llToLower(sValue)], iIndex + 1, iIndex + 1);
                 Debug("new g_lSettings: " + (string)g_lSettings);        
-                if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption+"!",FALSE);
+                if("trace" == sOption || "radar" == sOption || "listen" == sOption) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption + "!",FALSE);
                 EnforceSettings();
 
                 if (g_iFirstReport)
@@ -780,7 +794,7 @@ default
                         {
                             g_iSensorRepeat = sValue * 60;
                             SaveSetting(sOption + " " + (string)g_iSensorRepeat);
-                            Notify(kAv, "Radar frequency changed to " + (string)((integer)sValue) + " minutes.", TRUE);
+                            Notify(kAv, "Radar and Listen report frequency changed to " + (string)((integer)sValue) + " minutes.", TRUE);
                         }
                         if(Enabled("radar"))
                         {
@@ -809,13 +823,13 @@ default
             g_lAvBuffer = [];
         }
 
-        DoReports();
+        DoReports(FALSE);
     }
 
     no_sensor()
     {
         g_lAvBuffer = [];
-        DoReports();
+        DoReports(FALSE);
     }
 
     attach(key kID)
