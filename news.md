@@ -1,6 +1,6 @@
-Issue: 20131029.1
+Issue: 20131108.1
 
-HOT Update: OpenCollar 3.935
+Update: OpenCollar 3.936
 
 You can get an updater if navigating to Help/About in your collar menu and clicking Get Updater. Updaters are also available at the official locations at Keraxic and Qandico, as well as from the many network vendors found across the grid and on the marketplace.
 
