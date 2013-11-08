@@ -10,6 +10,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//3.936 bugfix: out of order command handling in dialog response was sending some commands back to child scripts. Also, added script reset on changed owner.
+
 //3.935   Added support for posture collar neck locking using provided ~PostureOverride animation, or another animation named in g_sPostureAnim. Supplied animation locks head and neck and priority 6 to ensure overriding. If the animation is found in inventory, animation menu will have a "☐Posture" as button defined in POSTURE. Button will not show if animation is not present. Also responds to chat commands "posture on" and "posture off". Posture is saved in settings with the token (g_sPostureToke) posture=1 when active, and read back from settings/defaultsettings notecard when settings are sent by settings script. Posture is reposed when animations refreshed and when permissions are granted (i.e. on attach) if g_iPosture is TRUE.
 
 //3.935 Removed reset on rez. CreateAnimList now happens if g_iNumberOfAnims changes instead of each rez. Much more sensible. requestperm() removed (let's not have single use functions! Bad! Naughty!) and permission requested in attach event instead, saving the unnecessary if(llGetAttached()); call. run_time_permissions is added to allow restoring posture. Also, good practice to have it. Probably should store permission in an integer to save llGetPermissions checks. We should consider if we want to refresh poses here rather than having all poses scrapped on rez as current. Added remenuing to the animation menu where sensible.
@@ -596,6 +598,7 @@ default
         {
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
         }
+        if (iChange & CHANGED_OWNER) llResetScript();
     }
     run_time_permissions(integer iPerm)
     {
@@ -727,35 +730,36 @@ default
                         Notify(kAv, "Attempting to trigger the AO menu.  This will only work if " + llKey2Name(g_kWearer) + " is meeting the a) or c) requirement for AO features.", FALSE);
                         AOMenu(kAv, iAuth);
                     }
+                    else if (sMessage == g_sGiveAO)
+                    {    //queue a delivery
+                        DeliverAO(kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
+                    else if(sMessage == "AO ON")
+                    {
+                        UserCommand(iAuth, "ao on", kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
+                    else if(sMessage == "AO OFF" )
+                    {
+                        UserCommand(iAuth, "ao off", kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
+                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == ANIMLOCK)
+                    {
+                        UserCommand(iAuth, sMessage, kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
+                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSTURE)
+                    {
+                        string sCommand=POSTURE+" on";
+                        if(~llSubStringIndex(sMessage,TICKED)) sCommand=POSTURE+" off";
+                        UserCommand(iAuth, llToLower(sCommand), kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
                     else if (~llListFindList(g_lAnimButtons, [sMessage]))
                     { // SA: can be child scripts menus, not handled in UserCommand()
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
-                    }
-                    else
-                    {
-                        if (sMessage == g_sGiveAO)
-                        {    //queue a delivery
-                            DeliverAO(kAv);
-                        }
-                        else if(sMessage == "AO ON")
-                        {
-                            UserCommand(iAuth, "ao on", kAv);
-                        }
-                        else if(sMessage == "AO OFF" )
-                        {
-                            UserCommand(iAuth, "ao off", kAv);
-                        }
-                        else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == ANIMLOCK)
-                        {
-                            UserCommand(iAuth, sMessage, kAv);
-                        }
-                        else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSTURE)
-                        {
-                            string sCommand=POSTURE+" on";
-                            if(~llSubStringIndex(sMessage,TICKED)) sCommand=POSTURE+" off";
-                            UserCommand(iAuth, llToLower(sCommand), kAv);
-                        }
-                        AnimMenu(kAv, iAuth);
                     }
                 }
                 else if (sMenuType == POSEMENU)
