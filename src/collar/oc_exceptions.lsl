@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.934                                  //
+//                                 version 3.936                                 //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,11 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+
+//3.936 Bugfixes:  1. Reported issue, message about UUID not found when trying to add other. I haven't found this to be repeatable, but I have managed to get it to do it once. Increased llRequestAgentInfo timer to 4 seconds from 0.5, because 0.5 may simply be too short to reliably get a response from the dataserver, particularly in a laggy sim. Hopefully this will remove the issue, but let's monitor this.  2. Reported issue in secowner exceptions not being set. Typo in settings was looking for auth_secowner rather than auth_secowners in LM_SETTINGS_RESPONSE, so secowners list was not getting filled.
+
+
 
 //3.934 notes. I've overhauled the menu appearance as it wasn't really that easy to understand, following the RLV terminology which is a bit of a headache for scripters, let alone users. Descriptions are clearer and now represent the current state, and we use unicode ☐ and ☒ to indicate selected/deselected state on the buttons, common with unicode enhancements to other menus. ALL buttons indicators swapped to make clearer the effect of pressing them, and the person to whom the exceptions will be added/removed is now named at the top of the menu. Finally, I've cleared up remenuing a little. When someone who is not an owner/secowner is set to default and removed from the list, we now return the personlist, and when a new person is added, we remenu. - Medea
 
@@ -389,7 +394,7 @@ AddName(string sKey)
         //lookup and put the uuid for the request in for now
         g_lNames += [sKey, g_kTestKey = llRequestAgentData(sKey, DATA_NAME)];
         // llSleep(1); --- unnecessary, as llRequestAgentData will induce a 0.1 second sleep
-        llSetTimerEvent(0.5); // if not a valid avi uuid, we'll revert the names list
+        llSetTimerEvent(4); // if not a valid avi uuid, we'll revert the names list
         return; // timer event will need (& reset) the Tmp values, & resend usercommands for this person
     }
     @AddDone;
@@ -746,7 +751,7 @@ default
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_secowner") g_lSecOwners = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_secowners") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "settings")
             {
                 if (sValue == "sent")
