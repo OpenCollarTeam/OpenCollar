@@ -1,4 +1,4 @@
-Guide for the OpenCollar Owner HUD  Vers.  3.92
+Guide for the OpenCollar Owner HUD  Vers.  3.930
 _______________________________________
 
 The HUD is designed to be attached to any point of your HUD. Attaching it to the two center positions might get in the way, but if you were really limited on HUD attach points, you could manually edit/move its position off to the sides. 
@@ -14,9 +14,6 @@ You can also be removed as a subs Owner by clicking [Remove Sub]
 
 Chat commands (default channel is 7):
 /7menu  -> opens the hud's menu
-/7couples -> opens the hud's couple animation menu
-/7hug name -> will ask name to accept a hug 
-(available couple anims are: hug, kiss, hugsub, kissfoot, lickboot, jumphug... where the animations are opposite the one ones in the collar!)
 /7channel x -> changes the hud listen channel to x (where x has to be > 0 )
 /7help  -> gives you this HUD help Guide, 
 /7update -> gives you a update Guild,.
@@ -31,7 +28,7 @@ You can also bring you any collar menu with -
 The 6 HUD Buttons: (Left to Right when at default setting)
 
 1) Leash - (chain symbol) Opens the Leash menu.
-2) Couples Animations (silhouette of a couple) Opens the couples animation menu.
+2) Couples Animations (silhouette of a couple) Opens the couples animation menu on a subs collar..
 3) Cage Rezzer - (round cage) Searches for RLV relay enabled AV's, presents a menu, then summons a cage on the chosen AV.  The victim has the normal RLV accept/refuse type options. From the cage certain RLV functions can then be carried out.
 4) Teleport Subs - (arrow down) Opens up the Teleport sub menu.
 5) Main Menu - (square menu sheet) Opens up the HUDs main menu.
@@ -42,6 +39,7 @@ The 6 HUD Buttons: (Left to Right when at default setting)
 <<The HUD Main menu:>>
 
 [CollarMenu] - Allows you to select from any registered collar menu's from your subs around.
+[Couples] - Opens the couple animation menu to choose an animation.
 [LeashMenu] - Opens the Leash/Unleash menu
 [Options] - Opens the HUD style/position/order options.
 [OwnerMenu] - This is a menu for owners to add their own commonly used collar commands
@@ -57,8 +55,6 @@ The 6 HUD Buttons: (Left to Right when at default setting)
 [Scan Subs] - Scans for subs you are owner (or open access) of, and adds them to the HUD, it will show in chat any it finds and what access level you have of that sub.
 [Load Subs]  - Loads subs and their keys from the Subs notecard
 [Dump Subs] -  Dumps a list of subs and keys to chat so you may copy and paste into the Subs notecard
-
-***** There is unresolved unwanted feature in the Scan code. The hud keeps listening waiting for an answer from any collar it has scanned, if there is no collar it holds this listen open even between relogs. Once it has reached 65 separate collars it is still waiting for, it will error with "Too many open listens" please save your subs to note card so they can be reloaded and reset your collar through the options menu, or /7reset, This will not show up for the normal hud user, but it will help to scan your new subs in a low used region ******
 
 >LeashMenu - menu<
 [Leash] - Select a single or all your controlled subs to leash
