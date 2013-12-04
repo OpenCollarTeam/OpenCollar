@@ -1,10 +1,13 @@
-Let's work on the Owner Hud!
+OpenCollar Owner HUD
 ===========================
 
-New Goals: 
-3.9xx Owners Hud Ideas:
+3.940
 -----------------------
-- Look into implentation of llEmail to send grid wide.
+- added a reset for menu; bugfixes (NG)
+- removed selection menu if owning only a single sub (NG)
+- updated the guide (NG)
+- proper headers and proper attribution in license (Wendy)
+- defaulting to white (Wendy)
 
 3.910 Owners Hud bug fix
 ------------------------
