@@ -1,5 +1,14 @@
-// Leashing script for the OpenCollar Project (c)
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollarHUD - hudleash                            //
+//                                 version 3.900                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
 
 //New Leash menu system added by North Glenwalker
 

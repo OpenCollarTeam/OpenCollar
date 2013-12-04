@@ -1,4 +1,15 @@
-//listener
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                          OpenCollarHUD - hudlistener                           //
+//                                 version 3.900                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 list localcmds = ["channel"];//commands that get passed to COMMAND_OWNER.  All others get passed through
 integer listenchannel = 7;
 

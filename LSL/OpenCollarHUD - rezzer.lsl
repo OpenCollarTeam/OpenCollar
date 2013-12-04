@@ -1,7 +1,16 @@
-// --- RLVLocator and Rezzer - 2.xxx
-// --- released to the public with all permission under the
-// --- condition that this header remains intact and the script
-// --- may not be resold.
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollarHUD - rezzer                              //
+//                                 version 3.900                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
+// --- RLVLocator and Rezzer
 // --- Filters sensor result for RLV users and gives menu of avis  in range
 // --- rezzes cage once selected.
 // -----------------------------------------------------------
