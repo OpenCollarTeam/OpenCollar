@@ -1,4 +1,15 @@
-//OpenCollarHUD - hudmenu 3.8415 Evolution
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollarHUD - hudmenu                             //
+//                                 version 3.940                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
 //on menu request, give dialog, with alphabetized list of submenus
@@ -260,5 +271,9 @@ default
         {
             llResetScript();
         }
+    }
+    on_rez(integer param)
+    {
+        llResetScript();
     }
 }
