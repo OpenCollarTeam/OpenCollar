@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                           OpenCollarHUD - hudoptions                           //
+//                                 version 3.940                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // HudOptions (Alexei Maven + Jessenia Mocha) 
 // This script could be used to position all HUDs quite easy.  Please remember this is Open Source 
 // Thus you need to Credit Open Collar / Alexei Maven / Jessenia Mocha and not sell it!
@@ -263,7 +275,7 @@ DoReset()
     SPosition = 69; // -- Don't we just love that position? *winks*
     tintable = FALSE;
     Hidden = FALSE;
-    DoTextures("Gray Square");
+    DoTextures("White");
     llSleep(2.0);
     primOrder = [0,1,2,3,4,5,6];
     DoHide();
@@ -282,7 +294,7 @@ default
     {
         if (c & CHANGED_OWNER) // Nice way to do this and not break everything in here
         {
-            DoTextures("Gray Square");
+            DoTextures("White");
             llGiveInventory(llGetOwner(),"OpenCollar Owner HUD Help Image");
             llResetScript();
         }
