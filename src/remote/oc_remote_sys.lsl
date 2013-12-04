@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollarHUD - hudmain                             //
+//                                 version 3.940                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 key currentsub = "";
 string g_sDialogUrl;
 list cmdqueue;// requset, id, cmd, type
@@ -462,12 +474,12 @@ default
         {
             //give a sub menu and send cmd to the sub picked
             integer length = llGetListLength(subs);
-            if (length > 2)
+            if (length > 6)
             {
                 pendingcmd = str;
                 PickSubMenu(wearer,0);
             }
-            else if (length == 2)
+            else if (length == 4)
             {
                 key sub = (key)llList2String(subs, 0);
                 SendCmd(sub, str, FALSE);
