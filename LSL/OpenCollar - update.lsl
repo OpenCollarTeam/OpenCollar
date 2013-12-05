@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.935                                 //
+//                                 version 3.940                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -11,6 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 //3.935 Bugfix for sending collarversion to menu script, 1 and 0 instead of TRUE and FALSE;
+//3.940 doesn't give regular updaters, informs user where to get an updater, and get updater button gives current updater
 
 // This script does 4 things:
 // 1 - On rez, check whether there's an update to the collar available.
@@ -39,6 +40,10 @@
 // update.mycollar.org.
 
 key wearer;
+
+string g_sUpdaterName="OpenCollar Updater";
+string g_sRelease_version;
+string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Qandico/223/159/77 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -79,8 +84,8 @@ key github_version_request;
 // A request to this URL will trigger delivery of an updater.  We omit the
 // "version=blah" parameter because we don't want the server deciding whether
 // we should get an updater or not.  We just want one.
-string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
-key appengine_delivery_request;
+//string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
+//key appengine_delivery_request;
 
 // The news system is back!  Only smarter this time.  News will be kept in a
 // static file on Github to keep server load down.  This script will remember
@@ -241,7 +246,16 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
         {
             if (id == wearer)
             {
-                appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
+                 if(llGetInventoryType(g_sUpdaterName)==INVENTORY_OBJECT)
+                    {
+                        llGiveInventory(id,g_sUpdaterName);
+                        if ((float)g_sRelease_version > (float)my_version)
+                        {
+                            Notify(id,"Look in your objects folder for your updater. Use this to change the packages in your collar, but please note that there is a newer updater than this one available.\n"+g_sHowToUpdate,FALSE);
+                        }
+                        else Notify(id,"Look in your objects folder for your updater. Use this to change the packages in your collar.",FALSE);
+                    }
+                    else Notify(id,"Sorry, the updater appears to be missing from your collar! \n"+g_sHowToUpdate,FALSE); 
             }
             else
             {
@@ -327,21 +341,23 @@ default
             if (id == github_version_request)
             {
                 // strip the newline off the end of the text
-                string release_version = llGetSubString(body, 0, -2);
-                //Debug("release:"+release_version);
-                if ((float)release_version > (float)my_version)
+                g_sRelease_version = llGetSubString(body, 0, -2);
+                //Deg_sRelease_versionbug("release:"+release_version);
+                if ((float)g_sRelease_version > (float)my_version)
                 {
                     string prompt = "\n\nYou are running OpenCollar version " +
-                    my_version + ".  There is an update available.";
-                    g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
-                    llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=0","");
+                    my_version + ".  There is an update available.\n"+g_sHowToUpdate;
+                    llDialog(llGetOwner(),prompt,["Ok!"],-23426245);
+                    
+                   // g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
+                   llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=0","");
                 }
                 else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=1","");
             }
-            else if (id == appengine_delivery_request)
-            {
-                llOwnerSay("An updater will be delivered to you shortly.");
-            }
+           // else if (id == appengine_delivery_request)
+          //  {
+           //     llOwnerSay("An updater will be delivered to you shortly.");
+          //  }
             else if (id == news_request)
             {
                 // We got a response back from the news page on Github.  See if
@@ -406,7 +422,16 @@ default
 
                 if (sMessage == BTN_GET_UPDATE)
                 {
-                    appengine_delivery_request = llHTTPRequest(delivery_url, [HTTP_METHOD, "GET"], "");
+                    if(llGetInventoryType(g_sUpdaterName)==INVENTORY_OBJECT)
+                    {
+                        llGiveInventory(kAv,g_sUpdaterName);
+                        if ((float)g_sRelease_version > (float)my_version)
+                        {
+                            Notify(kAv,"Look in your objects folder for your updater. Use this to change the packages in your collar, but please note that there is a newer updater than this one available.\n"+g_sHowToUpdate,FALSE);
+                        }
+                        else Notify(kAv,"Look in your objects folder for your updater. Use this to change the packages in your collar.",FALSE);
+                    }
+                    else Notify(kAv,"Sorry, the updater appears to be missing from your collar! \n"+g_sHowToUpdate,FALSE);                              
                 }
             }
             else if (id == g_kConfirmUpdate)
