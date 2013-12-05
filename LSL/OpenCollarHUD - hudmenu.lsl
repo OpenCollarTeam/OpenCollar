@@ -169,6 +169,7 @@ default
     {
         if (num == MENUNAME_RESPONSE)
         {
+            llOwnerSay("link_message hudmenu - get menu buttons: " + str);
             //str will be in form of "parent|menuname"
             //ignore unless parent is in our list of menu names
             list params = llParseString2List(str, ["|"], []);
@@ -274,6 +275,7 @@ default
     }
     on_rez(integer param)
     {
-        llResetScript();
+        llOwnerSay("Debug: on_rez hudmenu - commented out to keep menu buttons");
+        //llResetScript();
     }
 }
