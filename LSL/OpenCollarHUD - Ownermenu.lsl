@@ -165,6 +165,7 @@ default
     {
         wearer = llGetOwner();//Lets get the ID of who is wearing us
         llSleep(1.0);
+        llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
        

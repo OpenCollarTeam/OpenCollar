@@ -416,6 +416,7 @@ default
         
 //        subs = []; //this clears the subs list on reset
         llSleep(1.0);//giving time for others to reset before populating menu
+        llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
     link_message(integer sender, integer num, string str, key id)
@@ -454,6 +455,7 @@ default
             {
                 subs = [];
                 llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+llOwnerSay("Debug: hudmain, user reset request");
                 llResetScript(); //lets reset things
             }
         }
@@ -654,6 +656,7 @@ default
     on_rez(integer param)
     {
         llSleep(2.0);
+        llOwnerSay("Debug: on_rez hudmain");
         llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
         if (llGetOwner()!=wearer) 
         {

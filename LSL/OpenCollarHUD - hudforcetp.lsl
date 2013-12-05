@@ -211,6 +211,7 @@ default
             llRequestPermissions(wearer, PERMISSION_TRACK_CAMERA);
         }
         llSleep(1.0);
+        llOwnerSay("Debug: state_entry hudforcetp, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
 
