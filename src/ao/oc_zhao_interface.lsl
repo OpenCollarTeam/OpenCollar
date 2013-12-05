@@ -315,7 +315,7 @@ DoMenu(key id, integer page)
     else
     { // Else, if we're not attached, we must be updating and therefore only display the update menu
         mainMenu = ["Load"];
-        prompt = "\nWant to add your own animations?\n\n1. Take one of the notecards from the AO contents\n2. List your animations in the corresponding lines\n3. Give the notecard a new name\n4. Drop the notecard into the AO contents\n5. Also drop the animations you listed inside\n6. Click the Load button to select your new set\n7. Error? Check for typos or missing anims\n8. Give the AO a new name so you won't mix it up\n\nEnjoy your personalized AO!";
+        prompt = "\nCustomize me!\n\n1. Take a notecard set from the AO contents\n2. List your animations in the corresponding lines\n3. Give the notecard a new name\n4. Drop the notecard into the AO contents\n5. Also drop the animations you listed inside\n6. Click the Load button to select your new set\n7. Error? Check for typos or missing anims\n\nNote: Moving animations in bulk could cause hiccups for the SL asset server. Don't drop more than half a dozen at once, wait two seconds, then drop the next batch and you will be fine.";
     }
         
     listenState = 0;
