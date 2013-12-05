@@ -128,8 +128,8 @@ key Owner = NULL_KEY;
 
 integer collarIntegration;
 integer isLocked = FALSE;
-string UNLOCK = "*unlock*";
-string LOCK = "*lock*";
+string UNLOCK = " UNLOCK";
+string LOCK = " LOCK";
 
 string COLLAR_OFF = "NoCollar";
 string COLLAR_ON = "CollarInt";
@@ -209,7 +209,7 @@ DoFirstMenu(key id, integer page)
 {
     string text = "[AO] For AO Options\n"; // prompt text
     text += "[Collar Menu] for Collar Menu\n";
-    text += "[Couples] for Couples Animator\n";
+    //text += "[Couples] for Couples Animator\n";
     text += "[Options] for Stylalization options\n";
     text += "Requires Collar version 3.339 or higher for full functionality.\n\n";
     list buttons = []; // options
@@ -223,7 +223,8 @@ DoFirstMenu(key id, integer page)
     
     if(collarIntegration)
     {
-        buttons += ["AO","Collar Menu","Couples","Options"];
+        //buttons += ["AO","Collar Menu","Couples","Options"];
+        buttons += ["AO","Collar Menu","Options"];
     }
     else
     {
@@ -258,9 +259,9 @@ DoMenu(key id, integer page)
 
     if(llGetAttached())
     { // -- If we're attached... ANYWHERE, display the menu
-        mainMenu = ["Sit On/Off","Load", "Settings", "Next Stand","Help", "Reset", "Update"];
+        mainMenu = ["Sit On/Off","Load", "Settings", "Next Stand","Help", "Reset"];
         prompt = "Please select an option:\n";
-        prompt += "To have the AO intergrated with OpenCollar work properly you need an OpenCollar Version 3.339 or higher.\nCollarIntegration is currently: ";
+        prompt += "CollarIntegration is currently: ";
         //new for locking feature 
         if(collarIntegration)
         {
@@ -313,8 +314,8 @@ DoMenu(key id, integer page)
     }
     else
     { // Else, if we're not attached, we must be updating and therefore only display the update menu
-        mainMenu = ["Update", "Load"];
-        prompt = "Currently in UPDATE mode since the AO is not attached.\n";
+        mainMenu = ["Load"];
+        prompt = "\nWant to add your own animations?\n\n1. Take one of the notecards from the AO contents\n2. List your animations in the corresponding lines\n3. Give the notecard a new name\n4. Drop the notecard into the AO contents\n5. Also drop the animations you listed inside\n6. Click the Load button to select your new set\n7. Error? Check for typos or missing anims\n8. Give the AO a new name so you won't mix it up\n\nEnjoy your personalized AO!";
     }
         
     listenState = 0;
@@ -588,10 +589,10 @@ default {
                         else
                             llOwnerSay("No help notecard found.");
                     }
-                    else if (_message == "Update")
+                    /*else if (_message == "Update")
                     {
                         llMessageLinked(LINK_THIS, COMMAND_UPDATE, "Update", _id);
-                    }
+                    }*/
                     else if (_message == "AO ON")
                     {
                         llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_AOON", _id);
@@ -775,11 +776,11 @@ default {
                         llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
                         
                     }
-                    else if (_message == "Couples")
-                    {
-                        string authRequest = "couples";
-                        llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
-                    }
+                   // else if (_message == "Couples")
+                   // {
+                   //     string authRequest = "couples";
+                   //     llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
+                   // }
                     else if (_message == "Options")
                     {
                         llMessageLinked(LINK_THIS, SUBMENU, _message, _id);
