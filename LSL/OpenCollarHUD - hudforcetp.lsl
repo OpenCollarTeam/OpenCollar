@@ -217,6 +217,10 @@ default
 
     link_message(integer sender, integer num, string str, key id)
     {
+		if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        }
         if (num == SUBMENU && str == submenu)
         {
             MainMenu(wearer);

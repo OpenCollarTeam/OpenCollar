@@ -422,6 +422,10 @@ default
     link_message(integer sender, integer num, string str, key id)
     {
         debug("Link Message: num=" + (string)num + " str=" + str);
+		if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
+            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        }
         //authenticate messages on COMMAND_NOAUTH
         if (num == COMMAND_OWNER)
         {
@@ -458,10 +462,6 @@ default
 llOwnerSay("Debug: hudmain, user reset request");
                 llResetScript(); //lets reset things
             }
-        }
-        else if (num == MENUNAME_REQUEST && str == parentmenu)
-        {
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
         }
         else if (num == SUBMENU && str == submenu)
         {
