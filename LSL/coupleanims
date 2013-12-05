@@ -1,6 +1,7 @@
-hug|~hug|~hug|0.4|_SELF_ gently hugs _PARTNER_.
-kiss|~kiss|~kiss|0.4|_SELF_ gives a peck on _PARTNER_'s mouth.
-subhug|~bottom|~top|0.55|_SELF_ shifts closer and hugs _PARTNER_'s legs.
-footkiss|~foot-bottom|~foot-top|1.1|_SELF_ pads closer on all fours and noms _PARTNER_'s foot.
-bootlick|~boot-bottom|~boot-top|1.0|_SELF_ lowers their head to obediently lick and lap  _PARTNER_'s boot.
-jumphug|~jump-bottom|~jump-top|0.6|_SELF_ jumps into _PARTNER_'s arms and holds tight!
+hug|~hug|~hug|0.4|_SELF_ hugs _PARTNER_.
+kiss|~kiss|~kiss|0.4|_SELF_ kisses _PARTNER_.
+pet|~bottom|~top|0.55|_PARTNER_ pets _SELF_'s head.
+subhug|~leg-bottom|~leg-top|0.55|_SELF_ hugs _PARTNER_'s legs.
+footkiss|~foot-bottom|~foot-top|1.1|_SELF_ kisses _PARTNER_'s foot.
+bootlick|~boot-bottom|~boot-top|1.0|_SELF_ licks  _PARTNER_'s boot.
+jumphug|~jump-bottom|~jump-top|0.6|_SELF_ jumps into _PARTNER_'s arms.
