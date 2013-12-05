@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarHUD - hudoptions                           //
-//                                 version 3.940                                  //
+//                                 version 3.941                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -322,7 +322,7 @@ default
     
     state_entry()
     {
-        llSleep(1.0);        
+        llSleep(2.0);        
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
     }
     

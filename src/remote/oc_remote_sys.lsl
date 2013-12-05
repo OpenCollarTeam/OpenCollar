@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - hudmain                             //
-//                                 version 3.940                                  //
+//                                 version 3.941                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -415,7 +415,7 @@ default
         listener=llListen(getPersonalChannel(wearer,1111),"","",""); //lets listen here
         
 //        subs = []; //this clears the subs list on reset
-        llSleep(1.0);//giving time for others to reset before populating menu
+        llSleep(2.0);//giving time for others to reset before populating menu
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
     link_message(integer sender, integer num, string str, key id)
