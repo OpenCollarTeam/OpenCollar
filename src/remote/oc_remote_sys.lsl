@@ -418,6 +418,7 @@ default
         llSleep(1.0);//giving time for others to reset before populating menu
         llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+		llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
     link_message(integer sender, integer num, string str, key id)
     {
