@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollarAO - Dialog                              //
-//                                 version 3.900                                  //
+//                                 version 3.940                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -59,7 +59,7 @@ integer DIALOG_TIMEOUT = -9002;
 integer pagesize = 12;
 string MORE = "►";
 string PREV = "◄";
-string UPMENU = "⏏"; // string to identify the UPMENU button in the utility buttons
+string UPMENU = "BACK"; // string to identify the UPMENU button in the utility buttons
 //string SWAPBTN = "swap";
 //string SYNCBTN = "sync";
 string BLANK = " ";
@@ -129,7 +129,7 @@ integer RandomUniqueChannel()
 
 Dialog(key recipient, string prompt, list menuitems, list utilitybuttons, integer page, key id)
 {
-    string thisprompt = " (Timeout in " + (string)timeout + " seconds.)";
+    string thisprompt; //= " (Timeout in " + (string)timeout + " seconds.)";
     list buttons;
     list currentitems;
     integer numitems = llGetListLength(menuitems);
@@ -145,7 +145,7 @@ Dialog(key recipient, string prompt, list menuitems, list utilitybuttons, intege
         //multi page menu
         //currentitems = llList2List(menuitems, start, end);
         buttons = llList2List(menuitems, start, end);
-        thisprompt = thisprompt + " Page "+(string)(page+1)+"/"+(string)(((numitems-1)/mypagesize)+1);
+        thisprompt = " Page "+(string)(page+1)+"/"+(string)(((numitems-1)/mypagesize)+1);
     }
     else
     {
