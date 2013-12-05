@@ -1,3 +1,15 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                             OpenCollarAO - Options                             //
+//                                 version 3.940                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
 // HudOptions (Alexei Maven + Jessenia Mocha) 
 // This script could be used to position all HUDs quite easy.  Please remember this is Open Source 
 // Thus you need to Credit Open Collar / Alexei Maven / Jessenia Mocha + Keep it full perm and not sell it! =)
@@ -34,12 +46,12 @@ integer AOSit;
 vector AOoffcolor = <0.5, 0.5, 0.5>;
 vector AOoncolor = <1,1,1>;
 
-string UNLOCK = "*unlock*";
-string LOCK = "*lock*";
+string UNLOCK = " UNLOCK";
+string LOCK = " LOCK";
 string SITANYON = "ZHAO_SITANYWHERE_ON";
 string SITANYOFF = "ZHAO_SITANYWHERE_OFF";
 
-string UPMENU = "^";
+string UPMENU = "AO Menu";
 string parentmenu = "Main";
 string submenu = "Options";
 string submenu1 = "Textures";
@@ -312,7 +324,7 @@ DoReset()
     AOLock = FALSE;
     AOPower = TRUE;
     AOSit = FALSE;
-    DoTextures("Gray Square");
+    DoTextures("White");
     llSleep(1.5);
     primOrder = [0,1,2,3,4];
     DoHide();
@@ -332,7 +344,7 @@ default
     {
         if (c & CHANGED_OWNER) // Nice way to do this and not break everything in here
         {
-            DoTextures("Gray Square");
+            DoTextures("White");
             llGiveInventory(llGetOwner(),"OpenCollar SubAO Help Image");
             llResetScript();
         }
@@ -412,7 +424,7 @@ default
             if(str == LOCK)
             {
                 // -- Position in link is 2
-                if(texture == "") texture = "Gray Square"; // -- Redundancy sake "texture" should never be blank =)
+                if(texture == "") texture = "White"; // -- Redundancy sake "texture" should never be blank =)
                 
                 if(texture == "Gray Square")
                 {
@@ -445,7 +457,7 @@ default
             else if(str == UNLOCK)
             {
                 // -- Position in link is 2
-                if(texture == "") texture = "Gray Square"; // -- Redundancy sake "texture" should never be blank =)
+                if(texture == "") texture = "White"; // -- Redundancy sake "texture" should never be blank =)
                 
                 if(texture == "Gray Square")
                 {
