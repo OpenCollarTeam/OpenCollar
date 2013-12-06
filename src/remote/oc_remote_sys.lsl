@@ -133,7 +133,18 @@ SendCmd(key id, string cmd, integer all)
     if (InSim(id))
     {
         llRegionSayTo(id,getPersonalChannel(id,1111), (string)id + ":" + cmd);
-        llOwnerSay("Sending to "+ llKey2Name(id) + "'s collar - " + cmd);//make it look nice on the screen for owners, now it looks nice we can display all sent commands to all subs NG.
+        if (llGetSubString(cmd,0,6)=="leashto")
+        {
+            key temp = llGetSubString(cmd,8,43);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - leashto " + llGetDisplayName(temp));//makes Leashto look better NG.
+        }
+        else if (llGetSubString(cmd,0,5)=="follow")
+        {
+            key temp = llGetSubString(cmd,7,42);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - follow " + llGetDisplayName(temp));//Makes Follow look better NG.
+        }
+        else
+        llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd);//make it look nice on the screen for owners, now it looks nice we can display all sent commands to all subs NG.
     }
     else
     {
