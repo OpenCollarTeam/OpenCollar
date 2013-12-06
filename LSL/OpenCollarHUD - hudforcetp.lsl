@@ -10,6 +10,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//no gridwide TP, probably because of SendCmd llRegionSayTo in *hudmain* script
+
 //on touch, give menu of LMs
 //on hearing number, request LM data
 //on getting LM data, give TP command
