@@ -324,7 +324,7 @@ default
     state_entry()
     {
         llSleep(1.0);        
-        llOwnerSay("Debug: state_entry hudoptions, menu button");
+        //llOwnerSay("Debug: state_entry hudoptions, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
     }
     

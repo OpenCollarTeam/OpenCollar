@@ -126,7 +126,7 @@ default
     state_entry()
     {
         llSleep(1.0);
-        llOwnerSay("Debug: state_entry hudspy, menu button");
+        //llOwnerSay("Debug: state_entry hudspy, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
        

@@ -12,7 +12,7 @@
 
 //no gridwide TP, probably because of llRegionSayTo in SendCmd()
 //to enhance: check if command is a forced tp - then use llInstantMessage if sub is not in same SIM - but this is probably slow, laggy and error prone
-//- and do not forget to vheck if avi is online, before sending out a gridwide tp...
+//- and do not forget to check if avi is online, before sending out a gridwide tp...
 
 key currentsub = "";
 string g_sDialogUrl;
@@ -420,7 +420,7 @@ default
         
 //        subs = []; //this clears the subs list on reset
         llSleep(1.0);//giving time for others to reset before populating menu
-        llOwnerSay("Debug: state_entry hudmain, menu button");
+        //llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
 		llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
@@ -464,7 +464,7 @@ default
             {
                 subs = [];
                 llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
-llOwnerSay("Debug: hudmain, user reset request");
+				//llOwnerSay("Debug: hudmain, user reset request");
                 llResetScript(); //lets reset things
             }
         }
@@ -661,7 +661,7 @@ llOwnerSay("Debug: hudmain, user reset request");
     on_rez(integer param)
     {
         llSleep(2.0);
-        llOwnerSay("Debug: on_rez hudmain");
+        //llOwnerSay("Debug: on_rez hudmain");
         llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
         if (llGetOwner()!=wearer) 
         {
