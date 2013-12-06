@@ -129,7 +129,11 @@ default
         //llOwnerSay("Debug: state_entry hudspy, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
-       
+    
+	changed(integer change) {
+		if(change & CHANGED_OWNER) llResetScript();
+	}
+	
     link_message(integer sender, integer auth, string str, key id)
     {  //only the primary owner can use this !!
         if (auth == MENUNAME_REQUEST && str == parentmenu)

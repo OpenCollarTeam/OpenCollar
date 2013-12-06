@@ -191,6 +191,11 @@ default
     {
         llResetScript();
     }
+	
+	changed(integer change) {
+		if(change & CHANGED_OWNER) llResetScript();
+	}	
+	
     state_entry()
     {
         owner_key = llGetOwner();

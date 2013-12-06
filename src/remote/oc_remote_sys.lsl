@@ -424,6 +424,13 @@ default
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
 		llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
+	
+	changed(integer change) {
+		//reload on notcard changes should happen automaticly
+		if(change & CHANGED_INVENTORY) llOwnerSay("Note: Reload list of subs from notecard manually via menu, if you just edited it");
+		if(change & CHANGED_OWNER) llResetScript();
+	}
+	
     link_message(integer sender, integer num, string str, key id)
     {
         debug("Link Message: num=" + (string)num + " str=" + str);
