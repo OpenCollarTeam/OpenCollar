@@ -19,7 +19,7 @@ string g_sDialogUrl;
 list cmdqueue;// requset, id, cmd, type
 integer checkdelay = 600;
 integer debugging=FALSE; // show debug messages
-list subs;//strided list in the form key,name
+list subs = [];//strided list in the form key,name
 string tmpname; //used temporarily to store new owner or secowner name while retrieving key
 list localcmds = ["reset","removesub","listsubs", "reloadlist","help","update","owner"];//these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
 list LISTENERS; // list of hud-channels we are listening for, for building lists
@@ -670,11 +670,6 @@ default
         llSleep(2.0);
         //llOwnerSay("Debug: on_rez hudmain");
         llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
-        if (llGetOwner()!=wearer) 
-        {
-            subs = [];
-            llResetScript();;//if new owner lets reset everything
-        }
     }
     timer()//clear things after ping
     {
