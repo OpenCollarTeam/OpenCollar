@@ -1,7 +1,7 @@
-Guide for the OpenCollar Owner HUD  Vers.  3.930
+Guide for the OpenCollar Owner HUD  Vers.  3.940
 _______________________________________
 
-The HUD is designed to be attached to any point of your HUD. Attaching it to the two center positions might get in the way, but if you were really limited on HUD attach points, you could manually edit/move its position off to the sides. 
+The HUD is designed to be attached to any point of your HUD. Attaching it to the two center positions might get in the way, but if you were really limited on HUD attach points, you could manually edit/move its position off to the sides. When the HUD is attached on top (default) it stays in horizontal layout, even when vertical is chosen. 
 
 ALL HUDs may be slightly hidden when attached on the bottom three attach points.  This is due to the limitation that HUDs are positioned by the corner of the users screen rather then the raised menu bar.   
 >> To fix simply right click and edit the position slightly.  The Owners HUD is smart enough to not reset your manual adjustments unless you reattach it to a new attach point.
