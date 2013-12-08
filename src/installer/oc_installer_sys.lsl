@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.933                                  //
+//                                 version 3.940                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -207,7 +207,7 @@ SetInstructionsText() {
     llSetText("1 - Create a backup copy of your collar.\n" +
               "2 - Rez your collar next to me.\n" +
               "3 - Touch the collar.\n" + 
-              "4 - In the menu, select Help/Debug > Update.\n"
+              "4 - In the menu, select Help/About -> Update.\n"
                , <1,1,1>, 1.0);
 }
 
