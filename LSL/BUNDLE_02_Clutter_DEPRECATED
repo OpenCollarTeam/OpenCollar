@@ -1,4 +1,5 @@
 SCRIPT|OpenCollar - interface
+SCRIPT|OpenCollar - keyholder
 SCRIPT|OpenCollar - keyholder plugin
 SCRIPT|OpenCollar - remoteserver
 SCRIPT|OpenCollar - anim/pose
@@ -7,6 +8,7 @@ SCRIPT|OpenCollar - techlabel
 SCRIPT|OpenCollar - BMC
 SCRIPT|OpenCollar - real leash - 0.1
 SCRIPT|OpenCollar - real leash - 0.2
+ITEM|Tranquility
 ITEM|brushedmetal-hshaded-contrasty
 ITEM|brushedmetal-hshaded
 ITEM|brushedmetal-roundshaded
@@ -94,3 +96,4 @@ ITEM|Rust
 ITEM|Silver
 ITEM|Snake
 ITEM|Steel
+ITEM|Grabby Post
