@@ -1,4 +1,3 @@
-ITEM|coupleanims
 ITEM|~bottom
 ITEM|~foot-bottom
 ITEM|~foot-top
@@ -11,5 +10,6 @@ ITEM|~boot-top
 ITEM|~boot-bottom
 ITEM|~leg-top
 ITEM|~leg-bottom
+ITEM|coupleanims
 SCRIPT|OpenCollar - coupleanim1
 SCRIPT|OpenCollar - coupleanim2
