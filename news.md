@@ -1,4 +1,4 @@
-Issue: 20131115.1
+Issue: 20131209.1
 
-New Vendors, Gift Options and 3.937
-http://www.opencollar.at/blog.html
+Major Update Release: OpenCollar 3.940
+http://www.opencollar.at/
