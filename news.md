@@ -1,4 +1,5 @@
-Issue: 20131209.1
+Issue: 20131213.1
 
-Major Update Release: OpenCollar 3.940
+Ball, Chain & Legacy AO Sets.
+Read more on our blog at:
 http://www.opencollar.at/
