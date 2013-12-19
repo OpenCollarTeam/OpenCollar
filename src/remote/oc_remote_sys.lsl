@@ -18,8 +18,7 @@ integer debugging=FALSE; // show debug messages
 list subs;//strided list in the form key,name
 string tmpname; //used temporarily to store new owner or secowner name while retrieving key
 list localcmds = ["reset","removesub","listsubs", "reloadlist","help","update","owner"];//these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
-list LISTENERS; // list of hud-channels we are listening for, for building lists
-integer LISTEN; //We need this to listen to pongs
+list LISTENERS; // list of hud channel handles we are listening for, for building lists
 
 string parentmenu = "Main"; //whaere we return to
 string submenu = "Subs";  //which menu are we
@@ -352,11 +351,12 @@ ConfirmSubRemove(key id) // Single page menu
 //NG lets send pings here and listen for pong replys
 SendCommand(key id)
 {
+    if (llGetListLength(LISTENERS) >= 60) return;  // lets not cause "too many listen" error
+    
     integer channel = getPersonalChannel(id, 1111);
-    LISTENERS += [channel];
     llRegionSayTo(id, channel, (string)id+ ":ping");
-    LISTEN = llListen(channel, "", NULL_KEY, "");// if we have a reply on the channel lets see what it is.
-    llSetTimerEvent(0.2);// no reply by now, lets kick off the timer
+    LISTENERS += [ llListen(channel, "", NULL_KEY, "" )] ;// if we have a reply on the channel lets see what it is.
+    llSetTimerEvent(5.0);// no reply by now, lets kick off the timer
 }
 processConfiguration(string data)
 {
@@ -558,7 +558,13 @@ default
                      integer i;
                      for (; i < llGetListLength(AGENTS); i++) //build a list of who to scan
                      {
-                       SendCommand(llList2Key(AGENTS, i)); //kick off "sendCommand" for each uuid
+                        // Lets not ping oursevles
+                        // 1) wasteful
+                        // 2) when ping reply listeners are added, then removed, our personal channel is removed
+                        if (llList2Key(AGENTS,i) != wearer)
+                        {
+                            SendCommand(llList2Key(AGENTS, i)); //kick off "sendCommand" for each uuid
+                        }
                      }
                      SubMenu(id); //return to SubMenu
                     }
@@ -630,7 +636,6 @@ default
             if (menuindex != -1)
             {
                 llOwnerSay("Main Menu timed out!");
-                state two;
             }
         }
         else if (num == DIALOG_URL)
@@ -665,19 +670,17 @@ default
     {
         llSetTimerEvent(0);
         AGENTS = [];
+        integer n = llGetListLength(LISTENERS) - 1;
+        for (; n >= 0; n--)
+        {
+            llListenRemove(llList2Integer(LISTENERS,n));
+        }
+        LISTENERS = [];
     }
     dataserver(key request_id, string data)
     {
         if(request_id == notecardQueryId)
             processConfiguration(data);
 
-    }
-}
-//this is a dirty fix to clear all lllitens at the end of a scan
-state two
-{
-    state_entry()
-    {
-        state default;
     }
 }
