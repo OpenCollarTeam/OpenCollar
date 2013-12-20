@@ -21,11 +21,11 @@
 //Notecard format: ---
 //basic help:
 
-//bug: ???
 //bug: heap collision on too much chat text
 
 //todo: rework link_message{}
 //todo: rework listener reporting, currently much text is just discarded
+//todo: play with llListen and llGetFreeMemory
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
