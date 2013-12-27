@@ -1,4 +1,5 @@
-Issue: 20131115.1
+Issue: 20131213.1
 
-New Vendors, Gift Options and 3.937
-http://www.opencollar.at/blog.html
+Ball, Chain & Legacy AO Sets.
+Read more on our blog at:
+http://www.opencollar.at/

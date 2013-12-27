@@ -1,6 +1,12 @@
+----------------------
+OpenCollar License
+----------------------
+
+[In-World Notecard Object of the GPLv2]
+
 The OpenCollar scripts are licensed under the GPLv2 (http://www.gnu.org/licenses/gpl-2.0.txt), with the following addendum:
 
-Throughout this license the term "authors" refers to Nandana Singh, OpenCollar Organiser, Wendy Starfall, Satomi Ahn, Joy Stipe and other contributors to OpenCollar - submission set free.
+Throughout this license the term "authors" refers to Nandana Singh, OpenCollar Organiser, Wendy Starfall, Satomi Ahn, Joy Stipe, Medea Destiny and other contributors to OpenCollar - submission set free.
 
 "Full perms" means maintaining the modify, copy, and transfer permissions in Second Life. If the Second Life platform should allow more fine-grained permissions in the future, then "full perms" will mean the most permissive possible set of permissions allowed by the platform.
 
@@ -13,14 +19,15 @@ Custom plugins that are entirely created by you, and which communicate with the 
 
 The OpenCollar hug and kiss scripts were originally created by Francis Chung, with only slight modifications by Ilse Mannonen. To the best of our knowledge, they are in the public domain.
 
-To the best of our knowledge, the animations included in OpenCollar which were not created by the authors (which is most of them), may be used without restriction. Animations created by the authors must remain full perms. If you created one of the included animations and would like to have it removed, please notify Wendy Starfall.
+To the best of our knowledge, the animations included in OpenCollar which were not created by the authors (which is most of them), may be used without restriction. Animations created by the authors as well as animations created by Marine Kelley which are named arch, bendover, booty, cutie, display and kneel as of version 3.940 must remain full perms. If you created one of the included animations and would like to have it removed, please notify Wendy Starfall.
 
 Likewise, all textures included in the OpenCollar that were not created by the authors are, to the best of our knowledge, free to use for any purpose. The textures included which were created by the authors must remain full perms. If you created one of the included textures and would like to have it removed, please notify Wendy Starfall.
 
 The base OpenCollar object (in which the OpenCollar scripts are placed) must also remain full perms. (If you want to use the OpenCollar scripts in collars that you have made and wish to sell, you can restrict copy or trans permissions on your prims, but you must leave the OpenCollar scripts full perms).
 
-
-OpenCollar 3rd Party Extension Policy
+------------------------------
+3rd Party Extension Policy
+------------------------------
 
 Part of OpenCollar being "open" means that we aim to provide a platform that people can easily integrate with. We encourage people to create their own products, tools, extensions, or services that integrate with OpenCollar. You're even free to charge money for them. There are a few ground rules though:
 
