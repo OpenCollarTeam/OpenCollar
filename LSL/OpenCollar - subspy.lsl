@@ -12,7 +12,7 @@
 
 //modified by: Zopf Resident - Ray Zopf (Raz)
 //Additions: changes on save settings, small bugfixes, added reset on runaway, warning on startup; better handling of para rp
-//07. Nov 2013
+//27. Dec 2013
 //
 //Files:
 //OpenCollar - subspy.lsl
@@ -21,11 +21,14 @@
 //Notecard format: ---
 //basic help:
 
-//bug: ???
 //bug: heap collision on too much chat text
 
 //todo: rework link_message{}
+//todo: on settings change, only wearer and current menu user gets notified - not all primary users as it should be
 //todo: rework listener reporting, currently much text is just discarded
+//todo: play with llListen and llGetFreeMemory
+//todo: http://wiki.secondlife.com/wiki/User:Becky_Pippen/Script_Memory_Limits
+//todo: http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -355,15 +358,16 @@ DialogSpy(key kID, integer iAuth)
         g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
         return;
     }
+	string sTStatus;
+	string sRStatus;
+	string sLStatus;
+	sTStatus = sRStatus = sLStatus = "off";
     list lButtons ;
-    sPrompt = "\n\n- Access Granted to Primary Owners Only -\n";
-    sPrompt += "\nTrace notifies if " + g_sSubName + " teleports.\n";
-    sPrompt += "\nRadar and Listen sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
-    sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!\n - Messages may get capped and not all text may get transmitted -";
 
     if(Enabled("trace"))
     {
-        lButtons += ["Trace Off"];
+        lButtons += ["Trace OFF"];
+		sTStatus = "on";
     }
     else
     {
@@ -371,7 +375,8 @@ DialogSpy(key kID, integer iAuth)
     }
     if(Enabled("radar"))
     {
-        lButtons += ["Radar Off"];
+        lButtons += ["Radar OFF"];
+		sRStatus = "on";
     }
     else
     {
@@ -379,13 +384,19 @@ DialogSpy(key kID, integer iAuth)
     }
     if(Enabled("listen"))
     {
-        lButtons += ["Listen Off"];
+        lButtons += ["Listen OFF"];
+		sLStatus = "on";
     }
     else
     {
         lButtons += ["Listen On"];
     }
     lButtons += ["RadarSettings"];
+    sPrompt = "\n-Primary Owners Only Menu-\n";
+    sPrompt += "\nTrace ("+sTStatus+") notifies if " + g_sSubName + " teleports.\n";
+    sPrompt += "\nRadar ("+sRStatus+") and Listen ("+sLStatus+") sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
+    sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!\n - Messages may get capped and not all text may get transmitted -";
+	
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -433,6 +444,11 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
     else // remote request
     {
+		if (iAlsoNotifyWearer) //workaround for message on settings change by primary owner
+        {
+            llOwnerSay(sMsg);
+        }
+        llRegionSayTo(kID, PUBLIC_CHANNEL, sMsg);	//workaround for message on settings change by primary owner	
         llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
     }
 }
@@ -577,11 +593,11 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (iNum != COMMAND_OWNER)
     { 
         if(~llListFindList(g_lCmds, [sStr]))
-            Notify(kID, "Sorry, only an owner can set spy settings.", FALSE);
+            Notify(kID, "Sorry, only a primary owner can set spy settings.", FALSE);
     }
     else // COMMAND_OWNER
     {
-        Debug("UserCommand - COMMAND_OWNER");
+        Debug("UserCommand - COMMAND_OWNER, kID: "+(string)kID);
         if (sStr == "radarsettings")//request for the radar settings menu
         {
             DialogRadarSettings(kID, iNum);
@@ -608,13 +624,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
                 SaveSetting(sStr);
                 EnforceSettings();
-                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned ON.", TRUE);
+                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m around " + g_sSubName + " is now turned ON.", TRUE);
             }
             else if(sStr == "radar off")
             {
                 SaveSetting(sStr);
                 EnforceSettings();
-                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m for " + g_sSubName + " is now turned OFF.", TRUE);
+                Notify(kID, "Avatar radar with range of " + (string)((integer)g_iSensorRange) + "m around " + g_sSubName + " is now turned OFF.", TRUE);
             }
             else if(sStr == "listen on")
             {
