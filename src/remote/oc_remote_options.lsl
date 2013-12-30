@@ -22,6 +22,7 @@
 // Start Jess's OC modified menu injection
 
 // -- HUD Message Map
+integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU = 3002;
 integer DIALOG = -9000;
@@ -322,12 +323,17 @@ default
     
     state_entry()
     {
-        llSleep(2.0);        
+        llSleep(1.0);        
+        //llOwnerSay("Debug: state_entry hudoptions, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
     }
     
     link_message(integer sender, integer num, string str, key id)
     {   
+		if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
+        }
         if(num == SUBMENU && str == submenu)
         {
             currentmenu = submenu;

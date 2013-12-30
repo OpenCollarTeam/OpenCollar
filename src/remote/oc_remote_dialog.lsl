@@ -314,6 +314,10 @@ default
         llResetScript();
     }
 
+	changed(integer change) {
+		if(change & CHANGED_OWNER) llResetScript();
+	}
+	
     link_message(integer sender, integer num, string str, key id)
     {
         if (num == DIALOG)

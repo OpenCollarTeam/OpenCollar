@@ -10,12 +10,16 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//no gridwide TP, probably because of llRegionSayTo in SendCmd()
+//to enhance: check if command is a forced tp - then use llInstantMessage if sub is not in same SIM - but this is probably slow, laggy and error prone
+//- and do not forget to check if avi is online, before sending out a gridwide tp...
+
 key currentsub = "";
 string g_sDialogUrl;
 list cmdqueue;// requset, id, cmd, type
 integer checkdelay = 600;
 integer debugging=FALSE; // show debug messages
-list subs;//strided list in the form key,name
+list subs = [];//strided list in the form key,name
 string tmpname; //used temporarily to store new owner or secowner name while retrieving key
 list localcmds = ["reset","removesub","listsubs", "reloadlist","help","update","owner"];//these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
 list LISTENERS; // list of hud channel handles we are listening for, for building lists
@@ -128,7 +132,18 @@ SendCmd(key id, string cmd, integer all)
     if (InSim(id))
     {
         llRegionSayTo(id,getPersonalChannel(id,1111), (string)id + ":" + cmd);
-        llOwnerSay("Sending to "+ llKey2Name(id) + "'s collar - " + cmd);//make it look nice on the screen for owners, now it looks nice we can display all sent commands to all subs NG.
+        if (llGetSubString(cmd,0,6)=="leashto")
+        {
+            key temp = llGetSubString(cmd,8,43);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - leashto " + llGetDisplayName(temp));//makes Leashto look better NG.
+        }
+        else if (llGetSubString(cmd,0,5)=="follow")
+        {
+            key temp = llGetSubString(cmd,7,42);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - follow " + llGetDisplayName(temp));//Makes Follow look better NG.
+        }
+        else
+        llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd);//make it look nice on the screen for owners, now it looks nice we can display all sent commands to all subs NG.
     }
     else
     {
@@ -415,12 +430,25 @@ default
         listener=llListen(getPersonalChannel(wearer,1111),"","",""); //lets listen here
         
 //        subs = []; //this clears the subs list on reset
-        llSleep(2.0);//giving time for others to reset before populating menu
+        llSleep(1.0);//giving time for others to reset before populating menu
+        //llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+		llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
+	
+	changed(integer change) {
+		//reload on notcard changes should happen automaticly
+		if(change & CHANGED_INVENTORY) llOwnerSay("Note: Reload list of subs from notecard manually via menu, if you just edited it");
+		if(change & CHANGED_OWNER) llResetScript();
+	}
+	
     link_message(integer sender, integer num, string str, key id)
     {
         debug("Link Message: num=" + (string)num + " str=" + str);
+		if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
+            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        }
         //authenticate messages on COMMAND_NOAUTH
         if (num == COMMAND_OWNER)
         {
@@ -454,12 +482,9 @@ default
             {
                 subs = [];
                 llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+				//llOwnerSay("Debug: hudmain, user reset request");
                 llResetScript(); //lets reset things
             }
-        }
-        else if (num == MENUNAME_REQUEST && str == parentmenu)
-        {
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
         }
         else if (num == SUBMENU && str == submenu)
         {
@@ -659,12 +684,8 @@ default
     on_rez(integer param)
     {
         llSleep(2.0);
+        //llOwnerSay("Debug: on_rez hudmain");
         llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
-        if (llGetOwner()!=wearer) 
-        {
-            subs = [];
-            llResetScript();;//if new owner lets reset everything
-        }
     }
     timer()//clear things after ping
     {

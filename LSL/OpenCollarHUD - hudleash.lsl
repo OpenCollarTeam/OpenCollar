@@ -148,9 +148,14 @@ default
     {
         wearer = llGetOwner();//Lets get the ID of who is wearing us
         llSleep(1.0);
+        //llOwnerSay("Debug: state_entry hudleash, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
-       
+    
+	changed(integer change) {
+		if(change & CHANGED_OWNER) llResetScript();
+	}
+	
     link_message(integer sender, integer auth, string str, key id)
     {  //only the primary owner can use this !!
         if (auth == MENUNAME_REQUEST && str == parentmenu)

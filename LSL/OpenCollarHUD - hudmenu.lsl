@@ -169,6 +169,7 @@ default
     {
         if (num == MENUNAME_RESPONSE)
         {
+            //llOwnerSay("Debug: link_message hudmenu - get menu buttons: " + str);
             //str will be in form of "parent|menuname"
             //ignore unless parent is in our list of menu names
             list params = llParseString2List(str, ["|"], []);
@@ -273,7 +274,10 @@ default
         }
     }
     on_rez(integer param)
-    {
-        llResetScript();
+    {	
+		//here we need some lines that request all the menu buttons from the other scripts, using MENUNAME_REQUEST channel
+		//till we got this structure completed - looks like most scripts are allready prepared for this - do a script reset only on user request  or on owner change
+        //llOwnerSay("Debug: on_rez hudmenu - commented out to keep menu buttons");
+        //llResetScript();
     }
 }

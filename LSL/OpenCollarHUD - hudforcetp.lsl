@@ -10,6 +10,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//no gridwide TP, probably because of SendCmd llRegionSayTo in *hudmain* script
+
 //on touch, give menu of LMs
 //on hearing number, request LM data
 //on getting LM data, give TP command
@@ -211,11 +213,16 @@ default
             llRequestPermissions(wearer, PERMISSION_TRACK_CAMERA);
         }
         llSleep(1.0);
+        //llOwnerSay("Debug: state_entry hudforcetp, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
 
     link_message(integer sender, integer num, string str, key id)
     {
+		if (num == MENUNAME_REQUEST && str == parentmenu)
+        {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        }
         if (num == SUBMENU && str == submenu)
         {
             MainMenu(wearer);
