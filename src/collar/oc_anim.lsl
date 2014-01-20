@@ -377,7 +377,7 @@ integer StartsWith(string sHayStack, string sNeedle) // http://wiki.secondlife.c
 {
     return llDeleteSubString(sHayStack, llStringLength(sNeedle), -1) == sNeedle;
 }
-/*
+
 RequestPerms()
 {
     if (llGetAttached())
@@ -386,7 +386,7 @@ RequestPerms()
     }
 }
 
-*/
+
 CreateAnimList()
 {
     g_lPoseList=[];
@@ -588,7 +588,7 @@ default
 {
     on_rez(integer iNum)
     {
-        //llResetScript(); //ugh! -MD
+        llResetScript();
     }
     state_entry()
     {
@@ -597,7 +597,7 @@ default
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-        //RequestPerms(); Moving this to attach. Let's not have single call functions anyway... -MD
+        RequestPerms();
 
         CreateAnimList();
 
