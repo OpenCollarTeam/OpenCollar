@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvundress                             //
-//                                 version 3.934                                  //
+//                                 version 3.936                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,10 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+
+// 3.936 New feature! Smartstrip. When smartstrip is activated, the standard clothing removal folder will use detachallthis instead of remoutfit, to remove everything in the same folder or child folders of the item being removed. For people with a sensibly set up #RLV, this makes this a far more useful option! Because lots of people *don't* have a #RLV folder set up for this, we also have a notecard to give to help people with setting up folders. Yay! Smartstrip gets turned on and off via the menus or via the chat commands "smartstrip on" and "smartstrip off". Owners and Wearers can both change this setting. However! We also have a g_kSmartUser key. If someone other an Owner or Wearer selects it, their key gets dumped into this value, which is not saved. This allows other people to activate it for themselves only, for that session only. As an additional bonus, removing clothing can now be accessed by an easy chat command, "strip (item)" or "strip all". For now, I haven't changed the behaviour of strip all, however the code is there commented out if we think it's a good idea for strip all to use smartstrip.
+
 
 //gives menus for clothing and attachment, stripping and locking
 
@@ -20,6 +24,16 @@ list g_lSubMenus= [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
 list g_lRLVcmds = ["attach","detach","remoutfit", "addoutfit","remattach","addattach"];
+
+
+integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
+string SMARTON="☐ SmartStrip";
+string SMARTOFF = "☒ SmartStrip";
+string SMARTHELP = "#RLV Help";
+string g_sSmartHelpCard = "How to set up your #RLV and use SmartStrip";
+string g_sSmartToken="smartstrip";
+key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
+
 
 list g_lSettings;//2-strided list in form of [option, param]
 string CTYPE = "collar";
@@ -204,7 +218,8 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 MainMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nNote: Keep in mind that mesh clothing is worn as attachments and in most cases together with alpha masks which are worn as clothing layers. It is recommended to explore the possibilities of #RLV Folders for a smooth un/dressing experience.\n";
+    //string sPrompt = "\n\nNote: Keep in mind that mesh clothing is worn as attachments and in most cases together with alpha masks which are worn as clothing layers. It is recommended to explore the possibilities of #RLV Folders for a smooth un/dressing experience.\n";
+    string sPrompt = "\n\nNote: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder (click "+SMARTHELP+" for info), the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
     list lButtons = g_lChildren;
 
     if (g_iAllLocked)  //are all clothing and attachements locked?
@@ -219,6 +234,17 @@ MainMenu(key kID, integer iAuth)
         lButtons += ["Lock Attachment"];
         lButtons += ["☐ Lock All"];
     }
+    if(g_kSmartUser==kID || g_iSmartStrip==TRUE)
+    {
+        sPrompt += "\nSmartStrip is on.";
+        lButtons += SMARTOFF;
+    }
+    else
+    {
+        lButtons += SMARTON;
+        sPrompt += "\nSmartStrip is off.";
+    }
+    lButtons+=SMARTHELP;
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
 
@@ -423,6 +449,58 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {//give this plugin's menu to kID
         MainMenu(kID, iNum);
     }
+    else if (sCommand == "smartstrip")
+    {
+        string sOpt=llList2String(lParams,1);
+        if(sOpt == "on")
+        {
+            if(iNum==COMMAND_OWNER || iNum == COMMAND_WEARER)
+            {
+                g_iSmartStrip=TRUE;
+                llMessageLinked(LINK_SET,LM_SETTING_SAVE, g_sScript + g_sSmartToken +"=1",NULL_KEY);
+            }
+            else g_kSmartUser=kID;
+        }
+        else
+        {
+            if(iNum==COMMAND_OWNER || iNum == COMMAND_WEARER)
+            {
+                g_iSmartStrip=FALSE;
+                llMessageLinked(LINK_SET,LM_SETTING_DELETE, g_sScript + g_sSmartToken,NULL_KEY);
+            }
+            else g_kSmartUser=NULL_KEY;
+        }
+    }
+    else if (sCommand == "strip")
+    {
+        string sOpt=llList2String(lParams,1);
+        if(sOpt=="all")
+        {
+            /* Should we use smartstrip for this? Not sure. Here's the way to do it if we do.
+           if(kID==g_kSmartUser || g_iSmartStrip==TRUE)
+            {
+                integer x=14; //let's not strip tattoos and physics layers;
+                while(x)
+                {
+                    if(x==13) x=9; //skip hair,skin,shape,eyes
+                    --x;
+                    string sItem=llToLower(llList2String(DETACH_CLOTH_POINTS,x));
+                    llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:"+ sItem +"=force",NULL_KEY);
+                 }
+            }
+            */
+            llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY); //retain if smartstripping to catch items outside #RLV
+            return TRUE;
+        }
+        sOpt = llToLower(sOpt);
+        string test=llToUpper(llGetSubString(sOpt,0,0))+llGetSubString(sOpt,1,-1);
+        if(llListFindList(DETACH_CLOTH_POINTS,[test])==-1) return FALSE;
+        //send the RLV command to remove it.
+        if(kID==g_kSmartUser || g_iSmartStrip==TRUE){
+        llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sOpt + "=force", NULL_KEY);}
+        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sOpt + "=force", NULL_KEY); //yes, this isn't an else. We do it in case the item isn't in #RLV.
+    }
+        
     else if (llListFindList(g_lRLVcmds, [sCommand]) != -1)
     {    //we've received an RLV command that we control.  only execute if not sub
         if (iNum == COMMAND_WEARER)
@@ -679,6 +757,10 @@ default
                     g_lSettings = llParseString2List(sValue, [","], []);
                     UpdateSettings();
                 }
+                else if (sToken == g_sSmartToken)
+                {
+                    g_iSmartStrip=TRUE;
+                }
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
         }
@@ -741,6 +823,8 @@ default
                     else if (sMessage == "Lock Attachment") LockAttachmentMenu(kAv, iAuth);
                     else if (sMessage == "☐ Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
                     else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == SMARTON) { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
+                    else if (sMessage == SMARTOFF) { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
@@ -758,22 +842,36 @@ default
                     // SA:Â we can count ourselves lucky that all people who can see the menu have sufficient privileges for remoutfit commands!
                     //    Note for people looking for the auth check: it would have been here, look no further!
                     { //send the RLV command to remove it.
+                    
+                        //UserCommand(iAuth,"strip all",kAv); //See stuff in UserCommand. If we use smartstrip for all, then we'd jump to that here to save duplication, but otherwise it's a single LM, better to do it here than hit UserCommand.
+                                            
                         llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
                         QueryClothing(kAv, iAuth);
                     }
+                    else 
+                    {
+                        UserCommand(iAuth,"strip "+sMessage,kAv);
+                        llSleep(0.5);
+                        QueryClothing(kAv, iAuth);
+                    }
+                        
+                    /* Moving this to UserCommand to allow "strip" chat command
                     else
                     { //we got a cloth point.
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
+                        if(kAv==g_kSmartUser || g_iSmartStrip==TRUE){
+                        llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sMessage + "=force", NULL_KEY);}
                         llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
                         QueryClothing(kAv, iAuth);
                     }
+                    */
                 }
                 else if (kID == g_kAttachID)
                 {
