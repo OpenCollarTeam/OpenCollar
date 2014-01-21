@@ -72,6 +72,7 @@ integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon
 
 //added to prevent altime attach messages
 integer g_bDetached = FALSE;
+integer g_iHide ; // global hide
 
 key g_kWearer;
 string CTYPE = "collar";
@@ -184,6 +185,7 @@ BuildLockElementList()//EB
 
 SetLockElementAlpha() //EB
 {
+    if (g_iHide) return ; // ***** if collar is hide, don't do anything 
     //loop through stored links, setting alpha if element type is lock
     integer n;
     //float fAlpha;
@@ -400,6 +402,11 @@ default
         if (iChange & CHANGED_OWNER)
         {
             llResetScript();
+        }
+        if (iChange & CHANGED_COLOR) // ********************* 
+        {
+            g_iHide = !(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            SetLockElementAlpha(); // update hide elements 
         }
     }
 /*
