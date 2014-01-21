@@ -76,6 +76,7 @@ key g_kWearer; // key of the current wearer to reset only on owner changes
 integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 
 list g_lButtons;
+integer g_iHide ; // global hide
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -237,14 +238,16 @@ DoMenu(key kID, integer iAuth)
 //=
 //===============================================================================
 
-SetBellElementAlpha(float fAlpha)
+SetBellElementAlpha()
 {
+    if (g_iHide) return ; // ***** if collar is hide, don't do anything 
     //loop through stored links, setting color if element type is bell
+    
     integer n;
     integer iLinkElements = llGetListLength(g_lBellElements);
     for (n = 0; n < iLinkElements; n++)
     {
-        llSetLinkAlpha(llList2Integer(g_lBellElements,n), fAlpha, ALL_SIDES);
+        llSetLinkAlpha(llList2Integer(g_lBellElements,n), (float)g_iBellShow, ALL_SIDES);
     }
 }
 
@@ -416,15 +419,14 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if (sToken=="show")
             {
                 g_iBellShow=TRUE;
-                SetBellElementAlpha(1.0);
                 Notify(kID,"The bell is now visible.",TRUE);
             }
             else
             {
                 g_iBellShow=FALSE;
-                SetBellElementAlpha(0.0);
                 Notify(kID,"The bell is now invisible.",TRUE);
             }
+            SetBellElementAlpha();
             SaveBellSettings();
 
         }
@@ -570,8 +572,7 @@ default
                 else if (sToken == "show")
                 {
                     g_iBellShow=(integer)sValue;
-                    if (g_iBellShow) SetBellElementAlpha(1.0);
-                    else SetBellElementAlpha(0.0);
+                    SetBellElementAlpha();
                 }
                 else if (sToken == "sound")
                 {
@@ -698,14 +699,7 @@ default
                     // someone wants to hide or show the bell
                 {
                     g_iBellShow=!g_iBellShow;
-                    if (g_iBellShow)
-                    {
-                        SetBellElementAlpha(1.0);
-                    }
-                    else
-                    {
-                        SetBellElementAlpha(0.0);
-                    }
+                    SetBellElementAlpha();
                     SaveBellSettings();
                 }
                 else if (~llListFindList(g_lButtons, [sMessage]))
@@ -721,11 +715,8 @@ default
         }
         else if(iNum=COMMAND_OWNER && sStr=="runaway")
         {
-            if (!g_iBellShow)
-            {
-                llSleep(4);
-                SetBellElementAlpha(0.0);
-            }
+            llSleep(4);
+            SetBellElementAlpha();
         }
     }
 
@@ -764,6 +755,11 @@ default
     {
         if(change & CHANGED_LINK) BuildBellElementList();
         else if (change & CHANGED_INVENTORY) PrepareSounds();
+        if (change & CHANGED_COLOR) // ********************* 
+        {
+            g_iHide = !(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            SetBellElementAlpha(); // update hide elements 
+        }
     }
 
 }
