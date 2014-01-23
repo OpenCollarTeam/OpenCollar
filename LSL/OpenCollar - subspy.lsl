@@ -251,11 +251,16 @@ DialogSpy(key kID, integer iAuth)
         g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
         return;
     }
+    string sTStatus;
+    string sRStatus;
+    string sLStatus;
+    sTStatus = sRStatus = sLStatus = "off";
     list lButtons ;
 
     if(g_iTraceEnabled)
     {
         lButtons += ["☒ Trace"];
+        sTStatus = "on";
     }
     else
     {
@@ -264,6 +269,7 @@ DialogSpy(key kID, integer iAuth)
     if(g_iRadarEnabled)
     {
         lButtons += ["☒ Radar"];
+        sRStatus = "on";
     }
     else
     {
@@ -272,15 +278,16 @@ DialogSpy(key kID, integer iAuth)
     if(g_iListenEnabled)
     {
         lButtons += ["☒ Listen"];
+        sLStatus = "on";
     }
     else
     {
         lButtons += ["☐ Listen"];
     }
     lButtons += ["RadarSettings"];
-    sPrompt = "\n\n- Access Granted to Primary Owners Only -\n";
-    sPrompt += "\nTrace notifies if " + g_sSubName + " teleports.\n";
-    sPrompt += "\nRadar and Listen sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
+    sPrompt = "\n-Primary Owners Only Menu-\n";
+    sPrompt += "\nTrace ("+sTStatus+") notifies if " + g_sSubName + " teleports.\n";
+    sPrompt += "\nRadar ("+sRStatus+") and Listen ("+sLStatus+") sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
     sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!\n - Messages may get capped and not all text may get transmitted -";
 
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
