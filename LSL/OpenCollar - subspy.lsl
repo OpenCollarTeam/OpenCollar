@@ -763,9 +763,11 @@ default
 
     attach(key kID)
     {
-        if(kID != NULL_KEY)
+        if(kID != NULL_KEY && g_iTraceEnabled)
         {
             g_sLoc = GetLocation();
+            //record initial position if trace enabled
+            g_sTPBuffer += "Rezzed at " + g_sLoc + " at " + GetTimestamp() + ".\n";
         }
     }
 
