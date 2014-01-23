@@ -825,6 +825,7 @@ default
                     else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
                     else if (sMessage == SMARTON) { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
                     else if (sMessage == SMARTOFF) { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
+                    else if (sMessage == "#RLV Help") { llGiveInventory(kAv,g_sSmartHelpCard); MainMenu(kAv, iAuth);}
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
