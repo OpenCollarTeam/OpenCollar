@@ -174,7 +174,7 @@ UpdateSensor()
 UpdateListener()
 {
     if (g_iListenEnabled && llGetAttached()){ //turn on listener if not already on
-        if (!g_iListener){
+        if (g_iListener == 0){
             //Debug("Enabling listener");
             g_iListener = llListen(0, "", g_kWearer, "");
         }
@@ -182,7 +182,7 @@ UpdateListener()
     else
     {  
         //turn off listener if on
-        if (g_iListener)
+        if (g_iListener != 0)
         {
             //Debug("Disabling listener");
             llListenRemove(g_iListener);
