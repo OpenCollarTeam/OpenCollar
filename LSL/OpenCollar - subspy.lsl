@@ -514,6 +514,8 @@ default
 
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
 
+        Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
+        Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
         llSetTimerEvent(4.0);   //wait for data before we do anything else... see timer event.
     }
 
@@ -625,6 +627,8 @@ default
                     g_iSensorRepeat=(integer)sValue;
                 }
 
+                //Debug("new g_lSettings: " + (string)g_lSettings);
+                if(("trace" == sOption && g_iTraceEnabled) || ("radar" == sOption && g_iRadarEnabled) || ("listen" == sOption && g_iListenEnabled)) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption + "!",FALSE);
             }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -700,8 +704,6 @@ default
             g_sState="postInit";
             llSetTimerEvent(5.0);
         } else if (g_sState=="postInit") {  //postInit period complete, should have all of our data now
-            Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
-            Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
 
             if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation();
             //Debug("Running sensor from postInit");
