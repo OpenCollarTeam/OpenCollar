@@ -174,7 +174,7 @@ UpdateSensor()
 UpdateListener()
 {
     if (g_iListenEnabled && llGetAttached()){ //turn on listener if not already on
-        if (!g_iListener){
+        if (g_iListener == 0){
             //Debug("Enabling listener");
             g_iListener = llListen(0, "", g_kWearer, "");
         }
@@ -182,7 +182,7 @@ UpdateListener()
     else
     {  
         //turn off listener if on
-        if (g_iListener)
+        if (g_iListener != 0)
         {
             //Debug("Disabling listener");
             llListenRemove(g_iListener);
@@ -251,11 +251,16 @@ DialogSpy(key kID, integer iAuth)
         g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
         return;
     }
+    string sTStatus;
+    string sRStatus;
+    string sLStatus;
+    sTStatus = sRStatus = sLStatus = "off";
     list lButtons ;
 
     if(g_iTraceEnabled)
     {
         lButtons += ["☒ Trace"];
+        sTStatus = "on";
     }
     else
     {
@@ -264,6 +269,7 @@ DialogSpy(key kID, integer iAuth)
     if(g_iRadarEnabled)
     {
         lButtons += ["☒ Radar"];
+        sRStatus = "on";
     }
     else
     {
@@ -272,15 +278,16 @@ DialogSpy(key kID, integer iAuth)
     if(g_iListenEnabled)
     {
         lButtons += ["☒ Listen"];
+        sLStatus = "on";
     }
     else
     {
         lButtons += ["☐ Listen"];
     }
     lButtons += ["RadarSettings"];
-    sPrompt = "\n\n- Access Granted to Primary Owners Only -\n";
-    sPrompt += "\nTrace notifies if " + g_sSubName + " teleports.\n";
-    sPrompt += "\nRadar and Listen sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
+    sPrompt = "\n-Primary Owners Only Menu-\n";
+    sPrompt += "\nTrace ("+sTStatus+") notifies if " + g_sSubName + " teleports.\n";
+    sPrompt += "\nRadar ("+sRStatus+") and Listen ("+sLStatus+") sending reports every "+ (string)((integer)g_iSensorRepeat/60) + " minutes on who joined or left " + g_sSubName + " in a range of " + (string)((integer)g_iSensorRange) + " meters and on what " + g_sSubName + " wrote in Nearby Chat.\n";
     sPrompt += "\nListen transmits directly what " + g_sSubName + " says in Nearby Chat. Other nearby parties chat will NOT be transmitted!\n - Messages may get capped and not all text may get transmitted -";
 
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -362,6 +369,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
             {
                 llOwnerSay( llGetSubString(sMsg,0,index));
             }
+            llRegionSayTo(kID, PUBLIC_CHANNEL, llGetSubString(sMsg,0,index));   //workaround for message on settings change by primary owner
             llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), llGetSubString(sMsg,0,index));
         }
         if (index >=llStringLength(sMsg)-1 ) return;
@@ -432,6 +440,7 @@ performSpyCommand (string sStr, key kID)
     if(sStr == "☐ trace")
     {
         g_sLoc=GetLocation();
+        if (!g_iTraceEnabled) g_sTPBuffer += "Trace turned on at " + g_sLoc + " at " + GetTimestamp() + ".\n";
         g_iTraceEnabled=TRUE;
         SaveSetting("trace","on");
         Notify(kID, "Teleport tracing is now turned on.", TRUE);
@@ -444,6 +453,7 @@ performSpyCommand (string sStr, key kID)
     }
     else if(sStr == "☐ radar")
     {
+        //if (!g_iRadarEnabled) g_lAVBuffer += ["Radar turned on at " + GetTimestamp() + "."];
         g_sOldAVBuffer = "";
         g_iRadarEnabled=TRUE;
         SaveSetting("radar","on");
@@ -459,6 +469,7 @@ performSpyCommand (string sStr, key kID)
     }
     else if(sStr == "☐ listen")
     {
+        if (!g_iRadarEnabled) g_sChatBuffer += "Listener turned on at " + GetTimestamp() + ".\n";
         g_iListenEnabled=TRUE;
         SaveSetting("listen","on");
         UpdateListener();
@@ -504,6 +515,8 @@ default
 
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
 
+        Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
+        Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
         llSetTimerEvent(4.0);   //wait for data before we do anything else... see timer event.
     }
 
@@ -597,15 +610,32 @@ default
 
                 if (sOption == "trace") {
                     g_iGotSettingTrace=TRUE;
-                    if (sValue=="on") g_iTraceEnabled=TRUE;
+                    if (sValue=="on") {
+                        if (!g_iTraceEnabled) {
+                            g_sLoc=GetLocation();
+                            g_iTraceEnabled=TRUE;
+                            g_sTPBuffer += "Trace turned on at " + g_sLoc + " at " + GetTimestamp() + ".\n";
+                        }
+                    }
                     else g_iTraceEnabled=FALSE;
                 } else if (sOption == "radar") {
                     g_iGotSettingRadar=TRUE;
-                    if (sValue=="on") g_iRadarEnabled=TRUE;
-                    else g_iRadarEnabled=FALSE;
+                    if (sValue=="on") {
+                        if (!g_iRadarEnabled) {
+                            g_iRadarEnabled=TRUE;
+                            //if (g_iTraceEnabled) g_lAVBuffer += ["Radar turned on at " + GetLocation() + " at " + GetTimestamp() + "."];
+                            //    else g_lAVBuffer += ["Radar turned on at " + GetTimestamp() + "."];
+                        }
+                    } else g_iRadarEnabled=FALSE;
                 } else if (sOption == "listen") {
                     g_iGotSettingListen=TRUE;
-                    if (sValue=="on") g_iListenEnabled=TRUE;
+                    if (sValue=="on") {
+                        if (!g_iListenEnabled) {
+                            g_iListenEnabled=TRUE;
+                            if (g_iTraceEnabled) g_sChatBuffer += "Listener turned on at " + GetLocation() + " at " + GetTimestamp() + ".\n";
+                                else g_sChatBuffer += "Listener turned on at " + GetTimestamp() + ".\n";
+                        }
+                    }
                     else g_iListenEnabled=FALSE;
                 } else if (sOption == "meters") {
                     g_iGotSettingMeters=TRUE;
@@ -615,6 +645,8 @@ default
                     g_iSensorRepeat=(integer)sValue;
                 }
 
+                //Debug("new g_lSettings: " + (string)g_lSettings);
+                if(("trace" == sOption && g_iTraceEnabled) || ("radar" == sOption && g_iRadarEnabled) || ("listen" == sOption && g_iListenEnabled)) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption + "!",FALSE);
             }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -690,10 +722,8 @@ default
             g_sState="postInit";
             llSetTimerEvent(5.0);
         } else if (g_sState=="postInit") {  //postInit period complete, should have all of our data now
-            Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
-            Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
 
-            if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation();
+            if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation() + ".\n";
             //Debug("Running sensor from postInit");
             g_sState="initialScan";
             llSensor("" ,"" , AGENT, g_iSensorRange, PI);
@@ -733,9 +763,11 @@ default
 
     attach(key kID)
     {
-        if(kID != NULL_KEY)
+        if(kID != NULL_KEY && g_iTraceEnabled)
         {
             g_sLoc = GetLocation();
+            //record initial position if trace enabled
+            g_sTPBuffer += "Rezzed at " + g_sLoc + " at " + GetTimestamp() + ".\n";
         }
     }
 
@@ -747,8 +779,8 @@ default
             if(g_iTraceEnabled)
             {
                 g_sTPBuffer += "Teleport from " + g_sLoc + " to " +  GetLocation()+ " at " + GetTimestamp() + ".\n";
+                g_sLoc = GetLocation();
             }
-            g_sLoc = GetLocation();
             UpdateSensor(); //if we don't update sensor here, we will not get any reports as the sensor runs the timer, and sensorRepeat stops on tp
         }
 
