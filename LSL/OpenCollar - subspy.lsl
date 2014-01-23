@@ -759,8 +759,8 @@ default
             if(g_iTraceEnabled)
             {
                 g_sTPBuffer += "Teleport from " + g_sLoc + " to " +  GetLocation()+ " at " + GetTimestamp() + ".\n";
+                g_sLoc = GetLocation();
             }
-            g_sLoc = GetLocation();
             UpdateSensor(); //if we don't update sensor here, we will not get any reports as the sensor runs the timer, and sensorRepeat stops on tp
         }
 
