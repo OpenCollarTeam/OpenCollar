@@ -723,7 +723,7 @@ default
             llSetTimerEvent(5.0);
         } else if (g_sState=="postInit") {  //postInit period complete, should have all of our data now
 
-            if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation();
+            if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation() + ".\n";
             //Debug("Running sensor from postInit");
             g_sState="initialScan";
             llSensor("" ,"" , AGENT, g_iSensorRange, PI);
