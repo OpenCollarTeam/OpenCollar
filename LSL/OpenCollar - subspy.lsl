@@ -439,6 +439,7 @@ performSpyCommand (string sStr, key kID)
     if(sStr == "☐ trace")
     {
         g_sLoc=GetLocation();
+        if (!g_iTraceEnabled) g_sTPBuffer += "Trace turned on at " + g_sLoc + " at " + GetTimestamp() + ".\n";
         g_iTraceEnabled=TRUE;
         SaveSetting("trace","on");
         Notify(kID, "Teleport tracing is now turned on.", TRUE);
@@ -451,6 +452,7 @@ performSpyCommand (string sStr, key kID)
     }
     else if(sStr == "☐ radar")
     {
+        //if (!g_iRadarEnabled) g_lAVBuffer += ["Radar turned on at " + GetTimestamp() + "."];
         g_sOldAVBuffer = "";
         g_iRadarEnabled=TRUE;
         SaveSetting("radar","on");
@@ -466,6 +468,7 @@ performSpyCommand (string sStr, key kID)
     }
     else if(sStr == "☐ listen")
     {
+        if (!g_iRadarEnabled) g_sChatBuffer += "Listener turned on at " + GetTimestamp() + ".\n";
         g_iListenEnabled=TRUE;
         SaveSetting("listen","on");
         UpdateListener();
