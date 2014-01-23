@@ -610,15 +610,32 @@ default
 
                 if (sOption == "trace") {
                     g_iGotSettingTrace=TRUE;
-                    if (sValue=="on") g_iTraceEnabled=TRUE;
+                    if (sValue=="on") {
+                        if (!g_iTraceEnabled) {
+                            g_sLoc=GetLocation();
+                            g_iTraceEnabled=TRUE;
+                            g_sTPBuffer += "Trace turned on at " + g_sLoc + " at " + GetTimestamp() + ".\n";
+                        }
+                    }
                     else g_iTraceEnabled=FALSE;
                 } else if (sOption == "radar") {
                     g_iGotSettingRadar=TRUE;
-                    if (sValue=="on") g_iRadarEnabled=TRUE;
-                    else g_iRadarEnabled=FALSE;
+                    if (sValue=="on") {
+                        if (!g_iRadarEnabled) {
+                            g_iRadarEnabled=TRUE;
+                            //if (g_iTraceEnabled) g_lAVBuffer += ["Radar turned on at " + GetLocation() + " at " + GetTimestamp() + "."];
+                            //    else g_lAVBuffer += ["Radar turned on at " + GetTimestamp() + "."];
+                        }
+                    } else g_iRadarEnabled=FALSE;
                 } else if (sOption == "listen") {
                     g_iGotSettingListen=TRUE;
-                    if (sValue=="on") g_iListenEnabled=TRUE;
+                    if (sValue=="on") {
+                        if (!g_iListenEnabled) {
+                            g_iListenEnabled=TRUE;
+                            if (g_iTraceEnabled) g_sChatBuffer += "Listener turned on at " + GetLocation() + " at " + GetTimestamp() + ".\n";
+                                else g_sChatBuffer += "Listener turned on at " + GetTimestamp() + ".\n";
+                        }
+                    }
                     else g_iListenEnabled=FALSE;
                 } else if (sOption == "meters") {
                     g_iGotSettingMeters=TRUE;
