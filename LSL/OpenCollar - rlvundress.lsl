@@ -442,7 +442,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 {
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
-    list lParams = llParseString2List(sStr, [":", "="], []);
+    list lParams = llParseString2List(sStr, [":", "=", " "], []);
     string sCommand = llList2String(lParams, 0);
     //Debug(sStr + " ## " + sCommand);
     if (sStr == "menu " + g_sSubMenu)
