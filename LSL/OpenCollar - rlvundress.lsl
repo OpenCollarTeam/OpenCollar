@@ -442,7 +442,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 {
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
-    list lParams = llParseString2List(sStr, [":", "="], []);
+    list lParams = llParseString2List(sStr, [":", "=", " "], []);
     string sCommand = llList2String(lParams, 0);
     //Debug(sStr + " ## " + sCommand);
     if (sStr == "menu " + g_sSubMenu)
@@ -825,6 +825,7 @@ default
                     else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
                     else if (sMessage == SMARTON) { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
                     else if (sMessage == SMARTOFF) { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
+                    else if (sMessage == "#RLV Help") { llGiveInventory(kAv,g_sSmartHelpCard); MainMenu(kAv, iAuth);}
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
