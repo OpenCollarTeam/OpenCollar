@@ -369,6 +369,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
             {
                 llOwnerSay( llGetSubString(sMsg,0,index));
             }
+            llRegionSayTo(kID, PUBLIC_CHANNEL, llGetSubString(sMsg,0,index));   //workaround for message on settings change by primary owner
             llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), llGetSubString(sMsg,0,index));
         }
         if (index >=llStringLength(sMsg)-1 ) return;
