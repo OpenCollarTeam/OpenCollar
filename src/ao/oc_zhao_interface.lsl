@@ -126,10 +126,13 @@ integer oldCollarHandle;
 
 key Owner = NULL_KEY;
 
-integer collarIntegration;
 integer isLocked = FALSE;
 string UNLOCK = " UNLOCK";
 string LOCK = " LOCK";
+string AOOFF = "AO Off";
+string AOON = "AO On";
+string TYPINGOFF = "TypingOFF";
+string TYPINGON = "TypingON";
 
 string COLLAR_OFF = "NoCollar";
 string COLLAR_ON = "CollarInt";
@@ -160,13 +163,13 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer SUBMENU = 3002;
-string UPMENU = "^";
+string UPMENU = "BACK";
 list menuids;//three strided list of avkey, dialogid, and menuname
 integer menustride = 3;
 // Use these to keep track of your current menu
 // Use any variable name you desire
 string MENU = "DoMenu";
-string OCMENU = "FirstMenu";
+string QUICKMENU = "FirstMenu";
 
 
 // CODE
@@ -186,12 +189,22 @@ key ShortKey()
     return (key)(out + "-0000-0000-0000-000000000000");
 }
 
-key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
+Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page, string menu)
 {
     key id = ShortKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page +
- "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
-    return id;
+    llMessageLinked(LINK_SET, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page + "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
+
+    list newstride = [rcpt, id, menu];
+    
+    integer index = llListFindList(menuids, [id]);
+    if (index == -1)
+    {
+        menuids += newstride;
+    }
+    else
+    { //this person is already in the dialog list.  replace their entry
+        menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
+    } 
 }
 
 
@@ -207,110 +220,41 @@ Initialize() {
 
 DoFirstMenu(key id, integer page)
 {
-    string text = "[AO] For AO Options\n"; // prompt text
-    text += "[Collar Menu] for Collar Menu\n";
-    //text += "[Couples] for Couples Animator\n";
-    text += "[Options] for Stylalization options\n";
-    text += "Requires Collar version 3.339 or higher for full functionality.\n\n";
-    list buttons = []; // options
+//llSay(0,"Making quickmenu for: "+(string)id);
     list utility = [];
+    list buttons = ["AO Menu","Collar Menu","Couples","Pose","Sits","Ground Sits","Reset","HUD Style","Help"];
     
-    if(llStringLength(text) > 511) // Check text length so we can warn for it being too long before hand.
-    {
-        llOwnerSay("Dialog too long, trimming.");
-        text = llGetSubString(text,0,510);
-    }
+    Dialog(id, "\nSubmissive AO Quickmenu", buttons, utility, page, QUICKMENU);
+//llSay(0,"Done Making quickmenu for: "+(string)id); 
     
-    if(collarIntegration)
-    {
-        //buttons += ["AO","Collar Menu","Couples","Options"];
-        buttons += ["AO","Collar Menu","Options"];
-    }
-    else
-    {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "ZHAO_MENU", Owner);
-        return;
-    }
+}
 
-    
-    key menuid = Dialog(id, text, buttons, utility, page);
-    
-    // UUID , Menu ID, Menu
-    list newstride = [id, menuid, OCMENU];
-
-//////////                    Don't edit below this                //////////////////
-    
-    // Check dialogs for previous entry and update if needed
-    integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    { //this person is already in the dialog list.  replace their entry
-        menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    } 
+string Checkbox(integer iValue){
+    if (iValue) return "☒";
+    return "☐";
 }
 
 DoMenu(key id, integer page)
 {
     list mainMenu;
     string prompt;
-
+//llSay(0,"Making menu for: "+(string)id);
     if(llGetAttached())
     { // -- If we're attached... ANYWHERE, display the menu
-        mainMenu = ["Sit On/Off","Load", "Settings", "Next Stand","Help", "Reset"];
         prompt = "Please select an option:\n";
-        prompt += "CollarIntegration is currently: ";
         //new for locking feature 
-        if(collarIntegration)
-        {
-            prompt += "ON\n";
+        if (isLocked) mainMenu += [UNLOCK];
+        else mainMenu += [LOCK];
             
-            //mainMenu += [COLLAR_OFF];
-            if (isLocked)
-            {
-                mainMenu += [UNLOCK];
-            }
-            else
-            {
-                mainMenu += [LOCK];
-            }
-            
-        }
-        else
-        {
-            prompt += "OFF\n";
-            //mainMenu += [COLLAR_ON];
-        }
-        if (sitAnywhere)
-        {
-            mainMenu += ["SitAnyOFF"];
-        }
-        else
-        {
-            mainMenu += ["SitAnyON"];
-        }
-        if (typingOverrideOn)
-        {
-            mainMenu += ["TypingOFF"];
-        }
-        else
-        {
-            mainMenu += ["TypingON"];
-        }
-        if (zhaoOn)
-        {
-            mainMenu += ["AO OFF"];
-        }
-        else
-        {
-            mainMenu += ["AO ON"];
-        }
-        
-        if(!collarIntegration) mainMenu += ["Options"]; // -- Add options to the AO Menu in case collar integrations is off
-        
-        mainMenu += ["Walks", "Sits", "Ground Sits", "Rand/Seq", "Stand Time"];
+        if (zhaoOn) mainMenu += [AOOFF];
+        else mainMenu += [AOON];
+
+        mainMenu += "Load";
+        //mainMenu += ["Sits "+Checkbox(sitOverride),"Ground Sits","Walks"];
+        mainMenu += ["Sits","Ground Sits","Walks"];
+        //mainMenu += ["Sit Any "+Checkbox(sitAnywhere),"Typing "+Checkbox(typingOverrideOn),"Stand Time"];
+        mainMenu += ["Sits "+Checkbox(sitOverride),"Typing "+Checkbox(typingOverrideOn),"Stand Time"];
+        mainMenu += ["Next Stand","Shuffle "+Checkbox(randomStands),"MORE"];
     }
     else
     { // Else, if we're not attached, we must be updating and therefore only display the update menu
@@ -320,22 +264,7 @@ DoMenu(key id, integer page)
         
     listenState = 0;
     
-    key menuid = Dialog(id, prompt, mainMenu, [], page);
-    
-    // UUID , Menu ID, Menu
-    list newstride = [id, menuid, MENU];
-
-    // Check dialogs for previous entry and update if needed
-    integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    { //this person is already in the dialog list.  replace their entry
-        menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }   
-    
+    Dialog(id, prompt, mainMenu, [], page, MENU);
 }
 
 TurnOn()
@@ -357,18 +286,6 @@ TurnOff()
     //llSetLinkColor(2, offColor, ALL_SIDES);
     llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_AOOFF", "");
     llMessageLinked(LINK_SET, OPTIONS, "ZHAO_AOOFF", "");
-}
-
-ToggleTyping()
-{
-    if (typingOverrideOn == TRUE) 
-    {
-        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_OFF", NULL_KEY);
-    } else 
-    {
-        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_ON", NULL_KEY);
-    }
-    typingOverrideOn = !typingOverrideOn;
 }
 
 ToggleSitAnywhere()
@@ -398,7 +315,7 @@ ToggleSitAnywhere()
 
 SetListener(key speaker)
 {
-    llListen(collarchannel, "", NULL_KEY, "");
+    llListen(collarchannel, "", NULL_KEY, "");  //fixme:  should we be trapping the handle for this listener so we can remove it?
 }
 
 Notify(key id, string msg, integer alsoNotifyWearer) {
@@ -427,10 +344,12 @@ integer isAttachedToHUD()
 // STATE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 debug(string str)
 {
-    //llOwnerSay(llGetScriptName() + "-Debug: " + str);
+    llOwnerSay(llGetScriptName() + "-Debug: " + str);
 }
+*/
 
 default {
     state_entry() {
@@ -461,7 +380,7 @@ default {
 
     link_message(integer sender, integer num, string str, key id)
     {
-        debug("lnkMsg: " + str + " auth=" + (string)num + "id= " + (string)id);
+        //debug("lnkMsg: " + str + " auth=" + (string)num + "id= " + (string)id);
         if (num >= COMMAND_OWNER && num <= COMMAND_WEARER)
         {
             if (isLocked && num == COMMAND_WEARER)
@@ -481,6 +400,7 @@ default {
             else if (str == "ZHAO_MENU")
             {
                 //SetListener(id);
+//llSay(0,"Missed this one, I bet that's it!");
                 DoMenu(id, 0);
             }
             else if (str == "OCAO_MENU")
@@ -489,7 +409,7 @@ default {
             }
             else if (str == "ZHAO_LOCK")
             {
-                if(num >= COMMAND_OWNER && num <= COMMAND_WEARER && collarIntegration)
+                if(num >= COMMAND_OWNER && num <= COMMAND_WEARER)
                 {
                     isLocked = TRUE;
                     if (rlvDetected)
@@ -499,10 +419,6 @@ default {
                     lockerID = id;
                     Notify(id, "The AO has been locked.", TRUE);
                     //llSetLinkTexture(2, AO_LOCKED, ALL_SIDES);
-                }
-                else if (!collarIntegration)
-                {
-                    Notify(id, "The AO can only be locked if Collar Integration is turned on.", FALSE);
                 }
                 else
                 {
@@ -529,25 +445,13 @@ default {
         }
         else if (num == COLLAR_INT_REP)
         {
-            if (id == NULL_KEY && str == "CollarOn")
+            if (str == "CollarOn")
             {
-                llOwnerSay("I could not detect a compatible OpenCollar, full Collar Intergration not possible. OpenCollar 3.3 or higher is required.");
+                llOwnerSay("Collar found full Collar Integration on.");
             }
-            else if (str == "CollarOn")
+            else 
             {
-                if (!collarIntegration)
-                {
-                    collarIntegration = TRUE;
-                    llOwnerSay("Collar found full Collar Integration on.");
-                }
-            }
-            else if (str == "CollarOff")
-            {
-                if (collarIntegration)
-                {
-                    collarIntegration = FALSE;
-                    llOwnerSay("Collar not found full Collar Integration off.");
-                }
+                llOwnerSay("Compatible collar not found.  You may experience problems with this AO.");
             }
         }
         else if (num == COMMAND_COLLAR && str == "safeword")
@@ -567,6 +471,7 @@ default {
         }
         else if (num == DIALOG_RESPONSE)
         {
+//llSay(0,"got DIALOG_RESPONSE:"+str);
             integer menuindex = llListFindList(menuids, [id]);
             if (menuindex != -1)
             {
@@ -582,136 +487,68 @@ default {
                 
                 if (menutype == MENU)
                 {
-                    if ( _message == "Help" ) 
-                    {
-                        if (llGetInventoryType(helpNotecard) == INVENTORY_NOTECARD)
-                            llGiveInventory(_id, helpNotecard);
-                        else
-                            llOwnerSay("No help notecard found.");
-                    }
-                    /*else if (_message == "Update")
-                    {
-                        llMessageLinked(LINK_THIS, COMMAND_UPDATE, "Update", _id);
-                    }*/
-                    else if (_message == "AO ON")
+                    if (_message == AOON)
                     {
                         llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_AOON", _id);
+                        zhaoOn=TRUE;
+                        DoMenu(_id,page);
                     }
-                    else if (_message == "AO OFF")
+                    else if (_message == AOOFF)
                     {
                         llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_AOOFF", _id);
-                    }
-                    else if ( _message == "Reset" ) 
-                    {
-                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_RESET", NULL_KEY);
-                        llSleep(1.0);
-                        llResetScript();
+                        zhaoOn=FALSE;
+                        DoMenu(_id,page);
                     }
                     else if ( _message == "Settings" ) 
                     {
                         llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SETTINGS", _id);
+                        DoMenu(_id,page);
                     }
-                    else if ( _message == "Sit On/Off" ) 
+                    else if ( _message == "Sit Any "+Checkbox(1) || _message == "Sit Any "+Checkbox(0) ) 
                     {
-                        if (sitOverride == TRUE) 
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SITOFF", _id);
-                            sitOverride = FALSE;
-                        } 
-                        else 
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SITON", _id);
-                            sitOverride = TRUE;
-                        }
-                    }
-                    else if ( _message == "SitAnyON" || _message == "SitAnyOFF" ) 
-                    {
-                        //toggleSitAnywhere() by Marcus Gray
                         ToggleSitAnywhere();
+                        DoMenu(_id,page);
                     }
-                    else if ( _message == "TypingON" || _message == "TypingOFF" ) 
+                    else if ( _message == "Sits "+Checkbox(1) ) 
                     {
-                        //toggleTyping() by Marcus Gray
-                        ToggleTyping();
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SITOFF", _id);
+                        sitOverride = FALSE;
+                        DoMenu(_id,page);
                     }
-                    else if ( _message == "Rand/Seq" ) 
+                    else if ( _message == "Sits "+Checkbox(0) ) 
                     {
-                        if (randomStands == TRUE) 
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SEQUENTIALSTANDS", _id);
-                            randomStands = FALSE;
-                        } 
-                        else 
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_RANDOMSTANDS", _id);
-                            randomStands = TRUE;
-                        }
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SITON", _id);
+                        sitOverride = TRUE;
+                        DoMenu(_id,page);
+                    }
+                    else if ( _message == "Typing "+Checkbox(1) ) 
+                    {
+                        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_OFF", NULL_KEY);
+                        typingOverrideOn=FALSE;
+                        DoMenu(_id,page);
+                    }
+                    else if ( _message == "Typing "+Checkbox(0) ) 
+                    {
+                        llMessageLinked(LINK_THIS, OPTIONS, "ZHAO_TYPEAO_ON", NULL_KEY);
+                        typingOverrideOn = TRUE;
+                        DoMenu(_id,page);
+                    }
+                    else if ( _message == "Shuffle " +Checkbox(1) )  
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SEQUENTIALSTANDS", _id);
+                        randomStands = FALSE;
+                        DoMenu(_id,page);
+                    }
+                    else if ( _message == "Shuffle " +Checkbox(0) )  
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_RANDOMSTANDS", _id);
+                        randomStands = TRUE;
+                        DoMenu(_id,page);
                     }
                     else if ( _message == "Next Stand" ) 
                     {
                         llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_NEXTSTAND", _id);
-                    }
-                    else if ( _message == "Load" ) 
-                    {
-                        integer n = llGetInventoryNumber( INVENTORY_NOTECARD );
-                        // Can only have 12 buttons in a dialog box
-                        //if ( n > 12 ) {
-                        //    llOwnerSay( "You cannot have more than 12 animation notecards." );
-                        //    return;
-                        //}
-                        integer i;
-                        list animSets = [];
-                        // Build a list of notecard names and present them in a dialog box
-                        for ( i = 0; i < n; i++ ) {
-                            string notecardName = llGetInventoryName( INVENTORY_NOTECARD, i );
-                            if ( notecardName != helpNotecard && notecardName != license)
-                            animSets += [ notecardName ];
-                        }
-                        //llListenControl(listenHandle, TRUE);
-                        string text = "Select the notecard to load:";
-                        
-                        key menuid = Dialog(_id, text, animSets, [], 0);
-    
-                        // UUID , Menu ID, Menu
-                        list newstride = [_id, menuid, MENU];
-                
-                        // Check dialogs for previous entry and update if needed
-                        integer index = llListFindList(menuids, [_id]);
-                        if (index == -1)
-                        {
-                            menuids += newstride;
-                        }
-                        else
-                        { //this person is already in the dialog list.  replace their entry
-                            menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-                        }                          
-                        listenState = 1;
-                    }
-                    else if ( _message == "Stand Time" ) 
-                    {
-                        // Pick stand times
-                        list standTimes = ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"];
-                        
-                        //llDialog( _id, "Select stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.",
-                        //    standTimes, listenChannel);
-                        listenState = 2;
-                        string text = "Select stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
-                        
-                        key menuid = Dialog(_id, text, standTimes, [], 0);
-    
-                        // UUID , Menu ID, Menu
-                        list newstride = [_id, menuid, MENU];
-                
-                        // Check dialogs for previous entry and update if needed
-                        integer index = llListFindList(menuids, [_id]);
-                        if (index == -1)
-                        {
-                            menuids += newstride;
-                        }
-                        else
-                        { //this person is already in the dialog list.  replace their entry
-                            menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-                        }   
+                        DoMenu(_id,page);
                     }
                     else if ( _message == "Sits" ) 
                     {
@@ -725,65 +562,129 @@ default {
                     {
                         llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_GROUNDSITS", _id);
                     }
-                    else if (_message == "Options")
+                    else if ( _message == "Load" ) 
                     {
-                        llMessageLinked(LINK_THIS, SUBMENU, _message, _id);
+                        integer n = llGetInventoryNumber( INVENTORY_NOTECARD );
+                        integer i;
+                        list animSets = [];
+                        // Build a list of notecard names and present them in a dialog box
+                        for ( i = 0; i < n; i++ ) {
+                            string notecardName = llGetInventoryName( INVENTORY_NOTECARD, i );
+                            if ( notecardName != helpNotecard && notecardName != license)
+                            animSets += [ notecardName ];
+                        }
+                        //llListenControl(listenHandle, TRUE);
+                        string text = "Select the notecard to load:";
+                        
+                        Dialog(_id, text, animSets, [], 0, "SetsMenu");
+                        listenState = 1;
                     }
-                    //added for lock
-                    else if ( _message == LOCK || _message == UNLOCK)
+                    else if ( _message == "Stand Time" ) 
+                    {
+                        // Pick stand times
+                        listenState = 2;
+                        string text = "Select stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
+                        
+                        Dialog(_id, text, ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"], [], 0, "StandTimesMenu");
+    
+                    }
+                    else if ( _message == LOCK)
                     {
                         // -- Tell the options menu if we're locked or unlocked
                         llMessageLinked(LINK_THIS, OPTIONS, _message, _id); 
-                        
-                        if (_message == LOCK)
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_LOCK", _id);
-                        }
-                        else
-                        {
-                            llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_UNLOCK", _id);
-                        }
+                        llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_LOCK", _id);
+                        isLocked=TRUE;
+                        DoMenu(_id,page);
+                    }
+                    else if ( _message == UNLOCK)
+                    {
+                        // -- Tell the options menu if we're locked or unlocked
+                        llMessageLinked(LINK_THIS, OPTIONS, _message, _id); 
+                        llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "ZHAO_UNLOCK", _id);
+                        isLocked=FALSE;
+                        DoMenu(_id,page);
                     }
                     else if (_message == ">")
                     {
-                        //DoSecMenu(_id);
-                        DoMenu(_id,page);
+                        DoMenu(_id,++page);
                     }
                     else if (_message == "<")
                     {
-                        DoMenu(_id,page);
+                        DoMenu(_id,--page);
                     }
-                    else if ( listenState == 1 ) 
+                    else if (_message == "MORE")
                     {
-                        // Load notecard
-                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_LOAD|" + _message, _id);
-                    }
-                    else if ( listenState == 2 ) 
-                    {
-                        // Stand time change
-                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_STANDTIME|" + _message, _id);
+                        if (_id==Owner){     //wearer's menu, go to quick menu
+                            llMessageLinked(LINK_THIS, COMMAND_OWNER, "OCAO_MENU", _id);
+                        } else {                    //fixme:  must be owner's menu, send back to collar anim menu
+                            //llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, "animations", _id);
+                            llMessageLinked(LINK_THIS, COMMAND_OWNER, "OCAO_MENU", _id);
+                        }
                     }
                 }
-                else if (menutype == OCMENU)
+                else if (menutype == "SetsMenu")
                 {
-                    if (_message == "AO")
+                    if (_message == UPMENU)
+                    {
+                        DoMenu(_id,0);
+                    }
+                    llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_LOAD|" + _message, _id);
+                    DoMenu(_id,page);
+                }
+                else if (menutype == "StandTimesMenu")
+                {
+                    if (_message == UPMENU)
+                    {
+                        DoMenu(_id,0);
+                    }
+                    llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_STANDTIME|" + _message, _id);
+                    DoMenu(_id,page);
+                }
+                else if (menutype == QUICKMENU)
+                {
+                    if (_message == "AO Menu")
                     {
                         llMessageLinked(LINK_THIS, COMMAND_OWNER, "ZHAO_MENU", Owner);
                     }
                     else if (_message == "Collar Menu")
                     {
-                        string authRequest = "menu";
-                        llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
-                        
+                        llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, "menu", _id);                        
                     }
-                   // else if (_message == "Couples")
-                   // {
-                   //     string authRequest = "couples";
-                   //     llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
-                   // }
-                    else if (_message == "Options")
+                    else if ( _message == "Sits" ) 
                     {
-                        llMessageLinked(LINK_THIS, SUBMENU, _message, _id);
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_SITS", _id);
+                    }
+                    else if ( _message == "Walks" ) 
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_WALKS", _id);
+                    }
+                    else if ( _message == "Ground Sits" ) 
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_GROUNDSITS", _id);
+                    }
+                    else if (_message == "Couples")
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, "couples", _id);
+                    }
+                    else if (_message == "HUD Style")
+                    {
+                        llMessageLinked(LINK_THIS, SUBMENU, "Options", _id);
+                    }
+                    else if (_message == "Pose")
+                    {
+                        string authRequest = "pose";
+                        llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, authRequest, _id);
+                    }
+                    else if ( _message == "Help" ) 
+                    {
+                        if (llGetInventoryType(helpNotecard) == INVENTORY_NOTECARD)
+                            llGiveInventory(_id, helpNotecard);
+                    }
+                    else if ( _message == "Reset" ) 
+                    {
+                        llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_RESET", NULL_KEY);
+                        llSleep(1.0);
+                        llResetScript();
                     }
                 }
             }
@@ -901,6 +802,10 @@ default {
                         llSetLinkAlpha(LINK_SET, 1.0, ALL_SIDES);
                     }
                 }
+                else if (command == "ZHAO_MENU")
+                {
+                    llMessageLinked(LINK_THIS, COMMAND_OWNER, "ZHAO_MENU", _id);
+                }
                 else if (_message == "ZHAO_AOHIDE")
                 {
                     if(!isAttachedToHUD())
@@ -914,10 +819,8 @@ default {
                 }
                 else
                 {
-                    if (!collarIntegration)
-                    {
-                        llMessageLinked(LINK_SET, COMMAND_OWNER, command, (key)userID);
-                    }
+//llSay(0,"sending "+command+" to collar for "+(string)userID);
+                    llMessageLinked(LINK_SET, COMMAND_OWNER, command, (key)userID);
                 }
             }
         }
