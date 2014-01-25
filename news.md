@@ -1,5 +1,5 @@
-Issue: 20131213.1
+Issue: 20140125.1
 
-Ball, Chain & Legacy AO Sets.
+OpenCollar 3.950 is here!
 Read more on our blog at:
 http://www.opencollar.at/
