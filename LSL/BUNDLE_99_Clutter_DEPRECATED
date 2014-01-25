@@ -8,7 +8,7 @@ SCRIPT|OpenCollar - techlabel
 SCRIPT|OpenCollar - BMC
 SCRIPT|OpenCollar - real leash - 0.1
 SCRIPT|OpenCollar - real leash - 0.2
-ITEM|Tranquility
+ITEM|Ball&Chain
 ITEM|brushedmetal-hshaded-contrasty
 ITEM|brushedmetal-hshaded
 ITEM|brushedmetal-roundshaded
@@ -72,14 +72,6 @@ ITEM|~master
 ITEM|~pet_the_pet
 ITEM|~sub-hug
 ITEM|~sub-pet
-ITEM|beautystand
-ITEM|open
-ITEM|plead
-ITEM|sleep
-ITEM|squirm
-ITEM|subsit
-ITEM|underground
-ITEM|shock
 ITEM|OC_Leash_Post
 ITEM|Blank
 ITEM|Brass
