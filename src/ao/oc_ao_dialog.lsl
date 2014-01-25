@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollarAO - Dialog                              //
-//                                 version 3.940                                  //
+//                                 version 3.941                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -321,7 +321,7 @@ default
             string prompt = llList2String(params, 1);
             integer page = (integer)llList2String(params, 2);
             list lbuttons = CharacterCountCheck(llParseStringKeepNulls(llList2String(params, 3), ["`"], []), rcpt);
-            list ubuttons = llParseStringKeepNulls(llList2String(params, 4), ["`"], []);        
+            list ubuttons = SanitizeButtons(llParseStringKeepNulls(llList2String(params, 4), ["`"], []));        
             
             //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(rcpt);
