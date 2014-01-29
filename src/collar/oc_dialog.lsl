@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.934                                  //
+//                                 version 3.951                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,9 +12,7 @@
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
-//3.934 PRE notes. Project:despam! NOT READY FOR RELEASE, still needs a small logic check at minimum, not to mention a little testing to see how effective it is! What is Project: despam!? It's about making certain menus less spammy. Previously, if any button options were sent to dialog where the button length is too long, the dialog system would add numbers to the buttons, and send the list of them to Noftify, so the menu user has a key to truncated buttons. Example: #RLV browsing, you might have buttons for Black Leather Skirt and Black Leather Cuffs. This would then become "1.Black Leath" and "2.Black Leath" as buttons, and the chat would include "1. Black Leather Skirt", "2. Black Leather Cuffs". Necessary for identifying truncated buttons, but horribly spammy! 
-//So, Project: despam does this. Instead of listing out all the buttons after the dialog is sent, as current, the listing process is now done in the dialog function. Advantages: removed doubling up of various functions used both in the dialog routine and in the spamming routine, the list now only provides a list for the current page when selected to reduce spamminess, and best of all, if there's enough room, the list will be displayed in the menu prompt and not sent to local chat at all. -MD
-//3.934 Added PrettyMain to make main menu look better. -MD
+//3.951 <512 not <513 for dialog message length. AAAARGH. *bangs head against wall* -MD
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -255,11 +253,11 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         if(iNBPromptlen) sMkey="\nMenu Key:\n";
         integer iMkeylen=GetStringBytes(sMkey);
         integer iAll=iPromptlen + iNBPromptlen +iMkeylen + GetStringBytes(sThisPrompt);
-        if(iAll<513) sThisPrompt = sPrompt + sMkey + sNumberedButtons + sThisPrompt;
+        if(iAll<512) sThisPrompt = sPrompt + sMkey + sNumberedButtons + sThisPrompt;
         else if (iAll-iMkeylen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons + sThisPrompt;
-        else if(iPromptlen+iNBPromptlen+iMkeylen<513) sThisPrompt = sPrompt + sMkey + sNumberedButtons;
+        else if(iPromptlen+iNBPromptlen+iMkeylen<512) sThisPrompt = sPrompt + sMkey + sNumberedButtons;
         else if (iPromptlen+iNBPromptlen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons;
-        else if (iAll-iNBPromptlen-iMkeylen<513) sThisPrompt= sPrompt + sThisPrompt;
+        else if (iAll-iNBPromptlen-iMkeylen<512) sThisPrompt= sPrompt + sThisPrompt;
         else sThisPrompt= sPrompt;
     }
 
