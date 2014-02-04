@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - keyholder                             //
-//                                 version 3.930                                  //
+//                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,8 +10,11 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+// OC3.9xx? by WhiteFire
+// - Fixed the refactoring in UserCommand() so it actually works with buttons from forien menus.
+//
 //3.939 PROVISIONAL. "Force Return" was added to menu for owners, but wasn't actually being checked for. Should be fixed, see line 801, but so far untested. Other bugs... I can't find any. Need more info.
-
+//
 // OC3.526.2 by WhiteFire Sondergaard
 // - Safeword Support. DURP.
 //
@@ -661,9 +664,41 @@ integer UserCommand(integer num, string str, key id) // here iNum: auth value, s
     if (num > COMMAND_EVERYONE || num < COMMAND_OWNER) return FALSE; // sanity check
     if (str == "menu " + g_szSubmenu) DoMenu(id, FALSE, num);
     else if ((id == g_kWearer || num == COMMAND_OWNER) && str == "resetscripts") llResetScript();
+    // "Return Key" buttons from timer plugin.
+    else if (str == "menu (*)Return Key")
+    {
+        UserCommand(num, "khunsettimerreturnkey", id);
+        llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
+    }
+    else if (str == "menu ( )Return Key")
+    {
+        UserCommand(num, "khsettimerreturnkey", id);
+        llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
+    }
+    // Take/Return key from the main menu
+    else if (str == "menu " + TAKEKEY)
+    {
+        UserCommand(num, "khtakekey", id);
+        llMessageLinked(LINK_THIS, num, "menu Main", id);
+    }
+    else if (str == "menu " + RETURNKEY)
+    {
+        UserCommand(num, "khreturnkey", id);
+        llMessageLinked(LINK_THIS, num, "menu Main", id);
+    }
+    else if (str == "khreturnkey")
+    {
+        if (id == kh_key) ReturnKey("", FALSE);
+        else Notify(id, "You are not the keyholder.", FALSE);
+    }
+    else if (str == "khtakekey")
+    {
+        if (kh_key != NULL_KEY) Notify(id, "The key is not in the lock.", FALSE);
+        else TakeKey(id, num, FALSE);
+    }
     else if (num == COMMAND_OWNER) // owner only stuff here
     {
-        if (str == "menu " + g_szKeyConfigMenu) DoMenuConfigure(id, num);
+        if (str == "menu " + g_szKeyConfigMenu) DoMenuConfigure(id, num);        
         else if (llGetSubString(str, 0, 6) == "khtime " )
         {
             list times = llParseString2List(llDeleteSubString(str, 0,6), ["d", ":" ], []);
@@ -728,38 +763,17 @@ integer UserCommand(integer num, string str, key id) // here iNum: auth value, s
             kh_return_on_timer = ( str == "khsettimerreturnkey");
             setTimerMenu();
         }
-    }
-    // "Return Key" buttons from timer plugin.
-    else if (str == "menu (*)Return Key")
-    {
-        UserCommand(num, "khunsettimerreturnkey", id);
-        llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
-    }
-    else if (str == "menu ( )Return Key")
-    {
-        UserCommand(num, "khsettimerreturnkey", id);
-        llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
-    }
-    // Take/Return key from the main menu
-    else if (str == "menu " + TAKEKEY)
-    {
-        UserCommand(num, "khtakekey", id);
-        llMessageLinked(LINK_THIS, num, "menu Main", id);
-    }
-    else if (str == "menu " + RETURNKEY)
-    {
-        UserCommand(num, "khreturnkey", id);
-        llMessageLinked(LINK_THIS, num, "menu Main", id);
-    }
-    else if (str == "khreturnkey")
-    {
-        if (id == kh_key) ReturnKey("", FALSE);
-        else Notify(id, "You are not the keyholder.", FALSE);
-    }
-    else if (str == "khtakekey")
-    {
-        if (kh_key != NULL_KEY) Notify(id, "The key is not in the lock.", FALSE);
-        else TakeKey(id, num, FALSE);
+        // "Return Key" buttons from timer plugin.
+        else if (str == "menu (*)Return Key")
+        {
+            UserCommand(num, "khunsettimerreturnkey", id);
+            llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
+        }
+        else if (str == "menu ( )Return Key")
+        {
+            UserCommand(num, "khsettimerreturnkey", id);
+            llMessageLinked(LINK_THIS, num, "menu "+ g_szTimerMenu, id);
+        }
     }
     // after here, only primary owner commands
     else if (llGetSubString(str, 0 ,1) != "kh") return FALSE;
