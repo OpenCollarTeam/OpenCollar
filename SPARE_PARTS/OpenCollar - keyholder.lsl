@@ -12,6 +12,94 @@
 
 //3.939 PROVISIONAL. "Force Return" was added to menu for owners, but wasn't actually being checked for. Should be fixed, see line 801, but so far untested. Other bugs... I can't find any. Need more info.
 
+// OC3.526.2 by WhiteFire Sondergaard
+// - Safeword Support. DURP.
+//
+// OC3.526.1 by WhiteFire Sondergaard
+// - ~OpenKey ~ClosedKey support.
+//
+// WS0.824 by Satomi Ahn
+// - FIXED: A few typos
+//
+// OC3.526
+// - This is now an OpenCollar script.
+//
+// WS0.823 by WhiteFire Sondergaard
+// - Updated to handle new timer module's "timer on+24:00" format. ** This REQUIRES version 3.525 or better to work now, but no longer requires a hacked timer module. **
+// - FIXED: Do not display Main Menu *Take Key* when module is off.
+// - Main Menu *Take Key* not enabled by default.
+// - FIXED: bug preventing the *Take Key* in the main menu and ()Return Key in the timer menu from working at all. Also merged two different SUBMENU clauses so this mistake won't happen again.
+//
+// WS0.822 by WhiteFire Sondergaard
+// - Save and restore data.
+//
+// WS0.820 by WhiteFire Sondergaard
+// - Merged 0.803 with 0.810
+// - Made Config menu optional
+//
+// WS0.810 by WhiteFire Sondergaard
+// - Broadcast KEY_VISIBLE, KEY_INVISIBLE for things that handle keys differently. Namely the LV muzzle line.
+//
+// WS0.803 by Kadah Coba
+// - Moved config menu to Config and Key Holder to Addons.
+// note: May want to move Lockout to Main (with confirm/warning dialog) and always have Take/Return Key on Main.
+//
+// WS0.801 by Kadah Coba
+// - Added update to key/lock element list on link change.
+//
+// WS0.800 by WhiteFire Sondergaard
+// - Global Key: let them take keys to more than one toy at once. 
+// - Fixed the *Take Key* on reset when displayed on the main menu
+//
+// WS0.700 by WhiteFire Sondergaard
+// - Change to timer support to make it not assume this script exists.
+// - Auto-key return on timer, using "on=00:01" calls and new TIMER_EVENT.
+// - MENUNAME_REMOVE support.
+// - LINK_WHAT to make it easy to change what we message.
+//
+// WS0.605 by WhiteFire Sondergaard
+// - OOCD support
+//
+// WS0.604 by Kadah Coba
+// - Added element hide/show by list instead of scanning names every time.
+// - Added g_iHideLockWhenOff to control hidding lock when module is off and collar is locked.
+//
+// WS0.603 by WhiteFire Sondergaard
+// - Fixed bug where WEARERLOCKOUT would not be unset. Oops.
+// - Fixed bug where menu would be given on taking the LOCKOUT option.
+//
+// WS0.601 by WhiteFire Sondergaard
+// - Fixed bug where wearer lockout was lost when someone reconnected.
+// - Fixed bug where lock graphics were not updated when someone reconnected.
+//
+// WS0.600 by WhiteFire Sondergaard
+// - Added cuff support mode that fires off key visibility messages to slave cuffs.
+//
+// WS0.501 by WhiteFire Sondergaard
+// - After some comments, made public key access default to off. >.>
+//
+// WS0.500 by WhiteFire Sondergaard
+// - Changes to add a unlocked lock and key. It now tries to show/hide "locked key", "unlocked key", "locked lock" and "unlocked lock".
+// - Fixes to the lockout option.
+//
+// WS0.400 by WhiteFire Sondergaard
+// - Added "g_sToyName" to make it easier to use this for things other than collars.
+// - Initial lockout option.
+// - Key / lock visibility code
+//
+// WS0.300 by WhiteFire Sondergaard
+// - Made the exposed key when not open access configurable.
+// - Made an option to put a button in the main menu.
+// - Support for a Key prim(s). Prims should be named "key". (Also probably good to have the desc be "key" too).
+// - Lockout: once locked, lockout mode is enabled. So you can lock yourself up and need help getting out.
+//
+// Updates/changes by Kadah Coba
+// - Main menu support
+// - Changes to make compatible with a modified timer that returns the key.
+// - Other stuff I forgot (ws)
+//
+// First Version by WhiteFire Sondergaard
+// Adapted from a template by Cleo Collins
 
 // -- Toy Configuration ----------------------------------------
 integer g_iHideLockWhenOff=TRUE; // set to FALSE to not hide the lock when the module is off and the collar is unlocked. :kc
@@ -31,7 +119,7 @@ string g_szConfigMenu = "Config";
 string g_szTimerMenu = "Timer";
 
 // menu option to go one step back in menustructure
-string UPMENU = "⏏";//when your menu hears this, give the parent menu
+string UPMENU = "BACK";//when your menu hears this, give the parent menu
 
 // -- State Information ----------------------------------------
 key kh_key = NULL_KEY; // id key of the person that has the key
