@@ -10,6 +10,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+// ADDED "LIFE" MENU FUNCTION TO LEASH MENU FOR ST ("Slave Trash" version) by Jean Severine 2014-01-25
+
 //Split from the leash script in April 2010 by Garvin Twine
 
 //3.934 replace g_sParticleTextureID with texture name if NULL_KEY. This is for non full perms textures, which return a null key, giving a blank particle. This should still work for linked leash points if the texture is added to the leash point as well. 
@@ -57,6 +59,7 @@ string L_DENSITY    = "Density";
 string L_COLOR      = "Color";
 string L_GRAVITY    = "Gravity";
 string L_SIZE       = "Size";
+string L_LIFE       = "Life";   // ADDED FOR ST
 string L_DEFAULTS   = "ResetDefaults";
 
 list g_lSettings; //["tex", "texName", "size", "0.07", "color", "1,1,1", "gravity", "1.0", "density", "0.04", "Glow", "1"]
@@ -172,9 +175,9 @@ string g_sParticleTexture = "chain";
 string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
 float g_fLeashLength;
 vector g_vLeashColor = <1,1,1>;
-vector g_vLeashSize = <0.07, 0.07, 1.0>;
+vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
 integer g_bParticleGlow = TRUE;
-float g_fParticleAge = 3.0;
+float g_fParticleAge = 1.0;
 float g_fParticleAlpha = 1.0;
 vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
@@ -376,7 +379,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 OptionsMenu(key kIn, integer iAuth)
 {
     g_sCurrentMenu = SUBMENU;
-    list lButtons = [L_TEXTURE, L_DENSITY, L_GRAVITY, L_COLOR, L_SIZE];
+    list lButtons = [L_TEXTURE, L_DENSITY, L_GRAVITY, L_COLOR, L_SIZE, L_LIFE];
     if (g_bParticleGlow)
     {
         lButtons += "GlowOff";
@@ -410,10 +413,20 @@ GravityMenu(key kIn, integer iAuth)
 
 SizeMenu(key kIn, integer iAuth)
 {
-    list lButtons = ["Default", "+", "-", "minimum"];
+    list lButtons = ["Default", "+", "-", "MIN"];   // ADDED FOR ST changed "minimum" to "MIN"
     g_sCurrentMenu = L_SIZE;
     string sPrompt = "\n\nChoose '+' for bigger and '-' for smaller size of the leash texture\n'Default' to revert to the default\n'minium' for the smallest possible\n\nCurrent Size = ";
     sPrompt += Float2String(g_vLeashSize.x) + "\nDefault: 0.07 (0.03 steps)";
+    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
+}
+
+LifeMenu(key kIn, integer iAuth)   // ADDED FOR ST
+{
+    list lButtons = ["+0.5", "-0.5", "Default", "+0.1", "-0.1", "MIN"];
+    g_sCurrentMenu = L_LIFE;
+    string sPrompt = "Choose '+' for longer or '-' for shorter life\n'MIN' for the shortest life\nCurrent Life = ";
+    string sCurrentLife = llGetSubString((string)g_fParticleAge,0,2);
+    sPrompt += sCurrentLife + "\nDefault: 3.0\n";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -484,7 +497,8 @@ default
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.07,0.07,0.07>", L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];
+        g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.22, 0.17, 0.0>",
+        L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];   // CHANGED DEFAULT SIZE FOR ST TO <0.22, 0.17, 0.0>
         StopParticles(TRUE);
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
@@ -498,6 +512,8 @@ default
             debug ("entry leash targeted");
             StartParticles(g_kParticleTarget);
         }
+        
+        llListen(COMMAND_PARTICLE,"","","");    // ADDED FOR BETA 0.1
     }
     on_rez(integer iRez)
     {
@@ -601,6 +617,7 @@ default
                         g_fBurstRate = (float)GetDefaultSetting(L_DENSITY);
                         g_vLeashGravity = (vector)GetDefaultSetting(L_GRAVITY);
                         g_vLeashSize = (vector)GetDefaultSetting(L_SIZE);
+                        g_fParticleAge = (float)GetDefaultSetting(L_LIFE);  // ADDED FOR ST
                         g_vLeashColor = (vector)GetDefaultSetting(L_COLOR);
                         g_bParticleGlow = (integer)GetDefaultSetting("Glow");
                         g_lSettings = g_lDefaultSettings;
@@ -632,6 +649,10 @@ default
                     else if (sButton == L_SIZE)
                     {
                         SizeMenu(kAv, iAuth);
+                    }
+                    else if (sButton == L_LIFE) // ADDED FOR ST
+                    {
+                        LifeMenu(kAv, iAuth);
                     }
                     else if (llGetSubString(sButton, 0, 3) == "Glow")
                     {
@@ -773,7 +794,7 @@ default
                             g_vLeashSize.y -=0.03;
                         }
                     }
-                    else if (sButton == "minimum")
+                    else if (sButton == "MIN")  // ADDED FOR ST changed "minimum" to "MIN"
                     {
                         g_vLeashSize = <0.04,0.04,0.0>;
                     }
@@ -783,6 +804,53 @@ default
                     }
                     SaveSettings(L_SIZE, Float2String(g_vLeashSize.x), TRUE);
                     SizeMenu(kAv, iAuth);
+                }
+                else if (g_sCurrentMenu == L_LIFE)  // ADDED FOR ST
+                {
+                    if (sButton == "Default")
+                    {
+                        g_fParticleAge = (float)GetDefaultSetting(L_LIFE);
+                    }
+                    else if (sButton == "+0.5")
+                    {
+                        g_fParticleAge += 0.5;
+                    }
+                    else if (sButton == "-0.5")
+                    {
+                        if (g_fParticleAge == 0.5)
+                        {
+                            Notify(kAv, "Use the -0.1 button to reach minimum particle life.", FALSE);
+                        }
+                        else
+                        {
+                            g_fParticleAge -= 0.5;
+                        }
+                    }
+                    else if (sButton == "+0.1")
+                    {
+                        g_fParticleAge += 0.1;
+                    }
+                    else if (sButton == "-0.1")
+                    {
+                        if (g_fParticleAge == 0.1)
+                        {
+                            Notify(kAv, "You have reached minimum particle life.", FALSE);
+                        }
+                        else
+                        {
+                            g_fParticleAge -= 0.1;
+                        }
+                    }
+                    else if (sButton == "MIN")
+                    {
+                        g_fParticleAge = 0.1;
+                    }
+                    if (!g_bInvisibleLeash && g_bLeashActive)
+                    {
+                        StartParticles(g_kParticleTarget);
+                    }
+                    SaveSettings(L_LIFE, (string)g_fParticleAge, TRUE);
+                    LifeMenu(kAv,iAuth);
                 }
             }
         }
@@ -821,6 +889,11 @@ default
                     g_vLeashSize.x = g_vLeashSize.y = (float)sValue;
                     SaveSettings(L_SIZE, sValue, FALSE);
                     sValue = Vec2String(g_vLeashSize);
+                }
+                else if (sToken == "Life")
+                {
+                    g_fParticleAge = (float)sValue;
+                    SaveSettings(L_LIFE, sValue, FALSE);                    
                 }
                 else if (sToken == "Color")
                 {
@@ -873,6 +946,29 @@ default
                     g_kParticleTarget = kID;
                     StartParticles(g_kParticleTarget);
                 }
+            }
+        }
+        // ADDED BELOW FOR BETA 0.1  TOGGLES LEASH PARTICLES OFF IF COFFLES BEING USED.        
+        else if(iChannel == COMMAND_PARTICLE)
+        {
+            if(llGetOwnerKey(kID) == g_kWearer)
+            {
+                integer currentglow;
+                
+                if(sMessage == "noLeash")
+                {
+                    currentglow = g_bParticleGlow;
+                    g_bParticleGlow = FALSE;
+                    SetTexture(sMessage, g_kWearer);
+                    StartParticles(g_kParticleTarget);
+                }
+                
+                if(sMessage == "chain")
+                {
+                    g_bParticleGlow = currentglow;
+                    SetTexture(sMessage, g_kWearer);
+                    StartParticles(g_kParticleTarget);
+                }                             
             }
         }
     }
