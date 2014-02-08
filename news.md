@@ -1,5 +1,5 @@
-Issue: 20140125.1
+Issue: 20140208.1
 
-OpenCollar 3.950 is here!
+BETA Channel re-launched!
 Read more on our blog at:
 http://www.opencollar.at/
