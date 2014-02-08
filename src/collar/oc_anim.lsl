@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - anim                                //
-//                                 version 3.940                                  //
+//                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -154,25 +154,25 @@ AnimMenu(key kID, integer iAuth)
     if(g_iAnimLock)
     {
         sPrompt += TICKED + ANIMLOCK + " is turned on:\n";
-        sPrompt += "Only owners can change or stop poses now.";
+        sPrompt += "Only owners can change or stop poses now.\n";
         lButtons = [TICKED + ANIMLOCK];
     }
     else
     {
         sPrompt += UNTICKED + ANIMLOCK + " is turned off:\n";
-        sPrompt += "The wearer is free to change or stop poses on their own.";
+        sPrompt += "The wearer is free to change or stop poses on their own.\n";
         lButtons = [UNTICKED + ANIMLOCK];
     }
     if(llGetInventoryType(g_sPostureAnim)==INVENTORY_ANIMATION)
     {
         if(g_iPosture)
         {
-            sPrompt +="\n"+ TICKED + POSTURE + " is turned on:\n";
+            sPrompt +="\n"+ TICKED + POSTURE + " is turned on.\n";
             lButtons += [TICKED + POSTURE];
         }
         else
         {
-            sPrompt +="\n"+ UNTICKED + POSTURE + " is turned off:\n";
+            sPrompt +="\n"+ UNTICKED + POSTURE + " is turned off.\n";
             lButtons += [UNTICKED + POSTURE];
         }
     }    

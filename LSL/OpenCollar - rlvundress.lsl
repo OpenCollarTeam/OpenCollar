@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvundress                             //
-//                                 version 3.936                                  //
+//                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -32,7 +32,7 @@ string SMARTOFF = "☒ SmartStrip";
 string SMARTHELP = "#RLV Help";
 string g_sSmartHelpCard = "How to set up your #RLV and use SmartStrip";
 string g_sSmartToken="smartstrip";
-key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
+//key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
 
 
 list g_lSettings;//2-strided list in form of [option, param]
@@ -234,7 +234,7 @@ MainMenu(key kID, integer iAuth)
         lButtons += ["Lock Attachment"];
         lButtons += ["☐ Lock All"];
     }
-    if(g_kSmartUser==kID || g_iSmartStrip==TRUE)
+    if(g_iSmartStrip==TRUE)
     {
         sPrompt += "\nSmartStrip is on.";
         lButtons += SMARTOFF;
@@ -451,33 +451,33 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     }
     else if (sCommand == "smartstrip")
     {
-        string sOpt=llList2String(lParams,1);
-        if(sOpt == "on")
+        if(iNum==COMMAND_OWNER || iNum == COMMAND_WEARER)
         {
-            if(iNum==COMMAND_OWNER || iNum == COMMAND_WEARER)
+            
+            string sOpt=llList2String(lParams,1);
+            if(sOpt == "on")
             {
                 g_iSmartStrip=TRUE;
                 llMessageLinked(LINK_SET,LM_SETTING_SAVE, g_sScript + g_sSmartToken +"=1",NULL_KEY);
+                
+                
             }
-            else g_kSmartUser=kID;
-        }
-        else
-        {
-            if(iNum==COMMAND_OWNER || iNum == COMMAND_WEARER)
+            else
             {
                 g_iSmartStrip=FALSE;
                 llMessageLinked(LINK_SET,LM_SETTING_DELETE, g_sScript + g_sSmartToken,NULL_KEY);
+
             }
-            else g_kSmartUser=NULL_KEY;
         }
+        else Notify(kID,"This requires a properly set-up outfit, only wearer or owner can turn it on.", FALSE);
     }
     else if (sCommand == "strip")
     {
         string sOpt=llList2String(lParams,1);
         if(sOpt=="all")
         {
-            /* Should we use smartstrip for this? Not sure. Here's the way to do it if we do.
-           if(kID==g_kSmartUser || g_iSmartStrip==TRUE)
+           
+           if(g_iSmartStrip==TRUE)
             {
                 integer x=14; //let's not strip tattoos and physics layers;
                 while(x)
@@ -486,18 +486,18 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     --x;
                     string sItem=llToLower(llList2String(DETACH_CLOTH_POINTS,x));
                     llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:"+ sItem +"=force",NULL_KEY);
+                    
                  }
             }
-            */
-            llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY); //retain if smartstripping to catch items outside #RLV
+           
+           llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
             return TRUE;
         }
         sOpt = llToLower(sOpt);
         string test=llToUpper(llGetSubString(sOpt,0,0))+llGetSubString(sOpt,1,-1);
         if(llListFindList(DETACH_CLOTH_POINTS,[test])==-1) return FALSE;
         //send the RLV command to remove it.
-        if(kID==g_kSmartUser || g_iSmartStrip==TRUE){
-        llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sOpt + "=force", NULL_KEY);}
+        if(g_iSmartStrip==TRUE) llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sOpt + "=force", NULL_KEY);
         llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sOpt + "=force", NULL_KEY); //yes, this isn't an else. We do it in case the item isn't in #RLV.
     }
         
@@ -844,9 +844,9 @@ default
                     //    Note for people looking for the auth check: it would have been here, look no further!
                     { //send the RLV command to remove it.
                     
-                        //UserCommand(iAuth,"strip all",kAv); //See stuff in UserCommand. If we use smartstrip for all, then we'd jump to that here to save duplication, but otherwise it's a single LM, better to do it here than hit UserCommand.
+                        UserCommand(iAuth,"strip all",kAv); //See stuff in UserCommand. If we use smartstrip for all, then we'd jump to that here to save duplication, but otherwise it's a single LM, better to do it here than hit UserCommand.
                                             
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
+                       // llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);

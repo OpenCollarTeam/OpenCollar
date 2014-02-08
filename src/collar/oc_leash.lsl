@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.940                                  //
+//                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -635,11 +635,11 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID)
         }
         else if (sMesL == "givepost")
         {
-            llGiveInventory(kMessageID, "Ball&Chain");
+            llGiveInventory(kMessageID, "OpenCollar Post");
         }
         else if (sMesL == "rezpost")
         {
-            llRezObject("Ball&Chain", llGetPos() + (<1.0, 0.0, -0.77> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
+            llRezObject("OpenCollar Post", llGetPos() + (<1.0, 0.0, -0.805> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 80, 0> * DEG_TO_RAD), 0);
         }
         else if (sMesL == "yank" && kMessageID == g_kLeashedTo)
         {

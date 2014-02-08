@@ -1,5 +1,5 @@
-Issue: 20131213.1
+Issue: 20140208.1
 
-Ball, Chain & Legacy AO Sets.
+BETA Channel re-launched!
 Read more on our blog at:
 http://www.opencollar.at/

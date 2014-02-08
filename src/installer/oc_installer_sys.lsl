@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.940                                  //
+//                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -189,7 +189,7 @@ GiveMethodMenu() {
     //prompt += "\n[Developer]\n\"WARNING! This will install the full development workspace.\"\n";
 prompt += "\n\nThe currently selected method is ["+INSTALL_METHOD+"]\n";
     list choices = ["Standard","Basic","Custom", "Developer"];
-    kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["START"],0);
+    kDialogID = Dialog(llGetOwner(), prompt + "\n", choices, ["Help","START"],0);
 }
 
 Debug(string str) {
@@ -314,6 +314,9 @@ default {
                     GiveMethodMenu();
                 } else if (button == "Custom") {
                     BundleMenu(0);
+                }
+                else if (button == "Help") {
+                    llLoadURL(av, "Confused with the many choices? Find help on our website!","http://www.opencollar.at/updating-the-collar.html");
                 }
                 else {
                     // switch the bundle if appropriate
