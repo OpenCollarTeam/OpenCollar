@@ -43,7 +43,7 @@ key wearer;
 
 string g_sUpdaterName="OpenCollar Updater";
 string g_sRelease_version;
-string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Qandico/223/159/77 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
+string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Keraxic/51/192/1234 http://maps.secondlife.com/secondlife/Qandico/220/157/2600 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -78,7 +78,7 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/LSL/~version";
+string version_check_url = "https://raw2.github.com/OpenCollar/OpenCollarUpdater/main/BETA/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
@@ -91,7 +91,7 @@ key github_version_request;
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/news.md";
+string news_url = "https://raw2.github.com/OpenCollar/OpenCollarUpdater/main/BETA/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
