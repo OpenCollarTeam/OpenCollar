@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - timer                               //
-//                                 version 3.950                                  //
+//                                 version 3.930                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -62,7 +62,7 @@ key g_kRealMenuID;
 
 key g_kWearer; // key of the current wearer to reset only on owner changes
 
-list g_lLocalButtons = ["online"]; // any local, not changing buttons which will be used in this plugin, leave emty or add buttons as you like
+list g_lLocalButtons = ["realtime","online"]; // any local, not changing buttons which will be used in this plugin, leave emty or add buttons as you like
 list g_lTimeButtons = ["clear","+00:01","+00:05","+00:30","+03:00","+24:00","-00:01","-00:05","-00:30","-03:00","-24:00"];
 
 integer g_iOnRunning;
@@ -271,7 +271,7 @@ DoMenu(key keyID, integer iAuth)
         sPrompt += "\n Online timer - not running";
         //lMyButtons += ["start online"];
     }
-    //KW sPrompt += "\n Realtime timer - "+Int2Time(g_iRealSetTime);
+    sPrompt += "\n Realtime timer - "+Int2Time(g_iRealSetTime);
     if (g_iRealRunning==1)
     {
         sPrompt += "\n Realtime timer - "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
@@ -279,7 +279,7 @@ DoMenu(key keyID, integer iAuth)
     }
     else
     {
-        //KW sPrompt += "\n Realtime timer - not running";
+        sPrompt += "\n Realtime timer - not running";
         //lMyButtons += ["start realtime"];
     }
     if (g_iBoth)
@@ -289,8 +289,8 @@ DoMenu(key keyID, integer iAuth)
     }
     else
     {
-        sPrompt += "\n When the timer goes off:";
-        //KW lMyButtons += ["( )bothtime"];
+        sPrompt += "\n When EITHER the online or realtime timer go off:";
+        lMyButtons += ["( )bothtime"];
     }
     if (g_iRealRunning || g_iOnRunning)
     {
