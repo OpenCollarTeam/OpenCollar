@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - hovertext                              //
-//                                 version 3.928                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -84,7 +84,7 @@ ShowText(string sNewText) {
     list params = [PRIM_TEXT, g_sText, g_vColor, 1.0];
 
 //    if (g_iTextPrim > LINK_ROOT) {//don't scale the root prim <- SA: Why not?
-        params += [PRIM_SIZE, g_vShowScale];
+        params += [PRIM_SIZE, g_vShowScale, PRIM_SLICE, < 0.490, 0.510, 0.0 > ];
 //    }
     
     llSetLinkPrimitiveParamsFast(g_iTextPrim, params);
@@ -95,7 +95,7 @@ HideText() {
     Debug("hide text");
     list params = [PRIM_TEXT, "", g_vColor, 1.0];
 //    if (g_iTextPrim > LINK_ROOT) {
-        params += [PRIM_SIZE, g_vHideScale];
+        params += [PRIM_SIZE, g_vHideScale, PRIM_SLICE, < 0.0, 1.0, 0.0 > ];
 //    }
     llSetLinkPrimitiveParamsFast(g_iTextPrim, params);    
     g_iOn = FALSE;
