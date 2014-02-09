@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - anim                                //
-//                                 version 3.950                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -492,7 +492,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
             }
         }
-        AnimMenu(kID, iNum);
+        //AnimMenu(kID, iNum);
     }
     else if((sCommand == llToLower(ANIMLOCK)) && (iNum == COMMAND_OWNER))
     {
