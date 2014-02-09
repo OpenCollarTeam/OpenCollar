@@ -14,7 +14,7 @@ string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
 
 //has to be same as in the update script !!!!
-integer g_iUpdatePin = 4711;
+//integer g_iUpdatePin = 4711;  <<<< no more need!
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -57,7 +57,8 @@ key g_kDialogID;
 string UP = "Up";
 string DN = "Down";
 string UPMENU = "BACK";
-
+float min_z = 0.25 ; // min height 
+float max_z = 1.0 ;  // max height 
 
 Debug(string sMsg) 
 {
@@ -78,19 +79,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
             llOwnerSay(sMsg);
         }
     }
-}
-
-
-
-// Return  1 IF inventory is removed - llInventoryNumber will drop
-integer SafeRemoveInventory(string sItem) 
-{
-    if (llGetInventoryType(sItem) != INVENTORY_NONE) 
-    {
-        llRemoveInventory(sItem);
-        return 1;
-    }
-    return 0;
 }
 
 ShowText(string sNewText) 
@@ -170,7 +158,7 @@ default
         
         // get Z-size from prim name
         g_vShowScale.z = llList2Float(llGetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME]), 0) ;
-        if( g_vShowScale.z < 0.05) g_vShowScale.z = 0.05 ;
+        if(g_vShowScale.z < min_z) g_vShowScale.z = min_z ;
         
         g_vColor = GetTextPrimColor();
         g_kWearer = llGetOwner();
@@ -310,7 +298,7 @@ default
                 else if (sMessage == UP)
                 {
                     g_vShowScale.z += 0.05 ;
-                    if(g_vShowScale.z > 1.0) g_vShowScale.z = 1.0 ;
+                    if(g_vShowScale.z > max_z) g_vShowScale.z = max_z ;
                     llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME, (string)g_vShowScale.z]) ;  // save Z to prim name
                     if (g_iOn) ShowText(g_sText);
                     Menu(kAv, iAuth);
@@ -318,7 +306,7 @@ default
                 else if (sMessage == DN)
                 {
                     g_vShowScale.z -= 0.05 ;
-                    if(g_vShowScale.z < 0.05) g_vShowScale.z = 0.05 ;
+                    if(g_vShowScale.z < min_z) g_vShowScale.z = min_z ;
                     llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME, (string)g_vShowScale.z]) ; // save Z to prim name
                     if (g_iOn) ShowText(g_sText);
                     Menu(kAv, iAuth);
