@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - hovertext                              //
-//                                 version 3.928                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -14,7 +14,7 @@ string g_sParentMenu = "AddOns";
 string g_sFeatureName = "FloatText";
 
 //has to be same as in the update script !!!!
-integer g_iUpdatePin = 4711;
+//integer g_iUpdatePin = 4711;  <<<< no more need!
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -36,6 +36,10 @@ integer LM_SETTING_DELETE = 2003;//delete token from DB
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+integer DIALOG_TIMEOUT = -9002;
+
 vector g_vHideScale = <.02,.02,.02>;
 vector g_vShowScale = <.02,.02,1.0>;
 
@@ -48,7 +52,16 @@ string g_sDBToken = "hovertext";
 
 key g_kWearer;
 
-Debug(string sMsg) {
+// add for dialogs & buttons
+key g_kDialogID;
+string UP = "Up";
+string DN = "Down";
+string UPMENU = "BACK";
+float min_z = 0.25 ; // min height 
+float max_z = 1.0 ;  // max height 
+
+Debug(string sMsg) 
+{
     //llOwnerSay(llGetScriptName() + " (debug): " + sMsg);
 }
 
@@ -68,34 +81,27 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-// Return  1 IF inventory is removed - llInventoryNumber will drop
-integer SafeRemoveInventory(string sItem) {
-    if (llGetInventoryType(sItem) != INVENTORY_NONE) {
-        llRemoveInventory(sItem);
-        return 1;
-    }
-    return 0;
-}
-
-ShowText(string sNewText) {
+ShowText(string sNewText) 
+{
     // make it possible to insert line breaks in hover text
     list lTmp = llParseStringKeepNulls(sNewText, ["\\n"], []);
     g_sText = llDumpList2String(lTmp, "\n");
     list params = [PRIM_TEXT, g_sText, g_vColor, 1.0];
 
 //    if (g_iTextPrim > LINK_ROOT) {//don't scale the root prim <- SA: Why not?
-        params += [PRIM_SIZE, g_vShowScale];
+        params += [PRIM_SIZE, g_vShowScale, PRIM_SLICE, <0.490,0.51,0.0>];
 //    }
     
     llSetLinkPrimitiveParamsFast(g_iTextPrim, params);
     g_iOn = TRUE;
 }
 
-HideText() {
+HideText() 
+{
     Debug("hide text");
     list params = [PRIM_TEXT, "", g_vColor, 1.0];
 //    if (g_iTextPrim > LINK_ROOT) {
-        params += [PRIM_SIZE, g_vHideScale];
+        params += [PRIM_SIZE, g_vHideScale]; // PRIM_SLICE, <0.0, 1.0, 0.0>];
 //    }
     llSetLinkPrimitiveParamsFast(g_iTextPrim, params);    
     g_iOn = FALSE;
@@ -110,117 +116,221 @@ vector GetTextPrimColor()
     return llList2Vector(llGetLinkPrimitiveParams(g_iTextPrim, [PRIM_COLOR, ALL_SIDES]), 0) ;
 }
 
-default {
-    state_entry() {
+
+// ************************ add adjust height
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    return kID;
+}
+
+Menu(key kAv, integer iAuth)
+{
+    string sPrompt = "\n\n Adjust FloatText height position:" ;
+    g_kDialogID = Dialog(kAv, sPrompt, [UP,DN], [UPMENU],0, iAuth);
+}
+
+
+default 
+{
+    state_entry() 
+    {
         // find the text prim
         integer stop = llGetNumberOfPrims();
         //only bother if there are child prims
-        if (stop) {
+        if (stop) 
+        {
             integer n;
             // find the prim whose desc starts with "FloatText"
-            for (n = 1; n <= stop; n++) {
+            for (n = 1; n <= stop; n++) 
+            {
                 key id = llGetLinkKey(n);
                 string desc = (string)llGetObjectDetails(id, [OBJECT_DESC]);
-                if (llSubStringIndex(desc, g_sFeatureName) == 0) {
+                if (llSubStringIndex(desc, g_sFeatureName) == 0) 
+                {
                     g_iTextPrim = n;
                 }
             }
         }
         
+        // get Z-size from prim name
+        g_vShowScale.z = llList2Float(llGetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME]), 0) ;
+        if(g_vShowScale.z < min_z) g_vShowScale.z = min_z ;
+        
         g_vColor = GetTextPrimColor();
         g_kWearer = llGetOwner();
         llSetText("", <1,1,1>, 0.0);
-        if (llGetLinkNumber() > 1) {
+        if (llGetLinkNumber() > 1) 
+        {
             HideText();
         }
         llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
     }
     
-    on_rez(integer start) {
-        if(g_iOn && g_sText != "") {
+    on_rez(integer start) 
+    {
+        if(g_iOn && g_sText != "") 
+        {
             ShowText(g_sText);
-        } else {
+        } 
+        else 
+        {
             llSetText("", <1,1,1>, 0.0);
-            if (llGetLinkNumber() > 1) {
+            if (llGetLinkNumber() > 1) 
+            {
                 HideText();
             }
         }
     }
-    link_message(integer iSender, integer iNum, string sStr, key kID) {
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID) 
+    {
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llList2String(lParams, 0);
         string sValue = llToLower(llList2String(lParams, 1));
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
-            if (sStr == "menu " + g_sFeatureName) {
+        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) 
+        {
+            if (sStr == "menu " + g_sFeatureName) 
+            {                
                 //popup help on how to set label
                 llMessageLinked(LINK_ROOT, POPUP_HELP, "To set floating text , say _PREFIX_text followed by the text you wish to set.  \nExample: _PREFIX_text I have text above my head!", kID);
-                llMessageLinked(LINK_ROOT, iNum, "menu " + g_sParentMenu, kID);
-            } else if (sCommand == "text") {
+                //llMessageLinked(LINK_ROOT, iNum, "menu " + g_sParentMenu, kID);
+                Menu(kID, iNum);
+            } 
+            else if (sCommand == "text") 
+            {
                 //llSay(0, "got text command");
                 lParams = llDeleteSubList(lParams, 0, 0);//pop off the "text" command
                 string sNewText = llDumpList2String(lParams, " ");
-                if (g_iOn) {
+                if (g_iOn) 
+                {
                     //only change text if commander has smae or greater auth
-                    if (iNum <= g_iLastRank) {
-                        if (sNewText == "") {
+                    if (iNum <= g_iLastRank) 
+                    {
+                        if (sNewText == "") 
+                        {
                             g_sText = "";
                             HideText();
-                        } else {
+                        } 
+                        else 
+                        {
                             ShowText(sNewText);
                             g_iLastRank = iNum;
                             //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                         }
-                    } else {
+                    } 
+                    else 
+                    {
                         Notify(kID,"You currently have not the right to change the float text, someone with a higher rank set it!", FALSE);
                     }
-                } else {
+                } 
+                else 
+                {
                     //set text
-                    if (sNewText == "") {
+                    if (sNewText == "") 
+                    {
                         g_sText = "";
                         HideText();
-                    } else {
+                    } 
+                    else 
+                    {
                         ShowText(sNewText);
                         g_iLastRank = iNum;
                         //llMessageLinked(LINK_ROOT, LM_SETTING_SAVE, g_sDBToken + "=on:" + (string)iNum + ":" + llEscapeURL(sNewText), NULL_KEY);
                     }
                 }
-            } else if (sCommand == "textoff") {
-                if (g_iOn) {
+            } 
+            else if (sCommand == "textoff") 
+            {
+                if (g_iOn) 
+                {
                     //only turn off if commander auth is >= g_iLastRank
-                    if (iNum <= g_iLastRank) {
+                    if (iNum <= g_iLastRank) 
+                    {
                         g_iLastRank = COMMAND_WEARER;
                         HideText();
                     }
-                } else {
+                } 
+                else 
+                {
                     g_iLastRank = COMMAND_WEARER;
                     HideText();
                 }
-            } else if (sCommand == "texton") {
-                if( g_sText != "") {
+            } 
+            else if (sCommand == "texton") 
+            {
+                if( g_sText != "") 
+                {
                     g_iLastRank = iNum;
                     ShowText(g_sText);
                 }
-            } else if (sStr == "runaway" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER)) {
+            } 
+            else if (sStr == "runaway" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER)) 
+            {
                 g_sText = "";
                 HideText();
                 llResetScript();
             }
-        } else if (iNum == MENUNAME_REQUEST) {
+        } 
+        else if (iNum == MENUNAME_REQUEST) 
+        {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
         }
+        else if (iNum == DIALOG_RESPONSE)
+        {
+            if (kID==g_kDialogID)
+            {
+                //got a menu response meant for us.  pull out values
+                list lMenuParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
+                integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+
+                if (sMessage == UPMENU)
+                {
+                    //main menu
+                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                }
+                else if (sMessage == UP)
+                {
+                    g_vShowScale.z += 0.05 ;
+                    if(g_vShowScale.z > max_z) g_vShowScale.z = max_z ;
+                    llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME, (string)g_vShowScale.z]) ;  // save Z to prim name
+                    if (g_iOn) ShowText(g_sText);
+                    Menu(kAv, iAuth);
+                }
+                else if (sMessage == DN)
+                {
+                    g_vShowScale.z -= 0.05 ;
+                    if(g_vShowScale.z < min_z) g_vShowScale.z = min_z ;
+                    llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_NAME, (string)g_vShowScale.z]) ; // save Z to prim name
+                    if (g_iOn) ShowText(g_sText);
+                    Menu(kAv, iAuth);
+                }
+            }
+        }
+        
     }
 
-    changed(integer iChange) {
-        if (iChange & CHANGED_OWNER) {
+    changed(integer iChange) 
+    {
+        if (iChange & CHANGED_OWNER) 
+        {
             llResetScript();
         }
 
-        if (iChange & CHANGED_COLOR) { //SA this event is triggered when text is changed (LSL bug?) so we need to check the color really changed if we want to avoid an endless loop
+        if (iChange & CHANGED_COLOR) 
+        { //SA this event is triggered when text is changed (LSL bug?) so we need to check the color really changed if we want to avoid an endless loop
             vector vNewColor = GetTextPrimColor();
             if (vNewColor != g_vColor)
             {
                 g_vColor = vNewColor;
-                if (g_iOn) {
+                if (g_iOn) 
+                {
                     ShowText(g_sText);
                 }
             }
