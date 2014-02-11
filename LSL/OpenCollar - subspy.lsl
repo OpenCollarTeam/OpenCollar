@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
-//                              OpenCollar - subspy                               //
+//                              OpenCollar - spy                               //
 //                                 version 3.950                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
@@ -86,7 +86,7 @@ string g_sScript;
 
 string UPMENU = "BACK";
 string g_sParentMenu = "AddOns";
-string g_sSubMenu = "SubSpy";
+string g_sSubMenu = "Spy";
 
 list g_lOwners;
 string g_sSubName;
@@ -300,7 +300,7 @@ list CheckboxButtons(list lValues, string sButtonText, string sControlValue){
     integer i;
     for (i=0;i<iNumButtons;i++){
         string sButtonValue=llList2String(lValues,i);
-        llOwnerSay("processing button "+sButtonValue);
+        //Debug("processing button "+sButtonValue);
         if (sButtonValue==sControlValue){
             lNewButtons += "☒ "+sButtonValue+sButtonText;
         } else {
@@ -405,7 +405,7 @@ NotifyOwners(string sMsg)
 SaveSetting(string sOption, string sValue)
 {
     //Debug("Saving setting: " + sOption + "=" + sValue);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOption + "=" + sValue, NULL_KEY);   //send value to settings script
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_" + sOption + "=" + sValue, NULL_KEY);   //send value to settings script
 }
 
 
@@ -435,7 +435,7 @@ TurnAllOff(string command)
 
 performSpyCommand (string sStr, key kID)
 {
-    //Debug("Performing subspy command: "+sStr);
+    //Debug("Performing Spy command: "+sStr);
 
     if(sStr == "☐ trace")
     {
@@ -482,14 +482,6 @@ performSpyCommand (string sStr, key kID)
         UpdateListener();
         Notify(kID, "Chat listener disabled.", TRUE);
     }
-    else if(llSubStringIndex(sStr,"meters")==0)
-    {
-        //Debug("got meters command");
-    } else if(llSubStringIndex(sStr,"minutes")==0) {
-        //Debug("got minutes command");
-    } else {
-        //Debug("Got unhandled command: "+sStr);
-    }
 }
 
 
@@ -515,8 +507,6 @@ default
 
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
 
-        Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
-        Notify(g_kWearer,"\nOpenCollar SPY add-on (trace, radar, listen) INSTALLED and AVAILABLE\n...checking for activated spy features...",FALSE);
         llSetTimerEvent(4.0);   //wait for data before we do anything else... see timer event.
     }
 
@@ -571,7 +561,7 @@ default
             else // COMMAND_OWNER
             {
                 //Debug("UserCommand - COMMAND_OWNER");
-                if (sStr == "subspy" || sStr == "menu " + llToLower(g_sSubMenu)) DialogSpy(kID, iNum);
+                if (sStr == "spy" || sStr == "menu " + llToLower(g_sSubMenu)) DialogSpy(kID, iNum);
                 else if (sStr == "radarsettings")
                 {
                     DialogRadarSettings(kID, iNum); //request for the radar settings menu
@@ -603,8 +593,8 @@ default
                 //Debug("owners: " + sValue);
                 g_iGotSettingOwners=TRUE;
             }
-            else if (llGetSubString(sToken, 0, i) == g_sScript)
-            { //subspy data
+            else if (llGetSubString(sToken, 0, i) == "subspy_")
+            { //spy data
                 string sOption = llToLower(llGetSubString(sToken, i+1, -1));
                 //Debug("recieved settings: "+sOption+"="+sValue);
 
@@ -644,9 +634,6 @@ default
                     g_iGotSettingMinutes=TRUE;
                     g_iSensorRepeat=(integer)sValue;
                 }
-
-                //Debug("new g_lSettings: " + (string)g_lSettings);
-                if(("trace" == sOption && g_iTraceEnabled) || ("radar" == sOption && g_iRadarEnabled) || ("listen" == sOption && g_iListenEnabled)) Notify(g_kWearer,"Spy add-on is ENABLED, using " + sOption + "!",FALSE);
             }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -660,7 +647,7 @@ default
         else if (iNum == DIALOG_RESPONSE)
         {
             if (kID == g_kDialogSpyID)
-            { //settings change from main subspy
+            { //settings change from main spy
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -677,7 +664,7 @@ default
                 }
             }
             else if (kID == g_kDialogRadarSettingsID)
-            { //settings change from subspy radar menu
+            { //settings change from spy radar menu
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -722,6 +709,22 @@ default
             g_sState="postInit";
             llSetTimerEvent(5.0);
         } else if (g_sState=="postInit") {  //postInit period complete, should have all of our data now
+
+            string activityWarning;
+            if (g_iTraceEnabled) activityWarning += "location";
+            if (g_iRadarEnabled){
+                if (g_iTraceEnabled) activityWarning = " and "+activityWarning;
+                activityWarning = "nearby avatars"+activityWarning;
+            }
+            if (g_iListenEnabled){
+                if (g_iTraceEnabled && g_iRadarEnabled) activityWarning = ", "+activityWarning;
+                else if (g_iTraceEnabled || g_iRadarEnabled) activityWarning = " and "+activityWarning;
+                activityWarning = "chat"+activityWarning;
+            }
+            
+            if (llStringLength(activityWarning)>0){
+                Notify(g_kWearer,"Spy plugin is reporting your "+activityWarning+ " to your primary owners",FALSE);
+            }
 
             if (g_iTraceEnabled) g_sTPBuffer = "Rezzed at " + GetLocation() + ".\n";
             //Debug("Running sensor from postInit");
@@ -786,7 +789,10 @@ default
 
         if (iChange & CHANGED_OWNER)
         {
+            Notify(g_kWearer,"\n\nATTENTION: This collar is running the Spy feature.\nYour primary owners will be able to track where you go, access your radar and read what you speak in the Nearby Chat. Only your own local chat will be relayed. IMs and the chat of 3rd parties cannot be spied on. Please use an updater to uninstall this feature if you do not consent to this kind of practice and remember that bondage, power exchange and S&M is of all things based on mutual trust.",FALSE);
+
             llResetScript();
         }
     }
 }
+
