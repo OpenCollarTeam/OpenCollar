@@ -116,7 +116,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 NamesMenu(list lAvs)
 {
     string sPrompt = "\n\nChoose the person you like to add.";
-    g_kMenuID = Dialog(USER, sPrompt, lAvs, [], 0, AUTH);
+    g_kMenuID = Dialog(USER, sPrompt, lAvs, [UPMENU], 0, AUTH);
 }
 
 SendResult(key found)
@@ -146,7 +146,10 @@ default
             key user = (key)llList2String(params, 0);
             string name = llList2String(params, 1);
             integer auth = (integer)llList2String(params, 3);
-            if (name == "Yes")
+            if (name==UPMENU){
+                llMessageLinked(LINK_SET,auth,"access",user);
+            }
+            else if (name == "Yes")
             {
                 SendResult(llList2Key(AVIS, 0));
                 return;
@@ -184,8 +187,9 @@ default
         }
         else if (i == 1 && llList2Key(AVIS, 0) == USER)
         {
-            g_kMenuID = Dialog(USER, "\n\nYou are the only one in this region. Add yourself?", ["Yes", "No"], [], 0, AUTH);
+            g_kMenuID = Dialog(USER, "\n\nYou are the only one in this region. Add yourself?", ["Yes", "No"], [UPMENU], 0, AUTH);
         }
         else NamesMenu(AVIS);
     }
 }
+
