@@ -350,8 +350,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
         if (sStr == "menu " + g_sSubMenu)
         {
-            g_kTBoxID = Dialog(kID, "Either:\n- Submit the new label in the field below,\n- submit a few spaces to clear lamel,\n- or just submit a blank field to go back to "
- + g_sParentMenu + " menu.", [], [], 0, iNum);
+            g_kTBoxID = Dialog(kID, "\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to "
+ + g_sParentMenu + ".", [], [], 0, iNum);
         }
         else if (sStr == "menu " + g_sFontMenu)
         {
