@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.951                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,9 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+
+// SatomiAhn Initial support for llTextBox. 
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
@@ -184,7 +187,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     list lCurrentItems;
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart;
-    integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons); 
+    integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
     //slice the menuitems by page
     if (iNumitems > iMyPageSize)
     {
@@ -198,10 +201,10 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iEnd >= iNumitems) iEnd = iNumitems - 1;
     // check prompt lengths
     integer iPromptlen=GetStringBytes(sPrompt);
-    if (iWithNums && !~llListFindList(MRSBUN, [kRecipient])) 
+    if (iWithNums && !~llListFindList(MRSBUN, [kRecipient]))
     { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
         
-        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++) 
+        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++)
         {
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) sButton = Key2Name((key)sButton);
@@ -214,7 +217,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         if(iPromptlen+iNBPromptlen>511)
         {
             if(iNBPromptlen<1015) Notify(kRecipient,"Menu key:\n"+sNumberedButtons,FALSE);
-            else 
+            else
             {
                 integer m=llGetListLength(lButtons);
                 integer iLen;
@@ -285,10 +288,11 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     {
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[PREV,MORE]), iChan);
     }
-    else
+    else if (iNumitems || iMyPageSize != iPagesize)
     {
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
     }
+    else llTextBox(kRecipient, sThisPrompt, iChan);
     integer ts = llGetUnixTime() + g_iTimeOut;
     g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth];
 }
@@ -478,29 +482,29 @@ default
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth);
-//            if (iDigits) //Removed for Project: despam!
-//            {
-//                integer iLength = GetStringBytes(sPrompt);
-//                string sOut = sPrompt;
-//                integer iNb = llGetListLength(lButtons);
-//                integer iCount;
-//                string sLine;
-//                for (iCount = 0; iCount < iNb; iCount++)
-//                {
-//                    string sButton = llList2String(lButtons, iCount);
-//                    if ((key)sButton) sButton = Key2Name((key)sButton);
-//                    sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
-//                    iLength += GetStringBytes(sLine);
-//                    if (iLength >= 1024)
-//                    {
-//                        Notify(kRCPT, sOut, FALSE);
-//                        iLength = 0;
-//                        sOut = "";
-//                    }
-//                    sOut += sLine;
-//                }
-//                Notify(kRCPT, sOut, FALSE);
-//            }
+// if (iDigits) //Removed for Project: despam!
+// {
+// integer iLength = GetStringBytes(sPrompt);
+// string sOut = sPrompt;
+// integer iNb = llGetListLength(lButtons);
+// integer iCount;
+// string sLine;
+// for (iCount = 0; iCount < iNb; iCount++)
+// {
+// string sButton = llList2String(lButtons, iCount);
+// if ((key)sButton) sButton = Key2Name((key)sButton);
+// sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
+// iLength += GetStringBytes(sLine);
+// if (iLength >= 1024)
+// {
+// Notify(kRCPT, sOut, FALSE);
+// iLength = 0;
+// sOut = "";
+// }
+// sOut += sLine;
+// }
+// Notify(kRCPT, sOut, FALSE);
+// }
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
