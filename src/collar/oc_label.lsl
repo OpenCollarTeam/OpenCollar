@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - label                                //
-//                                 version 3.934                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -9,6 +9,8 @@
 // ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
+
+// SatomiAhn Initial support for llTextBox. 
 
 string g_sParentMenu = "AddOns";
 string g_sSubMenu = "Label";
@@ -49,6 +51,7 @@ integer g_iCharLimit = 12;
 string UPMENU = "BACK";
 string CTYPE = "collar";
 key g_kDialogID;
+key g_kTBoxID;
 
 string g_sLabelText = "OpenCollar";
 
@@ -337,6 +340,81 @@ SetOffsets(key font)
     g_kFontTexture = font;
 }
 
+
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    if (iNum == COMMAND_OWNER)
+    {
+        list lParams = llParseString2List(sStr, [" "], []);
+        string sCommand = llList2String(lParams, 0);
+
+        if (sStr == "menu " + g_sSubMenu)
+        {
+            g_kTBoxID = Dialog(kID, "Either:\n- Submit the new label in the field below,\n- submit a few spaces to clear lamel,\n- or just submit a blank field to go back to "
+ + g_sParentMenu + " menu.", [], [], 0, iNum);
+        }
+        else if (sStr == "menu " + g_sFontMenu)
+        {
+            //give font selection menu
+            FontMenu(kID, iNum);
+        }
+
+        if (llGetSubString(sStr,0,13) == "lockappearance")
+        {
+            if(llGetSubString(sStr, -1, -1) == "0")
+            {
+                g_iAppLock  = FALSE;
+            }
+            else
+            {
+                g_iAppLock  = TRUE;
+            }
+        }
+        else if (sCommand == "label")
+        {
+            if (g_iAppLock)
+            {
+                Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+            }
+            else
+            {
+                lParams = llDeleteSubList(lParams, 0, 0);
+                g_sLabelText = llDumpList2String(lParams, " ");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, NULL_KEY);
+                SetLabel(g_sLabelText);
+            }
+        }
+        else if (sCommand == "font")
+        {
+            if (g_iAppLock)
+            {
+                Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+            }
+            else FontMenu(kID, iNum);
+        }
+        return TRUE;
+    }
+    if ((iNum >= COMMAND_SECOWNER) && (iNum <= COMMAND_WEARER))
+    {
+        list lParams = llParseString2List(sStr, [" "], []);
+        string sCommand = llList2String(lParams, 0);
+        if (sCommand == "label") {} // do nothing here
+        else if (sStr == "menu " + g_sSubMenu)
+        {
+            llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
+        }
+        else if (sStr == "menu " + g_sFontMenu)
+        {
+            llMessageLinked(LINK_SET, iNum, "menu "+g_sFontParent, kID);
+        }
+        else return TRUE;
+        Notify(kID,"Only owners can change the label!", FALSE);
+        return TRUE;
+    }
+    
+    return FALSE ;
+}
+
 default
 {
     state_entry()
@@ -359,73 +437,9 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == COMMAND_OWNER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llList2String(lParams, 0);
 
-            if (sStr == "menu " + g_sSubMenu)
-            {
-                //popup help on how to set label
-                llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
-                llMessageLinked(LINK_SET, POPUP_HELP, "To set the label on the " + CTYPE + ", say _PREFIX_label followed by the text you wish to set.\nExample: _PREFIX_label I Rock!", kID);
-            }
-            else if (sStr == "menu " + g_sFontMenu)
-            {
-                //give font selection menu
-                FontMenu(kID, iNum);
-            }
-
-            if (llGetSubString(sStr,0,13) == "lockappearance")
-            {
-                if(llGetSubString(sStr, -1, -1) == "0")
-                {
-                    g_iAppLock  = FALSE;
-                }
-                else
-                {
-                    g_iAppLock  = TRUE;
-                }
-            }
-            else if (sCommand == "label")
-            {
-                if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
-                }
-                else
-                {
-                    lParams = llDeleteSubList(lParams, 0, 0);
-                    g_sLabelText = llDumpList2String(lParams, " ");
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, NULL_KEY);
-                    SetLabel(g_sLabelText);
-                }
-            }
-            else if (sCommand == "font")
-            {
-                if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
-                }
-                else FontMenu(kID, iNum);
-            }
-        }
-        if ((iNum >= COMMAND_SECOWNER) && (iNum <= COMMAND_WEARER))
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llList2String(lParams, 0);
-            if (sCommand == "label") {} // do nothing here
-            else if (sStr == "menu " + g_sSubMenu)
-            {
-                llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
-            }
-            else if (sStr == "menu " + g_sFontMenu)
-            {
-                llMessageLinked(LINK_SET, iNum, "menu "+g_sFontParent, kID);
-            }
-            else return;
-            Notify(kID,"Only owners can change the label!", FALSE);
-        }
+        
+        if ( UserCommand(iNum, sStr, kID) ) {}        
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -488,6 +502,15 @@ default
                     }
                     FontMenu(kAv, iAuth);
                 }
+            }
+            else if (kID == g_kTBoxID) // TextBox response, extract values
+            {
+                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                if(sMessage != "" )UserCommand(iAuth, "label " + sMessage, kAv);
+                llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
             }
         }
     }
