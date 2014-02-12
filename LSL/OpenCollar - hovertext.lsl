@@ -58,7 +58,7 @@ string g_sHelpText = "\nTo set floating text via chat command, say _PREFIX_text 
 key g_kDialogID;
 key g_kTBoxId;
 
-string SET = "Set Text" ;
+string SET = "Set Title" ;
 string UP = "Up";
 string DN = "Down";
 string ON = "☒ Show";
@@ -129,7 +129,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 Menu(key kAv, integer iAuth)
 {
     string ON_OFF ;
-    string sPrompt = "Float Text:\n\n" + g_sText ;
+    string sPrompt = "\nCurrent Title: " + g_sText ;
     if(g_iOn == TRUE) ON_OFF = ON ;
     else ON_OFF = OFF ;
     g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF], [HELP,UPMENU],0, iAuth);
