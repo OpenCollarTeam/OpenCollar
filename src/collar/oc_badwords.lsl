@@ -499,7 +499,8 @@ default
                 }
                 else if (sMessage == "Add Word")
                 {
-                    string sText = "Write a badword to add or submit a blank text field to go back to menu.";
+                    string sText = "\n- Submit the new badword in the field below.\n- Submit a blank field to go back to "
+ + g_sParentMenu + ".";
                     g_kDialog = g_kAddBadwordTBox = Dialog(kAv, sText, [], [], 0, iAuth);
                 }
                 else if (sMessage == "Remove Word")
@@ -513,9 +514,10 @@ default
                 }
                 else if (sMessage == "Set Penance")
                 {
-                    string sText = "\nThe sub has to say the penance phrase to be released from the punishment.";
-                    sText += "\nCurrent penance is:\n>> " + g_sPenance;
-                    sText += "\n\nWrite a new one in the field below or just submit a blank field to leave it unchanged.\n";
+                    
+                    string sText = "\n- Submit the new penance in the field below.\n- Submit a blank field to go back to "
+ + g_sParentMenu + ".";
+                           sText += "\n\n- Current penance is: " + g_sPenance;
                     g_kDialog = g_kSetPenanceTBox=Dialog(kAv, sText, [], [],0, iAuth);
                 }
                 else if (sMessage == "Set Animation") DialogSelectAnim(kAv, iAuth);
