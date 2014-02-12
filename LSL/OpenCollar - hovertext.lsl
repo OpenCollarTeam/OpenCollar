@@ -14,7 +14,7 @@
 // Romka Swallowtail add some buttons =^_^=
 
 string g_sParentMenu = "AddOns";
-string g_sFeatureName = "FloatText";
+string g_sFeatureName = "Titler";
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
