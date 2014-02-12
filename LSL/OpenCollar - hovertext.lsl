@@ -342,7 +342,7 @@ default
             }
             else if (kID == g_kTBoxId) 
             {
-                llOwnerSay(sStr);
+                Debug(sStr);
                 //got a menu response meant for us. pull out values
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
