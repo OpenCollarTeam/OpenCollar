@@ -15,6 +15,7 @@
 
 string g_sParentMenu = "AddOns";
 string g_sFeatureName = "Titler";
+string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -52,9 +53,7 @@ string g_sDBToken = "hovertext";
 key g_kWearer;
 
 // add for dialogs & buttons
-string g_sHelpText = "To set floating text , say _PREFIX_text followed by the text you wish to set. \nExample: _PREFIX_text I have text above my head!" ;
-
-string g_sTextBox = "Either:\n- Submit the new floating text in the field below,\n- enter a few (SPACES) to remove current text\n- or just submit a blank field to go back." ;
+string g_sHelpText = "\nTo set floating text via chat command, say _PREFIX_text followed by the title you wish to set.\nExample: _PREFIX_text I have text above my head!";
 
 key g_kDialogID;
 key g_kTBoxId;
@@ -140,7 +139,7 @@ Menu(key kAv, integer iAuth)
 integer CheckPrim()  // check prim link number
 {
     string desc = llList2String(llGetLinkPrimitiveParams(g_iTextPrim, [OBJECT_DESC]), 0) ;
-    if (llSubStringIndex(desc, g_sFeatureName) == 0) return TRUE;
+    if (llSubStringIndex(desc, g_sPrimDesc) == 0) return TRUE;
     else return FALSE ;
 }
 
@@ -159,7 +158,7 @@ InitPrim()
         {
             key id = llGetLinkKey(n);
             string desc = (string)llGetObjectDetails(id, [OBJECT_DESC]);
-            if (llSubStringIndex(desc, g_sFeatureName) == 0) g_iTextPrim = n;
+            if (llSubStringIndex(desc, g_sPrimDesc) == 0) g_iTextPrim = n;
         }            
     }
     
@@ -303,7 +302,7 @@ default
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == SET)
                 {
-                    g_kTBoxId = Dialog(kAv, g_sTextBox, [], [], 0, iAuth);                    
+                    g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sParentMenu + ".", [], [], 0, iAuth);                    
                 }
                 if (sMessage == UPMENU)
                 {
