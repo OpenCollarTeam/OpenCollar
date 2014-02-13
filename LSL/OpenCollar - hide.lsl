@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - hide                                //
-//                                 version 3.934                                  //
+//                                 version 3.952                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,25 +12,10 @@
 
 //on getting menu request, give element menu
 //on getting element type, give Hide and Show buttons
-//on hearing "hide" or "Show", do that for the current element type
+//on hearing "hide" or "show", do that for the current element type
 
 string g_sParentMenu = "Appearance";
 string g_sSubMenu = "Hide/Show";
-
-list g_lElements;
-
-key g_kWearer;
-
-key g_kDialogID;
-key g_kTouchID;
-
-list g_lAlphaSettings;
-string g_sIgnore = "nohide";
-list g_lButtons;
-
-integer g_iAppLock = FALSE;
-string g_sAppLockToken = "Appearance_Lock";
-
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -68,10 +53,28 @@ string CTYPE = "collar";
 string HIDE = "☒";
 string SHOW = "☐";
 string UPMENU = "BACK";
-string SHOWN = "Shown";
-string HIDDEN = "Hidden";
-string ALL = "All";
+
+string ALL = "Collar";
 string g_sScript;
+
+
+list g_lElements;
+
+key g_kWearer;
+
+key g_kDialogID;
+key g_kTouchID;
+
+list g_lAlphaSettings;
+
+string g_sIgnore = "nohide";
+list g_lButtons;
+
+integer g_iAppLock = FALSE;
+string g_sAppLockToken = "Appearance_Lock";
+
+integer g_iAllAlpha = 1 ;
+
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -118,66 +121,64 @@ key TouchRequest(key kRCPT,  integer iTouchStart, integer iTouchEnd, integer iAu
     return kID;
 } 
 
-SetAllElementsAlpha(float fAlpha)
+UpdateElementAlpha(string element_to_set, integer iAlpha)
 {
-    llSetLinkAlpha(LINK_SET, fAlpha, ALL_SIDES);
-    //set alphasettings of all elements to fAlpha (either 1.0 or 0.0 here)
-    g_lAlphaSettings = [];
+    //loop through links, setting alpha if element type matches what we're changing
+    //root prim is 1, so start at 2
+    integer n;
+    integer iLinkCount = llGetNumberOfPrims();
+    for (n = 2; n <= iLinkCount; n++)
+    {
+        string sElement = ElementType(n);
+        if (sElement == element_to_set) llSetLinkAlpha(n, (float)iAlpha, ALL_SIDES);
+    }    
+}
+
+SetAllElementsAlpha(integer iAlpha)
+{
+    g_iAllAlpha = iAlpha ;
+    llSetLinkAlpha(LINK_SET, (float)iAlpha, ALL_SIDES);
+    if(iAlpha == 0) return ;
+    //update alpha for all elements to fAlpha (either 1.0 or 0.0 here)
     integer n;
     integer iStop = llGetListLength(g_lElements);
     for (n = 0; n < iStop; n++)
     {
-        string sElement = llList2String(g_lElements, n);
-        g_lAlphaSettings += [sElement, Float2String(fAlpha)];
-    }
-}
-
-SetElementAlpha(string element_to_set, float fAlpha)
-{
-    //loop through links, setting color if element type matches what we're changing
-    //root prim is 1, so start at 2
-    integer n;
-    integer iLinkCount = llGetNumberOfPrims();
-    string sAlpha = Float2String(fAlpha);
-    for (n = 2; n <= iLinkCount; n++)
-    {
-        string sElement = ElementType(n);
-        if (sElement == element_to_set)
+        string sElement = llList2String(g_lElements, n);        
+        integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
+        if(iIndex !=-1)
         {
-            //set link to new color
-            //llSetLinkPrimitiveParams(n, [PRIM_COLOR, ALL_SIDES, color, 1.0]);
-            llSetLinkAlpha(n, fAlpha, ALL_SIDES);
-
-            //update element in list of settings
-            integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
-            if (iIndex == -1)
-            {
-                g_lAlphaSettings += [sElement, sAlpha];
-            }
-            else
-            {
-                g_lAlphaSettings = llListReplaceList(g_lAlphaSettings, [sAlpha], iIndex + 1, iIndex + 1);
-            }
+            integer iAlpha = llList2Integer(g_lAlphaSettings, iIndex+1);
+            UpdateElementAlpha(sElement,iAlpha);
         }
     }
 }
 
-SaveAlphaSettings()
+SetElementAlpha(string element_to_set, integer iAlpha)
 {
-    integer i = 0;
-    integer n;
-    string token;
-    string value;
-    for (; i < llGetListLength(g_lElements); i ++)
-    {
-        token = llList2String(g_lElements, i);
-        n = llListFindList(g_lAlphaSettings, [token]);
-        token = g_sScript + token;
-        value = llList2String(g_lAlphaSettings, n + 1);
-        if (~n) llMessageLinked(LINK_SET, LM_SETTING_SAVE, token + "=" + value, NULL_KEY);
-        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, NULL_KEY);
+    if(g_iAllAlpha == 1)
+    {    
+        //loop through links, setting alpha if element type matches what we're changing
+        //root prim is 1, so start at 2
+        integer n;
+        integer iLinkCount = llGetNumberOfPrims();    
+        for (n = 2; n <= iLinkCount; n++)
+        {
+            string sElement = ElementType(n);
+            if (sElement == element_to_set) llSetLinkAlpha(n, (float)iAlpha, ALL_SIDES);                  
+        }
     }
+    //update element in list of settings
+    integer i = llListFindList(g_lAlphaSettings, [element_to_set]);
+    if (i == -1) g_lAlphaSettings += [element_to_set, (string)iAlpha];    
+    else g_lAlphaSettings = llListReplaceList(g_lAlphaSettings, [(string)iAlpha], i+1, i+1);
 }
+
+SaveElementAlpha(string element_to_set, integer iAlpha)
+{
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+element_to_set + "=" + (string)iAlpha, NULL_KEY);    
+}
+
 
 ElementMenu(key kAv, integer iAuth)
 {
@@ -193,23 +194,17 @@ ElementMenu(key kAv, integer iAuth)
         integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
         if (iIndex == -1)
         {
-            //element not found in settings list.  Assume it's currently shown
-            //sPrompt += "\n" + element + " (" + SHOWN + ")";
             g_lButtons += HIDE + " " + sElement;
         }
         else
         {
-            float fAlpha = (float)llList2String(g_lAlphaSettings, iIndex + 1);
-            if (fAlpha)
+            integer iAlpha = llList2Integer(g_lAlphaSettings, iIndex + 1);
+            if (iAlpha)
             {
-                //currently shown
-                //sPrompt += "\n" + element + " (" + SHOWN + ")";
                 g_lButtons += HIDE + " " + sElement;
             }
             else
             {
-                //not currently shown
-                //sPrompt += "\n" + sElement + " (" + HIDDEN + ")";
                 g_lButtons += SHOW + " " + sElement;
             }
         }
@@ -221,8 +216,8 @@ ElementMenu(key kAv, integer iAuth)
 string ElementType(integer linkiNumber)
 {
     string sDesc = (string)llGetObjectDetails(llGetLinkKey(linkiNumber), [OBJECT_DESC]);
-    //each prim should have <elementname> in its description, plus "nocolor" or "notexture", if you want the prim to
-    //not appear in the color or texture menus
+    //each prim should have <elementname> in its description, plus "nohide", if you want the prim to
+    //not appear in the hede menu
     list lParams = llParseString2List(sDesc, ["~"], []);
     if ((~(integer)llListFindList(lParams, [g_sIgnore])) || sDesc == "" || sDesc == " " || sDesc == "(No Description)")
     {
@@ -246,17 +241,9 @@ BuildElementList()
         if (!((~(integer)llListFindList(g_lElements, [sElement]))) && sElement != g_sIgnore)
         {
             g_lElements += [sElement];
-            //llSay(0, "added " + sElement + " to elements");
         }
     }
     g_lElements = llListSort(g_lElements, 1, TRUE);
-
-
-}
-
-integer StartsWith(string sHayStack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return llDeleteSubString(sHayStack, llStringLength(sNeedle), -1) == sNeedle;
 }
 
 integer AppLocked(key kID)
@@ -272,16 +259,45 @@ integer AppLocked(key kID)
     }
 }
 
+RequestSettings()
+{
+    // restore settings from DB after reset script
+    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sAppLockToken, NULL_KEY);    
+    //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript+"all", NULL_KEY); //reserved for settings w. "all"
+    
+    // request settings for all Elements
+    integer n;
+    integer iStop = llGetListLength(g_lElements);
+    for (n = 0; n < iStop; n++)
+    {
+        string sElement = llList2String(g_lElements, n);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + sElement, NULL_KEY);
+    }
+}
+
+// Get Group or Token, 0=Group, 1=Token, 2=Value
+string SplitTokenValue(string in, integer slot)
+{
+    string out ;
+    if (slot==0) out = llGetSubString(in, 0,  llSubStringIndex(in, "_") );
+    else if (slot==1) out = llGetSubString(in,  llSubStringIndex(in, "_")+1, llSubStringIndex(in, "=")-1);
+    else if (slot==2) out = llGetSubString(in, llSubStringIndex(in, "=")+1, -1);
+    return out ;
+}
+
 default
 {
     state_entry()
     {
+        g_iAllAlpha = llCeil(llGetAlpha(ALL_SIDES));
+        
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         BuildElementList();
         //register menu button
         llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);        
+        RequestSettings();
     }
 
     on_rez(integer iParam)
@@ -295,111 +311,57 @@ default
         {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
-            string sValue = llToLower(llList2String(lParams, 1));
-            string sElement = llList2String(lParams, 1);
+            string sValue = llList2String(lParams, 1);
 
-            if (sStr == "hide")
-            {
-                if (!AppLocked(kID))
+            if (!AppLocked(kID))
+            {                           
+                if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;           
+                else if (sCommand == "hide" )
                 {
-                    SetAllElementsAlpha(0.0);
-                    SaveAlphaSettings();
-                }
-            }
-            else if (sStr == "show")
-            {
-                if (!AppLocked(kID))
-                {
-                    SetAllElementsAlpha(1.0);
-                    SaveAlphaSettings();
-                }
-            }
-            else if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu")
-            {
-                if (!AppLocked(kID))
-                {
-                    ElementMenu(kID, iNum);
-                }
-            }
-            else if (StartsWith(sStr, "setalpha"))
-            {
-                if (!AppLocked(kID))
-                {
-
-                    //                    list lParams = llParseString2List(sStr, [" "], []);
-                    //                    string sElement = llList2String(lParams, 1);
-                    float fAlpha = (float)llList2String(lParams, 2);
-                    SetElementAlpha(sElement, fAlpha);
-                    SaveAlphaSettings();
-                }
-            }
-            else if (StartsWith(sStr, "hide"))
-            {
-                if (!AppLocked(kID))
-                {
-                    //                    list lParams = llParseString2List(sStr, [" "], []);
-                    //                    string sElement = llList2String(lParams, 1);
-                    SetElementAlpha(sElement, 0.0);
-                    SaveAlphaSettings();
-                }
-            }
-            else if (StartsWith(sStr, "show"))
-            {
-                if (!AppLocked(kID))
-                {
-                    //                    list lParams = llParseString2List(sStr, [" "], []);
-                    //                    string sElement = llList2String(lParams, 1);
-                    SetElementAlpha(sElement, 1.0);
-                    SaveAlphaSettings();
-                }
-            }
-            else if (llGetSubString(sStr,0,13) == "lockappearance")
-            {
-                if (iNum == COMMAND_OWNER)
-                {
-                    if(llGetSubString(sStr, -1, -1) == "0")
+                    if(sValue == "") SetAllElementsAlpha(0); 
+                    else 
                     {
-                        g_iAppLock  = FALSE;
-                    }
-                    else
-                    {
-                        g_iAppLock  = TRUE;
+                        SetElementAlpha(sValue, 0);
+                        SaveElementAlpha(sValue, 0);
                     }
                 }
-            }
-            else if (sStr == "settings")
-            {
-                if (llGetAlpha(ALL_SIDES) == 0.0)
+                else if (sCommand == "show")
                 {
-                    Notify(kID, "Hidden", FALSE);
+                    if(sValue == "") SetAllElementsAlpha(1);
+                    else 
+                    {
+                        SetElementAlpha(sValue, 1);          
+                        SaveElementAlpha(sValue, 1);                     
+                    }
                 }
-            }
-            else if (iNum == COMMAND_OWNER && sStr == "runaway")
+            }            
+            else if (iNum == COMMAND_OWNER)
             {
-                SetAllElementsAlpha(1.0);
-                // no more self - resets
-                //    llResetScript();
+                if (sCommand == "lockappearance")
+                {
+                    if (sValue == "0") g_iAppLock = FALSE;
+                    else if (sValue == "1") g_iAppLock = TRUE;                    
+                }            
+                else if (iNum == COMMAND_OWNER && sStr == "runaway")
+                {
+                    SetAllElementsAlpha(1);
+                }
             }
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
+            string sGroup = SplitTokenValue(sStr, 0);
+            string sToken = SplitTokenValue(sStr, 1);
+            string sValue = SplitTokenValue(sStr, 2);
+            if (sGroup == g_sScript)
             {
-                sToken = llGetSubString(sToken, i + 1, -1);
-                i = llListFindList(g_lAlphaSettings, [sToken]);
-                if (~i) g_lAlphaSettings = llListReplaceList(g_lAlphaSettings, [sValue], i + 1, i + 1);
-                else g_lAlphaSettings += [sToken, sValue];
-                SetElementAlpha(sToken, (float)sValue);
+                SetElementAlpha(sToken, (integer)sValue);
             }
-            else if (sToken == g_sAppLockToken)
+            else if (sGroup+sToken == g_sAppLockToken)
             {
                 g_iAppLock = (integer)sValue;
             }
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sGroup+sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -432,32 +394,21 @@ default
                     list lParams = llParseString2List(sMessage, [" "], []);
                     string sCmd = llList2String(lParams, 0);
                     string sElement = llList2String(lParams, 1);
-                    float fAlpha;
-                    if (sCmd == HIDE)
-                    {
-                        fAlpha = 0.0;
-                    }
-                    else if (sCmd == SHOW)
-                    {
-                        fAlpha = 1.0;
-                    }
-
+                    integer iAlpha;
+                    
+                    if (sCmd == HIDE) iAlpha = 0;
+                    else if (sCmd == SHOW) iAlpha = 1;
+                    
                     if (sElement == ALL)
                     {
-                        if (sCmd == "Show")
-                        {
-                            SetAllElementsAlpha(1.0);
-                        }
-                        else if (sCmd == "Hide")
-                        {
-                            SetAllElementsAlpha(0.0);
-                        }
+                        if (sCmd == "Show") SetAllElementsAlpha(1);
+                        else if (sCmd == "Hide") SetAllElementsAlpha(0);
                     }
                     else if (sElement != "")//ignore empty element strings since they won't work anyway
                     {
-                        SetElementAlpha(sElement, fAlpha);
+                        SetElementAlpha(sElement, iAlpha);
+                        SaveElementAlpha(sElement, iAlpha);
                     }
-                    SaveAlphaSettings();
                     ElementMenu(kAv, iAuth);
                 }
             }
@@ -475,11 +426,12 @@ default
                 if (sElement != g_sIgnore)
                 {
                     integer iIndex = llListFindList(g_lAlphaSettings, [sElement]);
-                    float fAlpha;
-                    if (iIndex == -1) fAlpha = 1.0; // assuming visible
-                    else fAlpha = (float)llList2String(g_lAlphaSettings, iIndex + 1);
+                    integer iAlpha;
+                    if (iIndex == -1) iAlpha = 1; // assuming visible
+                    else iAlpha =  llList2Integer(g_lAlphaSettings, iIndex + 1);
                     Notify(kAv, "You selected \"" + sElement+"\". Toggling its transparency.", FALSE);
-                    SetElementAlpha(sElement, (float)(!llCeil(fAlpha)));
+                    SetElementAlpha(sElement, !iAlpha);
+                    SaveElementAlpha(sElement, !iAlpha);
                 }
                 else
                 {
