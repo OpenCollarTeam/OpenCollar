@@ -624,15 +624,15 @@ default
                         {
                             AdjustPos(<0, 0, -g_fNudge>);                
                         }                            
-                        else if (sMessage == "Nudge: S")
+                        else if (sMessage == "▸")
                         {
                             g_fNudge=g_fSmallNudge;
                         }
-                        else if (sMessage == "Nudge: M")
+                        else if (sMessage == "▸▸")
                         {
                             g_fNudge=g_fMediumNudge;                
                         }
-                        else if (sMessage == "Nudge: L")
+                        else if (sMessage == "▸▸▸")
                         {
                             g_fNudge=g_fLargeNudge;                
                         }
