@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.952                                  //
+//                                 version 3.953                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -55,6 +55,7 @@ integer ANIM_STOP = 7001;//send this with the name of an anim in the string part
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
+integer FIND_AGENT = -9005;
 
 integer iPagesize = 12;
 string MORE = "►";
@@ -73,7 +74,7 @@ list g_lMenus;//11-strided list in form listenChan, dialogid, listener, starttim
 
 list g_lRemoteMenus;
 
-integer g_iStrideLength = 11;
+integer g_iStrideLength = 12;
 
 // List of user keys who opt-out of chat-spammage, ie chose "off"
 list MRSBUN = []; // blatant monty python reference - list of those who do not like spam
@@ -81,6 +82,7 @@ string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
 string g_sScript;
+string g_sGetAviScript = "getavi_";
 
 string Key2Name(key kId)
 {
@@ -177,7 +179,7 @@ integer RandomUniqueChannel()
     return iOut;
 }
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth)
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
     //string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
     string sThisPrompt;
@@ -188,6 +190,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart;
     integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
+    
     //slice the menuitems by page
     if (iNumitems > iMyPageSize)
     {
@@ -294,7 +297,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
     integer ts = llGetUnixTime() + g_iTimeOut;
-    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth];
+    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo];
 }
 
 list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
@@ -349,14 +352,14 @@ list PrettyMain(list lOptions)
 
     
 
-list RemoveMenuStride(list lMenu, integer iIndex)
+RemoveMenuStride(integer iIndex)       //fixme:  duplicates entire global lMenu list
 {
     //tell this function the menu you wish to remove, identified by list index
     //it will close the listener, remove the menu's entry from the list, and return the new list
     //should be called in the listen event, and on menu timeout
-    integer iListener = llList2Integer(lMenu, iIndex + 2);
+    integer iListener = llList2Integer(g_lMenus, iIndex + 2);
     llListenRemove(iListener);
-    return llDeleteSubList(lMenu, iIndex, iIndex + g_iStrideLength - 1);
+    g_lMenus=llDeleteSubList(g_lMenus, iIndex, iIndex + g_iStrideLength - 1);
 }
 
 CleanList()
@@ -373,10 +376,10 @@ CleanList()
         //Debug("dietime: " + (string)iDieTime);
         if (iNow > iDieTime)
         {
-            Debug("menu timeout");
+            //Debug("menu timeout");
             key kID = llList2Key(g_lMenus, n + 1);
             llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
-            g_lMenus = RemoveMenuStride(g_lMenus, n);
+            RemoveMenuStride(n);
         }
     }
 }
@@ -387,17 +390,17 @@ ClearUser(key kRCPT)
     integer iIndex = llListFindList(g_lMenus, [kRCPT]);
     while (~iIndex)
     {
-        Debug("removed stride for " + (string)kRCPT);
-        g_lMenus = RemoveMenuStride(g_lMenus, iIndex -4);
+        //Debug("removed stride for " + (string)kRCPT);
+        RemoveMenuStride(iIndex -4);
         //g_lMenus = llDeleteSubList(g_lMenus, iIndex - 4, iIndex - 5 + g_iStrideLength);
         iIndex = llListFindList(g_lMenus, [kRCPT]);
     }
-    Debug(llDumpList2String(g_lMenus, ","));
+    //Debug(llDumpList2String(g_lMenus, ","));
 }
 
 Debug(string sStr)
 {
-// llOwnerSay(llGetScriptName() + ": " + sStr);
+    llOwnerSay(llGetScriptName() + ": " + sStr);
 }
 
 integer InSim(key id)
@@ -449,10 +452,56 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
+        if (iNum == FIND_AGENT) {
+            Debug("FIND_AGENT:"+sStr);
+            list lParams = llParseStringKeepNulls(sStr, ["|"], []);
+            if (llList2String(lParams, 0) == g_sGetAviScript){
+                //fixme: REQ(params[1]), 
+                string REQ = llList2String(lParams, 1);
+                key kRCPT = llGetOwnerKey((key)llList2String(lParams, 2));
+                integer iAuth = (integer)llList2String(lParams, 3);
+                string TYPE = llList2String(lParams, 4);
+                string find = llList2String(lParams, 5);
+                if (find == " ") find = "";
+                list excl = llParseString2List(llList2String(lParams, 6), [","], []);
+                
+                list AVIS = [];
+                list agentList = llGetAgentList(AGENT_LIST_REGION, []);
+                integer i = llGetListLength(agentList);
+                while(i--){
+                    key avId=llList2Key(agentList, i);
+                    string name = llKey2Name(avId);
+                    if (llSubStringIndex(llToLower(name), llToLower(find)) != -1){       //if this name contains find string
+                        if (! ~llListFindList(excl,[(string)avId])){            //if this key is not in the excludelist
+                            AVIS += avId;
+                        }
+                    }
+                }
+                
+                i = llGetListLength(AVIS);
+                if (!i){
+                    string findNotify;
+                    if (find != "") findNotify = "starting with \"" + find + "\" ";
+                    llInstantMessage(kRCPT, "Could not find any avatars "+ findNotify + "in this region.");
+                } else if (i == 1 && llList2Key(AVIS, 0) == kRCPT) {
+                    integer iDigits = ButtonDigits(["Yes", "No"]);
+                    ClearUser(kRCPT);
+                    Dialog(kRCPT, "\n\nYou are the only one in this region. Add yourself?", ["Yes", "No"], [UPMENU], 0, kID, iDigits, iAuth, "getavi_|"+REQ+"|"+TYPE);
+                } else {
+                    integer iDigits = ButtonDigits(AVIS);
+                    ClearUser(kRCPT);
+                    Dialog(kRCPT, "\n\nChoose the person you like to add.", AVIS, [UPMENU], 0, kID, iDigits, iAuth, "getavi_|"+REQ+"|"+TYPE);
+                }
+            }
+            else {
+                Debug(sStr);
+            }
+        } else 
         if (iNum == DIALOG)
         {//give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
-            Debug(sStr);
+            Debug("DIALOG:"+sStr);
+            
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
@@ -481,7 +530,7 @@ default
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
-            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth);
+            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"");
 // if (iDigits) //Removed for Project: despam!
 // {
 // integer iLength = GetStringBytes(sPrompt);
@@ -511,7 +560,7 @@ default
             if (iNum == COMMAND_OWNER || iNum == COMMAND_SECOWNER)
             {
                 string sCmd = llGetSubString(sStr, 11, -1);
-                Debug("dialog cmd:" + sCmd);
+                //Debug("dialog cmd:" + sCmd);
                 if (llGetSubString(sCmd, 0, 3) == "url:")
                 {
                     integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
@@ -569,11 +618,13 @@ default
             integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);
             integer iDigits = llList2Integer(g_lMenus, iMenuIndex + 9);
             integer iAuth = llList2Integer(g_lMenus, iMenuIndex + 10);
-            g_lMenus = RemoveMenuStride(g_lMenus, iMenuIndex);
+            string sExtraInfo = llList2String(g_lMenus, iMenuIndex + 11);
+            
+            RemoveMenuStride(iMenuIndex);
                    
             if (sMessage == MORE)
             {
-                Debug((string)iPage);
+                //Debug((string)iPage);
                 //increase the page num and give new menu
                 iPage++;
                 integer thisiPagesize = iPagesize - llGetListLength(ubuttons) - 2;
@@ -581,11 +632,11 @@ default
                 {
                     iPage = 0;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth,sExtraInfo);
             }
             else if (sMessage == PREV)
             {
-                Debug((string)iPage);
+                //Debug((string)iPage);
                 //increase the page num and give new menu
                 iPage--;
 
@@ -595,16 +646,33 @@ default
 
                     iPage = (llGetListLength(items)-1)/thisiPagesize;
                 }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
             }
             else if (sMessage == BLANK)
             
             {
                 //give the same menu back
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth);
+                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
             }
             else
             {
+                if (llSubStringIndex(sExtraInfo,g_sGetAviScript+"|")==0){
+                    Debug(sExtraInfo);
+                    list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);
+                    string REQ=llList2String(lExtraInfo,1);
+                    string TYPE=llList2String(lExtraInfo,2);
+                    
+                    if (sMessage==UPMENU){
+                        llMessageLinked(LINK_SET,iAuth,"access",kAv);
+                    } else if (sMessage == "Yes") {
+                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+(string)g_kWearer, kID);
+                    } else if (sMessage == "No") {
+                        //no action
+                    } else {
+                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sMessage, kID);
+                    }
+
+                }
                 string sAnswer;
                 integer iIndex = llListFindList(ubuttons, [sMessage]);
                 if (iDigits && !~iIndex)
@@ -626,7 +694,7 @@ default
         
         if (!llGetListLength(g_lMenus))
         {
-            Debug("no active dialogs, stopping timer");
+            //Debug("no active dialogs, stopping timer");
             llSetTimerEvent(0.0);
         }
     }
