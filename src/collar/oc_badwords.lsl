@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - badwords                              //
-//                                 version 3.952                                  //
+//                                 version 3.953                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,13 +12,8 @@
 
 // SatomiAhn Initial support for llTextBox. 
 
-//if list isn't blank, open listener on channel 0, with sub's key <== only for the first badword???
-string DEFAULT = "Default";
-string g_sDefaultAnim = "~shock";
-string g_sBadWordAnim ;
-list g_lBadWords;
-string g_sPenance = "I didn't do it!";
-integer g_iListener;
+string g_sSubMenu = "Badwords";
+string g_sParentMenu = "AddOns";
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -55,6 +50,21 @@ integer DIALOG_TIMEOUT = -9002;
 //5000 block is reserved for IM slaves
 string CTYPE = "collar";
 
+string UPMENU = "BACK";
+
+//string g_sDefaultSound = "011ef7f4-40e8-28fe-4ea5-f2fda0883707";
+string g_sDefaultSound = "4546cdc8-8682-6763-7d52-2c1e67e8257d";
+string g_sNoSound = "silent" ;
+string g_sBadWordSound;
+
+string DEFAULT = "Default";
+string g_sDefaultAnim = "~shock";
+string g_sBadWordAnim ;
+
+list g_lBadWords; //if list isn't blank, open listener on channel 0, with sub's key <== only for the first badword???
+string g_sPenance = "I didn't do it!";
+integer g_iListener;
+
 key g_kWearer;
 
 key g_kDialog;
@@ -63,11 +73,8 @@ key g_kAddBadwordTBox;
 key g_kRemBadwordDialog;
 key g_kSetAnimDialog;
 key g_kSetPenanceTBox;
+key g_kSetSoundDialog;
 
-string g_sSubMenu = "Badwords";
-string g_sParentMenu = "AddOns";
-
-string UPMENU = "BACK";
 string g_sIsEnabled = "badwordson=false";
 
 //added to stop abdword anim only if it was started by using a badword
@@ -91,20 +98,14 @@ integer Enabled()
 {
     integer iIndex = llSubStringIndex(g_sIsEnabled, "=");
     string sValue = llGetSubString(g_sIsEnabled, iIndex + 1, llStringLength(g_sIsEnabled) - 1);
-    if(sValue == "true")
-    {
-        return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
+    if(sValue == "true") return TRUE;
+    else return FALSE;
 }
 
 DialogBadwords(key kID, integer iAuth)
 {
     string sText;
-    list lButtons = ["Set Penance", "Add Word", "Remove Word", "Set Animation"];
+    list lButtons = ["Set Penance", "Add Word", "Remove Word", "Set Animation", "Set Sound"];
     if(Enabled())
     {
         lButtons += ["OFF"];
@@ -115,17 +116,32 @@ DialogBadwords(key kID, integer iAuth)
         lButtons += ["ON"];
         sText += "Badwords are turned OFF.\n";
     }
+    sText += "'Set Penance' write the penance the sub has to say to get released from the animation.\n";
     sText += "'Add Word' add another badword.\n";
     sText += "'Remove Word' shows the list of badwords and allows removing them.\n";
     sText += "'Set Animation' select the animation to use as a punishment.\n";
-    sText += "'Set Penance' write the penance the sub has to say to get released from the animation.\n";
-    g_kDialog = g_kMainDialog = Dialog(kID, sText, lButtons, [UPMENU],0, iAuth);
+    sText += "'Set Sound' select the sound tto use as a punishment.\n";
+    
+    g_kDialog = g_kMainDialog = Dialog(kID, sText, lButtons, ["Settings", UPMENU],0, iAuth);
+}
+
+TboxAddBadword(key kAv, integer iAuth)
+{
+    string sText = "\n- Submit the new badword in the field below.\n- Submit a blank field to go back to "+g_sSubMenu+" menu.";
+    g_kDialog = g_kAddBadwordTBox = Dialog(kAv, sText, [], [], 0, iAuth);
 }
 
 DialogRemBadword(key kID, integer iAuth) // short subroutine, but presented as a function as it needs to be called back again after an answer
 {
     string sText = "Select a badword to remove or clear them all.";
     g_kDialog = g_kRemBadwordDialog=Dialog(kID, sText, g_lBadWords, ["Clear All", UPMENU],0, iAuth);
+}
+      
+TboxSetPenance(key kID, integer iAuth)
+{
+    string sText = "\n- Submit the new penance in the field below.\n- Submit a blank field to go back to "+g_sSubMenu+" menu.";
+    sText += "\n\n- Current penance is: " + g_sPenance;
+    g_kDialog = g_kSetPenanceTBox = Dialog(kID, sText, [], [],0, iAuth);
 }
 
 DialogSelectAnim(key kID, integer iAuth)
@@ -148,6 +164,27 @@ DialogSelectAnim(key kID, integer iAuth)
     g_kDialog = g_kSetAnimDialog = Dialog(kID, sText, lPoseList, [UPMENU],0, iAuth);
 }
 
+DialogSelectSound(key kID, integer iAuth)
+{
+    list lSoundList = [DEFAULT];
+    integer iMax = llGetInventoryNumber(INVENTORY_SOUND);
+    integer i;
+    string sName;
+    for (i=0;i<iMax;i++)
+    {
+        sName=llGetInventoryName(INVENTORY_SOUND, i);
+        //check here if the sound start with ~ or for some reason does not get a name returned (spares to check that all again in the menu ;)
+        if (sName != "" && llGetSubString(sName, 0, 0) != "~")
+        {
+            lSoundList+=[sName];
+        }
+    }
+    lSoundList+=[g_sNoSound];
+    string sText = "Current sound is: "+g_sBadWordSound+"\n\n";
+    sText += "Select a new sound to use.\n\n";
+    g_kDialog = g_kSetSoundDialog = Dialog(kID, sText, lSoundList, [UPMENU],0, iAuth);
+}
+
 DialogHelp(key kID, integer iAuth)
 {
     string sMessage = "Usage of Badwords.\n";
@@ -156,6 +193,7 @@ DialogHelp(key kID, integer iAuth)
     sMessage += "rembadword <badword> where <badword> is the word you want to remove.\n";
     sMessage += "penance <what your sub has to say to get release from the badword anim.\n";
     sMessage += "badwordsanim <anim name> , make sure the animation is inside the " + CTYPE + ".";
+    sMessage += "badwordsound <sound name> , make sure the sound is inside the " + CTYPE + ".";
     g_kDialog=Dialog(kID, sMessage, ["Ok"], [], 0, iAuth);
 }
 
@@ -229,7 +267,6 @@ string WordPrompt()
         sPrompt += llDumpList2String(llDeleteSubList(g_lBadWords, -1, -1), ", ") + ", or " + llList2String(g_lBadWords, -1);
     }
 
-
     sPrompt += "\nThe penance phrase to clear the punishment anim is '" + g_sPenance + "'.";
     return sPrompt;
 }
@@ -272,6 +309,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         Notify(kID, "Bad Words: " + llDumpList2String(g_lBadWords, ", "),FALSE);
         Notify(kID, "Bad Word Anim: " + g_sBadWordAnim,FALSE);
         Notify(kID, "Penance: " + g_sPenance,FALSE);
+        Notify(kID, "Bad Word Sound: " + g_sBadWordSound,FALSE);
     }
     else if(iNum > COMMAND_OWNER)
     {
@@ -322,13 +360,35 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_sBadWordAnim = sAnim;
                 //Debug(g_sBadWordAnim);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwordsanim=" + g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "anim=" + g_sBadWordAnim, NULL_KEY);
                 Notify(kID, "Punishment anim for bad words is now '" + g_sBadWordAnim + "'.",FALSE);
             }
             else
             {
-                Notify(kID, llList2String(lParams, 1) + " is not a valid animation name.",FALSE);
+                Notify(kID, sAnim + " is not a valid animation name.",FALSE);
             }
+        }
+        else if (sCommand == "badwordsound")
+        {
+            //Get all text after the command, strip spaces from start and end
+            string sSound = right(sStr, sCommand);
+            sSound = llStringTrim(sSound, STRING_TRIM);
+            if(sSound == DEFAULT) {}
+            else if(sSound == g_sNoSound)
+            {
+                Notify(kID, "Punishment will be silently.",FALSE);
+            }            
+            else
+            {
+                if (llGetInventoryType(sSound) != INVENTORY_SOUND)
+                {
+                    Notify(kID, sSound + " is not a valid sound name. Set to default",FALSE);
+                    sSound = DEFAULT ;
+                }
+            }            
+            g_sBadWordSound = sSound;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + g_sBadWordSound, NULL_KEY);
+            Notify(kID, "Punishment sound for badwords is now '"+g_sBadWordSound+"'.",FALSE);
         }
         else if (sCommand == "penance")
         {
@@ -394,7 +454,6 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=", NULL_KEY);
                 ListenControl();
-                //DialogBadwords(kID, iNum); This was duplicated since the dialog is called at the end of the link_message event.
                 Notify(kID, "You cleared the badword list and turned it off.",FALSE);
             }
         }
@@ -402,13 +461,17 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     return TRUE;
 }
 
+GetSettings()
+{
+    llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"badwordson",NULL_KEY);
+    llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"anim",NULL_KEY);
+    llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"sound",NULL_KEY);
+    llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"badwords",NULL_KEY);
+    llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"penance",NULL_KEY);   
+}
+
 default
-{     // no more needed
-    //  state_entry()
-    //  {
-    //      llSleep(0.8);
-    //      llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-    //  }
+{
     on_rez(integer iParam)
     {
         llResetScript();
@@ -417,15 +480,18 @@ default
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_kWearer=llGetOwner();
+        g_kWearer = llGetOwner();
         g_sBadWordAnim = g_sDefaultAnim ;
+        g_sBadWordSound = DEFAULT ;
+        llSleep(1); // not sure for need this
+        GetSettings(); // request settings from DB 
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == LM_SETTING_RESPONSE)
         {
-            list lParams = llParseString2List(sStr, ["="], []);    
+            list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
@@ -437,9 +503,13 @@ default
                     g_sIsEnabled = "badwordson" + "=" + sValue;
                     ListenControl();
                 }
-                else if (sToken == "badwordsanim")
+                else if (sToken == "anim")
                 {
                     g_sBadWordAnim = sValue;
+                }
+                else if (sToken == "sound")
+                {
+                    g_sBadWordSound = sValue;
                 }
                 else if (sToken == "badwords")
                 {
@@ -497,12 +567,7 @@ default
                     UserCommand(iAuth, "badwords off", kAv);
                     DialogBadwords(kAv, iAuth);
                 }
-                else if (sMessage == "Add Word")
-                {
-                    string sText = "\n- Submit the new badword in the field below.\n- Submit a blank field to go back to "
- + g_sParentMenu + ".";
-                    g_kDialog = g_kAddBadwordTBox = Dialog(kAv, sText, [], [], 0, iAuth);
-                }
+                else if (sMessage == "Add Word") TboxAddBadword(kAv, iAuth);
                 else if (sMessage == "Remove Word")
                 {
                     if (g_lBadWords) DialogRemBadword(kAv, iAuth);
@@ -512,15 +577,14 @@ default
                         DialogBadwords(kAv, iAuth);
                     }
                 }
-                else if (sMessage == "Set Penance")
-                {
-                    
-                    string sText = "\n- Submit the new penance in the field below.\n- Submit a blank field to go back to "
- + g_sParentMenu + ".";
-                           sText += "\n\n- Current penance is: " + g_sPenance;
-                    g_kDialog = g_kSetPenanceTBox=Dialog(kAv, sText, [], [],0, iAuth);
-                }
+                else if (sMessage == "Set Penance") TboxSetPenance(kAv, iAuth);
                 else if (sMessage == "Set Animation") DialogSelectAnim(kAv, iAuth);
+                else if (sMessage == "Set Sound") DialogSelectSound(kAv, iAuth);
+                else if (sMessage == "Settings")
+                { 
+                    UserCommand(iAuth, "settings", kAv);
+                    DialogBadwords(kAv, iAuth);
+                }
             }
             else if (kID == g_kAddBadwordTBox)
             {
@@ -545,11 +609,13 @@ default
             else if (kID == g_kSetAnimDialog)
             {
                 if (sMessage == UPMENU) {} // nothing to do
-                else
-                {
-                    UserCommand(iAuth, "badwordsanim " + sMessage, kAv);
-                }
-                // in all cases
+                else UserCommand(iAuth, "badwordsanim " + sMessage, kAv);
+                DialogBadwords(kAv, iAuth);
+            }
+            else if (kID == g_kSetSoundDialog)
+            {
+                if (sMessage == UPMENU) {} // nothing to do
+                else UserCommand(iAuth, "badwordsound " + sMessage, kAv);
                 DialogBadwords(kAv, iAuth);
             }
             else if (kID == g_kSetPenanceTBox)
@@ -566,7 +632,9 @@ default
         if (iChannel == 0)
         {
             if ((~(integer)llSubStringIndex(llToLower(sMessage), llToLower(g_sPenance))) && g_iHasSworn )
-            { //stop anim
+            {   //stop sound
+                if(g_sBadWordSound != g_sNoSound) llStopSound();
+                //stop anim
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, NULL_KEY);
                 Notify(g_kWearer, "Penance accepted.",FALSE);
                 g_iHasSworn = FALSE;
@@ -576,7 +644,13 @@ default
                 return;
             }
             else if (HasSwear(sMessage))
-            {   //start anim
+            {   //start sound
+                if(g_sBadWordSound != g_sNoSound)
+                {
+                    if(g_sBadWordSound == DEFAULT) llLoopSound( g_sDefaultSound, 1.0 );
+                    else llLoopSound( g_sBadWordSound, 1.0 );
+                }
+                //start anim
                 llMessageLinked(LINK_SET, ANIM_START, g_sBadWordAnim, NULL_KEY);
                 llWhisper(0, llList2String(llParseString2List(llKey2Name(g_kWearer), [" "], []), 0) + " has said a bad word and is being punished.");
                 g_iHasSworn = TRUE;
