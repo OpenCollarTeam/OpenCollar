@@ -400,7 +400,7 @@ ClearUser(key kRCPT)
 
 Debug(string sStr)
 {
-    llOwnerSay(llGetScriptName() + ": " + sStr);
+    //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
 
 integer InSim(key id)

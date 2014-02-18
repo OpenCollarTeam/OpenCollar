@@ -13,7 +13,6 @@ ITEM|~PostureOverride
 SCRIPT|OpenCollar - cleanup
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
-SCRIPT|OpenCollar - getavi
 SCRIPT|OpenCollar - listener
 SCRIPT|OpenCollar - dialog
 SCRIPT|OpenCollar - update
