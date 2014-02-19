@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.952                                  //
+//                                 version 3.953                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -43,7 +43,7 @@ key wearer;
 
 string g_sUpdaterName="OpenCollar Updater";
 string g_sRelease_version;
-string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Keraxic/51/192/1234 http://maps.secondlife.com/secondlife/Qandico/220/157/2600 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
+string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Keraxic/51/192/1234 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
