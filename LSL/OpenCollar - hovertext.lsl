@@ -302,7 +302,7 @@ default
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == SET)
                 {
-                    g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + sFeatureName + ".", [], [], 0, iAuth);                    
+                    g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);                    
                 }
                 if (sMessage == UPMENU)
                 {
