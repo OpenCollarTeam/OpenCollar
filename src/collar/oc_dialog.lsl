@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.953                                  //
+//                                 version 3.954                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -453,7 +453,7 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == FIND_AGENT) {
-            Debug("FIND_AGENT:"+sStr);
+            //Debug("FIND_AGENT:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             if (llList2String(lParams, 0) == g_sGetAviScript){
                 //fixme: REQ(params[1]), 
@@ -494,13 +494,13 @@ default
                 }
             }
             else {
-                Debug(sStr);
+                //Debug(sStr);
             }
         } else 
         if (iNum == DIALOG)
         {//give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
-            Debug("DIALOG:"+sStr);
+            //Debug("DIALOG:"+sStr);
             
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
@@ -656,8 +656,14 @@ default
             }
             else
             {
+                string sAnswer;
+                integer iIndex = llListFindList(ubuttons, [sMessage]);
+                if (iDigits && !~iIndex)
+                {
+                    integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
+                    sAnswer = llList2String(items, iBIndex);
+                }
                 if (llSubStringIndex(sExtraInfo,g_sGetAviScript+"|")==0){
-                    Debug(sExtraInfo);
                     list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);
                     string REQ=llList2String(lExtraInfo,1);
                     string TYPE=llList2String(lExtraInfo,2);
@@ -665,20 +671,13 @@ default
                     if (sMessage==UPMENU){
                         llMessageLinked(LINK_SET,iAuth,"access",kAv);
                     } else if (sMessage == "Yes") {
-                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+(string)g_kWearer, kID);
+                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+(string)g_kWearer, kMenuID);
                     } else if (sMessage == "No") {
                         //no action
                     } else {
-                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sMessage, kID);
+                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
                     }
 
-                }
-                string sAnswer;
-                integer iIndex = llListFindList(ubuttons, [sMessage]);
-                if (iDigits && !~iIndex)
-                {
-                    integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
-                    sAnswer = llList2String(items, iBIndex);
                 }
                 else sAnswer = sMessage;
                 llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
