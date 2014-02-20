@@ -1,6 +1,7 @@
-Issue: 20140219.1
+Issue: 20140220.1
 
 OpenCollar BETA Channel
+3.954 HOTFIX
 FIXED: #62 #76 #77 #78 #79 #80
 We are looking at: #75
 Thanks for participating!
