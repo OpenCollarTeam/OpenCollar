@@ -1,5 +1,3 @@
-Issue: 20140208.1
+Issue: 20140221.1
 
-BETA Channel re-launched!
-Read more on our blog at:
-http://www.opencollar.at/
+Some of you have been getting a region full message when trying to reach the Temple of the Collar. A land speculator in the region has filled his parcel with bots after we refused to buy the land at his price. We apologize for the inconvenience. You should still be able to get to the Temple after a few tries. The long term solution to this and issues like it is a full private region. That is currently beyond our means but we are working on it actively. More at http://www.opencollar.at/
