@@ -129,7 +129,10 @@ PartnerMenu(key kID, list kAvs, integer iAuth)
 
 CoupleAnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nChoose an animation to play.\n\nSTOP: release the animation\n";
+    string sPrompt = "\n\nChoose an animation to play.\nAnmiations will play " ;    
+    if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
+    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";    
+    sPrompt += "\nSTOP: release the animation\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
@@ -137,7 +140,9 @@ CoupleAnimMenu(key kID, integer iAuth)
 
 TimerMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nChoose the duration for couple animations.";
+    string sPrompt = "\n\nChoose the duration for couple animations.\nCurrent duration: ";
+    if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
+    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
     list lButtons = ["10", "20", "30"];
     lButtons += ["40", "50", "60"];
     lButtons += ["90", "120", "ENDLESS"];
