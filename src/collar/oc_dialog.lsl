@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.954                                  //
+//                                 version 3.955                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -663,8 +663,9 @@ default
                     integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
                     sAnswer = llList2String(items, iBIndex);
                 }
+                else sAnswer = sMessage;
                 if (llSubStringIndex(sExtraInfo,g_sGetAviScript+"|")==0){
-                    list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);
+                    list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);    //unpack info for avi dialog
                     string REQ=llList2String(lExtraInfo,1);
                     string TYPE=llList2String(lExtraInfo,2);
                     
@@ -679,7 +680,6 @@ default
                     }
 
                 }
-                else sAnswer = sMessage;
                 llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }
         }
