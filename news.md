@@ -1,3 +1,3 @@
-Issue: 20140221.1
+Issue: 20140224.1
 
-Some of you have been getting a region full message when trying to reach the Temple of the Collar. A land speculator in the region has filled his parcel with bots after we refused to buy the land at his price. We apologize for the inconvenience. You should still be able to get to the Temple after a few tries. The long term solution to this and issues like it is a full private region. That is currently beyond our means but we are working on it actively. More at http://www.opencollar.at/
+Good news for OpenCollar! After many trials with mainland parcels where we do not have full control, we set sail and made landfall in the private region Glint, a land owned by the makers of Mama Allpa, who generously offered us haven there. In Glint OpenCollar has full estate rights and much better security. For a brief while, our legacy Temple on the mainland will remain open. As always we offer full transparency in our project and you can already check out the new spot. www.opencollar.at
