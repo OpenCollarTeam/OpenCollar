@@ -824,9 +824,10 @@ default
     {
         //only respond to owner, secowner, group, wearer, and "everyone" for unleashing themselves
         if (UserCommand(iNum, sMessage, kMessageID)) return;
-        else if (iNum == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST && sMessage == BUTTON_PARENTMENU)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
