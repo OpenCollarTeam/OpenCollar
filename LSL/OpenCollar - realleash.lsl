@@ -220,30 +220,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 
 //===============================================================================
-//= parameters   :    none
-//=
-//= return        :    key random uuid
-//=
-//= description  :    random key generator, not complety unique, but enough for use in dialogs
-//=
-//===============================================================================
-
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    integer iLength = 16;
-    string sOut;
-    integer n;
-    for (n = 0; n < 8; n++) {
-        integer iIndex = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
-    } 
-    Debug("ShortKey generation");
-    return (key)(sOut + "-0000-0000-0000-000000000000");
-}
-
-
-//===============================================================================
 //= parameters   :    key   kRCPT  recipient of the dialog
 //=                   string  sPrompt    dialog prompt
 //=                   list  lChoices    true dialog buttons
@@ -258,7 +234,7 @@ key ShortKey()
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-    key kID = ShortKey();
+    key kID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`")+"|"+(string) iAuth, kID);
     return kID;
 }
