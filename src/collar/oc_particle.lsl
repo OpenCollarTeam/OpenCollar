@@ -502,8 +502,8 @@ default
         StopParticles(TRUE);
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
-        llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
+        //llSleep(1.0);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
         g_kWearer = llGetOwner();
         //llOwnerSay((string)llGetFreeMemory());
         SetTexture("chain", NULLKEY);
@@ -582,7 +582,7 @@ default
                 }
             }
         }
-        else if (iNum == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
         }
