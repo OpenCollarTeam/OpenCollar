@@ -398,7 +398,7 @@ DensityMenu(key kIn, integer iAuth)
     list lButtons = ["Default", "+", "-"];
     g_sCurrentMenu = L_DENSITY;
     string sPrompt = "\n\nChoose '+' for more and '-' for less particles\n'Default' to revert to the default\n\nCurrent Density = ";
-    sPrompt += Float2String(-g_fBurstRate);// BurstRate is opposite the implied effect of density
+    sPrompt += Float2String(-g_fBurstRate) + "\nDefault: -0.04" ;// BurstRate is opposite the implied effect of density
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -407,7 +407,7 @@ GravityMenu(key kIn, integer iAuth)
     list lButtons = ["Default", "+", "-", "noGravity"];
     g_sCurrentMenu = L_GRAVITY;
     string sPrompt = "\n\nChoose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default\n\nCurrent Gravity = ";
-    sPrompt += Float2String(g_vLeashGravity.z) + "\nDefault: 1.0";
+    sPrompt += Float2String(g_vLeashGravity.z) + "\nDefault: -1.0";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -497,8 +497,7 @@ default
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_lDefaultSettings = [L_TEXTURE, g_sParticleTexture, L_SIZE, "<0.22, 0.17, 0.0>",
-        L_COLOR, "<1,1,1>", L_DENSITY, "0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1"];   // CHANGED DEFAULT SIZE FOR ST TO <0.22, 0.17, 0.0>
+        g_lDefaultSettings = [L_TEXTURE, "chain", L_SIZE, "<0.22, 0.17, 0.0>", L_COLOR, "<1,1,1>", L_DENSITY, "-0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1", L_LIFE, "3.0"]; // CHANGED DEFAULT SIZE FOR ST TO <0.22, 0.17, 0.0>
         StopParticles(TRUE);
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
