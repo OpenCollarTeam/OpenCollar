@@ -904,7 +904,7 @@ default
                     if (llToLower(sValue) == "off") g_bParticleGlow = FALSE;
                     else g_bParticleGlow = TRUE;
                 }
-                SaveDefaultSettings(sToken, sValue);
+                //SaveDefaultSettings(sToken, sValue); // no change particle defaultsetting!
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             // in case wearer is currently leashed
