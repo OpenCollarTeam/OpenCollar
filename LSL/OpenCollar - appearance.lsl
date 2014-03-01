@@ -422,8 +422,8 @@ default
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
