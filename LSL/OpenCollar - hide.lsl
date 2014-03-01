@@ -259,22 +259,6 @@ integer AppLocked(key kID)
     }
 }
 
-RequestSettings()
-{
-    // restore settings from DB after reset script
-    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sAppLockToken, NULL_KEY);    
-    //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript+"all", NULL_KEY); //reserved for settings w. "all"
-    
-    // request settings for all Elements
-    integer n;
-    integer iStop = llGetListLength(g_lElements);
-    for (n = 0; n < iStop; n++)
-    {
-        string sElement = llList2String(g_lElements, n);
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + sElement, NULL_KEY);
-    }
-}
-
 // Get Group or Token, 0=Group, 1=Token, 2=Value
 string SplitTokenValue(string in, integer slot)
 {
@@ -294,10 +278,6 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         BuildElementList();
-        //register menu button
-        llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);        
-        RequestSettings();
     }
 
     on_rez(integer iParam)
