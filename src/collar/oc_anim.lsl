@@ -601,7 +601,7 @@ default
 
         CreateAnimList();
 
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, NULL_KEY);
     }
 
@@ -660,6 +660,7 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sRootMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
