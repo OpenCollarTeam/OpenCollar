@@ -460,7 +460,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     }
     return TRUE;
 }
-
+/*
 GetSettings()
 {
     llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"badwordson",NULL_KEY);
@@ -469,7 +469,7 @@ GetSettings()
     llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"badwords",NULL_KEY);
     llMessageLinked(LINK_SET,LM_SETTING_REQUEST,g_sScript+"penance",NULL_KEY);   
 }
-
+*/
 default
 {
     on_rez(integer iParam)
@@ -483,8 +483,8 @@ default
         g_kWearer = llGetOwner();
         g_sBadWordAnim = g_sDefaultAnim ;
         g_sBadWordSound = DEFAULT ;
-        llSleep(1); // not sure for need this
-        GetSettings(); // request settings from DB 
+        //llSleep(1); // not sure for need this
+        //GetSettings(); // request settings from DB 
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -534,12 +534,9 @@ default
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
             ListenControl();
         }
-        else if (iNum == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            if (sStr == g_sParentMenu)
-            {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-            }
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
 
         else if (iNum == DIALOG_RESPONSE)
