@@ -852,6 +852,7 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)           
         { // our parent menu requested to receive buttons, so send ours
             llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            lButtons = [] ; // flush submenu buttons
             llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE) // a button is sned ot be added to a plugin
