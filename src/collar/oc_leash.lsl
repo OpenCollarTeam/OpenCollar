@@ -827,6 +827,7 @@ default
         else if (iNum == MENUNAME_REQUEST && sMessage == BUTTON_PARENTMENU)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
+            g_lButtons = []; // flush submenu buttons 
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
         }
         else if (iNum == MENUNAME_RESPONSE)
