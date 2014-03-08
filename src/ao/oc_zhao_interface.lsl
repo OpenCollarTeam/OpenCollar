@@ -163,6 +163,9 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer SUBMENU = 3002;
+
+string MORE = "►";
+string PREV = "◄";
 string UPMENU = "BACK";
 list menuids;//three strided list of avkey, dialogid, and menuname
 integer menustride = 3;
@@ -174,24 +177,10 @@ string QUICKMENU = "FirstMenu";
 
 // CODE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-key ShortKey()
-{    // just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string chars = "0123456789abcdef";
-    integer length = 16;
-    string out;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer index = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        out += llGetSubString(chars, index, index);
-    }
-     
-    return (key)(out + "-0000-0000-0000-000000000000");
-}
 
 Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page, string menu)
 {
-    key id = ShortKey();
+    key id = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page + "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
 
     list newstride = [rcpt, id, menu];
@@ -548,7 +537,7 @@ default {
                     else if ( _message == "Next Stand" ) 
                     {
                         llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_NEXTSTAND", _id);
-                        DoMenu(_id,page);
+                        //DoMenu(_id,page);
                     }
                     else if ( _message == "Sits" ) 
                     {
@@ -585,7 +574,7 @@ default {
                         listenState = 2;
                         string text = "Select stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
                         
-                        Dialog(_id, text, ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"], [], 0, "StandTimesMenu");
+                        Dialog(_id, text, ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"], [UPMENU], 0, "StandTimesMenu");
     
                     }
                     else if ( _message == LOCK)
@@ -633,12 +622,9 @@ default {
                 }
                 else if (menutype == "StandTimesMenu")
                 {
-                    if (_message == UPMENU)
-                    {
-                        DoMenu(_id,0);
-                    }
-                    llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_STANDTIME|" + _message, _id);
-                    DoMenu(_id,page);
+                    if (_message == UPMENU) DoMenu(_id,0);
+                    else llMessageLinked(LINK_THIS, COMMAND_AUTH, "ZHAO_STANDTIME|" + _message, _id);
+                    //DoMenu(_id,page);
                 }
                 else if (menutype == QUICKMENU)
                 {
