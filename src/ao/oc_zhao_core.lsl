@@ -331,6 +331,9 @@ key Owner = NULL_KEY;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
+
+string UPMENU = "BACK";
+
 list menuids;//three strided list of avkey, dialogid, and menuname
 integer menustride = 3;
 
@@ -363,24 +366,11 @@ string license = "OpenCollar AO License";
 // CODE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-key ShortKey()
-{//just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string chars = "0123456789abcdef";
-    integer length = 16;
-    string out;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer index = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        out += llGetSubString(chars, index, index);
-    }
-     
-    return (key)(out + "-0000-0000-0000-000000000000");
-}
+
 
 key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
 {
-    key id = ShortKey();
+    key id = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page +
  "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
     return id;
@@ -618,7 +608,7 @@ doMultiAnimMenu(key _id, integer _animIndex, string _animType, string _currentAn
     }
     
     string text = "Select the " + _animType + " animation to use:\n\nCurrently: " + _currentAnim + animNames + "\n"; 
-    list utility = [];
+    list utility = [UPMENU];
     key menuid = Dialog(_id, text, buttons, utility, 0);
     
     // UUID , Menu ID, Menu
@@ -877,6 +867,11 @@ default {
                     if ( listenState == 1 ) {
                         // Dialog enhancement - Fennec Wind
                         // Note that this is within one 'overrides' entry
+                        if(_message == UPMENU)
+                        {
+                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            return;
+                        }
                         curSitAnim = findMultiAnim( sittingIndex, (integer)_message - 1 );
                         if ( lastAnimState == "Sitting" ) {
                             startNewAnimation( curSitAnim, sittingIndex, lastAnimState );
@@ -888,6 +883,11 @@ default {
                     } else if ( listenState == 2 ) {
                         // Dialog enhancement - Fennec Wind
                         // Note that this is within one 'overrides' entry
+                        if(_message == UPMENU)
+                        {
+                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            return;
+                        }
                         curWalkAnim = findMultiAnim( walkingIndex, (integer)_message - 1 );
                         if ( lastAnimState == "Walking" ) {
                             startNewAnimation( curWalkAnim, walkingIndex, lastAnimState );
@@ -899,6 +899,11 @@ default {
                     } else if ( listenState == 3 ) {
                         // Dialog enhancement - Fennec Wind
                         // Note that this is within one 'overrides' entry
+                        if(_message == UPMENU)
+                        {
+                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            return;
+                        }
                         curGsitAnim = findMultiAnim( sitgroundIndex, (integer)_message - 1 );
                         // Lowercase 'on' - that's the anim name in SL
                         if (( lastAnimState == "Sitting on Ground" ) || ( lastAnimState == "Standing" && sitAnywhereOn ) ) {
