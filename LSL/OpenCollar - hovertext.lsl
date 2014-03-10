@@ -269,7 +269,7 @@ default
         GetTextPrimText() ;
         g_vColor = GetTextPrimColor();
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
+        //llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
     }
     
     on_rez(integer start)
@@ -286,7 +286,7 @@ default
         if (UserCommand(iNum, sStr, kID)) 
         {        
         }
-        else if (iNum == MENUNAME_REQUEST)
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
         }
