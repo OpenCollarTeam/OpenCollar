@@ -89,16 +89,17 @@ string DESIGN_ID;
 list DESIGN_SETTINGS;
 list USER_SETTINGS;
 integer USER_PREF = FALSE; // user switch
-integer SCRIPTCOUNT; // number of scripts, to resend if the count changes
 
 integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
 
+/*
 Debug (string str)
 {
-    //llOwnerSay(llGetScriptName() + ": " + str);
+    llOwnerSay(llGetScriptName() + ": " + str);
 }
+*/
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
@@ -382,6 +383,7 @@ DumpCache(key id)
 
 SendValues()
 {
+    //Debug("Sending all settings");
     //loop through and send all the settings
     integer n = 0;
     string tok;
@@ -484,7 +486,6 @@ default
         if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;
         defaultsline = 0;
         defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-        SCRIPTCOUNT=llGetInventoryNumber(INVENTORY_SCRIPT);
         card_key = llGetInventoryKey(defaultscard);
         DESIGN_ID = llGetObjectDesc();
         integer i = llSubStringIndex(DESIGN_ID, "~");
@@ -681,7 +682,7 @@ default
             // timeout from menu system, you do not have to react on this, but you can
             if (id == g_kMenuID)
             {
-                Debug("The user was to slow or lazy, we got a timeout!");
+                //Debug("The user was to slow or lazy, we got a timeout!");
             }
         }
     }
@@ -691,13 +692,6 @@ default
         if (change & CHANGED_OWNER) llResetScript();
         if (change & CHANGED_INVENTORY)
         {
-            if (SCRIPTCOUNT != llGetInventoryNumber(INVENTORY_SCRIPT))
-            {
-                // number of scripts changed
-                // resend values and store new number
-                SendValues();
-                SCRIPTCOUNT=llGetInventoryNumber(INVENTORY_SCRIPT);
-            }
             if (llGetInventoryKey(defaultscard) != card_key)
             {
                 // the defaultsettings card changed.  Re-read it.
@@ -705,6 +699,8 @@ default
                 defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
                 card_key = llGetInventoryKey(defaultscard);
             }
+            llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
+            SendValues();
         }
     }
 }
