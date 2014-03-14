@@ -343,8 +343,8 @@ default
             }
         }
         // we need to unify the initialization of the menu system for 3.5
-        llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llSleep(1.0);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
