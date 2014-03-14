@@ -826,9 +826,9 @@ default
         // because we can easily flood the 64 event limit in LSL's event queue
         // if all the scripts send a ton of link messages at the same time on
         // startup.
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sOwnersToken, "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sSecOwnersToken, "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sBlackListToken, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sOwnersToken, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sSecOwnersToken, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + g_sBlackListToken, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
