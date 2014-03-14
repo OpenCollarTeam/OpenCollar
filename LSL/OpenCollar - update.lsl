@@ -454,6 +454,19 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == "Global_CType") CTYPE = sValue;
         }
+        // need to answer the request version
+        else if (num == LM_SETTING_REQUEST)
+        {
+            list lParams = llParseString2List(str, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            //string sValue = llList2String(lParams, 1);
+            if (sToken == "collarversion") 
+            {
+                if ((float)g_sRelease_version > (float)my_version)
+                     llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=0","");
+                else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=1","");
+            }
+        }
     }
 
     listen(integer channel, string name, key id, string message)
