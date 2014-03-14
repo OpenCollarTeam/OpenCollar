@@ -285,12 +285,12 @@ DoMenu(key keyID, integer iAuth)
     if (g_iBoth)
     {
         sPrompt += "\n When BOTH the online and realtime timer go off:";
-        lMyButtons += ["(*)bothtime"];
+        lMyButtons += ["☒ bothtime"];
     }
     else
     {
         sPrompt += "\n When EITHER the online or realtime timer go off:";
-        lMyButtons += ["( )bothtime"];
+        lMyButtons += ["☐ bothtime"];
     }
     if (g_iRealRunning || g_iOnRunning)
     {
@@ -303,32 +303,32 @@ DoMenu(key keyID, integer iAuth)
     if (g_iUnlockCollar)
     {
         sPrompt += "\n\t the " + g_sToyName + " WILL be unlocked";
-        lMyButtons += ["(*)unlock"];
+        lMyButtons += ["☒ unlock"];
     }
     else
     {
         sPrompt += "\n\t the " + g_sToyName + " will NOT be unlocked";
-        lMyButtons += ["( )unlock"];
+        lMyButtons += ["☐ unlock"];
     }
     if (g_iUnleash)
     {
         sPrompt += "\n\t the " + g_sToyName + " WILL be unleashed";
-        lMyButtons += ["(*)unleash"];
+        lMyButtons += ["☒ unleash"];
     }
     else
     {
         sPrompt += "\n\t the " + g_sToyName + " will NOT be unleashed";
-        lMyButtons += ["( )unleash"];
+        lMyButtons += ["☐ unleash"];
     }
     if (g_iClearRLVRestions)
     {
         sPrompt += "\n\t the RLV restions WILL be cleared";
-        lMyButtons += ["(*)clearRLV"];
+        lMyButtons += ["☒ clearRLV"];
     }
     else
     {
         sPrompt += "\n\t the RLV restions will NOT be cleared";
-        lMyButtons += ["( )clearRLV"];
+        lMyButtons += ["☐ clearRLV"];
     }
 
     llListSort(g_lLocalButtons, 1, TRUE); // resort menu buttons alphabetical
@@ -491,17 +491,17 @@ integer UserCommand(integer iNum, string sStr, key kID)
             TimerWhentOff();
             DoMenu(kID, iNum);
         }
-        else if (sMsg == "(*)bothtime")
+        else if (sMsg == "☒ bothtime")
         {
             g_iBoth = FALSE;
             DoMenu(kID, iNum);
         }
-        else if (sMsg == "( )bothtime")
+        else if (sMsg == "☐ bothtime")
         {
             g_iBoth = TRUE;
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="(*)unlock")
+        else if(sMsg=="☒ unlock")
         {
             if (iNum == COMMAND_OWNER) g_iUnlockCollar=0;
             else
@@ -510,7 +510,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="( )unlock")
+        else if(sMsg=="☐ unlock")
         {
             if(iNum == COMMAND_OWNER) g_iUnlockCollar=1;
             else
@@ -519,7 +519,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             DoMenu(kID, iNum);
          }
-        else if(sMsg=="(*)clearRLV")
+        else if(sMsg=="☒ clearRLV")
         {
             if(iNum == COMMAND_WEARER)
             {
@@ -528,7 +528,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else g_iClearRLVRestions=0;
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="( )clearRLV")
+        else if(sMsg=="☐ clearRLV")
         {
             if(iNum == COMMAND_WEARER)
             {
@@ -537,7 +537,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else g_iClearRLVRestions=1;
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="(*)unleash")
+        else if(sMsg=="☒ unleash")
         {
             if(iNum <= g_iWhoCanChangeLeash) g_iUnleash=0;
             else
@@ -546,7 +546,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             DoMenu(kID, iNum);
         }
-        else if(sMsg=="( )unleash")
+        else if(sMsg=="☐ unleash")
         {
             if(iNum <= g_iWhoCanChangeLeash) g_iUnleash=1;
             else
@@ -716,13 +716,12 @@ default
         llWhisper(g_iInterfaceChannel, "timer|sendtimers");
 
         //end of timekeeper
-        //g_kWearer=llGetOwner();
 
         // sleep a sceond to allow all scripts to be initialized
-        llSleep(1.0);
+        //llSleep(1.0);
         // send reequest to main menu and ask other menus if the wnt to register with us
-        llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-        llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         
         //set settings
         g_iUnlockCollar=0;
@@ -850,14 +849,13 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == "Global_locked") g_iCollarLocked=(integer)sValue;
         }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            // our parent menu requested to receive buttons, so send ours
-        {
-
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)           
+        { // our parent menu requested to receive buttons, so send ours
             llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            lButtons = [] ; // flush submenu buttons
+            llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
         }
-        else if (iNum == MENUNAME_RESPONSE)
-            // a button is sned ot be added to a plugin
+        else if (iNum == MENUNAME_RESPONSE) // a button is sned ot be added to a plugin
         {
             list lParts = llParseString2List(sStr, ["|"], []);
             if (llList2String(lParts, 0) == g_sSubMenu)
@@ -870,8 +868,7 @@ default
                 }
             }
         }
-        else if (iNum == MENUNAME_REMOVE)
-            // a button is sned ot be added to a plugin
+        else if (iNum == MENUNAME_REMOVE) // a button is sned ot be added to a plugin
         {
             integer iIndex;
             list lParts = llParseString2List(sStr, ["|"], []);
