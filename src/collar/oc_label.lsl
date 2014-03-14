@@ -425,9 +425,9 @@ default
         SetOffsets(NULL_KEY);
         g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
         //no more needed
-        llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
+        //llSleep(1.0);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
     }
 
     on_rez(integer iNum)
@@ -437,8 +437,6 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-
-        
         if ( UserCommand(iNum, sStr, kID) ) {}        
         else if (iNum == LM_SETTING_RESPONSE)
         {
