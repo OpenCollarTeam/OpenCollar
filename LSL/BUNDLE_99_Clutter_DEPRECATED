@@ -1,14 +1,14 @@
 SCRIPT|OpenCollar - getavi
 SCRIPT|OpenCollar - interface
-SCRIPT|OpenCollar - keyholder
-SCRIPT|OpenCollar - keyholder plugin
 SCRIPT|OpenCollar - remoteserver
 SCRIPT|OpenCollar - anim/pose
 SCRIPT|OpenCollar - cmdupdate
 SCRIPT|OpenCollar - techlabel
 SCRIPT|OpenCollar - BMC
+SCRIPT|OpenCollar - realleash
 SCRIPT|OpenCollar - real leash - 0.1
 SCRIPT|OpenCollar - real leash - 0.2
+ITEM|OpenCollar Updater
 ITEM|Ball&Chain
 ITEM|brushedmetal-hshaded-contrasty
 ITEM|brushedmetal-hshaded
