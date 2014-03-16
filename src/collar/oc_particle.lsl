@@ -175,7 +175,8 @@ string g_sParticleTexture = "chain";
 string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
 float g_fLeashLength;
 vector g_vLeashColor = <1,1,1>;
-vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
+//vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
+vector g_vLeashSize = <0.07, 0.07, 1.0>;    // CHANGED back
 integer g_bParticleGlow = TRUE;
 float g_fParticleAge = 1.0;
 float g_fParticleAlpha = 1.0;
