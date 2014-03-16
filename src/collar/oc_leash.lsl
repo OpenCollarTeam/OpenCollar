@@ -475,7 +475,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             
         } else if (sMessage == "giveholder" || sMessage == "give holder") {
             llGiveInventory(kMessageID, "Leash Holder");
-            if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
+            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
         } else if (sMessage == "givepost" || sMessage == "give post") {
             llGiveInventory(kMessageID, "OpenCollar Post");
@@ -500,6 +500,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 llRequestPermissions(g_kWearer, PERMISSION_TAKE_CONTROLS);
                 llOwnerSay(llKey2Name(kMessageID) + " commanded you to stay in place, you cannot move until the command is revoked again.");
                 Notify(kMessageID, "You commanded " + g_sWearer + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
+                if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
             
         } else if ((sMessage == "unstay" || sMessage == "move") && g_iStay) {
@@ -508,6 +509,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 llReleaseControls();
                 llOwnerSay("You are free to move again.");
                 Notify(kMessageID,"You allowed " + g_sWearer + " to move freely again.", FALSE);
+                if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
     
         } else if (sComm == "realleash") {
@@ -626,7 +628,7 @@ default
         llMinEventDelay(0.3);
         
         DoUnleash();
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY); //no need 
     }
     
     on_rez(integer start_param) {
@@ -644,6 +646,7 @@ default
         if (UserCommand(iNum, sMessage, kMessageID, FALSE)) return;
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
+            g_lButtons = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
         } else if (iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sMessage, ["|"], []);
