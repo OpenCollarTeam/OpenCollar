@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvrelay                              //
-//                                 version 3.934                                  //
+//                                 version 3.955                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -837,7 +837,7 @@ default
                     else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
                     else if (sMsg=="Help")
                     {
-                        llGiveInventory(kAv,"OpenCollar RLV Relay Help");
+                        llGiveInventory(kAv,"OpenCollar Guide");
                         Menu(kAv, iAuth);
                     }
                     else if (sMsg==UPMENU)

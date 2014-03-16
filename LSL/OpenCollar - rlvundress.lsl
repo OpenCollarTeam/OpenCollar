@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvundress                             //
-//                                 version 3.950                                  //
+//                                 version 3.955                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -29,8 +29,8 @@ list g_lRLVcmds = ["attach","detach","remoutfit", "addoutfit","remattach","addat
 integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
 string SMARTON="☐ SmartStrip";
 string SMARTOFF = "☒ SmartStrip";
-string SMARTHELP = "#RLV Help";
-string g_sSmartHelpCard = "How to set up your #RLV and use SmartStrip";
+string SMARTHELP = "Help";
+string g_sSmartHelpCard = "OpenCollar Guide";
 string g_sSmartToken="smartstrip";
 //key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
 
@@ -825,7 +825,7 @@ default
                     else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
                     else if (sMessage == SMARTON) { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
                     else if (sMessage == SMARTOFF) { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
-                    else if (sMessage == "#RLV Help") { llGiveInventory(kAv,g_sSmartHelpCard); MainMenu(kAv, iAuth);}
+                    else if (sMessage == "Help") { llGiveInventory(kAv,g_sSmartHelpCard); MainMenu(kAv, iAuth);}
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1)
                     {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
