@@ -330,18 +330,26 @@ string GetDefaultSetting(string sSetting)
 // Added bSave as a boolean, to make this a more versatile wrapper
 SetTexture(string sIn, key kIn)
 {
-    g_sParticleTexture = sIn;
-    if (llToLower(g_sParticleTexture) == "noleash")
-    {
-        g_bInvisibleLeash = TRUE;
-    }
-    else
-    {
-        g_bInvisibleLeash = FALSE;
-    }
-    debug("particleTexture= " + sIn);
-    g_sParticleTextureID = llGetInventoryKey(sIn);
-    if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
+    if (sIn=="chain"){
+        g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
+    } else if (sIn=="rope"){
+        g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
+    } else if (sIn=="totallytransparent"){
+        g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
+    } else {
+        g_sParticleTexture = sIn;
+        if (llToLower(g_sParticleTexture) == "noleash")
+        {
+            g_bInvisibleLeash = TRUE;
+        }
+        else
+        {
+            g_bInvisibleLeash = FALSE;
+        }
+        debug("particleTexture= " + sIn);
+        g_sParticleTextureID = llGetInventoryKey(sIn);
+        if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
+    }        
     debug("particleTextureID= " + (string)g_sParticleTextureID);
     if (kIn)
     {
@@ -448,7 +456,7 @@ ColorMenu(key kIn, integer iAuth)
 
 TextureMenu(key kIn, integer iAuth)
 {
-    list lButtons = ["Default"];
+    list lButtons = ["Default", "chain","rope"];
     integer iLoop;
     string sName;
     integer iCount = llGetInventoryNumber(0);
