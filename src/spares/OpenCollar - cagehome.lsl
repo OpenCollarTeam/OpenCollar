@@ -457,18 +457,7 @@ DoMenu(key kID, integer iAuth) {
         "\n" +
         "\n";
 
-    
-    // formerly function ShortKey():
-    //
-    // just pick 8 random hex digits and pad the rest with 0. Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    string sOut;
-    integer n;
-    for (n = 0; n < 8; ++n) {
-        integer iIndex = (integer)llFrand(16); // yes this is correct; an integer cast rounds towards 0. See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
-    }
-    g_kMenuID = (key)(sOut + "-0000-0000-0000-000000000000");
+    g_kMenuID = llGenerateKey();
 
     llMessageLinked(LINK_THIS, DIALOG, 
         (string)kID + 
