@@ -161,9 +161,9 @@ integer MinMaxUnscaled(vector vSize, float fScale)
     {
         if (vSize.x >= 10.0)
             return TRUE;
-        if (vSize.x >= 10.0)
+        if (vSize.y >= 10.0)
             return TRUE;
-        if (vSize.x >= 10.0)
+        if (vSize.z >= 10.0)
             return TRUE;
     }
     return FALSE;
@@ -184,9 +184,9 @@ integer MinMaxScaled(vector vSize, float fScale)
     {
         if (vSize.x > 10.0)
             return TRUE;
-        if (vSize.x > 10.0)
+        if (vSize.y > 10.0)
             return TRUE;
-        if (vSize.x > 10.0)
+        if (vSize.z > 10.0)
             return TRUE;
     }
     return FALSE;
@@ -454,11 +454,11 @@ default
                 }
                 else DoMenu(kID, iNum);
             }
-            else if (sStr == "refreshmenu")
+            /*else if (sStr == "refreshmenu")
             {
                 g_lButtons = [];
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-            }
+            }*/
             else if (sStr == "appearance")
             {
                 if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
