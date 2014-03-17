@@ -475,7 +475,7 @@ default{
         llSleep(1.0);
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "on", NULL_KEY);
         // Ensure that menu script knows we're here.
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
