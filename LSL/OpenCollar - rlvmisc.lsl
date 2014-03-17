@@ -132,7 +132,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         }
     }
 }
-Menu(key kID, integer page, integer iAuth)
+Menu(key kID, integer iPage, integer iAuth)
 {
     if (!g_iRLVOn)
     {
@@ -182,7 +182,7 @@ Menu(key kID, integer page, integer iAuth)
     //give an Allow All button
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
-    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page, iAuth);
+    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage, iAuth);
 }
 
 UpdateSettings()
