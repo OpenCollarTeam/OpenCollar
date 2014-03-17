@@ -132,7 +132,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         }
     }
 }
-Menu(key kID, integer iAuth)
+Menu(key kID, integer page, integer iAuth)
 {
     if (!g_iRLVOn)
     {
@@ -182,7 +182,7 @@ Menu(key kID, integer iAuth)
     //give an Allow All button
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
-    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page, iAuth);
 }
 
 UpdateSettings()
@@ -248,7 +248,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     //added for chat command for direct menu acceess
     if (llToLower(sStr) == llToLower(g_sSubMenu) || sStr == "menu " + g_sSubMenu)
     {
-        Menu(kID, iNum);
+        Menu(kID, 0, iNum);
     }
     //do simple pass through for chat commands
 
@@ -412,7 +412,7 @@ default
                             sOut += llList2String(g_lRLVcmds, n) + "=" + ONOFF;
                         }
                         UserCommand(iAuth, sOut, kAv);
-                        Menu(kAv, iAuth);
+                        Menu(kAv, iPage, iAuth);
                     }
                     else if (iIndex != -1)
                     {
@@ -428,7 +428,7 @@ default
                         }
                         //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
                         UserCommand(iAuth, sOut, kAv);
-                        Menu(kAv, iAuth);
+                        Menu(kAv, iPage, iAuth);
                     }
                     else
                     {
