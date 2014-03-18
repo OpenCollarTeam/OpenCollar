@@ -502,11 +502,11 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        integer i;
-        for (i=0;i < llGetListLength(g_lChildren);i++)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
-        }
+        //integer i;
+        //for (i=0;i < llGetListLength(g_lChildren);i++)
+        //{
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
+        //}
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
