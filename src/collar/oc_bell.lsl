@@ -757,8 +757,11 @@ default
         else if (change & CHANGED_INVENTORY) PrepareSounds();
         if (change & CHANGED_COLOR) // ********************* 
         {
-            g_iHide = !(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            SetBellElementAlpha(); // update hide elements 
+            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
+                g_iHide = iNewHide;
+                SetBellElementAlpha(); // update hide elements 
+            }
         }
     }
 

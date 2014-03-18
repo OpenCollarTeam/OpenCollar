@@ -405,8 +405,11 @@ default
         }
         if (iChange & CHANGED_COLOR) // ********************* 
         {
-            g_iHide = !(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            SetLockElementAlpha(); // update hide elements 
+            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
+                g_iHide = iNewHide;
+                SetLockElementAlpha(); // update hide elements 
+            }
         }
     }
 /*
