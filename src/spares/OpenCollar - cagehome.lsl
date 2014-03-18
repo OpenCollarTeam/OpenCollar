@@ -457,18 +457,7 @@ DoMenu(key kID, integer iAuth) {
         "\n" +
         "\n";
 
-    
-    // formerly function ShortKey():
-    //
-    // just pick 8 random hex digits and pad the rest with 0. Good enough for dialog uniqueness.
-    string sChars = "0123456789abcdef";
-    string sOut;
-    integer n;
-    for (n = 0; n < 8; ++n) {
-        integer iIndex = (integer)llFrand(16); // yes this is correct; an integer cast rounds towards 0. See the llFrand wiki entry.
-        sOut += llGetSubString(sChars, iIndex, iIndex);
-    }
-    g_kMenuID = (key)(sOut + "-0000-0000-0000-000000000000");
+    g_kMenuID = llGenerateKey();
 
     llMessageLinked(LINK_THIS, DIALOG, 
         (string)kID + 
@@ -697,6 +686,8 @@ integer Event_link_message(integer iSender, integer iNum, string sStr, key kID) 
     else if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
         // our parent menu requested to receive entry buttons (from all plugins), so send back ours
         RegisterSubMenu(iSender);
+        g_lButtons = [] ; // flush submenu buttons
+        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, NULL_KEY);
     }
     else if (iNum == MENUNAME_RESPONSE) { // a button is sent to be added to a menu
         list lParts = llParseString2List(sStr, ["|"], []);
@@ -963,8 +954,8 @@ default {
         llSleep(1);
         
         // send request to main menu and ask other menus if they want to register with us
-        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, NULL_KEY);
-        RegisterSubMenu(LINK_THIS);
+        //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, NULL_KEY);
+        //RegisterSubMenu(LINK_THIS);
 
         llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, LM_SETTING_TOKEN, NULL_KEY);
         
