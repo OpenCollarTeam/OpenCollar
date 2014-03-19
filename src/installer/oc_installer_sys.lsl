@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.950                                  //
+//                                 version 3.956                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -62,6 +62,7 @@ string BTN_UNINSTALL = " ☐ ";
 string BTN_DEPRECATED = " ♻ ";
 string INSTALL_METHOD = "Standard";
 
+string g_sVersion;
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string name) {
@@ -203,12 +204,8 @@ ReadVersionLine() {
     }
 }
 
-SetInstructionsText() {
-    llSetText("1 - Create a backup copy of your collar.\n" +
-              "2 - Rez your collar next to me.\n" +
-              "3 - Touch the collar.\n" + 
-              "4 - In the menu, select Help/About -> Update.\n"
-               , <1,1,1>, 1.0);
+SetFloatText() {
+    llSetText("Version "+g_sVersion, <1,1,1>, 1.0);
 }
 
 Particles(key target) {
@@ -256,7 +253,7 @@ default {
                 }
             }
         }
-        SetInstructionsText();
+        SetFloatText();
         llParticleSystem([]);
     }
 
@@ -349,7 +346,7 @@ default {
                 // remove the script pin, and delete himself.
                 string myversion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(kCollarKey, iSecureChannel, "CLEANUP|" + myversion);
-                SetInstructionsText();
+                SetFloatText();
                 llParticleSystem([]);
             }
         }
@@ -371,6 +368,8 @@ default {
     dataserver(key id, string data) {
         if (id == version_line_id) {
             // make sure that object version matches this card.
+            g_sVersion=data;
+            SetFloatText();
             list nameparts = llParseString2List(llGetObjectName(), [" - "], []);
             integer length = llGetListLength(nameparts);
             if (length == 2) {
