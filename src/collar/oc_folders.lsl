@@ -203,14 +203,9 @@ FolderActionsMenu(integer iState, key kAv, integer iAuth)
     integer iStateThis = iState / 10;
     integer iStateSub = iState % 10;
     list lActions;
-
-
-   if (g_sFolderType != "history")
-    {
-        if (!iStateSub) g_sFolderType = "actions_sub";
-        else g_sFolderType = "actions";
-    }
-    else lActions += "Browse";
+    if (g_sFolderType == "history") lActions += "Browse";
+    g_sFolderType += "_actions";
+    if (!iStateSub) g_sFolderType += "_sub";
 
     if (g_sCurrentFolder != "")
     {
@@ -575,8 +570,7 @@ default
                     g_sCurrentFolder = sMessage;
                     g_iPage = 0;
                     SetAsyncMenu(kAv, iAuth);
-                    QueryFolders("history");
-                    
+                    QueryFolders("history");                    
                 }
             }
             else if (kID == g_kRootActionsID)
@@ -760,8 +754,8 @@ default
                 else if (llGetSubString(sMessage, 0, 0) == "(") Notify(kAv, "This action is forbidden at your authentification level.", FALSE);
                 if (sMessage != UPMENU) { addToHistory(g_sCurrentFolder); llSleep(1.0);} //time for command to take effect so that we see the result in menu
                 //Return to browse menu
-                if (g_sFolderType == "actions_sub") ParentFolder();
-                else if (g_sFolderType == "history" && sMessage == UPMENU) {HistoryMenu(kAv, iAuth); return;}
+                if (llGetSubString(g_sFolderType, 0, 14) == "history_actions" && sMessage != "Browse") {HistoryMenu(kAv, iAuth); return;}
+                if (llGetSubString(g_sFolderType, -4, -1) == "_sub") ParentFolder();
                 SetAsyncMenu(kAv, iAuth);
                 QueryFolders("browse");
             }
@@ -811,7 +805,6 @@ default
             {
                 list sData = llParseStringKeepNulls(sMsg, [",", "|"], []);
                 integer iState = llList2Integer(sData, 1);
-                llOwnerSay((string)iState);
                 FolderActionsMenu(iState, g_kAsyncMenuUser, g_iAsyncMenuAuth);
             }
             else if (g_sFolderType=="save") SaveFolder(sMsg);
