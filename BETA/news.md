@@ -1,8 +1,8 @@
-Issue: 20140316.1
+Issue: 20140319.1
 
 OpenCollar BETA Channel
-3.955 available
+Version 3.956 available
 Thanks for participating!
-http://www.opencollar.at/
+http://www.opencollar.at/blog.html
 https://github.com/OpenCollar/OpenCollarUpdater/issues
 https://github.com/OpenCollar/OpenCollarUpdater/commits/main
