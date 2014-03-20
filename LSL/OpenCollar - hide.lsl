@@ -250,7 +250,6 @@ integer AppLocked(key kID)
 {
     if (g_iAppLock)
     {
-        Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
         return TRUE;
     }
     else
