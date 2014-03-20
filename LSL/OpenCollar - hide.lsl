@@ -136,6 +136,7 @@ UpdateElementAlpha(string element_to_set, integer iAlpha)
 
 SetAllElementsAlpha(integer iAlpha)
 {
+    if(g_iAllAlpha == iAlpha) return ;
     g_iAllAlpha = iAlpha ;
     llSetLinkAlpha(LINK_SET, (float)iAlpha, ALL_SIDES);
     if(iAlpha == 0) return ;
@@ -257,9 +258,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
     if (!g_iAppLock || iNum == COMMAND_OWNER)  // if unlocked or Owner can do it
     { 
         if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;           
-        else if (sCommand == "hide" )
+        else if (sCommand == "hide")
         {
-            if(sValue == "") SetAllElementsAlpha(0); 
+            if(sValue == "" || sValue == ALL) SetAllElementsAlpha(0); 
             else 
             {
                 SetElementAlpha(sValue, 0);
@@ -268,7 +269,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if (sCommand == "show")
         {
-            if(sValue == "") SetAllElementsAlpha(1);
+            if(sValue == "" || sValue == ALL) SetAllElementsAlpha(1);
             else 
             {
                 SetElementAlpha(sValue, 1);          
@@ -371,22 +372,10 @@ default
                     //get "Hide" or "Show" and element name
                     list lParams = llParseString2List(sMessage, [" "], []);
                     string sCmd = llList2String(lParams, 0);
-                    string sElement = llList2String(lParams, 1);
-                    integer iAlpha;
-                    
-                    if (sCmd == HIDE) iAlpha = 0;
-                    else if (sCmd == SHOW) iAlpha = 1;
-                    
-                    if (sElement == ALL)
-                    {
-                        if (sCmd == "Show") SetAllElementsAlpha(1);
-                        else if (sCmd == "Hide") SetAllElementsAlpha(0);
-                    }
-                    else if (sElement != "")//ignore empty element strings since they won't work anyway
-                    {
-                        SetElementAlpha(sElement, iAlpha);
-                        SaveElementAlpha(sElement, iAlpha);
-                    }
+                    string sElement = llList2String(lParams, 1);                
+                    if (sCmd == HIDE || sCmd == "Hide") sCmd = "hide";
+                    else if (sCmd == SHOW || sCmd == "Show") sCmd = "show";                   
+                    UserCommand(iAuth, sCmd + " " + sElement, kAv);
                     ElementMenu(kAv, iAuth);
                 }
             }
