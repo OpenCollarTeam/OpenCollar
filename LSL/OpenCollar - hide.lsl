@@ -246,18 +246,55 @@ BuildElementList()
     g_lElements = llListSort(g_lElements, 1, TRUE);
 }
 
-integer AppLocked(key kID)
+integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (g_iAppLock)
-    {
-        Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
-        return TRUE;
-    }
+    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCommand = llToLower(llList2String(lParams, 0));
+    string sValue = llList2String(lParams, 1);
+
+    if (!g_iAppLock || iNum == COMMAND_OWNER)  // if unlocked or Owner can do it
+    { 
+        if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;           
+        else if (sCommand == "hide" )
+        {
+            if(sValue == "") SetAllElementsAlpha(0); 
+            else 
+            {
+                SetElementAlpha(sValue, 0);
+                SaveElementAlpha(sValue, 0);
+            }
+        }
+        else if (sCommand == "show")
+        {
+            if(sValue == "") SetAllElementsAlpha(1);
+            else 
+            {
+                SetElementAlpha(sValue, 1);          
+                SaveElementAlpha(sValue, 1);                     
+            }
+        }
+    }          
     else
-    {
-        return FALSE;
+    {  
+        if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu" || sCommand == "hide" || sCommand == "show")
+            Notify(kID,"The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
     }
+    
+    if (iNum == COMMAND_OWNER && sCommand == "lockappearance")
+    {
+        if (sValue == "0") g_iAppLock = FALSE;
+        else if (sValue == "1") g_iAppLock = TRUE;                    
+    }            
+    else if (iNum == COMMAND_WEARER && sStr == "runaway")
+    {
+        SetAllElementsAlpha(1);
+    }    
+    
+    return TRUE ;
 }
+
 
 // Get Group or Token, 0=Group, 1=Token, 2=Value
 string SplitTokenValue(string in, integer slot)
@@ -287,47 +324,8 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llToLower(llList2String(lParams, 0));
-            string sValue = llList2String(lParams, 1);
-
-            if (!AppLocked(kID))
-            {                           
-                if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;           
-                else if (sCommand == "hide" )
-                {
-                    if(sValue == "") SetAllElementsAlpha(0); 
-                    else 
-                    {
-                        SetElementAlpha(sValue, 0);
-                        SaveElementAlpha(sValue, 0);
-                    }
-                }
-                else if (sCommand == "show")
-                {
-                    if(sValue == "") SetAllElementsAlpha(1);
-                    else 
-                    {
-                        SetElementAlpha(sValue, 1);          
-                        SaveElementAlpha(sValue, 1);                     
-                    }
-                }
-            }            
-            else if (iNum == COMMAND_OWNER)
-            {
-                if (sCommand == "lockappearance")
-                {
-                    if (sValue == "0") g_iAppLock = FALSE;
-                    else if (sValue == "1") g_iAppLock = TRUE;                    
-                }            
-                else if (iNum == COMMAND_OWNER && sStr == "runaway")
-                {
-                    SetAllElementsAlpha(1);
-                }
-            }
-        }
+        if (UserCommand(iNum, sStr, kID)) return;
+        
         else if (iNum == LM_SETTING_RESPONSE)
         {
             string sGroup = SplitTokenValue(sStr, 0);
