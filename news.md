@@ -1,3 +1,3 @@
-Issue: 20140224.1
+Issue: 20140320.1
 
-Good news for OpenCollar! After many trials with mainland parcels where we do not have full control, we set sail and made landfall in the private region Glint, a land owned by the makers of Mama Allpa, who generously offered us haven there. In Glint OpenCollar has full estate rights and much better security. For a brief while, our legacy Temple on the mainland will remain open. As always we offer full transparency in our project and you can already check out the new spot. www.opencollar.at
+Contributors are highly encouraged to make use of the sandbox at http://maps.secondlife.com/secondlife/Keraxic/15/230/23 It's awesome we can have a place to build peacefully and everyone is most welcome to also rez collars there for running updates. If the temple at http://maps.secondlife.com/secondlife/Glint/42/97/46 is too busy for you, we put a mini temple at http://maps.secondlife.com/secondlife/Qandico/219/158/1234 We will keep both places open as long as we can. Love & peace! <3
