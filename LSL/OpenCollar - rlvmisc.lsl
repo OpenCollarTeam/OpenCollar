@@ -213,14 +213,14 @@ UpdateSettings()
 
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
         g_lSettings=lTempSettings;
     }
 }
 
 SaveSetting(string token, string value)
 {
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + token + "=" + value, NULL_KEY);
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + token + "=" + value, "");
 }
 
 ClearSettings()
@@ -229,7 +229,7 @@ ClearSettings()
     for (; i < llGetListLength(g_lSettings); i += 2)
     {
         string token = g_sScript + llList2String(g_lSettings, i);
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, "");
     }
     g_lSettings = [];
 }
@@ -319,15 +319,15 @@ default
         g_kWearer = llGetOwner();
         g_lDescriptions += ["See hover text from " + CTYPE];
         // llSleep(1.0);
-        // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, NULL_KEY);
+        // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, "");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_RESPONSE)
