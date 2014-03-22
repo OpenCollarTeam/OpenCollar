@@ -156,7 +156,7 @@ QueryFolders(string sType)
     g_iFolderRLV = 9999 + llRound(llFrand(9999999.0));
     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
     llSetTimerEvent(g_iTimeOut);
-    llMessageLinked(LINK_SET, RLV_CMD, "getinvworn:"+g_sCurrentFolder+"=" + (string)g_iFolderRLV, NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD, "getinvworn:"+g_sCurrentFolder+"=" + (string)g_iFolderRLV, "");
 }
 
 string lockFolderButton(integer iLockState, integer iLockNum, integer iAuth)
@@ -288,7 +288,7 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         else
         {
             g_lFolderLocks = llDeleteSubList(g_lFolderLocks, iIndex, iIndex+1);
-            llMessageLinked(LINK_SET, RLV_CMD,  "attachthis_except:"+sFolder+"=y,detachthis_except:"+sFolder+"=y,attachallthis_except:"+sFolder+"=y,detachallthis_except:"+sFolder+"=y,"+ "attachthis:"+sFolder+"=y,detachthis:"+sFolder+"=y,attachallthis:"+sFolder+"=y,detachallthis:"+sFolder+"=y", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD,  "attachthis_except:"+sFolder+"=y,detachthis_except:"+sFolder+"=y,attachallthis_except:"+sFolder+"=y,detachallthis_except:"+sFolder+"=y,"+ "attachthis:"+sFolder+"=y,detachthis:"+sFolder+"=y,attachallthis:"+sFolder+"=y,detachallthis:"+sFolder+"=y", "");
         }
     }
     else
@@ -298,8 +298,8 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         iIndex = llGetListLength(g_lFolderLocks)-2;
         doLockFolder(iIndex);
     }
-    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sScript + "Locks=" + llDumpList2String(g_lFolderLocks, ","), NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
+    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sScript + "Locks=" + llDumpList2String(g_lFolderLocks, ","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", "");
 }
 
 doLockFolder(integer iIndex)
@@ -323,7 +323,7 @@ doLockFolder(integer iIndex)
     sRlvCom += ",detachallthis_except:"+sFolder+"=";
     if ((iLock >> 7) & 1)  sRlvCom += "n"; else sRlvCom += "y";
     //    llOwnerSay(sRlvCom);
-    llMessageLinked(LINK_SET, RLV_CMD,  sRlvCom, NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD,  sRlvCom, "");
 }
 
 
@@ -331,8 +331,8 @@ updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Unshared=" + (string) g_iUnsharedLocks, NULL_KEY);
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "Unshared", NULL_KEY);
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Unshared=" + (string) g_iUnsharedLocks, "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "Unshared", "");
 }
 
 doLockUnshared()
@@ -341,7 +341,7 @@ doLockUnshared()
     if ((g_iUnsharedLocks >> 0) & 1)  sRlvCom += "n"; else sRlvCom += "y";
     sRlvCom += ",unsharedwear=";
     if ((g_iUnsharedLocks >> 1) & 1)  sRlvCom += "n"; else sRlvCom += "y";
-    llMessageLinked(LINK_SET, RLV_CMD,  sRlvCom, NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD,  sRlvCom, "");
 }
 
 // Browsing menu, called asynchronously only (after querying folder state). Queries user and auth from globals.
@@ -456,7 +456,7 @@ searchSingle(string sItem)
     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
     //start timer
     llSetTimerEvent(g_iTimeOut);
-    llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, "");
 }
 
 // set a dialog to be requested after the next viewer answer
@@ -504,7 +504,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         integer i = 0; integer n = llGetListLength(g_lOutfit);
         for (; i < n; ++i)
-            llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", "");
         Notify(kID, "Saved outfit has been restored.", TRUE );
         //if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
     }
@@ -537,7 +537,7 @@ default
         //integer i;
         //for (i=0;i < llGetListLength(g_lChildren);i++)
         //{
-        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), "");
         //}
     }
 
@@ -548,7 +548,7 @@ default
             integer i;
             for (i=0;i < llGetListLength(g_lChildren);i++)
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), "");
             }
         }
         else if (UserCommand(iNum, sStr, kID)) return;
@@ -662,33 +662,33 @@ default
 
                 if (sMessage == ADD)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "attachover:" + g_sCurrentFolder + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "attachover:" + g_sCurrentFolder + "=force", "");
                     Notify(kAv, "Now adding "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == REPLACE)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "attach:" + g_sCurrentFolder + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "attach:" + g_sCurrentFolder + "=force", "");
                     addToHistory(g_sCurrentFolder);
                     Notify(kAv, "Now attaching "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == DETACH)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + g_sCurrentFolder + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "detach:" + g_sCurrentFolder + "=force", "");
                     Notify(kAv, "Now detaching "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == ADD_ALL)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "attachallover:" + g_sCurrentFolder + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "attachallover:" + g_sCurrentFolder + "=force", "");
                     Notify(kAv, "Now adding everything in "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == REPLACE_ALL)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "attachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "attachall:" + g_sCurrentFolder  + "=force", "");
                     Notify(kAv, "Now attaching everything in "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == DETACH_ALL)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  "detachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "detachall:" + g_sCurrentFolder  + "=force", "");
                     Notify(kAv, "Now detaching everything in "+g_sCurrentFolder, TRUE);
                 }
                 else if (sMessage == lockFolderButton(0x00, 0, 0))
@@ -818,7 +818,7 @@ default
                 }
                 else
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD,  llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", "");
                     addToHistory(sMsg);
                     Notify(g_kAsyncMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
                 }
