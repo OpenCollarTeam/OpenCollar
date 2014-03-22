@@ -176,7 +176,7 @@ default{
         //Debug("Link Message Event");
         if (UserCommand(iNum, sStr, kID)) return;
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, NULL_KEY);
+            llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, "");
         } else if (iNum == DIALOG_RESPONSE) {
             if (kID == g_kDialogID) {
                 //got a menu response meant for us. pull out values
