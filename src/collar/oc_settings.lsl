@@ -410,15 +410,15 @@ SendValues()
     @done;
     for (; n < llGetListLength(out); n++)
     {
-        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(out, n), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(out, n), "");
     }
-    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", NULL_KEY);//tells scripts everything has be sentout
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
 Refresh()
 {
-    llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU, NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, NULL_KEY);
+    //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU, "");
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
     SendValues();
 }
 
@@ -590,11 +590,11 @@ default
             //check the cache for the token
             if (SettingExists(sStr))
             {
-                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
             } 
             else
             {
-                llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
             }
         }
         else if (iNum == LM_SETTING_DELETE)
@@ -675,7 +675,7 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == PARENT_MENU)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
         }
         else if (iNum == DIALOG_TIMEOUT)
         {
