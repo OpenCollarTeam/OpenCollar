@@ -205,22 +205,22 @@ SetLockElementAlpha() //EB
 Lock()
 {
     g_iLocked = TRUE;
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", NULL_KEY);
-    llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "");
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, "");
     llPlaySound(g_sLockSound, 1.0);
-    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + LOCK, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + LOCK, "");
     SetLockElementAlpha();//EB
 }
 
 Unlock()
 {
     g_iLocked = FALSE;
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", NULL_KEY);
-    llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "");
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, "");
     llPlaySound(g_sUnlockSound, 1.0);
-    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNLOCK, "");
     SetLockElementAlpha(); //EB
 }
 
@@ -235,7 +235,7 @@ default
         // g_iListenChan = -1 - llRound(llFrand(9999999.0)); //unused
         //no more needed
         //        llSleep(1.0);//giving time for others to reset before populating menu
-        //        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
+        //        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, "");
         
         BuildLockElementList();//EB
         SetLockElementAlpha(); //EB
@@ -307,15 +307,15 @@ default
                 g_iLocked = (integer)sValue;
                 if (g_iLocked)
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
-                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
-                    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + LOCK, NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "");
+                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, "");
+                    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + LOCK, "");
                 }
                 else
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
-                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
-                    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "");
+                    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, "");
+                    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNLOCK, "");
                 }
                 SetLockElementAlpha(); //EB
 
@@ -350,33 +350,33 @@ default
         {
             if (g_iLocked)
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNLOCK, "");
             }
             else
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, "");
             }
         }
         else if (iNum == RLV_REFRESH)
         {
             if (g_iLocked)
             {
-                llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "");
             }
             else
             {
-                llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "");
             }
         }
         else if (iNum == RLV_CLEAR)
         {
             if (g_iLocked)
             {
-                llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "");
             }
             else
             {
-                llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "");
             }
         }
     }
