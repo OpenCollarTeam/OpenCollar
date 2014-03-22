@@ -180,9 +180,9 @@ SetLength(integer iIn){
 ApplyRestrictions(){
     if (g_iRLVOn){
         if (g_kLeashedTo){
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
+            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", "");     //set all restrictions
         } else {
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //set all restrictions
+            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", "");     //set all restrictions
         }
     }
 }
@@ -294,9 +294,9 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     if (g_vPos != ZERO_VECTOR) {
         llMoveToTarget(g_vPos, 0.7);
     }
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
     if (! ~llListFindList(g_lOwners,[g_kLeashedTo])) {
-        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", "");
     }
     ApplyRestrictions();
 }
@@ -363,7 +363,7 @@ DoUnleash(){
         //Debug("Unleashing a Real leash");
         if (! ~llListFindList(g_lOwners,[g_kLeashedTo]) ){ //if not in owner list
             //Debug("leash holder ("+(string)g_kLeashedTo+")is not an owner");
-            llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", "");
         } else {
             //Debug("leash holder is an owner");
         }
@@ -515,8 +515,8 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
         } else if (sComm == "realleash") {
             if (sVal == "on" ) {
                 g_iRealLeashOn=TRUE;
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", NULL_KEY);
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, NULL_KEY);  //query current leasher, the response will trigger ApplyRestrictions
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", "");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
                 Notify(kMessageID,"Real Leash enabled.",TRUE);
                 ApplyRestrictions();
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -525,7 +525,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                     Notify(kMessageID, "You can't disable Real Leash while leashed.",FALSE);
                 } else {
                     g_iRealLeashOn=FALSE;
-                    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", NULL_KEY);
+                    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
                     ApplyRestrictions();
                     Notify(kMessageID,"Real Leash disabled.",FALSE);
                 }
@@ -628,7 +628,7 @@ default
         llMinEventDelay(0.3);
         
         DoUnleash();
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY); //no need 
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, ""); //no need 
     }
     
     on_rez(integer start_param) {
@@ -645,9 +645,9 @@ default
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
         if (UserCommand(iNum, sMessage, kMessageID, FALSE)) return;
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, "");
             g_lButtons = [] ; // flush submenu buttons
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
         } else if (iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sMessage, ["|"], []);
             if (llList2String(lParts, 0) == BUTTON_SUBMENU) {//someone wants to stick something in our menu
@@ -721,7 +721,7 @@ default
         if(g_iJustMoved) {
             vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", "");
             g_iJustMoved = 0;
         }   
     }
