@@ -422,9 +422,9 @@ default
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lButtons = []; // flush buttons before
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
@@ -457,7 +457,7 @@ default
             /*else if (sStr == "refreshmenu")
             {
                 g_lButtons = [];
-                llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             }*/
             else if (sStr == "appearance")
             {
@@ -511,8 +511,8 @@ default
                 if (iNum == COMMAND_OWNER)
                 {
                     g_iAppLock = (sValue!="0");
-                    if(g_iAppLock) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sAppLockToken + "=1", NULL_KEY);
-                    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sAppLockToken, NULL_KEY);
+                    if(g_iAppLock) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sAppLockToken + "=1", "");
+                    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sAppLockToken, "");
                 }
                 else Notify(kID,"Only owners can use this option.", FALSE);
             }
