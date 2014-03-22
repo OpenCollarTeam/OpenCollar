@@ -224,9 +224,10 @@ Init()
     news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
 
     // register menu buttons
-    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
-    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
-    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);    
+    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
+    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
+    //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "collarversion", "");
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -376,14 +377,11 @@ default
     {
         //the command was given by either owner, secowner, group member, or wearer
         if (UserCommand(num, str, id)) return;
-        else if (num == MENUNAME_REQUEST)
+        else if (num == MENUNAME_REQUEST && str == PARENT_MENU)
         {
-            if (str == PARENT_MENU)
-            {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, NULL_KEY);
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, NULL_KEY);
-               // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, NULL_KEY);
-            }
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
+         // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");
         }
         else if (num == DIALOG_RESPONSE)
         {
