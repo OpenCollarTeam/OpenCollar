@@ -222,12 +222,12 @@ integer SetPosture(integer iOn, key kCommander)
         {
             llStartAnimation(g_sPostureAnim);
             if(kCommander) Notify(kCommander,"Posture override active.",TRUE);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sPostureToken +"=1",NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sPostureToken +"=1","");
         }
         else if (!iOn)
         {
             llStopAnimation(g_sPostureAnim);
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sPostureToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sPostureToken, "");
         }
         g_iPosture=iOn;
         return TRUE;
@@ -405,7 +405,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (iNum <= g_iLastRank || !g_iAnimLock)
         {
             g_iLastRank = 0;
-            llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
+            llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
             g_sCurrentPose = "";
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sAnimToken, "");
         }
@@ -450,7 +450,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
         {
             g_iAnimLock = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
             if(kID != g_kWearer)
@@ -461,7 +461,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         else
         {
             g_iAnimLock = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
             // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
             if(kID != g_kWearer)
@@ -477,7 +477,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             integer iIndex = llListFindList(g_lAnimButtons, [UNTICKED + ANIMLOCK]);
             g_iAnimLock = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "You are now locked into poses set by others.", FALSE);
             if(kID != g_kWearer)
@@ -489,7 +489,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             integer iIndex = llListFindList(g_lAnimButtons, [TICKED + ANIMLOCK]);
             g_iAnimLock = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
             g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer,"You are able to change and stop all poses on your own.", FALSE);
             if(kID != g_kWearer)
@@ -543,7 +543,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             //not currently in a pose.  play one
             g_iLastRank = iNum;
             //StartAnim(sStr);
-            llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
+            llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
         }
         else
@@ -551,9 +551,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if (iNum <= g_iLastRank || !g_iAnimLock)
             {
                 g_iLastRank = iNum;
-                llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
+                llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
                 g_sCurrentPose = sStr;
-                llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
+                llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sAnimToken + "=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
             }
         }
@@ -578,8 +578,8 @@ default
 
         CreateAnimList();
 
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, "");
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
     }
 
     changed(integer iChange)
@@ -616,7 +616,7 @@ default
         {
             llRequestPermissions(llGetOwner(),PERMISSION_TRIGGER_ANIMATION);
             //g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
-            //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY); //even necessary? Dunno, shoudln't be, but with this, now reproduces old behaviour of resetting on every rez, only without resetting on every rez. -MD
+            //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, ""); //even necessary? Dunno, shoudln't be, but with this, now reproduces old behaviour of resetting on every rez, only without resetting on every rez. -MD
         }
     }
 
@@ -636,9 +636,9 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sRootMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
             g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, "");
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
@@ -656,9 +656,9 @@ default
             if(llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION)
             {
                 g_iLastRank = 0;
-                llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, NULL_KEY);
+                llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
                 g_iAnimLock = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
                 g_sCurrentPose = "";
             }
         }
@@ -676,7 +676,7 @@ default
                     list lAnimParams = llParseString2List(sValue, [","], []);
                     g_sCurrentPose = llList2String(lAnimParams, 0);
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
-                    llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, NULL_KEY);
+                    llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
                 }
                 else if (sToken == g_sLockToken)
                 {
