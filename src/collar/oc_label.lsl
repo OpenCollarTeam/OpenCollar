@@ -380,7 +380,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             {
                 lParams = llDeleteSubList(lParams, 0, 0);
                 g_sLabelText = llDumpList2String(lParams, " ");
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, "");
                 SetLabel(g_sLabelText);
             }
         }
@@ -426,8 +426,8 @@ default
         g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
         //no more needed
         //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, "");
     }
 
     on_rez(integer iNum)
@@ -467,11 +467,11 @@ default
         {
             if (sStr == g_sParentMenu)
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             }
             else if (sStr == g_sFontParent)
             {
-                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, NULL_KEY);
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, "");
             }
         }
         else if (iNum == DIALOG_RESPONSE)
@@ -496,7 +496,7 @@ default
                     {
                         SetOffsets((key)llList2String(g_lFonts, iIndex + 1));
                         SetLabel(g_sLabelText);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Font=" + (string)g_kFontTexture, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Font=" + (string)g_kFontTexture, "");
                     }
                     FontMenu(kAv, iAuth);
                 }
