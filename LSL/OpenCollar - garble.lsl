@@ -122,12 +122,12 @@ bind(key _k, integer auth)
     bOn = TRUE;
     g_iBinder = auth;
     g_kBinder = _k;
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + GARBLE, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Binder=" + (string)_k + "," + (string)auth, NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, "");
+    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + GARBLE, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Binder=" + (string)_k + "," + (string)auth, "");
     // Garbler only listen to the wearer, as a failsafe
     giGL = llListen(giCRC, "", gkWear, "");
-    llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", "");
     if (llGetAgentSize(_k) != ZERO_VECTOR)
     {
         if (_k != gkWear) llOwnerSay(llKey2Name(_k) + " ordered you to be quiet");
@@ -139,11 +139,11 @@ release(key _k)
 {
     bOn = g_iBinder = FALSE;
     g_kBinder = NULL_KEY;
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, NULL_KEY);
-    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNGARBLE, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "Binder", NULL_KEY);
+    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, "");
+    llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNGARBLE, "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "Binder", "");
     llListenRemove(giGL);
-    llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", "");
     if (llGetAgentSize(_k) != ZERO_VECTOR)
     {
         if (_k != gkWear) llOwnerSay("You are free to speak again");
@@ -185,8 +185,8 @@ default
         gsWear = llKey2Name(gkWear);
         giCRC = llRound(llFrand(499) + 1);
         if (bOn) release(gkWear);
-        llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", NULL_KEY);
-        llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, GetScriptID() + "Binder", NULL_KEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, GetScriptID() + "Binder", "");
         //llSleep(1.0);
     }
     listen(integer _c, string _n, key _k, string _m)
@@ -206,7 +206,7 @@ default
                 }
                 if (sw == SAFE) // Wearer used the safeword
                 {
-                    llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", NULL_KEY);
+                    llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
                     llOwnerSay("You used your safeword, your owner will be notified you did.");
                     return;
                 }
@@ -228,13 +228,13 @@ default
         if (UserCommand(iM, sM, kM)) return;
         if (iM == MENUNAME_REQUEST && sM == g_sParentMenu)
         {
-            if (bOn) llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, NULL_KEY);
-            else llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, NULL_KEY);
+            if (bOn) llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + UNGARBLE, "");
+            else llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, "");
         }
         else if (iM == RLV_REFRESH)
         {
-            if (bOn) llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", NULL_KEY);
-            else llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", NULL_KEY);
+            if (bOn) llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", "");
+            else llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", "");
         }
         else if (iM == RLV_CLEAR) release(kM);
         else if (iM == LM_SETTING_RESPONSE)
