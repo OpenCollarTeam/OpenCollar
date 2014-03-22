@@ -254,10 +254,10 @@ integer UserCommand(integer iNum, string sStr, key kID) {
         Debug("Do some fancy stuff to impress the user");
 
         // maybe save a value to the setting store:
-        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "token=value", NULL_KEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "token=value", "");
 
         // or delete a toke from the setting store:
-        llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "token", NULL_KEY);
+        llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "token", "");
     }
     return TRUE;
 }
@@ -274,8 +274,8 @@ default {
         // sleep a second to allow all scripts to be initialized
         llSleep(1);
         // send request to main menu and ask other menus if they want to register with us
-        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, NULL_KEY);
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, NULL_KEY);
+        //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
+        //llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
     }
 
     // Reset the script if wearer changes. By only reseting on owner change we can keep most of our
@@ -294,7 +294,9 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
             // our parent menu requested to receive buttons, so send ours
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, NULL_KEY);
+            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
+            g_lButtons = [] ;
+            llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
         }
         else if (iNum == MENUNAME_RESPONSE) {
             // a button is send to be added to a menu
