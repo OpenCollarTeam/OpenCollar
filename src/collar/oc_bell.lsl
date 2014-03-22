@@ -367,11 +367,11 @@ ShowHelp(key kID)
 
 SaveBellSettings()
 {
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), NULL_KEY);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -379,12 +379,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 {
     if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
     string test=llToLower(sStr);
-    if (sStr == "refreshmenu")
-    {
-        g_lButtons = [];
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-    }
-    else if (sStr == "menu " + g_sSubMenu || sStr == g_sBellChatPrefix)
+    if (sStr == "menu " + g_sSubMenu || sStr == g_sBellChatPrefix)
     {// the command prefix + bell without any extentsion is used in chat
         //give this plugin's menu to kID
         DoMenu(kID, iNum);
@@ -518,8 +513,8 @@ default
         //not needed anymore as we request menus already
         // now wait  to be sure al other scripts reseted and init the menu system into the collar
         //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
 
     }
     on_rez(integer param)
@@ -532,7 +527,9 @@ default
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             // the menu structure is to be build again, so make sure we get recognized
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            g_lButtons = [] ; // flush submenu buttons
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum == MENUNAME_RESPONSE)
         {
@@ -543,6 +540,19 @@ default
                 if (llListFindList(g_lButtons, [button]) == -1)
                 {
                     g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
+                }
+            }
+        }
+        else if (iNum == MENUNAME_REMOVE)
+        {
+            list lParts = llParseString2List(sStr, ["|"], []);
+            if (llList2String(lParts, 0) == g_sSubMenu)
+            {
+            string button = llList2String(lParts, 1);
+                integer iIndex = llListFindList(g_lButtons , [button]);
+                if (iIndex != -1)
+                {
+                    g_lButtons = llDeleteSubList(g_lButtons , iIndex, iIndex);
                 }
             }
         }
@@ -705,7 +715,8 @@ default
                 else if (~llListFindList(g_lButtons, [sMessage]))
                 {
                     //we got a submenu selection
-                    UserCommand(iAuth, "menu "+sMessage, kAV);
+                    //UserCommand(iAuth, "menu "+sMessage, kAV);
+                    llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAV);
                     return; // no main menu
                 }
                 // do we want to see the menu again?
