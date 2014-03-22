@@ -343,10 +343,10 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if(!iOldLength && iNewLength)
             {
                 g_sIsEnabled = "badwordson=true";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, "");
             }
             //save to database
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), "");
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -360,7 +360,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_sBadWordAnim = sAnim;
                 //Debug(g_sBadWordAnim);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "anim=" + g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "anim=" + g_sBadWordAnim, "");
                 Notify(kID, "Punishment anim for bad words is now '" + g_sBadWordAnim + "'.",FALSE);
             }
             else
@@ -387,7 +387,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 }
             }            
             g_sBadWordSound = sSound;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + g_sBadWordSound, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + g_sBadWordSound, "");
             Notify(kID, "Punishment sound for badwords is now '"+g_sBadWordSound+"'.",FALSE);
         }
         else if (sCommand == "penance")
@@ -400,7 +400,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else
             {
                 g_sPenance = llStringTrim(sPenance, STRING_TRIM);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "penance=" + g_sPenance, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "penance=" + g_sPenance, "");
                 string sPrompt = WordPrompt();
                 Notify(kID, sPrompt,TRUE);
             }
@@ -421,7 +421,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 }
             }
             //save to sDatabase
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=" + llDumpList2String(g_lBadWords, ","), "");
             ListenControl();
             Notify(kID, WordPrompt(),TRUE);
         }
@@ -432,7 +432,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 if(llGetListLength(g_lBadWords))
                 {
                     g_sIsEnabled = "badwordson=true";
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, "");
                     ListenControl();
                     Notify(kID, "Badwords are now turned on for: " + llDumpList2String(g_lBadWords, ","),FALSE);
                 }
@@ -443,7 +443,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             else if(sValue == "off")
             {
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, "");
                 ListenControl();
                 Notify(kID, "Badwords are now turned off.",FALSE);
             }
@@ -451,8 +451,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 g_lBadWords = [];
                 g_sIsEnabled = "badwordson=false";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=", NULL_KEY);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "badwords=", "");
                 ListenControl();
                 Notify(kID, "You cleared the badword list and turned it off.",FALSE);
             }
@@ -521,12 +521,12 @@ default
         else if(iNum == COMMAND_SAFEWORD)
         { // safeword disables badwords !
             g_sIsEnabled = "badwords=false";
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sIsEnabled, "");
             ListenControl();
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
 
         else if (iNum == DIALOG_RESPONSE)
@@ -622,7 +622,7 @@ default
             {   //stop sound
                 if(g_sBadWordSound != g_sNoSound) llStopSound();
                 //stop anim
-                llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, "");
                 Notify(g_kWearer, "Penance accepted.",FALSE);
                 g_iHasSworn = FALSE;
             }
@@ -638,7 +638,7 @@ default
                     else llLoopSound( g_sBadWordSound, 1.0 );
                 }
                 //start anim
-                llMessageLinked(LINK_SET, ANIM_START, g_sBadWordAnim, NULL_KEY);
+                llMessageLinked(LINK_SET, ANIM_START, g_sBadWordAnim, "");
                 llWhisper(0, llList2String(llParseString2List(llKey2Name(g_kWearer), [" "], []), 0) + " has said a bad word and is being punished.");
                 g_iHasSworn = TRUE;
             }
