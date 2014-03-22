@@ -286,7 +286,7 @@ UpdateSettings()
         }
         sOut = llDumpList2String(lNewList, ",");
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, sOut, NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_CMD, sOut, "");
         g_lSettings=lTempSettings;
     }
 }
@@ -295,9 +295,9 @@ SaveSettings()
 {
     //save to DB
     if (llGetListLength(g_lSettings)>0)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "List=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "List=" + llDumpList2String(g_lSettings, ","), "");
     else
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", "");
 }
 
 ClearSettings()
@@ -305,7 +305,7 @@ ClearSettings()
     //clear settings list
     g_lSettings = [];
     //remove tpsettings from DB
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", "");
     //main RLV script will take care of sending @clear to viewer
 }
 
@@ -315,8 +315,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
         else if ((sStr == "reset" || sStr == "runaway") && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
         {
             //clear db, reset script
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, "");
             llResetScript();
         }
     */
@@ -391,7 +391,7 @@ default
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_RESPONSE)
