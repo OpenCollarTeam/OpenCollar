@@ -854,7 +854,7 @@ default
                         Notify(kOwner, llKey2Name(g_kWearer) + " has run away!",FALSE);
                     }
                 }
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", NULL_KEY);
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
                 Notify(g_kWearer, "Runaway finished, the " + CTYPE + " will now release locks!",FALSE);
                 // moved reset request from settings to here to allow noticifation of owners.
                 llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", kID); // clear RLV restrictions
@@ -955,7 +955,7 @@ default
                 key kOwner = (key)llList2String(g_lOwners, n);
                 Notify(kOwner, "Your sub " + sSubName + " has used the safeword. Please check on " + sSubFirstName +"'s well-being and if further care is required.",FALSE);
             }
-            llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", NULL_KEY);
+            llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
         }        
     // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
         //added for attachment auth (Garvin)
