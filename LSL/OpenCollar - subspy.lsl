@@ -405,7 +405,7 @@ NotifyOwners(string sMsg)
 SaveSetting(string sOption, string sValue)
 {
     //Debug("Saving setting: " + sOption + "=" + sValue);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_" + sOption + "=" + sValue, NULL_KEY);   //send value to settings script
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_" + sOption + "=" + sValue, "");   //send value to settings script
 }
 
 
@@ -638,7 +638,7 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if(iNum == COMMAND_SAFEWORD)
         { //we recieved a safeword sCommand, turn all off
@@ -700,12 +700,12 @@ default
 
     timer (){
         if (g_sState=="init"){  //timeout during init.  We waited long enough for a random send of our data.  Ask for any that's missing
-            if (! g_iGotSettingOwners) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"auth_owner",NULL_KEY);
-            if (! g_iGotSettingTrace) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_trace",NULL_KEY);
-            if (! g_iGotSettingRadar) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_radar",NULL_KEY);
-            if (! g_iGotSettingListen) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_listen",NULL_KEY);
-            if (! g_iGotSettingMeters) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_meters",NULL_KEY);
-            if (! g_iGotSettingMinutes) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_minutes",NULL_KEY);
+            if (! g_iGotSettingOwners) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"auth_owner","");
+            if (! g_iGotSettingTrace) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_trace","");
+            if (! g_iGotSettingRadar) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_radar","");
+            if (! g_iGotSettingListen) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_listen","");
+            if (! g_iGotSettingMeters) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_meters","");
+            if (! g_iGotSettingMinutes) llMessageLinked(LINK_THIS,LM_SETTING_REQUEST,"subspy_minutes","");
             g_sState="postInit";
             llSetTimerEvent(5.0);
         } else if (g_sState=="postInit") {  //postInit period complete, should have all of our data now
