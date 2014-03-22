@@ -256,7 +256,7 @@ UpdateSettings()
             }
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
         g_lSettings=lTempSettings;
     }
 
@@ -268,11 +268,11 @@ SaveSettings()
     //save to DB
     if (llGetListLength(g_lSettings)>0)
     {
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, token + "=" + llDumpList2String(g_lSettings, ","), NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, token + "=" + llDumpList2String(g_lSettings, ","), "");
     }
     else
     {
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, token, "");
     }
 }
 
@@ -281,7 +281,7 @@ ClearSettings()
     //clear settings list
     g_lSettings = [];
     //remove tpsettings from DB... now done by httpdb itself
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", "");
     //main RLV script will take care of sending @clear to viewer
     //avoid race conditions
     llSleep(1.0);
@@ -292,8 +292,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
     if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
     if (sStr == "runaway" && (kID == g_kWearer || iNum == COMMAND_WEARER))
     {   //clear db, reset script
-        //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
-        //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, NULL_KEY);
+        //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, "");
         llResetScript();
     }
     if (sStr == "menu " + g_sSubMenu || llToLower(sStr) == "tp")
@@ -346,7 +346,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 //    llInstantMessage(llGetOwner(), "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                 //    return;
                 //}
-                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, "");
             }
             else if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
             {   //this is a behavior that we handle.
@@ -400,8 +400,8 @@ default
         g_kWearer = llGetOwner();
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -409,7 +409,7 @@ default
         //llOwnerSay("LinkMessage--iNum: " + (string)iNum + "sStr: " + sStr);
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_RESPONSE)
@@ -564,7 +564,7 @@ default
             string sCmd = "tpto:";
             sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
             sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, sCmd, "");
         }
     }
 }
