@@ -511,7 +511,7 @@ default
         FindLinkedPrims();
         SetTexture(g_sParticleTexture, NULLKEY);
         //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         g_kWearer = llGetOwner();
         //llOwnerSay((string)llGetFreeMemory());
         SetTexture("chain", NULLKEY);
@@ -592,7 +592,7 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -631,7 +631,7 @@ default
                         g_lSettings = g_lDefaultSettings;
                         Notify(kAv, "Leash-settings restored to " + CTYPE + " defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
                         if (!g_bInvisibleLeash && g_bLeashActive)
                         {
                             StartParticles(g_kParticleTarget);
