@@ -442,8 +442,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             Notify(kID, "Verbose Feature de-activated for you.", FALSE);
         }
         else return TRUE; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + SPAMSWITCH, NULL_KEY);
-        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + SPAMSWITCH + "=" + llList2CSV(MRSBUN), NULL_KEY);
+        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + SPAMSWITCH, "");
+        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
         return TRUE;
     }
     return FALSE;
