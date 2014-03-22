@@ -231,12 +231,12 @@ StopAnims()
 {
     if (AnimExists(g_sSubAnim))
     {
-        llMessageLinked(LINK_SET, ANIM_STOP, g_sSubAnim, NULL_KEY);
+        llMessageLinked(LINK_SET, ANIM_STOP, g_sSubAnim, "");
     }
 
     if (AnimExists(g_sDomAnim))
     {
-        llMessageLinked(LINK_SET, CPLANIM_STOP, g_sDomAnim, NULL_KEY);
+        llMessageLinked(LINK_SET, CPLANIM_STOP, g_sDomAnim, "");
     }
 
     g_sSubAnim = "";
@@ -267,7 +267,7 @@ MoveToPartner() {
     vector partnerEuler = llRot2Euler(partnerRot);
     
     // turn to face the partner
-    llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
+    llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", "");
     
     g_iTargetID = llTarget(partnerPos, g_fWalkingDistance);
     llMoveToTarget(partnerPos, g_fWalkingTau);
@@ -434,7 +434,7 @@ state ready
 {    //leaving this here due to delay of nc reading
     state_entry()
     {
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
     on_rez(integer start)
     {
@@ -513,7 +513,7 @@ state ready
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {
@@ -573,14 +573,14 @@ state ready
                 else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage))
                 {
                     g_fTimeOut = (float)((integer)sMessage);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), "");
                     Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
                 else if (sMessage == "ENDLESS")
                 {
                     g_fTimeOut = 0.0;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + Float2String(g_fTimeOut), "");
                     Notify (kAv, "Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
@@ -615,8 +615,8 @@ state ready
         //we've arrived.  let's play the anim and spout the text
         g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
         g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
-        llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, NULL_KEY);
-        llMessageLinked(LINK_SET, CPLANIM_START, g_sDomAnim, NULL_KEY);
+        llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
+        llMessageLinked(LINK_SET, CPLANIM_START, g_sDomAnim, "");
         string text = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
         if (text != "")
         {
