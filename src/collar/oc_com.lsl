@@ -283,8 +283,8 @@ default
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_prefix", NULL_KEY);
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", NULL_KEY);
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_prefix", "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
     }
 
     attach(key kID)
@@ -345,7 +345,7 @@ default
                 sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord)
             {
-                llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", NULL_KEY);
+                llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
                 llOwnerSay("You used your safeword, your owner will be notified you did.");
                 return;
             }
@@ -448,7 +448,7 @@ default
                     SetPrefix(value);
                     SetListeners();
                     Notify(kID, "\n" + llKey2Name(g_kWearer) + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, NULL_KEY);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
                 }
                 else if (sCommand == "channel")
                 {
@@ -460,11 +460,11 @@ default
                         Notify(kID, "Now listening on channel " + (string)g_iListenChan + ".", FALSE);
                         if (g_iListenChan0)
                         {
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", "");
                         }
                         else
                         {
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", "");
                         }
                     }
                     else if (iNewChan == 0)
@@ -472,14 +472,14 @@ default
                         g_iListenChan0 = TRUE;
                         SetListeners();
                         Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",TRUE", "");
                     }
                     else if (iNewChan == -1)
                     {
                         g_iListenChan0 = FALSE;
                         SetListeners();
                         Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iListenChan, FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", "");
                     }
                     else
                     {  //they left the param blank
@@ -495,7 +495,7 @@ default
                     {
                         g_sSafeWord = llList2String(lParams, 1);
                         llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "safeword=" + g_sSafeWord, NULL_KEY);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "safeword=" + g_sSafeWord, "");
                     }
                     else
                     {
