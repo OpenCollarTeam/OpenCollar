@@ -307,7 +307,7 @@ SetElementTexture(string sElement, string sTex)
     if (~iIndex) g_lTextures = llListReplaceList(g_lTextures, [sTex], iIndex + 1, iIndex + 1);
     else g_lTextures += [s_CurrentElement, sTex];
     //save to settings
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sElement + "=" + sTex, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sElement + "=" + sTex, "");
 }
 string DumpSettings(string sep)
 {
@@ -344,7 +344,7 @@ default
         }
         // we need to unify the initialization of the menu system for 3.5
         //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -383,7 +383,7 @@ default
             else if (sStr == "reset" && (iNum == COMMAND_OWNER || kID == g_kWearer))
             {
                 //clear saved settings
-                //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, NULL_KEY);
+                //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");
                 llResetScript();
             }
             else if (kID != g_kWearer && iNum != COMMAND_OWNER) return;
@@ -477,7 +477,7 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -584,8 +584,8 @@ default
     on_rez(integer iParam)
     {
         //llResetScript();
-        llSleep(1.5);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llSleep(1.5);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
     //Is this necessary for anything? Removing for now, we'll see.
     //yeah it was necessary cos our menu structuring is MESSED UP and relies on all sorts of scripts resetting. This should do the trick instead, however.
