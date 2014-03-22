@@ -165,7 +165,7 @@ MenuInit()
             HandleMenuResponse("Main|" + sName);
             
             //request children of each submenu
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, sName, NULL_KEY);            
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, sName, "");            
         }
     }
     //give the help menu GIVECARD and REFRESH_MENU buttons 
@@ -263,7 +263,7 @@ default
     state_entry()
     {
         llSleep(1.0);//delay sending this message until we're fairly sure that other scripts have reset too, just in case
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "collarversion", NULL_KEY);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "collarversion", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
         MenuInit();      
     }
