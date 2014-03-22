@@ -720,8 +720,8 @@ default
         // sleep a sceond to allow all scripts to be initialized
         //llSleep(1.0);
         // send reequest to main menu and ask other menus if the wnt to register with us
-        //llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
-        //llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+        //llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, "");
+        //llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         
         //set settings
         g_iUnlockCollar=0;
@@ -851,9 +851,9 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)           
         { // our parent menu requested to receive buttons, so send ours
-            llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_WHAT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             lButtons = [] ; // flush submenu buttons
-            llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_WHAT, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum == MENUNAME_RESPONSE) // a button is sned ot be added to a plugin
         {
