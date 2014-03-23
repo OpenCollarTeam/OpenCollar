@@ -55,8 +55,8 @@ key g_kDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
 
 string SET = "Set Title" ;
-string UP = "Up";
-string DN = "Down";
+string UP = "↑ Up";
+string DN = "↓ Down";
 string ON = "☒ Show";
 string OFF = "☐ Show";
 string HELP = "Help";
@@ -85,7 +85,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 ShowHideText(){
     //Debug("ShowHideText");
-    llSleep(1.0);
+    //llSleep(1.0); // not sure that it should be
     if (g_iTextPrim >0){
         if (g_sText == ""){
             llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT, g_sText, g_vColor, FALSE,PRIM_SIZE,g_vPrimScale, PRIM_SLICE, <0.490,0.51,0.0>]);
@@ -155,14 +155,16 @@ default{
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
-            list lParams=llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC,PRIM_TEXT]);
+            list lParams=llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC,PRIM_TEXT,PRIM_SIZE]);
             string desc=llList2String(lParams,0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                 g_iTextPrim=linkNumber;
                 g_sText=llList2String(lParams,1);
                 g_vColor=(vector)llList2String(lParams,2);
                 g_iOn=(integer)llList2Float(lParams,3);
-                
+                g_vPrimScale = llList2Vector(lParams,4); // get size from prim
+                if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
+                if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
                 ShowHideText();
                 //Debug((string)g_iTextPrim+(string)g_vColor+g_sText);
             }
