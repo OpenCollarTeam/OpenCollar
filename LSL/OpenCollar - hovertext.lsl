@@ -44,10 +44,11 @@ integer DIALOG_RESPONSE = -9001;
 integer g_iLastRank = COMMAND_EVERYONE ;
 integer g_iOn = FALSE;
 string g_sText;
-vector g_vColor;
+vector g_vColor = <1.0,1.0,1.0>; // default white 
 
 integer g_iTextPrim;
-string g_sDBToken = "hovertext";
+string g_sScript;
+string CTYPE = "collar";
 
 key g_kWearer;
 
@@ -64,7 +65,7 @@ string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.02,0.02,0.25>; // prim size, initial value
-
+vector g_vPrimSlice = <0.490,0.51,0.0>; // prim slice
 
 //Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
 
@@ -87,12 +88,8 @@ ShowHideText(){
     //Debug("ShowHideText");
     //llSleep(1.0); // not sure that it should be
     if (g_iTextPrim >0){
-        if (g_sText == ""){
-            llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT, g_sText, g_vColor, FALSE,PRIM_SIZE,g_vPrimScale, PRIM_SLICE, <0.490,0.51,0.0>]);
-            g_iOn = FALSE;
-        } else {
-            llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT, g_sText, g_vColor, (float)g_iOn,PRIM_SIZE,g_vPrimScale, PRIM_SLICE, <0.490,0.51,0.0>]);
-        }
+        if (g_sText == "") g_iOn = FALSE;
+        llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,g_vPrimSlice]);
     }
 }
 
@@ -124,28 +121,51 @@ integer UserCommand(integer iNum, string sStr, key kID){
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");//pop off the "text" command
         
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
-            if (sNewText == "") g_iOn = FALSE;
-            else g_iOn = TRUE;
- 
-            g_iLastRank=iNum;
+            if (sNewText == "") {
+                g_iOn = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"text", "");
+            } else { 
+                g_iOn = TRUE; 
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"text="+g_sText, "");
+            }
+            g_iLastRank=iNum;            
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
         } else if (sCommand == "textoff") {
             g_iLastRank = COMMAND_EVERYONE;
             g_iOn = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
         } else if (sCommand == "texton") {
             g_iLastRank = iNum;
             g_iOn = TRUE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
         } else if (sCommand == "textup") {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
         } else if (sCommand == "textdown") {
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
         }
         ShowHideText();
     }
     return TRUE;
 }
- 
+
+string GetScriptID() {
+    // strip away "OpenCollar - " leaving the script's individual name
+    return llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+}
+
+// Get from Group_Token=Value , 0=Group, 1=Token, 2=Value
+string SplitTokenValue(string in, integer slot) {
+    string out ;
+    if (slot==0) out = llGetSubString(in, 0,  llSubStringIndex(in, "_") );
+    else if (slot==1) out = llGetSubString(in, llSubStringIndex(in, "_")+1, llSubStringIndex(in, "=")-1);
+    else if (slot==2) out = llGetSubString(in, llSubStringIndex(in, "=")+1, -1);
+    return out ;
+}
+
 default{
     state_entry(){
         //llOwnerSay("state entry:"+(string)llGetFreeMemory());
@@ -155,21 +175,13 @@ default{
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
-            list lParams=llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC,PRIM_TEXT,PRIM_SIZE]);
-            string desc=llList2String(lParams,0);
+            string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
-                g_iTextPrim=linkNumber;
-                g_sText=llList2String(lParams,1);
-                g_vColor=(vector)llList2String(lParams,2);
-                g_iOn=(integer)llList2Float(lParams,3);
-                g_vPrimScale = llList2Vector(lParams,4); // get size from prim
-                if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
-                if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
-                ShowHideText();
-                //Debug((string)g_iTextPrim+(string)g_vColor+g_sText);
+                g_iTextPrim = linkNumber;
+                linkNumber = 0 ; // break while cylle
             }
         }
-         
+        g_sScript = GetScriptID();
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
     } 
@@ -179,6 +191,17 @@ default{
         if (UserCommand(iNum, sStr, kID)) return;
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, "");
+        } else if (iNum == LM_SETTING_RESPONSE) {
+            string sGroup = SplitTokenValue(sStr, 0);
+            string sToken = SplitTokenValue(sStr, 1);
+            string sValue = SplitTokenValue(sStr, 2);
+            if (sGroup == g_sScript) {
+                if(sToken == "text") g_sText = sValue;
+                //if(sToken == "color") g_vColor = (vector)sValue;
+                if(sToken == "on") g_iOn = (integer)sValue;
+                if(sToken == "height") g_vPrimScale.z = (float)sValue;
+            } else if (sGroup+sToken == "Global_CType") CTYPE = sValue;        
+            else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
             if (kID == g_kDialogID) {
                 //got a menu response meant for us. pull out values
@@ -235,5 +258,9 @@ default{
         }
         //Debug("Sleeping at end of changed event\n\n");
         //llSleep(1.0);
+    }
+    
+    on_rez(integer param){
+        llResetScript();
     }
 }
