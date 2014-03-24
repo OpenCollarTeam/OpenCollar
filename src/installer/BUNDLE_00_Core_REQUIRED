@@ -2,10 +2,10 @@ ITEM|~version
 ITEM|OpenCollar Guide
 ITEM|OpenCollar License
 ITEM|Temple
-ITEM|!totallytransparent
+ITEM|Sandbox
+ITEM|Shack
 ITEM|Leash Holder
-ITEM|OpenCollar Post
-ITEM|~PostureOverride
+ITEM|Grabby Post
 SCRIPT|OpenCollar - cleanup
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - auth
@@ -13,7 +13,6 @@ SCRIPT|OpenCollar - listener
 SCRIPT|OpenCollar - dialog
 SCRIPT|OpenCollar - update
 SCRIPT|OpenCollar - settings
-SCRIPT|OpenCollar - anim
 SCRIPT|OpenCollar - leash
 SCRIPT|OpenCollar - leashParticle
 SCRIPT|OpenCollar - lock
