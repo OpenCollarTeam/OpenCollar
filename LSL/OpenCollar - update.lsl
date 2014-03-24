@@ -227,6 +227,7 @@ Init()
     //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
     //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
     //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "collarversion", "");
 }
 
 // returns TRUE if eligible (AUTHED link message number)
