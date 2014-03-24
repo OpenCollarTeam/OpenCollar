@@ -345,6 +345,7 @@ default
                 i = llListFindList(g_lSettings, [sToken]);
                 if (~i) g_lSettings = llListReplaceList(g_lSettings, [sValue], i+1, i+1);
                 else g_lSettings += [sToken, sValue];
+                UpdateSettings();
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sStr == "settings=set") UpdateSettings();
