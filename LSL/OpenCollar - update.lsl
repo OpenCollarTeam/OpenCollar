@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.955                                  //
+//                                 version 3.957                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -43,7 +43,7 @@ key wearer;
 
 string g_sUpdaterName="OpenCollar Updater";
 string g_sRelease_version;
-string g_sHowToUpdate="Updaters are available at http://maps.secondlife.com/secondlife/Keraxic/51/192/1234 https://www.primbay.com/product.php?id=1782591 https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
+string g_sHowToUpdate="Get an Updater at http://maps.secondlife.com/secondlife/Glint/42/97/46\nhttps://www.primbay.com/product.php?id=1782591\nhttps://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
 
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -78,7 +78,7 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/LSL/~version";
+string version_check_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
@@ -91,7 +91,7 @@ key github_version_request;
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw.github.com/OpenCollar/OpenCollarUpdater/main/news.md";
+string news_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
@@ -245,33 +245,9 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
         }
         else if (submenu == BTN_GET_UPDATE)
         {
-            if (id == wearer)
-            {
-                 if(llGetInventoryType(g_sUpdaterName)==INVENTORY_OBJECT)
-                    {
-                        llGiveInventory(id,g_sUpdaterName);
-                        if ((float)g_sRelease_version > (float)my_version)
-                        {
-                            Notify(id,"Look in your objects folder for your updater. Use this to change the packages in your collar, but please note that there is a newer updater than this one available.\n"+g_sHowToUpdate,FALSE);
-                        }
-                        else Notify(id,"Look in your objects folder for your updater. Use this to change the packages in your collar.",FALSE);
-                    }
-                    else Notify(id,"Sorry, the updater appears to be missing from your collar! \n"+g_sHowToUpdate,FALSE); 
-            }
-            else
-            {
-                Notify(id,"Only the wearer can request updates for the " + CTYPE + ".",FALSE);
-            }
+            llLoadURL(id,g_sHowToUpdate,"https://marketplace.secondlife.com/p/Open
+Collar-Updater/5493698");
         }
-       // else if (submenu == BTN_GET_VERSION)
-       // {
-       //    UserCommand(iNum, "version", id);
-       // }
-        else
-        {
-            return TRUE; // drop the command if it is not a menu handled here
-        }
-        llMessageLinked(LINK_ROOT, iNum, "menu "+PARENT_MENU, id);
     }
     else if (str == "update")
     {

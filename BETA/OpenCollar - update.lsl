@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - update                               //
-//                                 version 3.955                                  //
+//                                 version 3.957                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -78,7 +78,7 @@ key g_kUpdaterOrb;
 
 // We check for the latest version number by looking at the "~version" notecard
 // inside the 'release' branch of the collar's Github repo.
-string version_check_url = "https://raw2.github.com/OpenCollar/OpenCollarUpdater/main/BETA/~version";
+string version_check_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/BETA/~version";
 key github_version_request;
 
 // A request to this URL will trigger delivery of an updater.  We omit the
@@ -91,7 +91,7 @@ key github_version_request;
 // static file on Github to keep server load down.  This script will remember
 // the date of the last time it reported news so it will only show things once.
 // It will also not show things more than a week old.
-string news_url = "https://raw2.github.com/OpenCollar/OpenCollarUpdater/main/BETA/news.md";
+string news_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/BETA/news.md";
 key news_request;
 
 // store versions as strings and don't cast to float until the last minute.
@@ -245,7 +245,8 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
         }
         else if (submenu == BTN_GET_UPDATE)
         {
-            llLoadURL(id,g_sHowToUpdate,"https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698");
+            llLoadURL(id,g_sHowToUpdate,"https://marketplace.secondlife.com/p/Open
+Collar-Updater/5493698");
         }
     }
     else if (str == "update")
@@ -381,7 +382,7 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
-         // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");
+            // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");
         }
         else if (num == DIALOG_RESPONSE)
         {
