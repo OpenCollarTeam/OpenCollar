@@ -9,10 +9,16 @@ SCRIPT|OpenCollar - BMC
 SCRIPT|OpenCollar - realleash
 SCRIPT|OpenCollar - real leash - 0.1
 SCRIPT|OpenCollar - real leash - 0.2
+SCRIPT|OpenCollar - coupleanim1
+SCRIPT|OpenCollar - coupleanim2
+SCRIPT|OpenCollar - hovertext
 ITEM|How to set up your #RLV and use SmartStrip
+ITEM|OpenCollar - rlvrelay - Help
 ITEM|OpenCollar RLV Relay Help
 ITEM|OpenCollar Updater
 ITEM|OpenCollar Sub AO
+ITEM|OpenCollar Post
+ITEM|OC_Leash_Post
 ITEM|Ball&Chain
 ITEM|chain
 ITEM|rope
@@ -20,7 +26,43 @@ ITEM|brushedmetal-hshaded-contrasty
 ITEM|brushedmetal-hshaded
 ITEM|brushedmetal-roundshaded
 ITEM|brushedmetal-vshaded
-ITEM|OpenCollar - rlvrelay - Help
+ITEM|blank
+ITEM|blkgraindot
+ITEM|Celtic
+ITEM|diamond
+ITEM|I-Beam
+ITEM|metal-h
+ITEM|metal-h-contrast
+ITEM|metal-round
+ITEM|metal-v
+ITEM|opaque gradient circle
+ITEM|Rusty Metal Chest
+ITEM|Rusty Panel
+ITEM|seamless foil
+ITEM|seamless gold foil
+ITEM|Silver Filligree
+ITEM|!fadestripe
+ITEM|!whiteleather
+ITEM|!totallytransparent
+ITEM|5fadestripes
+ITEM|Blank
+ITEM|Brass
+ITEM|Chrome
+ITEM|Fur Dark
+ITEM|Fur Light
+ITEM|Gem
+ITEM|Gold
+ITEM|Grunge
+ITEM|Lace
+ITEM|Leather Dark
+ITEM|Leather Light
+ITEM|Rust
+ITEM|Silver
+ITEM|Snake
+ITEM|Steel
+ITEM|yin
+ITEM|yang
+ITEM|Tranquility
 ITEM|~heightscalars
 ITEM|~-30
 ITEM|~-31
@@ -43,59 +85,3 @@ ITEM|~-47
 ITEM|~-48
 ITEM|~-49
 ITEM|~-50
-ITEM|blank
-ITEM|blkgraindot
-ITEM|Celtic
-ITEM|diamond
-ITEM|I-Beam
-ITEM|metal-h
-ITEM|metal-h-contrast
-ITEM|metal-round
-ITEM|metal-v
-ITEM|opaque gradient circle
-ITEM|Rusty Metal Chest
-ITEM|Rusty Panel
-ITEM|seamless foil
-ITEM|seamless gold foil
-ITEM|Silver Filligree
-ITEM|!fadestripe
-ITEM|!whiteleather
-ITEM|5fadestripes
-ITEM|~bootlick
-ITEM|~extendfoot
-ITEM|~footextend
-ITEM|~footkiss
-ITEM|~hug-feminine
-ITEM|~jumphold
-ITEM|~jumphug
-ITEM|~kiss-top
-ITEM|~kiss-bottom
-ITEM|~love-top
-ITEM|~love-bottom
-ITEM|~kiss-feminine
-ITEM|~kneelhug
-ITEM|~kneelhug-dom
-ITEM|~master
-ITEM|~pet_the_pet
-ITEM|~sub-hug
-ITEM|~sub-pet
-ITEM|OC_Leash_Post
-ITEM|Blank
-ITEM|Brass
-ITEM|Chrome
-ITEM|Fur Dark
-ITEM|Fur Light
-ITEM|Gem
-ITEM|Gold
-ITEM|Grunge
-ITEM|Lace
-ITEM|Leather Dark
-ITEM|Leather Light
-ITEM|Rust
-ITEM|Silver
-ITEM|Snake
-ITEM|Steel
-ITEM|Grabby Post
-ITEM|yin
-ITEM|yang
-ITEM|Tranquility
