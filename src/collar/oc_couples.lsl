@@ -217,7 +217,7 @@ default
     }
     state_entry()
     {
-        llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
+        //llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD)
