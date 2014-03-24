@@ -66,6 +66,25 @@ default
             llSetScriptState(llGetScriptName(), FALSE);
         }    
 
+        key transKey=llGetInventoryKey("!totallytransparent");
+        key systemTransKey="8dcd4a48-2d37-4909-9f78-f7a9eb4ef903";
+        
+        if (transKey){
+            integer primNumber=llGetNumberOfPrims()+1;
+            while (primNumber--){
+                integer numOfSides = llGetNumberOfSides();
+                while (numOfSides--){
+                    key texture=llList2String(llGetLinkPrimitiveParams(primNumber,[PRIM_TEXTURE,numOfSides]),0);
+                    if (texture == transKey){
+                        llSetLinkPrimitiveParamsFast(2,[PRIM_TEXTURE,numOfSides,systemTransKey,<1,1,1>,<0,0,0>,0]);
+                        //Debug("replaced !totalytransparent on prim "+(string)primNumber+" side "+(string)numOfSides);
+                    }
+                }
+            }
+        }
+
+
+
         DelItems(garbage);
 
         if (llGetLinkNumber() > 1) {
