@@ -478,11 +478,11 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
         } else if (sMessage == "givepost" || sMessage == "give post") {
-            llGiveInventory(kMessageID, "OpenCollar Post");
+            llGiveInventory(kMessageID, "Grabby Post");
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "rezpost" || sMessage == "rez post") {
-            llRezObject("OpenCollar Post", llGetPos() + (<1.0, 0.0, -0.805> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 80, 0> * DEG_TO_RAD), 0);
+            llRezObject("Grabby Post", llGetPos() + (<1.0, 0.0, -0.805> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 80, 0> * DEG_TO_RAD), 0);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
