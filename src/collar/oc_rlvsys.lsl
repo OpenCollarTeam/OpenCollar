@@ -370,7 +370,7 @@ SafeWord(integer iCollarToo) {
     g_lRestrictions=[];
     integer i;
     if (!iCollarToo) {
-        llMessageLinked(LINK_SET,RLV_REFRESH,"","");
+        llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
     }
 }
 // End of book keeping functions
@@ -426,7 +426,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else
         {
-            llMessageLinked(LINK_SET, RLV_CLEAR, "", "");
+            llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
             SafeWord(TRUE);
         }
     }
@@ -444,7 +444,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_iRLVOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
             SafeWord(TRUE);
-            llMessageLinked(LINK_SET, RLV_OFF, "", "");
+            llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
         }
         else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
     }
@@ -516,7 +516,7 @@ default{
                         //llOwnerSay("rlvdb false");
                         g_iViewerCheck = FALSE;
                         g_iRLVOn = FALSE; //force values, just in case.
-                        llMessageLinked(LINK_SET, RLV_OFF, "", "");
+                        llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
                         state checked;
                     }
                     else
@@ -558,7 +558,7 @@ default{
             //send the version to rlv plugins
             g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2);
             g_sRlvVersionString=PrettyVersion(sMsg);
-            llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, "");
+            llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
             //this is already TRUE if rlvon=1 in the DB, but not if rlvon was unset.  set it to true here regardless, since we're setting rlvon=1 in the DB
             g_iRLVOn = TRUE;
 
@@ -570,7 +570,7 @@ default{
             }
             g_iViewerCheck = TRUE;
 
-            llMessageLinked(LINK_SET, RLV_ON, "", "");
+            llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
 
             state checked;
         }
@@ -589,7 +589,7 @@ default{
             //we've given the viewer a full 60 seconds
             g_iViewerCheck = FALSE;
             g_iRLVOn = FALSE;
-            llMessageLinked(LINK_SET, RLV_OFF, "", "");
+            llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
 
             Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
@@ -635,7 +635,7 @@ state checked {
             // wake up other plugins anyway (tell them that RLV is still
             // active, as it is likely they did reset themselves
 
-            llMessageLinked(LINK_SET, RLV_REFRESH, "", "");         
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);         
         }
     }
 
@@ -654,7 +654,7 @@ state checked {
         {   //ask RLV plugins to tell us about their rlv submenus
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
-            llMessageLinked(LINK_SET, RLV_REFRESH, "", "");
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
             llSleep(5); //Make sure the relay is ready before pinging
             //ping inworld object so that they reinstate their restrictions
             integer i;
@@ -772,7 +772,7 @@ state checked {
             }
             else if (iNum == COMMAND_SAFEWORD)
             {// safeWord used, clear rlv settings
-                llMessageLinked(LINK_SET, RLV_CLEAR, "", "");
+                llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
                 SafeWord(TRUE);
             }
             else if (iNum == LM_SETTING_SAVE)
@@ -823,7 +823,7 @@ state checked {
         }
         //re make rlv restrictions after teleport or region change, because SL seems to be losing them
         if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {   //if we teleported, or changed regions
-            llMessageLinked(LINK_SET, RLV_REFRESH, "", "");              //request refresh
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);              //request refresh
             g_iTimestamp==llGetUnixTime();                              //remember when we requested it
         }
     }
