@@ -254,7 +254,7 @@ QueryClothing(key kAv, integer iAuth)
     //start timer
     llSetTimerEvent(g_iRLVTimeOut);
     //send rlvcmd
-    llMessageLinked(LINK_SET, RLV_CMD, "getoutfit=" + (string)g_iClothRLV, "");
+    llMessageLinked(LINK_SET, RLV_CMD, "getoutfit=" + (string)g_iClothRLV, NULL_KEY);
     g_kMenuUser = kAv;
     g_iMenuAuth = iAuth;
 }
@@ -307,7 +307,7 @@ QueryAttachments(key kAv, integer iAuth)
     //start timer
     llSetTimerEvent(g_iRLVTimeOut);
     //send rlvcmd
-    llMessageLinked(LINK_SET, RLV_CMD, "getattach=" + (string)g_iAttachRLV, "");
+    llMessageLinked(LINK_SET, RLV_CMD, "getattach=" + (string)g_iAttachRLV, NULL_KEY);
     g_kMenuUser = kAv;
     g_iMenuAuth = iAuth;
 }
@@ -391,7 +391,7 @@ UpdateSettings()
             }
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
         Debug("Loaded locks: Cloth- " + llList2CSV(g_lLockedItems) + ": Attach- " + llList2CSV(g_lLockedAttach));
     }
 }
@@ -429,12 +429,12 @@ SaveLockAllFlag(integer iSetting)
 
 DoLockAll(key kID)
 {
-    llMessageLinked(LINK_SET, RLV_CMD, "addattach=n,remattach=n,remoutfit=n,addoutfit=n", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=n,remattach=n,remoutfit=n,addoutfit=n", NULL_KEY);
 }
 
 DoUnlockAll(key kID)
 {
-    llMessageLinked(LINK_SET, RLV_CMD, "addattach=y,remattach=y,remoutfit=y,addoutfit=y", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "addattach=y,remattach=y,remoutfit=y,addoutfit=y", NULL_KEY);
 }
 
 // returns TRUE if eligible (AUTHED link message number)
@@ -485,20 +485,20 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     if(x==13) x=9; //skip hair,skin,shape,eyes
                     --x;
                     string sItem=llToLower(llList2String(DETACH_CLOTH_POINTS,x));
-                    llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:"+ sItem +"=force","");
+                    llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:"+ sItem +"=force",NULL_KEY);
                     
                  }
             }
            
-           llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", "");
+           llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
             return TRUE;
         }
         sOpt = llToLower(sOpt);
         string test=llToUpper(llGetSubString(sOpt,0,0))+llGetSubString(sOpt,1,-1);
         if(llListFindList(DETACH_CLOTH_POINTS,[test])==-1) return FALSE;
         //send the RLV command to remove it.
-        if(g_iSmartStrip==TRUE) llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sOpt + "=force", "");
-        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sOpt + "=force", ""); //yes, this isn't an else. We do it in case the item isn't in #RLV.
+        if(g_iSmartStrip==TRUE) llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sOpt + "=force", NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sOpt + "=force", NULL_KEY); //yes, this isn't an else. We do it in case the item isn't in #RLV.
     }
         
     else if (llListFindList(g_lRLVcmds, [sCommand]) != -1)
@@ -509,7 +509,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         }
         else
         {
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, "");
+            llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
             string sParam = llList2String(llParseString2List(sStr, ["="], []), 1);
             integer iIndex = llListFindList(g_lSettings, [sOption]);
@@ -848,7 +848,7 @@ default
                     
                         UserCommand(iAuth,"strip all",kAv); //See stuff in UserCommand. If we use smartstrip for all, then we'd jump to that here to save duplication, but otherwise it's a single LM, better to do it here than hit UserCommand.
                                             
-                       // llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", "");
+                       // llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
@@ -867,8 +867,8 @@ default
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
                         if(kAv==g_kSmartUser || g_iSmartStrip==TRUE){
-                        llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sMessage + "=force", "");}
-                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", "");
+                        llMessageLinked(LINK_SET, RLV_CMD , "detachallthis:" + sMessage + "=force", NULL_KEY);}
+                        llMessageLinked(LINK_SET, RLV_CMD,  "remoutfit:" + sMessage + "=force", NULL_KEY);
                         //Return menu
                         //sleep fof a sec to let things detach
                         llSleep(0.5);
@@ -884,7 +884,7 @@ default
                     {    //we got an attach point.  send a message to detach
                         sMessage = llToLower(sMessage);
                         //send the RLV command to remove it.
-                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", "");
+                        llMessageLinked(LINK_SET, RLV_CMD,  "detach:" + sMessage + "=force", NULL_KEY);
                         //sleep for a sec to let tihngs detach
                         llSleep(0.5);
                         //Return menu
