@@ -72,7 +72,7 @@ default
             integer numOfSides = llGetNumberOfSides();
             while (numOfSides--){
                 key texture=llList2String(llGetLinkPrimitiveParams(primNumber,[PRIM_TEXTURE,numOfSides]),0);
-                if (texture == transKey || texture == TEXTURE_PLYWOOD){
+                if (texture == transKey || texture == TEXTURE_PLYWOOD || texture=="!totallytransparent"){
                     llSetLinkPrimitiveParamsFast(primNumber,[PRIM_TEXTURE,numOfSides,TEXTURE_TRANSPARENT,<1,1,1>,<0,0,0>,0]);
                 }
             }
