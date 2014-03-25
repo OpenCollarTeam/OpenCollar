@@ -256,7 +256,7 @@ UpdateSettings()
             }
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
         g_lSettings=lTempSettings;
     }
 
@@ -346,7 +346,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 //    llInstantMessage(llGetOwner(), "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                 //    return;
                 //}
-                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, "");
+                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, NULL_KEY);
             }
             else if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
             {   //this is a behavior that we handle.
@@ -564,7 +564,7 @@ default
             string sCmd = "tpto:";
             sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
             sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, "");
+            llMessageLinked(LINK_SET, RLV_CMD, sCmd, NULL_KEY);
         }
     }
 }
