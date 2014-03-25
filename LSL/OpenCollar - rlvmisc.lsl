@@ -213,7 +213,7 @@ UpdateSettings()
 
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
         g_lSettings=lTempSettings;
     }
 }
