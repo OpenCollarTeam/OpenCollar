@@ -127,7 +127,7 @@ bind(key _k, integer auth)
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, GetScriptID() + "Binder=" + (string)_k + "," + (string)auth, "");
     // Garbler only listen to the wearer, as a failsafe
     giGL = llListen(giCRC, "", gkWear, "");
-    llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", NULL_KEY);
     if (llGetAgentSize(_k) != ZERO_VECTOR)
     {
         if (_k != gkWear) llOwnerSay(llKey2Name(_k) + " ordered you to be quiet");
@@ -143,7 +143,7 @@ release(key _k)
     llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + UNGARBLE, "");
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, GetScriptID() + "Binder", "");
     llListenRemove(giGL);
-    llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", NULL_KEY);
     if (llGetAgentSize(_k) != ZERO_VECTOR)
     {
         if (_k != gkWear) llOwnerSay("You are free to speak again");
@@ -233,8 +233,8 @@ default
         }
         else if (iM == RLV_REFRESH)
         {
-            if (bOn) llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", "");
-            else llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", "");
+            if (bOn) llMessageLinked(LINK_SET, RLV_CMD, "redirchat:" + (string)giCRC + "=add,chatshout=n,sendim=n", NULL_KEY);
+            else llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", NULL_KEY);
         }
         else if (iM == RLV_CLEAR) release(kM);
         else if (iM == LM_SETTING_RESPONSE)
