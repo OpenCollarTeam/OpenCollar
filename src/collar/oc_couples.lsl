@@ -366,7 +366,8 @@ default
                 StopAnims();
                 string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                 llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                llInstantMessage(g_kPartner,  llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0) + " would like give you a " + sCommand + ". Click [Yes] to accept." );
+                Notify(g_kWearer, "Offering to "+ sCommand +" "+ g_sPartnerName, FALSE);
+                Notify(g_kPartner,  llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0) + " would like give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
             }
             else if (kID == g_kTimerMenu)
             {
