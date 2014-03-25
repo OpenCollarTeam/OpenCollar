@@ -232,7 +232,7 @@ UpdateSettings()
             }
         }
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), "");
+        llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
         g_lSettings=lTempSettings;
     }
 }
@@ -337,7 +337,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 integer iIndex = llListFindList(g_lSettings, ["unsit"]);
                 if (~iIndex && llList2String(g_lSettings, iIndex + 1)!="n") iIndex=-1;
                 if (~iIndex) sStr = "unsit=y," + sStr + ",unsit=n";
-                llMessageLinked(LINK_SET, RLV_CMD, sStr, "");
+                llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             }
         }
         else if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
@@ -374,7 +374,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
                 return TRUE;
             }
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, "");
+            llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
         }
         else if (sBehavior == "clear" && iNum == COMMAND_OWNER) ClearSettings();
     }
@@ -460,7 +460,7 @@ default
             iIndex = llListFindList(g_lSettings, ["sittp"]);
             sSittpValue = llList2String(g_lSettings, iIndex + 1);
 
-            llMessageLinked(LINK_THIS, RLV_CMD, "sittp=y,sit:" + g_sSitTarget + "=force,sittp=" + sSittpValue, "");
+            llMessageLinked(LINK_THIS, RLV_CMD, "sittp=y,sit:" + g_sSitTarget + "=force,sittp=" + sSittpValue, NULL_KEY);
         }
     }
     
