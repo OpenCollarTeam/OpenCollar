@@ -197,7 +197,7 @@ MoveToPartner() {
     vector partnerEuler = llRot2Euler(partnerRot);
     
     // turn to face the partner
-    llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", "");
+    llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
     
     g_iTargetID = llTarget(partnerPos, g_fWalkingDistance);
     llMoveToTarget(partnerPos, g_fWalkingTau);
