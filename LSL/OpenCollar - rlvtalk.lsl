@@ -286,7 +286,7 @@ UpdateSettings()
         }
         sOut = llDumpList2String(lNewList, ",");
         //output that string to viewer
-        llMessageLinked(LINK_SET, RLV_CMD, sOut, "");
+        llMessageLinked(LINK_SET, RLV_CMD, sOut, NULL_KEY);
         g_lSettings=lTempSettings;
     }
 }
