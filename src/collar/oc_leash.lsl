@@ -180,9 +180,9 @@ SetLength(integer iIn){
 ApplyRestrictions(){
     if (g_iRLVOn){
         if (g_kLeashedTo){
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", "");     //set all restrictions
+            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
         } else {
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", "");     //set all restrictions
+            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //set all restrictions
         }
     }
 }
@@ -296,7 +296,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     }
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
     if (! ~llListFindList(g_lOwners,[g_kLeashedTo])) {
-        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", "");
+        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", NULL_KEY);
     }
     ApplyRestrictions();
 }
@@ -363,7 +363,7 @@ DoUnleash(){
         //Debug("Unleashing a Real leash");
         if (! ~llListFindList(g_lOwners,[g_kLeashedTo]) ){ //if not in owner list
             //Debug("leash holder ("+(string)g_kLeashedTo+")is not an owner");
-            llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", "");
+            llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", NULL_KEY);
         } else {
             //Debug("leash holder is an owner");
         }
@@ -720,7 +720,7 @@ default
         if(g_iJustMoved) {
             vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", "");
+            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);
             g_iJustMoved = 0;
         }   
     }
