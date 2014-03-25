@@ -356,7 +356,7 @@ SafeWord()
 {
     if (g_iSafeMode)
     {
-        llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "","");
+        llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "",NULL_KEY);
         Notify(g_kWearer, "You have safeworded",TRUE);
         g_lTempBlackList=[];
         g_lTempWhiteList=[];
