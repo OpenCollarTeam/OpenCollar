@@ -985,25 +985,32 @@ default
         if (iAuth==-1) return;
         else if (iAuth==1) {HandleCommand(sIdent,kID,sMsg,TRUE); llSetTimerEvent(g_iGarbageRate);}
         else if (g_iBaseMode == 2)
-        {llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
-            if (llGetMemoryLimit() - llGetUsedMemory()> 5000) //keeps margin for this event + next arriving chat message
+        {   
+            llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
+//            if (llGetMemoryLimit() - llGetUsedMemory()> 5000) //keeps margin for this event + next arriving chat message
+//            {
+            g_lQueue += [sIdent, kID, sMsg];
+            sMsg = ""; sIdent="";
+            llOwnerSay("Used memory after queueing: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
+//            }
+//            else
+            if (llGetMemoryLimit() - llGetUsedMemory()< 5000) //keeps margin for this event + next arriving chat message
             {
-                g_lQueue += [sIdent, kID, sMsg];
                 sMsg = ""; sIdent="";
-                if (!g_iAuthPending) Dequeue();
-                llOwnerSay("Used memory after queueing: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
-            }
-            else
-            {
-                llOwnerSay("Relay queue saturated. Dropping all requests from "+ llKey2Name(kID) +". Relay frozen for the next 20s.");
-                sMsg = ""; sIdent="";
-                g_lTempBlackList+=[kID];
-                if (kUser) g_lTempUserBlackList+=[kUser];
+                key kOldestId = llList2Key(g_lQueue, 1);  // It's actually more likely we want to drop the old request we completely forgot about rather than the newest one that will be forgotten because of some obscure memory limit.
+//                key kOldUser = NULL_KEY;
+//                if (llGetSubString(sMsg,0,6)=="!x-who/") kOldUser=SanitizeKey(llGetSubString(llList2String(g_lQueue, 2),7,42));
+                llOwnerSay("Relay queue saturated. Dropping all requests from oldest source ("+ llKey2Name(kOldestId) +").");
+                g_lTempBlackList+=[kOldestId];
+//                if (kUser) g_lTempUserBlackList+=[kUser];
                 CleanQueue();
-                g_iRecentSafeword = TRUE;
-                refreshRlvListener();
-                llSetTimerEvent(30.);
+                llOwnerSay("Used memory after cleaning queue: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
+//                g_iRecentSafeword = TRUE;
+//                refreshRlvListener();
+//                llSetTimerEvent(30.);
+// SA: maybe some of the above should be re-added to "punish" spammers more aggressively.
             }
+            if (!g_iAuthPending) Dequeue();
         }
         else if (g_iPlayMode) {HandleCommand(sIdent,kID,sMsg,FALSE); llSetTimerEvent(g_iGarbageRate);}
     }
