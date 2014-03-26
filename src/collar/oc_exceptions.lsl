@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.958                                 //
+//                                 version 3.959                                 //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -10,6 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//3.959 Medea/Lucian: g_iAuth was not being set in menu path to adding user, resulting in no auth value for return menu. Added  g_iAuth=auth; to fetchAvi command.
 
 //3.936 Bugfixes:  1. Reported issue, message about UUID not found when trying to add other. I haven't found this to be repeatable, but I have managed to get it to do it once. Increased llRequestAgentInfo timer to 4 seconds from 0.5, because 0.5 may simply be too short to reliably get a response from the dataserver, particularly in a laggy sim. Hopefully this will remove the issue, but let's monitor this.  2. Reported issue in secowner exceptions not being set. Typo in settings was looking for auth_secowner rather than auth_secowners in LM_SETTINGS_RESPONSE, so secowners list was not getting filled.
 
@@ -368,6 +369,7 @@ FetchAvi(integer auth, string type, string name, key user)
     }
     if (llGetListLength(exclude))
         out += "|" + llDumpList2String(exclude, ",");
+    g_iAuth=auth;
     llMessageLinked(LINK_THIS, FIND_AGENT, out, REQUEST_KEY = llGenerateKey());
 }
 
