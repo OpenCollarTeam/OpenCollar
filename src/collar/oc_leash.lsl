@@ -554,7 +554,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
                 UserCommand(iAuth, "leash", kMessageID ,bFromMenu);
-            } else if(iNewLength > 0 && iNewLength < 30){
+            } else if(iNewLength > 0 && iNewLength <= 30){
                 //Person holding the leash can always set length.
                 if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
                 {
