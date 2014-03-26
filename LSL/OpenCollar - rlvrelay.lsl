@@ -77,7 +77,6 @@ list g_lAvBlackListNames=[];
 
 integer g_iRLV=FALSE;
 list g_lQueue=[];
-integer g_iQApproxSize; //Approximation of the queue size (in bytes)
 integer QSTRIDES=3;
 integer g_iListener=0;
 integer g_iAuthPending = FALSE;
@@ -178,7 +177,7 @@ SaveSettings()
         +",avwhitelistnames:"+llDumpList2String(g_lAvWhiteListNames,"/");
     if ( g_lAvBlackList != [] ) sNewSettings+=",avblacklist:"+llDumpList2String(g_lAvBlackList,"/")
         +",avblacklistnames:"+llDumpList2String(g_lAvBlackListNames,"/");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, NULL_KEY);
 }
 
 UpdateSettings(string sSettings)
@@ -260,7 +259,6 @@ Dequeue()
         if (g_lQueue==[])
         {
             llSetTimerEvent(g_iGarbageRate);
-            g_iQApproxSize = 0;
             return;
         }
         sCurIdent=llList2String(g_lQueue,0);
@@ -356,7 +354,7 @@ SafeWord()
 {
     if (g_iSafeMode)
     {
-        llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "",NULL_KEY);
+        llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "","");
         Notify(g_kWearer, "You have safeworded",TRUE);
         g_lTempBlackList=[];
         g_lTempWhiteList=[];
@@ -609,14 +607,14 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
         llInstantMessage(kID, "Sorry, only the wearer of the " + CTYPE + " or their owner can change the relay options.");
     else if (sStr=="safeword") SafeWord();
-    else if (sStr=="relay getdebug")
+    else if (sStr=="getdebug")
     {
         g_kDebugRcpt = kID;
         Notify(kID, "Relay messages will be forwarded to "+llKey2Name(kID)+".", TRUE);
 
         return TRUE;
     }
-    else if (sStr=="relay stopdebug")
+    else if (sStr=="stopdebug")
     {
         g_kDebugRcpt = NULL_KEY;
         Notify(kID, "Relay messages will not forwarded anymore.", TRUE);
@@ -752,7 +750,7 @@ default
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
         }
         else if (iNum==CMD_ADDSRC)
         {
@@ -987,13 +985,13 @@ default
         if (iAuth==-1) return;
         else if (iAuth==1) {HandleCommand(sIdent,kID,sMsg,TRUE); llSetTimerEvent(g_iGarbageRate);}
         else if (g_iBaseMode == 2)
-        {
-            if (g_iQApproxSize < 2500) //keeps margin for this event + next arriving chat message
+        {llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
+            if (llGetMemoryLimit() - llGetUsedMemory()> 5000) //keeps margin for this event + next arriving chat message
             {
-                g_iQApproxSize += llStringLength(sIdent+ sMsg);
                 g_lQueue += [sIdent, kID, sMsg];
                 sMsg = ""; sIdent="";
                 if (!g_iAuthPending) Dequeue();
+                llOwnerSay("Used memory after queueing: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
             }
             else
             {
