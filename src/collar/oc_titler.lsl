@@ -64,7 +64,7 @@ string HELP = "Help";
 string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
-vector g_vPrimScale = <0.02,0.02,0.25>; // prim size, initial value
+vector g_vPrimScale = <0.02,0.02,0.5>; // prim size, initial value (z - text offset height)
 vector g_vPrimSlice = <0.490,0.51,0.0>; // prim slice
 
 //Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
@@ -130,14 +130,17 @@ integer UserCommand(integer iNum, string sStr, key kID){
             }
             g_iLastRank=iNum;            
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         } else if (sCommand == "textoff") {
             g_iLastRank = COMMAND_EVERYONE;
             g_iOn = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"on", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"auth", ""); // del lastrank from DB
         } else if (sCommand == "texton") {
             g_iLastRank = iNum;
             g_iOn = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sCommand == "textup") {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
@@ -200,6 +203,7 @@ default{
                 //if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "on") g_iOn = (integer)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
+                if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
             } else if (sGroup+sToken == "Global_CType") CTYPE = sValue;        
             else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
