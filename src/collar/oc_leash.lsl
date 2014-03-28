@@ -178,12 +178,20 @@ SetLength(integer iIn){
 }
 
 ApplyRestrictions(){
-    if (g_iRLVOn){
-        if (g_kLeashedTo){
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
-        } else {
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //set all restrictions
+    if (g_iStrictModeOn){
+        if (g_iRLVOn){
+            if (g_kLeashedTo){
+//                Debug("Setting restrictions");
+                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
+            } else {
+//                Debug("Releasing restrictions");
+                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //release all restrictions
+            }
+//        } else {
+//            Debug("RLV is off");
         }
+//    } else {
+//        Debug("Strict is off");
     }
 }
 
