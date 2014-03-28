@@ -986,15 +986,15 @@ default
         else if (iAuth==1) {HandleCommand(sIdent,kID,sMsg,TRUE); llSetTimerEvent(g_iGarbageRate);}
         else if (g_iBaseMode == 2)
         {   
-            llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
+//            llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
 //            if (llGetMemoryLimit() - llGetUsedMemory()> 5000) //keeps margin for this event + next arriving chat message
 //            {
             g_lQueue += [sIdent, kID, sMsg];
             sMsg = ""; sIdent="";
-            llOwnerSay("Used memory after queueing: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
+//            llOwnerSay("Used memory after queueing: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
 //            }
 //            else
-            if (llGetMemoryLimit() - llGetUsedMemory()< 5000) //keeps margin for this event + next arriving chat message
+            if (llGetMemoryLimit() - llGetUsedMemory()< 3927) //keeps margin for this event + next arriving chat message
             {
                 sMsg = ""; sIdent="";
                 key kOldestId = llList2Key(g_lQueue, 1);  // It's actually more likely we want to drop the old request we completely forgot about rather than the newest one that will be forgotten because of some obscure memory limit.
@@ -1004,7 +1004,7 @@ default
                 g_lTempBlackList+=[kOldestId];
 //                if (kUser) g_lTempUserBlackList+=[kUser];
                 CleanQueue();
-                llOwnerSay("Used memory after cleaning queue: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
+//                llOwnerSay("Used memory after cleaning queue: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
 //                g_iRecentSafeword = TRUE;
 //                refreshRlvListener();
 //                llSetTimerEvent(30.);
