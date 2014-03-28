@@ -125,6 +125,7 @@ string CTYPE = "collar";
 
 //realleash variables
 integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
+integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 
 list g_lRestrictionNames= ["fartouch","sittp","tplm","tplure","tploc"];
@@ -178,21 +179,26 @@ SetLength(integer iIn){
 }
 
 ApplyRestrictions(){
-    if (g_iStrictModeOn){
-        if (g_iRLVOn){
-            if (g_kLeashedTo){
-//                Debug("Setting restrictions");
-                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
-            } else {
-//                Debug("Releasing restrictions");
-                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //release all restrictions
+    //Debug("Applying Restrictions");
+    if (g_iLeasherInRange){
+        if (g_iStrictModeOn){
+            if (g_iRLVOn){
+                if (g_kLeashedTo){
+                    //Debug("Setting restrictions");
+                    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
+                    return;
+                }
+            //} else {
+                //Debug("RLV is off");
             }
-//        } else {
-//            Debug("RLV is off");
+        //} else {
+            //Debug("Strict is off");
         }
-//    } else {
-//        Debug("Strict is off");
+    //} else {
+        //Debug("Leasher out of range");
     }
+    //Debug("Releasing restrictions");
+    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //release all restrictions
 }
 
 // Wrapper for DoLeash with notifications
@@ -306,6 +312,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     if (! ~llListFindList(g_lOwners,[g_kLeashedTo])) {
         llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", NULL_KEY);
     }
+    g_iLeasherInRange=TRUE;
     ApplyRestrictions();
 }
 
@@ -379,6 +386,8 @@ DoUnleash(){
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
+    g_iLeasherInRange=FALSE;
+
     ApplyRestrictions();
 }
 
@@ -603,16 +612,19 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
         }
     } else if (iAuth == COMMAND_LEASH_SENSOR) {
         //fixme:  particles shouldn't be controling the leash script, should be the other way around
+        //Debug("Got leash sensor event:"+sMessage);
         if (sMessage == "Leasher out of range") {// particle script sensor lost the leasher... stop to follow
             llTargetRemove(g_iTargetHandle);
             llStopMoveToTarget();
-
+            g_iLeasherInRange=FALSE;
         } else if (sMessage == "Leasher in range") {// particle script sensor found the leasher again, restart to follow
             llTargetRemove(g_iTargetHandle);
             g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
             g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
+            g_iLeasherInRange=TRUE;
         }
+        ApplyRestrictions();
     } else if (iAuth == COMMAND_EVERYONE) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
