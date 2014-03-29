@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - titler                               //
-//                                 version 3.958                                  //
+//                                 version 3.959                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -103,7 +103,7 @@ integer UserCommand(integer iNum, string sStr, key kID){
         string ON_OFF ;
         string sPrompt;
         if (g_iTextPrim == -1) {
-            sPrompt="\nMissing hovertext prim.  Titler plugin disabled";
+            sPrompt="\nThis design is missing a FloatText box. Titler disabled.";
         }
         sPrompt = "\nCurrent Title: " + g_sText ;
         if(g_iOn == TRUE) ON_OFF = ON ;
@@ -114,38 +114,38 @@ integer UserCommand(integer iNum, string sStr, key kID){
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();
-    } else  if (g_iOn && iNum > g_iLastRank) { //only change text if commander has smae or greater auth             
-        Notify(kID,"You currently have not the right to change the float text settings, someone with a higher rank set it!", FALSE);
-    } else {
-        if (sCommand == "text") {
+    } else if (llSubStringIndex(sCommand,"title")==0) {
+        if (g_iOn && iNum > g_iLastRank) { //only change text if commander has smae or greater auth             
+            Notify(kID,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
+        } else  if (sCommand == "title") {
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");//pop off the "text" command
         
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
             if (sNewText == "") {
                 g_iOn = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"text", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"title", "");
             } else { 
                 g_iOn = TRUE; 
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"text="+g_sText, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sText, "");
             }
             g_iLastRank=iNum;            
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
-        } else if (sCommand == "textoff") {
+        } else if (sCommand == "titleoff") {
             g_iLastRank = COMMAND_EVERYONE;
             g_iOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"on", "");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"auth", ""); // del lastrank from DB
-        } else if (sCommand == "texton") {
+        } else if (sCommand == "titleon") {
             g_iLastRank = iNum;
             g_iOn = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
-        } else if (sCommand == "textup") {
+        } else if (sCommand == "titleup") {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
-        } else if (sCommand == "textdown") {
+        } else if (sCommand == "titledown") {
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
@@ -199,7 +199,7 @@ default{
             string sToken = SplitTokenValue(sStr, 1);
             string sValue = SplitTokenValue(sStr, 2);
             if (sGroup == g_sScript) {
-                if(sToken == "text") g_sText = sValue;
+                if(sToken == "title") g_sText = sValue;
                 //if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "on") g_iOn = (integer)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
@@ -221,11 +221,11 @@ default{
                 } else {
                     if (sMessage == HELP) {
                         //popup help on how to set label
-                        llMessageLinked(LINK_ROOT, POPUP_HELP, "\nTo set floating text via chat command, say _PREFIX_text followed by the title you wish to set.\nExample: _PREFIX_text I have text above my head!", kAv);
-                    } else if (sMessage == UP) UserCommand(iAuth, "textup", kAv);
-                    else if (sMessage == DN) UserCommand(iAuth, "textdown", kAv);
-                    else if (sMessage == OFF) UserCommand(iAuth, "texton", kAv);
-                    else if (sMessage == ON) UserCommand(iAuth, "textoff", kAv);
+                        llMessageLinked(LINK_ROOT, POPUP_HELP, "\nTo set a title via chat command, say _PREFIX_title followed by the title you wish to set.\nExample: _PREFIX_title WTS 20x Magic Cloth!", kAv);
+                    } else if (sMessage == UP) UserCommand(iAuth, "titleup", kAv);
+                    else if (sMessage == DN) UserCommand(iAuth, "titledown", kAv);
+                    else if (sMessage == OFF) UserCommand(iAuth, "titleon", kAv);
+                    else if (sMessage == ON) UserCommand(iAuth, "titleoff", kAv);
                     UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
                 }
             } else if (kID == g_kTBoxId) {
@@ -239,7 +239,7 @@ default{
                 
                 //if (sMessage == " ") UserCommand(iAuth, "textoff", kAv);
                 //else if (sMessage) UserCommand(iAuth, "text " + sMessage, kAv);
-                if(sMessage != "") UserCommand(iAuth, "text " + sMessage, kAv);
+                if(sMessage != "") UserCommand(iAuth, "title " + sMessage, kAv);
                 UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
             }
         }        
