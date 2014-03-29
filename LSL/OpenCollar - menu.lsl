@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - menu                                //
-//                                 version 3.957                                  //
+//                                 version 3.958                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -145,7 +145,7 @@ string GetPrompt(integer index) //return prompt for menu, index of g_lMenuNames
     {
         string sTemp="\nOpenCollar version "+g_sCollarVersion+"\n";
         if(!g_iLatestVersion) sTemp+="Update available!";
-        return sTemp + "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2013 Individual Contributors and\nOpenCollar - submission set free™\n";
+        return sTemp + "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n";
 //moved to bugs button response
 // \n\nPlease help us make things better and report bugs here:\n\nhttp://www.opencollar.at/forum.html#!/support\nhttps://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)";
     }
