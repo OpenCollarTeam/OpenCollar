@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.958                                  //
+//                                 version 3.959                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -122,11 +122,13 @@ integer g_bFollowMode;
 string g_sScript="leash_";
 string CTYPE = "collar";
 
+string g_sCheck;
 
 //realleash variables
 integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
 integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
+integer g_iAwayCounter=0;
 
 list g_lRestrictionNames= ["fartouch","sittp","tplm","tplure","tploc"];
 string RLV_STRING = "rlvmain_on";
@@ -136,7 +138,7 @@ list g_lOwners=[];          //needed for teleport exception
 // ------ FUNCTION DEFINITIONS ------
 
 
-//Debug(string sStr) { llOwnerSay(llGetScriptName() + ": " + sStr); }
+Debug(string sStr) { llOwnerSay(llGetScriptName() + ": " + sStr); }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
@@ -290,13 +292,15 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     if (g_bFollowMode) {
         llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
     } else {
-      integer iPointCount = llGetListLength(lPoints);
-      string sCheck = "";  
-      if (iPointCount) {//if more than one leashpoint, listen for all strings, else listen just for that point
-          if (iPointCount == 1) sCheck = (string)llGetOwnerKey(kTarget) + llList2String(lPoints, 0) + " ok";
-      }
-      //Send link message to the particle script
-      llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+        integer iPointCount = llGetListLength(lPoints);
+        g_sCheck = "";  
+        if (iPointCount) {//if more than one leashpoint, listen for all strings, else listen just for that point
+            if (iPointCount == 1) g_sCheck = (string)llGetOwnerKey(kTarget) + llList2String(lPoints, 0) + " ok";
+        }
+        //Send link message to the particle script
+        Debug("leashing with "+g_sCheck);
+        llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+        llSetTimerEvent(3.0);   //check for leasher out of range
     }
 
     // change to llTarget events by Lulu Pink 
@@ -386,6 +390,7 @@ DoUnleash(){
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
+    llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
 
     ApplyRestrictions();
@@ -610,21 +615,6 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             }
             
         }
-    } else if (iAuth == COMMAND_LEASH_SENSOR) {
-        //fixme:  particles shouldn't be controling the leash script, should be the other way around
-        //Debug("Got leash sensor event:"+sMessage);
-        if (sMessage == "Leasher out of range") {// particle script sensor lost the leasher... stop to follow
-            llTargetRemove(g_iTargetHandle);
-            llStopMoveToTarget();
-            g_iLeasherInRange=FALSE;
-        } else if (sMessage == "Leasher in range") {// particle script sensor found the leasher again, restart to follow
-            llTargetRemove(g_iTargetHandle);
-            g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
-            g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
-            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
-            g_iLeasherInRange=TRUE;
-        }
-        ApplyRestrictions();
     } else if (iAuth == COMMAND_EVERYONE) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
@@ -639,8 +629,59 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
 // ------ IMPLEMENTATION ------
 default
 {
+    timer()
+    {
+        
+        //inlined old isInSimOrJustOutside function
+        vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
+        integer iIsInSimOrJustOutside=TRUE;
+        if(vLeashedToPos == ZERO_VECTOR || vLeashedToPos.x < -25 || vLeashedToPos.x > 280 || vLeashedToPos.y < -25 || vLeashedToPos.y > 280) iIsInSimOrJustOutside=FALSE;
+        
+        
+        if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<60)    //if the leasher is now in range
+        {
+            if(!g_iLeasherInRange)  //and the leasher was previously not in range
+            {
+                if (g_iAwayCounter)
+                {
+                    g_iAwayCounter = 0;
+                    llSetTimerEvent(3.0);
+                }
+                Debug("leashing with "+g_sCheck);
+                llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+                g_iLeasherInRange = TRUE;
+                
+                llTargetRemove(g_iTargetHandle);
+                g_vPos = vLeashedToPos;
+                g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
+                if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
+                ApplyRestrictions();
+            }
+        }
+        else    //the leasher is not now in range
+        {
+            if(g_iLeasherInRange)   //but was a short while ago
+            {
+                if (g_iAwayCounter > 3)
+                {
+                    llTargetRemove(g_iTargetHandle);
+                    llStopMoveToTarget();
+                    llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
+                    g_iLeasherInRange=FALSE;
+                    ApplyRestrictions();
+                }
+            }
+            
+            g_iAwayCounter++; //+1 every 3 secs
+            if (g_iAwayCounter > 200) //3mins 20 secs
+            {//slow down the sensor:
+                g_iAwayCounter = 1;
+                llSetTimerEvent(11.0);
+            }
+        }
+    }
     state_entry() {
-        //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
+        llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
         g_sWearer = llKey2Name(g_kWearer);
         g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
