@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollar - leashParticle                           //
-//                                 version 3.957                                  //
+//                                 version 3.959                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -234,7 +234,6 @@ StartParticles(key kParticleTarget)
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
         }
     }
-    llSetTimerEvent(3.0);
     g_bLeashActive = TRUE;
 }
 
@@ -494,18 +493,11 @@ LMSay()
     llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) +  "handle");
 }
 
-integer isInSimOrJustOutside(vector v)
-{
-    if(v == ZERO_VECTOR || v.x < -25 || v.x > 280 || v.y < -25 || v.y > 280)
-        return FALSE;
-    return TRUE;
-}
-
 default
 {
     state_entry()
     {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        g_sScript = "leashParticle_";
         g_lDefaultSettings = [L_TEXTURE, "chain", L_SIZE, "<0.22, 0.17, 0.0>", L_COLOR, "<1,1,1>", L_DENSITY, "-0.04", L_GRAVITY, "<0.0,0.0,-1.0>", "Glow", "1", L_LIFE, "3.0"]; // CHANGED DEFAULT SIZE FOR ST TO <0.22, 0.17, 0.0>
         StopParticles(TRUE);
         FindLinkedPrims();
@@ -535,8 +527,6 @@ default
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash")
             {
-                llSetTimerEvent(0);
-                g_bLeasherInRange = FALSE;
                 StopParticles(TRUE);
                 llListenRemove(g_iLMListener);
                 llListenRemove(g_iLMListernerDetach);
@@ -544,15 +534,9 @@ default
             else
             {
                 debug("leash active");
-                if (g_bInvisibleLeash)
-                {// only start the sensor for the leasher
-                    g_bLeasherInRange = TRUE;
-                    llSetTimerEvent(3.0);
-                }
-                else
+                if (! g_bInvisibleLeash)
                 {
                     integer bLeasherIsAv = (integer)llList2String(llParseString2List(sMessage, ["|"], [""]), 1);
-                    g_bLeasherInRange = TRUE;
                     g_kParticleTarget = g_kLeashedTo;
                     StartParticles(g_kParticleTarget);
                     if (bLeasherIsAv)
@@ -977,54 +961,6 @@ default
                     SetTexture(sMessage, g_kWearer);
                     StartParticles(g_kParticleTarget);
                 }                             
-            }
-        }
-    }
-
-    timer()
-    {
-        if (isInSimOrJustOutside(llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0)) && llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0))<60)
-        {
-            if(!g_bLeasherInRange)
-            {
-//                llMessageLinked(LINK_THIS, COMMAND_LEASH_SENSOR, "Leasher in range", NULLKEY);
-//                LMSay();
-                if (g_iAwayCounter)
-                {
-                    g_iAwayCounter = 0;
-                    llSetTimerEvent(3.0);
-                }
-                StartParticles(g_kParticleTarget);
-                g_bLeasherInRange = TRUE;
-                //hate this sleep but somehow sometimes this message seems to get lost...
-//                llSleep(1.5);
-                llMessageLinked(LINK_THIS, COMMAND_LEASH_SENSOR, "Leasher in range", NULLKEY);
-                LMSay();
-            }
-            //actually not needed when using the new leash holder but to be sure not to dangle the leash but releash to avi
-            if(llKey2Name(g_kParticleTarget) == "")
-            {
-                g_kParticleTarget = g_kLeashedTo;
-                StartParticles(g_kParticleTarget);
-                LMSay();
-            }
-        }
-        else
-        {
-            if(g_bLeasherInRange)
-            {
-                StopParticles(FALSE);
-                llMessageLinked(LINK_THIS, COMMAND_LEASH_SENSOR, "Leasher out of range", NULLKEY);
-                if (g_iAwayCounter > 3)
-                {
-                    g_bLeasherInRange = FALSE;
-                }
-            }
-            g_iAwayCounter++; //+1 every 3 secs
-            if (g_iAwayCounter > 200) //10 mins
-            {//slow down the sensor:
-                g_iAwayCounter = 1;
-                llSetTimerEvent(11.0);
             }
         }
     }
