@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.956                                  //
+//                                 version 3.958                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -124,7 +124,8 @@ string CTYPE = "collar";
 
 
 //realleash variables
-integer g_iRealLeashOn=FALSE; //default is Real-Leash OFF
+integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
+integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 
 list g_lRestrictionNames= ["fartouch","sittp","tplm","tplure","tploc"];
@@ -178,13 +179,26 @@ SetLength(integer iIn){
 }
 
 ApplyRestrictions(){
-    if (g_iRLVOn){
-        if (g_kLeashedTo){
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
-        } else {
-            llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //set all restrictions
+    //Debug("Applying Restrictions");
+    if (g_iLeasherInRange){
+        if (g_iStrictModeOn){
+            if (g_iRLVOn){
+                if (g_kLeashedTo){
+                    //Debug("Setting restrictions");
+                    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
+                    return;
+                }
+            //} else {
+                //Debug("RLV is off");
+            }
+        //} else {
+            //Debug("Strict is off");
         }
+    //} else {
+        //Debug("Leasher out of range");
     }
+    //Debug("Releasing restrictions");
+    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //release all restrictions
 }
 
 // Wrapper for DoLeash with notifications
@@ -294,10 +308,11 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     if (g_vPos != ZERO_VECTOR) {
         llMoveToTarget(g_vPos, 0.7);
     }
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
     if (! ~llListFindList(g_lOwners,[g_kLeashedTo])) {
         llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", NULL_KEY);
     }
+    g_iLeasherInRange=TRUE;
     ApplyRestrictions();
 }
 
@@ -359,7 +374,7 @@ DoUnleash(){
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     llMessageLinked(LINK_SET, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
-    if (g_iRealLeashOn){
+    if (g_iStrictModeOn){
         //Debug("Unleashing a Real leash");
         if (! ~llListFindList(g_lOwners,[g_kLeashedTo]) ){ //if not in owner list
             //Debug("leash holder ("+(string)g_kLeashedTo+")is not an owner");
@@ -371,6 +386,8 @@ DoUnleash(){
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
+    g_iLeasherInRange=FALSE;
+
     ApplyRestrictions();
 }
 
@@ -393,10 +410,10 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
         //debug(sMessage);
         if (sMessage=="leashmenu" || sMessage == "menu leash"){
             list lButtons;
-            if (g_iRealLeashOn==TRUE) {
-                lButtons += "RealLeash Off";
+            if (g_iStrictModeOn==TRUE) {
+                lButtons += "Strict ☒";
             } else {
-                lButtons += "RealLeash On";
+                lButtons += "Strict ☐";
             }
              
             if (kMessageID != g_kWearer) lButtons += "Grab";// Only if not the wearer.
@@ -478,11 +495,11 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
         } else if (sMessage == "givepost" || sMessage == "give post") {
-            llGiveInventory(kMessageID, "OpenCollar Post");
+            llGiveInventory(kMessageID, "Grabby Post");
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "rezpost" || sMessage == "rez post") {
-            llRezObject("OpenCollar Post", llGetPos() + (<1.0, 0.0, -0.805> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 80, 0> * DEG_TO_RAD), 0);
+            llRezObject("Grabby Post", llGetPos() + (<0.1, 0.0, 0.37> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 270> * DEG_TO_RAD), 0);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
@@ -511,27 +528,26 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 Notify(kMessageID,"You allowed " + g_sWearer + " to move freely again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
-    
-        } else if (sComm == "realleash") {
-            if (sVal == "on" ) {
-                g_iRealLeashOn=TRUE;
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", NULL_KEY);
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, NULL_KEY);  //query current leasher, the response will trigger ApplyRestrictions
-                Notify(kMessageID,"Real Leash enabled.",TRUE);
+
+        } else if (sMessage == "strict on" || sMessage == "strict ☐") {
+            g_iStrictModeOn=TRUE;
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
+            Notify(kMessageID,"Strict leashing enabled.",TRUE);
+            ApplyRestrictions();
+            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
+            
+        } else if (sMessage == "strict off" || sMessage == "strict ☒") {
+            if (g_kLeashedTo) {
+                Notify(kMessageID, "You can't disable Strict Mode while leashed.",FALSE);
+            } else {
+                g_iStrictModeOn=FALSE;
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
                 ApplyRestrictions();
-                if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            } else if (sVal == "off") {
-                if (g_kLeashedTo) {
-                    Notify(kMessageID, "You can't disable Real Leash while leashed.",FALSE);
-                } else {
-                    g_iRealLeashOn=FALSE;
-                    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", NULL_KEY);
-                    ApplyRestrictions();
-                    Notify(kMessageID,"Real Leash disabled.",FALSE);
-                }
-                if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
+                Notify(kMessageID,"Strict leashing disabled.",FALSE);
             }
-        
+            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
+            
         } else if (sComm == "leashto") {
             if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
             if (sVal==llToLower(BUTTON_UPMENU)){
@@ -555,7 +571,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
                 UserCommand(iAuth, "leash", kMessageID ,bFromMenu);
-            } else if(iNewLength > 0 && iNewLength < 30){
+            } else if(iNewLength > 0 && iNewLength <= 30){
                 //Person holding the leash can always set length.
                 if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) 
                 {
@@ -596,16 +612,19 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
         }
     } else if (iAuth == COMMAND_LEASH_SENSOR) {
         //fixme:  particles shouldn't be controling the leash script, should be the other way around
+        //Debug("Got leash sensor event:"+sMessage);
         if (sMessage == "Leasher out of range") {// particle script sensor lost the leasher... stop to follow
             llTargetRemove(g_iTargetHandle);
             llStopMoveToTarget();
-
+            g_iLeasherInRange=FALSE;
         } else if (sMessage == "Leasher in range") {// particle script sensor found the leasher again, restart to follow
             llTargetRemove(g_iTargetHandle);
             g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
             g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
+            g_iLeasherInRange=TRUE;
         }
+        ApplyRestrictions();
     } else if (iAuth == COMMAND_EVERYONE) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
@@ -628,7 +647,7 @@ default
         llMinEventDelay(0.3);
         
         DoUnleash();
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY); //no need 
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, ""); //no need 
     }
     
     on_rez(integer start_param) {
@@ -645,9 +664,9 @@ default
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
         if (UserCommand(iNum, sMessage, kMessageID, FALSE)) return;
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, "");
             g_lButtons = [] ; // flush submenu buttons
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
         } else if (iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sMessage, ["|"], []);
             if (llList2String(lParts, 0) == BUTTON_SUBMENU) {//someone wants to stick something in our menu
@@ -682,7 +701,7 @@ default
                }
                 else if (sToken == TOK_LENGTH) SetLength((integer)sValue);
                 if (sToken=="strict"){
-                    g_iRealLeashOn = (integer)sValue;
+                    g_iStrictModeOn = (integer)sValue;
                     ApplyRestrictions();
                 }
             } else if (sToken == RLV_STRING) { // something enabled or disabled RLV.  Remember which
