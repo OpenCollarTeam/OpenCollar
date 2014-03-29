@@ -238,7 +238,7 @@ default
         //        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + LOCK, "");
         
         BuildLockElementList();//EB
-        SetLockElementAlpha(); //EB
+        //SetLockElementAlpha(); // isn't necessary
         llSetMemoryLimit(llGetUsedMemory()+6000); //should be plenty, but let's keep an eye on this.
 
     }
@@ -411,6 +411,7 @@ default
                 SetLockElementAlpha(); // update hide elements 
             }
         }
+        if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
     }
 /*
     on_rez(integer start_param)
