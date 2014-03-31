@@ -222,7 +222,7 @@ MainMenu(key kID, integer iAuth)
     string sPrompt = "\n\nNote: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder (click "+SMARTHELP+" for info), the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
     list lButtons = g_lChildren;
 
-    if (g_iAllLocked)  //are all clothing and attachements locked?
+    if (g_iAllLocked)  //are all clothing and attachments locked?
     {
         sPrompt += "\n all clothes and attachments are currently locked.";
         //skip the LockClothing and the LockAttachment buttons
@@ -638,7 +638,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             DoLockAll(kID); //lock all clothes and attachment points
             SaveLockAllFlag(1);
-            Notify(kID, g_sWearerName+"'s clothing and attachements have been locked.", TRUE);
+            Notify(kID, g_sWearerName+"'s clothing and attachments have been locked.", TRUE);
         }
     }
     else  if (sStr == "unlockall")
@@ -651,7 +651,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             DoUnlockAll(kID); //unlock all clothes and attachment points
             SaveLockAllFlag(0);
-            Notify(kID, g_sWearerName+"'s clothing and attachements have been unlocked.", TRUE);
+            Notify(kID, g_sWearerName+"'s clothing and attachments have been unlocked.", TRUE);
         }
     }
     else if (llGetSubString(sStr, 0, 15) == "unlockattachment")
