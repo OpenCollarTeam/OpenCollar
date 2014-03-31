@@ -19,7 +19,6 @@ string g_sGroupName;
 integer g_iGroupEnabled = FALSE;
 list g_lSecOwners;//strided list in the form key,name
 list g_lBlackList;//list of blacklisted UUID
-string g_sTmpName; //used temporarily to store new owner or secowner name while retrieving key
 
 string  g_sWikiURL = "http://www.opencollar.at/user-guide.html";
 string g_sParentMenu = "Main";
@@ -28,13 +27,14 @@ string g_sSubMenu = "Access";
 string g_sRequestType; //may be "owner" or "secowner" or "remsecowner"
 key g_kHTTPID;
 key g_kGroupHTTPID;
+key g_kNameRequest;
 
 string g_sOwnersToken = "owner";
 string g_sSecOwnersToken = "secowners";
 string g_sBlackListToken = "blacklist";
 
 string g_sPrefix;
-
+list g_lQueryId; //2 strided list of dataserver request key, uuid requested for name lookups
 //dialog handlers
 key g_kAuthMenuID;
 key g_kSensorMenuID;
@@ -215,14 +215,14 @@ NewPerson(key kID, string sName, string sType)
         g_lOwners = AddUniquePerson(g_lOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sOwnersToken + "=" + llDumpList2String(g_lOwners, ","), "");
         //added for attachment interface to announce owners have changed
-    sendToAttachmentInterface("OwnerChange");
+        sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "secowner")
     {
         g_lSecOwners = AddUniquePerson(g_lSecOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sSecOwnersToken + "=" + llDumpList2String(g_lSecOwners, ","), "");
         //added for attachment interface to announce owners have changed
-    sendToAttachmentInterface("OwnerChange");
+        sendToAttachmentInterface("OwnerChange");
     }
     else if (sType == "blacklist")
     {
@@ -240,14 +240,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 } 
 
-/*Name2Key(string sName)
-{
-    // Variant of N2K, uses SL's internal search engine instead of external databases
-    string url = "http://www.w3.org/services/html2txt?url=";
-    string escape = "http://vwrsearch.secondlife.com/client_search.php?session=00000000-0000-0000-0000-000000000000&q=";
-    g_kHTTPID = llHTTPRequest(url + llEscapeURL(escape) + llEscapeURL(sName), [], ""); 
-}
-*/
 FetchAvi(integer auth, string type, string name, key user)
 {
     if (name == "") name = " ";
@@ -334,13 +326,13 @@ integer Auth(string kObjID, integer attachment)
 {
     string kID = (string)llGetOwnerKey(kObjID); // if kObjID is an avatar key, then kID is the same key
     integer iNum;
-    if (g_iWearerlocksOut && kID == (string)g_kWearer && !attachment)
-    {
-        iNum = COMMAND_WEARERLOCKEDOUT;
-    }
-    else if (~llListFindList(g_lOwners, [(string)kID]))
+    if (~llListFindList(g_lOwners, [(string)kID]))
     {
         iNum = COMMAND_OWNER;
+    }
+    else if (g_iWearerlocksOut && kID == (string)g_kWearer && !attachment)
+    {
+        iNum = COMMAND_WEARERLOCKEDOUT;
     }
     else if (llGetListLength(g_lOwners) == 0 && kID == (string)g_kWearer)
     {
@@ -532,38 +524,19 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     {   //give owner menu
         AuthMenu(kID, iNum);
     }
-    else if (iNum == COMMAND_OWNER)
-    {
+    else if (iNum == COMMAND_OWNER) {
         //respond to messages to set or unset owner, group, or secowners.  only owner may do these things
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llList2String(lParams, 0);
-        if ((key)llList2String(lParams, 1))
-        {
+        if ((key)llList2String(lParams, 1)) {
             key new = (key)llList2String(lParams, 1);
             g_sRequestType = sCommand;
             if (g_sRequestType != "blacklist" && !~llSubStringIndex(g_sRequestType, "owner")) return TRUE;
-            else if (g_sRequestType != "blacklist" && new != g_kWearer)
-            {
-                Notify(kID, "Requesting confirmation from " + llKey2Name(new), FALSE);
-                g_kDialoger = kID;
-                string prompt = llKey2Name(kID) + " would like to add you as\na";
-                if (g_sRequestType == "owner") prompt += "n";
-                else if (g_sRequestType == "secowner") prompt += " secondary";
-                prompt += " owner on ";
-                if (kID == g_kWearer) prompt += "their ";
-                else prompt += llKey2Name(g_kWearer) + "'s ";
-                prompt += "" + CTYPE + ".\nDo you accept?";
-                g_kAuthMenuID = Dialog(new, prompt, ["Yes", "No"], [], 0, iNum);
-                return TRUE;
-            }
             NewPerson(new, llKey2Name(new), g_sRequestType);
             return TRUE;
-        }
-        if (sCommand == "owner")
-        { //set a new owner.
+        } if (sCommand == "owner") { //set a new owner.
             //if no owner at all specified:
-            if (llList2String(lParams, 1) == "")
-            {
+            if (llList2String(lParams, 1) == "") {
                 AuthMenu(kID, iNum);
                 return TRUE;
             }
@@ -571,29 +544,21 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //record owner name
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if(llToLower(g_sTmpName) == llToLower(llKey2Name(g_kWearer)))
-            {
-                NewPerson(g_kWearer, g_sTmpName, "owner");
+            string sTmpName = llDumpList2String(lParams, " ");
+            if ((key)sTmpName){
+                g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+            } else {
+                if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer)))  NewPerson(g_kWearer, sTmpName, g_sRequestType);
+                else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
             }
-            else
-            {
-                FetchAvi(iNum, g_sRequestType, g_sTmpName, kID);
-            }
-        }
-        else if (sCommand == "remowners")
-        { //remove secowner, if in the list
+        } else if (sCommand == "remowners") { //remove secowner, if in the list
             g_sRequestType = "";//Nan: this used to be set to "remowners" but that NEVER gets filtered on elsewhere in the script.  Just clearing it now in case later filtering relies on it being cleared.  I hate this g_sRequestType variable with a passion
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //name of person concerned
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if (g_sTmpName=="")
-            {
-                RemPersonMenu(kID, g_lOwners, "remowners", iNum);
-            }
-            else if(llToLower(g_sTmpName) == "remove all")
-            {
+            string sTmpName = llDumpList2String(lParams, " ");
+            if (sTmpName=="") RemPersonMenu(kID, g_lOwners, "remowners", iNum);
+            else if(llToLower(sTmpName) == "remove all") {
                 Notify(kID, "Removing of all owners started!",TRUE);
 
                 NotifyInList(g_lOwners, g_sOwnersToken);
@@ -601,49 +566,31 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 g_lOwners = [];
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sOwnersToken, "");
                 Notify(kID, "Everybody was removed from the owner list!",TRUE);
-            }
-            else
-            {
-                g_lOwners = RemovePerson(g_lOwners, g_sTmpName, g_sOwnersToken, kID);
-            }
-        }
-        else if (sCommand == "secowner")
-        { //set a new secowner
+            } else g_lOwners = RemovePerson(g_lOwners, sTmpName, g_sOwnersToken, kID);
+        } else if (sCommand == "secowner") { //set a new secowner
             g_sRequestType = "secowner";
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //record owner name
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if (llGetListLength(g_lSecOwners) == 20)
-            {
-                Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup.",FALSE);
-            }
-            else
-            {
-                if(llToLower(g_sTmpName) == llToLower(llKey2Name(g_kWearer)))
-                {
-                    NewPerson(g_kWearer, g_sTmpName, "secowner");
-                }
-                else
-                {
-                    FetchAvi(iNum, g_sRequestType, g_sTmpName, kID);
+            string sTmpName = llDumpList2String(lParams, " ");
+            if ((key)sTmpName){
+                g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+            } else {
+                if (llGetListLength(g_lSecOwners) == 20) Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup.",FALSE);
+                else {
+                    if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer))) NewPerson(g_kWearer, sTmpName, "secowner");
+                    else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
                 }
             }
-        }
-        else if (sCommand == "remsecowner")
-        { //remove secowner, if in the list
+        } else if (sCommand == "remsecowner") { //remove secowner, if in the list
             g_sRequestType = "";
             //g_sRequestType = "remsecowner";//Nan: we never parse on g_sRequestType == g_sRemSecOwner, so this makes little sense
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //name of person concerned
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if (g_sTmpName=="")
-            {
-                RemPersonMenu(kID, g_lSecOwners, "remsecowner", iNum);
-            }
-            else if(llToLower(g_sTmpName) == "remove all")
-            {
+            string sTmpName = llDumpList2String(lParams, " ");
+            if (sTmpName=="") RemPersonMenu(kID, g_lSecOwners, "remsecowner", iNum);
+            else if(llToLower(sTmpName) == "remove all") {
                 Notify(kID, "Removing of all secowners started!",TRUE);
 
                 NotifyInList(g_lSecOwners, g_sSecOwnersToken);
@@ -651,67 +598,41 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 g_lSecOwners = [];
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "secowners", "");
                 Notify(kID, "Everybody was removed from the secondary owner list!",TRUE);
-            }
-            else
-            {
-                g_lSecOwners = RemovePerson(g_lSecOwners, g_sTmpName, g_sSecOwnersToken, kID);
-            }
-        }
-        else if (sCommand == "blacklist")
-        { //blackList an avatar
+            } else g_lSecOwners = RemovePerson(g_lSecOwners, sTmpName, g_sSecOwnersToken, kID);
+        } else if (sCommand == "blacklist") { //blackList an avatar
             g_sRequestType = "blacklist";
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //record blacklisted name
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if (llGetListLength(g_lBlackList) == 20)
-            {
-                Notify(kID, "The maximum of 10 blacklisted is reached, please clean up.",FALSE);
-            }
-            else
-            {
-                FetchAvi(iNum, g_sRequestType, g_sTmpName, kID);
+            string sTmpName = llDumpList2String(lParams, " ");
+            if ((key)sTmpName){
+                g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+            } else {
+                if (llGetListLength(g_lBlackList) == 20) Notify(kID, "The maximum of 10 blacklisted is reached, please clean up.",FALSE);
+                else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
             }
         }
-        else if (sCommand == "remblacklist")
-        { //remove blacklisted, if in the list
+        else if (sCommand == "remblacklist") { //remove blacklisted, if in the list
             g_sRequestType = "";
             //g_sRequestType = "remblacklist";//Nan: we never filter on g_sRequestType == "remblacklist", so this makes no sense.
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
             //name of person concerned
-            g_sTmpName = llDumpList2String(lParams, " ");
-            if (g_sTmpName=="")
-            {
-                RemPersonMenu(kID, g_lBlackList, "remblacklist", iNum);
-            }
-            else if(llToLower(g_sTmpName) == "remove all")
-            {
+            string sTmpName = llDumpList2String(lParams, " ");
+            if (sTmpName=="") RemPersonMenu(kID, g_lBlackList, "remblacklist", iNum);
+            else if(llToLower(sTmpName) == "remove all") {
                 g_lBlackList = [];
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sBlackListToken, "");
                 Notify(kID, "Everybody was removed from the blacklist!", TRUE);
-            }
-            else
-            {
-                g_lBlackList = RemovePerson(g_lBlackList, g_sTmpName, g_sBlackListToken, kID);
-            }
+            } else g_lBlackList = RemovePerson(g_lBlackList, sTmpName, g_sBlackListToken, kID);
         }
-        else if (sCommand == "setgroup")
-        {
+        else if (sCommand == "setgroup") {
             g_sRequestType = "group";
             //if no arguments given, use current group, else use key provided
-            if (isKey(llList2String(lParams, 1)))
-            {
-                g_kGroup = (key)llList2String(lParams, 1);
-            }
-            else
-            {
-                //record current group key
-                g_kGroup = (key)llList2String(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]), 0);
-            }
+            if (isKey(llList2String(lParams, 1))) g_kGroup = (key)llList2String(lParams, 1);
+            else g_kGroup = (key)llList2String(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]), 0); //record current group key
 
-            if (g_kGroup != "")
-            {
+            if (g_kGroup != "") {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "group=" + (string)g_kGroup, "");
                 g_iGroupEnabled = TRUE;
                 g_kDialoger = kID;
@@ -719,78 +640,61 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 //get group name from
                 g_kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");
             }
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
         }
-        else if (sCommand == "setgroupname")
-        {
+        else if (sCommand == "setgroupname") {
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
-        }
-        else if (sCommand == "unsetgroup")
-        {
+        } else if (sCommand == "unsetgroup") {
             g_kGroup = "";
             g_sGroupName = "";
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "group", "");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "groupname", "");
             g_iGroupEnabled = FALSE;
             Notify(kID, "Group unset.", FALSE);
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
             //added for attachment interface to announce owners have changed
-        sendToAttachmentInterface("OwnerChange");
-        }
-        else if (sCommand == "setopenaccess")
-        {
+            sendToAttachmentInterface("OwnerChange");
+        } else if (sCommand == "setopenaccess") {
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "openaccess=" + (string) g_iOpenAccess, "");
             Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
             sendToAttachmentInterface("OwnerChange");
-        }
-        else if (sCommand == "unsetopenaccess")
-        {
+        } else if (sCommand == "unsetopenaccess") {
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "openaccess", "");
             Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
             //added for attachment interface to announce owners have changed
             sendToAttachmentInterface("OwnerChange");
-        }
-        else if (sCommand == "setlimitrange")
-        {
+        } else if (sCommand == "setlimitrange") {
             g_iLimitRange = TRUE;
             // as the default is range limit on, we do not need to store anything for this
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
             Notify(kID, "Range is limited.", FALSE);
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
-        }
-        else if (sCommand == "unsetlimitrange")
-        {
+        } else if (sCommand == "unsetlimitrange") {
             g_iLimitRange = FALSE;
             // save off state for limited range (default is on)
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
             Notify(kID, "Range is simwide.", FALSE);
-            if(g_iRemenu)
-            {
+            if(g_iRemenu) {
                 g_iRemenu = FALSE;
                 AuthMenu(kID, iNum);
             }
@@ -1012,16 +916,6 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     }
-                    else if (sMessage == "Yes")
-                    {
-                        NewPerson(kAv, llKey2Name(kAv), g_sRequestType);
-                        return;
-                    }
-                    else if (sMessage == "No")
-                    {
-                        Notify(g_kDialoger, llKey2Name(kAv) + " has declined your request.", FALSE);
-                        return;
-                    }
                     else if (sMessage == g_sSetOwner)
                     {
                         if (OwnerCheck(kAv))
@@ -1151,21 +1045,6 @@ default
             if (llList2String(params, 0) != g_sScript) return;
             g_sRequestType = llList2String(params, 4);
             key new = (key)llList2String(params, 5);
-            if (g_sRequestType != "blacklist" && new != g_kWearer)
-            {
-                key user = (key)llList2String(params, 2);
-                Notify(user, "Requesting confirmation from " + llKey2Name(new), FALSE);
-                g_kDialoger = user;
-                string prompt = llKey2Name(user) + " would like to add you as\na";
-                if (g_sRequestType == "owner") prompt += "n";
-                else if (g_sRequestType == "secowner") prompt += " secondary";
-                prompt += " owner on ";
-                if (user == g_kWearer) prompt += "their ";
-                else prompt += llKey2Name(g_kWearer) + "'s ";
-                prompt += "" + CTYPE + ".\nDo you accept?";
-                g_kAuthMenuID = Dialog(new, prompt, ["Yes", "No"], [], 0, iNum);
-                return;
-            }
             NewPerson(new, llKey2Name(new), g_sRequestType);
         }
     }
@@ -1191,8 +1070,8 @@ default
             if (iStatus == 200)
             {
                 key kAvi = (key)llList2String(llParseString2List(sBody, ["secondlife:///app/agent/", "/about"], []),1);
-                if (kAvi) NewPerson((key)sBody, g_sTmpName, g_sRequestType);
-                else Notify(g_kDialoger, "Error: unable to retrieve key for '" + g_sTmpName + "'.", FALSE);
+                if (kAvi) NewPerson((key)sBody, sTmpName, g_sRequestType);
+                else Notify(g_kDialoger, "Error: unable to retrieve key for '" + sTmpName + "'.", FALSE);
             }
             else Notify(g_kDialoger, "Error: The internet is missing or moving slower than a snail.", FALSE);
         }
@@ -1223,6 +1102,16 @@ default
                 Notify(g_kDialoger, "Group set to " + g_sGroupName + ".", FALSE);
             }
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
+        }
+    }
+    
+    dataserver(key kQueryId, string sData){
+        integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
+        if (listIndex!= -1){
+            //need UUID
+            key kAvId=llList2Key(g_lQueryId,listIndex+1);
+            g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+1);
+            NewPerson(kAvId, sData, g_sRequestType);
         }
     }
 }
