@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - settings                              //
-//                                 version 3.957                                  //
+//                                 version 3.958                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -48,7 +48,7 @@ string UPMENU = "BACK";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
-string g_sMenuScript="OpenCollar - menu"; //for fixmenus
+string g_sMenuScript="OpenCollar - main"; //for fixmenus
 
 string defaultscard = "defaultsettings";
 string split_line; // to parse lines that were split due to lsl constraints
