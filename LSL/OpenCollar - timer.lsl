@@ -818,7 +818,7 @@ default
         }
         else if(iNum == COMMAND_WEARERLOCKEDOUT && sStr == "menu")
         {
-            if (g_iRealRunning || g_iRealRunning)
+            if (g_iOnRunning || g_iRealRunning)
                 Notify(kID , "You are locked out of the " + g_sToyName + " until the timer expires", FALSE);
         }
         else if (iNum == LM_SETTING_DELETE)
