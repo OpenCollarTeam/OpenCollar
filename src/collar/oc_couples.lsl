@@ -449,7 +449,11 @@ default
             llSetObjectName(sName);
             
         }
-        g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
+        if (g_fTimeOut > 0.0){
+            g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
+        } else {
+            g_iAnimTimeout=0;
+        }
         refreshTimer();
     }
     timer()
