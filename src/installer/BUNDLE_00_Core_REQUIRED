@@ -7,7 +7,7 @@ ITEM|Shack
 ITEM|Leash Holder
 ITEM|Grabby Post
 SCRIPT|OpenCollar - cleanup
-SCRIPT|OpenCollar - menu
+SCRIPT|OpenCollar - main
 SCRIPT|OpenCollar - auth
 SCRIPT|OpenCollar - listener
 SCRIPT|OpenCollar - dialog
@@ -15,6 +15,5 @@ SCRIPT|OpenCollar - update
 SCRIPT|OpenCollar - settings
 SCRIPT|OpenCollar - leash
 SCRIPT|OpenCollar - leashParticle
-SCRIPT|OpenCollar - lock
 SCRIPT|OpenCollar - appearance
 SCRIPT|OpenCollar - hide
