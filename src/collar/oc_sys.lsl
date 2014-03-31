@@ -553,6 +553,10 @@ default
                         llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + USER_GROUP_ID + "/about " + "for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
                         Menu("Help/About", kAv, iAuth);
                     }
+                    else if (sMessage == "Update")
+                    {
+                        llMessageLinked(LINK_SET, iAuth, "menu Update", kAv);
+                    }
                 } else {
                     //Debug("Foreign menu response");
                 }
