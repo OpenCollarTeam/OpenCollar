@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - label                                //
-//                                 version 3.957                                  //
+//                                 version 3.958                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -312,7 +312,7 @@ SetOffsets(key font)
             integer t = (integer)llList2String(params, 1);
             if (t == PRIM_TYPE_BOX)
             {
-                if (font == NULL_KEY) font = "014291dc-7fd5-4587-413a-0d690a991ae1"; // LCD default for box
+                if (font == NULL_KEY) font = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe"; // LCD default for box
                 g_vGridOffset = <-0.45, 0.425, 0.0>;
                 g_vRepeats = <0.126, 0.097, 0>;
                 g_vOffset = <0.036, 0.028, 0>;
