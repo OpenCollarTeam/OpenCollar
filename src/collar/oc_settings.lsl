@@ -48,7 +48,7 @@ string UPMENU = "BACK";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
-string g_sMenuScript="OpenCollar - menu"; //for fixmenus
+string g_sMenuScript="OpenCollar - main"; //for fixmenus
 
 string defaultscard = "defaultsettings";
 string split_line; // to parse lines that were split due to lsl constraints
