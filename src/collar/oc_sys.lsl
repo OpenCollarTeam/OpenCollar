@@ -222,20 +222,6 @@ HandleMenuResponse(string entry)
             lGuts = llListSort(lGuts, 1, TRUE);
             g_lMenus = llListReplaceList(g_lMenus, [llDumpList2String(lGuts, "|")], 1, 1);
         }
-    } else if (sName=="Main"){  //fixme: temp allow lock/unlock button in main, delete this once lock is merged with menu
-        //Debug("we handle " + sName);
-        string sSubMenu = llList2String(lParams, 1);
-        if (sSubMenu == " LOCK" || sSubMenu == " UNLOCK") {
-            list lGuts = llParseString2List(llList2String(g_lMenus, 0), ["|"], []);
-            if (llListFindList(lGuts, [sSubMenu]) == -1)
-            {
-                lGuts += [sSubMenu];
-                lGuts = llListSort(lGuts, 1, TRUE);
-                g_lMenus = llListReplaceList(g_lMenus, [llDumpList2String(lGuts, "|")], 0, 0);
-            }
-        } else {
-            //Debug("Not making button: "+sSubMenu);
-        }
     }
 }
 
