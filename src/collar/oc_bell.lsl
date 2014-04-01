@@ -6,26 +6,15 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.927 MD: Update g_kOwners in on_rez event, as we don't necessarily reset this script and currently we may get failed permission requests targeting the wrong avatar! See line 513. Added check for runaway, if bell should be hidden, sleep for 4 seconds then re-hide the bell elements. This is to avoid other scripts resetting visibility. See line 712. Added changed event: INVENTORY changes mean more sounds may be available, so redo prepareSounds(), and LINK to redo BuildBellElementList(). See line 753
-
-//Collar Cuff Menu
-
-//=============================================================================
-//== OC Bell Plugin - Adds bell sounds while moving to the collar, allows to adjust vol, sound and timing
-//== as well to switch them off and hide the bell
-//==
-//== Note to Designers
-//== Plugin offers option to show/hide the bell if there are prims named "Bell"
-//== Plugin has a few default sounds, you can add more by putting them in the collar. The plugin scan for sounds starting with "bell_", f.i. "bell_kitty1"
-//==
-//== 2009-01-30 Cleo Collins - 1. draft
-//==
-//==
-//=============================================================================
+//scans for sounds starting with: bell_
+//show/hide for elements named: Bell
+//2009-01-30 Cleo Collins - 1. draft
 
 integer g_iDebugging=FALSE;
 
