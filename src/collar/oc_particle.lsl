@@ -6,15 +6,15 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// ADDED "LIFE" MENU FUNCTION TO LEASH MENU FOR ST ("Slave Trash" version) by Jean Severine 2014-01-25
-
 //Split from the leash script in April 2010 by Garvin Twine
-
-//3.934 replace g_sParticleTextureID with texture name if NULL_KEY. This is for non full perms textures, which return a null key, giving a blank particle. This should still work for linked leash points if the texture is added to the leash point as well. 
+//Nandana Singh, Lulu Pink, Joy Stipe, Wendy Starfall
+//Medea Destiny, Jean Severine, littlemousy
 
 // - MESSAGE MAP
 //integer COMMAND_NOAUTH      = 0;
