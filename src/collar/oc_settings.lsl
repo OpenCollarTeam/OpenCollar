@@ -6,7 +6,9 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,11 +29,6 @@
 //      Value = set Token to this value
 //  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
 //      texture_Base=steel,texture_Ring=stripes (in the scripts)
-
-//3.936 Fixed up multiline and multi-item cache dump to text to properly use new line characters at the start of each line so that the output list is properly NOT concatenated into a single line per script despite continuation characters.
-//3.934 Added a load defaults button to menu to user to reload the settings from the defaults notecard without having to open the notecard, edit it, and save it again, as script is only being reset on a changed owner. This allows people to restore settings more easily, for example if they change appearance or if they runaway and want to restore the owner settings from the defaults card. -MD
-//3.934 Menu Changes: the help/debug > settings setup removed, now help goes into the help/about menu and these functions appear in the Options menu under main. For the sake of simplicity, Fix Menus is now handled here, by using llResetOtherScript(); -MD
-
 
 string PARENT_MENU = "Main";
 string SUBMENU = "Options"; 
