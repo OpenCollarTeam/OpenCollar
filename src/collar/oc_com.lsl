@@ -6,11 +6,12 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.941 - littlemousy - combined listen script with touch script, so all input to collar goes through a single script.  Should save us some memory.
 integer g_iListenChan = 1;
 integer g_iListenChan0 = TRUE;
 string g_sPrefix = ".";
