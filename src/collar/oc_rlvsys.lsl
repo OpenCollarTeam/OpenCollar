@@ -6,11 +6,12 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.934: Something situation could cause the viewer check to get stuck. Not clear what, but I've thrown in a few robustness measures that hopefully should sort that out.
 //new viewer checking method, as of 2.73
 //on rez, restart script
 //on script start, query db for rlvon setting
