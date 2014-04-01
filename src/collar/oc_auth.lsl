@@ -6,11 +6,11 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
-
-//3.934 submenu name changed to "access" for menu updates and chat command for submenu updated to match (now works with both <prefix>owners and <prefix>access. Much bigger update to this script is in the works, but I think that's all that's needed for this release.
 
 key g_kWearer;
 list g_lOwners;//strided list in form key,name
