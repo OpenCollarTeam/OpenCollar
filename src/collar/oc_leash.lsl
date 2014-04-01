@@ -6,27 +6,14 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// -------------------------------
-// Original leash scripting & ongoing updates
-// Author: Nandana Singh
-// Date: Oct. 18, 2008
-// -------------------------------
-// Rewrite & various updates
-// Author: Lulu Pink
-// -------------------------------
-// Various updates
-// Author: Garvin Twine
-// -------------------------------
-// Edited & Added integration for particle-system to OC Settings & Dialog Subsystems (3.421)
-// Author: Joy Stipe
-// -------------------------------
-//April 2010 splitting of the particle part into its own script April 2010
-// Author: Garvin Twine
-// -------------------------------
+// Oct. 18, 2008
+// Nandana Singh, Lulu Pink, Garvin Twine, Joy Stipe
 
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
