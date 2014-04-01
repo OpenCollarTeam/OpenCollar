@@ -6,12 +6,11 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
-
-//3.935 Bugfix for sending collarversion to menu script, 1 and 0 instead of TRUE and FALSE;
-//3.940 doesn't give regular updaters, informs user where to get an updater, and get updater button gives current updater
 
 // This script does 4 things:
 // 1 - On rez, check whether there's an update to the collar available.
