@@ -125,7 +125,7 @@ list g_lOwners=[];          //needed for teleport exception
 // ------ FUNCTION DEFINITIONS ------
 
 
-Debug(string sStr) { llOwnerSay(llGetScriptName() + ": " + sStr); }
+//Debug(string sStr) { llOwnerSay(llGetScriptName() + ": " + sStr); }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
@@ -285,7 +285,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
             if (iPointCount == 1) g_sCheck = (string)llGetOwnerKey(kTarget) + llList2String(lPoints, 0) + " ok";
         }
         //Send link message to the particle script
-        Debug("leashing with "+g_sCheck);
+        //Debug("leashing with "+g_sCheck);
         llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
         llSetTimerEvent(3.0);   //check for leasher out of range
     }
@@ -634,7 +634,7 @@ default
                     g_iAwayCounter = 0;
                     llSetTimerEvent(3.0);
                 }
-                Debug("leashing with "+g_sCheck);
+                //Debug("leashing with "+g_sCheck);
                 llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
                 g_iLeasherInRange = TRUE;
                 
@@ -668,7 +668,7 @@ default
         }
     }
     state_entry() {
-        llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
+        //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
         g_sWearer = llKey2Name(g_kWearer);
         g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
