@@ -6,20 +6,13 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//3.936 reset script on owner change
-//Version 3.934 New Feature. Allow textures to be specified in a texture notecard. Notecard must contain textures on a separate line per texture, in the format name,uuid. -MD
-
-//Version 3.935 Added support for texture notecard named textures_custom which will be read instead of the standard texture notecard if present. Also put MENUNAME_RESPONSE into onrez in place of reset. This menu building system is... uh... yeah. -MD
-
-//Version 3.935 removed llToLower() in GetLongName(), GetElementHasTexs() and BuildTexButtons() functions. This commit makes textureable elements case sensitive; we need that if textures are exclusive to specific elements on the collar otherwhise those textures would have to be named like the element but in lower caps - Karo Weirsider
-// Flip side, now it relies on them being the same. Risk of breaking some existing content here? I'm inclined to say it would be better to put llToLower on both sides of the test comparisons, no? -Medea Destiny.
-
 //set textures by uuid, and save uuids instead of texture names to DB
-
 //on getting texture command, give menu to choose which element, followed by menu to pick texture
 
 list g_lElements;
