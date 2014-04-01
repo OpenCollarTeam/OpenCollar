@@ -6,15 +6,14 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-
-// 3.936 New feature! Smartstrip. When smartstrip is activated, the standard clothing removal folder will use detachallthis instead of remoutfit, to remove everything in the same folder or child folders of the item being removed. For people with a sensibly set up #RLV, this makes this a far more useful option! Because lots of people *don't* have a #RLV folder set up for this, we also have a notecard to give to help people with setting up folders. Yay! Smartstrip gets turned on and off via the menus or via the chat commands "smartstrip on" and "smartstrip off". Owners and Wearers can both change this setting. However! We also have a g_kSmartUser key. If someone other an Owner or Wearer selects it, their key gets dumped into this value, which is not saved. This allows other people to activate it for themselves only, for that session only. As an additional bonus, removing clothing can now be accessed by an easy chat command, "strip (item)" or "strip all". For now, I haven't changed the behaviour of strip all, however the code is there commented out if we think it's a good idea for strip all to use smartstrip.
-
-
 //gives menus for clothing and attachment, stripping and locking
+//Satomi Ahn, Medea Destiny
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
