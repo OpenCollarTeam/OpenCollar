@@ -6,13 +6,13 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Garbler plug-in for the OpenCollar Project (c), original by Joy Stipe
-
-//v3.601 by Joy Stipe 2010/07/28
+//original by Joy Stipe
 
 //OpenCollar MESSAGE MAP
 // messages for authenticating users
