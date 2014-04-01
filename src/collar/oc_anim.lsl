@@ -6,26 +6,16 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
-
-//3.940 gives AO from inventory only
-
-//3.936 bugfix: out of order command handling in dialog response was sending some commands back to child scripts. Also, added script reset on changed owner.
-
-//3.935   Added support for posture collar neck locking using provided ~PostureOverride animation, or another animation named in g_sPostureAnim. Supplied animation locks head and neck and priority 6 to ensure overriding. If the animation is found in inventory, animation menu will have a "☐Posture" as button defined in POSTURE. Button will not show if animation is not present. Also responds to chat commands "posture on" and "posture off". Posture is saved in settings with the token (g_sPostureToke) posture=1 when active, and read back from settings/defaultsettings notecard when settings are sent by settings script. Posture is reposed when animations refreshed and when permissions are granted (i.e. on attach) if g_iPosture is TRUE.
-
-//3.935 Removed reset on rez. CreateAnimList now happens if g_iNumberOfAnims changes instead of each rez. Much more sensible. requestperm() removed (let's not have single use functions! Bad! Naughty!) and permission requested in attach event instead, saving the unnecessary if(llGetAttached()); call. run_time_permissions is added to allow restoring posture. Also, good practice to have it. Probably should store permission in an integer to save llGetPermissions checks. We should consider if we want to refresh poses here rather than having all poses scrapped on rez as current. Added remenuing to the animation menu where sensible.
-
-
 
 //needs to handle anim requests from sister scripts as well
 //this script as essentially two layers
 //lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
 //upper layer: use the link message anim api to provide a pose menu
-
-//2009-03-22, Lulu Pink, animlock - issue 367
 
 list g_lAnims;
 //integer g_iNumAnims;//the number of anims that don't start with "~"
