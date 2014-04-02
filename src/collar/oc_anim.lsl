@@ -626,7 +626,7 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sRootMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
+            //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, ""); //no need for fixed main menu
             g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, "");
         }
