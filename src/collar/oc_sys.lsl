@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - main                                //
-//                                 version 3.958                                  //
+//                                 version 3.959                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -133,8 +133,8 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\n\nThis menu grants access to features of Add-on scripts.\n";
     list lUtility = [UPMENU];
-    string sTraceButton="[ ] Trace";
-    if (g_iTraceOn) sTraceButton="[x] Trace";
+    string sTraceButton="Trace ☐";
+    if (g_iTraceOn) sTraceButton="Trace ☒";
     Dialog(kID, sPrompt, sTraceButton+g_lAppsButtons, lUtility, 0, iAuth, "Apps");
 }
 HelpMenu(key kID, integer iAuth) {
@@ -418,11 +418,11 @@ default
                     //Debug("Apps menu response:"+sMessage);
                     if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
-                    } else if (sMessage=="[ ] Trace") {
+                    } else if (sMessage=="Trace ☐") {
                         //Debug("Trace off button");    
                         UserCommand(iAuth, "trace on", kAv, TRUE);
                         AppsMenu(kAv, iAuth);
-                    } else if (sMessage=="[x] Trace") {
+                    } else if (sMessage=="Trace ☒") {
                         //Debug("Trace off button");    
                         UserCommand(iAuth, "trace off", kAv, TRUE);
                         AppsMenu(kAv, iAuth);
