@@ -836,10 +836,10 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == "Global_prefix") SetPrefix(sValue);
         }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        }
+        //else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        //{
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //}
         else if (iNum == COMMAND_SAFEWORD)
         {
             string sSubName = llKey2Name(g_kWearer);
