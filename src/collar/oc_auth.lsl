@@ -131,10 +131,7 @@ key REQUEST_KEY;
 
 string g_sScript;
 
-Debug(string sStr)
-{
-    //llOwnerSay(llGetScriptName() + ": " + sStr);
-}
+//Debug(string sStr){llOwnerSay(llGetScriptName() + ": " + sStr);}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -207,25 +204,20 @@ list AddUniquePerson(list lContainer, key kID, string sName, string sType)
     return lContainer;
 }
 
-NewPerson(key kID, string sName, string sType)
-{
+NewPerson(key kID, string sName, string sType) {
+    //Debug("Adding "+sName+"("+(string)kID+") to owner list");
     //adds new owner, secowner, or blacklisted, as determined by type.
-    if (sType == "owner")
-    {
+    if (sType == "owner") {
         g_lOwners = AddUniquePerson(g_lOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sOwnersToken + "=" + llDumpList2String(g_lOwners, ","), "");
         //added for attachment interface to announce owners have changed
         sendToAttachmentInterface("OwnerChange");
-    }
-    else if (sType == "secowner")
-    {
+    } else if (sType == "secowner") {
         g_lSecOwners = AddUniquePerson(g_lSecOwners, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sSecOwnersToken + "=" + llDumpList2String(g_lSecOwners, ","), "");
         //added for attachment interface to announce owners have changed
         sendToAttachmentInterface("OwnerChange");
-    }
-    else if (sType == "blacklist")
-    {
+    } else if (sType == "blacklist") {
         g_lBlackList = AddUniquePerson(g_lBlackList, kID, sName, g_sRequestType);
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sBlackListToken + "=" + llDumpList2String(g_lBlackList, ","), "");
     }
@@ -382,7 +374,7 @@ list RemovePerson(list lPeople, string sName, string sToken, key kCmdr)
     //where "lPeople" is a 2-strided list in form key,name
     //looks for strides identified by "name", removes them if found, and returns the list
     //also handles notifications so as to reduce code duplication in the link message event
-    Debug("removing: " + sName);
+    //Debug("removing: " + sName);
     //all our comparisons will be cast to lower case first
     sName = llToLower(sName);
     integer iChange = FALSE;
@@ -392,7 +384,7 @@ list RemovePerson(list lPeople, string sName, string sToken, key kCmdr)
     for (n = llGetListLength(lPeople) - 1; n >= 0; n = n - 2)
     {
         string sThisName = llToLower(llList2String(lPeople, n));
-        Debug("checking " + sThisName);
+        //Debug("checking " + sThisName);
         if (sName == sThisName)
         {   //remove name and key
             kRemovedPerson=llList2String(lPeople,n - 1);
@@ -476,6 +468,7 @@ NotifyInList(list lStrideList, string sOwnerType)
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
 {
+    //Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
     if (sStr == "menu "+g_sSubMenu)
@@ -525,16 +518,12 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         AuthMenu(kID, iNum);
     }
     else if (iNum == COMMAND_OWNER) {
+        //Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+") **COMMAND_OWNER");
         //respond to messages to set or unset owner, group, or secowners.  only owner may do these things
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llList2String(lParams, 0);
-        if ((key)llList2String(lParams, 1)) {
-            key new = (key)llList2String(lParams, 1);
-            g_sRequestType = sCommand;
-            if (g_sRequestType != "blacklist" && !~llSubStringIndex(g_sRequestType, "owner")) return TRUE;
-            NewPerson(new, llKey2Name(new), g_sRequestType);
-            return TRUE;
-        } if (sCommand == "owner") { //set a new owner.
+        if (sCommand == "owner") { //set a new owner.
+            //Debug ("Owner command:"+sStr);
             //if no owner at all specified:
             if (llList2String(lParams, 1) == "") {
                 AuthMenu(kID, iNum);
@@ -546,8 +535,11 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             //record owner name
             string sTmpName = llDumpList2String(lParams, " ");
             if ((key)sTmpName){
+                //Debug ("Adding "+sTmpName+" as key");
                 g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+                g_lQueryId+=[g_kNameRequest,sTmpName];
             } else {
+                //Debug ("Adding "+sTmpName+" as name");
                 if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer)))  NewPerson(g_kWearer, sTmpName, g_sRequestType);
                 else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
             }
@@ -712,14 +704,14 @@ SetPrefix(string sValue)
         init += llGetSubString(llList2String(name, 1), 0, 0);
         g_sPrefix = llToLower(init);
     }
-    Debug("Prefix set to: " + g_sPrefix);
+    //Debug("Prefix set to: " + g_sPrefix);
 }
 default
 {
     state_entry()
     {   //until set otherwise, wearer is owner
-        Debug((string)llGetFreeMemory());
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        //llOwnerSay("Auth: free memory="+(string)llGetFreeMemory());
+        g_sScript = "auth_";
         g_kWearer = llGetOwner();
         SetPrefix("auto");
         //added for attachment auth
@@ -770,7 +762,7 @@ default
                 llMessageLinked(LINK_SET, iAuth, sStr, kID);
             }
 
-            Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
+            //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
             return; // NOAUTH messages need go no further
         }
         else if (UserCommand(iNum, sStr, kID)) return;
@@ -890,12 +882,12 @@ default
             if (sStr == "on")
             {
                 g_iWearerlocksOut=TRUE;
-                Debug("locksOuton");
+                //Debug("locksOuton");
             }
             else if (sStr == "off")
             {
                 g_iWearerlocksOut=FALSE;
-                Debug("lockoutoff");
+                //Debug("lockoutoff");
             }
         }
         else if (iNum == DIALOG_RESPONSE)
@@ -1106,12 +1098,17 @@ default
     }
     
     dataserver(key kQueryId, string sData){
+        //Debug ("dataserver("+(string)kQueryId+","+sData+")");
         integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
         if (listIndex!= -1){
             //need UUID
             key kAvId=llList2Key(g_lQueryId,listIndex+1);
             g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+1);
+            //Debug("Data server said "+(string)kAvId+" is called "+sData);
             NewPerson(kAvId, sData, g_sRequestType);
+        } else {
+            //Debug("Didn't recognise dataserver key");
+            //Debug(llDumpList2String(g_lQueryId,":"));
         }
     }
 }
