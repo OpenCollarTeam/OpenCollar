@@ -692,7 +692,7 @@ default
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
         if (UserCommand(iNum, sMessage, kMessageID, FALSE)) return;
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, "");
+            //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU + "|" + BUTTON_SUBMENU, "");
             g_lButtons = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
         } else if (iNum == MENUNAME_RESPONSE) {
