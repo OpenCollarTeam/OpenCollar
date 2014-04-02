@@ -424,7 +424,7 @@ default
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lButtons = []; // flush buttons before
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
