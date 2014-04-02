@@ -1,6 +1,4 @@
-Issue: 20140325.1
+Issue: 20140402.1
 
-OpenCollar BETA Channel
-3.958 released
-Thanks for participating!
+3.959 - BETA Release
 http://www.opencollar.at/blog.html
