@@ -347,6 +347,7 @@ default
         llSleep(1.0);//delay sending this message until we're fairly sure that other scripts have reset too, just in case
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "collarversion", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
 
         llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
