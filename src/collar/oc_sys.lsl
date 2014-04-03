@@ -29,10 +29,6 @@ list g_lMenuPrompts;
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
 
-//integer g_iListenChan = 1908789;
-//integer g_iListener;
-//integer g_iTimeOut = 60;
-
 integer g_iScriptCount;//when the scriptcount changes, rebuild menus
 
 //MESSAGE MAP
@@ -57,6 +53,8 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
+//5000 block is reserved for IM slaves
+
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
@@ -65,23 +63,13 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-//5000 block is reserved for IM slaves
-
 string UPMENU = "BACK";
-//string MORE = ">";
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
-//string REFRESH_MENU = "Fix Menus";
 string DEV_GROUP = "Join R&D";
 string USER_GROUP = "Join Support";
 string BUGS="Report Bug";
-string DEV_GROUP_ID = "c5e0525c-29a9-3b66-e302-34fe1bc1bd43";
-string USER_GROUP_ID = "0f6f3627-d9cb-a1db-b770-f66fce70d1ef";
-//string UPDATE="Get Update";
 string WIKI = "Website";
-string WIKI_URL = "http://www.opencollar.at/";
-string BUGS_URL = "http://www.opencollar.at/forum.html#!/support";
-string LICENSECARD="OpenCollar License";
 string LICENSE="License";
 //string SETTINGSHELP="Settings Help";
 //string SETTINGSHELP_URL="http://www.opencollar.at/";
@@ -191,7 +179,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             HelpMenu(kID, iNum);
         }
     } else if (sStr == "license") {
-        if(llGetInventoryType(LICENSECARD)==INVENTORY_NOTECARD) llGiveInventory(kID,LICENSECARD);
+        if(llGetInventoryType("OpenCollar License")==INVENTORY_NOTECARD) llGiveInventory(kID,"OpenCollar License");
         else Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
     } else if (sStr == "help") llGiveInventory(kID, HELPCARD); 
     else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);               
@@ -245,9 +233,7 @@ NotifyOwners(string sMsg) {
     integer n;
     integer stop = llGetListLength(g_lOwners);
     for (n = 0; n < stop; n += 2) {
-        // Cleo: Stop IMs going wild
-        if (g_kWearer != llGetOwner()) llResetScript();
-        else Notify((key)llList2String(g_lOwners, n), sMsg, FALSE);
+        Notify((key)llList2String(g_lOwners, n), sMsg, FALSE);
     }
 }
 
@@ -348,6 +334,7 @@ default
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "collarversion", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
 
         llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
@@ -404,7 +391,7 @@ default
                 //process response
                 if (sMenu=="Main"){
                     //Debug("Main menu response: '"+sMessage+"'");
-                    if (sMessage == " LOCK" || sMessage==" UNLOCK"){
+                    if (sMessage == LOCK || sMessage== UNLOCK){
                         //Debug("doing usercommand for '"+sMessage+"' from "+sMenu+" menu");
                         UserCommand(iAuth, sMessage, kAv, TRUE);
                         MainMenu(kAv, iAuth);
@@ -441,13 +428,13 @@ default
                     } else if (sMessage == LICENSE) {
                         UserCommand(iAuth,"license",kAv, TRUE);
                         HelpMenu(kAv, iAuth);
-                    } else if (sMessage == WIKI) llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", WIKI_URL);
-                    else if (sMessage == BUGS) llDialog(kAv,"Please help us to improve OpenCollar by reporting any bugs you see bugs. Click to open our support board at: \n"+BUGS_URL+"\n Or even better, use our github resource where you can create issues for bug reporting  / feature requests. \n https://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",[],-39457);
+                    } else if (sMessage == WIKI) llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", "http://www.opencollar.at/");
+                    else if (sMessage == BUGS) llDialog(kAv,"Please help us to improve OpenCollar by reporting any bugs you see bugs. Click to open our support board at: \nhttp://www.opencollar.at/forum.html#!/support\n Or even better, use our github resource where you can create issues for bug reporting  / feature requests. \n https://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",[],-39457);
                     else if (sMessage == DEV_GROUP) {
-                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + DEV_GROUP_ID + "/about " + "for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
+                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == USER_GROUP) {
-                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/" + USER_GROUP_ID + "/about " + "for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
+                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/0f6f3627-d9cb-a1db-b770-f66fce70d1ef/about for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == "Update") llMessageLinked(LINK_SET, iAuth, "menu Update", kAv);
                     else if (sMessage == "Get Updater") llMessageLinked(LINK_SET, iAuth, "menu Get Updater", kAv);
@@ -554,7 +541,7 @@ default
                     if (iIndex > -1){
                         sName=llGetSubString(sName,0,iIndex-1);
                     }
-                    string sSlurl="http://maps.secondlife.com/secondlife/"+sRegionName+"/"+(string)llFloor(vPos.x)+"/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
+                    string sSlurl="http://maps.secondlife.com/secondlife/"+llEscapeURL(sRegionName)+"/"+(string)llFloor(vPos.x)+"/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
                     
                     NotifyOwners(sName + " arrives at " +sSlurl);
                 }
