@@ -377,12 +377,12 @@ default
     {
         //the command was given by either owner, secowner, group member, or wearer
         if (UserCommand(num, str, id)) return;
-        else if (num == MENUNAME_REQUEST && str == PARENT_MENU)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
+        //else if (num == MENUNAME_REQUEST && str == PARENT_MENU)
+        //{
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_DO_UPDATE, "");
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_UPDATE, "");
             // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + BTN_GET_VERSION, "");
-        }
+        //}
         else if (num == DIALOG_RESPONSE)
         {
             if (id == g_kMenuID)
