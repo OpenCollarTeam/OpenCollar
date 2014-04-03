@@ -411,14 +411,14 @@ SendValues()
     }
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
-
+/*
 Refresh()
 {
     //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU, "");
     llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
     SendValues();
 }
-
+*/
 integer UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) return FALSE;
@@ -498,7 +498,7 @@ default
         if (g_kWearer == llGetOwner())
         {
             llSleep(0.5); // brief wait for others to reset
-            Refresh();        
+            SendValues();    
         }
         else llResetScript();
     }
@@ -563,7 +563,7 @@ default
                 // wait a sec before sending settings, in case other scripts are
                 // still resetting.
                 llSleep(2.0);
-                Refresh();
+                SendValues();
             }
         }
     }
@@ -670,10 +670,10 @@ default
                 DoMenu(kAv, iAuth);
             }
         }
-        else if (iNum == MENUNAME_REQUEST && sStr == PARENT_MENU)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
-        }
+        //else if (iNum == MENUNAME_REQUEST && sStr == PARENT_MENU)
+        //{
+        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
+        //}
         else if (iNum == DIALOG_TIMEOUT)
         {
             // timeout from menu system, you do not have to react on this, but you can
