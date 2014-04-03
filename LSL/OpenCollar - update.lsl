@@ -304,6 +304,7 @@ default
             my_version = data;        
             //Debug("version:"+my_version);
             // now request the version from github.
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "collarversion", "");
             CheckForUpdate();            
         }
     }
