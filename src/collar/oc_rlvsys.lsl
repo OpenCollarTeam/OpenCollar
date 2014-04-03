@@ -536,10 +536,10 @@ default{
         {
             CheckVersion(FALSE);
         }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        }
+        //else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        //{
+        //   llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //}
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER && sStr == "menu "+g_sSubMenu)
         {   //someone clicked "RLV" on the main menu.  Tell them we're not ready yet.
             Notify(kID, "Still querying for viewer version.  Please try again in a minute.", FALSE);
@@ -653,6 +653,7 @@ state checked {
         //we only need to request submenus if rlv is turned on and running
         if (g_iRLVOn && g_iViewerCheck)
         {   //ask RLV plugins to tell us about their rlv submenus
+            g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
             llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
@@ -672,12 +673,14 @@ state checked {
             llSetTimerEvent(2);
         }
         // Ensure that menu script knows we're here.
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            g_lMenu = [] ; // flush submenu buttons
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
         else if (UserCommand(iNum, sStr, kID)) return;
