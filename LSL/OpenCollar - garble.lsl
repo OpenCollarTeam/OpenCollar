@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - garble                               //
-//                                 version 3.959                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -45,7 +45,7 @@ integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 
-string g_sParentMenu = "AddOns";
+string g_sParentMenu = "Apps";
 string GARBLE = "Garble ☐";
 string UNGARBLE = "Garble ☒";
 integer g_nDebugMode=FALSE; // set to TRUE to enable Debug messages

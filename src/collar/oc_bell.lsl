@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.957                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -19,7 +19,7 @@
 integer g_iDebugging=FALSE;
 
 string g_sSubMenu = "Bell";
-string g_sParentMenu = "AddOns";
+string g_sParentMenu = "Apps";
 key g_kDialogID;
 
 list g_lLocalButtons = ["Vol +","Vol -","Delay +","Delay -"," Next Sound","  Quick Help","Ring it!"];

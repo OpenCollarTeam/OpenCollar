@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - titler                               //
-//                                 version 3.959                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -14,7 +14,7 @@
 
 // Nandana Singh, Satomi Ahn, Romka Swallowtail, littlemousy, Wendy Starfall
 
-string g_sParentMenu = "AddOns";
+string g_sParentMenu = "Apps";
 string g_sFeatureName = "Titler";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
 

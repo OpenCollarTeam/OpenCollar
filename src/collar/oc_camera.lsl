@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - camera                               //
-//                                 version 3.934                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -18,7 +18,7 @@
 key g_kWearer;
 integer g_iLastNum;
 string g_sMyMenu = "Camera";
-string g_sParentMenu = "AddOns";
+string g_sParentMenu = "Apps";
 key g_kMenuID;
 string g_sCurrentMode = "default";
 float g_fReapeat = 0.5;

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - timer                               //
-//                                 version 3.957                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -56,7 +56,7 @@ integer g_iInterfaceChannel;
 //Collar Cuff Menu
 
 string g_sSubMenu = "Timer"; // Name of the submenu
-string g_sParentMenu = "AddOns"; // mname of the menu, where the menu plugs in
+string g_sParentMenu = "Apps";
 
 key g_kMenuID;
 key g_kOnMenuID;
