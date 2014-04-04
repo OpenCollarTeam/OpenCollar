@@ -183,8 +183,10 @@ default{
         while (linkNumber-- >2){
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
-                g_iTextPrim = linkNumber;
-                linkNumber = 0 ; // break while cylle
+                if (llList2Integer(llGetLinkPrimitiveParams(linkNumber,[PRIM_TYPE]),0)==PRIM_TYPE_BOX){
+                    g_iTextPrim = linkNumber;
+                    linkNumber = 0 ; // break while cycle
+                }
             }
         }
         g_sScript = GetScriptID();
