@@ -6,7 +6,9 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +177,7 @@ integer g_iCurrentState; // keep track of current state, set within every state_
 //OpenCollar Plugin Template
 integer IN_DEBUG_MODE           = FALSE;       // set to TRUE to enable Debug messages, if any
 string  SUBMENU_BUTTON          = "Cage Home"; // Name of the g_sSubMenu
-string  COLLAR_PARENT_MENU      = "AddOns";    // Name of the menu
+string  COLLAR_PARENT_MENU      = "Apps";    // Name of the menu
 
 string  PLUGIN_CHAT_COMMAND     = "ch";        // so the user can easily access it by type for instance *plugin
 string  PLUGIN_TITLE            = "Cage Home"; // to be used in various strings
