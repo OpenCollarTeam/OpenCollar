@@ -1,3 +1,4 @@
+SCRIPT|Old Script
 SCRIPT|OpenCollar - menu
 SCRIPT|OpenCollar - lock
 SCRIPT|OpenCollar - touch
@@ -14,6 +15,7 @@ SCRIPT|OpenCollar - real leash - 0.2
 SCRIPT|OpenCollar - coupleanim1
 SCRIPT|OpenCollar - coupleanim2
 SCRIPT|OpenCollar - hovertext
+SCRIPT|OpenCollar - subspy
 ITEM|How to set up your #RLV and use SmartStrip
 ITEM|OpenCollar - rlvrelay - Help
 ITEM|OpenCollar RLV Relay Help
@@ -65,25 +67,3 @@ ITEM|Steel
 ITEM|yin
 ITEM|yang
 ITEM|Tranquility
-ITEM|~heightscalars
-ITEM|~-30
-ITEM|~-31
-ITEM|~-32
-ITEM|~-33
-ITEM|~-34
-ITEM|~-35
-ITEM|~-36
-ITEM|~-37
-ITEM|~-38
-ITEM|~-39
-ITEM|~-40
-ITEM|~-41
-ITEM|~-42
-ITEM|~-43
-ITEM|~-44
-ITEM|~-45
-ITEM|~-46
-ITEM|~-47
-ITEM|~-48
-ITEM|~-49
-ITEM|~-50
