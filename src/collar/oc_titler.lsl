@@ -105,11 +105,13 @@ integer UserCommand(integer iNum, string sStr, key kID){
         string sPrompt;
         if (g_iTextPrim == -1) {
             sPrompt="\nThis design is missing a FloatText box. Titler disabled.";
+            g_kDialogID = Dialog(kID, sPrompt, [], [UPMENU],0, iNum);
+        } else {
+            sPrompt = "\nCurrent Title: " + g_sText ;
+            if(g_iOn == TRUE) ON_OFF = ON ;
+            else ON_OFF = OFF ;
+            g_kDialogID = Dialog(kID, sPrompt, [SET,UP,DN,ON_OFF], [HELP,UPMENU],0, iNum);
         }
-        sPrompt = "\nCurrent Title: " + g_sText ;
-        if(g_iOn == TRUE) ON_OFF = ON ;
-        else ON_OFF = OFF ;
-        g_kDialogID = Dialog(kID, sPrompt, [SET,UP,DN,ON_OFF], [HELP,UPMENU],0, iNum);
     } else if (sStr == "runaway" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER)) {
         g_sText = "";
         g_iOn = FALSE;
