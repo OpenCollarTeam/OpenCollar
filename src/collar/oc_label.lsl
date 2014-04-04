@@ -130,8 +130,8 @@ key     null_key        = NULL_KEY;
 //key g_kFontTexture = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe";//verily serif 40 etched, on white
 key g_kFontTexture = NULL_KEY;
 list g_lFonts = [
-//    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
-//    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc", //not ideally aligned
+    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
+    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc", //not ideally aligned
     "Serif 1", "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c",
     "Serif 2", "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe",
     "LCD", "014291dc-7fd5-4587-413a-0d690a991ae1"
