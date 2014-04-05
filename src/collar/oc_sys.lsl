@@ -134,7 +134,7 @@ HelpMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
-    string sPrompt="\n\nWelcome to the Main Menu\nOpenCollar Version "+g_sCollarVersion;
+    string sPrompt="\nOpenCollar  -  submission set free™\nVersion "+g_sCollarVersion+" [ www.opencollar.at ]";
     list lStaticButtons=["Apps","Animations","Appearance","Leash","RLV","Access","Options","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, UNLOCK+lStaticButtons, [], 0, iAuth, "Main");
