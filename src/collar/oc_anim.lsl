@@ -22,6 +22,13 @@ list g_lAnims;
 //integer g_iPageSize = 8;//number of anims we can fit on one page of a multi-page menu
 list g_lPoseList;
 
+//for the height scaling feature
+key g_kDataID;
+string card = "~heightscalars";
+integer g_iLine = 0;
+list g_lAnimScalars;//a 3-strided list in form animname,scalar,delay
+integer g_iAdjustment = 0;
+
 string g_sCurrentPose = "";
 integer g_iLastRank = 0; //in this integer, save the rank of the person who posed the av, according to message map.  0 means unposed
 string g_sRootMenu = "Main";
@@ -108,6 +115,10 @@ string ANIMMENU = "Anim";
 string AOMENU = "AO";
 string POSEMENU = " Pose";
 
+string HEIGHTFIX = "HeightFix";
+string g_sHeightFixToken = "HFix";
+integer g_iHeightFix = TRUE;
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer)
@@ -153,6 +164,18 @@ AnimMenu(key kID, integer iAuth)
         sPrompt += "The wearer is free to change or stop poses on their own.\n";
         lButtons = [UNTICKED + ANIMLOCK];
     }
+    
+    if(g_iHeightFix)
+    {
+        sPrompt += "\nThe height of some poses will be adjusted now.";
+        lButtons += [TICKED + HEIGHTFIX];
+    }
+    else
+    {
+        sPrompt += "\nThe height of the poses will not be changed.";
+        lButtons += [UNTICKED + HEIGHTFIX];
+    }
+    
     if(llGetInventoryType(g_sPostureAnim)==INVENTORY_ANIMATION)
     {
         if(g_iPosture)
@@ -278,11 +301,41 @@ StartAnim(string sAnim)
                 llStopAnimation(s_Current);
             }
 
+            //stop any currently playing height adjustment
+            if (g_iAdjustment)
+            {
+                llStopAnimation("~" + (string)g_iAdjustment);
+                g_iAdjustment = 0;
+            }
+
             //add anim to list
             g_lAnims = [sAnim] + g_lAnims;//this way, g_lAnims[0] is always the currently playing anim
             llStartAnimation(sAnim);
             llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_OFF);
             llWhisper(g_iAOChannel, AO_OFF);
+            
+            if (g_iHeightFix)
+            {
+                //adjust height for anims in g_lAnimScalars
+                integer iIndex = llListFindList(g_lAnimScalars, [sAnim]);
+                if (iIndex != -1)
+                {//we just started playing an anim in our g_iAdjustment list
+                    //pause to give certain anims time to ease in
+                    llSleep((float)llList2String(g_lAnimScalars, iIndex + 2));
+                    vector vAvScale = llGetAgentSize(g_kWearer);
+                    float fScalar = (float)llList2String(g_lAnimScalars, iIndex + 1);
+                    g_iAdjustment = llRound(vAvScale.z * fScalar);
+                    if (g_iAdjustment > -30)
+                    {
+                        g_iAdjustment = -30;
+                    }
+                    else if (g_iAdjustment < -50)
+                    {
+                        g_iAdjustment = -50;
+                    }
+                    llStartAnimation("~" + (string)g_iAdjustment);
+                }
+            }                        
         }
         else
         {
@@ -311,12 +364,39 @@ StopAnim(string sAnim)
                 }
             }
             llStopAnimation(sAnim);
+            
+            //stop any currently-playing height adjustment
+            if (g_iAdjustment)
+            {
+                llStopAnimation("~" + (string)g_iAdjustment);
+                g_iAdjustment = 0;
+            }
             //play the new g_lAnims[0]
             //if anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims))
             {
                 string sNewAnim = llList2String(g_lAnims, 0);
                 llStartAnimation(sNewAnim);
+                
+                //adjust height for anims in g_lAnimScalars
+                integer iIndex = llListFindList(g_lAnimScalars, [sNewAnim]);
+                if (iIndex != -1)
+                {//we just started playing an anim in our adjustment list
+                    //pause to give certain anims time to ease in
+                    llSleep((float)llList2String(g_lAnimScalars, iIndex + 2));
+                    vector vAvScale = llGetAgentSize(g_kWearer);
+                    float fScalar = (float)llList2String(g_lAnimScalars, iIndex + 1);
+                    g_iAdjustment = llRound(vAvScale.z * fScalar);
+                    if (g_iAdjustment > -30)
+                    {
+                        g_iAdjustment = -30;
+                    }
+                    else if (g_iAdjustment < -50)
+                    {
+                        g_iAdjustment = -50;
+                    }
+                    llStartAnimation("~" + (string)g_iAdjustment);
+                }
             }
             else
             {
@@ -488,6 +568,35 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
         }
     }
+    
+    else if(llGetSubString(sStr, llStringLength(TICKED), -1) == HEIGHTFIX)
+    {
+        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer))
+        {
+            if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
+            {
+                g_iHeightFix = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
+            }
+            else
+            {
+                g_iHeightFix = TRUE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sHeightFixToken, NULL_KEY);
+
+            }
+            if (g_sCurrentPose != "")
+            {
+                string sTemp = g_sCurrentPose;
+                StopAnim(sTemp);
+                StartAnim(sTemp);
+            }
+            AnimMenu(kID, iNum);
+        }
+        else
+        {
+            Notify(kID,"Only owners or the wearer itself can use this option.",FALSE);
+        }
+    }
     else if(sCommand == "ao")
     {
         if(sValue == "" || sValue == "menu")
@@ -570,6 +679,22 @@ default
 
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, "");
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
+    
+         //start reading the ~heightscalars notecard
+        g_kDataID = llGetNotecardLine(card, g_iLine);
+    }
+
+    dataserver(key kID, string sData)
+    {
+        if (kID == g_kDataID)
+        {
+            if (sData != EOF)
+            {
+                g_lAnimScalars += llParseString2List(sData, ["|"], []);
+                g_iLine++;
+                g_kDataID = llGetNotecardLine(card, g_iLine);
+            }
+        }   
     }
 
     changed(integer iChange)
@@ -581,6 +706,10 @@ default
 
         if (iChange & CHANGED_INVENTORY)
         {
+            g_lAnimScalars = [];
+            //start re-reading the ~heightscalars notecard
+            g_iLine = 0;
+            g_kDataID = llGetNotecardLine(card, g_iLine);
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
         }
         if (iChange & CHANGED_OWNER) llResetScript();
@@ -735,6 +864,10 @@ default
                     {
                         UserCommand(iAuth, sMessage, kAv);
                         AnimMenu(kAv, iAuth);
+                    }
+                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == HEIGHTFIX)
+                    {
+                        UserCommand(iAuth, sMessage, kAv);
                     }
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSTURE)
                     {
