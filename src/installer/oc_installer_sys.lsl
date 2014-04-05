@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.956                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -188,7 +188,7 @@ GiveMethodMenu() {
     //string prompt = "\n\nChoose your install method:\n";
     string prompt = "\n\nStandard: \"All you need for a fun BDSM experience on SL. The most popular features, full RLV support and a relay.\"\n";
     prompt += "\nBasic: \"Just the basic modular collar framework and essential core features.\"\n";
-    prompt += "\nCustom: \"Add features for custom elements like label or bell. Un/install poses, couple animator or texture support and select advanced features like Spy.\"\n";
+    prompt += "\nCustom: \"Add features for custom elements like label or bell. Un/install native texture support and select advanced features.\"\n";
     //prompt += "\n[Developer]\n\"WARNING! This will install the full development workspace.\"\n";
 prompt += "\n\nThe currently selected method is ["+INSTALL_METHOD+"]\n";
     list choices = ["Standard","Basic","Custom", "Developer"];
