@@ -244,8 +244,7 @@ integer UserCommand(integer iNum, string str, key id) // here iNum: auth value, 
         }
         else if (submenu == BTN_GET_UPDATE)
         {
-            llLoadURL(id,g_sHowToUpdate,"https://marketplace.secondlife.com/p/Open
-Collar-Updater/5493698");
+            llLoadURL(id,g_sHowToUpdate,"https://marketplace.secondlife.com/p/OpenCollar-Updater/5493698");
         }
     }
     else if (str == "update")
