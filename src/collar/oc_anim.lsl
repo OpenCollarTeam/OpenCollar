@@ -135,10 +135,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-Debug(string sStr)
-{
-    //llOwnerSay(llGetScriptName() + ": " + sStr);
-}
+//Debug(string sStr){llOwnerSay(llGetScriptName() + ": " + sStr);}
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
@@ -190,6 +187,7 @@ AnimMenu(key kID, integer iAuth)
         }
     }    
     sPrompt += "\nAO features require one of the following:\n\na) OpenCollar Sub AO\nb) Firestorm Bridge + Internal AO\nc) A drop'n'go script for ZHAOII based AOs";
+
     lButtons += llListSort(g_lAnimButtons, 1, TRUE);
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
     list lNewStride = [kID, kMenuID, ANIMMENU];
@@ -213,7 +211,12 @@ AOMenu(key kID, integer iAuth) // wrapper to send menu back to the AO's menu
 PoseMenu(key kID, integer iPage, integer iAuth)
 { //create a list
     string sPrompt = "\n\nChoose a pose to play.\n\nSTOP: release the pose\n\n";
-    key kMenuID = Dialog(kID, sPrompt, g_lPoseList, [RELEASE, UPMENU], iPage, iAuth);
+
+    list lHeightFixButtons=[];
+    if (g_iHeightFix){
+        lHeightFixButtons=["↑","↓"];
+    }
+    key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (iIndex == -1)
@@ -660,6 +663,45 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
+AdjustOffset(integer direction){
+    //get sleep time from list    
+    string sNewAnim = llList2String(g_lAnims, 0);
+    integer iIndex = llListFindList(g_lAnimScalars, [sNewAnim]);
+    string sleepTime="2.0";
+    if (iIndex != -1){
+        sleepTime=llList2String(g_lAnimScalars, iIndex + 2);
+        g_lAnimScalars=llDeleteSubList(g_lAnimScalars,iIndex,iIndex+2);       //we re-write it at the end
+    }
+
+    //stop last adjustment anim and play next one
+    integer iOldAdjustment=g_iAdjustment;
+    if (g_iAdjustment){
+        g_iAdjustment+=direction;
+        if (g_iAdjustment > -30)
+        {
+            g_iAdjustment = -30;
+        }
+        else if (g_iAdjustment < -50)
+        {
+            g_iAdjustment = -50;
+        }
+    } else {
+        g_iAdjustment=-30;
+    }
+    llStartAnimation("~" + (string)g_iAdjustment);
+    if (iOldAdjustment && iOldAdjustment != g_iAdjustment){
+        llStopAnimation("~" + (string)iOldAdjustment);
+    }
+    
+    //now calculate the new offset for notecard dump print
+    vector avscale = llGetAgentSize(llGetOwner());
+    float test = (float)g_iAdjustment/avscale.z;
+    llOwnerSay(sNewAnim+"|"+(string)test+"|"+sleepTime);
+    
+    //and store it
+    g_lAnimScalars+=[sNewAnim,test,sleepTime];
+}
+
 default
 {
     on_rez(integer iNum)
@@ -725,7 +767,7 @@ default
     {
         if (kID == NULL_KEY)
         {
-            Debug("detached");
+            //Debug("detached");
             //we were just detached.  clear the anim list and tell the ao to play stands again.
             llWhisper(g_iInterfaceChannel, (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
             llWhisper(g_iAOChannel, AO_ON);
@@ -850,12 +892,12 @@ default
                     {   
                         DeliverAO(kAv);
                     }
-                    else if(sMessage == "AO ON")
+                    else if(sMessage == "☐ AO" || sMessage== "AO ON")
                     {
                         UserCommand(iAuth, "ao on", kAv);
                         AnimMenu(kAv, iAuth);
                     }
-                    else if(sMessage == "AO OFF" )
+                    else if(sMessage == "☒ AO"  || sMessage== "AO OFF")
                     {
                         UserCommand(iAuth, "ao off", kAv);
                         AnimMenu(kAv, iAuth);
@@ -891,6 +933,14 @@ default
                     else if (sMessage == RELEASE)
                     {
                         UserCommand(iAuth, "release", kAv);
+                    }
+                    else if (sMessage == "↑")
+                    {
+                        AdjustOffset(1);
+                    }
+                    else if (sMessage == "↓")
+                    {
+                        AdjustOffset(-1);
                     }
                     else  //we got an animation name
                         //if ((integer)sMessage)
