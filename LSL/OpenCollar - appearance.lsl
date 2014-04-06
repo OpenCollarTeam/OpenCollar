@@ -25,7 +25,7 @@ string POSMENU = "Position";
 string ROTMENU = "Rotation";
 string SIZEMENU = "Size";
 
-list g_lLocalButtons = ["Position", "Rotation", "Size"]; //[POSMENU, ROTMENU];
+list g_lLocalButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
 list g_lButtons;
 float g_fSmallNudge=0.0005;
 float g_fMediumNudge=0.005;
@@ -387,8 +387,8 @@ DoMenu(key kAv, integer iAuth)
     {
         sPrompt = "\n\nChange looks, adjustment and size.\n\nAdjustments are based on the neck attachment spot.";
     
-        lMyButtons = [UNTICKED + APPLOCK];
-        lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
+        lMyButtons = [UNTICKED + APPLOCK] + g_lButtons + g_lLocalButtons ;
+        //lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
     }
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
