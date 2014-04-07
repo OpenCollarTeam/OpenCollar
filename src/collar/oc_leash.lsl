@@ -435,7 +435,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             
             lButtons += g_lButtons;
             
-            string sPrompt = "\n\nLeash Options:\n\nClick Advanced for more options.";
+            string sPrompt = "\nLet's go walkies!\n\nwww.opencollar.at/leash";
             g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
             
         

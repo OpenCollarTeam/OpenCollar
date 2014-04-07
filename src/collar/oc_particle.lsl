@@ -53,7 +53,7 @@ integer COMMAND_LEASH_SENSOR = 20001;
 string UPMENU       = "BACK";
 //string MORE         = ">";
 string PARENTMENU   = "Leash";
-string SUBMENU      = "Advanced";
+string SUBMENU      = "Customize";
 string L_TEXTURE    = "Texture";
 string L_DENSITY    = "Density";
 string L_COLOR      = "Color";
@@ -431,7 +431,7 @@ OptionsMenu(key kIn, integer iAuth)
         lButtons += "GlowOn";
     }
     lButtons += [L_DEFAULTS];
-    string sPrompt = "\n\nAdvanced Leash Options\n";
+    string sPrompt = "\nCustomize the looks and feel of your leash.";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -440,8 +440,8 @@ DensityMenu(key kIn, integer iAuth)
     list lButtons = ["+", "-", "Default"];
     g_sCurrentMenu = L_DENSITY;
     string Default = GetDefaultSetting(L_DENSITY);
-    string sPrompt = "\n\nChoose '+' for more and '-' for less particles\n'Default' to revert to the default: "+Default+"\n";
-    sPrompt += "\nCurrent Density = "+Float2String(g_fBurstRate) ;// BurstRate is opposite the implied effect of density
+    string sPrompt = "\nChoose '+' for more and '-' for less particles\n'Default' to revert to the default: "+Default;
+    sPrompt += "\n\nCurrent Density = "+Float2String(g_fBurstRate) ;// BurstRate is opposite the implied effect of density
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -450,7 +450,7 @@ GravityMenu(key kIn, integer iAuth)
     list lButtons = ["+", "-", "Default", "noGravity"];
     g_sCurrentMenu = L_GRAVITY;
     string Default = GetDefaultSetting(L_GRAVITY);
-    string sPrompt = "\n\nChoose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default: "+Default; 
+    string sPrompt = "\nChoose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default: "+Default; 
     sPrompt += "\n\nCurrent Gravity = "+Float2String(g_vLeashGravity.z) ;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -460,7 +460,7 @@ SizeMenu(key kIn, integer iAuth)
     list lButtons = ["X+", "Y+", "Default", "X-", "Y-", "MIN"];   // ADDED FOR ST changed "minimum" to "MIN"
     g_sCurrentMenu = L_SIZE;
     vector defaultsize = (vector)GetDefaultSetting(L_SIZE);    
-    string sPrompt = "\n\nChoose '+' for bigger and '-' for smaller size of the leash texture";
+    string sPrompt = "\nChoose '+' for bigger and '-' for smaller size of the leash texture";
     sPrompt += "\n'Default' to revert to the default size: "+Float2String(defaultsize.x)+" x "+Float2String(defaultsize.y);
     sPrompt += "\n'MIN' for the smallest possible: 0.04 x 0.04\n" ; 
     sPrompt += "\nCurrent Size = "+ Float2String(g_vLeashSize.x)+" x "+Float2String(g_vLeashSize.y) + "  (0.03 steps)";
@@ -481,14 +481,14 @@ LifeMenu(key kIn, integer iAuth)   // ADDED FOR ST
 ColorCategoryMenu(key kIn, integer iAuth)
 {
     //give kAv a dialog with a list of color cards
-    string sPrompt = "\n\nChoose a color category.\n";
+    string sPrompt = "\nChoose a color category.";
     g_sCurrentMenu = "L-ColorCat";
     g_kDialogID = Dialog(kIn, sPrompt, g_lCategories, [UPMENU], 0, iAuth);
 }
 
 ColorMenu(key kIn, integer iAuth)
 {
-    string sPrompt = "\n\nChoose a color.\n";
+    string sPrompt = "\nChoose a color.";
     list lButtons = llList2ListStrided(g_lColors,0,-1,2);
     g_sCurrentMenu = L_COLOR;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -522,8 +522,8 @@ TextureMenu(key kIn, integer iAuth)
     }
     lButtons += ["noTexture", "noLeash"];
     g_sCurrentMenu = L_TEXTURE;
-    string sPrompt = "\n\nChoose a texture\nnoTexture does default SL particle dots\nnoLeash means no particle leash at all\n\nCurrent Texture = ";
-    sPrompt += g_sParticleTexture + "\n";
+    string sPrompt = "\nChoose a texture\nnoTexture does default SL particle dots\nnoLeash means no particle leash at all\n\nCurrent Texture = ";
+    sPrompt += g_sParticleTexture;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -641,7 +641,7 @@ default
                         OptionsMenu(kAv, iAuth);
                     }
                 }
-                else if (g_sCurrentMenu == "Advanced")
+                else if (g_sCurrentMenu == "Customize")
                 {
                     if (sButton == L_DEFAULTS)
                     {
