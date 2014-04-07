@@ -14,7 +14,7 @@
 
 //Split from the leash script in April 2010 by Garvin Twine
 //Nandana Singh, Lulu Pink, Joy Stipe, Wendy Starfall
-//Medea Destiny, Jean Severine, littlemousy
+//Medea Destiny, Jean Severine, littlemousy, Romka Swallowtail
 
 // - MESSAGE MAP
 //integer COMMAND_NOAUTH      = 0;
