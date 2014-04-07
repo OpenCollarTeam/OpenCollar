@@ -147,46 +147,47 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 AnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\n";
+    string sPrompt = "\nThe wearer of this "+ CTYPE;
     list lButtons;
     if(g_iAnimLock)
     {
-        sPrompt += TICKED + ANIMLOCK + " is turned on:\n";
-        sPrompt += "Only owners can change or stop poses now.\n";
+        //sPrompt += TICKED + ANIMLOCK + " is turned on:\n";
+        sPrompt += " is forbidden to change or stop poses on their own";
         lButtons = [TICKED + ANIMLOCK];
     }
     else
     {
-        sPrompt += UNTICKED + ANIMLOCK + " is turned off:\n";
-        sPrompt += "The wearer is free to change or stop poses on their own.\n";
+        //sPrompt += UNTICKED + ANIMLOCK + " is turned off:\n";
+        sPrompt += " is allowed to change or stop poses on their own";
         lButtons = [UNTICKED + ANIMLOCK];
-    }
-    
-    if(g_iHeightFix)
-    {
-        sPrompt += "\nThe height of some poses will be adjusted now.";
-        lButtons += [TICKED + HEIGHTFIX];
-    }
-    else
-    {
-        sPrompt += "\nThe height of the poses will not be changed.";
-        lButtons += [UNTICKED + HEIGHTFIX];
-    }
-    
+    }        
     if(llGetInventoryType(g_sPostureAnim)==INVENTORY_ANIMATION)
     {
         if(g_iPosture)
         {
-            sPrompt +="\n"+ TICKED + POSTURE + " is turned on.\n";
+            //sPrompt +="\n"+ TICKED + POSTURE + " is turned on.\n";
+            sPrompt +=" and has their neck forced stiff.";
             lButtons += [TICKED + POSTURE];
         }
         else
         {
-            sPrompt +="\n"+ UNTICKED + POSTURE + " is turned off.\n";
+            //sPrompt +="\n"+ UNTICKED + POSTURE + " is turned off.\n";
+            sPrompt +=" and can relax their neck.";
             lButtons += [UNTICKED + POSTURE];
         }
-    }    
-    sPrompt += "\nAO features require one of the following:\n\na) OpenCollar Sub AO\nb) Firestorm Bridge + Internal AO\nc) A drop'n'go script for ZHAOII based AOs\n"+"Get an up to date Submissive AO for free here: "+"https://marketplace.secondlife.com/p/OpenCollar-Sub-AO/5493736";
+    }
+    if(g_iHeightFix)
+    {
+        //sPrompt += "\n\nThe height of some poses will be adjusted now.";
+        lButtons += [TICKED + HEIGHTFIX];
+    }
+    else
+   {
+        //sPrompt += "\n\nThe height of the poses will not be changed.";
+        lButtons += [UNTICKED + HEIGHTFIX];
+   }
+    sPrompt +="\n\nwww.opencollar.at/animations";    
+    //sPrompt +="\n\nGet a free, unisex and upgradeable Submissive AO here:\nmarketplace.secondlife.com/p/OpenCollar-Sub-AO/5493736";
 
     lButtons += llListSort(g_lAnimButtons, 1, TRUE);
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -494,6 +495,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
             Notify(kID, "Current Pose: " + g_sCurrentPose, FALSE);
         }
     }
+    //pose menu
+    else if (sStr == "pose"){
+        PoseMenu(kID, 0, iNum);
+    }
     else if ((sStr == "runaway" || sStr == "reset") && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER))
     {   //stop pose
         if (g_sCurrentPose != "")
@@ -503,105 +508,64 @@ integer UserCommand(integer iNum, string sStr, key kID)
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sAnimToken, "");
         llResetScript();
     }
-    else if(sCommand==llToLower(POSTURE))
-    {
-        if(iNum==COMMAND_OWNER || iNum==COMMAND_WEARER)
-        {
-            if(sValue=="on")SetPosture(TRUE,kID);
-            else SetPosture(FALSE,kID);
-        }
-        else Notify(kID,"Only wearers and owners can do that, sorry.",FALSE);
+    //posture
+    else if ( sStr=="posture on" || sStr == UNTICKED+POSTURE) {
+        if(iNum==COMMAND_OWNER || iNum==COMMAND_WEARER) {
+            SetPosture(TRUE,kID);
+            Notify(g_kWearer, "Your neck is locked in place.", FALSE);
+            if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + "'s neck is locked in place.", FALSE);
+        } else Notify(kID,"Only wearers and owners can do that, sorry.",FALSE);
+    } else if ( sStr=="posture off" || sStr == UNTICKED+POSTURE) {
+        if(iNum==COMMAND_OWNER || iNum==COMMAND_WEARER) {
+            SetPosture(FALSE,kID);
+            Notify(g_kWearer, "You can move your neck again.", FALSE);
+            if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to move their neck.", FALSE);
+        } else Notify(kID,"Only wearers and owners can do that, sorry.",FALSE);
     }
-    else if (sStr == "pose")
-    {  //do multi page menu listing anims
-        PoseMenu(kID, 0, iNum);
-    }
-    //added for anim lock
-    else if((llGetSubString(sStr, llStringLength(TICKED), -1) == ANIMLOCK) && (iNum == COMMAND_OWNER))
-    {
-        integer iIndex = llListFindList(g_lAnimButtons, [sStr]);
-        if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
-        {
-            g_iAnimLock = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
-            // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
-            if(kID != g_kWearer)
-            {
-                Notify(kID, llKey2Name(g_kWearer) + " is free to change or stop poses on their own.", FALSE);
-            }
-        }
-        else
-        {
+    //anim lock
+    else if ( sStr=="animlock on" || sStr == UNTICKED+ANIMLOCK){
+        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iAnimLock = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
-            // g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
             Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
-            if(kID != g_kWearer)
-            {
-                Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
-            }
+            if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
         }
-        //AnimMenu(kID, iNum);
-    }
-    else if((sCommand == llToLower(ANIMLOCK)) && (iNum == COMMAND_OWNER))
-    {
-        if(sValue == "on" && !g_iAnimLock)
-        {
-            integer iIndex = llListFindList(g_lAnimButtons, [UNTICKED + ANIMLOCK]);
-            g_iAnimLock = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
-            g_lAnimButtons = llListReplaceList(g_lAnimButtons, [TICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer, "You are now locked into poses set by others.", FALSE);
-            if(kID != g_kWearer)
-            {
-                Notify(kID, llKey2Name(g_kWearer) + " is now locked into poses set by others and cannot change or stop them on their own.", FALSE);
-            }
-        }
-        else if(sValue == "off" && g_iAnimLock)
-        {
-            integer iIndex = llListFindList(g_lAnimButtons, [TICKED + ANIMLOCK]);
+    } else if ( sStr=="animlock off" || sStr == TICKED+ANIMLOCK){
+        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iAnimLock = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
-            g_lAnimButtons = llListReplaceList(g_lAnimButtons, [UNTICKED + ANIMLOCK], iIndex, iIndex);
-            Notify(g_kWearer,"You are able to change and stop all poses on your own.", FALSE);
-            if(kID != g_kWearer)
-            {
-                Notify(kID, llKey2Name(g_kWearer) + " is able to change and stop poses set by others.", FALSE);
-            }
+            Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
+            if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to change or stop poses on their own.", FALSE);
         }
-    }
-    
-    else if(llGetSubString(sStr, llStringLength(TICKED), -1) == HEIGHTFIX)
-    {
-        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer))
-        {
-            if(llGetSubString(sStr, 0, llStringLength(TICKED) - 1) == TICKED)
-            {
-                g_iHeightFix = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
-            }
-            else
-            {
-                g_iHeightFix = TRUE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sHeightFixToken, NULL_KEY);
-
-            }
-            if (g_sCurrentPose != "")
-            {
+    //heightfix
+    } else if ( sStr=="heightfix on" || sStr == UNTICKED+HEIGHTFIX){
+        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
+            g_iHeightFix = TRUE;
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sHeightFixToken, NULL_KEY);
+            Notify(g_kWearer, "HeightFix override activated.", TRUE);
+            if (g_sCurrentPose != "") {
                 string sTemp = g_sCurrentPose;
                 StopAnim(sTemp);
                 StartAnim(sTemp);
             }
             AnimMenu(kID, iNum);
         }
-        else
-        {
-            Notify(kID,"Only owners or the wearer itself can use this option.",FALSE);
+        else Notify(kID,"Only owners or the wearer can use this option.",FALSE);
+    } else if ( sStr=="heightfix off" || sStr == TICKED+HEIGHTFIX){
+        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
+            g_iHeightFix = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
+            Notify(g_kWearer, "HeightFix override deactivated.", TRUE);
+            if (g_sCurrentPose != "") {
+                string sTemp = g_sCurrentPose;
+                StopAnim(sTemp);
+                StartAnim(sTemp);
+            }
+            AnimMenu(kID, iNum);
         }
-    }
-    else if(sCommand == "ao")
-    {
+        else Notify(kID,"Only owners or the wearer can use this option.",FALSE);
+    //AO
+    } else if(sCommand == "ao") {
         if(sValue == "" || sValue == "menu")
         {
             AOMenu(kID, iNum);
