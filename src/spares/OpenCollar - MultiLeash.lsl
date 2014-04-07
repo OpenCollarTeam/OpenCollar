@@ -4,6 +4,15 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life®   //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html    //
 //////////////////////////////////////////////////////////////////////////////////////
+//		Drop this script into an attachment to have that attachment make leash(es)	//
+//		See the first code line for the entry to use in the DESCRIPTION field of	//
+//		links/prims where leash should come from; setting no link descriptsions to	//
+//		that will result in only the prim that contains this script being the		//
+//		emitter.																	//
+//////////////////////////////////////////////////////////////////////////////////////
+
+// the description of a prim that identifies it as where to leash
+string sEMITTER = "leashpoint";
 
 integer HUD_CHANNEL;
 key kWEARER;
@@ -97,7 +106,7 @@ default
         for (; i <= llGetNumberOfPrims(); i++)
         {
             list d = llParseString2List(llList2String(llGetLinkPrimitiveParams(i, [28]), 0), ["~"], []);
-            if (llList2String(d, 0) == "leashpoint") lLINKS += [i];
+            if (llList2String(d, 0) == sEMITTER) lLINKS += [i];
         }
         if (!llGetListLength(lLINKS)) lLINKS = [llGetLinkNumber()];
         StopParticles();
