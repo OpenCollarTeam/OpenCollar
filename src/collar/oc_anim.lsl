@@ -664,42 +664,45 @@ integer UserCommand(integer iNum, string sStr, key kID)
 }
 
 AdjustOffset(integer direction){
-    //get sleep time from list    
-    string sNewAnim = llList2String(g_lAnims, 0);
-    integer iIndex = llListFindList(g_lAnimScalars, [sNewAnim]);
-    string sleepTime="2.0";
-    if (iIndex != -1){
-        sleepTime=llList2String(g_lAnimScalars, iIndex + 2);
-        g_lAnimScalars=llDeleteSubList(g_lAnimScalars,iIndex,iIndex+2);       //we re-write it at the end
-    }
-
-    //stop last adjustment anim and play next one
-    integer iOldAdjustment=g_iAdjustment;
-    if (g_iAdjustment){
-        g_iAdjustment+=direction;
-        if (g_iAdjustment > -30)
-        {
-            g_iAdjustment = -30;
+    //first, check we're running an anim
+    if (llGetListLength(g_lAnims)>0){
+        //get sleep time from list    
+        string sNewAnim = llList2String(g_lAnims, 0);
+        integer iIndex = llListFindList(g_lAnimScalars, [sNewAnim]);
+        string sleepTime="2.0";
+        if (iIndex != -1){
+            sleepTime=llList2String(g_lAnimScalars, iIndex + 2);
+            g_lAnimScalars=llDeleteSubList(g_lAnimScalars,iIndex,iIndex+2);       //we re-write it at the end
         }
-        else if (g_iAdjustment < -50)
-        {
-            g_iAdjustment = -50;
+    
+        //stop last adjustment anim and play next one
+        integer iOldAdjustment=g_iAdjustment;
+        if (g_iAdjustment){
+            g_iAdjustment+=direction;
+            if (g_iAdjustment > -30){
+                g_iAdjustment = 0;
+                Notify(g_kWearer,sNewAnim+" height fix cancelled",FALSE);
+            } else if (g_iAdjustment < -50){
+                g_iAdjustment = -50;
+            }
+        } else if (direction == -1){
+            g_iAdjustment=-30;
         }
-    } else {
-        g_iAdjustment=-30;
+        if (g_iAdjustment != 0){
+            llStartAnimation("~" + (string)g_iAdjustment);
+            
+            //now calculate the new offset for notecard dump print
+            vector avscale = llGetAgentSize(llGetOwner());
+            float test = (float)g_iAdjustment/avscale.z;
+            Notify(g_kWearer,sNewAnim+"|"+(string)test+"|"+sleepTime,FALSE);
+            
+            //and store it
+            g_lAnimScalars+=[sNewAnim,test,sleepTime];
+        }
+        if (iOldAdjustment && iOldAdjustment != g_iAdjustment){
+            llStopAnimation("~" + (string)iOldAdjustment);
+        }
     }
-    llStartAnimation("~" + (string)g_iAdjustment);
-    if (iOldAdjustment && iOldAdjustment != g_iAdjustment){
-        llStopAnimation("~" + (string)iOldAdjustment);
-    }
-    
-    //now calculate the new offset for notecard dump print
-    vector avscale = llGetAgentSize(llGetOwner());
-    float test = (float)g_iAdjustment/avscale.z;
-    llOwnerSay(sNewAnim+"|"+(string)test+"|"+sleepTime);
-    
-    //and store it
-    g_lAnimScalars+=[sNewAnim,test,sleepTime];
 }
 
 default
