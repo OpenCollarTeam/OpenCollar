@@ -776,8 +776,8 @@ default
                     }
                     else if (sButton == "+")
                     {
-                        g_vLeashGravity.z -= 0.1;                        
-                        if (g_vLeashGravity.z == -3.0)
+                        g_vLeashGravity.z -= 0.1;
+                        if (g_vLeashGravity.z < -3.0)
                         {
                             g_vLeashGravity.z = -3.0;
                             Notify(kAv, "You have already reached maximum gravity.", FALSE);
@@ -786,9 +786,9 @@ default
                     else if (sButton == "-")
                     {
                         g_vLeashGravity.z += 0.1;
-                        if (g_vLeashGravity.z == 0.0)
+                        if (g_vLeashGravity.z > 0.0)
                         {
-                            g_vLeashGravity.z == 0.0 ;
+                            g_vLeashGravity.z = 0.0 ;
                             Notify(kAv, "You have already reached 0 leash-gravity.", FALSE);
                         }
                     }
@@ -820,7 +820,7 @@ default
                     else if (sButton == "X-")
                     {
                         g_vLeashSize.x -=0.03;                        
-                        if (g_vLeashSize.x <= 0.04)
+                        if (g_vLeashSize.x < 0.04)
                         {
                             g_vLeashSize.x = 0.04 ;
                             Notify(kAv, "You have reached the minimum size for particles.", FALSE);
@@ -829,7 +829,7 @@ default
                     else if (sButton == "Y-")
                     {
                         g_vLeashSize.y -=0.03;
-                        if (g_vLeashSize.y <= 0.04)
+                        if (g_vLeashSize.y < 0.04)
                         {
                             g_vLeashSize.y = 0.04 ;
                             Notify(kAv, "You have reached the minimum size for particles.", FALSE);
@@ -858,13 +858,19 @@ default
                     }
                     else if (sButton == "-0.5")
                     {
-                        if (g_fParticleAge <= 0.5)
-                        {
-                            Notify(kAv, "Use the -0.1 button to reach minimum particle life.", FALSE);
-                        }
-                        else
-                        {
+                        //if (g_fParticleAge <= 0.5)
+                        //{
+                        //    Notify(kAv, "Use the -0.1 button to reach minimum particle life.", FALSE);
+                        //}
+                        //else
+                        //{
                             g_fParticleAge -= 0.5;
+                        //}
+                        
+                        if (g_fParticleAge < 0.1)
+                        {
+                            g_fParticleAge = 0.1;
+                            Notify(kAv, "You have reached minimum particle life.", FALSE);
                         }
                     }
                     else if (sButton == "+0.1")
