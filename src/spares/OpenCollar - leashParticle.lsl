@@ -243,9 +243,9 @@ Particles(integer iLink, key kParticleTarget)
         PSYS_SRC_TARGET_KEY,kParticleTarget,
         PSYS_SRC_MAX_AGE, 0,
         PSYS_SRC_TEXTURE, g_sParticleTextureID
-            //PSYS_PART_START_ALPHA, g_fParticleAlpha,
-            //PSYS_PART_END_ALPHA, g_fParticleAlpha
-            ];
+        //PSYS_PART_START_ALPHA, g_fParticleAlpha,
+        //PSYS_PART_END_ALPHA, g_fParticleAlpha
+        ];
     //llLinkParticleSystem(iLink, lTemp);
     if (EMIT_COLL) llLinkParticleSystem(iLink, lTemp);
     if (EMIT_MULT) llRegionSayTo(g_kWearer, HUD_CHANNEL, (string)g_kParticleTarget + "\\LeashUp\\" + llList2CSV(lTemp));
@@ -688,6 +688,7 @@ default
                 }
                 else if (g_sCurrentMenu == "Advanced")
                 {
+                    integer iI = llSubStringIndex(sButton, " O"); // for test in one "else" case
                     if (sButton == L_DEFAULTS)
                     {
                         g_lSettings = []; // clear current settings
@@ -735,7 +736,7 @@ default
                         }
                         OptionsMenu(kAv, iAuth);
                     }
-                    else if (integer iI = llSubStringIndex(sButton, " O") > 2)
+                    else if (iI > 2)
                     {
                         string sP = llGetSubString(sButton, 0, iI - 1);
                         string sE = llGetSubString(sButton, -1, -1);
@@ -971,12 +972,7 @@ default
             {
                 // load current settings
                 sToken = llGetSubString(sToken, i + 1, -1);                
-                SaveSettings(sToken, sValue, FALSE);             
-            }
-            else if (llGetSubString(sToken, 0, i) == g_sDefaults)
-            {
-                // load default settings
-                sToken = llGetSubString(sToken, i + 1, -1);
+                SaveSettings(sToken, sValue, FALSE);
                 SaveDefaultSettings(sToken,sValue);
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
