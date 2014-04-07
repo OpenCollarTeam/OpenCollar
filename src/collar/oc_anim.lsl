@@ -35,7 +35,7 @@ string g_sRootMenu = "Main";
 string g_sAnimMenu = "Animations";
 string g_sPoseMenu = " Pose";
 string g_sAOMenu = "AO";
-string g_sGiveAO = "Give AO";
+//string g_sGiveAO = "Give AO";
 string g_sTriggerAO = "AO Menu";
 list g_lAnimButtons; // initialized in state_entry for OpenSim compatibility (= ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];)
 //added for sAnimlock
@@ -186,7 +186,7 @@ AnimMenu(key kID, integer iAuth)
             lButtons += [UNTICKED + POSTURE];
         }
     }    
-    sPrompt += "\nAO features require one of the following:\n\na) OpenCollar Sub AO\nb) Firestorm Bridge + Internal AO\nc) A drop'n'go script for ZHAOII based AOs";
+    sPrompt += "\nAO features require one of the following:\n\na) OpenCollar Sub AO\nb) Firestorm Bridge + Internal AO\nc) A drop'n'go script for ZHAOII based AOs\n"+"Get an up to date Submissive AO for free here: "+"https://marketplace.secondlife.com/p/OpenCollar-Sub-AO/5493736";
 
     lButtons += llListSort(g_lAnimButtons, 1, TRUE);
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -711,7 +711,8 @@ default
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+        //g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+        g_lAnimButtons = [" Pose", g_sTriggerAO, "AO ON", "AO OFF"];
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
@@ -798,7 +799,8 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sRootMenu)
         {
             //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, ""); //no need for fixed main menu
-            g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+            //g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
+            g_lAnimButtons = [" Pose", g_sTriggerAO, "AO ON", "AO OFF"];
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, "");
         }
         else if (iNum == MENUNAME_RESPONSE)
@@ -888,10 +890,11 @@ default
                         Notify(kAv, "Attempting to trigger the AO menu.  This will only work if " + llKey2Name(g_kWearer) + " is meeting the a) or c) requirement for AO features.", FALSE);
                         AOMenu(kAv, iAuth);
                     }
-                    else if (sMessage == g_sGiveAO)
+/*                    else if (sMessage == g_sGiveAO)
                     {   
                         DeliverAO(kAv);
                     }
+*/
                     else if(sMessage == "☐ AO" || sMessage== "AO ON")
                     {
                         UserCommand(iAuth, "ao on", kAv);
