@@ -252,7 +252,7 @@ FetchAvi(integer auth, string type, string name, key user)
 
 AuthMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\n\n✓: add someone\n✗: remove someone\n☐: option is off\n☒: option is on";
+    string sPrompt = "\n✓: add someone\n✗: remove someone\n\nwww.opencollar.at/access";
     list lButtons = [g_sSetOwner, g_sSetSecOwner, g_sSetBlackList, g_sRemOwner, g_sRemSecOwner, g_sRemBlackList];
 
     if (g_kGroup=="") lButtons += [g_sSetGroup];    //set group
@@ -275,7 +275,7 @@ AuthMenu(key kAv, integer iAuth)
 RemPersonMenu(key kID, list lPeople, string sType, integer iAuth)
 {
     g_sRequestType = sType;
-    string sPrompt = "\n\nChoose the person to remove.";
+    string sPrompt = "\nChoose the person to remove:\n";
     list lButtons;
     //build a button list with the dances, and "More"
     //get number of secowners
@@ -301,7 +301,7 @@ integer in_range(key kID) {
         vector kAvpos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0);
         if (llVecDist(llGetPos(), kAvpos) > range) {
             //llOwnerSay(llKey2Name(kID) + " is not in range...");
-            llDialog(kID, "\n\nNot in range...", [], 298479);
+            llDialog(kID, "\nNot in range...", [], 298479);
             return FALSE;
         }
         else {
