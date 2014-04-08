@@ -361,15 +361,21 @@ default
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                
-                //process return from sensordialog
-                g_kPartner = (key)sMessage;
-                g_sPartnerName = llKey2Name(g_kPartner);
-                StopAnims();
-                string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
-                llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                Notify(g_kWearer, "Offering to "+ sCommand +" "+ g_sPartnerName, FALSE);
-                Notify(g_kPartner,  llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0) + " would like give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
+                if (sMessage == UPMENU)
+                {
+                    CoupleAnimMenu(kAv, iAuth);
+                }
+                else
+                {
+                    //process return from sensordialog
+                    g_kPartner = (key)sMessage;
+                    g_sPartnerName = llKey2Name(g_kPartner);
+                    StopAnims();
+                    string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
+                    llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+                    Notify(g_kWearer, "Offering to "+ sCommand +" "+ g_sPartnerName, FALSE);
+                    Notify(g_kPartner,  llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0) + " would like give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
+                }   
             }
             else if (kID == g_kTimerMenu)
             {
