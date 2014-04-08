@@ -171,7 +171,7 @@ integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.
 
 DoMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\n";
+    string sPrompt = "\n";
     // sPrompt += "(Menu will time out in " + (string)g_iTimeOut + " seconds.)\n";
     list lMyButtons = g_lLocalButtons + g_lButtons;
 
@@ -212,6 +212,7 @@ DoMenu(key kID, integer iAuth)
     sPrompt += "The volume of the bell is now: "+(string)((integer)(g_fVolume*10))+"/10.\n";
     sPrompt += "The bell rings every "+llGetSubString((string)g_fSpeed,0,2)+" seconds when moving.\n";
     sPrompt += "Currently used sound: "+(string)(g_iCurrentBellSound+1)+"/"+(string)g_iBellSoundCount+"\n";
+    sPrompt +="\nwww.opencollar.at/bell";
 
     lMyButtons = llListSort(lMyButtons, 1, TRUE);
 
