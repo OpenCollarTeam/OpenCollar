@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvtp                                //
-//                                 version 3.958                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -143,7 +143,7 @@ Menu(key kID, integer iAuth)
 
     //build prompt showing current settings
     //make enable/disable buttons
-    string sPrompt = "\n\nCurrent Settings: \n";
+    string sPrompt = "\nwww.opencollar.at/maptp\n";
     list lButtons;
 
     integer n;
@@ -206,7 +206,7 @@ LandmarkMenu(key kAv, integer iAuth)
         lButtons += [sName];
     }
 
-    lmkMenuID = Dialog(kAv, "\n\nChoose a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);
+    lmkMenuID = Dialog(kAv, "\nChoose a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);
 }
 
 integer AtLeastVersion(string sCutOff, string sCheckMe)
