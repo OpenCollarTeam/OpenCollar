@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvrelay                              //
-//                                 version 3.959                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -381,7 +381,7 @@ SafeWord()
 //----Menu functions section---//
 Menu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nCurrent mode is: " + Mode2String(FALSE);
+    string sPrompt = "\nwww.opencollar.at/relay\n\nCurrent mode is: " + Mode2String(FALSE);
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iBaseMode,g_iBaseMode);
     if (g_lSources != []) lButtons = llDeleteSubList(lButtons,0,0);
     if (g_iPlayMode) lButtons+=["☒ Playful"];
@@ -415,7 +415,7 @@ Menu(key kID, integer iAuth)
 MinModeMenu(key kID, integer iAuth)
 {
     list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iMinBaseMode,g_iMinBaseMode);
-    string sPrompt = "\n\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
+    string sPrompt = "\nwww.opencollar.at/relay\n\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
     if (g_iMinPlayMode) lButtons+=["☒ Playful"];
     else lButtons+=["☐ Playful"];
     if (g_iMinLandMode) lButtons+=["☒ Land"];
