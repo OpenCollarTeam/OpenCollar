@@ -349,7 +349,7 @@ default
                         g_iCmdIndex = iIndex;
                         //llSensor("", NULL_KEY, AGENT, g_fRange, PI);
                         g_kPart=llGenerateKey();
-                        llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI + "|BACK|" + (string)iNum, g_kPart);
+                        llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI + "|BACK|" + (string)iAuth, g_kPart);
                     }
                 }
             }
