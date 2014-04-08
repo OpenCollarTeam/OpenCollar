@@ -351,7 +351,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (sStr == "menu " + g_sSubMenu)
         {
             g_kTBoxID = Dialog(kID, "\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to "
- + g_sParentMenu + ".", [], [], 0, iNum);
+ + g_sParentMenu + ".\n\nwww.opencollar.at/label", [], [], 0, iNum);
         }
         else if (sStr == "menu " + g_sFontMenu)
         {
