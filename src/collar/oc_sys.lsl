@@ -128,7 +128,7 @@ AppsMenu(key kID, integer iAuth) {
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
-    sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n";
+    sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/manual";
     list lUtility = [UPMENU];
     list lStaticButtons=[WIKI,GIVECARD,DEV_GROUP,USER_GROUP,BUGS,LICENSE,"Update","Get Updater"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
