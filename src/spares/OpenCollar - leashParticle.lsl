@@ -746,6 +746,7 @@ default
                         else if (sP == L_MULT) EMIT_MULT = iI;
                         else jump notmult; // failsafe jump out
                         SaveSettings(sP, (string)iI, TRUE);
+                        OptionsMenu(kAv, iAuth);
                     }
                     @notmult;
                 }
