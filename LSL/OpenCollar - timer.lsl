@@ -258,7 +258,7 @@ DoMenu(key keyID, integer iAuth)
     }
 
     Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "\n\n- Timer Menu -\n";
+    string sPrompt = "\n";
     list lMyButtons = g_lLocalButtons + lButtons;
 
     //fill in your button list and additional prompt here
@@ -332,7 +332,8 @@ DoMenu(key keyID, integer iAuth)
         sPrompt += "\n\t the RLV restions will NOT be cleared";
         lMyButtons += ["☐ clearRLV"];
     }
-
+        sPrompt+="\n\nwww.opencollar.at/timer";
+        
     llListSort(g_lLocalButtons, 1, TRUE); // resort menu buttons alphabetical
 
     g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
