@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.959                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -186,7 +186,7 @@ Menu(key kID, string sWho, integer iAuth)
     }
     
     list lButtons = ["Owner", "Secowner", "Other"];
-    string sPrompt = "\n\nSet exemptions to the restrictions for RLV commands. Exemptions can be changed for owners, secowners and specific ones for other people. Use \"Other\" to set the specific exemptions for them later.";
+    string sPrompt = "\nSet exemptions to the restrictions for RLV commands. Exemptions can be changed for owners, secowners and specific ones for other people. Use \"Other\" to set the specific exemptions for them later.\n\nwww.opencollar.at/exceptions";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -199,7 +199,7 @@ PersonMenu(key kID, list lPeople, string sType, integer iAuth)
         return;
     }
     //g_sRequestType = sType;
-    string sPrompt = "\n\nChoose the person to change settings on. Add others with the \"Add\" button";
+    string sPrompt = "\nChoose the person to change settings on. Add others with the \"Add\" button";
     list lButtons = ["Add"];
     integer iNum= llGetListLength(lPeople);
     integer n;
