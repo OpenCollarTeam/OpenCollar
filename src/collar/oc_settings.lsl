@@ -121,22 +121,20 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 DoMenu(key keyID, integer iAuth)
 {
-    string sPrompt = "\nClick '" + DUMPCACHE + "' to dump all current settings to chat.";
-    sPrompt += "\n(copy/paste them to backup your defaultsettings)";
-    //sPrompt += "\nClick '" + WIKI + "' to get a link to the User Guide.";
-    sPrompt += "\nClick '" +LOADCARD+"' to restore values from defaultsettings notecard.";
+    string sPrompt = "\n" + DUMPCACHE + " prints current settings to chat.";
+    sPrompt += "\n" +LOADCARD+" restores the default settings.";
     list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,SETTINGSHELP];
     if (USER_PREF)
     {
-        sPrompt += "\nUncheck " + PREFDESI + " to give designer settings priority.\n";
+        sPrompt += "\n\nUncheck " + PREFDESI + " to give designer settings priority.\n";
         lButtons += [PREFDESI];
     }
     else
     {
-        sPrompt += "\nCheck " + PREFUSER + " to give your personal settings priority.\n";
+        sPrompt += "\n\nCheck " + PREFUSER + " to give your personal settings priority.\n";
         lButtons += [PREFUSER];
     }
-    sPrompt +="\nNote: No worries, Settings backups are entirely optional.";
+    sPrompt +="\nwww.opencollar.at/options";
     g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
