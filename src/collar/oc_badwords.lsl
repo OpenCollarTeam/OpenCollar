@@ -109,20 +109,21 @@ DialogBadwords(key kID, integer iAuth)
     if(Enabled())
     {
         lButtons += ["OFF"];
-        sText += "Badwords are turned ON.\n";
+        sText += "\nBadwords are turned ON.";
     }
     else
     {
         lButtons += ["ON"];
-        sText += "Badwords are turned OFF.\n";
+        sText += "\nBadwords are turned OFF.";
     }
-    sText += "'Set Penance' write the penance the sub has to say to get released from the animation.\n";
+        sText+="\n\nwww.opencollar.at/badwords";
+    /*sText += "'Set Penance' write the penance the sub has to say to get released from the animation.\n";
     sText += "'Add Word' add another badword.\n";
     sText += "'Remove Word' shows the list of badwords and allows removing them.\n";
     sText += "'Set Animation' select the animation to use as a punishment.\n";
-    sText += "'Set Sound' select the sound tto use as a punishment.\n";
+    sText += "'Set Sound' select the sound tto use as a punishment.\n";*/
     
-    g_kDialog = g_kMainDialog = Dialog(kID, sText, lButtons, ["Settings", UPMENU],0, iAuth);
+    g_kDialog = g_kMainDialog = Dialog(kID, sText, lButtons, ["Clear All","Settings", UPMENU],0, iAuth);
 }
 
 TboxAddBadword(key kAv, integer iAuth)
