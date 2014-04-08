@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - couples                               //
-//                                 version 3.959                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -137,10 +137,10 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 CoupleAnimMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nChoose an animation to play.\nAnmiations will play " ;    
+    string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;    
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";    
-    sPrompt += "\nSTOP: release the animation\n";
+    sPrompt += "\n\nwww.opencollar.at/animations\n\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
@@ -272,7 +272,7 @@ default
                     string sTmpName = llDumpList2String(llList2List(lParams, 1, -1), " ");//this makes it so we support even full names in the command
                     //llSensor("", NULL_KEY, AGENT, g_fRange, PI);  //replaced with call to sensor dialog
                     g_kPart=llGenerateKey();
-                    llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\n\nChoose a partner.|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI +"`"+sTmpName+"`1"+ "|BACK|" + (string)iNum, g_kPart);
+                    llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI +"`"+sTmpName+"`1"+ "|BACK|" + (string)iNum, g_kPart);
                 }
                 else        //no name given.  
                 {
@@ -334,7 +334,7 @@ default
                 }
                 else if (sMessage == TIME_COUPLES)
                 {
-                    string sPrompt = "\n\nChoose the duration for couple animations.\nCurrent duration: ";
+                    string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
                     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
                     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
                     g_kTimerMenu=Dialog(kAv, sPrompt, ["10", "20", "30","40", "50", "60","90", "120", "ENDLESS"], [UPMENU],0, iAuth);
@@ -349,7 +349,7 @@ default
                         g_iCmdIndex = iIndex;
                         //llSensor("", NULL_KEY, AGENT, g_fRange, PI);
                         g_kPart=llGenerateKey();
-                        llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\n\nChoose a partner.|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI + "|BACK|" + (string)iNum, g_kPart);
+                        llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI + "|BACK|" + (string)iNum, g_kPart);
                     }
                 }
             }
