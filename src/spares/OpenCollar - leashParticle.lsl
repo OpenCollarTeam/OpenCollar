@@ -153,7 +153,6 @@ list g_lLeashPrims;
 //global integer used for loops
 integer g_iLoop;
 string g_sScript;
-string g_sDefaults;
 
 debug(string sText)
 {
@@ -580,7 +579,6 @@ default
     state_entry()
     {
         g_sScript = "leashParticle_";
-        g_sDefaults = "leashDefaults_";
         g_kWearer = llGetOwner();
         HUD_CHANNEL = (integer)("0x" + llGetSubString((string)g_kWearer, 2, 7)) + 1111;
         if (HUD_CHANNEL > 0) HUD_CHANNEL *= -1;
@@ -974,7 +972,7 @@ default
                 // load current settings
                 sToken = llGetSubString(sToken, i + 1, -1);                
                 SaveSettings(sToken, sValue, FALSE);
-                SaveDefaultSettings(sToken,sValue);
+                SaveDefaultSettings(sToken, sValue);
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             // in case wearer is currently leashed
