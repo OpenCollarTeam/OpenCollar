@@ -159,7 +159,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 CamMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\nCurrent camera mode is " + g_sCurrentMode + ".\n";
+    string sPrompt = "\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera";
     list lButtons = ["CLEAR"];
     integer n;
     integer stop = llGetListLength(g_lModes);    
