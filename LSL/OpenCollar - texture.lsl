@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.957                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -251,13 +251,13 @@ key TouchRequest(key kRCPT, integer iTouchStart, integer iTouchEnd, integer iAut
 
 TextureMenu(key kID, integer iPage, integer iAuth)
 {
-    string sPrompt = "\n\nChoose the texture to apply.\n\n";
+    string sPrompt = "\nChoose the texture to apply.";
     g_ktextureID = Dialog(kID, sPrompt, BuildTexButtons(), [UPMENU], iPage, iAuth);
 }
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\n\nChoose the element of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
+    string sPrompt = "\nChoose the element of the " + CTYPE + " you would like to retexture.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
     lButtons = llListSort(g_lElements, 1, TRUE);
     g_kElementID = Dialog(kAv, sPrompt, lButtons, ["*Touch*", UPMENU], 0, iAuth);
 }

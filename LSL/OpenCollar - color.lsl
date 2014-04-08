@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - color                                //
-//                                 version 3.957                                  //
+//                                 version 3.960                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -147,20 +147,20 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 CategoryMenu(key kAv, integer iAuth)
 {
     //give kAv a dialog with a list of color cards
-    string sPrompt = "\n\nSelect a color catagory.\n";
+    string sPrompt = "\nSelect a color catagory.";
     g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lCategories, [UPMENU],0, iAuth)];
 }
 
 ColorMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\n\nChoose a color.\n";
+    string sPrompt = "\nChoose a color.";
     list g_lButtons = llList2ListStrided(g_lColors,0,-1,2);
     g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, [UPMENU],0, iAuth)];
 }
 
 ElementMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\n\nWhich element of the " + CTYPE + " would you like to tint?\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
+    string sPrompt = "\nWhich element of the " + CTYPE + " would you like to tint?\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
     g_lButtons = llListSort(g_lElements, 1, TRUE);
     g_lMenuIDs+=[Dialog(kAv, sPrompt, g_lButtons, ["*Touch*", UPMENU],0, iAuth)];
 }
