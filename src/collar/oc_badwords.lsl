@@ -573,6 +573,11 @@ default
                     UserCommand(iAuth, "settings", kAv);
                     DialogBadwords(kAv, iAuth);
                 }
+                else if (sMessage == "Clear All")
+                {
+                    UserCommand(iAuth, "badwords clearall", kAv);
+                    DialogBadwords(kAv, iAuth);
+                }
             }
             else if (kID == g_kAddBadwordTBox)
             {
