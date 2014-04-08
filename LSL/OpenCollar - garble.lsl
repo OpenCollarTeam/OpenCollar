@@ -46,8 +46,8 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 
 string g_sParentMenu = "Apps";
-string GARBLE = "Garble ☐";
-string UNGARBLE = "Garble ☒";
+string GARBLE = "☐ Garble";
+string UNGARBLE = "☒ Garble";
 integer g_nDebugMode=FALSE; // set to TRUE to enable Debug messages
 
 string SAFE = "RED";
