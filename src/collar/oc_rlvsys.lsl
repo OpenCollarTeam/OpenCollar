@@ -150,8 +150,8 @@ DoMenu(key kID, integer iAuth)
         lButtons += [TURNON];
     }
 
-    string sPrompt = "\n\n- Restrained Love Viewer Options -\n";
-    if (g_iRlvVersion) sPrompt += "\n- Detected version of RLV API: "+g_sRlvVersionString;
+    string sPrompt = "\nRestrained Love Viewer Options\n";
+    if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString+"\n\nwww.opencollar.at/rlv";
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 string PrettyVersion(string iVersion)
