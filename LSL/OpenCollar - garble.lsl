@@ -161,12 +161,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (bOn) Notify(kID, "Garbled.", FALSE);
         else Notify(kID, "Not Garbled.", FALSE);
     }
-    else if (sStr == "menu " + GARBLE || llToLower(sStr) == llToLower(GARBLE))
+    else if (sStr == "menu " + GARBLE || llToLower(sStr) == "garble on")
     {
         if (bOn && g_kBinder == kID) Notify(kID, "I can't garble 'er any more, Jim! She's only a subbie!", FALSE);
         else if (iNum > g_iBinder) bind(kID, iNum);
     }
-    else if (sStr == "menu " + UNGARBLE || llToLower(sStr) == llToLower(UNGARBLE))
+    else if (sStr == "menu " + UNGARBLE || llToLower(sStr) == "garble off")
     {
         if (iNum > g_iBinder || g_kBinder == kID) release(kID,iNum);
         else Notify(kID, "Sorry, " + llKey2Name(kID) + ", but only the person who activated the garbler, or one who outranks them, may release the garbler.", FALSE);
