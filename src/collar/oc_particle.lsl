@@ -363,6 +363,7 @@ GetSettings()
 // Added bSave as a boolean, to make this a more versatile wrapper
 SetTexture(string sIn, key kIn)
 {
+    g_sParticleTexture = sIn;
     if (sIn=="chain"){
         g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
     } else if (sIn=="rope"){
@@ -370,7 +371,6 @@ SetTexture(string sIn, key kIn)
     } else if (sIn=="totallytransparent"){
         g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
     } else {
-        g_sParticleTexture = sIn;
         if (llToLower(g_sParticleTexture) == "noleash")
         {
             g_bInvisibleLeash = TRUE;
