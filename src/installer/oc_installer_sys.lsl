@@ -315,7 +315,7 @@ default {
                     BundleMenu(0);
                 }
                 else if (button == "Help") {
-                    llLoadURL(av, "Confused with the many choices? Find help on our website!","http://www.opencollar.at/updating-the-collar.html");
+                    llLoadURL(av, "Confused with the many choices? Find help on our website!","http://www.opencollar.at/updates.html");
                 }
                 else {
                     // switch the bundle if appropriate
