@@ -395,14 +395,21 @@ GetSettings()
 // Added bSave as a boolean, to make this a more versatile wrapper
 SetTexture(string sIn, key kIn)
 {
-    if (sIn=="chain"){
+    g_sParticleTexture = sIn;
+    if (sIn=="chain")
+    {
         g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
-    } else if (sIn=="rope"){
+    }
+    else if (sIn=="rope")
+    {
         g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
-    } else if (sIn=="totallytransparent"){
+    }
+    else if (sIn=="totallytransparent")
+    {
         g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
-    } else {
-        g_sParticleTexture = sIn;
+    }
+    else
+    {
         if (llToLower(g_sParticleTexture) == "noleash")
         {
             g_bInvisibleLeash = TRUE;
@@ -413,7 +420,7 @@ SetTexture(string sIn, key kIn)
         }
         debug("particleTexture= " + sIn);
         g_sParticleTextureID = llGetInventoryKey(sIn);
-        if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
+        if (g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
     }        
     debug("particleTextureID= " + (string)g_sParticleTextureID);
     if (kIn)
