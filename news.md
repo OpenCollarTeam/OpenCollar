@@ -1,3 +1,4 @@
-Issue: 20140320.1
+Issue: 20140411.1
 
-Contributors are highly encouraged to make use of the sandbox at http://maps.secondlife.com/secondlife/Keraxic/15/230/23 It's awesome we can have a place to build peacefully and everyone is most welcome to also rez collars there for running updates. If the temple at http://maps.secondlife.com/secondlife/Glint/42/97/46 is too busy for you, we put a mini temple at http://maps.secondlife.com/secondlife/Qandico/219/158/1234 We will keep both places open as long as we can. Love & peace! <3
+RELEASE: OpenCollar v3.960
+#RLV History, HeightFix, Strict Leashing, lightning fast Trace, Relay Buffer, RLV Viewer/Server fail-safe, fewer scripts, lower memory consumption, add owners grid-wide, all new web guide -> www.opencollar.at
