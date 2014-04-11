@@ -126,15 +126,15 @@ AppsMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, sTraceButton+g_lAppsButtons, lUtility, 0, iAuth, "Apps");
 }
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar version "+g_sCollarVersion+"\n";
+    string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
-    sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/manual";
+    sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/helpabout";
     list lUtility = [UPMENU];
     list lStaticButtons=[WIKI,GIVECARD,DEV_GROUP,USER_GROUP,BUGS,LICENSE,"Update","Get Updater"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar  -  submission set free™\nVersion "+g_sCollarVersion+" [ www.opencollar.at ]";
+    string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\nwww.opencollar.at/main-menu";
     list lStaticButtons=["Apps","Animations","Appearance","Leash","RLV","Access","Options","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, UNLOCK+lStaticButtons, [], 0, iAuth, "Main");
