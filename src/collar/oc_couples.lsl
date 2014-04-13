@@ -287,6 +287,7 @@ default
                         //added to stop eventual still going animations
                         StopAnims();
                         //llMessageLinked(LINK_SET, CPLANIM_PERMREQUEST, sCommand, g_kPartner);
+                        llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                         llOwnerSay("Offering to " + sCommand + " " + g_sPartnerName + ".");
                     }
                 }
