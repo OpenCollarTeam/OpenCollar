@@ -676,6 +676,7 @@ default
         
         DoUnleash();
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, ""); //no need 
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvmail_on", "");
     }
     
     on_rez(integer start_param) {
