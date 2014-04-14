@@ -510,33 +510,33 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     //posture
     else if ( sStr=="posture on" || sStr == UNTICKED+POSTURE) {
-        if(iNum==COMMAND_OWNER || iNum==COMMAND_WEARER) {
+        if(iNum<COMMAND_WEARER) {
             SetPosture(TRUE,kID);
             Notify(g_kWearer, "Your neck is locked in place.", FALSE);
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + "'s neck is locked in place.", FALSE);
-        } else Notify(kID,"Only wearers and owners can do that, sorry.",FALSE);
+        } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     } else if ( sStr=="posture off" || sStr == UNTICKED+POSTURE) {
-        if(iNum==COMMAND_OWNER || iNum==COMMAND_WEARER) {
+        if(iNum<COMMAND_WEARER) {
             SetPosture(FALSE,kID);
             Notify(g_kWearer, "You can move your neck again.", FALSE);
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to move their neck.", FALSE);
-        } else Notify(kID,"Only wearers and owners can do that, sorry.",FALSE);
+        } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     }
     //anim lock
     else if ( sStr=="animlock on" || sStr == UNTICKED+ANIMLOCK){
-        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
+        if(iNum<COMMAND_WEARER) {
             g_iAnimLock = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
             Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
-        }
+        } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     } else if ( sStr=="animlock off" || sStr == TICKED+ANIMLOCK){
-        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
+        if(iNum<COMMAND_WEARER) {
             g_iAnimLock = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
             Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to change or stop poses on their own.", FALSE);
-        }
+        } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     //heightfix
     } else if ( sStr=="heightfix on" || sStr == UNTICKED+HEIGHTFIX){
         if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
