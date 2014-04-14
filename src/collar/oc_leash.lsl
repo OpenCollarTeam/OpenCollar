@@ -676,7 +676,7 @@ default
         
         DoUnleash();
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, ""); //no need 
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "rlvmain_on", "");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
     }
     
     on_rez(integer start_param) {
