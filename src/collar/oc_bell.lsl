@@ -511,6 +511,7 @@ default
     {
         g_kWearer=llGetOwner();
         g_sSubPrefix=AutoPrefix();
+        if (g_iBellOn) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
     }
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
