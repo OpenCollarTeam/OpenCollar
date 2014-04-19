@@ -560,11 +560,11 @@ default
                 if (sToken == "on")
                 {
                     g_iBellOn=(integer)sValue;
-                    if (g_iBellOn & !g_iHasControl)
+                    if (g_iBellOn && !g_iHasControl)
                     {
                         llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
                     }
-                    else if (!g_iBellOn & g_iHasControl)
+                    else if (!g_iBellOn && g_iHasControl)
                     {
                         llReleaseControls();
                         g_iHasControl=FALSE;
