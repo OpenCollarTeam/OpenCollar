@@ -1,4 +1,5 @@
-//Nandana Singh mod for OpenCollar compatibility.
+// Submissive AO 3.960
+// Nandana Singh mod for OpenCollar compatibility.
 
 // ZHAO-II-interface - Ziggy Puff, 06/07
 

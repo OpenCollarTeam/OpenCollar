@@ -1,4 +1,4 @@
-//OC AO version number 3.902 or something
+// Submissive AO 3.960
 // Anyway. This version has Wendy's request to offer a menu when the
 // ao is reset/has a new owner, asking the user to pick the correct notecard. MD 
 
