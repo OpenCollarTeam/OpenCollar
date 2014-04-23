@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -598,13 +598,19 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_sRequestType = "blacklist";
             //pop the command off the param list, leaving only first and last name
             lParams = llDeleteSubList(lParams, 0, 0);
-            //record blacklisted name
+            //record name
             string sTmpName = llDumpList2String(lParams, " ");
-            if ((key)sTmpName){
-                g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
-            } else {
-                if (llGetListLength(g_lBlackList) == 20) Notify(kID, "The maximum of 10 blacklisted is reached, please clean up.",FALSE);
-                else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
+            if (llGetListLength(g_lBlackList) == 20) Notify(kID, "The maximum of 10 blacklisted users is reached, please clean up.",FALSE);
+            else {
+                if ((key)sTmpName){
+                    //Debug ("Adding "+sTmpName+" as key (blacklist)");
+                    g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+                    g_lQueryId+=[g_kNameRequest,sTmpName];
+                } else {
+                    //Debug ("Adding "+sTmpName+" as name (blacklist)");
+                    if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer)))  NewPerson(g_kWearer, sTmpName, g_sRequestType);
+                    else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
+                }
             }
         }
         else if (sCommand == "remblacklist") { //remove blacklisted, if in the list
