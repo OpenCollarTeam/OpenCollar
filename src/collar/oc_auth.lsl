@@ -565,12 +565,15 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             lParams = llDeleteSubList(lParams, 0, 0);
             //record owner name
             string sTmpName = llDumpList2String(lParams, " ");
-            if ((key)sTmpName){
-                g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
-            } else {
-                if (llGetListLength(g_lSecOwners) == 20) Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup.",FALSE);
-                else {
-                    if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer))) NewPerson(g_kWearer, sTmpName, "secowner");
+            if (llGetListLength(g_lSecOwners) == 20) Notify(kID, "The maximum of 10 secowners is reached, please clean up or use SetGroup.",FALSE);
+            else {
+                if ((key)sTmpName){
+                    //Debug ("Adding "+sTmpName+" as key (secondary)");
+                    g_kNameRequest=llRequestAgentData( sTmpName, DATA_NAME );
+                    g_lQueryId+=[g_kNameRequest,sTmpName];
+                } else {
+                    //Debug ("Adding "+sTmpName+" as name (secondary)");
+                    if(llToLower(sTmpName) == llToLower(llKey2Name(g_kWearer)))  NewPerson(g_kWearer, sTmpName, g_sRequestType);
                     else FetchAvi(iNum, g_sRequestType, sTmpName, kID);
                 }
             }
