@@ -303,7 +303,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         //we got a "tp" command with an argument after it.  See if it corresponds to a LM in inventory.
         list lParams = llParseString2List(sStr, [" "], []);
-        string sDest = llToLower(llList2String(lParams, 1));
+        string sDest = llToLower(llGetSubString(sStr,llStringLength(llList2String(lParams,0))+1,-1));
         integer i=0;
         integer m=llGetInventoryNumber(INVENTORY_LANDMARK);
         string s;
