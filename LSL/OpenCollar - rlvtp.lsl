@@ -302,8 +302,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (llSubStringIndex(sStr, "tp ") == 0)
     {
         //we got a "tp" command with an argument after it.  See if it corresponds to a LM in inventory.
-        list lParams = llParseString2List(sStr, [" "], []);
-        string sDest = llToLower(llGetSubString(sStr,llStringLength(llList2String(lParams,0))+1,-1));
+        string sDest = llGetSubString(sStr,0,2);
+        string sDestLow = llToLower(sDest);
         integer i=0;
         integer m=llGetInventoryNumber(INVENTORY_LANDMARK);
         string s;
@@ -311,7 +311,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         for (i=0;i<m;i++)
         {
             s=llGetInventoryName(INVENTORY_LANDMARK,i);
-            if (sDest==llToLower(s))
+            if (sDestLow==llToLower(s))
             {
                 //tp there
                 //llOwnerSay("got a 'tp <landmark>'");
@@ -321,7 +321,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         if (!found)
         {
-            Notify(kID,"The landmark '"+llList2String(lParams, 1)+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+            Notify(kID,"The landmark '"+sDest+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
         }
     }
     else
