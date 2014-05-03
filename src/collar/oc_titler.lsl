@@ -154,6 +154,8 @@ integer UserCommand(integer iNum, string sStr, key kID){
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
+        } else if (sCommand == "titlebox") {
+            g_kTBoxId = Dialog(kID, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iNum);
         }
         ShowHideText();
     }
@@ -224,7 +226,7 @@ default{
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == SET) {
-                    g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);                    
+                    UserCommand(iAuth, "titlebox", kAv);
                 } else if (sMessage == UPMENU) {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 } else {
