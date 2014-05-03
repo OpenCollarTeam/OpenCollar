@@ -52,24 +52,10 @@ string rlv = "rlv";//what have I added here?
 key wearer;
 key menuid;
 
-key ShortKey()
-{ //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string chars = "0123456789abcdef";
-    integer length = 16;
-    string out;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer index = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        out += llGetSubString(chars, index, index);
-    }
-
-    return (key)(out + "-0000-0000-0000-000000000000");
-}
 
 key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
 {
-    key id = ShortKey();
+    key id = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page +
         "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
     return id;
