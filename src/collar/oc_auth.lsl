@@ -20,7 +20,7 @@ integer g_iGroupEnabled = FALSE;
 list g_lSecOwners;//strided list in the form key,name
 list g_lBlackList;//list of blacklisted UUID
 
-string  g_sWikiURL = "http://www.opencollar.at/user-guide.html";
+string  g_sWikiURL = "http://www.opencollar.at/manual.html";
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
 
