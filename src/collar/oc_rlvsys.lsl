@@ -753,7 +753,7 @@ state checked {
             else if (iNum == RLV_CMD)
             {
                 //re make rlv restrictions after teleport or region change, because SL seems to be losing them
-                if (llGetUnixTime()-g_iTimestamp >= 30){   //if we asked for refresh less than 30 seconds ago
+                if (llGetUnixTime()-g_iTimestamp < 30){   //if we asked for refresh less than 30 seconds ago
                     llOwnerSay("@"+sStr);               //refresh the restriction
                 }
                 
