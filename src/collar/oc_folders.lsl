@@ -1,8 +1,7 @@
-
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvfolders                             //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -450,14 +449,32 @@ handleMultiSearch()
     searchSingle(sItem);
 }
 
+string g_sFirstsearch;
+string g_sNextsearch;
+string g_sBuildpath;
+
 searchSingle(string sItem)
 {
     //open listener
     g_iFolderRLV = 9999 + llRound(llFrand(9999999.0));
     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
     //start timer
+    g_sFirstsearch="";
+    g_sNextsearch="";
+    g_sBuildpath="";
+    if(~llSubStringIndex(sItem,"/"))
+    {
+        //we're doing a two-level search.
+        list tlist=llParseString2List(sItem,["/"],[]);
+        g_sFirstsearch=llList2String(tlist,0);
+        g_sNextsearch=llList2String(tlist,1);
+        sItem=g_sFirstsearch;
+    }
+    
     llSetTimerEvent(g_iTimeOut);
-    llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, NULL_KEY);
+    //llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, NULL_KEY);
+    llOwnerSay("@findfolder:"+sItem+"="+(string)g_iFolderRLV); //Unstored one-shot commands are better performed locally to save the linked message.
+
 }
 
 // set a dialog to be requested after the next viewer answer
@@ -811,7 +828,7 @@ default
             else if (g_sFolderType=="save") SaveFolder(sMsg);
             else if (llGetSubString(g_sFolderType,0,5)=="search")
             {
-                if (sMsg=="") Notify(kID,sMsg+"No folder found", FALSE);
+                if (sMsg=="") Notify(g_kAsyncMenuUser,sMsg+"No folder found", FALSE);
                 else if (llGetSubString(g_sFolderType,6,-1)=="browse")                
                 {
                     g_sCurrentFolder = sMsg;
@@ -819,9 +836,51 @@ default
                 }
                 else
                 {
-                    llMessageLinked(LINK_SET, RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
-                    addToHistory(sMsg);
-                    Notify(g_kAsyncMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
+                    if(g_sFirstsearch!="")
+                    {
+                        integer idx=llSubStringIndex(llToLower(sMsg),llToLower(g_sFirstsearch));
+                        g_sBuildpath=llGetSubString(sMsg,0,idx);
+                        sMsg=llDeleteSubString(sMsg,0,idx);
+                        idx=llSubStringIndex(sMsg,"/");
+                        g_sBuildpath+=llGetSubString(sMsg,0,idx);
+                        g_sFirstsearch="";
+                        g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
+                        llSetTimerEvent(g_iTimeOut);
+                        llOwnerSay("@getinv:"+g_sBuildpath+"="+(string)g_iFolderRLV); 
+                    }
+                    else
+                    {
+                        if(g_sNextsearch!="")
+                        {
+                            list tlist=llParseString2List(sMsg,[","],[]);
+                            integer i=llGetListLength(tlist);
+                            string found;
+                            string test;
+                            while(i)
+                            {
+                                --i;
+                                test=llList2String(tlist,i);
+                                if(~llSubStringIndex(llToLower(test),llToLower(g_sNextsearch)))
+                                {
+                                    i=0;
+                                    found=test;
+                                }
+                            }
+                            if(found=="")
+                            {
+                                 Notify(g_kAsyncMenuUser,g_sNextsearch+" subfolder not found", FALSE);
+                                 return;
+                            }
+                            else sMsg=g_sBuildpath+"/"+found;
+                            g_sNextsearch="";
+                            g_sBuildpath="";
+                        }
+                            
+                        
+                        llMessageLinked(LINK_SET, RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
+                        addToHistory(sMsg);
+                        Notify(g_kAsyncMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
+                      }
                 }
                 if (g_lSearchList!=[]) handleMultiSearch();
             }
