@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -50,7 +50,8 @@ list g_lRLVcmds = [
     "recvchat", //4
     "recvemote", //8
     "tplure",   //16
-    "accepttp"   //32
+    "accepttp",   //32
+    "startim"   //64
         ];
         
 list g_lBinCmds = [ //binary values for each item in g_lRLVcmds
@@ -59,7 +60,8 @@ list g_lBinCmds = [ //binary values for each item in g_lRLVcmds
     2,
     32,
     1,
-    16
+    16,
+    64
         ];
 
 list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_lRLVcmds
@@ -68,7 +70,8 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
     "RcvChat",
     "RcvEmote",
     "Lure",
-    "refuseTP"
+    "refuseTP",
+    "StartIM"
         ];
 
 list g_lDescriptionsOn = [ //showing descriptions for commands when exempted
@@ -77,15 +80,17 @@ list g_lDescriptionsOn = [ //showing descriptions for commands when exempted
     "Can see their Chat even when blocked",
     "Can see their Emotes even when blocked",
     "Can receive their Teleport offers even when blocked",
-    "Sub cannot refuse a tp offer from them"  //counter-intuitive, but other exceptions stop restrictions from working for subject, while this one adds its own restriction.
-        ];
+    "Sub cannot refuse a tp offer from them",  //counter-intuitive, but other exceptions stop restrictions from working for subject, while this one adds its own restriction.
+    "Can start an IM session with, even when blocked"
+];
 list g_lDescriptionsOff =[ //descriptions of commands when not exempted.
     "Sending IMs to them can be blocked",
     "Receiving IMs from them can be blocked",
     "Seeing chat from them can be blocked",
     "Seeing emotes from them can be blocked",
     "Teleport offers from them can be blocked",
-    "Sub can refuse their tp offers"
+    "Sub can refuse their tp offers",
+    "Starting IMs to them can be blocked"
         ];      
 
 string TURNON = "☐";
