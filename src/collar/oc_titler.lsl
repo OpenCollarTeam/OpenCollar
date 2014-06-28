@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - titler                               //
-//                                 version 3.961                                  //
+//                                 version 3.962                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -36,6 +36,7 @@ integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -211,6 +212,11 @@ default{
         g_sScript = "titler_";
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
+        
+        if (g_iTextPrim < 0) {
+            llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sFeatureName, "");
+            llRemoveInventory(llGetScriptName());
+        }
     } 
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
