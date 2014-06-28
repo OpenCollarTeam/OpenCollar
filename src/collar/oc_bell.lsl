@@ -278,6 +278,8 @@ BuildBellElementList()
     }
     else
     {
+        llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+        llRemoveInventory(llGetScriptName());
         g_iBellAvailable=FALSE;
     }
 
