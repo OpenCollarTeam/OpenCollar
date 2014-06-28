@@ -17,3 +17,6 @@ SCRIPT|OpenCollar - leash
 SCRIPT|OpenCollar - leashParticle
 SCRIPT|OpenCollar - appearance
 SCRIPT|OpenCollar - hide
+SCRIPT|OpenCollar - label
+SCRIPT|OpenCollar - bell
+SCRIPT|OpenCollar - titler
