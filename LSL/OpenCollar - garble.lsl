@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - garble                               //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -168,8 +168,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else if (sStr == "menu " + UNGARBLE || llToLower(sStr) == "garble off")
     {
-        if (iNum > g_iBinder || g_kBinder == kID) release(kID,iNum);
-        else Notify(kID, "Sorry, " + llKey2Name(kID) + ", but only the person who activated the garbler, or one who outranks them, may release the garbler.", FALSE);
+        if (iNum <= g_iBinder) release(kID,iNum);
+        else Notify(kID, "Sorry, " + llKey2Name(kID) + ", the garbler can only be released by someone with an equal or higher rank than the person who set it.", FALSE);
     }
     else return FALSE;
     return TRUE;
