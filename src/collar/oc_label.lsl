@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - label                                //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -41,12 +41,13 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-integer g_iCharLimit = 12;
+integer g_iCharLimit = -1;
 
 string UPMENU = "BACK";
 string CTYPE = "collar";
@@ -248,8 +249,17 @@ integer ConvertIndex(integer iIndex) {
 
 /////END XYTEXT FUNCTIONS
 
-GetLabelPrim(string sData)
+SetLabel()
 {
+    //inlined single use CenterJustify function
+    string sPadding;
+    while(llStringLength(sPadding + g_sLabelText + sPadding) < g_iCharLimit)
+    {
+        sPadding += " ";
+    }
+    string sText = sPadding + g_sLabelText;
+    
+    //inlined single use GetLabelPrim function
     string sLabel;
     list lTmp;
     integer i;
@@ -262,25 +272,10 @@ GetLabelPrim(string sData)
         if(sLabel == "Label")
         {
             integer iCharPosition = (integer)llList2String(lTmp,1);
-            RenderString(i, llGetSubString(sData, iCharPosition, iCharPosition));
+            if (iCharPosition > g_iCharLimit) g_iCharLimit = iCharPosition;
+            RenderString(i, llGetSubString(sText, iCharPosition, iCharPosition));
         }
     }
-}
-
-string CenterJustify(string sIn, integer iCellSize)
-{
-    string sPadding;
-    while(llStringLength(sPadding + sIn + sPadding) < iCellSize)
-    {
-        sPadding += " ";
-    }
-    return sPadding + sIn;
-}
-
-SetLabel(string sText)
-{
-    sText = CenterJustify(sText, g_iCharLimit);
-    GetLabelPrim(sText);
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -381,7 +376,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 lParams = llDeleteSubList(lParams, 0, 0);
                 g_sLabelText = llDumpList2String(lParams, " ");
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Text=" + g_sLabelText, "");
-                SetLabel(g_sLabelText);
+                SetLabel();
             }
         }
         else if (sCommand == "font")
@@ -419,11 +414,20 @@ default
 {
     state_entry()
     {   // Initialize the character index.
+        //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         ResetCharIndex();
         SetOffsets(NULL_KEY);
         g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
+
+        //first count the label prims by making a dummy label.  Real label will be replaced when settings arrive
+        SetLabel();
+        if (g_iCharLimit < 0) {
+            llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llRemoveInventory(llGetScriptName());
+        }
+
         //no more needed
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -459,7 +463,7 @@ default
             {
                 if (sValue == "sent")
                 {
-                    SetLabel(g_sLabelText);
+                    SetLabel();
                 }
             }
         }
@@ -495,7 +499,7 @@ default
                     if (iIndex != -1)
                     {
                         SetOffsets((key)llList2String(g_lFonts, iIndex + 1));
-                        SetLabel(g_sLabelText);
+                        SetLabel();
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Font=" + (string)g_kFontTexture, "");
                     }
                     FontMenu(kAv, iAuth);
