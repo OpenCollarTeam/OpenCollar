@@ -120,7 +120,6 @@ integer g_iAwayCounter=0;
 list g_lRestrictionNames= ["fartouch","sittp","tplm","tplure","tploc"];
 string RLV_STRING = "rlvmain_on";
 string OWNER_STRING = "auth_owner";
-list g_lOwners=[];          //needed for teleport exception
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -171,14 +170,10 @@ ApplyRestrictions(){
     //Debug("Applying Restrictions");
     if (g_iLeasherInRange){
         if (g_iStrictModeOn){
-            if (g_iRLVOn){
-                if (g_kLeashedTo){
-                    //Debug("Setting restrictions");
-                    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", NULL_KEY);     //set all restrictions
-                    return;
-                }
-            //} else {
-                //Debug("RLV is off");
+            if (g_kLeashedTo){
+                //Debug("Setting restrictions");
+                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", "realleash");     //set all restrictions
+                return;
             }
         //} else {
             //Debug("Strict is off");
@@ -187,7 +182,7 @@ ApplyRestrictions(){
         //Debug("Leasher out of range");
     }
     //Debug("Releasing restrictions");
-    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", NULL_KEY);     //release all restrictions
+    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", "realleash");     //release all restrictions
 }
 
 // Wrapper for DoLeash with notifications
@@ -300,9 +295,8 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
         llMoveToTarget(g_vPos, 0.7);
     }
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
-    if (! ~llListFindList(g_lOwners,[g_kLeashedTo])) {
-        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", NULL_KEY);
-    }
+    llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", "realleash");
+
     g_iLeasherInRange=TRUE;
     ApplyRestrictions();
 }
@@ -367,12 +361,7 @@ DoUnleash(){
     llMessageLinked(LINK_SET, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
     if (g_iStrictModeOn){
         //Debug("Unleashing a Real leash");
-        if (! ~llListFindList(g_lOwners,[g_kLeashedTo]) ){ //if not in owner list
-            //Debug("leash holder ("+(string)g_kLeashedTo+")is not an owner");
-            llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", NULL_KEY);
-        } else {
-            //Debug("leash holder is an owner");
-        }
+        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", "realleash");
     }
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
@@ -769,7 +758,7 @@ default
         if(g_iJustMoved) {
             vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
             g_iJustMoved = 0;
         }   
     }
