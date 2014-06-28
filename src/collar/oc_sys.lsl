@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - main                                //
-//                                 version 3.960                                  //
+//                                 version 3.962                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -96,6 +96,10 @@ string g_sDefaultUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
 string g_sLockSound="caa78697-8493-ead3-4737-76dcc926df30";
 string g_sUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
 
+integer g_iAnimsMenu=FALSE;
+integer g_iRlvMenu=FALSE;
+integer g_iAppearanceMenu=FALSE;
+
 //Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -135,7 +139,24 @@ HelpMenu(key kID, integer iAuth) {
 }
 MainMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\nwww.opencollar.at/main-menu";
-    list lStaticButtons=["Apps","Animations","Appearance","Leash","RLV","Access","Options","Help/About"];
+    list lStaticButtons=["Apps"];
+    if (g_iAnimsMenu){
+        lStaticButtons+="Animations";
+    } else {
+        lStaticButtons+=" ";
+    }
+    if (g_iAppearanceMenu){
+        lStaticButtons+="Appearance";
+    } else {
+        lStaticButtons+=" ";
+    }
+    lStaticButtons+=["Leash"];
+    if (g_iRlvMenu){
+        lStaticButtons+="RLV";
+    } else {
+        lStaticButtons+=" ";
+    }
+    lStaticButtons+=["Access","Options","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, UNLOCK+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, LOCK+lStaticButtons, [], 0, iAuth, "Main");
@@ -350,14 +371,19 @@ default
             //sStr will be in form of "parent|menuname"
             list lParams = llParseString2List(sStr, ["|"], []);
             string sName = llList2String(lParams, 0);
-            
+            string sSubMenu = llList2String(lParams, 1);
             if (sName=="AddOns" || sName=="Apps"){  //we only accept buttons for apps nemu
                 //Debug("we handle " + sName);
-                string sSubMenu = llList2String(lParams, 1);
                 if (llListFindList(g_lAppsButtons, [sSubMenu]) == -1) {
                     g_lAppsButtons += [sSubMenu];
                     g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
                 }
+            } else if (sName=="Animations"){
+                g_iAnimsMenu=TRUE;
+            } else if (sName=="RLV"){
+                g_iRlvMenu=TRUE;
+            } else if (sName=="Appearance"){
+                g_iAppearanceMenu=TRUE;
             }
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
