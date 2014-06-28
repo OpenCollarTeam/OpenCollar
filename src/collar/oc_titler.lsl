@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - titler                               //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -54,6 +54,7 @@ string CTYPE = "collar";
 key g_kWearer;
 
 key g_kDialogID;    //menu handle
+key g_kColourDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
 
 string SET = "Set Title" ;
@@ -61,13 +62,23 @@ string UP = "↑ Up";
 string DN = "↓ Down";
 string ON = "☒ Show";
 string OFF = "☐ Show";
-string HELP = "Help";
 string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.02,0.02,0.5>; // prim size, initial value (z - text offset height)
-vector g_vPrimSlice = <0.490,0.51,0.0>; // prim slice
-
+list g_lColours=[
+    "Magenta",<1.00000, 0.00000, 0.50196>,
+    "Pink",<1.00000, 0.14902, 0.50980>,
+    "Hot Pink",<1.00000, 0.05490, 0.72157>,
+    "Firefighter",<0.88627, 0.08627, 0.00392>,
+    "Sun",<1.00000, 1.00000, 0.18039>,
+    "Flame",<0.92941, 0.43529, 0.00000>,
+    "Matrix",<0.07843, 1.00000, 0.07843>,
+    "Electricity",<0.00000, 0.46667, 0.92941>,
+    "Violet Wand",<0.63922, 0.00000, 0.78824>,
+    "Black",<0.00000, 0.00000, 0.00000>,
+    "White",<1.00000, 1.00000, 1.00000>
+];
 //Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
 
 
@@ -90,38 +101,54 @@ ShowHideText(){
     //llSleep(1.0); // not sure that it should be
     if (g_iTextPrim >0){
         if (g_sText == "") g_iOn = FALSE;
-        llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,g_vPrimSlice]);
+        llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
     }
 }
 
-integer UserCommand(integer iNum, string sStr, key kID){
-    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+integer UserCommand(integer iAuth, string sStr, key kAv){
+    if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return FALSE;
     
     list lParams = llParseString2List(sStr, [" "], []);
-    string sCommand = llList2String(lParams, 0);
+    string sCommand = llToLower(llList2String(lParams, 0));
 
-    if (sStr == "menu " + g_sFeatureName) {
+    if (llToLower(sStr) == "menu titler") {
         string ON_OFF ;
         string sPrompt;
         if (g_iTextPrim == -1) {
             sPrompt="\nThis design is missing a FloatText box. Titler disabled.";
             sPrompt+= "\n\nwww.opencollar.at/titler";
-            g_kDialogID = Dialog(kID, sPrompt, [], [UPMENU],0, iNum);
+            g_kDialogID = Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth);
         } else {
             sPrompt = "\nCurrent Title: " + g_sText ;
             sPrompt+= "\n\nwww.opencollar.at/titler";
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
-            g_kDialogID = Dialog(kID, sPrompt, [SET,UP,DN,ON_OFF], [HELP,UPMENU],0, iNum);
+            g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth);
         }
-    } else if (sStr == "runaway" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER)) {
+    } else if (sStr=="menu titlercolor" || sStr=="titlercolor") {
+        list lColourNames;
+        integer numColours=llGetListLength(g_lColours)/2;
+        while (numColours--){
+            lColourNames+=llList2String(g_lColours,numColours*2);
+        }
+        g_kColourDialogID = Dialog(kAv, "\n\nSelect a colour from the list", lColourNames, [UPMENU],0, iAuth);
+    } else if (sCommand=="titlercolor") {
+        string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+        integer colourIndex=llListFindList(g_lColours,[sColour]);
+        if (~colourIndex){
+            g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
+        }
+        ShowHideText();
+        
+    } else if (sStr == "runaway" && (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER)) {
         g_sText = "";
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();
     } else if (llSubStringIndex(sCommand,"title")==0) {
-        if (g_iOn && iNum > g_iLastRank) { //only change text if commander has smae or greater auth             
-            Notify(kID,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
+        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has smae or greater auth             
+            Notify(kAv,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
         } else  if (sCommand == "title") {
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");//pop off the "text" command
         
@@ -133,7 +160,7 @@ integer UserCommand(integer iNum, string sStr, key kID){
                 g_iOn = TRUE; 
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sText, "");
             }
-            g_iLastRank=iNum;            
+            g_iLastRank=iAuth;            
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         } else if (sCommand == "titleoff") {
@@ -142,7 +169,7 @@ integer UserCommand(integer iNum, string sStr, key kID){
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"on", "");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"auth", ""); // del lastrank from DB
         } else if (sCommand == "titleon") {
-            g_iLastRank = iNum;
+            g_iLastRank = iAuth;
             g_iOn = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
@@ -155,25 +182,11 @@ integer UserCommand(integer iNum, string sStr, key kID){
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
         } else if (sCommand == "titlebox") {
-            g_kTBoxId = Dialog(kID, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iNum);
+            g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);
         }
         ShowHideText();
     }
     return TRUE;
-}
-
-string GetScriptID() {
-    // strip away "OpenCollar - " leaving the script's individual name
-    return llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-}
-
-// Get from Group_Token=Value , 0=Group, 1=Token, 2=Value
-string SplitTokenValue(string in, integer slot) {
-    string out ;
-    if (slot==0) out = llGetSubString(in, 0,  llSubStringIndex(in, "_") );
-    else if (slot==1) out = llGetSubString(in, llSubStringIndex(in, "_")+1, llSubStringIndex(in, "=")-1);
-    else if (slot==2) out = llGetSubString(in, llSubStringIndex(in, "=")+1, -1);
-    return out ;
 }
 
 default{
@@ -195,7 +208,7 @@ default{
                 }
             }
         }
-        g_sScript = GetScriptID();
+        g_sScript = "titler_";
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
     } 
@@ -206,13 +219,14 @@ default{
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, "");
         } else if (iNum == LM_SETTING_RESPONSE) {
-            string sGroup = SplitTokenValue(sStr, 0);
-            string sToken = SplitTokenValue(sStr, 1);
-            string sValue = SplitTokenValue(sStr, 2);
+            string sGroup = llGetSubString(sStr, 0,  llSubStringIndex(sStr, "_") );
+            string sToken = llGetSubString(sStr, llSubStringIndex(sStr, "_")+1, llSubStringIndex(sStr, "=")-1);
+            string sValue = llGetSubString(sStr, llSubStringIndex(sStr, "=")+1, -1);
             if (sGroup == g_sScript) {
                 if(sToken == "title") g_sText = sValue;
                 //if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "on") g_iOn = (integer)sValue;
+                if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
             } else if (sGroup+sToken == "Global_CType") CTYPE = sValue;        
@@ -227,18 +241,31 @@ default{
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == SET) {
                     UserCommand(iAuth, "titlebox", kAv);
+                } else if (sMessage == "Color") {
+                    UserCommand(iAuth, "menu titlercolor", kAv);
                 } else if (sMessage == UPMENU) {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 } else {
-                    if (sMessage == HELP) {
-                        //popup help on how to set label
-                        llMessageLinked(LINK_ROOT, POPUP_HELP, "\nTo set a title via chat command, say _PREFIX_title followed by the title you wish to set.\nExample: _PREFIX_title WTS 20x Magic Cloth!", kAv);
-                    } else if (sMessage == UP) UserCommand(iAuth, "titleup", kAv);
+                    if (sMessage == UP) UserCommand(iAuth, "titleup", kAv);
                     else if (sMessage == DN) UserCommand(iAuth, "titledown", kAv);
                     else if (sMessage == OFF) UserCommand(iAuth, "titleon", kAv);
                     else if (sMessage == ON) UserCommand(iAuth, "titleoff", kAv);
-                    UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
+                    UserCommand(iAuth, "menu titler", kAv);
                 }
+            } else if (kID == g_kColourDialogID) {
+                list lMenuParams = llParseString2List(sStr, ["|"], []);
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
+                integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                
+                if (sMessage == UPMENU) {
+                    UserCommand(iAuth, "menu titler", kAv);
+                } else {
+                    UserCommand(iAuth, "titlercolor "+sMessage, kAv);
+                    UserCommand(iAuth, "menu titlercolor", kAv);
+                }
+                
             } else if (kID == g_kTBoxId) {
                 //Debug(sStr);
                 //got a menu response meant for us. pull out values
