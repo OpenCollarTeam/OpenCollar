@@ -101,8 +101,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 }
 
 CheckVersion(){
-    llOwnerSay( "Checking you out for hotness (and RLV), please wait a moment before use.");
-
+    //Debug("Sending viewer check string");
     if (g_iListener){
         llListenRemove(g_iListener);
     }
@@ -161,7 +160,7 @@ setRlvState(){
                 }
             }
             llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
-            Notify(g_kWearer,"Restrained Love functions enabled. " + g_sRlvVersionString + " detected.",FALSE);
+            Notify(g_kWearer,"RLV ready! (v" + g_sRlvVersionString + ")",FALSE);
             
             //lock the collar if there are still restrictions from active traps.  Garbage collection will clear lock if they are stale.
             if (g_lSources != [] && g_lSources != [NULL_KEY]) ApplyAdd("detach");
@@ -585,7 +584,7 @@ default {
             //re make rlv restrictions after teleport or region change, because SL seems to be losing them
             integer numBaked=llGetListLength(g_lBaked);
             while (numBaked--){
-                llOwnerSay("@"+llList2String(g_lBaked,numBaked));
+                llOwnerSay("@"+llList2String(g_lBaked,numBaked)+"=n");
                 //Debug("resending @"+llList2String(g_lBaked,numBaked));
             }
 
