@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.961                                  //
+//                                 version 3.962                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -23,6 +23,7 @@ key lmkMenuID;
 key g_kDialoger;
 integer g_iDialogerAuth;
 list g_lScan;
+integer g_iRlvUnknown=TRUE;
 
 list g_lOwners;
 list g_lSecOwners;
@@ -31,11 +32,11 @@ string g_sParentMenu = "RLV";
 string g_sSubMenu = "Exceptions";
 
 //statics to compare
-integer OWNER_DEFAULT = 63;//1+2+4+8+16+32;//all on
+integer OWNER_DEFAULT = 127;//1+2+4+8+16+32;//all on
 integer SECOWNER_DEFAULT = 0;//all off
 
 
-integer g_iOwnerDefault = 63;//1+2+4+8+16+32;//all on
+integer g_iOwnerDefault = 127;//1+2+4+8+16+32;//all on
 integer g_iSecOwnerDefault = 0;//all off
 
 string g_sLatestRLVersionSupport = "1.15.1"; //the version which brings the latest used feature to check against
@@ -138,6 +139,8 @@ integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version
 
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+integer RLV_QUERY = 6102; //query from a script asking if RLV is currently functioning
+integer RLV_RESPONSE = 6103;  //reply to RLV_QUERY, with "ON" or "OFF" as the message
 
 integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
 integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
@@ -270,8 +273,7 @@ ExMenu(key kID, string sWho, integer iAuth)
         }
     }
     //give an Allow All button
-    lButtons += [TURNON + " All"];
-    lButtons += [TURNOFF + " All"];
+    lButtons += ["All","None"];
     //add list button
     if (sWho == "owner")
     {
@@ -715,6 +717,7 @@ default
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
+        llMessageLinked(LINK_SET, RLV_QUERY, "", "");
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, "");
@@ -784,6 +787,14 @@ default
             //rlvmain just started up. Tell it about our current restrictions
             g_iRLVOn = TRUE;
             UpdateSettings();
+        }
+        else if (iNum == RLV_RESPONSE)
+        {
+            if (g_iRlvUnknown) {
+                g_iRlvUnknown=FALSE;
+                if (sStr=="ON") g_iRLVOn=TRUE;
+                else if (sStr=="OFF") g_iRLVOn=FALSE;
+            }
         }
         else if (iNum == RLV_CLEAR)
         {
@@ -856,13 +867,13 @@ default
                     string sCmd = llList2String(lParams, 1);
                     string sOut = "ex " + sMenu + ":";
                     integer iIndex = llListFindList(g_lPrettyCmds, [sCmd]);
-                    if (sCmd == "All")
-                    {
-                        //handle the "Allow All" and "Forbid All" commands
-                        sOut += "all";
-                        //decide whether we need to switch to "y" or "n"
-                        if (sSwitch == TURNON) sOut += "=y"; // counter-intuitive, but we're using the off/on symbol to display current state on other buttons, so for ALL it makes sense to sync visually. Clicking the ALL button with a given symbol will now set all other buttons to match that symbol.
-                        else if (sSwitch == TURNOFF) sOut += "=n"; 
+                    if (sSwitch == "All") {
+                        sOut += "all=n";
+                        UserCommand(iAuth, sOut, kAv);
+                        ExMenu(kAv, sMenu, iAuth);
+                    }
+                    else if (sSwitch == "None") {
+                        sOut += "all=y";
                         UserCommand(iAuth, sOut, kAv);
                         ExMenu(kAv, sMenu, iAuth);
                     }
