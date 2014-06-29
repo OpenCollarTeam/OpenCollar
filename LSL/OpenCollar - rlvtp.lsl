@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvtp                                //
-//                                 version 3.960                                  //
+//                                 version 3.962                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -103,10 +103,7 @@ string UPMENU = "BACK";
 //string MORE = ">";
 string g_sScript;
 
-Debug(string sMsg)
-{
-    //llOwnerSay(llGetScriptName() + ": " + sMsg);
-}
+//Debug(string sMsg) { llOwnerSay(llGetScriptName() + ": " + sMsg); }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -155,7 +152,7 @@ Menu(key kID, integer iAuth)
         string sPretty = llList2String(g_lPrettyCmds, n);
         string sDesc = llList2String(g_lDescriptions, n);
         integer iIndex = llListFindList(g_lSettings, [sCmd]);
-        Debug((string)iIndex);
+        //Debug((string)iIndex);
         if (iIndex == -1)
         {   //if this cmd not set, then give button to enable
             lButtons += [TURNOFF + " " + llList2String(g_lPrettyCmds, n)];
@@ -183,8 +180,8 @@ Menu(key kID, integer iAuth)
     //give an Allow All button
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
-    Debug(sPrompt);
-    Debug((string)llStringLength(sPrompt));
+    //Debug(sPrompt);
+    //Debug((string)llStringLength(sPrompt));
     //    lButtons += [UPMENU];
     //    lButtons = RestackMenu(lbuttons);
     //    menuchannel = -llRound(llFrand(9999999.0)) -99999;
@@ -302,27 +299,34 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (llSubStringIndex(sStr, "tp ") == 0)
     {
         //we got a "tp" command with an argument after it.  See if it corresponds to a LM in inventory.
-        string sDest = llGetSubString(sStr,0,2);
-        string sDestLow = llToLower(sDest);
+        list lParams = llParseString2List(sStr, [" "], []);
+        string sDest = llGetSubString(sStr,llStringLength(llList2String(lParams,0))+1,-1);
         integer i=0;
         integer m=llGetInventoryNumber(INVENTORY_LANDMARK);
         string s;
-        integer found=FALSE;
+        integer found=0;
+        string matchedLandmark;
         for (i=0;i<m;i++)
         {
             s=llGetInventoryName(INVENTORY_LANDMARK,i);
-            if (sDestLow==llToLower(s))
+            if (llSubStringIndex(llToLower(s),llToLower(sDest))==0)
             {
-                //tp there
-                //llOwnerSay("got a 'tp <landmark>'");
-                g_kLMID = llRequestInventoryData(s);
-                found=TRUE;
-                }
+                //store it, if we only find one, we'll go there
+                Notify(kID,"Matched landmark '"+s+"'",TRUE);
+                found+=1;
+                matchedLandmark=s;
+            }
         }
-        if (!found)
+        if (found==0)
         {
             Notify(kID,"The landmark '"+sDest+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+        } else if (found>1) {
+            Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+        } else { //exactly one matching LM found, so use it
+            g_kLMID = llRequestInventoryData(matchedLandmark);
         }
+    } else if (sStr=="destinations"){
+        LandmarkMenu(kID, iNum);
     }
     else
     {
@@ -455,7 +459,7 @@ default
         {
             if (kID == kMenuID)
             {
-                Debug("dialog response: " + sStr);
+                //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -509,7 +513,7 @@ default
                     else if (sMessage == DESTINATIONS)
                     {
                         //give menu of LMs
-                        LandmarkMenu(kAv, iAuth);
+                        UserCommand(iAuth, "destinations", kAv);
                     }
                     else if (iIndex != -1)
                     {
