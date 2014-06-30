@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvtp                                //
-//                                 version 3.962                                  //
+//                                 version 3.967                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -305,16 +305,16 @@ integer UserCommand(integer iNum, string sStr, key kID)
         integer m=llGetInventoryNumber(INVENTORY_LANDMARK);
         string s;
         integer found=0;
-        string matchedLandmark;
+        list matchedLandmarks;
         for (i=0;i<m;i++)
         {
             s=llGetInventoryName(INVENTORY_LANDMARK,i);
             if (llSubStringIndex(llToLower(s),llToLower(sDest))==0)
             {
                 //store it, if we only find one, we'll go there
-                Notify(kID,"Matched landmark '"+s+"'",TRUE);
+                Notify(kID,"Matched landmark '"+s+"'",FALSE);
                 found+=1;
-                matchedLandmark=s;
+                matchedLandmarks+=s;
             }
         }
         if (found==0)
@@ -322,8 +322,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
             Notify(kID,"The landmark '"+sDest+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
         } else if (found>1) {
             Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+            lmkMenuID = Dialog(kID , "\nChoose a landmark to teleport to.", matchedLandmarks, [UPMENU], 0, iNum);
         } else { //exactly one matching LM found, so use it
-            g_kLMID = llRequestInventoryData(matchedLandmark);
+            g_kLMID = llRequestInventoryData(llList2String(matchedLandmarks,0));
         }
     } else if (sStr=="destinations"){
         LandmarkMenu(kID, iNum);
