@@ -38,12 +38,14 @@
 integer type; 
 //If left like this, script will try to determine AO type automatically.
 //To force compatibility for a particular type of AO, change to:
-// integer type=1; //for zhao2 type AOs
-// integer type=2; // for Oracul type AOs
+// integer type=1; //for Oracul type AOs
+// integer type=2; // for ZHAO-II type AOs
+// integer type=3; // for Vista type AOs
 //----------------------------------------------------------------------
 //Integer map for above
-integer ZHAO=1; 
-integer ORACUL=2;
+integer ORACUL=1; 
+integer ZHAO=2;
+integer VISTA=3;
 
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
@@ -84,7 +86,15 @@ determineType() //function to determine AO type.
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
             
         }
-        if(~llSubStringIndex(t,"oracul")) //if we find a script with "oracul" in the name.
+        else if(~llSubStringIndex(t,"vista")) //if we find a script with "zhao" in the name.
+        {
+            type=VISTA;
+            x=0;
+            llOwnerSay("OC compatibility script configured for VISTA AO. Support is very experimental since it is unknown how much was changed from ZHAO");
+            llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
+            
+        }
+        else if(~llSubStringIndex(t,"oracul")) //if we find a script with "oracul" in the name.
         {
             type=ORACUL;
             x=0;
@@ -104,7 +114,7 @@ AOPause()
     if(g_iAOSwitch)
     {
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
-        if(type==ZHAO) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
+        if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=FALSE;
@@ -115,7 +125,7 @@ AOUnPause()
 {
     if(g_iAOSwitch)
     {
-        if(type==ZHAO) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
+        if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=TRUE;
@@ -209,7 +219,13 @@ default
                 llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
                 if(llGetPermissions()) llReleaseControls(); //if AO is off, we don't want to be checking controls.
             }
-            else if(sMsg=="Next Stand") llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
+            else if(sMsg=="Next Stand")
+            {
+                if(type == 2) // ZHAO-II
+                    llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
+                else // VISTA                
+                    llMessageLinked(LINK_SET,0,"ZHAO_NEXTPOSE","");
+            }
             //check if sMsg is a notecard picked from Load Notecard menu, and send load command if so.
              else  if(llGetInventoryType(sMsg)==INVENTORY_NOTECARD) llMessageLinked(LINK_THIS,0,"ZHAO_LOAD|"+sMsg,"");
             //resend the menu where it makes sense.
@@ -223,7 +239,7 @@ default
             else if (sMsg=="ZHAO_STANDOFF") AOPause();
             else if (sMsg=="ZHAO_AOOFF")
             {
-                if(type==ZHAO) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
+                if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
                 else llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
                 if(llGetPermissions()) llReleaseControls();
             }
@@ -231,7 +247,7 @@ default
             {
                 if(g_iOCSwitch)// don't switch on AO if we are paused
                 {
-                    if(type==ZHAO) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
+                    if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
                     else llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"");
                 }
                 else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); //AO was switched on while we are paused, so we take permissions to allow unpausing whilst  moving.
@@ -241,7 +257,7 @@ default
             {
                 key kMenuTo=(key)llGetSubString(sMsg,10,-1);
                 if(type==ORACUL) llMessageLinked(LINK_SET,4,"",kMenuTo);
-                else if (type==ZHAO) zhaoMenu(kMenuTo);
+                else if (type>1) zhaoMenu(kMenuTo);
             }
         } 
     }
@@ -255,7 +271,7 @@ default
                 if(!g_iAOSwitch && llGetPermissions()) llReleaseControls(); //stop checking controls if taken.    
         }
 
-        else if(type==ZHAO) 
+        else if(type>1) 
         {
             if (sMsg=="ZHAO_SITON") g_iSitOverride=TRUE;
             else if (sMsg=="ZHAO_SITOFF") g_iSitOverride=FALSE;
@@ -287,13 +303,13 @@ default
         if(level&edge) //movement button pressed
         {
             
-            if(type==ZHAO) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
+            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
             else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");           
         }
         else if((!level)&edge) //movement button released
         {
             
-            if(type==ZHAO) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
+            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
             else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
         }
     }
