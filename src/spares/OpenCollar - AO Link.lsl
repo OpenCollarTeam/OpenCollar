@@ -114,7 +114,7 @@ AOPause()
     if(g_iAOSwitch)
     {
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
-        if(type > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
+        if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=FALSE;
@@ -125,7 +125,7 @@ AOUnPause()
 {
     if(g_iAOSwitch)
     {
-        if(type >1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
+        if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=TRUE;
@@ -239,7 +239,7 @@ default
             else if (sMsg=="ZHAO_STANDOFF") AOPause();
             else if (sMsg=="ZHAO_AOOFF")
             {
-                if(type > 1) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
+                if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
                 else llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
                 if(llGetPermissions()) llReleaseControls();
             }
@@ -247,7 +247,7 @@ default
             {
                 if(g_iOCSwitch)// don't switch on AO if we are paused
                 {
-                    if(type > 1) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
+                    if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
                     else llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"");
                 }
                 else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); //AO was switched on while we are paused, so we take permissions to allow unpausing whilst  moving.
@@ -257,7 +257,7 @@ default
             {
                 key kMenuTo=(key)llGetSubString(sMsg,10,-1);
                 if(type==ORACUL) llMessageLinked(LINK_SET,4,"",kMenuTo);
-                else if (type > 1) zhaoMenu(kMenuTo);
+                else if (type>1) zhaoMenu(kMenuTo);
             }
         } 
     }
@@ -271,7 +271,7 @@ default
                 if(!g_iAOSwitch && llGetPermissions()) llReleaseControls(); //stop checking controls if taken.    
         }
 
-        else if(type > 1) 
+        else if(type>1) 
         {
             if (sMsg=="ZHAO_SITON") g_iSitOverride=TRUE;
             else if (sMsg=="ZHAO_SITOFF") g_iSitOverride=FALSE;
@@ -303,13 +303,13 @@ default
         if(level&edge) //movement button pressed
         {
             
-            if(type > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
+            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
             else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");           
         }
         else if((!level)&edge) //movement button released
         {
             
-            if(type > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
+            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
             else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
         }
     }
