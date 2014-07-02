@@ -212,6 +212,8 @@ AOMenu(key kID, integer iAuth) // wrapper to send menu back to the AO's menu
 PoseMenu(key kID, integer iPage, integer iAuth)
 { //create a list
     string sPrompt = "\nChoose a pose to play.\n\nwww.opencollar.at/animations\n\n";
+    if (g_sCurrentPose == "")sPrompt += "Current Pose is = None\n";
+    else sPrompt += "Current Pose is = " + g_sCurrentPose +"\n";
 
     list lHeightFixButtons=[];
     if (g_iHeightFix){
