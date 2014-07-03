@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - AO Link                               //
-//                                 version 0.100                                  //
+//                                 version 0.103                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -14,8 +14,8 @@
 
 // BETA VERSION NOTES ---------------------------------------------------
 // Medea Destiny's AO interface script for OpenCollar
-// This script is inteneded to be a drop-in for ZHAO-2 and Oracul AOs that are not
-// already compatible with OpenCollar's AO interface. 
+// This script is intended to be dropped into ZHAO-2, Vista and Oracul
+// AOs that are not already compatible with OpenCollar's AO interface. 
 
 // Scope: The script tries to identify the AO type by checking script naming. It receives
 // the ZHAO ON, ZHAO OFF and ZHAO Menu commands from the collar, and uses link messages to 
