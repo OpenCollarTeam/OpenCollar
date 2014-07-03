@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.967                                  //
+//                                 version 3.968                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -476,8 +476,8 @@ SetAllExs(string sVal)
                 }
                 string sStr = llDumpList2String(sCmd, ",");
                 //llOwnerSay("sending " + sStr);
-                //llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
-                llOwnerSay("@" + sStr);
+                llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+                //llOwnerSay("@" + sStr);
             }
         }
     }
@@ -506,8 +506,8 @@ SetAllExs(string sVal)
                 }
                 string sStr = llDumpList2String(sCmd, ",");
                 //llOwnerSay("sending " + sStr);
-                //llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
-                llOwnerSay("@" + sStr);
+                llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+                //llOwnerSay("@" + sStr);
             }
         }
     }
@@ -536,15 +536,16 @@ SetAllExs(string sVal)
             }
             string sStr = llDumpList2String(sCmd, ",");
             //llOwnerSay("sending " + sStr);
-            //llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
-            llOwnerSay("@" + sStr);
+            llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+            //llOwnerSay("@" + sStr);
             @skip;
         }
     }
 }
 ClearEx()
 {
-    llOwnerSay("@clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:");
+    llMessageLinked(LINK_SET, RLV_CMD, "clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
+    //llOwnerSay("@clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:");
 }
 
 integer UserCommand(integer iNum, string sStr, key kID)
