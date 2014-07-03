@@ -62,7 +62,6 @@ vector g_vGridOffset;
 vector g_vRepeats;
 vector g_vOffset;
 
-
 ////////////////////////////////////////////
 // Changed for the OpenColar label, only one face per prim on a cut cylinder,
 // HEAVILY reduced to what we need, else functions removed for easier reading
@@ -108,8 +107,8 @@ string  EXTENDED_INDEX  = "12345";
 integer FACE          = -1;
 
 // Used to hide the text after a fade-out.
-key     TRANSPARENT     = "701917a8-d614-471f-13dd-5f4644e36e3c";
-key     null_key        = NULL_KEY;
+//key     TRANSPARENT     = "701917a8-d614-471f-13dd-5f4644e36e3c";
+//key     null_key        = NULL_KEY;
 ///////////// END CONSTANTS ////////////////
 
 ///////////// GLOBAL VARIABLES ///////////////
@@ -153,10 +152,10 @@ Debug(string in)
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-} 
+}
 
 FontMenu(key kID, integer iAuth)
 {
@@ -249,34 +248,81 @@ integer ConvertIndex(integer iIndex) {
 
 /////END XYTEXT FUNCTIONS
 
-SetLabel()
+// add for text scroll
+float g_fScrollTime = 0.2 ;
+integer g_iSctollPos ;
+string g_sScrollText;
+list g_lLabelLinks ;
+
+// find all 'Label' prims, count and store it's link numbers for fast work SetLabel() and timer
+LabelsCount()
 {
-    //inlined single use CenterJustify function
-    string sPadding;
-    while(llStringLength(sPadding + g_sLabelText + sPadding) < g_iCharLimit)
-    {
-        sPadding += " ";
-    }
-    string sText = sPadding + g_sLabelText;
-    
-    //inlined single use GetLabelPrim function
+    g_lLabelLinks = [] ;
+
     string sLabel;
     list lTmp;
-    integer i;
+    integer iLink;
     integer iLinkCount = llGetNumberOfPrims();
-    for(i=2; i <= iLinkCount; i++)
+
+    //find all 'Label' prims and count it's
+    for(iLink=2; iLink <= iLinkCount; iLink++)
     {
-        sLabel = (string)llGetObjectDetails(llGetLinkKey(i), [OBJECT_NAME]);
+        sLabel = (string)llGetObjectDetails(llGetLinkKey(iLink), [OBJECT_NAME]);
         lTmp = llParseString2List(sLabel, ["~"],[]);
         sLabel = llList2String(lTmp,0);
         if(sLabel == "Label")
         {
-            integer iCharPosition = (integer)llList2String(lTmp,1);
-            if (iCharPosition >= g_iCharLimit) g_iCharLimit = iCharPosition+1;
-            RenderString(i, llGetSubString(sText, iCharPosition, iCharPosition));
+            g_lLabelLinks += [0]; // fill list witn nulls
+        }
+    }
+
+    g_iCharLimit = llGetListLength(g_lLabelLinks);
+
+    //find all 'Label' prims and store it's links to list
+    for(iLink=2; iLink <= iLinkCount; iLink++)
+    {
+        sLabel = (string)llGetObjectDetails(llGetLinkKey(iLink), [OBJECT_NAME]);
+        lTmp = llParseString2List(sLabel, ["~"],[]);
+        sLabel = llList2String(lTmp,0);
+        if(sLabel == "Label")
+        {
+            integer iLabel = (integer)llList2String(lTmp,1);
+            g_lLabelLinks = llListReplaceList(g_lLabelLinks,[iLink],iLabel,iLabel);
         }
     }
 }
+
+SetLabel()
+{
+    string sPadding;
+    if(llStringLength(g_sLabelText) > g_iCharLimit)
+    {
+        // add some blanks 
+        while(llStringLength(sPadding) < g_iCharLimit)
+        {
+            sPadding += " ";
+        }
+        g_sScrollText = sPadding + g_sLabelText;
+        llSetTimerEvent(g_fScrollTime);
+    }
+    else
+    {
+        g_sScrollText = "";
+        llSetTimerEvent(0);
+        //inlined single use CenterJustify function
+        while(llStringLength(sPadding + g_sLabelText + sPadding) < g_iCharLimit)
+        {
+            sPadding += " ";
+        }
+        string sText = sPadding + g_sLabelText;
+        integer iCharPosition;
+        for(iCharPosition=0; iCharPosition < g_iCharLimit; iCharPosition++)
+        {
+            RenderString(llList2Integer(g_lLabelLinks, iCharPosition), llGetSubString(sText, iCharPosition, iCharPosition));
+        }
+    }
+}
+
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -296,41 +342,39 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 SetOffsets(key font)
 {
-    integer i = 2;
-    for (; i < llGetNumberOfPrims(); i++)
+    // get 1-st link number from list
+    integer link = llList2Integer(g_lLabelLinks, 0);
+
+    // Compensate for label box-prims, which must use face 0. Others can be added as needed.
+    list params = llGetLinkPrimitiveParams(link, [PRIM_DESC, PRIM_TYPE]);
+    string desc = llGetSubString(llList2String(params, 0), 0, 4);
+    if (desc == "Label")
     {
-        // Compensate for label box-prims, which must use face 0. Others can be added as needed.
-        list params = llGetLinkPrimitiveParams(i, [PRIM_DESC, PRIM_TYPE]);
-        string desc = llGetSubString(llList2String(params, 0), 0, 4);
-        if (desc == "Label")
+        integer t = (integer)llList2String(params, 1);
+        if (t == PRIM_TYPE_BOX)
         {
-            integer t = (integer)llList2String(params, 1);
-            if (t == PRIM_TYPE_BOX)
-            {
-                if (font == NULL_KEY) font = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe"; // LCD default for box
-                g_vGridOffset = <-0.45, 0.425, 0.0>;
-                g_vRepeats = <0.126, 0.097, 0>;
-                g_vOffset = <0.036, 0.028, 0>;
-                FACE = 0;
-            }
-            else if (t == PRIM_TYPE_CYLINDER)
-            {
-                if (font == NULL_KEY) font = "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c"; // Serif default for cyl
-                g_vGridOffset = <-0.725, 0.425, 0.0>;
-                g_vRepeats = <1.434, 0.05, 0>;
-                g_vOffset = <0.037, 0.003, 0>;
-                FACE = 1;
-            }
-            integer o = llListFindList(g_lFonts, [(string)g_kFontTexture]);
-            integer n = llListFindList(g_lFonts, [(string)font]);
-            if (~o && o != n) // changing fonts - adjust for differences in font offsets
-            {
-                if (n < 8 && o == 9) g_vOffset.y += 0.0015;
-                else if (o < 8 && n == 9) g_vOffset.y -= 0.0015;
-            }
-            Debug("Offset = " + (string)g_vOffset);
-            i = llGetNumberOfPrims(); // quick & dirty break from loop
+            if (font == NULL_KEY) font = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe"; // LCD default for box
+            g_vGridOffset = <-0.45, 0.425, 0.0>;
+            g_vRepeats = <0.126, 0.097, 0>;
+            g_vOffset = <0.036, 0.028, 0>;
+            FACE = 0;
         }
+        else if (t == PRIM_TYPE_CYLINDER)
+        {
+            if (font == NULL_KEY) font = "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c"; // Serif default for cyl
+            g_vGridOffset = <-0.725, 0.425, 0.0>;
+            g_vRepeats = <1.434, 0.05, 0>;
+            g_vOffset = <0.037, 0.003, 0>;
+            FACE = 1;
+        }
+        integer o = llListFindList(g_lFonts, [(string)g_kFontTexture]);
+        integer n = llListFindList(g_lFonts, [(string)font]);
+        if (~o && o != n) // changing fonts - adjust for differences in font offsets
+        {
+            if (n < 8 && o == 9) g_vOffset.y += 0.0015;
+            else if (o < 8 && n == 9) g_vOffset.y -= 0.0015;
+        }
+        Debug("Offset = " + (string)g_vOffset);
     }
     g_kFontTexture = font;
 }
@@ -406,7 +450,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         Notify(kID,"Only owners can change the label!", FALSE);
         return TRUE;
     }
-    
+
     return FALSE ;
 }
 
@@ -417,21 +461,18 @@ default
         //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        ResetCharIndex();
-        SetOffsets(NULL_KEY);
-        g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
 
-        //first count the label prims by making a dummy label.  Real label will be replaced when settings arrive
-        SetLabel();
-        if (g_iCharLimit < 0) {
+        //first count the label prims.
+        LabelsCount();
+        SetOffsets(NULL_KEY);
+        ResetCharIndex();
+
+        if (g_iCharLimit <= 0) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
-
-        //no more needed
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sFontParent + "|" + g_sFontMenu, "");
+        g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
+        SetLabel();
     }
 
     on_rez(integer iNum)
@@ -441,7 +482,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if ( UserCommand(iNum, sStr, kID) ) {}        
+        if ( UserCommand(iNum, sStr, kID) ) {}
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -515,5 +556,22 @@ default
                 llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
             }
         }
+    }
+
+    timer()
+    {
+        string sText = llGetSubString(g_sScrollText, g_iSctollPos, -1);
+        integer iCharPosition;
+        for(iCharPosition=0; iCharPosition < g_iCharLimit; iCharPosition++)
+        {
+            RenderString(llList2Integer(g_lLabelLinks, iCharPosition), llGetSubString(sText, iCharPosition, iCharPosition));
+        }
+        g_iSctollPos++;
+        if(g_iSctollPos > llStringLength(g_sScrollText)) g_iSctollPos = 0 ;
+    }
+    
+    changed(integer change)
+    {
+        if(change & CHANGED_LINK) LabelsCount(); // if links changed
     }
 }
