@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - label                                //
-//                                 version 3.967                                  //
+//                                 version 3.968                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -272,7 +272,7 @@ SetLabel()
         if(sLabel == "Label")
         {
             integer iCharPosition = (integer)llList2String(lTmp,1);
-            if (iCharPosition > g_iCharLimit) g_iCharLimit = iCharPosition;
+            if (iCharPosition >= g_iCharLimit) g_iCharLimit = iCharPosition+1;
             RenderString(i, llGetSubString(sText, iCharPosition, iCharPosition));
         }
     }
