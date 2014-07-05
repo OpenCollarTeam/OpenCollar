@@ -314,7 +314,7 @@ default
                 llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
             }
             // an object wants to know the version, we check if it is allowed to
-            if (sMsg==(string)g_kWearer + ":version")
+            else if (sMsg==(string)g_kWearer + ":version")
             {
                 llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
             }
