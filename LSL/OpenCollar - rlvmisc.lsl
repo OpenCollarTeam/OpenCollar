@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvmisc                               //
-//                                 version 3.960                                  //
+//                                 version 3.961                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -19,6 +19,7 @@ list g_lSettings;//2-strided list in form of [option, param]
 
 list g_lRLVcmds = [
     "shownames",
+    "camdistmax",
     "fly",
     "fartouch",
     "edit",
@@ -34,6 +35,7 @@ list g_lRLVcmds = [
 
 list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_lRLVcmds
     "Names",
+    "Mouse",
     "Fly",
     "Touch",
     "Edit",
@@ -49,6 +51,7 @@ list g_lPrettyCmds = [ //showing menu-friendly command names for each item in g_
 
 list g_lDescriptions = [ //showing descriptions for commands
     "See Avatar Names",
+    "MouseLook",
     "Ability to Fly",
     "Touch Objects 1.5M+ Away",
     "Edit Objects",
