@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.967                                  //
+//                                 version 3.968                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -172,7 +172,7 @@ ApplyRestrictions(){
         if (g_iStrictModeOn){
             if (g_kLeashedTo){
                 //Debug("Setting restrictions");
-                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n", "realleash");     //set all restrictions
+                llMessageLinked(LINK_SET, RLV_CMD, "fartouch=n,sittp=n,tplm=n,tplure=n,tploc=n,tplure:" + (string) g_kLeashedTo + "=add", "realleash");     //set all restrictions
                 return;
             }
         //} else {
@@ -182,7 +182,7 @@ ApplyRestrictions(){
         //Debug("Leasher out of range");
     }
     //Debug("Releasing restrictions");
-    llMessageLinked(LINK_SET, RLV_CMD, "fartouch=y,sittp=y,tplm=y,tplure=y,tploc=y", "realleash");     //release all restrictions
+    llMessageLinked(LINK_SET, RLV_CMD, "clear", "realleash");     //release all restrictions
 }
 
 // Wrapper for DoLeash with notifications
@@ -295,7 +295,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
         llMoveToTarget(g_vPos, 0.7);
     }
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
-    llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=add", "realleash");
+    
 
     g_iLeasherInRange=TRUE;
     ApplyRestrictions();
@@ -359,10 +359,6 @@ DoUnleash(){
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     llMessageLinked(LINK_SET, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
-    if (g_iStrictModeOn){
-        //Debug("Unleashing a Real leash");
-        llMessageLinked(LINK_SET, RLV_CMD, "tplure:" + (string) g_kLeashedTo + "=rem", "realleash");
-    }
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = COMMAND_EVERYONE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
