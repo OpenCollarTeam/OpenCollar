@@ -15,7 +15,8 @@ integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug m
 key     g_kMenuID;                              // menu handler
 key     g_kWearer;                              // key of the current wearer to reset only on owner changes
 string  g_sScript;                              // part of script name used for settings
-string CTYPE                         = "collar";    // designer can set in notecard to appropriate word for their item        
+
+string CTYPE                        = "collar";    // designer can set in notecard to appropriate word for their item        
 
  // any local, not changing buttons which will be used in this plugin, leave empty or add buttons as you like:
 list    PLUGIN_BUTTONS              = ["Command 1", "Command 2", "AuthCommand"];
@@ -69,6 +70,8 @@ integer RLV_CLEAR                  = 6002; // RLV plugins should clear their res
 integer RLV_VERSION                = 6003; // RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer RLV_OFF                    = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON                     = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+integer RLV_QUERY                  = 6102; //query from a script asking if RLV is currently functioning
+integer RLV_RESPONSE               = 6103; //reply to RLV_QUERY, with "ON" or "OFF" as the message
 
 // messages for poses and couple anims
 integer ANIM_START                 = 7000; // send this with the name of an anim in the string part of the message to play the anim
