@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollar - leashParticle                           //
-//                                 version 3.961                                  //
+//                                 version 3.962                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -53,7 +53,7 @@ integer COMMAND_LEASH_SENSOR = 20001;
 string UPMENU       = "BACK";
 //string MORE         = ">";
 string PARENTMENU   = "Leash";
-string SUBMENU      = "Customize";
+string SUBMENU      = "Particle";
 string L_TEXTURE    = "Texture";
 string L_DENSITY    = "Density";
 string L_COLOR      = "Color";
@@ -639,7 +639,7 @@ default
                         OptionsMenu(kAv, iAuth);
                     }
                 }
-                else if (g_sCurrentMenu == "Customize")
+                else if (g_sCurrentMenu == "Particle")
                 {
                     if (sButton == L_DEFAULTS)
                     {
