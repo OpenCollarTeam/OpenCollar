@@ -111,20 +111,22 @@ buildElementTypes(){  //builds three lists, one of element names, matching one o
     
     integer iLinkCount = llGetNumberOfPrims();
     while (iLinkCount-- > 2) {
-        list descriptionParts=llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(iLinkCount,[PRIM_DESC]),0),["~"],[]);
+        string description=llStringTrim(llList2String(llGetLinkPrimitiveParams(iLinkCount,[PRIM_DESC]),0),STRING_TRIM);
+        list descriptionParts=llParseStringKeepNulls(description,["~"],[]);
         string type=llList2String(descriptionParts,0);
-        
-        integer elementIndex=llListFindList(g_lElementTypes,[type]);
-        if (! ~elementIndex ){  //new element type, make list entries and set element index
-            elementIndex=llGetListLength(g_lElementTypes);
-            g_lElementTypes+=type;
-            g_lElementTypesLower+=llToLower(type);
-            g_lElementTypesUnHideable+=TRUE;
-            g_lAlphaSettings+=TRUE;
-        }
-        if (llList2Integer(g_lElementTypesUnHideable,elementIndex)){   //all of this element type so far have been unhideable.  If this one is too, the element stays unhideable
-            if (! ~llListFindList(descriptionParts, ["nohide"])){  //this element is hideable, therefore the element type as a whole is not unhideable
-                g_lElementTypesUnHideable=llListReplaceList(g_lElementTypesUnHideable,[FALSE],elementIndex,elementIndex);
+        if ( (llListFindList(descriptionParts,["nocolor"])==-1 || llListFindList(descriptionParts,["notexture"])==-1 || llListFindList(descriptionParts,["nohide"])==-1 ) && ( type != "" || type != "(No Description)") ) {
+            integer elementIndex=llListFindList(g_lElementTypes,[type]);
+            if (! ~elementIndex ){  //new element type, make list entries and set element index
+                elementIndex=llGetListLength(g_lElementTypes);
+                g_lElementTypes+=type;
+                g_lElementTypesLower+=llToLower(type);
+                g_lElementTypesUnHideable+=TRUE;
+                g_lAlphaSettings+=TRUE;
+            }
+            if (llList2Integer(g_lElementTypesUnHideable,elementIndex)){   //all of this element type so far have been unhideable.  If this one is too, the element stays unhideable
+                if (! ~llListFindList(descriptionParts, ["nohide"])){  //this element is hideable, therefore the element type as a whole is not unhideable
+                    g_lElementTypesUnHideable=llListReplaceList(g_lElementTypesUnHideable,[FALSE],elementIndex,elementIndex);
+                }
             }
         }
     }
