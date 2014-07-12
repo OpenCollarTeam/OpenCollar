@@ -138,7 +138,7 @@ setElementStyle(string elementType,string sMessage){
     //Debug("styleIndex "+(string)styleIndex);
     if (~styleIndex){
         key textureKey=llList2Key(g_lTexturesCard,styleIndex+2);
-        vector newTint=(vector)llList2String(g_lTexturesCard,styleIndex+3);
+        vector color=(vector)llList2String(g_lTexturesCard,styleIndex+3);
 
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "texture_"+elementType + "=" + (string)sMessage, "");
         
@@ -149,26 +149,19 @@ setElementStyle(string elementType,string sMessage){
             string thisElementType=llList2String(descriptionParts, 0);
             if (elementType==llToLower(thisElementType)) {  //if this element is the type we're looking for
                 //calculate and set new texture key
+                list params ;
                 if ((key)textureKey){
                     if (! ~llListFindList(descriptionParts,["notexture"])){
                         //Debug("Setting texture to "+(string)textureKey);
-                        llSetLinkPrimitiveParamsFast(numElements,[PRIM_TEXTURE,ALL_SIDES,textureKey, <1.0,1.0,1.0>, <0.0,0.0,0.0>, 0.0]);
+                        params += [PRIM_TEXTURE,ALL_SIDES,textureKey, <1.0,1.0,1.0>, <0.0,0.0,0.0>, 0.0] ;
                     }
+                }                
+                if (! ~llListFindList(descriptionParts, ["nocolor"]) ){                    
+                    list oldColourParams=llGetLinkPrimitiveParams(numElements,[PRIM_COLOR,ALL_SIDES]);  //get current prim params
+                    float alpha=llList2Float(oldColourParams,1);  //calculate the old alpha to re-apply                    
+                    params += [PRIM_COLOR, ALL_SIDES, color, alpha];
                 }
-                
-                list oldColourParams=llGetLinkPrimitiveParams(numElements,[PRIM_COLOR,ALL_SIDES]);  //get current prim params
-                float alpha=llList2Float(oldColourParams,1);  //calculate the old alpha to re-apply
-                
-                //calculate the tint to apply
-                vector tint;
-                if (! ~llListFindList(descriptionParts, ["nocolor"]) ){ //if this element not nocolour
-                    tint=newTint;
-                } else {
-                    tint=(vector)llList2String(oldColourParams,0);
-                }
-                
-                //set tint
-                llSetLinkPrimitiveParamsFast(numElements,[PRIM_COLOR, ALL_SIDES, tint, alpha]);
+                if (llGetListLength(params) > 3) llSetLinkPrimitiveParamsFast(numElements, params);
             }
         }
     } else {
