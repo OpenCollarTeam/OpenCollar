@@ -1,7 +1,7 @@
-﻿////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - texture                               //
-//                                 version 3.960                                  //
+//                                 version 3.968                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -89,10 +89,11 @@ Debug(string sStr)
 {
     //llOwnerSay(llGetScriptName() + ": " + sStr);
 }
+
 loadNotecardTextures()
 {
     g_sTextureCard=g_sDefTextureCard+"_custom";
-    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard=g_sDefTextureCard; 
+    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard=g_sDefTextureCard;
     if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD)
     {
         g_kTextureCardUUID=NULL_KEY;
@@ -104,7 +105,6 @@ loadNotecardTextures()
     g_kTextureCardUUID=llGetInventoryKey(g_sTextureCard);
     g_kNotecardRead=llGetNotecardLine(g_sTextureCard,g_iNotecardLine);
 }
-    
 
 
 string GetDefaultTexture(string ele)
@@ -165,7 +165,7 @@ list BuildTextureNames(integer short) // set short TRUE to lop off all prefixes 
         name=llList2String(g_lNotecardTextures,l);
         if (short) name = GetShortName(name);
         out += [name];
-    }   
+    }
     return out;
 }
 
@@ -264,35 +264,40 @@ ElementMenu(key kAv, integer iAuth)
 
 string ElementType(integer iLinkNum)
 {
-    string sDesc = (string)llGetObjectDetails(llGetLinkKey(iLinkNum), [OBJECT_DESC]);
+    string sDesc = llList2String(llGetLinkPrimitiveParams(iLinkNum, [PRIM_DESC]),0);
     //prim desc will be elementtype~notexture(maybe)
-    list lParams = llParseString2List(sDesc, ["~"], []);
-    if ((~(integer)llListFindList(lParams, ["notexture"])) || sDesc == "" || sDesc == " " || sDesc == "(No Description)")
+    list lParams = llParseString2List(llStringTrim(sDesc,STRING_TRIM), ["~"], []);
+    if (~llListFindList(lParams,["notexture"]) || sDesc == "" || sDesc == "(No Description)")
     {
         return "notexture";
     }
     else
     {
-        return llList2String(llParseString2List(sDesc, ["~"], []), 0);
+        return llList2String(lParams, 0);
     }
-}
-// -- Deprecated "LoadTextureSettings" --
-integer StartsWith(string sHayStack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return llDeleteSubString(sHayStack, llStringLength(sNeedle), -1) == sNeedle;
 }
 
 SetElementTexture(string sElement, string sTex)
 {
-    integer n;
+    integer iLink;
     integer iLinkCount = llGetNumberOfPrims();
     integer i=llListFindList(g_lNotecardTextures,[sTex]);
     if(~i) sTex=llList2String(g_lNotecardTextureKeys,i);
-    for (n = 2; n <= iLinkCount; n++)
-
+    for (iLink = 2; iLink <= iLinkCount; iLink++)
     {
-        string thiselement = ElementType(n);
-        if (thiselement == sElement) llSetLinkTexture(n, sTex, ALL_SIDES);
+        if (ElementType(iLink) == sElement)
+        {
+            // llSetLinkPrimitiveParamsFast(iLink, [PRIM_TEXTURE,ALL_SIDES,sTex,<1.0,1.0,1.0>,<0.0,0.0,0.0>,0.0] );
+            // update prim texture for each face with save texture repeats, offsets and rotations
+            integer iSides = llGetLinkNumberOfSides(iLink);
+            integer iFace ;
+            for (iFace = 0; iFace < iSides; iFace++)
+            {
+                list lParams = llGetLinkPrimitiveParams(iLink, [PRIM_TEXTURE, iFace ]);
+                lParams = llDeleteSubList(lParams,0,0); // get texture params
+                llSetLinkPrimitiveParamsFast(iLink, [PRIM_TEXTURE, iFace, sTex]+lParams);
+            }
+        }
     }
 
     //change the textures list entry for the current element
@@ -302,6 +307,7 @@ SetElementTexture(string sElement, string sTex)
     //save to settings
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sElement + "=" + sTex, "");
 }
+
 string DumpSettings(string sep)
 {
     string out;
@@ -314,6 +320,120 @@ string DumpSettings(string sep)
     return out;
 }
 
+integer UserCommand(integer iNum, string sStr, key kID)
+{
+    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+
+    if (sStr == "textures" || sStr == "menu "+g_sSubMenu)
+    {
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID, "You are not allowed to change the textures.", FALSE);
+            if (!llSubStringIndex(sStr, "menu "))
+                        llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+        }
+        else if (g_iAppLock)
+        {
+            Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+            if (!llSubStringIndex(sStr, "menu "))
+                llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+        }
+        else
+        {
+            s_CurrentElement = "";
+            ElementMenu(kID, iNum);
+        }
+    }
+    else if (llGetSubString(sStr,0,13) == "lockappearance")
+    {
+        if (iNum == COMMAND_OWNER)
+        {
+            if(llGetSubString(sStr, -1, -1) == "0") g_iAppLock = FALSE;
+            else g_iAppLock = TRUE;
+        }
+    }
+    else if (sStr == "reset" && (iNum == COMMAND_OWNER || kID == g_kWearer))
+    {
+        //clear saved settings
+        //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");
+        llResetScript();
+    }
+    else if (kID != g_kWearer && iNum != COMMAND_OWNER) return TRUE;
+    {
+        if (sStr == "settings") Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
+        else
+        {
+            list lParams = llParseString2List(sStr, [" "], []);
+
+            if (llToLower(llList2String(lParams,0))=="settexture")
+            {
+                if (g_iAppLock)
+                {
+                    Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot change textures now!", FALSE);
+                    return TRUE;
+                }
+                string sElement = llList2String(lParams, 1);
+                string sTex = llList2String(lParams, 2);
+                integer ok;
+                string test;
+
+                integer x=llGetListLength(g_lElements);
+                while(x)
+                {
+                    --x;
+                    test=llList2String(g_lElements,x);
+                    if(llToLower(sElement)==llToLower(test))
+                    {
+                        sElement=test;
+                        x=0;
+                        ok=TRUE;
+                    }
+                }
+                if(!ok) Notify(kID, "The element " + sElement + " wasn't recognized, please check your command and try again.",FALSE);
+                else
+                {
+                    ok=FALSE;
+                    if((key)sTex) ok=TRUE;
+                    else
+                    {
+                        x=llGetInventoryNumber(INVENTORY_TEXTURE);
+                        while(x)
+                        {
+                            --x;
+                            test=llGetInventoryName(INVENTORY_TEXTURE,x);
+                            if(llToLower(sTex)==llToLower(test))
+                            {
+                                ok=TRUE;
+                                sTex=test;
+                                x=0;
+                            }
+                        }
+                        if(!ok)
+                        {
+                            x=llGetListLength(g_lNotecardTextures);
+                            while(x)
+                            {
+                                --x;
+                                test=llList2String(g_lNotecardTextures,x);
+                                if(llToLower(sTex)==llToLower(test) || llToLower(GetShortName(test))==llToLower(sTex))
+                                {
+                                    ok=TRUE;
+                                    sTex=test;
+                                    x=0;
+                                }
+                            }
+                        }
+                    }
+                    if(ok) SetElementTexture(sElement, sTex);
+                    else Notify(kID, "The texture " + sTex + " wasn't found in "+CTYPE+" inventory or the textures notecard, please check your command and try again.",FALSE);
+                }
+            }
+        }
+    }
+
+    return TRUE ;
+}
+
 default
 {
     state_entry()
@@ -321,10 +441,10 @@ default
         g_kWearer = llGetOwner();
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         loadNotecardTextures();
+
         //loop through non-root prims, build element list
         integer n;
         integer iLinkCount = llGetNumberOfPrims();
-
         //root prim is 1, so start at 2
         for (n = 2; n <= iLinkCount; n++)
         {
@@ -335,122 +455,15 @@ default
                 //llSay(0, "added " + sElement + " to g_lElements");
             }
         }
-        // we need to unify the initialization of the menu system for 3.5
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
+        if (UserCommand(iNum, sStr, kID)) return;
         //owner, secowner, group, and wearer may currently change colors
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            if (sStr == "textures" || sStr == "menu "+g_sSubMenu)
-            {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID, "You are not allowed to change the textures.", FALSE);
-                    if (!llSubStringIndex(sStr, "menu "))
-                        llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
-                }
-                else if (g_iAppLock)
-                {
-                    Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
-                    if (!llSubStringIndex(sStr, "menu "))
-                        llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
-                }
-                else
-                {
-                    s_CurrentElement = "";
-                    ElementMenu(kID, iNum);
-                }
-            }
-            else if (llGetSubString(sStr,0,13) == "lockappearance")
-            {
-                if (iNum == COMMAND_OWNER)
-                {
-                    if(llGetSubString(sStr, -1, -1) == "0") g_iAppLock = FALSE;
-                    else g_iAppLock = TRUE;
-                }
-            }
-            else if (sStr == "reset" && (iNum == COMMAND_OWNER || kID == g_kWearer))
-            {
-                //clear saved settings
-                //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sDBToken, "");
-                llResetScript();
-            }
-            else if (kID != g_kWearer && iNum != COMMAND_OWNER) return;
-            {
-                if (sStr == "settings") Notify(kID, "Texture Settings: " + DumpSettings("\n"), FALSE);
-
-                else
-                {
-                    list lParams = llParseString2List(sStr, [" "], []);
-                    
-                    if (llToLower(llList2String(lParams,0))=="settexture")
-                    {
-                        if (g_iAppLock)
-                        {
-                            Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot change textures now!", FALSE);
-                            return;
-                        }
-                        string sElement = llList2String(lParams, 1);
-                        string sTex = llList2String(lParams, 2);
-                        integer ok;
-                        integer x=llGetListLength(g_lElements);
-                        string test;
-                        while(x)
-                        {
-                            --x;
-                            test=llList2String(g_lElements,x);
-                            if(llToLower(sElement)==llToLower(test))
-                            {
-                                sElement=test;
-                                x=0;
-                                ok=TRUE;
-                            }
-                        }
-                       if(!ok) Notify(kID, "The element " + sElement + " wasn't recognized, please check your command and try again.",FALSE);
-                        else
-                        {
-                            ok=FALSE;
-                            if((key)sTex) ok=TRUE;
-                            else 
-                            {
-                                x=llGetInventoryNumber(INVENTORY_TEXTURE);
-                                while(x)
-                                {
-                                    --x;
-                                    test=llGetInventoryName(INVENTORY_TEXTURE,x);
-                                    if(llToLower(sTex)==llToLower(test))
-                                    {
-                                        ok=TRUE;
-                                        sTex=test;
-                                        x=0;
-                                    }
-                                }
-                                if(!ok)
-                                {
-                                    x=llGetListLength(g_lNotecardTextures);
-                                    while(x)
-                                    {
-                                        --x;
-                                        test=llList2String(g_lNotecardTextures,x);
-                                        if(llToLower(sTex)==llToLower(test) || llToLower(GetShortName(test))==llToLower(sTex))
-                                        {
-                                            ok=TRUE;
-                                            sTex=test;
-                                            x=0;
-                                        }
-                                    }
-                                }
-                            }
-                            if(ok) SetElementTexture(sElement, sTex);
-                            else Notify(kID, "The texture " + sTex + " wasn't found in "+CTYPE+" inventory or the textures notecard, please check your command and try again.",FALSE);
-                        }
-                    }
-                }
-            }
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {
@@ -467,10 +480,6 @@ default
             }
             else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
             else if (sToken == "Global_CType") CTYPE = sValue;
-        }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -527,7 +536,7 @@ default
                 key kAv = (key)llList2String(lParams, 0);
                 integer iAuth = (integer)llList2String(lParams, 1);
                 integer iLinkNumber = (integer)llList2String(lParams, 3);
-                
+
                 string sElement = ElementType(iLinkNumber);
                 if (sElement != "notexture")
                 {
@@ -549,7 +558,7 @@ default
             if(sData!=EOF)
             {
                 if(llStringTrim(sData,STRING_TRIM)!="" && llGetSubString(sData,0,1)!="//")
-                {   
+                {
                     list lThisLine=llParseString2List(sData,[","],[]);
                     key kTextureKey=(key)llStringTrim(llList2String(lThisLine,1),STRING_TRIM);
                     string sTextureName=llStringTrim(llList2String(lThisLine,0),STRING_TRIM);
@@ -572,18 +581,15 @@ default
                 g_kNotecardRead=llGetNotecardLine(g_sTextureCard,g_iNotecardLine);
             }
         }
-    }  
-      
+    }
+
     on_rez(integer iParam)
     {
         //llResetScript();
-        //llSleep(1.5);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
     }
     //Is this necessary for anything? Removing for now, we'll see.
     //yeah it was necessary cos our menu structuring is MESSED UP and relies on all sorts of scripts resetting. This should do the trick instead, however.
-    
-    
+
     changed(integer change)
     {
         if(change&CHANGED_LINK) llResetScript();
