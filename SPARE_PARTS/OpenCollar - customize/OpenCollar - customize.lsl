@@ -111,20 +111,22 @@ buildElementTypes(){  //builds three lists, one of element names, matching one o
     
     integer iLinkCount = llGetNumberOfPrims();
     while (iLinkCount-- > 2) {
-        list descriptionParts=llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(iLinkCount,[PRIM_DESC]),0),["~"],[]);
+        string description=llStringTrim(llList2String(llGetLinkPrimitiveParams(iLinkCount,[PRIM_DESC]),0),STRING_TRIM);
+        list descriptionParts=llParseStringKeepNulls(description,["~"],[]);
         string type=llList2String(descriptionParts,0);
-        
-        integer elementIndex=llListFindList(g_lElementTypes,[type]);
-        if (! ~elementIndex ){  //new element type, make list entries and set element index
-            elementIndex=llGetListLength(g_lElementTypes);
-            g_lElementTypes+=type;
-            g_lElementTypesLower+=llToLower(type);
-            g_lElementTypesUnHideable+=TRUE;
-            g_lAlphaSettings+=TRUE;
-        }
-        if (llList2Integer(g_lElementTypesUnHideable,elementIndex)){   //all of this element type so far have been unhideable.  If this one is too, the element stays unhideable
-            if (! ~llListFindList(descriptionParts, ["nohide"])){  //this element is hideable, therefore the element type as a whole is not unhideable
-                g_lElementTypesUnHideable=llListReplaceList(g_lElementTypesUnHideable,[FALSE],elementIndex,elementIndex);
+        if ( (llListFindList(descriptionParts,["nocolor"])==-1 || llListFindList(descriptionParts,["notexture"])==-1 || llListFindList(descriptionParts,["nohide"])==-1 ) && ( type != "" || type != "(No Description)") ) {
+            integer elementIndex=llListFindList(g_lElementTypes,[type]);
+            if (! ~elementIndex ){  //new element type, make list entries and set element index
+                elementIndex=llGetListLength(g_lElementTypes);
+                g_lElementTypes+=type;
+                g_lElementTypesLower+=llToLower(type);
+                g_lElementTypesUnHideable+=TRUE;
+                g_lAlphaSettings+=TRUE;
+            }
+            if (llList2Integer(g_lElementTypesUnHideable,elementIndex)){   //all of this element type so far have been unhideable.  If this one is too, the element stays unhideable
+                if (! ~llListFindList(descriptionParts, ["nohide"])){  //this element is hideable, therefore the element type as a whole is not unhideable
+                    g_lElementTypesUnHideable=llListReplaceList(g_lElementTypesUnHideable,[FALSE],elementIndex,elementIndex);
+                }
             }
         }
     }
@@ -136,7 +138,7 @@ setElementStyle(string elementType,string sMessage){
     //Debug("styleIndex "+(string)styleIndex);
     if (~styleIndex){
         key textureKey=llList2Key(g_lTexturesCard,styleIndex+2);
-        vector newTint=(vector)llList2String(g_lTexturesCard,styleIndex+3);
+        vector color=(vector)llList2String(g_lTexturesCard,styleIndex+3);
 
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "texture_"+elementType + "=" + (string)sMessage, "");
         
@@ -147,26 +149,19 @@ setElementStyle(string elementType,string sMessage){
             string thisElementType=llList2String(descriptionParts, 0);
             if (elementType==llToLower(thisElementType)) {  //if this element is the type we're looking for
                 //calculate and set new texture key
+                list params ;
                 if ((key)textureKey){
                     if (! ~llListFindList(descriptionParts,["notexture"])){
                         //Debug("Setting texture to "+(string)textureKey);
-                        llSetLinkPrimitiveParamsFast(numElements,[PRIM_TEXTURE,ALL_SIDES,textureKey, <1.0,1.0,1.0>, <0.0,0.0,0.0>, 0.0]);
+                        params += [PRIM_TEXTURE,ALL_SIDES,textureKey, <1.0,1.0,1.0>, <0.0,0.0,0.0>, 0.0] ;
                     }
+                }                
+                if (! ~llListFindList(descriptionParts, ["nocolor"]) ){                    
+                    list oldColourParams=llGetLinkPrimitiveParams(numElements,[PRIM_COLOR,ALL_SIDES]);  //get current prim params
+                    float alpha=llList2Float(oldColourParams,1);  //calculate the old alpha to re-apply                    
+                    params += [PRIM_COLOR, ALL_SIDES, color, alpha];
                 }
-                
-                list oldColourParams=llGetLinkPrimitiveParams(numElements,[PRIM_COLOR,ALL_SIDES]);  //get current prim params
-                float alpha=llList2Float(oldColourParams,1);  //calculate the old alpha to re-apply
-                
-                //calculate the tint to apply
-                vector tint;
-                if (! ~llListFindList(descriptionParts, ["nocolor"]) ){ //if this element not nocolour
-                    tint=newTint;
-                } else {
-                    tint=(vector)llList2String(oldColourParams,0);
-                }
-                
-                //set tint
-                llSetLinkPrimitiveParamsFast(numElements,[PRIM_COLOR, ALL_SIDES, tint, alpha]);
+                if (llGetListLength(params) > 3) llSetLinkPrimitiveParamsFast(numElements, params);
             }
         }
     } else {
