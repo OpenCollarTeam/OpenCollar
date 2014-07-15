@@ -271,7 +271,7 @@ default
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);     
                 
                 if (sMenuType == "StyleMenu") 
-                {  //lists all elements in the collar
+                {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == DUMP) UserCommand(iAuth,"dumpstyle", kAv, TRUE);
                     else UserCommand(iAuth,"style "+sMessage, kAv, TRUE);
@@ -291,7 +291,7 @@ default
         if (id == g_kNotecardReadRequest){
             if (data != EOF){
                 data = llStringTrim(data,STRING_TRIM);
-                if (data != "")// && llGetSubString(data,0,0) == "#" )
+                if (data != "" && llGetSubString(data,0,0) != "#" )
                 {
                     if( llGetSubString(data,0,0) == "[" )
                     {
@@ -321,7 +321,7 @@ default
     changed (integer change){
         if (change & CHANGED_INVENTORY){
             if (g_iNotecardId != llGetInventoryKey(g_sNotecardName)){
-                //Debug("Reading textures card");
+                //Debug("Reading styles card");
                 g_iNotecardId = llGetInventoryKey(g_sNotecardName);
                 if(g_iNotecardId){
                     g_lStyles=[];
