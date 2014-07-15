@@ -52,6 +52,8 @@ string g_sNotecardName="styles";
 integer g_iNotecardLine=0;
 string g_sNotecardStyle ;
 
+integer g_iAppLock = FALSE;
+string g_sAppLockToken = "Appearance_Lock";
 
 //standard OC functions
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string menuType) {
@@ -145,16 +147,27 @@ integer UserCommand(integer iAuth, string sStr, key kAv, integer remenu)
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
     //string sValue = llList2String(lParams, 1);
-    if (sStr == "menu "+ g_sSubMenu || llToLower(sStr) == "style")
+    if (sStr == "menu "+ g_sSubMenu || llToLower(sStr) == "styles")
     {
         if (kAv!=g_kWearer && iAuth!=COMMAND_OWNER) 
         {
             Notify(kAv,"You are not allowed to change the "+CTYPE+"'s style.", FALSE);
             llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+        }        
+        else if (g_iAppLock)
+        {
+            Notify(kAv, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+            llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
         }
         else StyleMenu(kAv, iAuth);
-    } 
-    else if (sCommand == "setstyle")
+    }
+    else if (sCommand == "lockappearance" && iAuth == COMMAND_OWNER)
+    {
+        string sValue = llStringTrim(llDeleteSubString(sStr,0,llStringLength(sCommand)),STRING_TRIM);
+        if(sValue == "0") g_iAppLock = FALSE;
+        if(sValue == "1") g_iAppLock = TRUE;
+    }
+    else if (sCommand == "style" && !g_iAppLock)
     {
         string sValue = llStringTrim(llDeleteSubString(sStr,0,llStringLength(sCommand)),STRING_TRIM);
         if (~llListFindList(g_lStyles,[sValue])) 
@@ -193,6 +206,7 @@ default
     on_rez(integer param)
     {
         //llResetScript();
+        g_lElementsSettings = [] ;
     }
     
     state_entry() 
@@ -226,6 +240,7 @@ default
             else if (sGroup == "color") AddElementSetting(sToken, sValue, 1);
             else if (sGroup == "shininess") AddElementSetting(sToken, sValue, 2);
             else if (sGroupToken == "styles_style") g_sStyle = sValue; // SetStyle(sValue,COMMAND_WEARER,g_kWearer); 
+            else if (sGroupToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
         }
         else if (iNum == LM_SETTING_SAVE) 
         {
@@ -238,6 +253,7 @@ default
             else if (sGroup == "texture") AddElementSetting(sToken, sValue, 0);
             else if (sGroup == "color") AddElementSetting(sToken, sValue, 1);
             else if (sGroup == "shininess") AddElementSetting(sToken, sValue, 2);
+            else if (sGroupToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
         } 
         else if (iNum == DIALOG_RESPONSE) 
         {
@@ -258,7 +274,7 @@ default
                 {  //lists all elements in the collar
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == DUMP) UserCommand(iAuth,"dumpstyle", kAv, TRUE);
-                    else UserCommand(iAuth,"setstyle "+sMessage, kAv, TRUE);
+                    else UserCommand(iAuth,"style "+sMessage, kAv, TRUE);
                 }
             }
         } 
@@ -307,8 +323,7 @@ default
             if (g_iNotecardId != llGetInventoryKey(g_sNotecardName)){
                 //Debug("Reading textures card");
                 g_iNotecardId = llGetInventoryKey(g_sNotecardName);
-                if(g_iNotecardId)
-                {
+                if(g_iNotecardId){
                     g_lStyles=[];
                     g_lStyleSettings=[];
                     g_iNotecardLine=0;
@@ -317,5 +332,6 @@ default
                 else llOwnerSay(g_sNotecardName+" notecard absent!");
             }
         }
+        if (change & CHANGED_OWNER) llResetScript();            
     }
 }
