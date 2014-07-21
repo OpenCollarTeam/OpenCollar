@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - main                                //
-//                                 version 3.962                                  //
+//                                 version 3.970                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -66,13 +66,17 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
-string DEV_GROUP = "Join R&D";
-string USER_GROUP = "Join Support";
+//string DEV_GROUP = "Join R&D";
+string USER_GROUP = "Join Groups";
+string VISIT_US="Visit us!";
 string BUGS="Report Bug";
 string WIKI = "Website";
 string LICENSE="License";
 //string SETTINGSHELP="Settings Help";
 //string SETTINGSHELP_URL="http://www.opencollar.at/";
+string templeSlurl;
+key webLookup;
+key webRequester;
 
 list g_lAppsButtons;
 
@@ -134,7 +138,7 @@ HelpMenu(key kID, integer iAuth) {
     if(!g_iLatestVersion) sPrompt+="Update available!";
     sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/helpabout";
     list lUtility = [UPMENU];
-    list lStaticButtons=[WIKI,GIVECARD,DEV_GROUP,USER_GROUP,BUGS,LICENSE,"Update","Get Updater"];
+    list lStaticButtons=[WIKI,GIVECARD,VISIT_US,USER_GROUP,BUGS,LICENSE,"Update","Get Updater"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
@@ -456,11 +460,19 @@ default
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == WIKI) llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", "http://www.opencollar.at/");
                     else if (sMessage == BUGS) llDialog(kAv,"Please help us to improve OpenCollar by reporting any bugs you see bugs. Click to open our support board at: \nhttp://www.opencollar.at/forum.html#!/support\n Or even better, use our github resource where you can create issues for bug reporting  / feature requests. \n https://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",[],-39457);
-                    else if (sMessage == DEV_GROUP) {
-                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
+//                    else if (sMessage == DEV_GROUP) {
+//                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
+//                        HelpMenu(kAv, iAuth);
+//                    } else if (sMessage == USER_GROUP) {
+//                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/0f6f3627-d9cb-a1db-b770-f66fce70d1ef/about for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
+//                        HelpMenu(kAv, iAuth);
+                    else if (sMessage == VISIT_US) {
+                        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~places", [HTTP_METHOD, "GET"], "");
+                        webRequester = kAv;
                         HelpMenu(kAv, iAuth);
-                    } else if (sMessage == USER_GROUP) {
-                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/0f6f3627-d9cb-a1db-b770-f66fce70d1ef/about for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
+                }else if (sMessage == USER_GROUP) {
+                        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~groups", [HTTP_METHOD, "GET"], "");
+                        webRequester = kAv;
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == "Update") llMessageLinked(LINK_SET, iAuth, "menu Update", kAv);
                     else if (sMessage == "Get Updater") llMessageLinked(LINK_SET, iAuth, "menu Get Updater", kAv);
@@ -587,6 +599,13 @@ default
             {
                 NotifyOwners(llKey2Name(g_kWearer) + " has re-atached me at " + GetTimestamp() + "!");
                 g_bDetached = FALSE;
+            }
+        }
+    }
+    http_response(key id, integer status, list meta, string body){
+        if (status == 200) { // be silent on failures.
+            if (id == webLookup){
+                Notify(webRequester,body,FALSE);
             }
         }
     }
