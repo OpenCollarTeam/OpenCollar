@@ -459,7 +459,7 @@ default
                         UserCommand(iAuth,"license",kAv, TRUE);
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == WIKI) llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", "http://www.opencollar.at/");
-                    else if (sMessage == BUGS) llDialog(kAv,"Please help us to improve OpenCollar by reporting any bugs you see bugs. Click to open our support board at: \nhttp://www.opencollar.at/forum.html#!/support\n Or even better, use our github resource where you can create issues for bug reporting  / feature requests. \n https://github.com/OpenCollar/OpenCollarUpdater/issues\n\n(Creating a moot.it or github account is quick, simple, free and won't up your privacy. Forums could be fun.)",[],-39457);
+                    else if (sMessage == BUGS) llDialog(kAv,"\nPlease help us to improve OpenCollar by reporting any bugs you see. Click to open our support board at: \n\nhttp://www.opencollar.at/forum.html#!/support\n\nOr even better, use our GitHub resource where you can create issues for bug reports and feature requests:\n https://github.com/OpenCollar/OpenCollarUpdater/issues",[],-39457);
 //                    else if (sMessage == DEV_GROUP) {
 //                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
 //                        HelpMenu(kAv, iAuth);
