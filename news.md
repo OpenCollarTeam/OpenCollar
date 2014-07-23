@@ -1,5 +1,6 @@
-Issue: 20140703.1
+Issue: 20140723.1
 
-PATCH RELEASE: OpenCollar 3.968
-and three new, free designs are
+MAINTENANCE RELEASE: OpenCollar 3.970
 now available -> www.opencollar.at
+See you at the beach at the new
+Temple of the Collar! http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21
