@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - titler                               //
-//                                 version 3.967                                  //
+//                                 version 3.970                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -49,8 +49,7 @@ string g_sText;
 vector g_vColor = <1.0,1.0,1.0>; // default white 
 
 integer g_iTextPrim;
-string g_sScript;
-string CTYPE = "collar";
+string g_sScript= "titler_";
 
 key g_kWearer;
 
@@ -80,8 +79,8 @@ list g_lColours=[
     "Black",<0.00000, 0.00000, 0.00000>,
     "White",<1.00000, 1.00000, 1.00000>
 ];
-//Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
 
+//Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -209,7 +208,6 @@ default{
                 }
             }
         }
-        g_sScript = "titler_";
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
         
@@ -230,16 +228,13 @@ default{
             string sValue = llGetSubString(sStr, llSubStringIndex(sStr, "=")+1, -1);
             if (sGroup == g_sScript) {
                 if(sToken == "title") g_sText = sValue;
-                //if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "on") g_iOn = (integer)sValue;
                 if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
-            } else if (sGroup+sToken == "Global_CType") CTYPE = sValue;        
-            else if( sStr == "settings=sent") ShowHideText();
+            } else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
-            if (kID == g_kDialogID) {
-                //got a menu response meant for us. pull out values
+            if (kID == g_kDialogID) {   //response from our main menu
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -258,7 +253,7 @@ default{
                     else if (sMessage == ON) UserCommand(iAuth, "titleoff", kAv);
                     UserCommand(iAuth, "menu titler", kAv);
                 }
-            } else if (kID == g_kColourDialogID) {
+            } else if (kID == g_kColourDialogID) {  //response form the colours menu
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -272,40 +267,21 @@ default{
                     UserCommand(iAuth, "menu titlercolor", kAv);
                 }
                 
-            } else if (kID == g_kTBoxId) {
-                //Debug(sStr);
-                //got a menu response meant for us. pull out values
+            } else if (kID == g_kTBoxId) {  //response from text box
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 
-                //if (sMessage == " ") UserCommand(iAuth, "textoff", kAv);
-                //else if (sMessage) UserCommand(iAuth, "text " + sMessage, kAv);
                 if(sMessage != "") UserCommand(iAuth, "title " + sMessage, kAv);
                 UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
             }
-        }        
-        //Debug("Link Message Event ended");
-    } 
+        }
+    }
 
     changed(integer iChange){
-        //Debug("Changed event");
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
-        if (iChange & CHANGED_COLOR){
-            vector vNewColor=llList2Vector(llGetLinkPrimitiveParams(g_iTextPrim,[PRIM_COLOR,ALL_SIDES]),0);
-            //Debug("testing color, was "+(string)g_vColor+" now "+(string)vNewColor);
-            if (vNewColor!=g_vColor){
-                //Debug("Set color");
-                g_vColor=vNewColor;
-                ShowHideText();
-            } else { 
-                //Debug("No color change");
-            }
-        }
-        //Debug("Sleeping at end of changed event\n\n");
-        //llSleep(1.0);
     }
     
     on_rez(integer param){
