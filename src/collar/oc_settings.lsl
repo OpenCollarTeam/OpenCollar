@@ -119,6 +119,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
+
 DoMenu(key keyID, integer iAuth)
 {
     string sPrompt = "\n" + DUMPCACHE + " prints current settings to chat.";
@@ -459,8 +460,10 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         if(llGetInventoryType(g_sMenuScript)==INVENTORY_SCRIPT)
         {
+            //Notify(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", FALSE); // another way
             llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
             llResetOtherScript(g_sMenuScript);
+            return FALSE ; // for DIALOG_RESPONSE, don't remenu 
         }
         else Notify(kID,"Menu script is missing or has been renamed. Cannot fix menus!",FALSE);
     }        
@@ -617,17 +620,17 @@ default
                 //    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
                 //    return;
                // }
-               if(sMessage == SETTINGSHELP)
-                    {
-                        llSleep(0.2);
-                        llLoadURL(kAv, "\n\nSettings can be permanently stored and backed up even over a manual script reset by saving them to the defaultsettings notecard inside your collar. For instructions, please visit this page on our website.", SETTINGSHELP_URL);
-                        return;
-                    }
+                if(sMessage == SETTINGSHELP)
+                {
+                    llSleep(0.2);
+                    llLoadURL(kAv, "\n\nSettings can be permanently stored and backed up even over a manual script reset by saving them to the defaultsettings notecard inside your collar. For instructions, please visit this page on our website.", SETTINGSHELP_URL);
+                    return;
+                }
                 if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
                 
                 if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
                 { //moving everything to UserCommand to save doubling up on code.
-                    UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv);
+                    if (UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv) == FALSE) return;
                 }
                 else Notify(kAv,"Sorry, only Owners & Wearers may acces this feature.",FALSE);
                 
@@ -664,7 +667,7 @@ default
                 //    }
                 //    else Notify(kAv,"Only the collar wearer and owners may refresh menus.",FALSE);
                 //}
-                    
+                
                 DoMenu(kAv, iAuth);
             }
         }
