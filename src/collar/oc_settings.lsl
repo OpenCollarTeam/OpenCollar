@@ -410,14 +410,7 @@ SendValues()
     }
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
-/*
-Refresh()
-{
-    //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU, "");
-    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
-    SendValues();
-}
-*/
+
 integer UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) return FALSE;
@@ -458,14 +451,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
     }
     else if (C == llToLower(REFRESH_MENU))
     {
-        if(llGetInventoryType(g_sMenuScript)==INVENTORY_SCRIPT)
-        {
-            //Notify(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", FALSE); // another way
-            llDialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
-            llResetOtherScript(g_sMenuScript);
-            return FALSE ; // for DIALOG_RESPONSE, don't remenu 
-        }
-        else Notify(kID,"Menu script is missing or has been renamed. Cannot fix menus!",FALSE);
+        llMessageLinked(LINK_THIS, iNum, "refreshmenu", kID); // send command to 'main' script
+        g_kMenuID = Dialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.\n\nPress 'Ok' for return to Main Menu.", ["Ok"], [], 0, iNum);
+        return FALSE ; // for DIALOG_RESPONSE, don't remenu
     }        
     else return FALSE;
     return TRUE;
@@ -630,7 +618,13 @@ default
                 
                 if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
                 { //moving everything to UserCommand to save doubling up on code.
-                    if (UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv) == FALSE) return;
+                    if(sMessage == "Ok")
+                    {
+                        //llSleep(1); // not sure need this
+                        llMessageLinked(LINK_THIS, iAuth, "menu "+ PARENT_MENU, kAv);
+                        return;
+                    }
+                    else if(UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv)==FALSE) return;
                 }
                 else Notify(kAv,"Sorry, only Owners & Wearers may acces this feature.",FALSE);
                 
