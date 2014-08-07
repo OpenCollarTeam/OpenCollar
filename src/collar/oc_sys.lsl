@@ -251,6 +251,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
         else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
     }
+    else if (sStr == "refreshmenu") RebuildMenu();
     return TRUE;
 }
 
@@ -349,6 +350,18 @@ SetLockElementAlpha() //EB
     }
 }
 
+RebuildMenu()
+{
+    //Debug("Rebuild Menu");
+    g_iAnimsMenu=FALSE;
+    g_iRlvMenu=FALSE;
+    g_iAppearanceMenu=FALSE;
+    g_lAppsButtons = [] ;
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
+}
+
 default
 {
     state_entry() {
@@ -361,10 +374,10 @@ default
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
-
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
+        RebuildMenu();
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
+        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -552,7 +565,7 @@ default
         {
             if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount)
             {//a script has been added or removed.  Reset to rebuild menu
-                llResetScript();
+                RebuildMenu(); //llResetScript();
             }
         }
         if (iChange & CHANGED_OWNER)
