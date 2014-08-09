@@ -433,7 +433,7 @@ default
             else if (sStr == "ping")
                 // ping from an object, we answer to it on the object channel
             {
-                llSay(g_iHUDChan,(string)g_kWearer+":pong");
+                llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
             }
             //handle changing prefix and channel from owner
             else if (iNum == COMMAND_OWNER)
