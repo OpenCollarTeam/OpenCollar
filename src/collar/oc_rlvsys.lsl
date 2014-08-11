@@ -202,12 +202,19 @@ HandleCommand(key kID, string sCommand) {
             //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
             list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]); //get a list of this source's restrictions
             integer numRestrictions=llGetListLength(lSrcRestr);
-            while (numRestrictions--) { //loop through all of this source's restrictions
+            list lRestrictionsToRemove;
+            while (numRestrictions--) { //loop through all of this source's restrictions and store them in a new list
                 string  sBehav=llList2String(lSrcRestr,numRestrictions);  //get the name of the restriction from the list
                 if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
                     //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
-                    RemRestriction(kID,sBehav); //remove the restriction from the list
+                    lRestrictionsToRemove+=sBehav;
+                    //RemRestriction(kID,sBehav); //remove the restriction from the list
                 }
+            }
+            lSrcRestr=[]; //delete the list to free memory
+            numRestrictions=llGetListLength(lRestrictionsToRemove);
+            while (numRestrictions--) { //loop through restrictions to remove, and remove them
+                RemRestriction(kID,llList2String(lRestrictionsToRemove,numRestrictions)); //remove the restriction from the list
             }
         }
     } else {         //perform other command
