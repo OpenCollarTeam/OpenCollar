@@ -393,11 +393,11 @@ default
                     g_lAppsButtons += [sSubMenu];
                     g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
                 }
-            } else if (sName=="Animations"){
+            } else if (sStr=="Main|Animations"){
                 g_iAnimsMenu=TRUE;
-            } else if (sName=="RLV"){
+            } else if (sStr=="Main|RLV"){
                 g_iRlvMenu=TRUE;
-            } else if (sName=="Appearance"){
+            } else if (sStr=="Main|Appearance"){
                 g_iAppearanceMenu=TRUE;
             }
         } else if (iNum == MENUNAME_REMOVE) {
