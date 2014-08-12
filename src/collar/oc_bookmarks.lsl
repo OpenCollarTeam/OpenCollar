@@ -9,17 +9,17 @@
 // ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
-// ------------------------------------------------------------------------------ //
+// ------------------------------------------------------------------------------ // 
 //////////////////////////////////////////////////////////////////////////////////// 
 
 
 string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
-string  COLLAR_PARENT_MENU          = "AddOns"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_COMMAND         = "bookmarks"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  RLV_STRING                  = "rlvmain_on"; //ask for updated RLV status
 
-string   g_sCard                         = "~destinations"; //Name of the notecards to store destinations.  ~destinations should be updatable, not edited by users.  destinations should be user editable
+string   g_sCard                         = "~destinations"; //Name of the notecards to store destinations. 
 
 key webLookup;
 key webRequester;
@@ -32,11 +32,13 @@ key    g_kRequestHandle               = NULL_KEY; //Sim Request Handle to conver
 vector g_vLocalPos                    = ZERO_VECTOR;
 key    g_kRemoveMenu                  = NULL_KEY; //Use a separate key for the remove menu ID
 integer g_iRLVOn                      = FALSE; //Assume RLV is off until we hear otherwise
+string g_tempLoc                      = "";   //This holds a global temp location for manual entry from provided location but no favorite name - g_kTBoxIdLocationOnly
 
 key g_kDataID;
 
 integer g_iLine = 0;
 key g_kTBoxIdSave = "null";
+key g_kTBoxIdLocationOnly = "null";
 //key g_kTBoxIdRemove = "null";
 
 key     g_kMenuID;                              // menu handler
@@ -135,14 +137,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     
     if (kID == g_kWearer)
     {
-        llOwnerSay(sMsg);
+        Debug(sMsg);
     } 
     else
     {
         llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
-            llOwnerSay(sMsg);
+            Debug(sMsg);
         }
     }
 } 
@@ -228,17 +230,20 @@ integer UserCommand(integer iNum, string sStr, key kID) {
             }
             else {
                 string slurl = GetSLUrl();
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sAdd + "=" + slurl, "");
-                g_lVolatile_Destinations += sAdd;
-                g_lVolatile_Slurls += slurl;
-                Notify(kID,"Added destination "+sAdd+" with a location of: "+slurl,FALSE);
-                
+                addDestination(sAdd,slurl,kID);
+//                  convertSlurl(sAdd,kID,iNum);
+            
             }
             
         }
         else {
             // Notify that they need to give a description of the saved destination ie. <prefix>bookmarks save description
-            g_kTBoxIdSave = Dialog(kID, "\n- Enter a name for the destination below.\n- Submit a blank field to cancel and return.", [], [], 0, iNum);
+            g_kTBoxIdSave = Dialog(kID,
+"Enter a name for the destination below. Submit a blank field to cancel and return.             
+You can enter: 
+1) A friendly name to save your current location to your favorites
+2) A new location or SLurl
+                ", [], [], 0, iNum);
         }
     }
     
@@ -301,6 +306,13 @@ integer UserCommand(integer iNum, string sStr, key kID) {
     return TRUE;
 }
 
+addDestination(string sMessage,string sLoc, key kID) {
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sMessage + "=" + sLoc, "");
+    g_lVolatile_Destinations += sMessage;
+    g_lVolatile_Slurls += sLoc;
+    Notify(kID,"Added destination "+sMessage+" with a location of: "+sLoc,FALSE);
+}
+
 string GetSLUrl() 
 { //not using slurls
  //   string globe = "http://maps.secondlife.com/secondlife";
@@ -312,6 +324,123 @@ string GetSLUrl()
     return (region +"(" + posx + "," + posy + "," + posz + ")");
 }
 
+string convertSlurl(string sStr,key kAv, integer iAuth) { //convert the slurl http strings to region (xxx,xxx,xxx)
+    sStr = llStringTrim(llUnescapeURL(sStr),STRING_TRIM);
+    string sIndex = "http:";
+    list lPieces =  llParseStringKeepNulls(sStr,["/"],[]);
+    integer iHttploc = 0;
+    string sStringToKeep;
+    integer iHttpInString = llSubStringIndex(llList2String(lPieces,0), sIndex );
+
+
+    if (iHttpInString > 0) {
+        sStringToKeep = llGetSubString( llList2String(lPieces,0),0, iHttpInString - 1);
+    }
+
+    if (llGetListLength(lPieces) == 8) {//
+        string sRegion = llList2String(lPieces,iHttploc + 4);
+        string sLocationx = llList2String(lPieces,iHttploc + 5);
+        string sLocationy = llList2String(lPieces,iHttploc + 6);
+        string sLocationz = llList2String(lPieces,iHttploc + 7);
+        sStr = sStringToKeep + sRegion+"("+sLocationx+","+sLocationy+","+sLocationz+")";
+        Debug("Converted slurl, sending for processing..." + sStr);
+        return sStr; //successful conversion, send converted string assembly
+     }
+        
+     
+    Debug("No slurl detected, sending for processing anyways :" + sStr);
+    return sStr; //failed conversion, send raw string assuming there's no Slurls
+
+}
+
+
+integer isInteger(string input) //for validating location scheme
+{
+    return ((string)((integer)input) == input);
+}
+
+
+
+integer validatePlace(string sStr,key kAv, integer iAuth) {
+    Debug("validatePlaces working on: "+sStr);
+    list lPieces; 
+    integer MAX_CHAR_TYPE = 2; //we use +1 due since we're counting with a list split.  We can only accept 1 of each of the following: ()~
+    string sAssembledLoc;
+    string sRegionName;
+    string sFriendlyName;
+    
+    sStr = llStringTrim(sStr,STRING_TRIM); //clean up whitespace
+    lPieces = llParseStringKeepNulls(sStr,["~"],[]); // split location from friendly name
+    
+    if (llGetListLength(lPieces) == MAX_CHAR_TYPE) {  //We have a tilde, so make sure the friendly name is good
+    
+        if (llStringLength(llList2String(lPieces,0)) < 1) { return 2;} //make sure friendly name isn't empty
+
+        sFriendlyName = llStringTrim(llList2String(lPieces,0),STRING_TRIM); //assign friendly name
+
+        lPieces = llParseStringKeepNulls(llList2String(lPieces,1),["("],[]); // split location from friendly name
+    } 
+    else if (llGetListLength(lPieces) > MAX_CHAR_TYPE) return 1; //too many tildes, retreat
+    else lPieces = llParseStringKeepNulls(llList2String(lPieces,0),["("],[]); // We don't have a friendly name, so let's ignore that for now and split at 0
+    
+    
+    if (llGetListLength(lPieces) == MAX_CHAR_TYPE) {   //Check to see we don't have extra ('s - this might also mean there's no location coming...
+        if (llStringLength(llList2String(lPieces,0)) < 1) { return 4;} //make sure region name isn't empty
+
+        sRegionName = llStringTrim(llList2String(lPieces,0),STRING_TRIM); //trim off whitespace from region name
+    }
+    else if (llGetListLength(lPieces) > MAX_CHAR_TYPE) {return 3; } //this location looks wrong, retreat
+    else  { //there's no location here, kick out new menu
+
+        UserCommand(iAuth, "bookmarks save "+sStr, kAv);
+        UserCommand(iAuth, "bookmarks", kAv);
+        return 0;
+    }
+
+
+    //we're left with sFriendlyname,sRegionName,["blah","123,123)"] - so lets validate the last list item
+    
+    sAssembledLoc = llStringTrim("("+llList2String(lPieces,1),STRING_TRIM); //reattach the bracket we lost, clean up whitespace
+    
+    lPieces = llParseStringKeepNulls(sAssembledLoc,[","],[]); // split location from friendly name
+    if (llGetListLength(lPieces) != 3) { return 5; } //Check to see we don't have extra ,'s
+
+    if (llGetSubString(sAssembledLoc,0,0) != "(") { return 6; } //location doesn't start with (
+    
+    if (llGetSubString(sAssembledLoc,llStringLength(sAssembledLoc)-1,llStringLength(sAssembledLoc)-1) != ")") { return 7; } //location doesn't end with )
+
+    lPieces = llParseStringKeepNulls(llGetSubString(sAssembledLoc,1,llStringLength(sAssembledLoc)-2),[","],[]); // lPieces should be a list of 3 sets of numbers
+    
+    
+    integer i=0; 
+    integer x=llGetListLength(lPieces) - 1;
+    
+    for (i=0;i<=x;++i) { //run through this number list to make sure each character is numeric
+        integer y=0;
+        integer z=llStringLength(llList2String(lPieces,i)) -1;
+        for (y=0;y<=z;++y){
+
+            if (isInteger(llGetSubString(llList2String(lPieces,i),y,y)) != 1 ) return 8; //something left in here isn't an integer
+        }
+    }
+    
+    if (sFriendlyName == "") { 
+        g_tempLoc = sRegionName+sAssembledLoc; //assign a global for use in response menu
+        g_kTBoxIdLocationOnly = Dialog(kAv, 
+"\nEnter a name for the destination " + sRegionName + sAssembledLoc + " 
+            below.\n- Submit a blank field to cancel and return.
+        ", [], [], 0, iAuth);
+
+    }
+    else {
+        addDestination(sFriendlyName,sRegionName,kAv);
+        UserCommand(iAuth, "bookmarks", kAv);
+
+    }
+    
+    return 0;
+
+}
 
 ReadDestinations() { // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks
         key kAv;
@@ -324,6 +453,7 @@ ReadDestinations() { // On inventory change, re-read our ~destinations notecard 
 
 }
 
+
 TeleportTo(string sStr) { //take a string in region (x,y,z) format, and retrieve global coordinates.  The teleport takes place in the data server section
     string sRegion = llStringTrim( llGetSubString( sStr,0,llSubStringIndex( sStr, "(")-1),STRING_TRIM);
     string sCoords = llStringTrim( llGetSubString( sStr,llSubStringIndex( sStr, "(")+1 ,llStringLength(sStr)-2),STRING_TRIM);
@@ -333,7 +463,7 @@ TeleportTo(string sStr) { //take a string in region (x,y,z) format, and retrieve
       g_vLocalPos.x = llList2Float (tokens, 0);
       g_vLocalPos.y = llList2Float (tokens, 1);
       g_vLocalPos.z = llList2Float (tokens, 2);
-//      Debug("Region " + sRegion + " Coords " + sCoords + " Tokens: " + llList2String (tokens, 0) );
+
       // Request info about the sim
       if (g_iRLVOn == FALSE) { //If we don't have RLV, we can just send to llMapDestination for a popup
           llMapDestination(sRegion,g_vLocalPos,ZERO_VECTOR);
@@ -346,10 +476,11 @@ TeleportTo(string sStr) { //take a string in region (x,y,z) format, and retrieve
 }
 
 PrintDestinations(key kID) { // On inventory change, re-read our ~destinations notecard
+
         integer i;
         integer length = llGetListLength(g_lDestinations);  
         string sMsg;
-        sMsg += "The below can be copied and pasted into the \"destinations\" notecard. *IMPORTANT* Do not modify the \"~destinations\" notecard *IMPORTANT*.\n  The format should follow: destination name~region name(123,123,123)\n";
+        sMsg += "The below can be copied and pasted into the \"~destinations\" notecard. The format should follow: destination name~region name(123,123,123)\n";
         for (i = 0; i < length; i++)
         {
             sMsg += llList2String(g_lDestinations, i) + "~" + llList2String(g_lDestinations_Slurls, i) + "\n";
@@ -444,8 +575,6 @@ default {
                      g_lDestinations += [ llStringTrim(llList2String(split,0),STRING_TRIM) ];
                      g_lDestinations_Slurls += [ llStringTrim(llList2String(split,1),STRING_TRIM) ];
 
-            
-//                     Debug(llDumpList2String(g_lDestinations,"/"));
                 }
                 g_iLine++;
                 
@@ -501,6 +630,7 @@ default {
             g_lButtons = [] ;
             llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
         }
+
         
         else if (iNum == RLV_OFF)// rlvoff -> we have to turn the menu off too
         {
@@ -511,32 +641,7 @@ default {
             g_iRLVOn=TRUE;                
         }
         
-        else if (kID == g_kTBoxIdSave) {
-                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);      
 
-                list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
-                //got a menu response meant for us. pull out values
-                if(sMessage != "") UserCommand(iAuth, "bookmarks save " + sMessage, kAv);
-                UserCommand(iAuth, "bookmarks", kAv);
-        }
-
-        else if (kID == g_kRemoveMenu) {
-                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                
-            //    Debug("Response = "+sStr);
-                list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
-                //got a menu response meant for us. pull out values
-                if(sMessage != "") UserCommand(iAuth, "bookmarks remove " + sMessage, kAv);
-                UserCommand(iAuth, "bookmarks", kAv);
-        }
 
         else if (iNum == MENUNAME_RESPONSE) {
             // a button is send to be added to a menu
@@ -585,7 +690,7 @@ default {
             // careful, don't use the variable kID to identify the user, it is the UUID we generated when calling the dialog
             // you have to parse the answer from the dialog system and use the parsed variable kAv
 
-            if (kID == g_kMenuID) {
+            if (llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
                 //got a menu response meant for us, extract the values
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
@@ -594,37 +699,89 @@ default {
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 // request to switch to parent menu
 
-                if (sMessage == UPMENU) {
+                
+                
+                if (kID == g_kTBoxIdLocationOnly) {
+                        list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
+                        key kAv = (key)llList2String(lMenuParams, 0);
+                        string sMessage = llList2String(lMenuParams, 1);
+                        integer iPage = (integer)llList2String(lMenuParams, 2);
+                        integer iAuth = (integer)llList2String(lMenuParams, 3);      
+        
+                        list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
+                        //got a menu response meant for us. pull out values
+                        if(sMessage != "") {         
+                            addDestination(sMessage,g_tempLoc,kID);
+                        }
+                        UserCommand(iAuth, "bookmarks", kAv);
+                }
+                
+                else if (kID == g_kTBoxIdSave) {
+                        list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
+                        key kAv = (key)llList2String(lMenuParams, 0);
+                        string sMessage = llList2String(lMenuParams, 1);
+                        integer iPage = (integer)llList2String(lMenuParams, 2);
+                        integer iAuth = (integer)llList2String(lMenuParams, 3);      
+        
+                        list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
+                        //got a menu response meant for us. pull out values
+        //                if(sMessage != "") UserCommand(iAuth, "bookmarks save " + sMessage, kAv);
+                        Debug("TBoxIDSave "+sMessage);
+                        if(sMessage != "") validatePlace(convertSlurl(sMessage,kAv,iAuth),kAv,iAuth);
+        //                UserCommand(iAuth, "bookmarks", kAv);
+                }
+        
+                else if (kID == g_kRemoveMenu) {
+                        list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
+                        key kAv = (key)llList2String(lMenuParams, 0);
+                        string sMessage = llList2String(lMenuParams, 1);
+                        integer iPage = (integer)llList2String(lMenuParams, 2);
+                        integer iAuth = (integer)llList2String(lMenuParams, 3);
+                 //       Debug("|"+sMessage+"|");
+                        if (sMessage == UPMENU) {
+                            UserCommand(iAuth, "bookmarks", kAv);
+                            return;
+                        }
+                        if (sMessage != "") { 
+                            list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
+                            //got a menu response meant for us. pull out values
+                            UserCommand(iAuth, "bookmarks remove " + sMessage, kAv);
+                            UserCommand(iAuth, "bookmarks remove", kAv);
+                         }
+                        else UserCommand(iAuth, "bookmarks", kAv);
+                        
+                }
+
+                else if (sMessage == UPMENU) {
+
                     //give av the parent menu
                     llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
                 }
                 else if (~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
                     //we got a response for something we handle locally
                     if (sMessage == "Save") {
-                        // do What has to be Done
+
                         UserCommand(iAuth, "bookmarks save", kAv);
-                     //   Debug("Command 1");
-                        // and restart the menu if wanted/needed
-                        //DoMenu(kAv, iAuth);
+ 
                     }
                     else if (sMessage == "Remove") {
                         // do What has to be Done
-                       // Debug("bookmarks remove");
                         UserCommand(iAuth, "bookmarks remove", kAv);
                         // and restart the menu if wanted/needed
                      //   DoMenu(kAv, iAuth);
                     }
                     else if (sMessage == "Print") {
                         // do What has to be Done
-                       // Debug("bookmarks remove");
+
                         UserCommand(iAuth, "bookmarks print", kAv);
+                        UserCommand(iAuth, "bookmarks", kAv);
                         // and restart the menu if wanted/needed
                      //   DoMenu(kAv, iAuth);
                     }
 
                 }
                 else if (~llListFindList(g_lDestinations + g_lVolatile_Destinations, [sMessage])) {
-                    Debug("Sending " + sMessage + " to bookmarks user command");
+
                     UserCommand(iAuth, "bookmarks " + sMessage, kAv);
                 }
                 else if (~llListFindList(g_lButtons, [sMessage])) {
