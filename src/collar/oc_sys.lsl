@@ -97,6 +97,7 @@ string g_sUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iAppearanceMenu=FALSE;
+integer g_iCustomizeMenu=FALSE;
 
 //Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
 
@@ -149,7 +150,9 @@ MainMenu(key kID, integer iAuth) {
     } else {
         lStaticButtons+=" ";
     }
-    if (g_iAppearanceMenu){
+    if (g_iCustomizeMenu){
+        lStaticButtons+="Customize";
+    } else if (g_iAppearanceMenu){
         lStaticButtons+="Appearance";
     } else {
         lStaticButtons+=" ";
@@ -399,6 +402,8 @@ default
                 g_iRlvMenu=TRUE;
             } else if (sStr=="Main|Appearance"){
                 g_iAppearanceMenu=TRUE;
+            } else if (sStr=="Main|Customize"){
+                g_iCustomizeMenu=TRUE;
             }
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
