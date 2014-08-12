@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.967                                  //
+//                                 version 3.970                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -22,7 +22,7 @@ string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 key g_kDialogID;
 
-list g_lLocalButtons = ["Vol +","Vol -","Delay +","Delay -"," Next Sound","  Quick Help","Ring it!"];
+list g_lLocalButtons = ["Vol +","Vol -","Delay +","Delay -"," Next Sound","Ring it!"];
 
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
@@ -317,35 +317,6 @@ PrepareSounds()
 }
 
 //===============================================================================
-//= parameters   :   keyID receiver of the help
-//=
-//= return        :    none
-//=
-//= description  :    show help for shat commands
-//=
-//===============================================================================
-
-
-ShowHelp(key kID)
-{
-
-    string sPrompt = "\n\nHelp for bell chat command:\n";
-    sPrompt += "\nAll commands for the bell of the " + CTYPE + " of "+llKey2Name(g_kWearer)+" start with \""+g_sSubPrefix+g_sBellChatPrefix+"\" followed by the command and the value, if needed.\n";
-    sPrompt += "Examples: \""+g_sSubPrefix+g_sBellChatPrefix+" show\" or \""+g_sSubPrefix+g_sBellChatPrefix+" volume 10\"\n\n";
-    sPrompt += "Commands:\n";
-    sPrompt += "on: Enable bell sound.\n";
-    sPrompt += "off: Disable bell sound.\n";
-    sPrompt += "show: Show prims of bell.\n";
-    sPrompt += "hide: Hide prims of bell.\n";
-    sPrompt += "volume X: Set the volume for the bell, X=1-10\n";
-    sPrompt += "delay X.X: Set the delay between rings, X=0.5-5.0\n";
-    sPrompt += "help or ?: Show this help text.\n";
-
-    Notify(kID,sPrompt,TRUE);
-
-}
-
-//===============================================================================
 //= parameters   :   none
 //=
 //= return        :    none
@@ -467,11 +438,6 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             }
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
             Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
-        }
-        // show the help
-        else if (sToken=="help" || sToken=="?")
-        {
-            ShowHelp(kID);
         }
         // let the bell ring one time
         else if (sToken=="ring")
@@ -667,11 +633,6 @@ default
                         g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 
                         SaveBellSettings();
-                    }
-                    // show help
-                    else if (sMessage=="  Quick Help")
-                    {
-                        ShowHelp(kAV);
                     }
                     //added a button to ring the bell. same call as when walking.
                     else if (sMessage == "Ring it!")
