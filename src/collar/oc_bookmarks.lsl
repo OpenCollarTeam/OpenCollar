@@ -526,8 +526,8 @@ default {
 
                     sData = llStringTrim(llList2String(lResponse,i),STRING_TRIM);
                     split = llParseString2List(sData, ["~"], []); 
-                    g_lDestinations += [ llStringTrim(llList2String(split,0),STRING_TRIM) ];
-                    g_lDestinations_Slurls += [ llStringTrim(llList2String(split,1),STRING_TRIM) ];
+                    g_lDestinations = [ llStringTrim(llList2String(split,0),STRING_TRIM) ] + g_lDestinations;
+                    g_lDestinations_Slurls = [ llStringTrim(llList2String(split,1),STRING_TRIM) ] + g_lDestinations_Slurls ;
                 }
 
            //     Debug("Body: " + body);
@@ -571,6 +571,7 @@ default {
         {
             list split;
             if (sData != EOF) {
+
                if (llGetSubString(sData,0,2) != "") { //Ignore blank lines
                      sData = llStringTrim(sData,STRING_TRIM);
                      split = llParseString2List(sData, ["~"], []);
@@ -579,11 +580,12 @@ default {
 
                 }
                 g_iLine++;
+                g_kDataID = llGetNotecardLine(g_sCard, g_iLine);
                 
             }
         }
         
-    }
+    } 
      
     changed(integer iChange)
     {
