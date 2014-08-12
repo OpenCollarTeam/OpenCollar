@@ -30,22 +30,20 @@
 //  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
 //      texture_Base=steel,texture_Ring=stripes (in the scripts)
 
-string PARENT_MENU = "Main";
-string SUBMENU = "Options"; 
+string PARENT_MENU = "Help/About";
+string SUBMENU = "Settings"; 
 
-string DUMPCACHE = "Dump Cache";
+string DUMPCACHE = "Print";
 string PREFUSER = "☐ Personal";
 string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
 //string WIKI = "Online Guide";
-string SETTINGSHELP="Settings Help";
-string SETTINGSHELP_URL="http://www.opencollar.at/options.html";
-string LOADCARD="Load Defaults";
-string REFRESH_MENU = "Fix Menus";
+string LOADUSER="Load";
+string LOADDEFAULT="Default";
+//string REFRESH_MENU = "Fix Menus";
 string UPMENU = "BACK";
 key g_kMenuID;
 key g_kWearer;
 string g_sScript;
-string g_sMenuScript="OpenCollar - main"; //for fixmenus
 
 string defaultscard = "defaultsettings";
 string split_line; // to parse lines that were split due to lsl constraints
@@ -123,8 +121,9 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 DoMenu(key keyID, integer iAuth)
 {
     string sPrompt = "\n" + DUMPCACHE + " prints current settings to chat.";
-    sPrompt += "\n" +LOADCARD+" restores the default settings.";
-    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,SETTINGSHELP];
+    sPrompt += "\n" +LOADUSER+" restores the user settings.";
+    sPrompt += "\n" +LOADDEFAULT+" restores the default settings.";
+    list lButtons = [DUMPCACHE,LOADUSER,LOADDEFAULT];
     if (USER_PREF)
     {
         sPrompt += "\n\nUncheck " + PREFDESI + " to give designer settings priority.\n";
@@ -411,51 +410,60 @@ SendValues()
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
-integer UserCommand(integer iNum, string sStr, key kID)
+integer UserCommand(integer iNum, string sStr, key kID, integer remenu)
 {
     if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) return FALSE;
-    if (sStr == "menu " + SUBMENU || llToLower(sStr) == llToLower(SUBMENU))
-    {
+    string sStr=llToLower(sStr);
+    if (sStr == "menu settings" || sStr == "settings" || sStr == "settings ") {
         DoMenu(kID, iNum);
-        return TRUE;
-    }
-    if (llToLower(llGetSubString(sStr, 0, 4)) == "dump_")
-    {
-        sStr = llToLower(llGetSubString(sStr, 5, -1));
+    } else if (llSubStringIndex(sStr,"settings") == 0) {
+    
+        integer i = llSubStringIndex(sStr, " ");    //find the first space
+        string command = llGetSubString(sStr, i + 1, -1);
+        if (command == llToLower(PREFUSER))
+        {
+            USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
+            USER_PREF = TRUE;
+        }
+        else if (command == llToLower(PREFDESI))
+        {
+            USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
+            USER_PREF = FALSE;
+        }
+        else if (command == llToLower(DUMPCACHE))
+        {
+            //Debug("Dumping cache");
+            DumpCache(kID);
+        }
+        else if (command == llToLower(LOADUSER))
+        {
+            defaultsline = 0;
+            defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
+        }
+        else if (command == llToLower(LOADDEFAULT))
+        {
+            defaultsline = 0;
+            defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
+        }
+/*
+        else if (command == llToLower(REFRESH_MENU))
+        {
+            Notify(kID, "Rebuilding menus, this may take several seconds.", TRUE);
+            llMessageLinked(LINK_THIS, iNum, "refreshmenu", kID); // send command to 'main' script
+            llSleep(1);
+            llMessageLinked(LINK_THIS, iNum, "menu "+ PARENT_MENU, kID);
+            return TRUE;    //no remenu, as we go back to main from here
+        }
+*/
+        else return FALSE;
+        if (remenu) DoMenu(kID, iNum);
+    } else if (llSubStringIndex(sStr,"dump_") == 0) {
+        sStr = llGetSubString(sStr, 5, -1);
         if (sStr == "cache") DumpCache(kID);
         else DumpGroupSettings(sStr, kID);
-        return TRUE;
+    } else {
+        return FALSE;
     }
-    integer i = llSubStringIndex(sStr, " ");
-    string sid = llToLower(llGetSubString(sStr, 0, i - 1)) + "_";
-    if (sid != llToLower(g_sScript)) return TRUE;
-    string C = llToLower(llGetSubString(sStr, i + 1, -1));
-    if (C == llToLower(PREFUSER))
-    {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
-        USER_PREF = TRUE;
-    }
-    else if (C == llToLower(PREFDESI))
-    {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
-        USER_PREF = FALSE;
-    }
-    else if (C == llToLower(DUMPCACHE))
-    {
-        DumpCache(kID);
-    }
-    else if (C == llToLower(LOADCARD))
-    {
-        defaultsline = 0;
-        defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-    }
-    else if (C == llToLower(REFRESH_MENU))
-    {
-        llMessageLinked(LINK_THIS, iNum, "refreshmenu", kID); // send command to 'main' script
-        g_kMenuID = Dialog(kID, "\n\nRebuilding menu.\n\nThis may take several seconds.\n\nPress 'Ok' for return to Main Menu.", ["Ok"], [], 0, iNum);
-        return FALSE ; // for DIALOG_RESPONSE, don't remenu
-    }        
-    else return FALSE;
     return TRUE;
 }
 
@@ -463,7 +471,7 @@ default
 {
     state_entry()
     {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        g_sScript = "settings_";
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -559,7 +567,7 @@ default
 
     link_message(integer sender, integer iNum, string sStr, key id)
     {
-        if (UserCommand(iNum, sStr, id)) return;
+        if (UserCommand(iNum, sStr, id, FALSE)) return;
         if (iNum == LM_SETTING_SAVE)
         {
             //save the token, value
@@ -574,12 +582,9 @@ default
         else if (iNum == LM_SETTING_REQUEST)
         {
             //check the cache for the token
-            if (SettingExists(sStr))
-            {
+            if (~llListFindList(USER_SETTINGS, [sStr]) || ~llListFindList(DESIGN_SETTINGS, [sStr]) ) {  //inlined "settingexists" function
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
-            } 
-            else
-            {
+            } else {
                 llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
             }
         }
@@ -596,85 +601,17 @@ default
                 string sMessage = llList2String(lMenuParams, 1); // button label
                 integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
+                if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
+                
                 // request to switch to parent menu
                 if (sMessage == UPMENU)
                 {
                     llMessageLinked(LINK_THIS, iAuth, "menu "+ PARENT_MENU, kAv);
                     return;
-                }
-               // if (sMessage == WIKI) //moved to menu script
-               // {
-                //    llSleep(0.2);
-                //    llLoadURL(kAv, "Read the online guide, check release notes and learn how to get involved on our website.", WIKI_URL);
-                //    return;
-               // }
-                if(sMessage == SETTINGSHELP)
-                {
-                    llSleep(0.2);
-                    llLoadURL(kAv, "\n\nSettings can be permanently stored and backed up even over a manual script reset by saving them to the defaultsettings notecard inside your collar. For instructions, please visit this page on our website.", SETTINGSHELP_URL);
-                    return;
-                }
-                if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
-                
-                if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
-                { //moving everything to UserCommand to save doubling up on code.
-                    if(sMessage == "Ok")
-                    {
-                        //llSleep(1); // not sure need this
-                        llMessageLinked(LINK_THIS, iAuth, "menu "+ PARENT_MENU, kAv);
-                        return;
-                    }
-                    else if(UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv)==FALSE) return;
+                } else if (iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER) { //moving everything to UserCommand to save doubling up on code.
+                    UserCommand(iAuth,"settings "+sMessage,kAv,TRUE);
                 }
                 else Notify(kAv,"Sorry, only Owners & Wearers may acces this feature.",FALSE);
-                
-                //if (sMessage == PREFDESI)
-                //{
-                //    USER_PREF = FALSE;
-                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
-                //}
-                //else if (sMessage == PREFUSER)
-                //{
-                //    USER_PREF = TRUE;
-                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
-                //}
-                //else if (sMessage == DUMPCACHE)
-                //{
-                //    if (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER) DumpCache(kAv);
-                //    else Notify(kAv, "Only Owners & Wearer may access this feature.", FALSE);
-                //}
-                //else if (sMessage == LOADCARD)
-                //{
-                //    if(kAv==g_kWearer)
-                //    {
-                //        defaultsline = 0;
-                //        defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-                //    }
-                //    else Notify(kAv,"Only the collar wearer may reload defaults.",FALSE);
-                //}
-                // else if (sMessage == REFRESH_MENU)
-                //{
-                //     if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
-                //   {
-                //       llDialog(kAv, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
-                //        llResetOtherScript(g_sMenuScript);
-                //    }
-                //    else Notify(kAv,"Only the collar wearer and owners may refresh menus.",FALSE);
-                //}
-                
-                DoMenu(kAv, iAuth);
-            }
-        }
-        //else if (iNum == MENUNAME_REQUEST && sStr == PARENT_MENU)
-        //{
-        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
-        //}
-        else if (iNum == DIALOG_TIMEOUT)
-        {
-            // timeout from menu system, you do not have to react on this, but you can
-            if (id == g_kMenuID)
-            {
-                //Debug("The user was to slow or lazy, we got a timeout!");
             }
         }
     }

@@ -66,15 +66,8 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
-//string DEV_GROUP = "Join R&D";
-string USER_GROUP = "Join Groups";
-string VISIT_US="Visit us!";
-string BUGS="Report Bug";
-string WIKI = "Website";
+string CONTACT = "Contact";
 string LICENSE="License";
-//string SETTINGSHELP="Settings Help";
-//string SETTINGSHELP_URL="http://www.opencollar.at/";
-string templeSlurl;
 key webLookup;
 key webRequester;
 
@@ -83,8 +76,9 @@ list g_lAppsButtons;
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
 integer g_iHide ; // global hide
+integer g_iNews=TRUE;
 
-integer g_iTraceOn = FALSE;
+//integer g_iTraceOn = FALSE;
 
 string g_sLockPrimName="Lock"; // Description for lock elements to recognize them //EB //SA: to be removed eventually (kept for compatibility)
 string g_sOpenLockPrimName="OpenLock"; // Prim description of elements that should be shown when unlocked
@@ -129,16 +123,22 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\nBrowse apps, extras and custom features.\n\nwww.opencollar.at/apps";
     list lUtility = [UPMENU];
-    string sTraceButton="☐ Trace";
-    if (g_iTraceOn) sTraceButton="☒ Trace";
-    Dialog(kID, sPrompt, sTraceButton+g_lAppsButtons, lUtility, 0, iAuth, "Apps");
+    //string sTraceButton="☐ Trace";
+    //if () sTraceButton="☒ Trace";
+    //Dialog(kID, sPrompt, sTraceButton+g_lAppsButtons, lUtility, 0, iAuth, "Apps");
+    Dialog(kID, sPrompt, g_lAppsButtons, lUtility, 0, iAuth, "Apps");
 }
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
     sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/helpabout";
     list lUtility = [UPMENU];
-    list lStaticButtons=[WIKI,GIVECARD,VISIT_US,USER_GROUP,BUGS,LICENSE,"Update","Get Updater"];
+    
+    string sNewsButton="☐ News";
+    if (g_iNews){
+        sNewsButton="☒ News";
+    }
+    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update","Settings"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
@@ -160,7 +160,7 @@ MainMenu(key kID, integer iAuth) {
     } else {
         lStaticButtons+=" ";
     }
-    lStaticButtons+=["Access","Options","Help/About"];
+    lStaticButtons+=["Access","Extras","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, UNLOCK+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, LOCK+lStaticButtons, [], 0, iAuth, "Main");
@@ -175,26 +175,9 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     string sCmd = llList2String(lParams, 0);
 
     sCmd=llToLower(sCmd);
-    //Debug("User command:'"+sStr+"'"+" "+(string)iNum);
-    //Debug("User command:'"+sCmd+"'");
 
     if (sStr == "menu") MainMenu(kID, iNum);
-    else if (sCmd == "trace") {
-        //Debug("Doing trace command");
-        if (iNum == COMMAND_OWNER){
-            string sValue = llList2String(lParams, 1); 
-            if (sValue == "on"){
-                g_iTraceOn=TRUE;
-                Notify(kID,"Trace on",TRUE);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_trace=1", "");
-            } else {
-                g_iTraceOn=FALSE;
-                Notify(kID,"Trace off",TRUE);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_trace=0", "");
-            }
-        }
-        else Notify(kID, "Sorry, only primary owners can change trace settings.", FALSE);
-    } else if (sCmd == "menu") {
+    else if (sCmd == "menu") {
         string sSubmenu = llGetSubString(sStr, 5, -1);
         if (sSubmenu == "Main"){
             MainMenu(kID, iNum);
@@ -216,9 +199,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
             else  llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);   //else send an auth request for the menu
         }
-    } else if (sStr == "settings") {
-        if (g_iLocked) Notify(kID, "Locked.", FALSE);
-        else Notify(kID, "Unlocked.", FALSE);
     } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {
         //Debug("User command:"+sCmd);
 
@@ -230,7 +210,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
 
-            //            owner = kID; //need to store the one who locked (who has to be also owner) here
             Notify(kID, "Locked.", FALSE);
             if (kID!=g_kWearer) llOwnerSay("Your " + CTYPE + " has been locked.");
         }
@@ -250,8 +229,30 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if (kID!=g_kWearer) Notify(g_kWearer,"Your " + CTYPE + " has been unlocked.",FALSE);
         }
         else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
+    } else if (sCmd == "fixmenus") {
+        if (kID == g_kWearer){
+            RebuildMenu();
+            Notify(kID, "Rebuilding menus, this may take several seconds.", FALSE);
+            if (fromMenu) MainMenu(kID, iNum);
+        }
+    } else if (sCmd == "news"){
+        if (kID == g_kWearer){
+            if (sStr=="news off"){
+                g_iNews=FALSE;
+                //notify news off
+                Notify(kID,"News items will no longer be downloaded from the OpenCollar web site.",TRUE);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_news=0", "");
+            } else {
+                g_iNews=TRUE;
+                //notify news on
+                Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_news=1", "");
+            }
+        } else {
+            //notify only wearer and owner can change news settings
+            Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
+        }
     }
-    else if (sStr == "refreshmenu") RebuildMenu();
     return TRUE;
 }
 
@@ -371,13 +372,10 @@ default
         llSleep(1.0);//delay sending this message until we're fairly sure that other scripts have reset too, just in case
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "collarversion", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
         RebuildMenu();
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", ""); 
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -450,6 +448,7 @@ default
                     //Debug("Apps menu response:"+sMessage);
                     if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
+/*
                     } else if (sMessage=="☐ Trace") {
                         //Debug("Trace off button");    
                         UserCommand(iAuth, "trace on", kAv, TRUE);
@@ -458,6 +457,7 @@ default
                         //Debug("Trace off button");    
                         UserCommand(iAuth, "trace off", kAv, TRUE);
                         AppsMenu(kAv, iAuth);
+*/
                     } else {
                         //Debug("doing link message for 'menu "+sMessage+"' button from Apps menu");
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
@@ -465,30 +465,28 @@ default
                 } else if (sMenu=="Help/About"){
                     //Debug("Help menu response");
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                    else if (sMessage == GIVECARD) {
+                    else if (sMessage == "Settings") {
+                        llMessageLinked(LINK_SET, iAuth, "menu settings", kAv);
+                    } else if (sMessage == GIVECARD) {
                         UserCommand(iAuth,"help",kAv, TRUE);
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == LICENSE) {
                         UserCommand(iAuth,"license",kAv, TRUE);
                         HelpMenu(kAv, iAuth);
-                    } else if (sMessage == WIKI) llLoadURL(kAv, "\n\nVisit our homepage for help, discussion and news.\n", "http://www.opencollar.at/");
-                    else if (sMessage == BUGS) llDialog(kAv,"\nPlease help us to improve OpenCollar by reporting any bugs you see. Click to open our support board at: \n\nhttp://www.opencollar.at/forum.html#!/support\n\nOr even better, use our GitHub resource where you can create issues for bug reports and feature requests:\n https://github.com/OpenCollar/OpenCollarUpdater/issues",[],-39457);
-//                    else if (sMessage == DEV_GROUP) {
-//                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about for scripter talk.\nhttp://www.opencollar.at/forum.html#!/tinkerbox\n\n");
-//                        HelpMenu(kAv, iAuth);
-//                    } else if (sMessage == USER_GROUP) {
-//                        llInstantMessage(kAv,"\n\nJoin secondlife:///app/group/0f6f3627-d9cb-a1db-b770-f66fce70d1ef/about for friendly support.\nhttp://www.opencollar.at/forum.html#!/support\n\n");
-//                        HelpMenu(kAv, iAuth);
-                    else if (sMessage == VISIT_US) {
-                        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~places", [HTTP_METHOD, "GET"], "");
+                    } else if (sMessage == CONTACT) {
+                        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~contact", [HTTP_METHOD, "GET"], "");
                         webRequester = kAv;
                         HelpMenu(kAv, iAuth);
-                }else if (sMessage == USER_GROUP) {
-                        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~groups", [HTTP_METHOD, "GET"], "");
-                        webRequester = kAv;
+                    } else if (sMessage=="☐ News") {
+                        //Debug("News on button");    
+                        UserCommand(iAuth, "news on", kAv, TRUE);
                         HelpMenu(kAv, iAuth);
-                    } else if (sMessage == "Update") llMessageLinked(LINK_SET, iAuth, "menu Update", kAv);
-                    else if (sMessage == "Get Updater") llMessageLinked(LINK_SET, iAuth, "menu Get Updater", kAv);
+                    } else if (sMessage=="☒ News") {
+                        //Debug("News off button");    
+                        UserCommand(iAuth, "news off", kAv, TRUE);
+                        HelpMenu(kAv, iAuth);
+                    } else if (sMessage == "Update") llMessageLinked(LINK_SET, iAuth, "update remenu", kAv);
+                    //else if (sMessage == "Get Updater") llMessageLinked(LINK_SET, iAuth, "menu Get Updater", kAv);
                     //else //Debug("Unknown button:'"+sMessage+"'");
                 }
             }
@@ -525,10 +523,14 @@ default
                 if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
             }
+            else if (sToken == "Global_news") g_iNews = (integer)sValue;
+
+/*
             else if(sToken =="Global_trace")
             {
                 g_iTraceOn = (integer)sValue;
             }
+*/
         }
         else if (iNum == DIALOG_TIMEOUT)
         {
@@ -581,6 +583,7 @@ default
             }
         }
         if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
+/*
         if (iChange & CHANGED_TELEPORT || iChange & CHANGED_REGION){
             if (g_iTraceOn){
                 string sRegionName=llGetRegionName();
@@ -598,6 +601,7 @@ default
                 }
             }
         }
+*/
     }
     attach(key kID)
     {
