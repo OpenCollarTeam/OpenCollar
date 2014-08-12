@@ -19,7 +19,7 @@ string  PLUGIN_CHAT_COMMAND         = "bookmarks"; // every menu should have a c
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  RLV_STRING                  = "rlvmain_on"; //ask for updated RLV status
 
-string   g_sCard                         = "~destinations"; //Name of the notecards to store destinations. 
+string   g_sCard                         = "~bookmarks"; //Name of the notecards to store destinations. 
 
 key webLookup;
 key webRequester;
@@ -449,7 +449,9 @@ ReadDestinations() { // On inventory change, re-read our ~destinations notecard 
         g_lDestinations = [];
         g_lDestinations_Slurls = [];
         //start re-reading the notecards
-        g_kDataID = llGetNotecardLine(g_sCard,0);
+        if (llGetInventoryKey(g_sCard) ) { 
+            g_kDataID = llGetNotecardLine(g_sCard,0);
+        }
 
 }
 
