@@ -137,14 +137,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     
     if (kID == g_kWearer)
     {
-        Debug(sMsg);
+        llOwnerSay(sMsg);
     } 
     else
     {
         llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer)
         {
-            Debug(sMsg);
+            llOwnerSay(sMsg);
         }
     }
 } 
