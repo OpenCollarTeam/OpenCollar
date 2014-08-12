@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - customize                              //
-//                                 version 3.960                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -45,7 +45,7 @@ list g_lElementTypesLower; //lower case names, for chat command access
 list g_lTexturesCard;
 key g_iTexturesCardId;
 key g_kNotecardReadRequest;
-string g_sTexturesNotecardName="textures_custom";
+string g_sTexturesNotecardName="~customize";
 integer g_iTexturesNotecardLine=0;
 
 //standard OC functions
@@ -273,7 +273,7 @@ default {
         g_iAllAlpha=0;
         if (llGetAlpha(ALL_SIDES)>0) g_iAllAlpha=1;
         
-        llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Appearance", "");
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Appearance", "");
         
         buildElementTypes();
         g_iTexturesCardId = llGetInventoryKey(g_sTexturesNotecardName);
