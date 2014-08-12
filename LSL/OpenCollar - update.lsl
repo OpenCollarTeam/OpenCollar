@@ -441,7 +441,7 @@ default
         {
             if (!g_iUpdatersNearBy)
             {
-                Notify(g_kUpdater,"No updaters found.  Please rez an updater within 10m and try again",FALSE);
+                //Notify(g_kUpdater,"No updaters found.  Please rez an updater within 10m and try again",FALSE);
                 g_kUpdateRequest = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~update", [HTTP_METHOD, "GET"], "");
                 if (g_iUpdateFromMenu) llMessageLinked(LINK_THIS,g_iUpdateAuth,"menu "+PARENT_MENU,g_kUpdater);
                 //else Debug("Not remenuing");
