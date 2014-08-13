@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - main                                //
-//                                 version 3.970                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -208,7 +208,7 @@ MainMenu(key kID, integer iAuth) {
         lStaticButtons+=" ";
     }
     if (g_iCustomizeMenu){
-        lStaticButtons+="Customize";
+        lStaticButtons+="Paint";
     } else if (g_iCustomizeMenu){
         lStaticButtons+="Paint";
     } else if (g_iAppearanceMenu){
@@ -494,7 +494,7 @@ default
                 g_iRlvMenu=TRUE;
             } else if (sStr=="Main|Appearance"){
                 g_iAppearanceMenu=TRUE;
-            } else if (sStr=="Main|Customize"){
+            } else if (sStr=="Main|Paint"){
                 g_iCustomizeMenu=TRUE;
             }
         } else if (iNum == MENUNAME_REMOVE) {
