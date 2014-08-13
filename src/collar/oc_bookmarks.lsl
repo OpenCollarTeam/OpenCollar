@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
-//                              OpenCollar - bookmarks                            //
-//                                 version 3.971                                 //
+//                            OpenCollar - bookmarks                              //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -89,7 +89,7 @@ integer DIALOG_TIMEOUT             = -9002;
 integer RLV_RELAY_CHANNEL          = -1812221819;
 
 // menu option to go one step back in menustructure
-string  UPMENU                     = "^"; // when your menu hears this, give the parent menu
+string  UPMENU                     = "BACK"; // when your menu hears this, give the parent menu
 
 
 
