@@ -17,7 +17,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="(loading...)";
+string g_sCollarVersion="3.9.82";   //FIXME: symantic version numbers need extra code to support
 integer g_iLatestVersion=TRUE;
 
 list g_lOwners;
@@ -99,6 +99,53 @@ integer g_iRlvMenu=FALSE;
 integer g_iAppearanceMenu=FALSE;
 integer g_iCustomizeMenu=FALSE;
 
+integer g_iUpdateChan = -7483214;
+integer g_iUpdateHandle;
+
+key g_kConfirmUpdate;
+key g_kUpdaterOrb;
+integer g_iUpdateFromMenu;
+
+// We check for the latest version number by looking at the "~version" notecard
+// inside the 'release' branch of the collar's Github repo.
+string version_check_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~version";
+key github_version_request;
+
+// A request to this URL will trigger delivery of an updater.  We omit the
+// "version=blah" parameter because we don't want the server deciding whether
+// we should get an updater or not.  We just want one.
+//string delivery_url = "http://update.mycollar.org/updater/check?object=OpenCollarUpdater&update=yes";
+//key appengine_delivery_request;
+
+// The news system is back!  Only smarter this time.  News will be kept in a
+// static file on Github to keep server load down.  This script will remember
+// the date of the last time it reported news so it will only show things once.
+// It will also not show things more than a week old.
+string news_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~news";
+key news_request;
+key news_now;
+
+key g_kUpdateRequest;
+
+// store versions as strings and don't cast to float until the last minute.
+// This ensures that we can display them in a nice way without a bunch of
+// floating point garbage on the end.
+string my_version = "0.0";
+key my_version_request;
+
+key g_kUpdater; // key of avi who asked for the update
+integer g_iUpdateAuth;
+integer g_iUpdatersNearBy = -1;
+integer g_iWillingUpdaters = -1;
+
+string last_news_time = "0";
+
+string g_sUpdaterName="OpenCollar Updater";
+string g_sRelease_version;
+string g_sHowToUpdate="Get an Updater at http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21\nhttps://www.primbay.com/product.php?id=1782591\nhttps://marketplace.secondlife.com/p/OpenCollar-Updater/5493698 or any OpenCollar network vendor."; //put in appropriate message here.
+
+
+
 //Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -123,6 +170,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\nBrowse apps, extras and custom features.\n\nwww.opencollar.at/apps";
+    sPrompt+="\nmax memory used: "+(string)llGetSPMaxMemory();
     list lUtility = [UPMENU];
     //string sTraceButton="☐ Trace";
     //if () sTraceButton="☒ Trace";
@@ -133,6 +181,7 @@ HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
     sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/helpabout";
+    sPrompt+="\nmax memory used: "+(string)llGetSPMaxMemory();
     list lUtility = [UPMENU];
     
     string sNewsButton="☐ News";
@@ -144,6 +193,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 MainMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\nwww.opencollar.at/main-menu";
+    sPrompt+="\nmax memory used: "+(string)llGetSPMaxMemory();
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu){
         lStaticButtons+="Animations";
@@ -167,6 +217,16 @@ MainMenu(key kID, integer iAuth) {
     
     if (g_iLocked) Dialog(kID, sPrompt, UNLOCK+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, LOCK+lStaticButtons, [], 0, iAuth, "Main");
+}
+
+ConfirmUpdate(key kID, integer iAuth)
+{
+    //string sPrompt = "\n\nDo you want to update with " + llKey2Name(kUpdater) + " with object key:\n\n" + (string)kUpdater +"\n"
+    string sPrompt = "\n3 Golden Rules for Updates:\n\n1.Create a Backup\n2.Rezzed is safer than Worn\n3.Low Lag regions make happy Updates\n\n(These rules apply to any kind of scripted item, not just collars or bondage and kink items!)\n\nATTENTION: Do not rez any other collars till the update has started.\n\nReady?";
+
+    sPrompt+="\nmax memory used: "+(string)llGetSPMaxMemory();
+
+    Dialog(kID, sPrompt, ["Yes", "No"], [], 0, iAuth, "ConfirmUpdate");
 }
 
 integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
@@ -244,17 +304,44 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 g_iNews=FALSE;
                 //notify news off
                 Notify(kID,"News items will no longer be downloaded from the OpenCollar web site.",TRUE);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_news=0", "");
-            } else {
+            } else if (sStr=="news on"){
                 g_iNews=TRUE;
                 //notify news on
                 Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_news=1", "");
+                news_now = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+            } else {
+                news_now = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
             }
         } else {
             //notify only wearer and owner can change news settings
             Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
         }
+    } else if (sCmd == "update") {
+        if (kID == g_kWearer) {
+            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
+            g_iUpdatersNearBy = 0;
+            g_iWillingUpdaters = 0;
+            g_kUpdater = kID;
+            g_iUpdateAuth = iNum;
+            Notify(kID,"Searching for nearby updater",FALSE);
+            g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
+            g_iUpdateFromMenu=fromMenu;
+            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+            llSetTimerEvent(10.0); //set a timer to close the g_iListener if no response
+        } else {
+            Notify(kID,"Only the wearer can update the " + CTYPE + ".",FALSE);
+        }
+    } else if (sCmd == "version") {
+        Notify(kID, "I am running OpenCollar version " + my_version, FALSE);
+    } else if (sCmd == "objectversion") {
+        // ping from an object, we answer to it on the object channel
+        
+        // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
+        integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
+        if (iChan>0) iChan=iChan*(-1);
+        if (iChan > -10000) iChan -= 30000;
+
+        llSay(iChan,(string)g_kWearer+"\\version="+my_version);
     }
     return TRUE;
 }
@@ -379,6 +466,10 @@ default
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", "");
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
         RebuildMenu();
+        
+        if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+        github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET"], "");
+        llScriptProfiler(PROFILE_SCRIPT_MEMORY);
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -466,6 +557,15 @@ default
                     } else {
                         //Debug("doing link message for 'menu "+sMessage+"' button from Apps menu");
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
+                    }
+                } else if (sMenu=="ConfirmUpdate"){
+                    if (sMessage == "Yes") {
+                        //inlined single use SayUpdatePin(g_kUpdaterOrb); function
+                        integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
+                        llSetRemoteScriptAccessPin(pin);
+                        llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
+                    } else {
+                        HelpMenu(kAv, iAuth);
                     }
                 } else if (sMenu=="Help/About"){
                     //Debug("Help menu response");
@@ -629,6 +729,97 @@ default
             if (id == webLookup){
                 Notify(webRequester,body,FALSE);
             }
+        } else if (id == github_version_request) {
+            // strip the newline off the end of the text
+            g_sRelease_version = llGetSubString(body, 0, -2);
+            //Deg_sRelease_versionbug("release:"+release_version);
+            if ((float)g_sRelease_version > (float)my_version)
+            {
+                string prompt = "\n\nYou are running OpenCollar version " +
+                my_version + ".  There is an update available.\n"+g_sHowToUpdate;
+                llDialog(llGetOwner(),prompt,["Ok!"],-23426245);
+                
+               // g_kMenuID = Dialog(wearer, prompt, [BTN_GET_UPDATE], ["Cancel"], 0, COMMAND_WEARER);
+               llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=0","");
+            }
+            else llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"collarversion="+(string)my_version+"=1","");
+        }
+        else if (id == g_kUpdateRequest){
+            Notify(g_kUpdater,body,FALSE);
+        }
+        else if (id == news_now){
+            //Debug("Got news_now");
+            Notify(g_kUpdater,body,FALSE);
+        }
+        else if (id == news_request)
+        {
+            // We got a response back from the news page on Github.  See if
+            // it's new enough to report to the user.
+            string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
+            list firstline_parts = llParseString2List(firstline, [" "], []);
+            
+            // The first line of a news item should always look like this:
+            // # First News - 20111012
+            // or optionally with a decimal like this:
+            // # Second News of the Day - 20111012.2
+            // So we can compare timestamps that way.  
+            string this_news_time = llList2String(firstline_parts, -1);
+
+            if ((integer)last_news_time > (integer)this_news_time) {
+                string news = "Newsflash " + body;
+                Notify(llGetOwner(), news, FALSE);
+                // last news time is remembered in memory.  We used to
+                // store it in the desc but you can't write to that while
+                // worn.
+                last_news_time = this_news_time;
+            } 
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {   //collar and updater have to have the same Owner else do nothing!
+        //Debug(message);
+        if (llGetOwnerKey(id) == g_kWearer)
+        {
+            list lTemp = llParseString2List(message, [","],[]);
+            string sCommand = llList2String(lTemp, 0);
+            if(message == "nothing to update")
+            {
+                g_iUpdatersNearBy++;
+            }
+            else if( message == "get ready")
+            {
+                g_iUpdatersNearBy++;
+                g_iWillingUpdaters++;
+                //g_kUpdaterOrb = id;
+                ConfirmUpdate(g_kWearer,COMMAND_WEARER); 
+                g_iUpdatersNearBy = -1;
+                g_iWillingUpdaters = -1;
+                llSetTimerEvent(0);
+            }
+        }
+    }
+
+    timer()
+    {
+        //Debug("timer");
+        llSetTimerEvent(0.0);
+        llListenRemove(g_iUpdateHandle);
+        if (g_iUpdatersNearBy > -1)
+        {
+            if (!g_iUpdatersNearBy)
+            {
+                //Notify(g_kUpdater,"No updaters found.  Please rez an updater within 10m and try again",FALSE);
+                g_kUpdateRequest = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~update", [HTTP_METHOD, "GET"], "");
+                if (g_iUpdateFromMenu) HelpMenu(g_kUpdater,g_iUpdateAuth);
+                //else Debug("Not remenuing");
+            }
+            else if (g_iWillingUpdaters > 1)
+            {
+                Notify(g_kUpdater,"Multiple updaters were found within 10m.  Please remove all but one and try again",FALSE);
+            }
+            g_iUpdatersNearBy = -1;
+            g_iWillingUpdaters = -1;
         }
     }
 }
