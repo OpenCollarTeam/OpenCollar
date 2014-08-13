@@ -300,6 +300,8 @@ default {
             } else if (sGroup == "texture") {
                 setElementStyle(sToken, sValue);
             }
+        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         } else if (iNum == LM_SETTING_SAVE) {
             //if we see a hide for something saved that we think is not currently hidden, then hide it, and store the new setting locally
             if (llSubStringIndex(sStr,"hide_")==0){
