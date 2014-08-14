@@ -102,7 +102,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 //string MORE = ">";
 string g_sScript;
-
+key g_kCommander;
 //Debug(string sMsg) { llOwnerSay(llGetScriptName() + ": " + sMsg); }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -324,6 +324,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
             lmkMenuID = Dialog(kID , "\nChoose a landmark to teleport to.", matchedLandmarks, [UPMENU], 0, iNum);
         } else { //exactly one matching LM found, so use it
+            g_kCommander=kID;
             g_kLMID = llRequestInventoryData(llList2String(matchedLandmarks,0));
         }
     } else if (sStr=="destinations"){
@@ -350,7 +351,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 //    llInstantMessage(llGetOwner(), "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                 //    return;
                 //}
-                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_CMD, sThisItem, kID);
             }
             else if (llListFindList(g_lRLVcmds, [sBehavior]) != -1)
             {   //this is a behavior that we handle.
@@ -568,7 +569,7 @@ default
             string sCmd = "tpto:";
             sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
             sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, sCmd, g_kCommander);
         }
     }
 }

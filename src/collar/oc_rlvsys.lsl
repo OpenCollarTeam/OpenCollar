@@ -219,6 +219,12 @@ HandleCommand(key kID, string sCommand) {
         }
     } else {         //perform other command
         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
+        if (llSubStringIndex(sCom,"tpto")==0) {  //looks like a tpto command, lets check to see if we should honour it or not, and message back if we can if it fails
+            if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
+                    Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
+                    return;
+            }
+        }
         SendCommand(sCommand);
         if (g_kSitter==NULL_KEY&&llGetSubString(sCommand,0,3)=="sit:") {
             g_kSitter=kID;
