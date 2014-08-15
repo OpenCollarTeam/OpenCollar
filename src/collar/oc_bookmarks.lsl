@@ -91,7 +91,7 @@ integer RLV_RELAY_CHANNEL          = -1812221819;
 // menu option to go one step back in menustructure
 string  UPMENU                     = "BACK"; // when your menu hears this, give the parent menu
 
-
+key g_kCommander;
 
 //===============================================================================
 //= parameters   :    string    sMsg    message string received
@@ -287,9 +287,11 @@ You can enter:
     else if (llGetSubString(sStr,0,llStringLength(PLUGIN_CHAT_COMMAND)-1) == PLUGIN_CHAT_COMMAND ) { //reset destinations
 
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1),STRING_TRIM);
+        g_kCommander=kID;
         if (llListFindList(g_lVolatile_Destinations,[sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations,[sCmd]);
             TeleportTo(llList2String(g_lVolatile_Slurls,iIndex));
+            
         }
         else if (llListFindList(g_lDestinations,[sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lDestinations,[sCmd]);
@@ -562,7 +564,7 @@ default {
           // Pass command to main
           if (g_iRLVOn) {
               string sRlvCmd = "tpto:"+pos_str+"=force";
-              llMessageLinked(LINK_SET, RLV_CMD, sRlvCmd, NULL_KEY);
+              llMessageLinked(LINK_SET, RLV_CMD, sRlvCmd, g_kCommander);
           }
         }
         
