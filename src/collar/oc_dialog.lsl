@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.960                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -62,7 +62,7 @@ string PREV = "◄";
 string UPMENU = "BACK"; // string to identify the UPMENU button in the utility lButtons
 //string SWAPBTN = "swap";
 //string SYNCBTN = "sync";
-string BLANK = " ";
+string BLANK = "-";
 integer g_iTimeOut = 300;
 integer g_iReapeat = 5;//how often the timer will go off, in seconds
 
