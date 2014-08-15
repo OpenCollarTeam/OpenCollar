@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvtp                                //
-//                                 version 3.967                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -55,7 +55,7 @@ list g_lDescriptions = [ //showing descriptions for commands
 
 string TURNON = "Allow";
 string TURNOFF = "Forbid";
-string DESTINATIONS = "Destinations";
+//string DESTINATIONS = "Destinations";
 
 integer g_iRLVOn=TRUE;
 
@@ -175,7 +175,7 @@ Menu(key kID, integer iAuth)
         }
     }
 
-    lButtons += [DESTINATIONS];
+    //lButtons += [DESTINATIONS];
 
     //give an Allow All button
     lButtons += [TURNON + " All"];
@@ -327,8 +327,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
             g_kCommander=kID;
             g_kLMID = llRequestInventoryData(llList2String(matchedLandmarks,0));
         }
-    } else if (sStr=="destinations"){
+/*    } else if (sStr=="destinations"){
         LandmarkMenu(kID, iNum);
+*/
     }
     else
     {
@@ -512,11 +513,12 @@ default
                         UserCommand(iAuth, sOut, kAv);
                         Menu(kAv, iAuth);
                     }
-                    else if (sMessage == DESTINATIONS)
+/*                    else if (sMessage == DESTINATIONS)
                     {
                         //give menu of LMs
                         UserCommand(iAuth, "destinations", kAv);
                     }
+*/
                     else if (iIndex != -1)
                     {
                         string sOut = llList2String(g_lRLVcmds, iIndex);
