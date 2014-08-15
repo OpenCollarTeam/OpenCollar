@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - rlvrelay                              //
-//                                 version 3.960                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -406,7 +406,8 @@ Menu(key kID, integer iAuth)
         sPrompt+="\n\nYou have pending requests.";
         lButtons+=["Pending"];
     }
-    lButtons+=["Access Lists", "MinMode", "Help"];
+    //lButtons+=["Access Lists", "MinMode", "Help"];
+    lButtons+=["Access Lists", "MinMode"];
     sPrompt+="\n\nMake a choice:";
 
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
