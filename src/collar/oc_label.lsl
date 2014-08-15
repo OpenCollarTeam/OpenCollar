@@ -50,7 +50,7 @@ integer g_iCharLimit = -1;
 string UPMENU = "BACK";
 string CTYPE = "collar";
 
-string g_sTextMenu = "SetText";
+string g_sTextMenu = "Set Label";
 string g_sFontMenu = "Font";
 string g_sColorMenu = "Color";
 
@@ -417,7 +417,7 @@ MainMenu(key kID, integer iAuth)
     if (g_iScroll) lButtons += ["☒ Scroll"];
     else lButtons += ["☐ Scroll"];    
         
-    string sPrompt = "\nSelect option for the " + CTYPE + "'s label.\n\nNOTE: This feature requires a design with label prims. If the worn design doesn't have any of those, it is recommended to uninstall Label with the updater.\n\nwww.opencollar.at/label";
+    string sPrompt = "\nCustomize the " + CTYPE + "'s label!\n\nwww.opencollar.at/label";
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
