@@ -202,6 +202,11 @@ RemovePerson(string sName, string sToken, key kCmdr) {
     else if (sToken=="secowner") lPeople=g_lSecOwners;
     else if (sToken=="blacklist") lPeople=g_lBlackList;
     else return;
+    
+    if (~llListFindList(g_lTempOwners,[(string)kCmdr]) && ! ~llListFindList(g_lOwners,[(string)kCmdr]) && sToken != "tempowner"){
+        Notify(kCmdr,"Temporary owners can only change the temporary owners list",FALSE);
+        return;
+    }
 
     sName = llToLower(sName);
     integer iFound=FALSE;
@@ -379,6 +384,7 @@ integer Auth(string kObjID, integer attachment) {
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
     //Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
+    
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
     string sMessage=llToLower(sStr);
@@ -388,7 +394,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     
     if (sStr == "menu "+g_sSubMenu) {
         AuthMenu(kID, iNum);
-    } else if (sStr == "settings" || sStr == "listowners") {   //say owner, secowners, group
+    } else if (sStr == "listowners") {   //say owner, secowners, group
         if (iNum == COMMAND_OWNER || kID == g_kWearer) {
             //Do Owners list
             integer iLength = llGetListLength(g_lOwners);
@@ -442,10 +448,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,0), " "); //get full name
         if (iNum!=COMMAND_OWNER) {
             Notify(kID, sOwnerError, FALSE);
-            if (remenu) AuthMenu(kID, iNum);
+            if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if ((key)sTmpName){
             g_lQueryId+=[llRequestAgentData( sTmpName, DATA_NAME ),sTmpName,sCommand, kID, remenu];
-            if (remenu) FetchAvi(iNum, sCommand, sTmpName, kID);
+            if (remenu) FetchAvi(Auth(kID,FALSE), sCommand, sTmpName, kID);
         } else
             FetchAvi(iNum, sCommand, sTmpName, kID);
     } else if (llSubStringIndex(sCommand,"rem")==0) { //remove person from a list
@@ -456,12 +462,12 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,0), " "); //get full name
         if (iNum!=COMMAND_OWNER){
             Notify(kID, sOwnerError, FALSE);
-            if (remenu) AuthMenu(kID, iNum);
+            if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if (sTmpName=="") 
             RemPersonMenu(kID, sToken, iNum);
         else {
             RemovePerson(sTmpName, sToken, kID);
-            if (remenu) RemPersonMenu(kID, sToken, iNum);
+            if (remenu) RemPersonMenu(kID, sToken, Auth(kID,FALSE));
         }
             
     } else if (sCommand == "setgroup") {
@@ -480,7 +486,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "setgroupname") {
         if (iNum==COMMAND_OWNER){
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
@@ -500,7 +506,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "setopenaccess") {
         if (iNum==COMMAND_OWNER){
             g_iOpenAccess = TRUE;
@@ -510,7 +516,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "unsetopenaccess") {
         if (iNum==COMMAND_OWNER){
             g_iOpenAccess = FALSE;
@@ -520,7 +526,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "setlimitrange") {
         if (iNum==COMMAND_OWNER){
             g_iLimitRange = TRUE;
@@ -530,7 +536,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "unsetlimitrange") {
         if (iNum==COMMAND_OWNER){
             g_iLimitRange = FALSE;
@@ -540,13 +546,13 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         } else {
             Notify(kID, sOwnerError, FALSE);
         }
-        if (remenu) AuthMenu(kID, iNum);
+        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "runaway"){
         list lButtons=[];
         string message;
         if (iNum == COMMAND_WEARER){  //wearer called for menu
             if (g_iRunawayDisable){
-                lButtons=["Stay","Cancel"];
+                lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
                 message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly your owners can restore this ability.";
             } else {
                 lButtons=["Runaway!", "Disable"];
@@ -767,7 +773,6 @@ default
                     }
                 } else if (sMenu == "remowner" || sMenu == "remsecowner" || sMenu == "remblacklist" ) {
                     if (sMessage == UPMENU) {
-                        //Debug("Sending BACK menu to "+(string)kAv);
                         AuthMenu(kAv, iAuth);
                     } else  if (sMessage == "Remove All") {
                         UserCommand(iAuth, sMenu + " Remove All", kAv,TRUE);
@@ -781,23 +786,37 @@ default
                         UserCommand(iAuth, sMenu+" " + llList2String(g_lBlackList, (integer)sMessage*2 - 1), kAv, TRUE);
                     }
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
-                    if (sMessage == "Runaway!") {
+                    if (sMessage == UPMENU) {
+                        AuthMenu(kAv, iAuth);
+                    } else  if (sMessage == "Runaway!") {
                         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
                     } else if (sMessage == "Enable") {
-                        g_iRunawayDisable=FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"runawayDisable","");
-                        Notify(kAv,"The ability to runaway has been restored", TRUE);
-                        UserCommand(iAuth, "runaway", kAv, TRUE);
+                        if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) ){
+                            Notify(kAv,"Temporary owners can not enable runaway",FALSE);
+                        } else {
+                            g_iRunawayDisable=FALSE;
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"runawayDisable","");
+                            Notify(kAv,"The ability to runaway has been restored", TRUE);
+                            UserCommand(iAuth, "runaway", kAv, TRUE);
+                        }
                     } else if (sMessage == "Disable") {
                         g_iRunawayDisable=TRUE;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"runawayDisable=1","");
                         Notify(g_kWearer,"You have decided to remove your ability to run from your owners... good luck with that.", TRUE);
                         UserCommand(iAuth, "runaway", kAv, TRUE);
-                    } else if (sMessage == "Sack Wearer") {
-                        UserCommand(iAuth, "remowner "+(string)kAv, kAv, TRUE);
-                        UserCommand(iAuth, "runaway", kAv, TRUE);
+                    } else if (sMessage == "Cancel") {
+                        return;  //no remenu on canel
+                    } else if (sMessage == "Release") {
+                        integer iOwnerIndex=llListFindList(g_lOwners,[(string)kAv]);
+                        if (~iOwnerIndex){
+                            string name=llList2String(g_lOwners,iOwnerIndex+1);
+                            UserCommand(iAuth, "remowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
+                        } else {
+                            Notify(kAv, "You are not on the owners list", TRUE);
+                            UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
+                        }
                     } else {
-                        AuthMenu(kAv, iAuth); //remenu
+                        UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
                     }
                 }
             }
@@ -809,7 +828,8 @@ default
                     key kAv = llList2Key(params, 2);
                     
                     AddUniquePerson((key)llList2String(params, 5), sRequestType, kAv);
-                    FetchAvi(llList2Integer(params, 3), sRequestType, "", kAv);   //remenu
+                    //FetchAvi(llList2Integer(params, 3), sRequestType, "", kAv);   //remenu
+                    UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
@@ -864,7 +884,8 @@ default
             
             AddUniquePerson(newOwner, sRequestType, kAv);
             if (remenu)
-                FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
+                UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
+                //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
         }
     }
 }
