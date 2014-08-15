@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvundress                             //
-//                                 version 3.960                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,7 +28,7 @@ list g_lRLVcmds = ["attach","detach","remoutfit", "addoutfit","remattach","addat
 integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
 string SMARTON="☐ SmartStrip";
 string SMARTOFF = "☒ SmartStrip";
-string SMARTHELP = "Help";
+//string SMARTHELP = "Help";
 string g_sSmartHelpCard = "OpenCollar Guide";
 string g_sSmartToken="smartstrip";
 //key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
@@ -218,7 +218,9 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 MainMenu(key kID, integer iAuth)
 {
     //string sPrompt = "\n\nNote: Keep in mind that mesh clothing is worn as attachments and in most cases together with alpha masks which are worn as clothing layers. It is recommended to explore the possibilities of #RLV Folders for a smooth un/dressing experience.\n";
-    string sPrompt = "\nwww.opencollar.at/undress\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder (click "+SMARTHELP+" for info), the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
+    string sPrompt = "\nwww.opencollar.at/undress\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder";
+    //sPrompt+=" (click "+SMARTHELP+" for info)";
+    sPrompt+=", the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
     list lButtons = g_lChildren;
 
     if (g_iAllLocked)  //are all clothing and attachments locked?
@@ -243,7 +245,7 @@ MainMenu(key kID, integer iAuth)
         lButtons += SMARTON;
         //sPrompt += "\nSmartStrip is off.";
     }
-    lButtons+=SMARTHELP;
+    //lButtons+=SMARTHELP;
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
 
