@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - anim                                //
-//                                 version 3.961                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -118,6 +118,9 @@ string POSEMENU = " Pose";
 string HEIGHTFIX = "HeightFix";
 string g_sHeightFixToken = "HFix";
 integer g_iHeightFix = TRUE;
+list g_lHeightFixAnims;
+integer maxHeightAdjust;
+integer minHeightAdjust;
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -331,13 +334,13 @@ StartAnim(string sAnim)
                     vector vAvScale = llGetAgentSize(g_kWearer);
                     float fScalar = (float)llList2String(g_lAnimScalars, iIndex + 1);
                     g_iAdjustment = llRound(vAvScale.z * fScalar);
-                    if (g_iAdjustment > -30)
+                    if (g_iAdjustment > maxHeightAdjust)
                     {
-                        g_iAdjustment = -30;
+                        g_iAdjustment = maxHeightAdjust;
                     }
-                    else if (g_iAdjustment < -50)
+                    else if (g_iAdjustment < minHeightAdjust)
                     {
-                        g_iAdjustment = -50;
+                        g_iAdjustment = minHeightAdjust;
                     }
                     llStartAnimation("~" + (string)g_iAdjustment);
                 }
@@ -393,13 +396,13 @@ StopAnim(string sAnim)
                     vector vAvScale = llGetAgentSize(g_kWearer);
                     float fScalar = (float)llList2String(g_lAnimScalars, iIndex + 1);
                     g_iAdjustment = llRound(vAvScale.z * fScalar);
-                    if (g_iAdjustment > -30)
+                    if (g_iAdjustment > maxHeightAdjust)
                     {
-                        g_iAdjustment = -30;
+                        g_iAdjustment = maxHeightAdjust;
                     }
-                    else if (g_iAdjustment < -50)
+                    else if (g_iAdjustment < minHeightAdjust)
                     {
-                        g_iAdjustment = -50;
+                        g_iAdjustment = minHeightAdjust;
                     }
                     llStartAnimation("~" + (string)g_iAdjustment);
                 }
@@ -449,6 +452,9 @@ CreateAnimList()
     //g_iNumAnims;
     integer i;
     string sName;
+    
+    g_lHeightFixAnims=[];
+    
     for (i=0;i<iMax;i++)
     {
         sName=llGetInventoryName(INVENTORY_ANIMATION, i);
@@ -457,8 +463,22 @@ CreateAnimList()
         {
             g_lPoseList+=[sName];
         }
+        
+        if (llSubStringIndex(sName,"~")==0 && llStringLength(sName)==4){
+            sName=llGetSubString(sName,1,3);
+            if ((integer)sName != 0){
+                g_lHeightFixAnims += sName;
+            }
+        }
     }
     //    g_iNumAnims=llGetListLength(g_lPoseList);
+    
+    
+    g_lHeightFixAnims=llListSort(g_lHeightFixAnims,1,1);
+    //Debug("Height fix:"+llDumpList2String(g_lHeightFixAnims,","));
+    maxHeightAdjust=llList2Integer(g_lHeightFixAnims,0);
+    minHeightAdjust=llList2Integer(g_lHeightFixAnims,-1);
+    //Debug("max:"+(string)maxHeightAdjust+" min:"+(string)minHeightAdjust);
 }
 
 integer UserCommand(integer iNum, string sStr, key kID)
@@ -645,14 +665,21 @@ AdjustOffset(integer direction){
         integer iOldAdjustment=g_iAdjustment;
         if (g_iAdjustment){
             g_iAdjustment+=direction;
-            if (g_iAdjustment > -30){
+            while (g_iAdjustment > minHeightAdjust && g_iAdjustment < maxHeightAdjust && !~llListFindList(g_lHeightFixAnims,[(string)g_iAdjustment])){
+                //Debug("Re-adjust "+(string)g_iAdjustment);
+                g_iAdjustment+=direction;
+            }
+            
+            if (g_iAdjustment > maxHeightAdjust){
                 g_iAdjustment = 0;
                 Notify(g_kWearer,sNewAnim+" height fix cancelled",FALSE);
-            } else if (g_iAdjustment < -50){
-                g_iAdjustment = -50;
+            } else if (g_iAdjustment < minHeightAdjust){
+                g_iAdjustment = minHeightAdjust;
             }
+            
+            
         } else if (direction == -1){
-            g_iAdjustment=-30;
+            g_iAdjustment=maxHeightAdjust;
         }
         if (g_iAdjustment != 0){
             llStartAnimation("~" + (string)g_iAdjustment);
@@ -693,7 +720,7 @@ default
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
     
          //start reading the ~heightscalars notecard
-        g_kDataID = llGetNotecardLine(card, g_iLine);
+         g_kDataID = llGetNotecardLine(card, g_iLine);
     }
 
     dataserver(key kID, string sData)
