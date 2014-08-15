@@ -41,7 +41,7 @@ string g_sBellOn="    ON"; // menu text of bell on
 string g_sBellOff="    OFF"; // menu text of bell on
 integer g_iBellAvailable=FALSE;
 
-integer g_iBellShow=TRUE; // is the bell visible
+integer g_iBellShow=FALSE; // is the bell visible
 string g_sBellShow="    SHOW"; //menu text of bell visible
 string g_sBellHide="   HIDE"; //menu text of bell hidden
 
@@ -468,6 +468,7 @@ default
         BuildBellElementList();
 
         PrepareSounds();
+        SetBellElementAlpha();
         //not needed anymore as we request menus already
         // now wait  to be sure al other scripts reseted and init the menu system into the collar
         //llSleep(1.0);
