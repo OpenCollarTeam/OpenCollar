@@ -547,26 +547,26 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         if (iNum == COMMAND_WEARER){  //wearer called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Cancel"];
-                message="\nACCESS DENIED\n\nYou chose to disable the runaway function\nOnly your owners can restore this ability";
+                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly your owners can restore this ability.";
             } else {
                 lButtons=["Runaway!", "Disable"];
-                message="\nYou can run away from your owners,\nor you can choose to declare your undying loyalty and disable your ability to ever run from them";
+                message="\nYou can run away from your owners or you can choose to declare your undying loyalty and disable your ability to ever run from them.";
             }
         } else if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Enable"];
-                message="\nYou chose to disable the runaway function\nThis must be re-enabled before you can runaway";
+                message="\nYou chose to disable the runaway function.\n\nThis must be re-enabled before you can runaway.";
             } else {
                 lButtons=["Runaway!", "Disable"];
-                message="\nYou can run away from your owners,\nor you can choose to declare your undying loyalty and disable your ability to ever run from them";
+                message="\nYou can run away from your owners or you can choose to declare your undying loyalty and disable your ability to ever run from them.";
             }
         } else if (iNum == COMMAND_OWNER ) {  //owner called for menu
             if (g_iRunawayDisable){
-                lButtons=["Sack Wearer", "Enable"];
-                message="\nYou can cancel your ownership of this slave,\nor you can return their ability to run away from you";
+                lButtons=["Release", "Enable"];
+                message="\nYou can release this sub of your service or you can return their ability to run away on their own.";
             } else {
-                lButtons=["Sack Wearer"];
-                message="\nYou can cancel your ownership of this slave";
+                lButtons=["Release"];
+                message="\nYou can release this sub of your service.";
             }
         }
         //Debug("runaway button");
