@@ -247,8 +247,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         Notify(kCmdr, "Error: '" + sName + "' not in list.",FALSE);
 }
 
-AddUniquePerson(key kPerson, string sToken, key kAv) {
-    string sName=llKey2Name(kPerson);
+AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
     list lPeople;
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
     if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) && sToken != "tempowner"){
@@ -826,8 +825,8 @@ default
                 if (llList2String(params, 0) == g_sScript) {
                     string sRequestType = llList2String(params, 4);
                     key kAv = llList2Key(params, 2);
-                    
-                    AddUniquePerson((key)llList2String(params, 5), sRequestType, kAv);
+                    key kNewOwner=(key)llList2String(params, 5);
+                    AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), sRequestType, kAv); //should be safe to uase key2name here, as we added from sensor dialog
                     //FetchAvi(llList2Integer(params, 3), sRequestType, "", kAv);   //remenu
                     UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
                 }
@@ -882,7 +881,7 @@ default
             
             g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
             
-            AddUniquePerson(newOwner, sRequestType, kAv);
+            AddUniquePerson(newOwner, sData, sRequestType, kAv);
             if (remenu)
                 UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
                 //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
