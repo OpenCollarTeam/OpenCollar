@@ -606,22 +606,26 @@ default
         if (iNum == COMMAND_NOAUTH) { //authenticate messages on COMMAND_NOAUTH
             integer iAuth = Auth((string)kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
-                Notify(g_kWearer, "Running away from all owners started, your owners will now be notified!",FALSE);
-                integer n;
-                integer stop = llGetListLength(g_lOwners+g_lTempOwners);
-                for (n = 0; n < stop; n += 2) {
-                    key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
-                    if (kOwner != g_kWearer)
-                    {
-                        Notify(kOwner, llKey2Name(g_kWearer) + " has run away!",FALSE);
+                if (g_iRunawayDisable){
+                    Notify(g_kWearer, "Run Away is currently disabled",FALSE);
+                } else {
+                    Notify(g_kWearer, "Running away from all owners started, your owners will now be notified!",FALSE);
+                    integer n;
+                    integer stop = llGetListLength(g_lOwners+g_lTempOwners);
+                    for (n = 0; n < stop; n += 2) {
+                        key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
+                        if (kOwner != g_kWearer)
+                        {
+                            Notify(kOwner, llKey2Name(g_kWearer) + " has run away!",FALSE);
+                        }
                     }
+                    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
+                    Notify(g_kWearer, "Runaway finished, the " + CTYPE + " will now release locks!",FALSE);
+                    // moved reset request from settings to here to allow noticifation of owners.
+                    llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", kID); // clear RLV restrictions
+                    llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
+                    llResetScript();
                 }
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
-                Notify(g_kWearer, "Runaway finished, the " + CTYPE + " will now release locks!",FALSE);
-                // moved reset request from settings to here to allow noticifation of owners.
-                llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", kID); // clear RLV restrictions
-                llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
-                llResetScript();
             } else llMessageLinked(LINK_SET, iAuth, sStr, kID);
 
             //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
