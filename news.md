@@ -1,6 +1,3 @@
-Issue: 20140723.1
+Issue: 20140816.1
 
-MAINTENANCE RELEASE: OpenCollar 3.970
-now available -> www.opencollar.at
-See you at the beach at the new
-Temple of the Collar! http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21
+Good news for everyone who had been floating or sinking in collar poses! Read about it at -> www.opencollar.at/blog
