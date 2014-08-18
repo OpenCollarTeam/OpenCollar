@@ -832,7 +832,13 @@ default
                     key kNewOwner=(key)llList2String(params, 5);
                     AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), sRequestType, kAv); //should be safe to uase key2name here, as we added from sensor dialog
                     //FetchAvi(llList2Integer(params, 3), sRequestType, "", kAv);   //remenu
-                    UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
+                    integer iNewAuth=Auth(kAv,FALSE);
+                    if (iNewAuth == COMMAND_OWNER){
+                        UserCommand(iNewAuth,sRequestType,kAv,TRUE);
+                        //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
+                    } else {
+                        AuthMenu(kAv,iNewAuth);
+                    }
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
@@ -886,9 +892,15 @@ default
             g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
             
             AddUniquePerson(newOwner, sData, sRequestType, kAv);
-            if (remenu)
-                UserCommand(Auth(kAv,FALSE),sRequestType,kAv,TRUE);
-                //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
+            if (remenu){
+                integer iNewAuth=Auth(kAv,FALSE);
+                if (iNewAuth == COMMAND_OWNER){
+                    UserCommand(iNewAuth,sRequestType,kAv,TRUE);
+                    //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
+                } else {
+                    AuthMenu(kAv,iNewAuth);
+                }
+            }
         }
     }
 }
