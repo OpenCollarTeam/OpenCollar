@@ -203,9 +203,9 @@ default {
         }
         else if (iNum == COMMAND_SAFEWORD) {
             // Safeword has been received, release any restricitions that should be released
-            Notify(kID,"Capture game is OFF!",TRUE);
+            Notify(g_kWearer,"Capture game is OFF!",TRUE);
             g_iCaptureOn=FALSE;
-            Notify(kID,"Temp owners list has been purged.",TRUE);
+            Notify(g_kWearer,"Temp owners list has been purged.",TRUE);
             g_lTempOwners=[];
             llMessageLinked(LINK_SET, LM_SETTING_EMPTY, "auth_tempowner", "");
         }
