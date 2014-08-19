@@ -569,6 +569,11 @@ default
                 llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), "");
             }
         }
+        else if (iNum == RLV_CLEAR) //this triggers for safeword as well
+        {
+            g_lFolderLocks = [];
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
+        }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == DIALOG_RESPONSE)
         {
