@@ -203,9 +203,10 @@ vector GetGridOffset(integer iIndex) {
 ShowChars(integer link,vector grkID_offset)
 {
     // SALAHZAR modified .1 to .05 to handle different sized texture
+    float alpha = llList2Float(llGetLinkPrimitiveParams( link,[PRIM_COLOR,FACE]),1);
     llSetLinkPrimitiveParamsFast( link,[
         PRIM_TEXTURE, FACE, (string)g_kFontTexture, g_vRepeats, grkID_offset - g_vOffset, 0.0,
-        PRIM_COLOR, FACE, g_vColor, 1.0]);
+        PRIM_COLOR, FACE, g_vColor, alpha]);
 }
 
 // SALAHZAR intelligent procedure to extract UTF-8 codes and convert to index in our "cp850"-like table
