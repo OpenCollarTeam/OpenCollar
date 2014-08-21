@@ -442,6 +442,16 @@ default
                 }
             }
         }
+        else if (iNum == MENUNAME_REMOVE)
+        {
+            list lParts = llParseString2List(sStr, ["|"], []);
+            if (llList2String(lParts, 0) == g_sSubMenu)
+            {//someone wants to stick something in our menu
+                string button = llList2String(lParts, 1);
+                integer index = llListFindList(g_lButtons, [button]);                
+                if (index != -1) g_lButtons = llDeleteSubList(g_lButtons, index, index);
+            }
+        }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
             list lParams = llParseString2List(sStr, [" "], []);
