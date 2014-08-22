@@ -15,7 +15,6 @@
 key g_kLMID;//store the request id here when we look up  a LM
 
 key kMenuID;
-key lmkMenuID;
 string CTYPE = "collar";
 list g_lOwners;
 
@@ -191,20 +190,7 @@ Menu(key kID, integer iAuth)
     kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
-LandmarkMenu(key kAv, integer iAuth)
-{
-    list lButtons;
-    //put all LMs button list, unless their sNames are >23 chars long, in which case complain
-    integer n;
-    integer iStop = llGetInventoryNumber(INVENTORY_LANDMARK);
-    for (n = 0; n < iStop; n++)
-    {
-        string sName = llGetInventoryName(INVENTORY_LANDMARK, n);
-        lButtons += [sName];
-    }
 
-    lmkMenuID = Dialog(kAv, "\nChoose a landmark to teleport to.", lButtons, [UPMENU], 0, iAuth);
-}
 
 integer AtLeastVersion(string sCutOff, string sCheckMe)
 {//returns TRUE if sCheckMe is >= sCutOff, else FALSE.  Loops through major.minor.reallyminor versions ad nauseum to do compare
@@ -292,45 +278,11 @@ integer UserCommand(integer iNum, string sStr, key kID)
         //llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sExToken, "");
         llResetScript();
     }
-    if (sStr == "menu " + g_sSubMenu || llToLower(sStr) == "tp")
+    if (sStr == "menu " + g_sSubMenu || llToLower(sStr) == "rlvtp")
     {
         Menu(kID, iNum);
     }
-    else if (llSubStringIndex(sStr, "tp ") == 0)
-    {
-        //we got a "tp" command with an argument after it.  See if it corresponds to a LM in inventory.
-        list lParams = llParseString2List(sStr, [" "], []);
-        string sDest = llGetSubString(sStr,llStringLength(llList2String(lParams,0))+1,-1);
-        integer i=0;
-        integer m=llGetInventoryNumber(INVENTORY_LANDMARK);
-        string s;
-        integer found=0;
-        list matchedLandmarks;
-        for (i=0;i<m;i++)
-        {
-            s=llGetInventoryName(INVENTORY_LANDMARK,i);
-            if (llSubStringIndex(llToLower(s),llToLower(sDest))==0)
-            {
-                //store it, if we only find one, we'll go there
-                Notify(kID,"Matched landmark '"+s+"'",FALSE);
-                found+=1;
-                matchedLandmarks+=s;
-            }
-        }
-        if (found==0)
-        {
-            Notify(kID,"The landmark '"+sDest+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
-        } else if (found>1) {
-            Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
-            lmkMenuID = Dialog(kID , "\nChoose a landmark to teleport to.", matchedLandmarks, [UPMENU], 0, iNum);
-        } else { //exactly one matching LM found, so use it
-            g_kCommander=kID;
-            g_kLMID = llRequestInventoryData(llList2String(matchedLandmarks,0));
-        }
-/*    } else if (sStr=="destinations"){
-        LandmarkMenu(kID, iNum);
-*/
-    }
+
     else
     {
         //do simple pass through for chat commands
@@ -541,37 +493,9 @@ default
                     }
                 }
             }
-            else if (kID == lmkMenuID)
-            {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                //got a response to the LM menu.
-                if (sMessage == UPMENU)
-                {
-                    Menu(kAv, iAuth);
-                }
-                else if (llGetInventoryType(sMessage) == INVENTORY_LANDMARK)
-                {
-                    UserCommand(iAuth, "tp " + sMessage, kAv);
-                    LandmarkMenu(kAv, iAuth);
-                }
-            }
+
         }
     }
 
-    dataserver(key kID, string sData)
-    {
-        if (kID == g_kLMID)
-        {
-            //we just got back LM data from a "tp " command.  now do a rlv "tpto" there
-            vector vGoTo = (vector)sData + llGetRegionCorner();
-            string sCmd = "tpto:";
-            sCmd += llDumpList2String([vGoTo.x, vGoTo.y, vGoTo.z], "/");//format the destination in form x/y/z, as rlv requires
-            sCmd += "=force";
-            llMessageLinked(LINK_SET, RLV_CMD, sCmd, g_kCommander);
-        }
-    }
+
 }
