@@ -196,7 +196,7 @@ You can enter:
 
         if (llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " remove")) {
 
-            string sDel = llStringTrim(llGetSubString(sStr, 16, -1),STRING_TRIM);
+            string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_COMMAND + " remove"), -1),STRING_TRIM);
         
            if (llListFindList(g_lVolatile_Destinations,[sDel]) < 0) {
                 Notify(kID,"Can't find bookmark "+(string)sDel+" to be deleted",FALSE);
@@ -217,19 +217,13 @@ You can enter:
         }
     }
     
-    else if (llGetSubString(sStr,0,14) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
+    else if (llGetSubString(sStr,0, llStringLength(PLUGIN_CHAT_COMMAND + " print") -1) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
 
             PrintDestinations(kID);
 
 
     }
-    else if (llGetSubString(sStr,0,14) == PLUGIN_CHAT_COMMAND + " reset") { //reset destinations
-
-            ResetDestinations(kID);
-
-
-    }
-    else if (llGetSubString(sStr,0,llStringLength(PLUGIN_CHAT_COMMAND)-1) == PLUGIN_CHAT_COMMAND ) { //reset destinations
+    else if (llGetSubString(sStr,0,llStringLength(PLUGIN_CHAT_COMMAND)-1) == PLUGIN_CHAT_COMMAND ) {
 
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1),STRING_TRIM);
         g_kCommander=kID;
@@ -482,19 +476,6 @@ PrintDestinations(key kID) { // On inventory change, re-read our ~destinations n
         }
         Notify(kID, sMsg, i);
 }
-
-ResetDestinations(key kID) { // This is for testing, and can probably be removed
-        integer i;
-        integer length = llGetListLength(g_lVolatile_Destinations);        
-        for (i = 0; i < length; i++)
-        {
-           llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript +  llList2String(g_lVolatile_Destinations, i), "");
-        }
-        g_lVolatile_Slurls = [];
-        g_lVolatile_Destinations = [];
-        Notify(kID, "Removing personal bookmarks", i);
-}
-
 
 default {
     
