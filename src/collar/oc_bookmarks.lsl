@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - bookmarks                              //
@@ -15,7 +16,8 @@
 
 string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
 string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
-string  PLUGIN_CHAT_COMMAND         = "bookmarks"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
+string  PLUGIN_CHAT_COMMAND         = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
+string  PLUGIN_CHAT_COMMAND_ALT     = "tp"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  RLV_STRING                  = "rlvmain_on"; //ask for updated RLV status
 
@@ -93,33 +95,12 @@ string  UPMENU                     = "BACK"; // when your menu hears this, give 
 
 key g_kCommander;
 
-//===============================================================================
-//= parameters   :    string    sMsg    message string received
-//=
-//= return        :    none
-//=
-//= description  :    output debug messages
-//=
-//===============================================================================
-
-
 Debug(string sMsg) {
     if (!IN_DEBUG_MODE) {
         return;
     }
     llOwnerSay(llGetScriptName() + " [DEBUG]: " + sMsg);
 }
-
-//===============================================================================
-//= parameters   :    key       kID                key of the avatar that receives the message
-//=                   string    sMsg               message to send
-//=                   integer   iAlsoNotifyWearer  if TRUE, a copy of the message is sent to the wearer
-//=
-//= return        :    none
-//=
-//= description  :    notify targeted id and maybe the wearer
-//=
-//===============================================================================
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -149,19 +130,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 } 
 
-//===============================================================================
-//= parameters   :    key   kRCPT  recipient of the dialog
-//=                   string  sPrompt    dialog prompt
-//=                   list  lChoices    true dialog buttons
-//=                   list  lUtilityButtons  utility buttons (kept on every iPage)
-//=                   integer   iPage    Page to be display
-//=
-//= return        :    key  handler of the dialog
-//=
-//= description  :    displays a dialog to the given recipient
-//=
-//===============================================================================
-
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -170,14 +138,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 }
 
-//===============================================================================
-//= parameters   :    string    keyID   key of person requesting the menu
-//=
-//= return        :    none
-//=
-//= description  :    build menu and display to user
-//=
-//===============================================================================
 
 DoMenu(key keyID, integer iAuth) {
     string sPrompt = "Pick an option.\n";
@@ -185,19 +145,6 @@ DoMenu(key keyID, integer iAuth) {
 
     g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
-
-
-
-//===============================================================================
-//= parameters   :    iNum: integer parameter of link message (avatar auth level)
-//=                   sStr: string parameter of link message (command name)
-//=                   kID: key parameter of link message (user key, usually)
-//=
-//= return        :   TRUE if the command was handled, FALSE otherwise
-//=
-//= description  :    handles user chat commands (also used as backend for menus)
-//=
-//===============================================================================
 
 integer UserCommand(integer iNum, string sStr, key kID) {
     if (!(iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
@@ -231,8 +178,6 @@ integer UserCommand(integer iNum, string sStr, key kID) {
             else {
                 string slurl = GetSLUrl();
                 addDestination(sAdd,slurl,kID);
-//                  convertSlurl(sAdd,kID,iNum);
-            
             }
             
         }
@@ -291,12 +236,53 @@ You can enter:
         if (llListFindList(g_lVolatile_Destinations,[sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations,[sCmd]);
             TeleportTo(llList2String(g_lVolatile_Slurls,iIndex));
-            
         }
-        else if (llListFindList(g_lDestinations,[sCmd]) >= 0) {
+        else if (llListFindList(g_lDestinations,[sCmd]) >= 0) { //Found exact match, TP over
             integer iIndex = llListFindList(g_lDestinations,[sCmd]);
             TeleportTo(llList2String(g_lDestinations_Slurls,iIndex));
         }
+        else if (llStringLength(sCmd) > 0) { // We didn't get a case sensitive match, so lets loop through what we know and try find what we need
+            integer i=0;
+            integer x=llGetListLength(g_lDestinations);
+            string s;
+            integer found=0;
+            list matchedBookmarks;
+            for (i=0;i<x;i++) { //First check OC locations
+                s=llList2String(g_lDestinations,i);
+                if (llSubStringIndex(llToLower(s),llToLower(sCmd))>=0)
+                {
+                    //store it, if we only find one, we'll go there
+                    //Notify(kID,"Matched bookmark '"+s+"'",FALSE);
+                    found+=1;
+                    matchedBookmarks+=s;
+                }
+            }
+            i=0;
+            x=llGetListLength(g_lVolatile_Destinations);
+            for (i=0;i<x;i++) { //Then check volatile destinations
+                s=llList2String(g_lVolatile_Destinations,i);
+                if (llSubStringIndex(llToLower(s),llToLower(sCmd))>=0)
+                {
+                    //store it, if we only find one, we'll go there
+                    //Notify(kID,"Matched bookmark '"+s+"'",FALSE);
+                    found+=1;
+                    matchedBookmarks+=s;
+                }
+            }
+            if (found==0)
+            {
+                Notify(kID,"The bookmark '"+sCmd+"' has not been found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+            } else if (found>1) {
+            //    Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
+                g_kMenuID = Dialog(kID, "More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
+            } else { //exactly one matching LM found, so use it
+                llOwnerSay("just the one, launch!");
+                UserCommand(iNum, "bookmarks "+llList2String(matchedBookmarks,0), g_kCommander); //Push matched result to command for processing
+            }
+        
+        }
+
+        //Can't find in list, lets try find substring matches
         else {
             Notify(kID,"I didn't understand your command.",FALSE);
         }
@@ -612,14 +598,8 @@ default {
         // send request to main menu and ask other menus if they want to register with us
         llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
     }
 
-    // Reset the script if wearer changes. By only reseting on owner change we can keep most of our
-    // configuration in the script itself as global variables, so that we don't loose anything in case
-    // the settings store isn't available, and also keep settings that were not sent to that store
-    // in the first place.
-    // Cleo: As per Nan this should be a reset on every rez, this has to be handled as needed, but be prepared that the user can reset your script anytime using the OC menus
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer) {
             // Reset if wearer changed
@@ -692,9 +672,6 @@ default {
             // do nothing more if TRUE
         }
         else if (iNum == DIALOG_RESPONSE) {
-            // answer from menu system
-            // careful, don't use the variable kID to identify the user, it is the UUID we generated when calling the dialog
-            // you have to parse the answer from the dialog system and use the parsed variable kAv
 
             if (llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
                 //got a menu response meant for us, extract the values
@@ -703,9 +680,6 @@ default {
                 string sMessage = llList2String(lMenuParams, 1); // button label
                 integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-                // request to switch to parent menu
-
-                
                 
                 if (kID == g_kTBoxIdLocationOnly) {
                         list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
@@ -713,7 +687,6 @@ default {
                         string sMessage = llList2String(lMenuParams, 1);
                         integer iPage = (integer)llList2String(lMenuParams, 2);
                         integer iAuth = (integer)llList2String(lMenuParams, 3);      
-        
                         list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                         //got a menu response meant for us. pull out values
                         if(sMessage != "") {         
@@ -759,30 +732,18 @@ default {
                 }
 
                 else if (sMessage == UPMENU) {
-
-                    //give av the parent menu
                     llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
                 }
                 else if (~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
-                    //we got a response for something we handle locally
                     if (sMessage == "Save") {
-
                         UserCommand(iAuth, "bookmarks save", kAv);
- 
                     }
                     else if (sMessage == "Remove") {
-                        // do What has to be Done
                         UserCommand(iAuth, "bookmarks remove", kAv);
-                        // and restart the menu if wanted/needed
-                     //   DoMenu(kAv, iAuth);
                     }
                     else if (sMessage == "Print") {
-                        // do What has to be Done
-
                         UserCommand(iAuth, "bookmarks print", kAv);
                         UserCommand(iAuth, "bookmarks", kAv);
-                        // and restart the menu if wanted/needed
-                     //   DoMenu(kAv, iAuth);
                     }
 
                 }
@@ -791,7 +752,6 @@ default {
                     UserCommand(iAuth, "bookmarks " + sMessage, kAv);
                 }
                 else if (~llListFindList(g_lButtons, [sMessage])) {
-                    //we got a button which another plugin put into into our menu
                     llMessageLinked(LINK_THIS, iAuth, "menu "+ sMessage, kAv);
                 }
             }
