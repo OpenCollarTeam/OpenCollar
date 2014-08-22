@@ -276,8 +276,7 @@ You can enter:
             //    Notify(kID,"More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".",FALSE);
                 g_kMenuID = Dialog(kID, "More than one matching landmark was found in the " + CTYPE + " of "+llKey2Name(g_kWearer)+".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
-                llOwnerSay("just the one, launch!");
-                UserCommand(iNum, "bookmarks "+llList2String(matchedBookmarks,0), g_kCommander); //Push matched result to command for processing
+                UserCommand(iNum, PLUGIN_CHAT_COMMAND+" "+llList2String(matchedBookmarks,0), g_kCommander); //Push matched result to command for processing
             }
         
         }
@@ -380,8 +379,8 @@ integer validatePlace(string sStr,key kAv, integer iAuth) {
     else if (llGetListLength(lPieces) > MAX_CHAR_TYPE) {return 3; } //this location looks wrong, retreat
     else  { //there's no location here, kick out new menu
 
-        UserCommand(iAuth, "bookmarks save "+sStr, kAv);
-        UserCommand(iAuth, "bookmarks", kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" save "+sStr, kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
         return 0;
     }
 
@@ -422,7 +421,7 @@ integer validatePlace(string sStr,key kAv, integer iAuth) {
     }
     else {
         addDestination(sFriendlyName,sRegionName,kAv);
-        UserCommand(iAuth, "bookmarks", kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
 
     }
     
@@ -692,7 +691,7 @@ default {
                         if(sMessage != "") {         
                             addDestination(sMessage,g_tempLoc,kID);
                         }
-                        UserCommand(iAuth, "bookmarks", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
                 }
                 
                 else if (kID == g_kTBoxIdSave) {
@@ -718,16 +717,16 @@ default {
                         integer iAuth = (integer)llList2String(lMenuParams, 3);
                  //       Debug("|"+sMessage+"|");
                         if (sMessage == UPMENU) {
-                            UserCommand(iAuth, "bookmarks", kAv);
+                            UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
                             return;
                         }
                         if (sMessage != "") { 
                             list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                             //got a menu response meant for us. pull out values
-                            UserCommand(iAuth, "bookmarks remove " + sMessage, kAv);
-                            UserCommand(iAuth, "bookmarks remove", kAv);
+                            UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" remove " + sMessage, kAv);
+                            UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" remove", kAv);
                          }
-                        else UserCommand(iAuth, "bookmarks", kAv);
+                        else UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
                         
                 }
 
@@ -736,20 +735,20 @@ default {
                 }
                 else if (~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
                     if (sMessage == "Save") {
-                        UserCommand(iAuth, "bookmarks save", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" save", kAv);
                     }
                     else if (sMessage == "Remove") {
-                        UserCommand(iAuth, "bookmarks remove", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" remove", kAv);
                     }
                     else if (sMessage == "Print") {
-                        UserCommand(iAuth, "bookmarks print", kAv);
-                        UserCommand(iAuth, "bookmarks", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" print", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
                     }
 
                 }
                 else if (~llListFindList(g_lDestinations + g_lVolatile_Destinations, [sMessage])) {
 
-                    UserCommand(iAuth, "bookmarks " + sMessage, kAv);
+                    UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" " + sMessage, kAv);
                 }
                 else if (~llListFindList(g_lButtons, [sMessage])) {
                     llMessageLinked(LINK_THIS, iAuth, "menu "+ sMessage, kAv);
