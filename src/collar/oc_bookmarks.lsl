@@ -17,7 +17,7 @@
 string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
 string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_COMMAND         = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
-string  PLUGIN_CHAT_COMMAND_ALT     = "tp"; //taking control over some map/tp commands from rlvtp
+string  PLUGIN_CHAT_COMMAND_ALT     = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  RLV_STRING                  = "rlvmain_on"; //ask for updated RLV status
 
@@ -164,7 +164,7 @@ integer UserCommand(integer iNum, string sStr, key kID) {
         }
     }
     
-    else if (sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON) {
+    else if (sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_COMMAND_ALT) {
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     }
