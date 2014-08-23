@@ -141,7 +141,6 @@ setRlvState(){
             //Debug("Sources:"+llDumpList2String(g_lSources,";"));
             g_iRlvActive=TRUE;
             llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
-            
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
@@ -601,6 +600,12 @@ default {
                 //Debug("resending @"+llList2String(g_lBaked,numBaked));
             }
 
+        }
+        if (change & CHANGED_INVENTORY) { //A script may have been recompiled or added, lets refresh the RLV state for other scripts
+            if (g_iRlvActive==TRUE) {
+                llSleep(2);
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+            }
         }
     }
 }
