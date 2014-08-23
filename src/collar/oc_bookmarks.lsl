@@ -50,7 +50,7 @@ string  g_sScript;                              // part of script name used for 
 string CTYPE                        = "collar";    // designer can set in notecard to appropriate word for their item        
 
  // any local, not changing buttons which will be used in this plugin, leave empty or add buttons as you like:
-list    PLUGIN_BUTTONS              = ["Remove", "Print", "Save"];
+list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
 
 integer COMMAND_OWNER              = 500;
@@ -686,8 +686,12 @@ default {
                         //got a menu response meant for us. pull out values
         //                if(sMessage != "") UserCommand(iAuth, "bookmarks save " + sMessage, kAv);
                         Debug("TBoxIDSave "+sMessage);
-                        if(sMessage != "") validatePlace(convertSlurl(sMessage,kAv,iAuth),kAv,iAuth);
-        //                UserCommand(iAuth, "bookmarks", kAv);
+                        if(sMessage != "") {
+                            validatePlace(convertSlurl(sMessage,kAv,iAuth),kAv,iAuth);
+                        }
+                        else {
+                            UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+                        }
                 }
         
                 else if (kID == g_kRemoveMenu) {
