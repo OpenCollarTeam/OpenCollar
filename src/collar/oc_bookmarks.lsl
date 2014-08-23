@@ -719,13 +719,13 @@ default {
                     llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
                 }
                 else if (~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
-                    if (sMessage == "Save") {
+                    if (sMessage == "SAVE") {
                         UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" save", kAv);
                     }
-                    else if (sMessage == "Remove") {
+                    else if (sMessage == "REMOVE") {
                         UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" remove", kAv);
                     }
-                    else if (sMessage == "Print") {
+                    else if (sMessage == "PRINT") {
                         UserCommand(iAuth, PLUGIN_CHAT_COMMAND+" print", kAv);
                         UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
                     }
