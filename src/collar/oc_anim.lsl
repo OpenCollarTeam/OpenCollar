@@ -22,6 +22,8 @@ list g_lAnims;
 //integer g_iPageSize = 8;//number of anims we can fit on one page of a multi-page menu
 list g_lPoseList;
 
+integer g_iTweakPoseAO = 0; //Disable/Enable AO for posed animations
+
 //for the height scaling feature
 key g_kDataID;
 string card = "~heightscalars";
@@ -116,6 +118,7 @@ string AOMENU = "AO";
 string POSEMENU = " Pose";
 
 string HEIGHTFIX = "HeightFix";
+string POSEAO = "PoseMove";
 string g_sHeightFixToken = "HFix";
 integer g_iHeightFix = TRUE;
 list g_lHeightFixAnims;
@@ -179,6 +182,16 @@ AnimMenu(key kID, integer iAuth)
             lButtons += [UNTICKED + POSTURE];
         }
     }
+    if(g_iTweakPoseAO)
+    {
+        //sPrompt += "\n\nThe height of some poses will be adjusted now.";
+        lButtons += [TICKED + POSEAO];
+    }
+    else
+   {
+        //sPrompt += "\n\nThe height of the poses will not be changed.";
+        lButtons += [UNTICKED + POSEAO];
+   }
     if(g_iHeightFix)
     {
         //sPrompt += "\n\nThe height of some poses will be adjusted now.";
@@ -266,9 +279,11 @@ RefreshAnim()
 { //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and call this function in "changed" event on TP
     if (llGetListLength(g_lAnims))
     {
+
         if(g_iPosture) llStartAnimation(g_sPostureAnim);
-        if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)
+        if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)
         {
+            llResetAnimationOverride("ALL");            
             string sAnim = llList2String(g_lAnims, 0);
             if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
             { //get and stop currently playing anim
@@ -299,7 +314,7 @@ RefreshAnim()
 
 StartAnim(string sAnim)
 {
-    if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)
+    if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)
     {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
         {   //get and stop currently playing anim
@@ -307,7 +322,12 @@ StartAnim(string sAnim)
 
             {
                 string s_Current = llList2String(g_lAnims, 0);
-                llStopAnimation(s_Current);
+                if (g_iTweakPoseAO) {
+                    llResetAnimationOverride("ALL");
+                }
+                else {
+                    llStopAnimation(s_Current);
+                }
             }
 
             //stop any currently playing height adjustment
@@ -319,7 +339,16 @@ StartAnim(string sAnim)
 
             //add anim to list
             g_lAnims = [sAnim] + g_lAnims;//this way, g_lAnims[0] is always the currently playing anim
-            llStartAnimation(sAnim);
+            if (g_iTweakPoseAO) {
+
+                 llSetAnimationOverride( "Standing", sAnim);
+                 //  llSetAnimationOverride( "Walking", "~walk_female");
+                 //  llSetAnimationOverride( "Running", "~run");
+
+            }
+            else {
+               llStartAnimation(sAnim);
+            }
             llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_OFF);
             llWhisper(g_iAOChannel, AO_OFF);
             
@@ -359,7 +388,7 @@ StartAnim(string sAnim)
 
 StopAnim(string sAnim)
 {
-    if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)
+    if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)
     {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
         {   //remove all instances of anim from anims
@@ -372,7 +401,13 @@ StopAnim(string sAnim)
                     g_lAnims = llDeleteSubList(g_lAnims, n, n);
                 }
             }
-            llStopAnimation(sAnim);
+//            if ( llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS ) llResetAnimationOverride("ALL");
+            if (g_iTweakPoseAO) {
+                llResetAnimationOverride("ALL");
+            }
+            else {
+                llStopAnimation(sAnim);
+            }
             
             //stop any currently-playing height adjustment
             if (g_iAdjustment)
@@ -438,7 +473,7 @@ RequestPerms()
 {
     if (llGetAttached())
     {
-        llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
+        llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
     }
 }
 
@@ -704,6 +739,7 @@ default
     {
         llResetScript();
     }
+
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
@@ -759,7 +795,11 @@ default
         {
             if(g_iPosture) llStartAnimation(g_sPostureAnim);
         }
-    }
+        if(iPerm & PERMISSION_OVERRIDE_ANIMATIONS )
+        {
+            //Do nothing - we can call default replacement walks/runs when a pose is triggered
+        }
+    } 
     attach(key kID)
     {
         if (kID == NULL_KEY)
@@ -772,7 +812,7 @@ default
         }
         else
         {
-            llRequestPermissions(llGetOwner(),PERMISSION_TRIGGER_ANIMATION);
+            llRequestPermissions(llGetOwner(),PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS);
             //g_lAnimButtons = [" Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];
             //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sAnimMenu, ""); //even necessary? Dunno, shoudln't be, but with this, now reproduces old behaviour of resetting on every rez, only without resetting on every rez. -MD
         }
@@ -904,6 +944,17 @@ default
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == ANIMLOCK)
                     {
                         UserCommand(iAuth, sMessage, kAv);
+                        AnimMenu(kAv, iAuth);
+                    }
+                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSEAO)
+                    {
+                        if (g_iTweakPoseAO) {
+                            g_iTweakPoseAO = 0;
+                        }
+                        else {
+                            g_iTweakPoseAO = 1;
+                        }
+                        RefreshAnim();
                         AnimMenu(kAv, iAuth);
                     }
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == HEIGHTFIX)
