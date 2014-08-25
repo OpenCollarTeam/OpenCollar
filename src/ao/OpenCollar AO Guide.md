@@ -82,35 +82,26 @@ This section tells you how to add/change animations.
 7. Find the notecard for the set you want to edit, and drag it from the OpenCollar Sub AO's inventory into your inventory.
 8. In your inventory, rename this notecard. Call it "My Anims" or something like that. Keep the name small, it needs to fit on a dialog menu button.
 9. Open up the notecard. You'll see  lines in it that look like the following:
-
 ```text
 [ Walking ]
 [ Sitting ]
 ```
-
 ... and so on. If the notecard was already set up with animations, the lines will look like this:
-
 ```text
 [ Walking ]MaleWalk1|MaleWalk2|DorkyWalk1
 [ Sitting ]CrossLeggedSit|MaleSit1
 ```
-
 10. Find the line that corresponds to the animation you want to add. For example, let's say you're trying to add a new 'Sitting' animation. Find the line that starts with [ Sitting ]
 11. If the line doesn't have any animations in it, then at the end of the line, type the animation name. If the line already has some animation(s) in it, then at the end of this line, type the | character, and then type/paste the name of your animation. Make sure you don't add any spaces around the animation names. Look at the other lines in the notecard to see what it should look like. Make sure you spell the animation name right. Make sure you have the capitalization right. A good way to do this is to copy the animation's name by right-clicking on it and selecting 'Properties'. Once you are done, it should look like this:
-
 ```text
 [ Sitting ]CrossLeggedSit|MaleSit1|NewAnimationYouAdded
 ```
-
 12. Repeat the previous step for all the animations you want to add. You can repeat lines if you need to. For example, if you want to add a large number of walks, you can split them up across multiple lines like this:
-
 ```text
 [ Walking ]MaleWalk1|MaleWalk2|MaleWalk3
 [ Walking ]MaleWalk4|MaleWalk5|MaleWalk6
 ```
-
 Make sure that both lines start with `[ Walking ]`, and the script will combine the specified animations.
-
 13. Save this notecard.
 14. Drag the notecard you just created/saved from your inventory into the OpenCollar Sub AO's inventory.
 15. Take the OpenCollar Sub AO back into your inventory.
@@ -144,22 +135,22 @@ Note: ZHAO-II is not associated with OpenCollar Sub AO in any way. Please do not
 
 ## Animation Credits
 
-Linda Kellie Henson
-[Roenik Newell](http://my.secondlife.com/roenik.newell)
-[Vanish Firecaster](http://my.secondlife.com/vanish.firecaster)
-[Nandana Singh](http://my.secondlife.com/nandana.singh)
-[Nadja Gufler](http://my.secondlife.com/nadja.gufler)
-[Marine Kelley](http://my.secondlife.com/marine.kelley)
-[Antoinette Lioncourt](http://my.secondlife.com/antoinette.lioncourt)
-[Beau Perkins](http://my.secondlife.com/beau.perkins)
-[Darien Caldwell](http://my.secondlife.com/darien.caldwell)
-[Freestyle Adamski](http://my.secondlife.com/freestyle.adamski)
-[Garvin Twine](http://my.secondlife.com/garvin.twine)
-[Gaudeon Wu](http://my.secondlife.com/gaudeon.wu)
-[Illse Mannonen](http://my.secondlife.com/illse.mannonen)
-[Madison McHenry](http://my.secondlife.com/madison.mchenry)
-[Stephe Ehrler](http://my.secondlife.com/stephe.ehrler)
-[Twitch Misfit](http://my.secondlife.com/twitch.misfit)
-[Whinge Languish](http://my.secondlife.com/whinge.languish)
-[Creamy Cooljoke](http://my.secondlife.com/creamy.cooljoke)
-[Vasa Vella](http://my.secondlife.com/vasa.vella)
+* Linda Kellie Henson
+* [Roenik Newell](http://my.secondlife.com/roenik.newell)
+* [Vanish Firecaster](http://my.secondlife.com/vanish.firecaster)
+* [Nandana Singh](http://my.secondlife.com/nandana.singh)
+* [Nadja Gufler](http://my.secondlife.com/nadja.gufler)
+* [Marine Kelley](http://my.secondlife.com/marine.kelley)
+* [Antoinette Lioncourt](http://my.secondlife.com/antoinette.lioncourt)
+* [Beau Perkins](http://my.secondlife.com/beau.perkins)
+* [Darien Caldwell](http://my.secondlife.com/darien.caldwell)
+* [Freestyle Adamski](http://my.secondlife.com/freestyle.adamski)
+* [Garvin Twine](http://my.secondlife.com/garvin.twine)
+* [Gaudeon Wu](http://my.secondlife.com/gaudeon.wu)
+* [Illse Mannonen](http://my.secondlife.com/illse.mannonen)
+* [Madison McHenry](http://my.secondlife.com/madison.mchenry)
+* [Stephe Ehrler](http://my.secondlife.com/stephe.ehrler)
+* [Twitch Misfit](http://my.secondlife.com/twitch.misfit)
+* [Whinge Languish](http://my.secondlife.com/whinge.languish)
+* [Creamy Cooljoke](http://my.secondlife.com/creamy.cooljoke)
+* [Vasa Vella](http://my.secondlife.com/vasa.vella)
