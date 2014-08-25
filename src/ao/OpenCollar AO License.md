@@ -38,6 +38,7 @@ We are eager to welcome creators willing to follow these rules. We want to suppo
 For now, violations of these rules will be dealt with through group ejection and public shunning. We may in the future create a directory of third party products and services that we trust. Violators of these rules will be forbidden from being on that list.
 
 Textures come from two Base sources:
-[MouseRunner.com](MouseRunner.com) |  (licensed under the Creative Commons Attribution-ShareAlike 2.5 License)
-[webtreats.mysitemyway.com](webtreats.mysitemyway.com) | (Royalty Free)
-Texture Editing by [Alexei Maven](http://my.secondlife.com/alexei.maven)
+
+* [MouseRunner.com](MouseRunner.com) |  (licensed under the Creative Commons Attribution-ShareAlike 2.5 License)
+* [webtreats.mysitemyway.com](webtreats.mysitemyway.com) | (Royalty Free)
+* Texture Editing by [Alexei Maven](http://my.secondlife.com/alexei.maven)
