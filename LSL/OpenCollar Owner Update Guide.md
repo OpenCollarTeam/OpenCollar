@@ -1,0 +1,32 @@
+## New changes since 3.900
+
+* Fixed "To many open listens in Hudmain" this was a rare bug and has taken a while to find a fix.
+* Couple animations removed from Hud and now all controlled by the collar.
+
+## New changes since 3.800
+
+* New collar link direct to RLV main menu - Update linking into Un/Dress menu instead.
+* Requested hook into Un/Dress Menu, along with change the main menu hook from "menuto" to "menu", this change will make the Owner HUD incompatible with <3.900 collars
+* Change llRegionSay and llSay -> llRegionSayTo this speeds up all commands to the collar.
+* Remove all the AutoTP code since we no longer use this option in the Hud (Why did we have an option in the HUD to turn AutoTP on and off?)
+* Adjusted the llOwnerSay string to be more descriptive by using Key2Name - EG when access to a sub called sub123, the main collar menu will respond - "Sending to Sub123 Resident's collar - menu"
+* Added "post" command to leash menu to bring up the collar "post menu" to display items to leash the collar to
+* update cage rezzer script to use llRegionSayTo- now responds in under 1/2 second
+* Adjusted Animation timeout from the HUD from 30 to 60 seconds
+* When you scan for subs now, the HUD will respond with all subs found in under 1 second, even in busy sims.
+* Changed Sensor scan to Sim wide was set at 20M, and old system limited to 96M maximum and 15 closest Avatars on Sim.
+* Added local chat when trying to send a command to a collar not on the Sim
+* Added OwnerMenu to enable a further 11 custom commands to be added.
+* Added Bound /UnBound to leash menu as attach/detach standard #RLV bound folder
+* Added chat command `/7reset` to reset the Hud and clear the subs list
+
+
+## New changes since 3.703
+
+* Updated the RLV strip code in the cages to add the extra attach/wear points now implemented by LL
+* New leash/unleash/follow Menu system
+* Re - do TP menu system working within SL limits
+* Clean up orphaned code in the scripts.
+* Provide better commentary/documentation.
+
+[North Glenwalker](http://my.secondlife.com/north.glenwalker)
