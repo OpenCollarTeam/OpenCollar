@@ -756,7 +756,9 @@ default
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sRootMenu + "|" + g_sAnimMenu, "");
     
          //start reading the ~heightscalars notecard
-         g_kDataID = llGetNotecardLine(card, g_iLine);
+         if (llGetInventoryKey(card)) {
+             g_kDataID = llGetNotecardLine(card, g_iLine);
+        }
     }
 
     dataserver(key kID, string sData)
