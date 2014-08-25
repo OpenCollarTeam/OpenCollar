@@ -218,7 +218,7 @@ default
             g_iNotecardLine=0;
             g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,0);
         }
-        else llOwnerSay(g_sNotecardName+" notecard absent!");        
+        //else llOwnerSay(g_sNotecardName+" notecard absent!");        
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) 
