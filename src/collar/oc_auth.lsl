@@ -552,18 +552,18 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         if (iNum == COMMAND_WEARER){  //wearer called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
-                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly your owners can restore this ability.";
+                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly primary owners can restore this ability.";
             } else {
                 lButtons=["Runaway!", "Disable"];
-                message="\nYou can run away from your owners or you can choose to declare your undying loyalty and disable your ability to ever run from them.";
+                message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
             }
         } else if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Enable"];
-                message="\nYou chose to disable the runaway function.\n\nThis must be re-enabled before you can runaway.";
+                message="\nYou chose to disable the runaway function.\n\nAs an owner you can restore this ability if desired.";
             } else {
                 lButtons=["Runaway!", "Disable"];
-                message="\nYou can run away from your owners or you can choose to declare your undying loyalty and disable your ability to ever run from them.";
+                message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
             }
         } else if (iNum == COMMAND_OWNER ) {  //owner called for menu
             if (g_iRunawayDisable){
@@ -607,7 +607,7 @@ default
             integer iAuth = Auth((string)kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable){
-                    Notify(g_kWearer, "Run Away is currently disabled",FALSE);
+                    Notify(g_kWearer, "Runaway is currently disabled.",FALSE);
                 } else {
                     Notify(g_kWearer, "Running away from all owners started, your owners will now be notified!",FALSE);
                     integer n;
@@ -795,17 +795,17 @@ default
                         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
                     } else if (sMessage == "Enable") {
                         if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) ){
-                            Notify(kAv,"Temporary owners can not enable runaway",FALSE);
+                            Notify(kAv,"Temporary owners can't enable runaway.",FALSE);
                         } else {
                             g_iRunawayDisable=FALSE;
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"runawayDisable","");
-                            Notify(kAv,"The ability to runaway has been restored", TRUE);
+                            Notify(kAv,"The ability to runaway has been restored.", TRUE);
                             UserCommand(iAuth, "runaway", kAv, TRUE);
                         }
                     } else if (sMessage == "Disable") {
                         g_iRunawayDisable=TRUE;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"runawayDisable=1","");
-                        Notify(g_kWearer,"You have decided to remove your ability to run from your owners... good luck with that.", TRUE);
+                        Notify(g_kWearer,"You have disabled your ability to runaway.", TRUE);
                         UserCommand(iAuth, "runaway", kAv, TRUE);
                     } else if (sMessage == "Cancel") {
                         return;  //no remenu on canel
@@ -815,7 +815,7 @@ default
                             string name=llList2String(g_lOwners,iOwnerIndex+1);
                             UserCommand(iAuth, "remowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
                         } else {
-                            Notify(kAv, "You are not on the owners list", TRUE);
+                            Notify(kAv, "You are not on the owners list.", TRUE);
                             UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
                         }
                     } else {
