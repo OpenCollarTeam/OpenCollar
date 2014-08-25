@@ -23,6 +23,10 @@ list g_lAnims;
 list g_lPoseList;
 
 integer g_iTweakPoseAO = 0; //Disable/Enable AO for posed animations
+key g_kMenuPoseMove;
+string g_sPoseMoveWalk;
+string NOWALK = "no walk";
+string g_sPoseWalkAnimationPrefix = "~walk_";
 
 //for the height scaling feature
 key g_kDataID;
@@ -36,6 +40,7 @@ integer g_iLastRank = 0; //in this integer, save the rank of the person who pose
 string g_sRootMenu = "Main";
 string g_sAnimMenu = "Animations";
 string g_sPoseMenu = " Pose";
+string g_sPoseMoveMenu = "PoseMove";
 string g_sAOMenu = "AO";
 //string g_sGiveAO = "Give AO";
 string g_sTriggerAO = "AO Menu";
@@ -116,6 +121,7 @@ integer g_iMenuStride = 3;
 string ANIMMENU = "Anim";
 string AOMENU = "AO";
 string POSEMENU = " Pose";
+string POSEMOVEMENU = "PoseMove";
 
 string HEIGHTFIX = "HeightFix";
 string POSEAO = "PoseMove";
@@ -273,6 +279,53 @@ integer SetPosture(integer iOn, key kCommander)
         return FALSE;
     }
 }
+
+PoseMoveMenu(key kID, integer iPage, integer iAuth) {
+    string sPrompt = "\nThe wearer of this "+ CTYPE;
+    list lButtons;
+    if(g_iTweakPoseAO)
+    {
+        //sPrompt += "\n\nThe PoseMove Tweak is on.";
+        lButtons += [TICKED + POSEAO];
+    }
+    else
+   {
+        //sPrompt += "\n\nThe The PoseMove Tweak is off.";
+        lButtons += [UNTICKED + POSEAO];
+   }
+   lButtons += [NOWALK];
+   integer i = 0;
+   integer iAnims = llGetInventoryNumber(INVENTORY_ANIMATION) - 1;
+   string sAnim;
+   for (i=0;i<=iAnims;++i)
+    {
+        sAnim = llGetInventoryName(INVENTORY_ANIMATION,i);
+        if (llSubStringIndex(sAnim,g_sPoseWalkAnimationPrefix) == 0) {
+            //Debug("sAnim = "+sAnim+"\ng_sPoseMoveWalk = "+g_sPoseMoveWalk);
+            if (sAnim == g_sPoseMoveWalk) {
+                lButtons += [TICKED + llGetSubString(sAnim,llStringLength(g_sPoseWalkAnimationPrefix),-1)];
+            }
+            else {
+                lButtons += [UNTICKED + llGetSubString(sAnim,llStringLength(g_sPoseWalkAnimationPrefix),-1)];
+            }
+        }
+    }
+
+    sPrompt +="\n\nwww.opencollar.at/animations";    
+
+    g_kMenuPoseMove = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    list lNewStride = [kID, g_kMenuPoseMove, POSEMOVEMENU];
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (iIndex == -1)
+    {
+        g_lMenuIDs += lNewStride;
+    }
+    else
+    {//this person is already in the dialog list.  replace their entry
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, iIndex, iIndex - 1 + g_iMenuStride);
+    }
+
+}
         
 
 RefreshAnim()
@@ -342,7 +395,9 @@ StartAnim(string sAnim)
             if (g_iTweakPoseAO) {
 
                  llSetAnimationOverride( "Standing", sAnim);
-                 //  llSetAnimationOverride( "Walking", "~walk_female");
+                 if (g_sPoseMoveWalk) {
+                     llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
+                 }
                  //  llSetAnimationOverride( "Running", "~run");
 
             }
@@ -950,14 +1005,8 @@ default
                     }
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSEAO)
                     {
-                        if (g_iTweakPoseAO) {
-                            g_iTweakPoseAO = 0;
-                        }
-                        else {
-                            g_iTweakPoseAO = 1;
-                        }
-                        RefreshAnim();
-                        AnimMenu(kAv, iAuth);
+                        //This is the Animation menu item, we need to call the PoseMoveMenu item from here...
+                        PoseMoveMenu(kAv,iNum,iAuth);
                     }
                     else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == HEIGHTFIX)
                     {
@@ -1001,6 +1050,35 @@ default
                         UserCommand(iAuth, sMessage, kAv);
                     }
                     PoseMenu(kAv, iPage, iAuth);
+                }
+                else if (sMenuType == POSEMOVEMENU) {
+                    if (sMessage == UPMENU)
+                    { //return on parent menu, so the animmenu below doesn't come up
+                        AnimMenu(kAv, iAuth);
+                        return;
+                    }
+                
+                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSEAO)
+                    {
+                        if (g_iTweakPoseAO) {
+                            g_iTweakPoseAO = 0;
+                        }
+                        else {
+                            g_iTweakPoseAO = 1;
+                        }
+                        RefreshAnim();
+                        PoseMoveMenu(kAv,iNum,iAuth);
+                    }
+                    else if (sMessage == NOWALK) {
+                        g_sPoseMoveWalk = "";
+                        RefreshAnim();
+                        PoseMoveMenu(kAv,iNum,iAuth);
+                    }
+                    else if (sMessage != "") {
+                        g_sPoseMoveWalk = g_sPoseWalkAnimationPrefix + llGetSubString(sMessage,llStringLength(TICKED),-1);
+                        RefreshAnim();
+                        PoseMoveMenu(kAv,iNum,iAuth);
+                    }
                 }
             }
         }
