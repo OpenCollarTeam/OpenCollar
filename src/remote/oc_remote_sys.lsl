@@ -1,110 +1,109 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - hudmain                             //
-//                                 version 3.941                                  //
+//                                 version 3.942                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//no gridwide TP, probably because of llRegionSayTo in SendCmd()
-//to enhance: check if command is a forced tp - then use llInstantMessage if sub is not in same SIM - but this is probably slow, laggy and error prone
-//- and do not forget to check if avi is online, before sending out a gridwide tp...
+//  no gridwide TP, probably because of llRegionSayTo in SendCmd()
+//  to enhance: check if command is a forced tp - then use llInstantMessage if sub is not in same SIM - but this is probably slow, laggy and error prone
+//  and do not forget to check if avi is online, before sending out a gridwide tp...
 
-key currentsub = "";
 string g_sDialogUrl;
-list cmdqueue;// requset, id, cmd, type
-integer checkdelay = 600;
-integer debugging=FALSE; // show debug messages
-list subs = [];//strided list in the form key,name
-string tmpname; //used temporarily to store new owner or secowner name while retrieving key
-list localcmds = ["reset","removesub","listsubs", "reloadlist","help","update","owner"];//these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
-list LISTENERS; // list of hud channel handles we are listening for, for building lists
 
-string parentmenu = "Main"; //whaere we return to
-string submenu = "Subs";  //which menu are we
-key subkey = NULL_KEY;  //clear the sub uuid
-string subname; //what is the name of the sub
-list AGENTS; //list of AV's to ping
-//Notecard reading bits
-string configurationNotecardName = "Subs";//Notecard to contain subs names
-key notecardQueryId;
+//  show debug messages
+integer debugging = FALSE;
+
+//  strided list in the form key,name
+list subs = [];
+
+//  these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
+list localcmds = ["reset","removesub","listsubs", "reloadlist","help","update","owner"];
+
+//  list of hud channel handles we are listening for, for building lists
+list LISTENERS;
+
+string parentmenu = "Main";   //  where we return to
+string submenu    = "Subs";   //  which menu are we
+key    subkey     = NULL_KEY; //  clear the sub uuid
+string subname;               //  what is the name of the sub
+list   AGENTS;                //  list of AV's to ping
+
+//  Notecard reading bits
+
+string  configurationNotecardName = "Subs";
+key     notecardQueryId;
 integer line;
 
-key queueid;
-integer listenchannel = 802930;//just something i randomly chose
-integer picksubchannel = 3264589;
-integer removesubchannel = 32645891;
 integer listener;
-integer timeout = 90;
-string pendingcmd;//save cmd here while we give the sub menu to decide who to send it to
 
-//news system stuff
-key newslistid;
-list article_ids;
+//  save cmd here while we give the sub menu to decide who to send it to
+string pendingcmd;
 
-//MESSAGE MAP
-integer COMMAND_OWNER = 500;
-integer POPUP_HELP = 1001;
-integer SUB_LIST = 2005;
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer SUBMENU = 3002;
-integer MENUNAME_REMOVE = 3003;
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-integer SET_SUB = -1000;
-integer SEND_CMD = -1001;
-integer SEND_CMD_PICK_SUB = -1002;
-integer SEND_CMD_ALL_SUBS = -1003;
-integer CMD_AUTO_TP = -1004;
-integer SEND_CMD_SUB = -1005;
+//  MESSAGE MAP
+integer COMMAND_OWNER        = 500;
+integer POPUP_HELP           = 1001;
+
+integer MENUNAME_REQUEST     = 3000;
+integer MENUNAME_RESPONSE    = 3001;
+integer SUBMENU              = 3002;
+
+integer DIALOG               = -9000;
+integer DIALOG_RESPONSE      = -9001;
+integer DIALOG_TIMEOUT       = -9002;
+
+integer SEND_CMD_PICK_SUB    = -1002;
+integer SEND_CMD_ALL_SUBS    = -1003;
+
+integer SEND_CMD_SUB         = -1005;
 integer SEND_CMD_NEARBY_SUBS = -1006;
-integer LOCALCMD_REQUEST = -2000;
-integer LOCALCMD_RESPONSE = -2001;
-integer DIALOG_URL = -2002;
+integer LOCALCMD_REQUEST     = -2000;
+integer LOCALCMD_RESPONSE    = -2001;
+integer DIALOG_URL           = -2002;
 
-string UPMENU = "^";
-string MORE = ">";
+string UPMENU       = "^";
 
-string listsubs = "List Subs";
-string removesub="Remove Sub";
-string reloadlist="Reload Subs";
-string scansubs="Scan Subs";
+string listsubs     = "List Subs";
+string removesub    = "Remove Sub";
+string reloadlist   = "Reload Subs";
+string scansubs     = "Scan Subs";
 string loadnotecard = "Load Subs";
-string dumpsubs = "Dump Subs";
-string ALLSUBS = "*All*";
+string dumpsubs     = "Dump Subs";
+string ALLSUBS      = "*All*";
 
-string currentmenu;
 string wearerName;
-key removedSub;
-key wearer;
+key    removedSub;
+key    wearer;
 
-
-list menuids;//three strided list of avkey, dialogid, and menuname
+//  three strided list of avkey, dialogid, and menuname
+list menuids;
 integer menustride = 3;
-// Use these to keep track of your current menu
-// Use any variable name you desire
-string MAINMENU = "SubMenu";
-string PICKMENU = "PickSub";
+
+//  Use these to keep track of your current menu
+//  Use any variable name you desire
+
+string MAINMENU   = "SubMenu";
+string PICKMENU   = "PickSub";
 string REMOVEMENU = "RemoveSub";
 
 debug(string str)
 {
-    if (debugging) llOwnerSay(str);
+    if (debugging)
+        llOwnerSay(str);
 }
 
 // Yay for Cleo and Jessenia – Personal Object Channel!
 integer getPersonalChannel(key owner, integer nOffset)
 {
     integer chan = (integer)("0x"+llGetSubString((string)owner,2,7)) + nOffset;
-    if (chan>0)
+    if (0 < chan)
     {
-        chan=chan*(-1);
+        chan = chan*(-1);
     }
     if (chan > -10000)
     {
@@ -113,42 +112,38 @@ integer getPersonalChannel(key owner, integer nOffset)
     return chan;
 }
 
-
 integer InSim(key id)
 {
-    return llKey2Name(id) != "";// checks if the AV is logged in and in Sim
+//  check if the AV is logged in and in Sim
+
+    return (llGetAgentSize(id) != ZERO_VECTOR);
 }
 
-Popup(key id, string message)
+SendCmd(key id, string cmd)
 {
-    //one-way popup message.  don't listen for these anywhere
-    llDialog(id, message, [], 298479);
-}
+    subname = llList2String(subs, (llListFindList(subs, [(string)id])) + 1);
 
-
-SendCmd(key id, string cmd, integer all)
-{
-    subname = llList2String(subs,(llListFindList(subs,[(string)id]))+1);
     if (InSim(id))
     {
         llRegionSayTo(id,getPersonalChannel(id,1111), (string)id + ":" + cmd);
-        if (llGetSubString(cmd,0,6)=="leashto")
+
+        if (llGetSubString(cmd, 0, 6)=="leashto")
         {
             key temp = llGetSubString(cmd,8,43);
-            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - leashto " + llGetDisplayName(temp));//makes Leashto look better NG.
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - leashto " + llGetDisplayName(temp));
         }
-        else if (llGetSubString(cmd,0,5)=="follow")
+        else if (llGetSubString(cmd, 0, 5)=="follow")
         {
-            key temp = llGetSubString(cmd,7,42);
-            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - follow " + llGetDisplayName(temp));//Makes Follow look better NG.
+            key temp = llGetSubString(cmd, 7, 42);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - follow " + llGetDisplayName(temp));
         }
         else
-        llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd);//make it look nice on the screen for owners, now it looks nice we can display all sent commands to all subs NG.
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd);
     }
     else
     {
-        llOwnerSay("You have selected someone who cannot be found on this Sim.");//opps we selected someone not here! NG adding nice Say's
-        PickSubMenu(wearer,0);
+        llOwnerSay("You have selected someone who cannot be found on this Sim.");
+        PickSubMenu(wearer, 0);
     }
 }
 
@@ -159,9 +154,9 @@ SendNearbyCmd(string cmd)
     for (n = 0; n < stop; n = n + 4)
     {
         key id = (key)llList2String(subs, n);
-        if(id != wearer && InSim(id)) //Don't expose out-of-sim subs
+        if (id != wearer && InSim(id)) //Don't expose out-of-sim subs
         {
-            SendCmd(id, cmd, TRUE);
+            SendCmd(id, cmd);
         }
     }
 }
@@ -173,18 +168,18 @@ SendAllCmd(string cmd)
     for (n = 0; n < stop; n = n + 4)
     {
         key id = (key)llList2String(subs, n);
-        if(id != wearer && InSim(id)) //Prevent out of sim sending
+        if (id != wearer && InSim(id)) //Prevent out of sim sending
         {
-            SendCmd(id, cmd, TRUE);
+            SendCmd(id, cmd);
         }
     }
 }
 
 AddSub(key id, string name)
 {
-        
-    if (llListFindList(subs,[id])!=-1) return;
-    if( llStringLength(name) >= 24) name=llStringTrim(llGetSubString(name, 0, 23),STRING_TRIM);//only store first 24 char$ of subs name
+
+    if (~llListFindList(subs,[id])) return;
+    if ( llStringLength(name) >= 24) name=llStringTrim(llGetSubString(name, 0, 23),STRING_TRIM);//only store first 24 char$ of subs name
     if (name=="????")//don't register any unrecognised names
     {
     }
@@ -204,11 +199,11 @@ AddSub(key id, string name)
 RemoveSub(key subbie)
 {
     integer index = llListFindList(subs,[subbie]);
-    if (index!=-1)
+    if (~index)
     {
         subs=llDeleteSubList(subs,index, index+3);
-        SendCmd(subbie, "remowners "+wearerName, FALSE);
-        SendCmd(subbie, "remsecowner "+wearerName, FALSE);
+        SendCmd(subbie, "remowners "+wearerName);
+        SendCmd(subbie, "remsecowner "+wearerName);
     }
 }
 
@@ -238,28 +233,25 @@ SubMenu(key id) // Single page menu
     buttons += [listsubs,removesub,scansubs,loadnotecard,dumpsubs];
     //parent menu
     list utility = [UPMENU];
-    
-    if(llStringLength(text) > 511) // Check text length so we can warn for it being too long before hand.
+
+    if (llStringLength(text) > 511) // Check text length so we can warn for it being too long before hand.
      {
          llOwnerSay("**** Too many submissives, not all names may appear. ****");
          text = llGetSubString(text,0,510);
      }
     key menuid = Dialog(id, text, buttons, utility, 0);
-    
+
     // UUID , Menu ID, Menu
     list newstride = [id, menuid, MAINMENU];
-    
+
     // Check dialogs for previous entry and update if needed
     integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    { //this person is already in the dialog list.  replace their entry
+
+//  this person is already in the dialog list.  replace their entry
+    if (~index)
         menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }    
-    
+    else
+        menuids += newstride;
 }
 
 PickSubMenu(key id, integer page) // Multi-page menu
@@ -275,22 +267,20 @@ PickSubMenu(key id, integer page) // Multi-page menu
     }
     //parent menu
     list utility = [UPMENU];
-    
+
     key menuid = Dialog(id, text, buttons, utility, page);
-    
+
     // UUID , Menu ID, Menu
     list newstride = [id, menuid, PICKMENU];
-    
+
     // Check dialogs for previous entry and update if needed
     integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    { //this person is already in the dialog list.  replace their entry
+
+//  this person is already in the dialog list.  replace their entry
+    if (~index)
         menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }       
+    else
+        menuids += newstride;
 }
 
 RemoveSubMenu(key id, integer page) // Multi-page menu
@@ -308,22 +298,20 @@ RemoveSubMenu(key id, integer page) // Multi-page menu
 
     //parent menu
     list utility = [UPMENU];
-    
+
     key menuid = Dialog(id, text, buttons, utility, page);
-    
+
     // UUID , Menu ID, Menu
     list newstride = [id, menuid, REMOVEMENU];
-    
+
     // Check dialogs for previous entry and update if needed
     integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    { //this person is already in the dialog list.  replace their entry
+
+//  this person is already in the dialog list.  replace their entry
+    if (~index)
         menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }
+    else
+        menuids += newstride;
 }
 
 ConfirmSubRemove(key id) // Single page menu
@@ -331,49 +319,45 @@ ConfirmSubRemove(key id) // Single page menu
     string text = "Please confirm that you really want to remove " + subname + " as your sub. This will also remove you from " + subname + "'s collar as owner.";
 
     list buttons = ["Yes", "No"];
-    integer stop = llGetListLength(subs);
     list utility = [];
-    
+
     key menuid = Dialog(id, text, buttons, utility, 0);
-    
-    // UUID , Menu ID, Menu
+
+//  UUID , Menu ID, Menu
     list newstride = [id, menuid, REMOVEMENU];
 
     integer index = llListFindList(menuids, [id]);
-    if (index == -1)
-    {
-        menuids += newstride;
-    }
-    else
-    {
+    if (~index)
         menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    } 
+    else
+        menuids += newstride;
 }
+
 //NG lets send pings here and listen for pong replys
 SendCommand(key id)
 {
     if (llGetListLength(LISTENERS) >= 60) return;  // lets not cause "too many listen" error
-    
+
     integer channel = getPersonalChannel(id, 1111);
     llRegionSayTo(id, channel, (string)id+ ":ping");
     LISTENERS += [ llListen(channel, "", NULL_KEY, "" )] ;// if we have a reply on the channel lets see what it is.
-    llSetTimerEvent(5.0);// no reply by now, lets kick off the timer
+    llSetTimerEvent(5);// no reply by now, lets kick off the timer
 }
 processConfiguration(string data)
 {
 //  if we are at the end of the file
-    if(data == EOF)
+    if (data == EOF)
     {
     //  notify the owner
         llOwnerSay("Finished reading the Sub Notecard");
         return;
     }
-    if(data != "")//  if we are not working with a blank line
+    if (data != "")//  if we are not working with a blank line
     {
-        if(llSubStringIndex(data, "#") != 0)//  if the line does not begin with a comment
+        if (llSubStringIndex(data, "#") != 0)//  if the line does not begin with a comment
         {
             integer i = llSubStringIndex(data, "=");//  find first equal sign
-            if(i != -1)//  if line contains equal sign
+            if (~i)//  if line contains equal sign
             {
                 string name = llGetSubString(data, 0, i - 1);//  get name of name/value pair
                 string value = llGetSubString(data, i + 1, -1);//  get value of name/value pair
@@ -382,9 +366,9 @@ processConfiguration(string data)
                 name = llToLower(name);//  make name lowercase (case insensitive)
                 temp = llParseString2List(value, [" "], []);
                 value = llDumpList2String(temp, " ");//  trim value
-                if(name == "subname")//  subname
+                if (name == "subname")//  subname
                     subname = value;
-                else if(name == "subid")//  subid
+                else if (name == "subid")//  subid
                     subkey = value;
                 else//  unknown name
                     llOwnerSay("Unknown configuration value: " + name + " on line " + (string)line);
@@ -395,11 +379,11 @@ processConfiguration(string data)
             }
         }
     }
-    if (subname=="") 
+    if (subname=="")
     {
         subname="????";
     }
-    if (subkey=="") 
+    if (subkey=="")
     {
         subkey="00000000-0000-0000-0000-000000000000";
     }
@@ -414,24 +398,29 @@ default
         wearer = llGetOwner();  //Who are we
         wearerName = llKey2Name(wearer);  //thats our real name
         listener=llListen(getPersonalChannel(wearer,1111),"","",""); //lets listen here
-        
+
 //        subs = []; //this clears the subs list on reset
         llSleep(1.0);//giving time for others to reset before populating menu
         //llOwnerSay("Debug: state_entry hudmain, menu button");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
-		llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+        llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
-	
-	changed(integer change) {
-		//reload on notcard changes should happen automaticly
-		if(change & CHANGED_INVENTORY) llOwnerSay("Note: Reload list of subs from notecard manually via menu, if you just edited it");
-		if(change & CHANGED_OWNER) llResetScript();
-	}
-	
+
+    changed(integer change)
+    {
+//      reload on notcard changes should happen automaticly
+
+        if (change & CHANGED_INVENTORY)
+            llOwnerSay("Note: Reload list of subs from notecard manually via menu, if you just edited it");
+
+        if (change & CHANGED_OWNER)
+            llResetScript();
+    }
+
     link_message(integer sender, integer num, string str, key id)
     {
         debug("Link Message: num=" + (string)num + " str=" + str);
-		if (num == MENUNAME_REQUEST && str == parentmenu)
+        if (num == MENUNAME_REQUEST && str == parentmenu)
         {
             llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
         }
@@ -452,38 +441,29 @@ default
                 }
                 llOwnerSay("Subs: " + llDumpList2String(tmplist, ", "));
             }
-            else if (str == "help") // lets give out the help guide
-            {
-                llGiveInventory(id, "OpenCollar Owner HUD Guide");
-            }
-            else if (str == "update") // lets give out the Update Guide
-            {
-                llGiveInventory(id, "OpenCollar Owner Update Guide");
-            }
-            else if (str == "owner") // lets give out the  OwnerMenu Guide
-            {
-                llGiveInventory(id, "OpenCollar Owner HUD Ownermenu Guide");
-            }
+            else if (str == "help")   llGiveInventory(id, "OpenCollar Owner HUD Guide");
+            else if (str == "update") llGiveInventory(id, "OpenCollar Owner Update Guide");
+            else if (str == "owner")  llGiveInventory(id, "OpenCollar Owner HUD Ownermenu Guide");
             else if (str =="reset")
             {
                 subs = [];
                 llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
-				//llOwnerSay("Debug: hudmain, user reset request");
-                llResetScript(); //lets reset things
+//              llOwnerSay("Debug: hudmain, user reset request");
+                llResetScript();
             }
         }
         else if (num == SUBMENU && str == submenu)
         {
-            //give the Owner menu here.  should let the dialog do whatever the chat commands do
+//          give the Owner menu here.  should let the dialog do whatever the chat commands do
             SubMenu(id);
         }
         else if (num == SEND_CMD_SUB)
         {
-            SendCmd(id, str, FALSE);
+            SendCmd(id, str);
         }
         else if (num == SEND_CMD_PICK_SUB)
         {
-            //give a sub menu and send cmd to the sub picked
+//          give a sub menu and send cmd to the sub picked
             integer length = llGetListLength(subs);
             if (length > 6)
             {
@@ -493,22 +473,22 @@ default
             else if (length == 4)
             {
                 key sub = (key)llList2String(subs, 0);
-                SendCmd(sub, str, FALSE);
+                SendCmd(sub, str);
             }
             else
             {
-                //you have 0 subs in list (empty)
+//              you have 0 subs in list (empty)
                 llMessageLinked(LINK_THIS, POPUP_HELP, "Cannot send command because you have no subs listed.  Choose \"Scan Subs\" in the Subs menu after being set as owner or secowner on an OpenCollar.", wearer);
             }
 
         }
         else if (num == SEND_CMD_ALL_SUBS)
         {
-            SendAllCmd(str);  //Are we sending to All subs
+            SendAllCmd(str);
         }
         else if (num == SEND_CMD_NEARBY_SUBS)
         {
-            SendNearbyCmd(str);  //Or are we asending to just 1 sub?
+            SendNearbyCmd(str);
         }
         else if (num == LOCALCMD_REQUEST)
         {
@@ -517,18 +497,21 @@ default
         else if (num == DIALOG_RESPONSE)
         {
             integer menuindex = llListFindList(menuids, [id]);
-            if (menuindex != -1)
+            if (~menuindex)
             {
-                //got a menu response meant for us.  pull out values
-                list menuparams = llParseString2List(str, ["|"], []);
-                id = (key)llList2String(menuparams, 0);          
-                string message = llList2String(menuparams, 1);                                         
-                integer page = (integer)llList2String(menuparams, 2);
-                string menutype = llList2String(menuids, menuindex + 1);
-                //remove stride from menuids
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
-                menuids = llDeleteSubList(menuids, menuindex - 1, menuindex - 2 + menustride);    
-                
+//              got a menu response meant for us.  pull out values
+
+                list    menuparams = llParseString2List(str, ["|"], []);
+                        id         = (key)llList2String(menuparams, 0);
+                string  message    = llList2String(menuparams, 1);
+                integer page       = (integer)llList2String(menuparams, 2);
+                string  menutype   = llList2String(menuids, menuindex + 1);
+
+//              remove stride from menuids
+//              we have to subtract from the index because the dialog id comes in the middle of the stride
+
+                menuids = llDeleteSubList(menuids, menuindex - 1, menuindex - 2 + menustride);
+
                 if (menutype == MAINMENU)
                 {
                     if (message == UPMENU)
@@ -547,7 +530,7 @@ default
                     }
                     else if (message == loadnotecard)  // Ok lets load the subs from the notecard
                     {
-                        if(llGetInventoryType(configurationNotecardName) != INVENTORY_NOTECARD)
+                        if (llGetInventoryType(configurationNotecardName) != INVENTORY_NOTECARD)
                         {
                             //  notify owner of missing file
                             llOwnerSay("Missing notecard: " + configurationNotecardName);
@@ -556,7 +539,7 @@ default
                         line = 0;
                         notecardQueryId = llGetNotecardLine(configurationNotecardName, line);
                         SubMenu(id); //return to SubMenu
-                    }                    
+                    }
                     else if (message == reloadlist)
                     {
                     SubMenu(id);
@@ -595,7 +578,7 @@ default
                             tmplist = llList2List(subs, n + 1, n + 1);
                             text+= "\nsubid = " + llDumpList2String(tmplist,"");
                         }
-                        llOwnerSay(text);   
+                        llOwnerSay(text);
                     }
                 }
                 else if (menutype == REMOVEMENU) // OK we want to remove a sub from the Hud
@@ -605,15 +588,15 @@ default
                     {
                         SubMenu(wearer);
                     }
-                    else if(message == "Yes")
+                    else if (message == "Yes")
                     {
                         RemoveSub(removedSub);
                     }
-                    else if(message == "No")
+                    else if (message == "No")
                     {
                         return;
                     }
-                    else if (index != -1)
+                    else if (~index)
                     {
                         removedSub = (key)llList2String(subs, index - 1);
                         subname = llList2String(subs, index);
@@ -632,11 +615,11 @@ default
 
                         SendAllCmd(pendingcmd);
                     }
-                    else if (index != -1)
+                    else if (~index)
                     {
                         subname = message;
                         key sub = (key)llList2String(subs, index - 1);
-                        SendCmd(sub, pendingcmd, FALSE);
+                        SendCmd(sub, pendingcmd);
                     }
                 }
             }
@@ -644,7 +627,7 @@ default
         else if (num == DIALOG_TIMEOUT)
         {
             integer menuindex = llListFindList(menuids, [id]);
-            if (menuindex != -1)
+            if (~menuindex)
             {
                 llOwnerSay("Main Menu timed out!");
             }
@@ -655,25 +638,33 @@ default
             debug("dialog url:"+str);
         }
     }
-    //Now we have recieved something back from a ping lets break it down and see if it's for us.
+
+//  Now we have recieved something back from a ping lets break it down and see if it's for us.
     listen(integer channel, string name, key id, string msg)
     {
-        if (llGetSubString(msg,36,40)==":pong")
+        if (llGetSubString(msg, 36, 40)==":pong")
         {
-            key subId=llGetOwnerKey(id);
-            string subName=llKey2Name(subId);
-            if (subName=="") subName="????";
-            llOwnerSay(subName+" has been detected."); 
+            key    subId   = llGetOwnerKey(id);
+            string subName = llKey2Name(subId);
+
+            if (subName == "") subName="????";
+
+            llOwnerSay(subName+" has been detected.");
             AddSub(subId,subName);
-        } 
+        }
     }
-    on_rez(integer param)
+
+    on_rez(integer start_param)
     {
         llSleep(2.0);
-        //llOwnerSay("Debug: on_rez hudmain");
-        llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+
+//      llOwnerSay("Debug: on_rez hudmain");
+
+        llOwnerSay("Type these commands on channel 7:\n\t/7help for a HUD Guide\n\t/7update for an update Guide\n\t/7owner for an owners menu Setup Guide");
     }
-    timer()//clear things after ping
+
+//  clear things after ping
+    timer()
     {
         llSetTimerEvent(0);
         AGENTS = [];
@@ -684,10 +675,10 @@ default
         }
         LISTENERS = [];
     }
+
     dataserver(key request_id, string data)
     {
-        if(request_id == notecardQueryId)
+        if (request_id == notecardQueryId)
             processConfiguration(data);
-
     }
 }
