@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarHUD - Ownermenu                            //
-//                                 version 3.900                                  //
+//                                 version 3.901                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,42 +48,27 @@ string cmd11 = "cmd11";
 //DO NOT CHANGE ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING
 //--------------------------------------------------------------------
 
-integer timeout = 90;
-//MESSAGE MAP
-integer COMMAND_OWNER = 500;
-integer COMMAND_WEARER = 503;
-integer CHAT = 505;
-
-integer POPUP_HELP = 1001;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU = 3002;
-integer MENUNAME_REMOVE = 3003;
+
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-integer SET_SUB = -1000;
-integer SEND_CMD = -1001;
+
 integer SEND_CMD_PICK_SUB = -1002;
-integer SEND_CMD_ALL_SUBS = -1003;
-integer LOCALCMD_REQUEST = -2000;
-integer LOCALCMD_RESPONSE = -2001;
 
 //Strings
 string UPMENU = "^";
-string MORE = ">";
+
 string parentmenu = "Main";
-string submenu = "OwnerMenu";
+
 string currentmenu;
-string subName;
+string submenu = "OwnerMenu";
 
-//Keys
 key wearer;
-key owner = NULL_KEY;
+
 key menuid;
-
-list settings;
-
 
 key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
 {
@@ -100,8 +85,8 @@ Dialogowner(key id)
     list buttons ;
     string text = "This is where you can set up your own commands for the collar\n";
     text += "See the examples in OpenCollarHud - Ownermenu script";
-    
-    buttons += [Button1];    
+
+    buttons += [Button1];
     buttons += [Button2];
     buttons += [Button3];
     buttons += [Button4];
@@ -116,47 +101,18 @@ Dialogowner(key id)
     menuid = Dialog(id, text, buttons, utility, 0);
 }
 
-SendIM(key id, string str)
-{
-    if (id != NULL_KEY)
-    {
-        llInstantMessage(id, str);
-    }
-}
-
-SaveSettings(string str, key id)
-{
-    list temp = llParseString2List(str, [" "], []);
-    string option = llList2String(temp, 0);
-    string value = llList2String(temp, 1);
-    integer index = llListFindList(settings, [option]);
-    if(index == -1)
-    {
-        settings += temp;
-    }
-    else
-    {
-        settings = llListReplaceList(settings, [value], index + 1, index + 1);
-    }
-    string save = llDumpList2String(settings, ",");
-    if(currentmenu == "Ownermenu")
-    {
-        llMessageLinked(LINK_SET, SUBMENU, submenu, id);
-    }
-}
-
 default
 {
     state_entry()
     {
         wearer = llGetOwner();//Lets get the ID of who is wearing us
         llSleep(1.0);
-        //llOwnerSay("Debug: state_entry Ownermenu, menu button");
+//      llOwnerSay("Debug: state_entry Ownermenu, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
-       
+
     link_message(integer sender, integer auth, string str, key id)
-    {  //only the primary owner can use this !!
+    {// only the primary owner can use this !!
         if (auth == MENUNAME_REQUEST && str == parentmenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
@@ -164,83 +120,45 @@ default
         else if (auth == SUBMENU && str == submenu)
         {
             Dialogowner(id);
-        }    
-            else if (str == "OwnerMenu")
-            {
-                Dialogowner(id);
-            }    
+        }
+        else if (str == "OwnerMenu")
+        {
+            Dialogowner(id);
+        }
         else if (auth == DIALOG_RESPONSE)
         {
             if (id == menuid)
             {
-                list menuparams = llParseString2List(str, ["|"], []);
-                id = (key)llList2String(menuparams, 0);
-                string message = llList2String(menuparams, 1);
-                integer page = (integer)llList2String(menuparams, 2);
-                
-                if(message == UPMENU)
-                {//lets go up a menu
+                list   menuparams = llParseString2List(str, ["|"], []);
+                       id         = (key)llList2String(menuparams, 0);
+                string message    = llList2String(menuparams, 1);
+
+//              lets go up a menu
+                if (message == UPMENU)
                     llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-                }
-                
-// OK lets send the command against the button
-      
-                if(message == Button1)
-                {
-                    string message = cmd1;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button2)
-                {
-                    string message = cmd2;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button3)
-                {
-                    string message = cmd3;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button4)
-                {
-                    string message = cmd4;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button5)
-                {
-                    string message = cmd5;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button6)
-                {
-                    string message = cmd6;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button7)
-                {
-                    string message = cmd7;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button8)
-                {
-                    string message = cmd8;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button9)
-                {
-                    string message = cmd9;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button10)
-                {
-                    string message = cmd10;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Button11)
-                {
-                    string message = cmd11;
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                
+//              OK lets send the command against the button
+                else if (message == Button1)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd1), id);
+                else if (message == Button2)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd2), id);
+                else if (message == Button3)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd3), id);
+                else if (message == Button4)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd4), id);
+                else if (message == Button5)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd5), id);
+                else if (message == Button6)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd6), id);
+                else if (message == Button7)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd7), id);
+                else if (message == Button8)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd8), id);
+                else if (message == Button9)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd9), id);
+                else if (message == Button10)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd10), id);
+                else if (message == Button11)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(cmd11), id);
             }
         }
         else if (auth == DIALOG_TIMEOUT)
@@ -254,15 +172,15 @@ default
             }
         }
     }
+
     changed(integer change)
     {
         if (change & CHANGED_OWNER)
-        {
             llResetScript();
-        }
-    }    
-    on_rez(integer param)
-    {     //should reset on rez to make sure the parent menu gets populated with our button
+    }
+
+    on_rez(integer start_param)
+    {// should reset on rez to make sure the parent menu gets populated with our button
         llResetScript();
     }
 }

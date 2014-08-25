@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - rezzer                              //
-//                                 version 3.900                                  //
+//                                 version 3.901                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -16,46 +16,39 @@
 // -----------------------------------------------------------
 // ---
 // --- 06-17-2009 by Betsy Hastings
-// --- 
-// -----------------------------------------------------------
-// ------------------- constants & variables -----------------
-// --- integer ---
+
 integer commchannel = -987654321;
-integer count = 0;
+
 integer debugger = FALSE;
 integer i;
 integer index;
 integer index1 = 0;
-integer listener;
+
 integer relaychannel = -1812221819;
 integer relaylisten;
-integer selectvictimchannel = 987212;
+
 integer timeout = 70;
 integer touched;
 integer x;
 integer y;
 
-integer DIALOG = -9000;
+integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT  = -9002;
 
-// --- key ---
 key owner_key;
 key victimkey;
 key menuid;
 
-// --- float ---
-float range=20.0;  // So we don't scan to far away
+float range = 20.0;
 
-// --- list ---
 list buttons;
-list found = [];
-list foundkeys = [];
-list victims = [];
-list lx  = [];
-list ly = [];
+list found;
+list foundkeys;
+list victims;
+list lx;
+list ly;
 
-// --- string ---
 string cmd;
 string message;
 string msg = "";
@@ -66,24 +59,14 @@ string tempname;
 string temp_obj_name;
 string victim;
 
-// --- vector ---
 vector pos;
 rotation rot;
 
-// --- functions ---
 key ShortKey()
-{ //just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
-    string chars = "0123456789abcdef";
-    integer length = 16;
-    string out;
-    integer n;
-    for (n = 0; n < 8; n++)
-    {
-        integer index = (integer)llFrand(16);//yes this is correct; an integer cast rounds towards 0.  See the llFrand wiki entry.
-        out += llGetSubString(chars, index, index);
-    }
-     
-    return (key)(out + "-0000-0000-0000-000000000000");
+{
+//  just pick 8 random hex digits and pad the rest with 0.  Good enough for dialog uniqueness.
+
+    return (key)(llGetSubString((string)llGenerateKey(), 0, 7) + "-0000-0000-0000-000000000000");
 }
 
 key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
@@ -106,7 +89,7 @@ AvMenu(key id)//give list of people in victims list with RLV
     prompt = "Pick someone to cage.\n";
     prompt += "Choose from these " + (string)(index/2) + " avis, who have RLV enabled.";
     llSetTimerEvent(timeout);
-    
+
     menuid = Dialog(id, prompt, buttons, utility, 0);
 }
 
@@ -137,7 +120,7 @@ list ListCheck4Dup(list lx) // check the list, eliminating duplicates and sort
         lx = llDeleteSubList(lx,x,x);
         for (y = 0; y < llGetListLength(lx); ++y)
         {
-            if(~llListFindList(lx,ly))
+            if (~llListFindList(lx,ly))
             {
                 ly = [];
             }
@@ -155,7 +138,7 @@ list ListCheck4Dup(list lx) // check the list, eliminating duplicates and sort
 
 set_to_default(integer x)
 {
-    if(x)
+    if (x)
     {
         debug("cleaning up and getting ready...");
         lx = [];
@@ -170,8 +153,6 @@ set_to_default(integer x)
         llListenControl(relaylisten,FALSE);
     }
 }
-
-
 
 debug(string bugger)
 {
@@ -191,37 +172,38 @@ default
     {
         llResetScript();
     }
-	
-	changed(integer change) {
-		if(change & CHANGED_OWNER) llResetScript();
-	}	
-	
+
+    changed(integer change)
+    {
+        if (change & CHANGED_OWNER)
+            llResetScript();
+    }
+
     state_entry()
     {
         owner_key = llGetOwner();
         OwnerName = llKey2Name(owner_key);
         touched = 0;
     }
-    
+
     link_message(integer sender, integer num, string str, key id)
     {
-        if(str == "cagemenu")
+        if (str == "cagemenu")
         {
             llSleep(0.5);
-            llOwnerSay("Scanning for avis with RLV within " + llGetSubString((string)range,0,3) + " Meters. (Please wait)");
-            llSensor("",NULL_KEY,AGENT,range,PI);
+            llOwnerSay("Scanning for avis with RLV within " + llGetSubString((string)range, 0, 3) + " Meters. (Please wait)");
+            llSensor("", NULL_KEY, AGENT_BY_LEGACY_NAME, range, PI);
         }
     }
 
     listen(integer channel,string name,key id,string message)
     {
-        cmd = llGetSubString(message,0,6);
+        cmd = llGetSubString(message, 0, 6);
         if (channel == relaychannel && cmd == "locator")
         {
-
             rlvenabled=llKey2Name(llGetOwnerKey(id));
             index = llListFindList(found,[rlvenabled]);
-            if(index > -1)  // we have found the name of the avi wearing a RLVrelay on the 'found' list the sensor event generated
+            if (~index)  // we have found the name of the avi wearing a RLVrelay on the 'found' list the sensor event generated
             {
                 tempname = llList2String(found,index);//(string)name of avi with RLV
                 found = (found=[]) + llDeleteSubList(found,index,index); // take this avi out of list 'found'
@@ -242,8 +224,8 @@ default
             relaylisten = llListen(relaychannel,"",NULL_KEY,"");
             llRegionSayTo((string)llDetectedKey(i),relaychannel,"locator,"+(string)llDetectedKey(i)+",!version");//query for a RLVRS...NG changed to RegionSayTo
         }
+
         llSetTimerEvent(1.0); //reduced this time since we are using RegionSayTo
-        
     }
 
     no_sensor()
@@ -257,7 +239,7 @@ default
         llSetTimerEvent(0.0);
         llSensorRemove();
         llListenControl(relaylisten,FALSE);
-        if(victims == []) // we heared no message from a RLVrelay
+        if (victims == []) // we heared no message from a RLVrelay
         {
             llOwnerSay("No RLV relays found. Check the sub has RLV relay installed it is turned on, and set to auto.");
             llResetScript();
@@ -285,54 +267,56 @@ state launch
         found = ly;
         AvMenu(owner_key);
     }
-    
+
     link_message(integer sender, integer num, string str, key id)
     {
-        if(num == DIALOG_RESPONSE)
+        if (num == DIALOG_RESPONSE)
         {
-            if(id == menuid)
+            if (id == menuid)
             {
-                list menuparams = llParseString2List(str, ["|"], []);
-                id = (key)llList2String(menuparams, 0);
-                string message = llList2String(menuparams, 1);
-                integer page = (integer)llList2String(menuparams, 2);            
-                
+                list    menuparams = llParseString2List(str, ["|"], []);
+                        id         = (key)llList2String(menuparams, 0);
+                string  message    = llList2String(menuparams, 1);
+                integer page       = (integer)llList2String(menuparams, 2);
+
                 llSetTimerEvent(timeout);
-                msg = llGetSubString(llToLower(message),-4,-1);
+
+                msg    = llGetSubString(llToLower(message),-4,-1);
                 index1 = llStringLength(message);
-                index = llGetListLength(victims);
+                index  = llGetListLength(victims);
+
                 if (msg == "cage")
                 {
                     pos = llGetPos();
                     rot = llGetRot();
-                    llRezObject(message,pos + <3.0,3.0,1.0>, <0.0,0.0,0.0>, rot, 0);
+                    llRezObject(message,pos + <3, 3, 1>, ZERO_VECTOR, rot, 0);
                 }
                 else if (msg != "cage")
                 {
-                    i=0;
+                    i = 0;
                     while(i < index)
                     {
-                        victim = (llGetSubString(llList2String(victims,i),0,index1-1));
-                        if(victim == message)
+                        victim = (llGetSubString(llList2String(victims, i), 0, index1 - 1));
+                        if (victim == message)
                         {
-                            llOwnerSay("Choose a cage for " + llList2String(victims,i) + ".");  
-                            victimkey = llList2Key(victims,i+1);
+                            llOwnerSay("Choose a cage for " + llList2String(victims, i) + ".");
+                            victimkey = llList2Key(victims,i + 1);
                             Choose_Cage(owner_key);
                         }
-                        i = i+2;
+                        i += 2;
                     }
                 }
-               
-                else 
+
+                else
                 {
                     llOwnerSay("Please choose a victim or cage.");
                     llSetTimerEvent(0.1);
                 }
             }
         }
-        else if(num == DIALOG_TIMEOUT)
+        else if (num == DIALOG_TIMEOUT)
         {
-            if(id == menuid)
+            if (id == menuid)
             {
                 llOwnerSay("Cager Menu timed out!");
             }
@@ -345,7 +329,7 @@ state launch
         llSay(commchannel,"fetch"+(string)victimkey);
         llSetTimerEvent(0.1);
     }
-    
+
     timer()
     {
         set_to_default(1);
