@@ -276,9 +276,11 @@ default {
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Appearance", "");
         
         buildElementTypes();
-        g_iTexturesCardId = llGetInventoryKey(g_sTexturesNotecardName);
-        g_iTexturesNotecardLine=0;
-        g_kNotecardReadRequest=llGetNotecardLine(g_sTexturesNotecardName,0);
+        if (llGetInventoryKey(g_sTexturesNotecardName)) {
+            g_iTexturesCardId = llGetInventoryKey(g_sTexturesNotecardName);
+            g_iTexturesNotecardLine=0;
+            g_kNotecardReadRequest=llGetNotecardLine(g_sTexturesNotecardName,0);
+        }
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
