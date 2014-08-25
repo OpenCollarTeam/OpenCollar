@@ -156,7 +156,7 @@ Note: ZHAO-II is not associated with OpenCollar Sub AO in any way. Please do not
 * [Freestyle Adamski](http://my.secondlife.com/freestyle.adamski)
 * [Garvin Twine](http://my.secondlife.com/garvin.twine)
 * [Gaudeon Wu](http://my.secondlife.com/gaudeon.wu)
-* [Illse Mannonen](http://my.secondlife.com/illse.mannonen)
+* [Ilse Mannonen](http://my.secondlife.com/ilse.mannonen)
 * [Madison McHenry](http://my.secondlife.com/madison.mchenry)
 * [Stephe Ehrler](http://my.secondlife.com/stephe.ehrler)
 * [Twitch Misfit](http://my.secondlife.com/twitch.misfit)
