@@ -1,44 +1,32 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - hudleash                            //
-//                                 version 3.900                                  //
+//                                 version 3.901                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
 //New Leash menu system added by North Glenwalker
 
-integer timeout = 90;
 //MESSAGE MAP
-integer COMMAND_OWNER = 500;
-integer COMMAND_WEARER = 503;
-integer CHAT = 505;
 
-integer POPUP_HELP = 1001;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU = 3002;
-integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-integer SET_SUB = -1000;
-integer SEND_CMD = -1001;
 integer SEND_CMD_PICK_SUB = -1002;
-integer SEND_CMD_ALL_SUBS = -1003;
-
-integer LOCALCMD_REQUEST = -2000;
-integer LOCALCMD_RESPONSE = -2001;
 
 //Strings
 string UPMENU = "^";
-string MORE = ">";
+
 string parentmenu = "Main";
 string submenu = "LeashMenu";
 string Leash = "Leash";
@@ -51,14 +39,11 @@ string Bound = "Bound";
 string Unbound = "Unbound";
 
 string currentmenu;
-string subName;
 
 //Keys
 key wearer;
-key owner = NULL_KEY;
-key menuid;
 
-list settings;
+key menuid;
 
 key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
 {
@@ -67,7 +52,6 @@ key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer p
  "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
     return id;
 }
-
 
 Dialogleash(key id)
 {
@@ -82,8 +66,8 @@ Dialogleash(key id)
     text += "[Stand] Forces the Subbie to Stand.\n";
     text += "[Bound] Attached the Bound folder in #RLV.\n";
     text += "[UnBound] Detaches the Bound folder in #RLV.\n";
-    
-    buttons += ["Leash"];    
+
+    buttons += ["Leash"];
     buttons += ["Follow"];
     buttons += ["Post"];
     buttons += [" "];
@@ -93,56 +77,34 @@ Dialogleash(key id)
     buttons += ["Stand"];
     buttons += [" "];
     buttons += ["Bound"];
-    buttons += ["Unbound"];            
+    buttons += ["Unbound"];
     list utility = [UPMENU];
     menuid = Dialog(id, text, buttons, utility, 0);
-}
-
-SendIM(key id, string str)
-{
-    if (id != NULL_KEY)
-    {
-        llInstantMessage(id, str);
-    }
-}
-
-SaveSettings(string str, key id)
-{
-    list temp = llParseString2List(str, [" "], []);
-    string option = llList2String(temp, 0);
-    string value = llList2String(temp, 1);
-    integer index = llListFindList(settings, [option]);
-    if(index == -1)
-    {
-        settings += temp;
-    }
-    else
-    {
-        settings = llListReplaceList(settings, [value], index + 1, index + 1);
-    }
-    string save = llDumpList2String(settings, ",");
-    if(currentmenu == "Leashmenu")
-    {
-        llMessageLinked(LINK_SET, SUBMENU, submenu, id);
-    }
 }
 
 default
 {
     state_entry()
     {
-        wearer = llGetOwner();//Lets get the ID of who is wearing us
+//      Lets get the ID of who is wearing us
+        wearer = llGetOwner();
         llSleep(1.0);
-        //llOwnerSay("Debug: state_entry hudleash, menu button");
+
+//      llOwnerSay("Debug: state_entry hudleash, menu button");
+
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
-    
-	changed(integer change) {
-		if(change & CHANGED_OWNER) llResetScript();
-	}
-	
+
+    changed(integer change)
+    {
+        if (change & CHANGED_OWNER)
+            llResetScript();
+    }
+
     link_message(integer sender, integer auth, string str, key id)
-    {  //only the primary owner can use this !!
+    {
+//      only the primary owner can use this !!
+
         if (auth == MENUNAME_REQUEST && str == parentmenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
@@ -150,60 +112,43 @@ default
         else if (auth == SUBMENU && str == submenu)
         {
             Dialogleash(id);
-        }    
-            else if (str == "LeashMenus")
-            {
-                Dialogleash(id);
-            }    
+        }
+        else if (str == "LeashMenus")
+        {
+            Dialogleash(id);
+        }
         else if (auth == DIALOG_RESPONSE)
         {
             if (id == menuid)
             {
-                list menuparams = llParseString2List(str, ["|"], []);
-                id = (key)llList2String(menuparams, 0);
-                string message = llList2String(menuparams, 1);
-                integer page = (integer)llList2String(menuparams, 2);
-                
-                if(message == UPMENU)
-                {//lets go up a menu
+                list   menuparams = llParseString2List(str, ["|"], []);
+                       id         = (key)llList2String(menuparams, 0);
+                string message    = llList2String(menuparams, 1);
+
+//              lets go up a menu
+                if (message == UPMENU)
                     llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-                }
-                
-                if(message == Leash)
-                {//reformat the "message" to the correct format to leash someone then pick who.
-                 string message = "leashto " + (string)wearer + " handle";
-                 llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Follow)
-                {//reformat the "message" to the correct format to follow someone then pick who.
-                 string message = "follow " + (string)wearer + " handle";
-                 llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                if(message == Release)
-                {//reformat the "message" to the correct format to follow someone then pick who. 
-                string message = "unleash";
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower(message), id);
-                }
-                 if(message == Post)
-                {//brings up the Collar Post menu
+                else if (message == Leash)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower("leashto " + (string)wearer + " handle"), id);
+                else if (message == Follow)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower("follow " + (string)wearer + " handle"), id);
+                else if (message == Release)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unleash", id);
+//              brings up the Collar Post menu
+                else if (message == Post)
                     llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "post", NULL_KEY);
-                }
-                if(message == ForceSit)
-                { //brings up the Collar SitNow menu
+//              brings up the Collar SitNow menu
+                else if (message == ForceSit)
                     llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "sitnow", NULL_KEY);
-                }       
-                if(message == Stand)
-                { //forces the Collar wearer to stand
+//              forces the Collar wearer to stand
+                else if (message == Stand)
                     llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "unsit=force", NULL_KEY);
-                }  
-                if(message == Bound)
-                {//attach a #RLV folder called bound
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "+bound", NULL_KEY);// an idea from pandora15 - single button to attach an RLV folder containing items to bind/gag/pose/restrict at once
-                } 
-                if(message == Unbound)
-                {
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "-bound", NULL_KEY);// OK lets detach the folder now
-                }               
+//              attach a #RLV folder called bound
+//              an idea from pandora15 - single button to attach an RLV folder containing items to bind/gag/pose/restrict at once
+                else if (message == Bound)
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "+bound", NULL_KEY);
+                else if (message == Unbound)
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "-bound", NULL_KEY);
             }
         }
         else if (auth == DIALOG_TIMEOUT)
@@ -217,9 +162,9 @@ default
             }
         }
     }
-    
+
     on_rez(integer param)
-    {     //should reset on rez to make sure the parent menu gets populated with our button
+    {
         llResetScript();
     }
 }
