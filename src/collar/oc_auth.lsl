@@ -906,7 +906,7 @@ default
                 } else {
                     AuthMenu(kAv,iNewAuth);
                 }
-            } 
+            }
         }
     }
 }
