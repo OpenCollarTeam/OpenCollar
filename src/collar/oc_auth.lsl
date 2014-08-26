@@ -3,10 +3,10 @@
 //                               OpenCollar - auth                                //
 //                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// Licensed under the GPLv2 with additional requirements specific to Second Life� //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// �   2008 - 2014  Individual Contributors and OpenCollar - submission set free� //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
@@ -142,17 +142,17 @@ FetchAvi(integer iAuth, string type, string name, key kAv) {
 }
 
 AuthMenu(key kAv, integer iAuth) {
-    string sPrompt = "\n✓: add someone\n✗: remove someone\n\nwww.opencollar.at/access";
-    list lButtons = ["✓ Owner", "✓ Secowner", "✓ Blacklisted", "✗ Owner", "✗ Secowner", "✗ Blacklisted"];
+    string sPrompt = "\n?: add someone\n?: remove someone\n\nwww.opencollar.at/access";
+    list lButtons = ["? Owner", "? Secowner", "? Blacklisted", "? Owner", "? Secowner", "? Blacklisted"];
 
-    if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
-    else lButtons += ["Group ☒"];    //unset group
+    if (g_kGroup=="") lButtons += ["Group ?"];    //set group
+    else lButtons += ["Group ?"];    //unset group
 
-    if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
-    else lButtons += ["Public ☐"];    //unset open access
+    if (g_iOpenAccess) lButtons += ["Public ?"];    //set open access
+    else lButtons += ["Public ?"];    //unset open access
 
-    if (g_iLimitRange) lButtons += ["LimitRange ☒"];    //set ranged
-    else lButtons += ["LimitRange ☐"];    //unset open ranged
+    if (g_iLimitRange) lButtons += ["LimitRange ?"];    //set ranged
+    else lButtons += ["LimitRange ?"];    //unset open ranged
 
     lButtons += ["Runaway","List Owners"];
 
@@ -626,7 +626,12 @@ default
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
                     llResetScript();
                 }
-            } else llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            } 
+            else if (kID != g_kWearer && iAuth == COMMAND_OWNER && sStr == "runaway") {  //owner requests the runaway menu
+                //We trap here and pull up the UserCommand manually to avoid passing 'runaway' prematurely to linkmessage (this was unlocking/unleashing)
+                UserCommand(iAuth, "runaway", kID, FALSE); 
+            }
+            else llMessageLinked(LINK_SET, iAuth, sStr, kID);
 
             //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
             return; // NOAUTH messages need go no further
@@ -749,20 +754,20 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else {
                         list lTranslation=[
-                            "✓ Owner","owner",
-//                            "✓ Temp Owner","tempowner",
-                            "✓ Secowner","secowner",
-                            "✓ Blacklisted","blacklist",
-                            "✗ Owner","remowner",
-//                            "✗ Temp Owner","remtempowner",
-                            "✗ Secowner","remsecowner",
-                            "✗ Blacklisted","remblacklist",
-                            "Group ☐","setgroup",
-                            "Group ☒","unsetgroup",
-                            "Public ☐","setopenaccess",
-                            "Public ☒","unsetopenaccess",
-                            "Limit Range ☐","setlimitrange",
-                            "Limit Range ☒","unsetlimitrange",
+                            "? Owner","owner",
+//                            "? Temp Owner","tempowner",
+                            "? Secowner","secowner",
+                            "? Blacklisted","blacklist",
+                            "? Owner","remowner",
+//                            "? Temp Owner","remtempowner",
+                            "? Secowner","remsecowner",
+                            "? Blacklisted","remblacklist",
+                            "Group ?","setgroup",
+                            "Group ?","unsetgroup",
+                            "Public ?","setopenaccess",
+                            "Public ?","unsetopenaccess",
+                            "Limit Range ?","setlimitrange",
+                            "Limit Range ?","unsetlimitrange",
                             //"Give Hud","givehud", 
                             "List Owners","listowners",
                             "Runaway","runaway"
@@ -814,6 +819,7 @@ default
                         if (~iOwnerIndex){
                             string name=llList2String(g_lOwners,iOwnerIndex+1);
                             UserCommand(iAuth, "remowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
+                            llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); //let other scripts know we're running away
                         } else {
                             Notify(kAv, "You are not on the owners list.", TRUE);
                             UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway

@@ -3,10 +3,10 @@
 //                               OpenCollar - anim                                //
 //                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// Licensed under the GPLv2 with additional requirements specific to Second Life� //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// �   2008 - 2014  Individual Contributors and OpenCollar - submission set free� //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
@@ -22,11 +22,20 @@ list g_lAnims;
 //integer g_iPageSize = 8;//number of anims we can fit on one page of a multi-page menu
 list g_lPoseList;
 
-integer g_iTweakPoseAO = 0; //Disable/Enable AO for posed animations
+//PoseMove tweak stuff
+integer g_iTweakPoseAO = 0; //Disable/Enable AO for posed animations - set it to 1 to default PoseMove tweak to ON
 key g_kMenuPoseMove;
-string g_sPoseMoveWalk;
-string NOWALK = "no walk";
-string g_sPoseWalkAnimationPrefix = "~walk_";
+string g_sPoseMoveWalk;  //Variable to hold our current Walk animation
+string g_sPoseMoveRun;   //Variable to hold our run animation
+string NOWALK = "no walk"; //This can be changed to reflect the PoseMove Menu 'no walk' selected button
+string NORUN = "no run";  //This can be changed to reflect the PoseMove Menu 'no run' selected button
+string g_sWalkButtonPrefix = "Walk "; //This can be changed to prefix walks in the PoseMove menu
+string g_sRunButtonPrefix = "Run "; //This can be changed to prefix runs in the PoseMove menu
+list g_lPoseMoveAnimationPrefix = ["~walk_","~run_"];
+
+string g_sPoseMoveWalkToken = "PoseMoveWalk"; //tokens for saving - these can be changed
+string g_sPoseMoveRunToken = "PoseMoveRun";
+string g_sTweakPoseAOToken = "TweakPoseAO";
 
 //for the height scaling feature
 key g_kDataID;
@@ -46,8 +55,8 @@ string g_sAOMenu = "AO";
 string g_sTriggerAO = "AO Menu";
 list g_lAnimButtons; // initialized in state_entry for OpenSim compatibility (= ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];)
 //added for sAnimlock
-string TICKED = "☒ ";
-string UNTICKED = "☐ ";
+string TICKED = "? ";
+string UNTICKED = "? ";
 string ANIMLOCK = "AnimLock";
 string RELEASE = "STOP";
 integer g_iAnimLock = FALSE;
@@ -239,7 +248,7 @@ PoseMenu(key kID, integer iPage, integer iAuth)
 
     list lHeightFixButtons=[];
     if (g_iHeightFix){
-        lHeightFixButtons=["↑","↓"];
+        lHeightFixButtons=["?","?"];
     }
     key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
@@ -293,20 +302,28 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
         //sPrompt += "\n\nThe The PoseMove Tweak is off.";
         lButtons += [UNTICKED + POSEAO];
    }
-   lButtons += [NOWALK];
+   lButtons += [NORUN,NOWALK];
    integer i = 0;
    integer iAnims = llGetInventoryNumber(INVENTORY_ANIMATION) - 1;
    string sAnim;
    for (i=0;i<=iAnims;++i)
     {
         sAnim = llGetInventoryName(INVENTORY_ANIMATION,i);
-        if (llSubStringIndex(sAnim,g_sPoseWalkAnimationPrefix) == 0) {
+        if (llSubStringIndex(sAnim,llList2String(g_lPoseMoveAnimationPrefix,0)) == 0 ) { 
             //Debug("sAnim = "+sAnim+"\ng_sPoseMoveWalk = "+g_sPoseMoveWalk);
             if (sAnim == g_sPoseMoveWalk) {
-                lButtons += [TICKED + llGetSubString(sAnim,llStringLength(g_sPoseWalkAnimationPrefix),-1)];
+                lButtons += [TICKED + g_sWalkButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,0)),-1)];
             }
             else {
-                lButtons += [UNTICKED + llGetSubString(sAnim,llStringLength(g_sPoseWalkAnimationPrefix),-1)];
+                lButtons += [UNTICKED +g_sWalkButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,0)),-1)];
+            }
+        }
+        else if (llSubStringIndex(sAnim,llList2String(g_lPoseMoveAnimationPrefix,1)) == 0 ) {
+            if (sAnim == g_sPoseMoveRun) {
+                lButtons += [TICKED + g_sRunButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,1)),-1)];
+            }
+            else {
+                lButtons += [UNTICKED + g_sRunButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,1)),-1)];
             }
         }
     }
@@ -398,7 +415,9 @@ StartAnim(string sAnim)
                  if (g_sPoseMoveWalk) {
                      llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
                  }
-                 //  llSetAnimationOverride( "Running", "~run");
+                 if (g_sPoseMoveRun) {
+                     llSetAnimationOverride( "Running", g_sPoseMoveRun);
+                 }
 
             }
             else {
@@ -583,6 +602,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         string sSubmenu = llGetSubString(sStr, 5, -1);
         if (sSubmenu == g_sPoseMenu) PoseMenu(kID, 0, iNum);
+      //  else if (sSubmenu == g_sPoseMoveMenu) PoseMoveMenu(kID,0,iNum); we handle this as a catch-all else statement
         else if (sSubmenu == g_sAOMenu) AOMenu(kID, iNum);
         else if (sSubmenu == g_sAnimMenu) AnimMenu(kID, iNum);
     }
@@ -713,6 +733,28 @@ integer UserCommand(integer iNum, string sStr, key kID)
             llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW" + "|" + (string)kID);
         }
     }
+    else if (sCommand == llToLower(g_sPoseMoveMenu)) { //check for text command of PoseMoveMenu's string
+        if (iNum <= g_iLastRank || !g_iAnimLock) {
+            if (sValue == "on") {
+                g_iTweakPoseAO = 1;    
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sTweakPoseAOToken + "=1" , "");
+                RefreshAnim();
+                Notify(kID, g_sPoseMoveMenu +" is now enabled.", FALSE);
+            }
+            else if (sValue == "off") {
+                g_iTweakPoseAO = 0;
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sTweakPoseAOToken, "");
+                RefreshAnim();
+                Notify(kID, g_sPoseMoveMenu +" is now disabled.", FALSE);
+            }
+            else {                   
+                PoseMoveMenu(kID,0,iNum);
+            }
+        }
+        else {
+            Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
+        }
+    }
     else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION)
     {
         if (g_sCurrentPose == "")
@@ -841,7 +883,9 @@ default
             g_lAnimScalars = [];
             //start re-reading the ~heightscalars notecard
             g_iLine = 0;
-            g_kDataID = llGetNotecardLine(card, g_iLine);
+            if (llGetInventoryKey(card)) {
+                g_kDataID = llGetNotecardLine(card, g_iLine);
+            }
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
         }
         if (iChange & CHANGED_OWNER) llResetScript();
@@ -949,6 +993,19 @@ default
                 {
                     g_sAppEngine_Url = sValue;
                 }
+                else if (sToken == g_sPoseMoveWalkToken)
+                {
+                    g_sPoseMoveWalk = sValue;
+                }
+                else if (sToken == g_sPoseMoveRunToken)
+                {
+                    g_sPoseMoveRun = sValue;
+                }
+                else if (sToken == g_sTweakPoseAOToken)
+                {
+                    g_iTweakPoseAO = 1;
+                }
+
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
         }
@@ -988,12 +1045,12 @@ default
                         DeliverAO(kAv);
                     }
 */
-                    else if(sMessage == "☐ AO" || sMessage== "AO ON")
+                    else if(sMessage == "? AO" || sMessage== "AO ON")
                     {
                         UserCommand(iAuth, "ao on", kAv);
                         AnimMenu(kAv, iAuth);
                     }
-                    else if(sMessage == "☒ AO"  || sMessage== "AO OFF")
+                    else if(sMessage == "? AO"  || sMessage== "AO OFF")
                     {
                         UserCommand(iAuth, "ao off", kAv);
                         AnimMenu(kAv, iAuth);
@@ -1035,11 +1092,11 @@ default
                     {
                         UserCommand(iAuth, "release", kAv);
                     }
-                    else if (sMessage == "↑")
+                    else if (sMessage == "?")
                     {
                         AdjustOffset(1);
                     }
-                    else if (sMessage == "↓")
+                    else if (sMessage == "?")
                     {
                         AdjustOffset(-1);
                     }
@@ -1053,31 +1110,53 @@ default
                 }
                 else if (sMenuType == POSEMOVEMENU) {
                     if (sMessage == UPMENU)
-                    { //return on parent menu, so the animmenu below doesn't come up
-                        AnimMenu(kAv, iAuth);
-                        return;
-                    }
-                
-                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSEAO)
-                    {
-                        if (g_iTweakPoseAO) {
-                            g_iTweakPoseAO = 0;
+                        { //return on parent menu, so the animmenu below doesn't come up
+                            AnimMenu(kAv, iAuth);
+                            return;
                         }
-                        else {
-                            g_iTweakPoseAO = 1;
+                    if (iAuth <= g_iLastRank || !g_iAnimLock) {
+                        if(llGetSubString(sMessage, llStringLength(TICKED), -1) == POSEAO)
+                        {
+                            if (g_iTweakPoseAO) {
+                                g_iTweakPoseAO = 0;
+                                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sTweakPoseAOToken, "");
+                            }
+                            else {
+                                g_iTweakPoseAO = 1;
+                                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sTweakPoseAOToken + "=1" , "");
+                            }
+    
+                           
+                            RefreshAnim();
+                            PoseMoveMenu(kAv,iNum,iAuth);
                         }
-                        RefreshAnim();
-                        PoseMoveMenu(kAv,iNum,iAuth);
+                        else if (sMessage == NOWALK) {
+                            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sPoseMoveWalkToken, ""); 
+                            g_sPoseMoveWalk = "";
+                            RefreshAnim();
+                            PoseMoveMenu(kAv,iNum,iAuth);
+                        }
+                        else if (sMessage == NORUN) {
+                            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sPoseMoveRunToken, ""); 
+                            g_sPoseMoveRun = "";
+                            RefreshAnim();
+                            PoseMoveMenu(kAv,iNum,iAuth);
+                        }
+                        else if (sMessage != "") {
+                            if (llSubStringIndex(sMessage,UNTICKED + g_sWalkButtonPrefix) == 0) {
+                                g_sPoseMoveWalk = llList2String(g_lPoseMoveAnimationPrefix,0) + llGetSubString(sMessage,llStringLength(TICKED + g_sWalkButtonPrefix) ,-1);
+                                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sPoseMoveWalkToken + "=" + g_sPoseMoveWalk, "");
+                            }
+                            else if (llSubStringIndex(sMessage,UNTICKED + g_sRunButtonPrefix) == 0) {
+                                g_sPoseMoveRun = llList2String(g_lPoseMoveAnimationPrefix,1) + llGetSubString(sMessage,llStringLength(TICKED + g_sRunButtonPrefix),-1);
+                                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sPoseMoveRunToken + "=" + g_sPoseMoveRun, "");
+                            }
+                            RefreshAnim();
+                            PoseMoveMenu(kAv,iNum,iAuth);
+                        }
                     }
-                    else if (sMessage == NOWALK) {
-                        g_sPoseMoveWalk = "";
-                        RefreshAnim();
-                        PoseMoveMenu(kAv,iNum,iAuth);
-                    }
-                    else if (sMessage != "") {
-                        g_sPoseMoveWalk = g_sPoseWalkAnimationPrefix + llGetSubString(sMessage,llStringLength(TICKED),-1);
-                        RefreshAnim();
-                        PoseMoveMenu(kAv,iNum,iAuth);
+                    else {
+                        Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
                     }
                 }
             }
