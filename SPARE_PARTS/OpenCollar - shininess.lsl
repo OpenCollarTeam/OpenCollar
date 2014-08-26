@@ -1,11 +1,23 @@
-//OpenCollar - shininess
-// based on OpenCollar - texture
-//Licensed under the GPLv2, with the additional requirement that these scripts remain "full perms" in Second Life.  See "OpenCollar License" for details.
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollar - shininess                              //
+//                                 version 3.980                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
+
+//based on OpenCollar - texture
 
 string g_sParentMenu = "Appearance";
 string g_sSubMenu = "Shininess";
 
-string g_sIgnoreType = "notexture" ;  //  or "noshine" if you want use alternate prims descriptions;
+string g_sIgnoreType = "notexture" ;  //  or "noshiny" if you want use alternate prims descriptions;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
