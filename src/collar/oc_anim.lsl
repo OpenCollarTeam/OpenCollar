@@ -28,10 +28,11 @@ key g_kMenuPoseMove;
 string g_sPoseMoveWalk;  //Variable to hold our current Walk animation
 string g_sPoseMoveRun;   //Variable to hold our run animation
 string NOWALK = "no walk"; //This can be changed to reflect the PoseMove Menu 'no walk' selected button
-string NORUN = "no run";  //This can be changed to reflect the PoseMove Menu 'no run' selected button
-string g_sWalkButtonPrefix = "Walk "; //This can be changed to prefix walks in the PoseMove menu
-string g_sRunButtonPrefix = "Run "; //This can be changed to prefix runs in the PoseMove menu
+//string NORUN = "no run";  //This can be changed to reflect the PoseMove Menu 'no run' selected button
+string g_sWalkButtonPrefix = ""; //This can be changed to prefix walks in the PoseMove menu
+//string g_sRunButtonPrefix = "Run "; //This can be changed to prefix runs in the PoseMove menu
 list g_lPoseMoveAnimationPrefix = ["~walk_","~run_"];
+string g_sPoseMoveRunDefaultAnimation = "~run";
 
 string g_sPoseMoveWalkToken = "PoseMoveWalk"; //tokens for saving - these can be changed
 string g_sPoseMoveRunToken = "PoseMoveRun";
@@ -302,7 +303,7 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
         //sPrompt += "\n\nThe The PoseMove Tweak is off.";
         lButtons += [UNTICKED + POSEAO];
    }
-   lButtons += [NORUN,NOWALK];
+   lButtons += [NOWALK];
    integer i = 0;
    integer iAnims = llGetInventoryNumber(INVENTORY_ANIMATION) - 1;
    string sAnim;
@@ -317,7 +318,7 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
             else {
                 lButtons += [UNTICKED +g_sWalkButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,0)),-1)];
             }
-        }
+        } /*
         else if (llSubStringIndex(sAnim,llList2String(g_lPoseMoveAnimationPrefix,1)) == 0 ) {
             if (sAnim == g_sPoseMoveRun) {
                 lButtons += [TICKED + g_sRunButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,1)),-1)];
@@ -325,7 +326,7 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
             else {
                 lButtons += [UNTICKED + g_sRunButtonPrefix+ llGetSubString(sAnim,llStringLength(llList2String(g_lPoseMoveAnimationPrefix,1)),-1)];
             }
-        }
+        } */
     }
 
     sPrompt +="\n\nwww.opencollar.at/animations";    
@@ -416,7 +417,12 @@ StartAnim(string sAnim)
                      llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
                  }
                  if (g_sPoseMoveRun) {
-                     llSetAnimationOverride( "Running", g_sPoseMoveRun);
+                     if (llGetInventoryKey(g_sPoseMoveRun)) {
+                        llSetAnimationOverride( "Running", g_sPoseMoveRun);
+                    }
+                    else if (llGetInventoryKey(g_sPoseMoveRunDefaultAnimation)) {
+                        llSetAnimationOverride( "Running", g_sPoseMoveRunDefaultAnimation);
+                    }
                  }
 
             }
@@ -1133,24 +1139,27 @@ default
                         else if (sMessage == NOWALK) {
                             llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sPoseMoveWalkToken, ""); 
                             g_sPoseMoveWalk = "";
+                            g_sPoseMoveRun = "";
                             RefreshAnim();
                             PoseMoveMenu(kAv,iNum,iAuth);
-                        }
+                        } /*
                         else if (sMessage == NORUN) {
                             llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + g_sPoseMoveRunToken, ""); 
                             g_sPoseMoveRun = "";
                             RefreshAnim();
                             PoseMoveMenu(kAv,iNum,iAuth);
-                        }
+                        } */
                         else if (sMessage != "") {
                             if (llSubStringIndex(sMessage,UNTICKED + g_sWalkButtonPrefix) == 0) {
                                 g_sPoseMoveWalk = llList2String(g_lPoseMoveAnimationPrefix,0) + llGetSubString(sMessage,llStringLength(TICKED + g_sWalkButtonPrefix) ,-1);
+                                g_sPoseMoveRun = llList2String(g_lPoseMoveAnimationPrefix,1) + llGetSubString(sMessage,llStringLength(TICKED) ,-1);
                                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sPoseMoveWalkToken + "=" + g_sPoseMoveWalk, "");
-                            }
+                                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sPoseMoveRunToken + "=" + g_sPoseMoveRun, "");
+                            } /*
                             else if (llSubStringIndex(sMessage,UNTICKED + g_sRunButtonPrefix) == 0) {
                                 g_sPoseMoveRun = llList2String(g_lPoseMoveAnimationPrefix,1) + llGetSubString(sMessage,llStringLength(TICKED + g_sRunButtonPrefix),-1);
                                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + g_sPoseMoveRunToken + "=" + g_sPoseMoveRun, "");
-                            }
+                            } */
                             RefreshAnim();
                             PoseMoveMenu(kAv,iNum,iAuth);
                         }
