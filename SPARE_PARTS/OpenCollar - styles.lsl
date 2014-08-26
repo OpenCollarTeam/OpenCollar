@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - styles                               //
-//                                 version 3.960                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,7 +12,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-string g_sSubMenu = "*Styles*";
+string g_sSubMenu = "Styles";
 string g_sParentMenu = "Appearance";
 string CTYPE = "collar";
 key g_kWearer;
@@ -48,7 +48,7 @@ list g_lStyleSettings; // list of style settings ["Stylename1", "elementname~key
 
 key g_iNotecardId;
 key g_kNotecardReadRequest;
-string g_sNotecardName="styles";
+string g_sNotecardName="~styles";
 integer g_iNotecardLine=0;
 string g_sNotecardStyle ;
 
@@ -98,8 +98,7 @@ SetStyle(string sStyle, integer iAuth, key kAv)
                 if (~llListFindList(g_lStyles,[setting]) || setting == "") index = -1;
                 else
                 {
-                    //Debug("Setting style of "+sStyle+" "+setting);
-                    
+                    //Debug("Setting style of "+sStyle+" "+setting);                    
                     list lParams = llParseString2List(setting,["~"],[]);
                     string element = llStringTrim(llList2String(lParams,0),STRING_TRIM);
                     if (element != "")
@@ -120,6 +119,8 @@ SetStyle(string sStyle, integer iAuth, key kAv)
 
 AddElementSetting(string element, string value, integer n )
 {
+    //Debug(element +"="+ value) ;
+    if (element =="") return ;
     string params;
     integer i = llListFindList(g_lElementsSettings, [element]);    
     if (i==-1)
@@ -189,10 +190,13 @@ integer UserCommand(integer iAuth, string sStr, key kAv, integer remenu)
 
 DumpSettings(key kAv, string sep)
 {
+    //llOwnerSay(llList2CSV(g_lElementsSettings));
+    
     g_lElementsSettings = llListSort(g_lElementsSettings, 2, TRUE);
-    string out = "\n# Copy all below into 'styles' notecard and change 'New Style' to own style name:\n\n[ New Style ]\n";
-    integer i = 0;
-    for (; i < llGetListLength(g_lElementsSettings); i += 2)
+    
+    string out = "\n# Copy all below into '~styles' notecard and change 'New Style' to own style name:\n\n[ New Style ]\n";
+    integer i;
+    for (i = 0; i < llGetListLength(g_lElementsSettings); i += 2)
     {
         out += llList2String(g_lElementsSettings, i)+sep+llList2String(g_lElementsSettings, i+1)+"\n";
     }    
@@ -218,7 +222,7 @@ default
             g_iNotecardLine=0;
             g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,0);
         }
-        //else llOwnerSay(g_sNotecardName+" notecard absent!");        
+        else llOwnerSay(g_sNotecardName+" notecard absent!");        
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) 
@@ -271,7 +275,7 @@ default
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);     
                 
                 if (sMenuType == "StyleMenu") 
-                {
+                {  //lists all elements in the collar
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == DUMP) UserCommand(iAuth,"dumpstyle", kAv, TRUE);
                     else UserCommand(iAuth,"style "+sMessage, kAv, TRUE);
@@ -302,15 +306,7 @@ default
                     }
                     else
                     {
-                        g_lStyleSettings += [data];
-                        /*
-                        list parts=llParseString2List(data,["~"],[]);                        
-                        string name=llList2String(parts,0);
-                        string texture=llList2String(parts,1);
-                        string color=llList2String(parts,2);
-                        string shine=llList2String(parts,3);
-                        g_lStyleSettings += [name+"~"+texture+"~"+color+"~"+shine];
-                        */                 
+                        g_lStyleSettings += [data];          
                     }
                 }
                 g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,++g_iNotecardLine);
@@ -330,7 +326,7 @@ default
                     g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,0);
                 }
                 else llOwnerSay(g_sNotecardName+" notecard absent!");
-            }
+            }            
         }
         if (change & CHANGED_OWNER) llResetScript();            
     }
