@@ -76,6 +76,7 @@ string g_sAppLockToken = "Appearance_Lock";
 
 integer g_iAllAlpha = 1 ;
 
+integer g_iHasElements = FALSE;
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -95,7 +96,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
- 
+
 string Float2String(float in)
 {
     string out = (string)in;
@@ -190,7 +191,6 @@ SaveElementAlpha(string element_to_set, integer iAlpha)
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+element_to_set + "=" + (string)iAlpha, "");
 }
 
-
 ElementMenu(key kAv, integer iAuth)
 {
     string sPrompt = "\nWhich element of the " + CTYPE + " would you like to hide or show?\n\n☒: element is shown\n☐: element is hidden\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
@@ -223,18 +223,13 @@ ElementMenu(key kAv, integer iAuth)
 
 string ElementType(integer link)
 {
-    string sDesc = llList2String(llGetLinkPrimitiveParams(link,[PRIM_DESC]),0);
+    string sDesc = llStringTrim(llList2String(llGetLinkPrimitiveParams(link,[PRIM_DESC]),0),STRING_TRIM);
     //each prim should have <elementname> in its description, plus "nohide", if you want the prim to
     //not appear in the hede menu
+    if (sDesc == "" || sDesc == "(No Description)") return g_sIgnore ;
     list lParams = llParseString2List(sDesc, ["~"], []);
-    if ((~(integer)llListFindList(lParams, [g_sIgnore])) || sDesc == "" || sDesc == " " || sDesc == "(No Description)")
-    {
-        return g_sIgnore;
-    }
-    else
-    {
-        return llList2String(lParams, 0);
-    }
+    if ( ~llListFindList(lParams,[g_sIgnore]) ) return g_sIgnore ;
+    else return llList2String(lParams, 0);
 }
 
 BuildElementList()
@@ -247,12 +242,15 @@ BuildElementList()
     for (link = 2; link <= count; link++)
     {
         string sElement = ElementType(link);
-        if (!((~(integer)llListFindList(g_lElements, [sElement]))) && sElement != g_sIgnore)
+        if (llListFindList(g_lElements,[sElement])==-1 && sElement != g_sIgnore)
         {
             g_lElements += [sElement];
         }
     }
     g_lElements = llListSort(g_lElements, 1, TRUE);
+    
+    if (llGetListLength(g_lElements) > 0 ) g_iHasElements = TRUE;
+    else g_iHasElements = FALSE;
 }
 
 
@@ -309,6 +307,19 @@ RestoreAllGlows()
     }
 }
 
+MakeOneButtonMenu()
+{
+    if (g_iAllAlpha)
+    {
+        llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu+"|"+HIDE+" Stealth", "");
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+SHOW+" Stealth", "");
+    }
+    else
+    {
+        llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu+"|"+SHOW+" Stealth", "");
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+HIDE+" Stealth", "");
+    }
+}
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
@@ -320,10 +331,14 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
     if (!g_iAppLock || iNum == COMMAND_OWNER)  // if unlocked or Owner can do it
     {
-        if (sStr  == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;
+        if (sStr == "menu " + g_sSubMenu || sStr == "hidemenu") ElementMenu(kID, iNum) ;
         else if (sCommand == "hide")
         {
-            if(sValue == "" || sValue == CTYPE) SetAllElementsAlpha(0);
+            if(sValue == "" || sValue == CTYPE)
+            {
+                SetAllElementsAlpha(0);
+                if (!g_iHasElements) MakeOneButtonMenu();
+            }
             else
             {
                 SetElementAlpha(sValue, 0);
@@ -332,12 +347,28 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if (sCommand == "show")
         {
-            if(sValue == "" || sValue == CTYPE) SetAllElementsAlpha(1);
+            if(sValue == "" || sValue == CTYPE)
+            {
+                SetAllElementsAlpha(1);
+                if (!g_iHasElements) MakeOneButtonMenu();
+            }
             else
             {
                 SetElementAlpha(sValue, 1);
                 SaveElementAlpha(sValue, 1);
             }
+        }
+        else if (sStr == "menu "+HIDE+" Stealth")
+        {
+            SetAllElementsAlpha(1);
+            if (!g_iHasElements) MakeOneButtonMenu();
+            llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+        }
+        else if (sStr == "menu "+SHOW+" Stealth")
+        {
+            SetAllElementsAlpha(0) ;
+            if (!g_iHasElements) MakeOneButtonMenu();
+            llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
     }
     else
@@ -383,6 +414,7 @@ default
     {        
         g_iAllAlpha=0;
         if (llGetAlpha(ALL_SIDES)>0) g_iAllAlpha=1;
+        if (!g_iHasElements) BuildElementList();
     }
     
     changed(integer change)
@@ -412,7 +444,8 @@ default
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            if (g_iHasElements) llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            else MakeOneButtonMenu() ;
         }
         else if (iNum == DIALOG_RESPONSE)
         {

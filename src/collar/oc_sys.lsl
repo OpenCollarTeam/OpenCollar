@@ -17,7 +17,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.96.1";
+string g_sCollarVersion="3.980";
 integer g_iLatestVersion=TRUE;
 
 list g_lOwners;
@@ -95,6 +95,7 @@ integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iAppearanceMenu=FALSE;
 integer g_iCustomizeMenu=FALSE;
+integer g_iPaintMenu=FALSE;
 
 integer g_iUpdateChan = -7483214;
 integer g_iUpdateHandle;
@@ -107,13 +108,22 @@ key github_version_request;
 
 string news_url = "https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~news";
 key news_request;
-integer g_iLastNewsTime = 0;
+string g_sLastNewsTime = "0";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
 
+integer g_iListenChan=1;
+string g_sSafeWord="RED";
+string g_sPrefix;
 
-Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
+//Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
+
+string AutoPrefix()
+{
+    list sName = llParseString2List(llKey2Name(llGetOwner()), [" "], []);
+    return llToLower(llGetSubString(llList2String(sName, 0), 0, 0)) + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
+}
 
 integer compareVersions(string v1, string v2){ //compares two symantic version strings, true if v1 >= v2
     //Debug("compare "+v1+" with "+v2);
@@ -148,7 +158,7 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
 
             return compareVersions(v1b,v2b);
         } else {
-            //Debug("FALSE as nothing to compare");
+            //Debug("0 as nothing to compare");
             return FALSE;
         }
     }
@@ -178,39 +188,40 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\nBrowse apps, extras and custom features.\n\nwww.opencollar.at/apps";
-    Debug("max memory used: "+(string)llGetSPMaxMemory());
+    //Debug("max memory used: "+(string)llGetSPMaxMemory());
     Dialog(kID, sPrompt, g_lAppsButtons, [UPMENU], 0, iAuth, "Apps");
 }
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
-    sPrompt+= "\n\nThe OpenCollar stock software bundle in this item is licensed under the GPLv2 with additional requirements specific to Second Life®.\n\n© 2008 - 2014 Individual Contributors and\nOpenCollar - submission set free™\n\nwww.opencollar.at/helpabout";
-    
-    Debug("max memory used: "+(string)llGetSPMaxMemory());
+    sPrompt+="\n\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iListenChan+"\nSafeword: "+g_sSafeWord;
+    sPrompt+="\n\nwww.opencollar.at/helpabout";
+
+    //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     
     string sNewsButton="☐ News";
     if (g_iNews){
         sNewsButton="☒ News";
     }
-    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update","Settings"];
+    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion;
     if(!g_iLatestVersion) sPrompt+="\nUpdate available!";
     sPrompt += "\n\nwww.opencollar.at/main-menu";
-    Debug("max memory used: "+(string)llGetSPMaxMemory());
+    //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu){
         lStaticButtons+="Animations";
     } else {
         lStaticButtons+=" ";
     }
-    if (g_iCustomizeMenu){
+    if (g_iPaintMenu){
         lStaticButtons+="Paint";
     } else if (g_iCustomizeMenu){
-        lStaticButtons+="Paint";
+        lStaticButtons+="Customize";
     } else if (g_iAppearanceMenu){
         lStaticButtons+="Appearance";
     } else {
@@ -222,19 +233,10 @@ MainMenu(key kID, integer iAuth) {
     } else {
         lStaticButtons+=" ";
     }
-    lStaticButtons+=["Access","Extras","Help/About"];
+    lStaticButtons+=["Access","Options","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
-}
-
-ConfirmUpdate(key kID, integer iAuth)
-{
-    string sPrompt = "\n3 Golden Rules for Updates:\n\n1.Create a Backup\n2.Rezzed is safer than Worn\n3.Low Lag regions make happy Updates\n\n(These rules apply to any kind of scripted item, not just collars or bondage and kink items!)\n\nATTENTION: Do not rez any other collars till the update has started.\n\nReady?";
-
-    Debug("max memory used: "+(string)llGetSPMaxMemory());
-
-    Dialog(kID, sPrompt, ["Yes", "No"], [], 0, iAuth, "ConfirmUpdate");
 }
 
 integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
@@ -308,10 +310,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 g_iNews=TRUE;
                 //notify news on
                 Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);
-                g_iLastNewsTime=0;
+                g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
             } else {
-                g_iLastNewsTime=0;
+                g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
             }
         } else Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
@@ -453,24 +455,30 @@ RebuildMenu()
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
 }
 
+init (){
+    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET"], "");
+    
+    llSleep(1.0);//delay menu rebuild until other scripts are ready
+    RebuildMenu();
+}
+
 default
 {
     state_entry() {
-        //llOwnerSay("Main: state entry:"+(string)llGetFreeMemory());
-        g_kWearer = llGetOwner();
-        BuildLockElementList();
-        llSleep(1.0);//delay sending this message until we're fairly sure that other scripts have reset too, just in case
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", "");
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_trace", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", "");
-        g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
-        RebuildMenu();
+        g_kWearer = llGetOwner(); //updates in change event prompting script restart
+        BuildLockElementList(); //updates in change event, doesn;t need a reset every time
+        g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
-        if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
-        github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET"], "");
-        llScriptProfiler(PROFILE_SCRIPT_MEMORY);
         
-        Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
+        
+        init(); //do stuf needed on_rez AND on script start
+        
+        g_sPrefix=AutoPrefix();
+        
+        //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
+        //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -494,8 +502,10 @@ default
                 g_iRlvMenu=TRUE;
             } else if (sStr=="Main|Appearance"){
                 g_iAppearanceMenu=TRUE;
-            } else if (sStr=="Main|Paint"){
+            } else if (sStr=="Main|Customize"){
                 g_iCustomizeMenu=TRUE;
+            } else if (sStr=="Main|Paint"){
+                g_iPaintMenu=TRUE;
             }
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
@@ -546,15 +556,6 @@ default
                     } else {
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
-                } else if (sMenu=="ConfirmUpdate"){
-                    if (sMessage == "Yes") {
-                        //inlined single use SayUpdatePin(g_kUpdaterOrb); function
-                        integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
-                        llSetRemoteScriptAccessPin(pin);
-                        llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin ); //give the ok to send update sripts etc...
-                    } else {
-                        HelpMenu(kAv, iAuth);
-                    }
                 } else if (sMenu=="Help/About"){
                     //Debug("Help menu response");
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
@@ -602,14 +603,13 @@ default
                 if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
             }
+            else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
+            else if (sToken == "listener_safeword") g_sSafeWord = sValue;
+            else if (sToken == "Global_prefix") g_sPrefix = sValue;
             else if (sToken == "Global_news") g_iNews = (integer)sValue;
-
-/*
-            else if(sToken =="Global_trace")
-            {
-                g_iTraceOn = (integer)sValue;
+            else if (sStr == "settings=sent") {
+                if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
             }
-*/
         }
         else if (iNum == DIALOG_TIMEOUT)
         {
@@ -623,10 +623,10 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "auth_owner")
-            {
-                g_lOwners = llParseString2List(sValue, [","], []);
-            }
+            if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
+            else if (sToken == "listener_safeword") g_sSafeWord = sValue;
+            else if (sToken == "Global_prefix") g_sPrefix = sValue;
         }
         else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR)
         {
@@ -637,17 +637,17 @@ default
 
     on_rez(integer iParam)
     {
-        llResetScript();
+        init();
     }
     
     changed(integer iChange)
     {
         if (iChange & CHANGED_INVENTORY)
         {
-            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount)
-            {//a script has been added or removed.  Reset to rebuild menu
+            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
                 RebuildMenu(); //llResetScript();
             }
+            g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER)
         {
@@ -662,25 +662,6 @@ default
             }
         }
         if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
-/*
-        if (iChange & CHANGED_TELEPORT || iChange & CHANGED_REGION){
-            if (g_iTraceOn){
-                string sRegionName=llGetRegionName();
-                if (sRegionName != g_sOldRegionName){
-                    g_sOldRegionName=sRegionName;
-                    vector vPos=llGetPos();
-                    string sName=llGetUsername(g_kWearer);
-                    integer iIndex=llSubStringIndex(sName,"Resident");
-                    if (iIndex > -1){
-                        sName=llGetSubString(sName,0,iIndex-1);
-                    }
-                    string sSlurl="http://maps.secondlife.com/secondlife/"+llEscapeURL(sRegionName)+"/"+(string)llFloor(vPos.x)+"/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
-                    
-                    NotifyOwners(sName + " arrives at " +sSlurl);
-                }
-            }
-        }
-*/
     }
     attach(key kID)
     {
@@ -702,26 +683,19 @@ default
         if (status == 200) { // be silent on failures.
             if (id == g_kWebLookup){
                 Notify(g_kCurrentUser,body,FALSE);
-            } else if (id == github_version_request) {
-                // strip the newline off the end of the text
+            } else if (id == github_version_request) {  // strip the newline off the end of the text
                 if (compareVersions(llStringTrim(body, STRING_TRIM),g_sCollarVersion)) g_iLatestVersion=FALSE;
                 else g_iLatestVersion=TRUE;
-            } else if (id == news_request) {
-                // We got a response back from the news page on Github.  See if
-                // it's new enough to report to the user.
+            } else if (id == news_request) {  // We got a response back from the news page on Github.  See if it's new enough to report to the user.
+                // The first line of a news item should be space delimited list with timestamp in format yyyymmdd.n as the last field, where n is the number of messages on this day
                 string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
                 list firstline_parts = llParseString2List(firstline, [" "], []);
-                
-                // The first line of a news item should be space delimited list with timestamp in format yyyymmddHHMM as the last field
-                integer this_news_time = llList2Integer(firstline_parts, -1);
+                string this_news_time = llList2String(firstline_parts, -1);
 
-                if (g_iLastNewsTime > this_news_time) {
+                if (compareVersions(this_news_time,g_sLastNewsTime)) {
                     string news = "Newsflash " + body;
                     Notify(llGetOwner(), news, FALSE);
-                    // last news time is remembered in memory.  We used to
-                    // store it in the desc but you can't write to that while
-                    // worn.
-                    g_iLastNewsTime = this_news_time;
+                    g_sLastNewsTime = this_news_time;
                 } 
             }
         }
@@ -748,7 +722,9 @@ default
         } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
             Notify(g_kCurrentUser,"Multiple updaters were found within 10m.  Please remove all but one and try again",FALSE);
         } else {    //perform update
-            ConfirmUpdate(g_kWearer,COMMAND_WEARER);
+            integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
+            llSetRemoteScriptAccessPin(pin);
+            llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
         }
     }
 }
