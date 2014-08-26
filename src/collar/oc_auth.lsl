@@ -626,7 +626,12 @@ default
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
                     llResetScript();
                 }
-            } else llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            } 
+            else if (kID != g_kWearer && iAuth == COMMAND_OWNER && sStr == "runaway") {  //owner requests the runaway menu
+                //We trap here and pull up the UserCommand manually to avoid passing 'runaway' prematurely to linkmessage (this was unlocking/unleashing)
+                UserCommand(iAuth, "runaway", kID, FALSE); 
+            }
+            else llMessageLinked(LINK_SET, iAuth, sStr, kID);
 
             //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
             return; // NOAUTH messages need go no further
@@ -814,6 +819,7 @@ default
                         if (~iOwnerIndex){
                             string name=llList2String(g_lOwners,iOwnerIndex+1);
                             UserCommand(iAuth, "remowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
+                            llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); //let other scripts know we're running away
                         } else {
                             Notify(kAv, "You are not on the owners list.", TRUE);
                             UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
