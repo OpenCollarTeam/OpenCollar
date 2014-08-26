@@ -3,10 +3,10 @@
 //                               OpenCollar - anim                                //
 //                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life� //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// �   2008 - 2014  Individual Contributors and OpenCollar - submission set free� //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
@@ -55,8 +55,8 @@ string g_sAOMenu = "AO";
 string g_sTriggerAO = "AO Menu";
 list g_lAnimButtons; // initialized in state_entry for OpenSim compatibility (= ["Pose", g_sTriggerAO, g_sGiveAO, "AO ON", "AO OFF"];)
 //added for sAnimlock
-string TICKED = "? ";
-string UNTICKED = "? ";
+string TICKED = "☒ ";
+string UNTICKED = "☐ ";
 string ANIMLOCK = "AnimLock";
 string RELEASE = "STOP";
 integer g_iAnimLock = FALSE;
@@ -248,7 +248,7 @@ PoseMenu(key kID, integer iPage, integer iAuth)
 
     list lHeightFixButtons=[];
     if (g_iHeightFix){
-        lHeightFixButtons=["?","?"];
+        lHeightFixButtons=["↑","↓"];
     }
     key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
@@ -1045,12 +1045,12 @@ default
                         DeliverAO(kAv);
                     }
 */
-                    else if(sMessage == "? AO" || sMessage== "AO ON")
+                    else if(sMessage == "☐ AO" || sMessage== "AO ON")
                     {
                         UserCommand(iAuth, "ao on", kAv);
                         AnimMenu(kAv, iAuth);
                     }
-                    else if(sMessage == "? AO"  || sMessage== "AO OFF")
+                    else if(sMessage == "☒ AO"  || sMessage== "AO OFF")
                     {
                         UserCommand(iAuth, "ao off", kAv);
                         AnimMenu(kAv, iAuth);
@@ -1092,11 +1092,11 @@ default
                     {
                         UserCommand(iAuth, "release", kAv);
                     }
-                    else if (sMessage == "?")
+                    else if (sMessage == "↑")
                     {
                         AdjustOffset(1);
                     }
-                    else if (sMessage == "?")
+                    else if (sMessage == "↓")
                     {
                         AdjustOffset(-1);
                     }
