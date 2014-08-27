@@ -66,7 +66,7 @@ string g_sLockToken = "animlock";
 //added for posture
 string POSTURE="Posture";
 integer g_iPosture;
-string g_sPostureAnim="~PostureOverride";
+string g_sPostureAnim="~stiff";
 string g_sPostureToken="posture";
 
 string g_sAppEngine_Url = "http://data.mycollar.org/"; //defaul OC url, can be changed in defaultsettings notecard and wil be send by settings script if changed
