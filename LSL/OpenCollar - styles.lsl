@@ -48,7 +48,7 @@ list g_lStyleSettings; // list of style settings ["Stylename1", "elementname~key
 
 key g_iNotecardId;
 key g_kNotecardReadRequest;
-string g_sNotecardName="~styles";
+string g_sNotecardName=".styles";
 integer g_iNotecardLine=0;
 string g_sNotecardStyle ;
 
