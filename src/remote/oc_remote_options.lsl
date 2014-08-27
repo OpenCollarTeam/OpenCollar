@@ -53,7 +53,10 @@ list attachPoints = [
     ATTACH_HUD_TOP_LEFT,
     ATTACH_HUD_BOTTOM_RIGHT,
     ATTACH_HUD_BOTTOM,
-    ATTACH_HUD_BOTTOM_LEFT];
+    ATTACH_HUD_BOTTOM_LEFT,
+    ATTACH_HUD_CENTER_1,
+    ATTACH_HUD_CENTER_2
+    ];
 
 list primOrder = [0, 1, 2, 3, 4, 5, 6];
 //  List must always start with '0','1'
@@ -300,19 +303,12 @@ default
 //      if being detached
         if (attached == NULL_KEY)
             return;
-        else if (attachPoint == ATTACH_HUD_BOTTOM ||
-                 attachPoint == ATTACH_HUD_BOTTOM_LEFT ||
-                 attachPoint == ATTACH_HUD_BOTTOM_RIGHT ||
-                 attachPoint == ATTACH_HUD_CENTER_1 ||
-                 attachPoint == ATTACH_HUD_CENTER_2 ||
-                 attachPoint == ATTACH_HUD_TOP_RIGHT ||
-                 attachPoint == ATTACH_HUD_TOP_CENTER ||
-                 attachPoint == ATTACH_HUD_TOP_LEFT)
+        else if (attachPoint < 31 || attachPoint > 38) //http://wiki.secondlife.com/wiki/LlAttachToAvatar attach point integer values - 31-38 are hud placements
         {
-            llOwnerSay("Sorry, this device can only be placed on the HUD.");
+            llOwnerSay("Sorry, this device can only be placed on the HUD. Attach code: " + (string)attachPoint);
             llRequestPermissions(attached, PERMISSION_ATTACH);
             llDetachFromAvatar();
-            ATTACH_HUD
+            //ATTACH_HUD
             return;
         }
         else // It's being attached and the attachment point is a HUD position, DefinePosition()
