@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarUpdater - Master                           //
-//                                 version 3.967                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -26,7 +26,7 @@
 // install or remove each.
 
 // This script also does a little bit of magic to ensure that the updater's
-// version number always matches the contents of the "~version" card.
+// version number always matches the contents of the ".version" card.
 
 
 key version_line_id;
@@ -185,12 +185,14 @@ BundleMenu(integer page) {
 }
 
 GiveMethodMenu() {
-    string prompt = "\n\nStandard: \"The most popular features, RLV and Relay.\"\n";
-    prompt += "\nBasic: \"Just the modular core and essential basics.\"\n";
-    prompt += "\nCustom: \"Make your own selection of features here.\"\n\nwww.opencollar.at/updates\n";
+    //string prompt = "\n\nStandard: \"The most popular features, RLV and Relay.\"\n";
+    //prompt += "\nBasic: \"Just the modular core and essential basics.\"\n";
+    //prompt += "\nCustom: \"Make your own selection of features here.\"\n";
+    string prompt = "\n\nPlease select Standard or Custom installation.\n\nCustom is recommended if you want to add apps such as Timer and Camera, add extra height scalars or remove standard modules such as RLV or Animations.";
+    prompt += "\n\nwww.opencollar.at/updates\n";
     prompt += "\n\nThe currently selected method is ["+INSTALL_METHOD+"]";
-    list choices = ["Standard","Basic","Custom", "Developer"];
-    kDialogID = Dialog(llGetOwner(), prompt, choices, ["Help","START"],0);
+    list choices = ["Standard","Custom"];
+    kDialogID = Dialog(llGetOwner(), prompt, choices, ["START"],0);
 }
 
 Debug(string str) {
@@ -198,9 +200,9 @@ Debug(string str) {
 }
 
 ReadVersionLine() {
-    // try to keep object's version in sync with "~version" notecard.
-    if (llGetInventoryType("~version") == INVENTORY_NOTECARD) {
-        version_line_id = llGetNotecardLine("~version", 0);
+    // try to keep object's version in sync with ".version" notecard.
+    if (llGetInventoryType(".version") == INVENTORY_NOTECARD) {
+        version_line_id = llGetNotecardLine(".version", 0);
     }
 }
 
@@ -304,7 +306,8 @@ default {
                     llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        
 
                 }
-                else if (button == "Basic" || button == "Standard" || button == "Developer")
+                //else if (button == "Basic" || button == "Standard" || button == "Developer")
+                else if (button == "Standard")
                 {
                     INSTALL_METHOD = button;
                     SetInstallmode(button);
@@ -312,9 +315,9 @@ default {
                 } else if (button == "Custom") {
                     BundleMenu(0);
                 }
-                else if (button == "Help") {
+                /*else if (button == "Help") {
                     llLoadURL(av, "Confused with the many choices? Find help on our website!","http://www.opencollar.at/updates.html");
-                }
+                }*/
                 else {
                     // switch the bundle if appropriate
                     string status = llGetSubString(button, 0, 2);
@@ -359,7 +362,7 @@ default {
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             // Resetting on inventory change ensures that the bundle list is
-            // kept current, and that the ~version card is re-read if it
+            // kept current, and that the .version card is re-read if it
             // changes.
             llResetScript();
         }
