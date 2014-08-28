@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                          OpenCollar - AO Link (lite)                           //
-//                                 version 1.000                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,29 +12,18 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// BETA VERSION NOTES ---------------------------------------------------
-// Medea Destiny's AO interface script for OpenCollar
-// This script is intended to be dropped into ZHAO-2, Vista and Oracul
-// AOs that are not already compatible with OpenCollar's AO interface. 
+// Based on Medea Destiny's AO interface script for OpenCollar.
 
-// Scope: The script tries to identify the AO type by checking script naming. It receives
-// the ZHAO ON, ZHAO OFF and ZHAO Menu commands from the collar, and uses link messages to 
-// send appropriate commands to the AO, depending on the detected collar type. It is not a
-// complete replacement of the Sub AO as it cannot allow as complete access to the AO as
-// that does, but it should provide most of the functionality while being very easy to add to 
-// user's pre-existing AOs.
+// HOW TO: This script is intended to be dropped into ZHAO-2, Vista and Oracul
+// AOs that are not already compatible with OpenCollar's AO interface. Just rez
+// your existing AO Hud, right-click to open it and drop this script inside!
 
-// When the AO is switched on, but the collar sends a command to switch it off, the script
-// will take controls and detect for movement. While the avatar is trying to move, the AO will
-// told to switch the AO back on again until movement ceases. 
+// This is not a complete replacement of the Sub AO as it cannot allow as complete
+// access to the AO as that does, but it should provide most of the functionality
+// while being very easy to add to your pre-existing AOs.
 
-// An alternative to this method would be to capture the AO's walk animation and play the animation
-// itself as a walk overrider. The disadvantage of that is trying to capture the walk animation
-// isn't straightforward, particular when there is more than one walk configured. The disadvantage
-// of this method is that it does a lot more AO triggering. 
+// The lite variation of this script is complementary to AntiSlide technology.
 
-// Comments and bug reports to Medea Destiny, please!
-//---------------------------------------------------------------------
 integer type; 
 //If left like this, script will try to determine AO type automatically.
 //To force compatibility for a particular type of AO, change to:
@@ -66,7 +55,7 @@ integer g_iOCSwitch=TRUE; //monitor on/off due to collar pauses (FALSE=paused, T
 
 integer g_iSitOverride=TRUE; //monitor AO sit override
 
-integer g_iHasPerm; //Sanity check for permissions. If we have permissions, then script takes controls and restores AO while moving.
+
 
 
 determineType() //function to determine AO type.
@@ -90,7 +79,7 @@ determineType() //function to determine AO type.
         {
             type=VISTA;
             x=0;
-            llOwnerSay("OC compatibility script configured for VISTA AO. Support is very experimental since it is unknown how much was changed from ZHAO");
+            llOwnerSay("OC compatibility script configured for VISTA AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
             
         }
@@ -118,7 +107,7 @@ AOPause()
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=FALSE;
-    if(g_iAOSwitch==TRUE) llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS);//AO is supposed to be on, so we take controls here to allow it to be switched back on temporarily whilst moving.
+
 }
 
 AOUnPause()
@@ -129,7 +118,7 @@ AOUnPause()
         else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
     }
     g_iOCSwitch=TRUE;
-    if(llGetPermissionsKey()) llReleaseControls(); //if we took permissions, release them so the AO can do its own thing now.
+
 }
 
 zhaoMenu(key kMenuTo)
@@ -211,13 +200,13 @@ default
             else if(sMsg=="AO on")
             {
                 if(g_iOCSwitch) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); // don't switch on AO if we are paused
-                else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); //AO was switched on while we are paused, so we take permissions to allow unpausing whilst  movement
+
                 g_iAOSwitch=TRUE;
             }
             else if(sMsg=="AO off")
             {
                 llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
-                if(llGetPermissions()) llReleaseControls(); //if AO is off, we don't want to be checking controls.
+
             }
             else if(sMsg=="Next Stand")
             {
@@ -241,7 +230,7 @@ default
             {
                 if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
                 else llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
-                if(llGetPermissions()) llReleaseControls();
+
             }
             else if (sMsg=="ZHAO_AOON")
             {
@@ -250,7 +239,7 @@ default
                     if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
                     else llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"");
                 }
-                else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); //AO was switched on while we are paused, so we take permissions to allow unpausing whilst  moving.
+
                 g_iAOSwitch=TRUE;
             } 
             else if (llGetSubString(sMsg,0,8)=="ZHAO_MENU")
@@ -268,7 +257,7 @@ default
         {
                 g_sOraculstring=llGetSubString(sMsg,1,-1); //store the config string for Oracul AO.
                 g_iAOSwitch=(integer)llGetSubString(sMsg,0,1); //store the AO power state.
-                if(!g_iAOSwitch && llGetPermissions()) llReleaseControls(); //stop checking controls if taken.    
+
         }
 
         else if(type>1) 
@@ -281,38 +270,13 @@ default
                 else if(sMsg=="ZHAO_AOOFF")
                 {
                     g_iAOSwitch=FALSE;
-                    if(llGetPermissions()) llReleaseControls(); //stop checking controls if taken.
+
                 }
             }          
         }
     }
     
-    run_time_permissions(integer perms)
-    { 
-        //we want to monitor for movement while the AO is temporarily off, so we can temporarily switch it back on again while a movement button is held.
-        if(perms&PERMISSION_TAKE_CONTROLS) llTakeControls(CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT,TRUE,TRUE);
-    }
-    
-    control(key id, integer level, integer edge)
-    {
-        if(!g_iAOSwitch||g_iOCSwitch) //if AO is turned off or OC hasn't requested a pause, we're not meant to be here.
-        {
-            llReleaseControls();
-            return;
-        }
-        if(level&edge) //movement button pressed
-        {
-            
-            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
-            else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");           
-        }
-        else if((!level)&edge) //movement button released
-        {
-            
-            if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
-            else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
-        }
-    }
+
     
     timer()
     {
