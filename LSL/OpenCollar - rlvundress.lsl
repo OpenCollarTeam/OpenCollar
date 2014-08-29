@@ -18,7 +18,7 @@
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
 
-list g_lChildren = ["Rem Clothing","Rem Attachment"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
+//list g_lChildren = ["Rem Clothing"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
 list g_lSubMenus= [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
@@ -221,7 +221,7 @@ MainMenu(key kID, integer iAuth)
     string sPrompt = "\nwww.opencollar.at/undress\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder";
     //sPrompt+=" (click "+SMARTHELP+" for info)";
     sPrompt+=", the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
-    list lButtons = g_lChildren;
+    list lButtons;
 
     if (g_iAllLocked)  //are all clothing and attachments locked?
     {
@@ -231,9 +231,10 @@ MainMenu(key kID, integer iAuth)
     }
     else
     {
-        lButtons += ["Lock Clothing"];
-        lButtons += ["Lock Attachment"];
         lButtons += ["☐ Lock All"];
+        lButtons += ["Rem Clothing"];
+        lButtons += ["Lock Clothing"];
+
     }
     if(g_iSmartStrip==TRUE)
     {
@@ -245,6 +246,7 @@ MainMenu(key kID, integer iAuth)
         lButtons += SMARTON;
         //sPrompt += "\nSmartStrip is off.";
     }
+    lButtons += ["Rem Attachment","Lock Attachment"];
     //lButtons+=SMARTHELP;
     g_kMainID = Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth);
 }
@@ -938,11 +940,12 @@ default
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
         if (iChan == g_iClothRLV)
-        {   //llOwnerSay(sMessage);
+        {  // llOwnerSay(sMessage);
             ClothingMenu(g_kMenuUser, sMessage, g_iMenuAuth);
         }
         else if (iChan == g_iAttachRLV)
         {
+           // llOwnerSay(sMessage);
             DetachMenu(g_kMenuUser, sMessage, g_iMenuAuth);
         }
     }
