@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvfolders                             //
-//                                 version 3.967                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -217,11 +217,13 @@ FolderActionsMenu(integer iState, key kAv, integer iAuth)
         }
 
         if ( iStateThis == 1 || iStateThis == 2) // there are items that can be added in current folder
-            lActions += [REPLACE, ADD, lockFolderButton(iLock, 0, iAuth)];
+            //lActions += [REPLACE, ADD, lockFolderButton(iLock, 0, iAuth)];
+            lActions += [ADD, lockFolderButton(iLock, 0, iAuth)];
         if ( iStateThis == 2 || iStateThis == 3) // there are items that can be removed
             lActions += [DETACH,  lockFolderButton(iLock, 1, iAuth)];
         if ( iStateSub == 1 || iStateSub == 2) // there are items that can be added in descendant folder
-            lActions += [REPLACE_ALL, ADD_ALL,  lockFolderButton(iLock, 2, iAuth)];
+            //lActions += [REPLACE_ALL, ADD_ALL,  lockFolderButton(iLock, 2, iAuth)];
+            lActions += [ADD_ALL,  lockFolderButton(iLock, 2, iAuth)];
         if ( iStateSub == 2 || iStateSub == 3) // there are items that can be removed from descendant folders
             lActions += [DETACH_ALL,  lockFolderButton(iLock, 3, iAuth)];
     }
