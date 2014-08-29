@@ -200,7 +200,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         iMyPageSize=iMyPageSize-2;//we'll use two slots for the MORE and PREV button, so shrink the page accordingly
         iStart = iPage * iMyPageSize;
         //multi page menu
-        sThisPrompt = sThisPrompt + " Page "+(string)(iPage+1)+"/"+(string)(((iNumitems-1)/iMyPageSize)+1);
+        sThisPrompt = sThisPrompt + "\nPage "+(string)(iPage+1)+"/"+(string)(((iNumitems-1)/iMyPageSize)+1);
     }
     else iStart = 0;
     integer iEnd = iStart + iMyPageSize - 1;
