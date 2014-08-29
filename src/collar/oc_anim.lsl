@@ -251,7 +251,7 @@ PoseMenu(key kID, integer iPage, integer iAuth)
     if (g_iHeightFix){
         lHeightFixButtons=["↑","↓"];
     }
-    key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lButtons+lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
+    key kMenuID = Dialog(kID, sPrompt, lButtons+g_lPoseList, lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (iIndex == -1)
