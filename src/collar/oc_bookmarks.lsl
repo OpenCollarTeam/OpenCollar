@@ -140,7 +140,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 
 
 DoMenu(key keyID, integer iAuth) {
-    string sPrompt = "\nwww.opencollar.at/bookmarks";
+    string sPrompt = "\nTake me away, gumby!\n\nwww.opencollar.at/bookmarks";
     list lMyButtons = PLUGIN_BUTTONS + g_lButtons + g_lDestinations + g_lVolatile_Destinations;
 
     g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
