@@ -199,24 +199,15 @@ AnimMenu(key kID, integer iAuth)
     }
     if(g_iTweakPoseAO)
     {
-        //sPrompt += "\n"+g_sPoseMoveMenu+" is enabled.";
+        sPrompt += "\n"+g_sPoseMoveMenu+" is enabled.";
         lButtons += [TICKED + POSEAO];
     }
     else
    {
-        //sPrompt += "\n"+g_sPoseMoveMenu+" is disabled.";
+        sPrompt += "\n"+g_sPoseMoveMenu+" is disabled.";
         lButtons += [UNTICKED + POSEAO];
    }
-    if(g_iHeightFix)
-    {
-        //sPrompt += "\n\nThe height of some poses will be adjusted now.";
-        lButtons += [TICKED + HEIGHTFIX];
-    }
-    else
-   {
-        //sPrompt += "\n\nThe height of the poses will not be changed.";
-        lButtons += [UNTICKED + HEIGHTFIX];
-   }
+
     sPrompt +="\n\nwww.opencollar.at/animations";    
     //sPrompt +="\n\nGet a free, unisex and upgradeable Submissive AO here:\nmarketplace.secondlife.com/p/OpenCollar-Sub-AO/5493736";
 
@@ -245,12 +236,22 @@ PoseMenu(key kID, integer iPage, integer iAuth)
     string sPrompt = "\nChoose a pose to play.\n\nwww.opencollar.at/animations\n\n";
     if (g_sCurrentPose == "")sPrompt += "Current Pose is = None\n";
     else sPrompt += "Current Pose is = " + g_sCurrentPose +"\n";
-
+    list lButtons;
+    if(g_iHeightFix)
+    {
+        //sPrompt += "\n\nThe height of some poses will be adjusted now.";
+        lButtons += [TICKED + HEIGHTFIX];
+    }
+    else
+   {
+        //sPrompt += "\n\nThe height of the poses will not be changed.";
+        lButtons += [UNTICKED + HEIGHTFIX];
+   }
     list lHeightFixButtons=[];
     if (g_iHeightFix){
         lHeightFixButtons=["↑","↓"];
     }
-    key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
+    key kMenuID = Dialog(kID, sPrompt, g_lPoseList, lButtons+lHeightFixButtons+[RELEASE, UPMENU], iPage, iAuth);
     list lNewStride = [kID, kMenuID, POSEMENU];
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (iIndex == -1)
@@ -284,7 +285,7 @@ integer SetPosture(integer iOn, key kCommander)
     }
     else 
     {
-        llOwnerSay("Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.");
+        llOwnerSay("Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
         return FALSE;
     }
 }
@@ -304,14 +305,14 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
    }
    if (g_sPoseMoveWalk != "") {
        if (g_iTweakPoseAO) {
-           sPrompt += "\n\nSelected Walk: "+g_sPoseMoveWalk;
+           sPrompt += "\nSelected Walk: "+g_sPoseMoveWalk;
            if (llGetInventoryKey(g_sPoseMoveRun)) sPrompt += "\nSelected Run: "+g_sPoseMoveRun;
            else sPrompt += "\nSelected Run: "+g_sPoseMoveRunDefaultAnimation;
        }
        lButtons += [UNTICKED+NOWALK];
    }
    else {
-       sPrompt += "\n\n"+g_sPoseMoveMenu+" is not overriding any walk animations.";
+       sPrompt += "\n"+g_sPoseMoveMenu+" is not overriding any walk animations.";
        lButtons += [TICKED+NOWALK];
    }
    integer i = 0;
@@ -688,7 +689,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 StopAnim(sTemp);
                 StartAnim(sTemp);
             }
-            AnimMenu(kID, iNum);
+            //AnimMenu(kID, iNum);
         }
         else Notify(kID,"Only owners or the wearer can use this option.",FALSE);
     } else if ( sStr=="heightfix off" || sStr == TICKED+HEIGHTFIX){
@@ -701,7 +702,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 StopAnim(sTemp);
                 StartAnim(sTemp);
             }
-            AnimMenu(kID, iNum);
+            //AnimMenu(kID, iNum);
         }
         else Notify(kID,"Only owners or the wearer can use this option.",FALSE);
     //AO
@@ -1045,7 +1046,7 @@ default
                     }
                     else if (sMessage == g_sTriggerAO)
                     {
-                        Notify(kAv, "Attempting to trigger the AO menu. This will only work if " + llKey2Name(g_kWearer) + " is using a Submissive AO or an AO Link script in their normal AO.", FALSE);
+                        Notify(kAv, "Attempting to trigger the AO menu.  This will only work if " + llKey2Name(g_kWearer) + " is meeting the a) or c) requirement for AO features.", FALSE);
                         AOMenu(kAv, iAuth);
                     }
 /*                    else if (sMessage == g_sGiveAO)
