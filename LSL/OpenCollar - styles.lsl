@@ -194,7 +194,7 @@ DumpSettings(key kAv, string sep)
     
     g_lElementsSettings = llListSort(g_lElementsSettings, 2, TRUE);
     
-    string out = "\n# Copy all below into '~styles' notecard and change 'New Style' to own style name:\n\n[ New Style ]\n";
+    string out = "\n# Copy all below into '"+g_sNotecardName+"' notecard and change 'New Style' to own style name:\n\n[ New Style ]\n";
     integer i;
     for (i = 0; i < llGetListLength(g_lElementsSettings); i += 2)
     {
