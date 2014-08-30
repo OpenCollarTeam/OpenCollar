@@ -682,7 +682,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     } else if ( sStr=="heightfix on" || sStr == UNTICKED+HEIGHTFIX){
         if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iHeightFix = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sHeightFixToken, NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sHeightFixToken, "");
             Notify(g_kWearer, "HeightFix override activated.", TRUE);
             if (g_sCurrentPose != "") {
                 string sTemp = g_sCurrentPose;
@@ -695,7 +695,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     } else if ( sStr=="heightfix off" || sStr == TICKED+HEIGHTFIX){
         if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iHeightFix = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sHeightFixToken + "=0", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sHeightFixToken + "=0", "");
             Notify(g_kWearer, "HeightFix override deactivated.", TRUE);
             if (g_sCurrentPose != "") {
                 string sTemp = g_sCurrentPose;
@@ -1013,6 +1013,10 @@ default
                 else if (sToken == g_sTweakPoseAOToken)
                 {
                     g_iTweakPoseAO = 1;
+                }
+                else if (sToken == g_sHeightFixToken)
+                {
+                    g_iHeightFix = (integer)sValue;
                 }
 
             }
