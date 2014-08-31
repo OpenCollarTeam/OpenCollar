@@ -434,8 +434,8 @@ default {
     state_entry() {
         //Debug("init");
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         CheckVersion();
     }
 
@@ -495,11 +495,11 @@ default {
             } else if (sToken=="Global_lock") {
                 g_iCollarLocked=(integer)sValue;
             } else if (sToken=="CTYPE") {
-				CTYPE=sValue;
-			} else if (sToken=="WEARERNAME") {
-				WEARERNAME=sValue;
-			}
-			
+                CTYPE=sValue;
+            } else if (sToken=="WEARERNAME") {
+                WEARERNAME=sValue;
+            }
+            
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

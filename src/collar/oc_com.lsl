@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - listener                              //
-//                                 version 3.957                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -279,8 +279,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
@@ -521,7 +521,7 @@ default
                 SetListeners();
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
-			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);

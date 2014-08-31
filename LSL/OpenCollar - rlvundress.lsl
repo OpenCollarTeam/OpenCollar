@@ -722,8 +722,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         g_sWearerName = WEARERNAME;
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         //llSleep(1.0);
@@ -771,7 +771,7 @@ default
                 }
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
-			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
         }
         else if (iNum == RLV_REFRESH)
         {//rlvmain just started up.  Tell it about our current restrictions

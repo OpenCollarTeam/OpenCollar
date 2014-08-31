@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - garble                               //
-//                                 version 3.967                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -186,10 +186,10 @@ default
     state_entry()
     {
         gkWear = llGetOwner();
-		WEARERNAME = llGetDisplayName(gkWear);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(gkWear);
+        WEARERNAME = llGetDisplayName(gkWear);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(gkWear);
         gsWear = WEARERNAME;
-		
+        
         giCRC = llRound(llFrand(499) + 1);
         if (bOn) release(gkWear,0);
         llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", "");
@@ -262,10 +262,10 @@ default
                 if (sV == "") sV = "auto";
                 SetPrefix(sV);
             }
-			else if (sT == "WEARERNAME") {
-				WEARERNAME = sV;
-				gsWear = WEARERNAME;
-			}
+            else if (sT == "WEARERNAME") {
+                WEARERNAME = sV;
+                gsWear = WEARERNAME;
+            }
         }
         else if (iM == LM_SETTING_EMPTY && sM == GetScriptID() + "Binder") release(kM,iL);
         else if (iM == LM_SETTING_SAVE) // Have to update the safeword if it is changed between resets

@@ -746,8 +746,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
     }

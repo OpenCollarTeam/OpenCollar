@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.968                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -205,9 +205,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // Only send notices if Leasher is an AV, as objects normally handle their own messages for such things
     if (bCmdGiverIsAvi) {
         string sTarget = llGetDisplayName(kTarget);
-		if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(kTarget);
-		string sCmdGiver = llGetDisplayName(kCmdGiver);
-		if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
+    if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(kTarget);
+        string sCmdGiver = llGetDisplayName(kCmdGiver);
+    if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
         string sWearMess;
         if (kCmdGiver == g_kWearer) {// Wearer is Leasher
             if (iFollowMode){
@@ -309,10 +309,10 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
 Unleash(key kCmdGiver)
 {
     string sTarget = llGetDisplayName(g_kLeashedTo);
-	if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(g_kLeashedTo);
+    if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(g_kLeashedTo);
     if ( (key)g_kLeashedTo ){
         string sCmdGiver = llGetDisplayName(kCmdGiver);
-		if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
+    if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
         string sWearMess;
         string sCmdMess;
         string sTargetMess;
@@ -497,10 +497,9 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if (iAuth <= COMMAND_GROUP) {
                 g_iStayRank = iAuth;
                 g_iStay = TRUE;
-				sCmdGiver = llGetDisplayName(kMessageID);
-				if (sCmdGiver == "???" | sCmdGiver == "") sCmdGiver = llKey2Name(kMessageID);
+                string sCmdGiver = llGetDisplayName(kMessageID);
+            if (sCmdGiver == "???" | sCmdGiver == "") sCmdGiver = llKey2Name(kMessageID);
                 llRequestPermissions(g_kWearer, PERMISSION_TAKE_CONTROLS);
-				
                 llOwnerSay(sCmdGiver + " commanded you to stay in place, you cannot move until the command is revoked again.");
                 Notify(kMessageID, "You commanded " + g_sWearer + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -664,9 +663,9 @@ default
     state_entry() {
         //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-		g_sWearer = WEARERNAME;
+        WEARERNAME = llGetDisplayName(g_kWearer);
+    if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        g_sWearer = WEARERNAME;
         g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         llMinEventDelay(0.3);
         
@@ -682,8 +681,8 @@ default
     changed (integer change){
         if (change & CHANGED_OWNER){
             g_kWearer = llGetOwner();
-			WEARERNAME = llGetDisplayName(g_kWearer);
-			if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+            WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
             g_sWearer = WEARERNAME;
             g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         }
