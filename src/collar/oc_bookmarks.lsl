@@ -463,7 +463,7 @@ PrintDestinations(key kID) { // On inventory change, re-read our ~destinations n
         integer i;
         integer length = llGetListLength(g_lDestinations);  
         string sMsg;
-        sMsg += "The below can be copied and pasted into the \"~destinations\" notecard. The format should follow: destination name~region name(123,123,123)\n";
+        sMsg += "\n\nThe below can be copied and pasted into the "+g_sCard+" notecard. The format should follow:\n\ndestination name~region name(123,123,123)\n\n";
         for (i = 0; i < length; i++)
         {
             sMsg += llList2String(g_lDestinations, i) + "~" + llList2String(g_lDestinations_Slurls, i) + "\n";
