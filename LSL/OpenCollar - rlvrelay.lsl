@@ -94,6 +94,7 @@ integer CMD_REMSRC = 12;
 //string g_sSecOwnerssToken = "secowners";
 //string g_sBlackListsToken = "blacklist";
 string CTYPE = "collar";
+string WEARERNAME;
 list g_lCollarOwnersList;
 list g_lCollarSecOwnersList;
 list g_lCollarBlackList;
@@ -270,13 +271,13 @@ Dequeue()
     }
     g_lQueue=[sCurIdent,kCurID,sCommand]+g_lQueue;
     list lButtons=["Yes","No","Trust Object","Ban Object","Trust Owner","Ban Owner"];
-    string sOwner=llKey2Name(llGetOwnerKey(kCurID));
+    string sOwner=llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")";
     if (sOwner!="") sOwner= ", owned by "+sOwner+",";
     string sPrompt=llKey2Name(kCurID)+sOwner+" wants to control your viewer.";
     if (llGetSubString(sCommand,0,6)=="!x-who/")
     {
         lButtons+=["Trust User","Ban User"];
-        sPrompt+="\n"+llKey2Name(llGetSubString(sCommand,7,42))+" is currently using this device.";
+        sPrompt+="\n"+llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"+" is currently using this device.";
     }
     sPrompt+="\n\nDo you want to allow this?";
     g_iAuthPending = TRUE;
@@ -677,7 +678,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         if (!iOSuccess)
         {
-            Notify(kID, llKey2Name(g_kWearer)+"'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), TRUE);
+            Notify(kID, WEARERNAME+"'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), TRUE);
             SaveSettings();
             refreshRlvListener();
         }
@@ -745,6 +746,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
     }
@@ -907,7 +910,7 @@ default
                         if (!~llListFindList(g_lAvWhiteList, [(string)llGetOwnerKey(kCurID)]))
                         {
                             g_lAvWhiteList+=[(string)llGetOwnerKey(kCurID)];
-                            g_lAvWhiteListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                            g_lAvWhiteListNames+=[llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"];
                         }
                     }
                     else if (sMsg=="Ban Owner")
@@ -915,7 +918,7 @@ default
                         if (!~llListFindList(g_lAvBlackList, [(string)llGetOwnerKey(kCurID)]))
                         {
                             g_lAvBlackList+=[(string)llGetOwnerKey(kCurID)];
-                            g_lAvBlackListNames+=[llKey2Name(llGetOwnerKey(kCurID))];
+                            g_lAvBlackListNames+=[llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"];
                         }
                     }
                     else if (sMsg=="Trust User")
@@ -923,7 +926,7 @@ default
                         if (!~llListFindList(g_lAvWhiteList, [(string)kUser]))
                         {
                             g_lAvWhiteList+=[(string)kUser];
-                            g_lAvWhiteListNames+=[llKey2Name(kUser)];
+                            g_lAvWhiteListNames+=[llGetDisplayName(llGetOwnerKey(kUser))+"("+llKey2Name(llGetOwnerKey(kUser))+")"];
                         }
                     }
                     else if (sMsg=="Ban User")
@@ -931,7 +934,7 @@ default
                         if (!~llListFindList(g_lAvBlackList, [(string)kUser]))
                         {
                             g_lAvBlackList+=[(string)kUser];
-                            g_lAvBlackListNames+=[llKey2Name(kUser)];
+                            g_lAvBlackListNames+=[llGetDisplayName(llGetOwnerKey(kUser))+"("+llKey2Name(llGetOwnerKey(kUser))+")"];
                         }
                     }
                     if (iSave) SaveSettings();

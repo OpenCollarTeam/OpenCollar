@@ -36,6 +36,7 @@ string g_sSmartToken="smartstrip";
 
 list g_lSettings;//2-strided list in form of [option, param]
 string CTYPE = "collar";
+string WEARERNAME;
 
 list LOCK_CLOTH_POINTS = [
     "Gloves",
@@ -721,7 +722,9 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        g_sWearerName = llKey2Name(g_kWearer);
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        g_sWearerName = WEARERNAME;
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -768,6 +771,7 @@ default
                 }
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
+			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
         }
         else if (iNum == RLV_REFRESH)
         {//rlvmain just started up.  Tell it about our current restrictions

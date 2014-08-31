@@ -65,6 +65,7 @@ integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
 string CTYPE="collar";
+string WEARERNAME;
 
 string GIVECARD = "Quick Guide";
 string HELPCARD = "OpenCollar Guide";
@@ -466,6 +467,8 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
@@ -589,6 +592,7 @@ default
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
             } else if (sToken == "Global_CType") CTYPE = sValue;
+			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
@@ -670,11 +674,11 @@ default
             if(kID == NULL_KEY)
             {
                 g_bDetached = TRUE;
-                NotifyOwners(llKey2Name(g_kWearer) + " has detached me while locked at " + GetTimestamp() + "!");
+                NotifyOwners(WEARERNAME + " has detached me while locked at " + GetTimestamp() + "!");
             }
             else if(g_bDetached)
             {
-                NotifyOwners(llKey2Name(g_kWearer) + " has re-atached me at " + GetTimestamp() + "!");
+                NotifyOwners(WEARERNAME + " has re-atached me at " + GetTimestamp() + "!");
                 g_bDetached = FALSE;
             }
         }
