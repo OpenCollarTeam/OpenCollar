@@ -79,6 +79,7 @@ string UUID;
 string g_sCmd;
 string g_sScript;
 string CTYPE = "collar";
+string WEARERNAME;
 
 //globlals for supporting touch requests
 list g_lTouchRequests; // 4-strided list in form of touchid, recipient, flags, auth level
@@ -278,6 +279,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
@@ -448,7 +451,7 @@ default
                     }
                     SetPrefix(value);
                     SetListeners();
-                    Notify(kID, "\n" + llKey2Name(g_kWearer) + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
+                    Notify(kID, "\n" + WEARERNAME + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
                 }
                 else if (sCommand == "channel")
@@ -518,6 +521,7 @@ default
                 SetListeners();
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
+			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);

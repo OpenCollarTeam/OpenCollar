@@ -76,6 +76,7 @@ string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
 string CTYPE = "collar";
+string WEARERNAME;
 key g_kWearer;
 string g_sScript="rlvmain_";
 string g_sRlvVersionString="(unknown)";
@@ -433,6 +434,8 @@ default {
     state_entry() {
         //Debug("init");
         g_kWearer = llGetOwner();
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         CheckVersion();
     }
 
@@ -491,7 +494,12 @@ default {
                 //Debug("owners: " + sValue);
             } else if (sToken=="Global_lock") {
                 g_iCollarLocked=(integer)sValue;
-            }
+            } else if (sToken=="CTYPE") {
+				CTYPE=sValue;
+			} else if (sToken=="WEARERNAME") {
+				WEARERNAME=sValue;
+			}
+			
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -574,7 +582,7 @@ default {
 
             Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
-                string sMsg = llKey2Name(g_kWearer)+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
+                string sMsg = WEARERNAME+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
 
                 integer i_OwnerCount=llGetListLength(g_lOwners);
                 integer i;

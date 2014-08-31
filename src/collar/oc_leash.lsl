@@ -108,6 +108,7 @@ integer g_bLeashedToAvi;
 integer g_bFollowMode;
 string g_sScript="leash_";
 string CTYPE = "collar";
+string WEARERNAME;
 
 string g_sCheck;
 
@@ -203,7 +204,10 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // Send notices to wearer, leasher, and target
     // Only send notices if Leasher is an AV, as objects normally handle their own messages for such things
     if (bCmdGiverIsAvi) {
-        string sTarget = llKey2Name(kTarget);
+        string sTarget = llGetDisplayName(kTarget);
+		if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(kTarget);
+		string sCmdGiver = llGetDisplayName(kCmdGiver);
+		if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
         string sWearMess;
         if (kCmdGiver == g_kWearer) {// Wearer is Leasher
             if (iFollowMode){
@@ -221,23 +225,23 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
             string sCmdMess;
             if (iFollowMode){
                 if (kCmdGiver != kTarget) { // LeashTo someone else
-                    Notify(kTarget, llKey2Name(kCmdGiver) + " commands " + g_sWearer + " to follow you.", FALSE);
-                    sCmdMess= "You command " + g_sWearer + " to follow " + sTarget + ".";
-                    sWearMess = llKey2Name(kCmdGiver) + " commands you to follow " + sTarget + ".";
+                    Notify(kTarget, sCmdGiver + " commands " + g_sWearer + " to follow you.", FALSE);
+                    sCmdMess= "You command " + WEARERNAME + " to follow " + sTarget + ".";
+                    sWearMess = sCmdGiver + " commands you to follow " + sTarget + ".";
                 } else {
                     sCmdMess= "You command " + g_sWearer + " to follow you.";
-                    sWearMess = llKey2Name(kCmdGiver) + " commands you to follow them.";
+                    sWearMess = sCmdGiver + " commands you to follow them.";
                 }
             } else {
                 string sPsv = "'s"; // Possessive, will vary if name ends in "s"
                 if (llGetSubString(g_sWearer, -1,-1)=="s") sPsv = "'";
                 sCmdMess= "You grab " + g_sWearer + sPsv + " leash";
-                sWearMess = llKey2Name(kCmdGiver) + " grabs your leash";
+                sWearMess = sCmdGiver + " grabs your leash";
                 if (kCmdGiver != kTarget) { // Leasher is not LeashTo
                     if (bTargetIsAvi) { // LeashTo someone else
                         sCmdMess += ", and hand it to " + sTarget + ".";
                         sWearMess += ", and hands it to " + sTarget + ".";
-                        Notify(kTarget, llKey2Name(kCmdGiver) + " hands you " + g_sWearer + sPsv + " leash.", FALSE);
+                        Notify(kTarget, sCmdGiver + " hands you " + g_sWearer + sPsv + " leash.", FALSE);
                     } else {// LeashTo object
                         sCmdMess += ", and tie it to " + sTarget + ".";
                         sWearMess += ", and ties it to " + sTarget + ".";
@@ -304,9 +308,11 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
 // Wrapper for DoUnleash()
 Unleash(key kCmdGiver)
 {
-    string sTarget = llKey2Name(g_kLeashedTo);
+    string sTarget = llGetDisplayName(g_kLeashedTo);
+	if (sTarget == "???" || sTarget == "") sTarget = llKey2Name(g_kLeashedTo);
     if ( (key)g_kLeashedTo ){
-        string sCmdGiver = llKey2Name(kCmdGiver);
+        string sCmdGiver = llGetDisplayName(kCmdGiver);
+		if (sCmdGiver == "???" || sCmdGiver == "") sCmdGiver = llKey2Name(kCmdGiver);
         string sWearMess;
         string sCmdMess;
         string sTargetMess;
@@ -491,8 +497,11 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if (iAuth <= COMMAND_GROUP) {
                 g_iStayRank = iAuth;
                 g_iStay = TRUE;
+				sCmdGiver = llGetDisplayName(kMessageID);
+				if (sCmdGiver == "???" | sCmdGiver == "") sCmdGiver = llKey2Name(kMessageID);
                 llRequestPermissions(g_kWearer, PERMISSION_TAKE_CONTROLS);
-                llOwnerSay(llKey2Name(kMessageID) + " commanded you to stay in place, you cannot move until the command is revoked again.");
+				
+                llOwnerSay(sCmdGiver + " commanded you to stay in place, you cannot move until the command is revoked again.");
                 Notify(kMessageID, "You commanded " + g_sWearer + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
@@ -655,7 +664,9 @@ default
     state_entry() {
         //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
-        g_sWearer = llKey2Name(g_kWearer);
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+		g_sWearer = WEARERNAME;
         g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         llMinEventDelay(0.3);
         
@@ -671,7 +682,9 @@ default
     changed (integer change){
         if (change & CHANGED_OWNER){
             g_kWearer = llGetOwner();
-            g_sWearer = llKey2Name(g_kWearer);
+			WEARERNAME = llGetDisplayName(g_kWearer);
+			if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+            g_sWearer = WEARERNAME;
             g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         }
     }

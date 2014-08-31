@@ -37,6 +37,8 @@ integer card1line1;
 integer card1line2;
 integer iCardComplete;
 
+string WEARERNAME;
+
 list g_lAnimCmds;//1-strided list of strings that will trigger
 list g_lAnimSettings;//4-strided list of subAnim|domAnim|offset|text, running parallel to g_lAnimCmds,
 //such that g_lAnimCmds[0] corresponds to g_lAnimSettings[0:3], and g_lAnimCmds[1] corresponds to g_lAnimSettings[4:7], etc
@@ -222,6 +224,8 @@ default
         //llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
+		WEARERNAME = llGetDisplayName(g_kWearer);
+		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer); //sanity check, fallback if necessary
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD)
         {//card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
@@ -283,7 +287,8 @@ default
                     else                //else set partner to commander
                     {
                         g_kPartner = g_kCmdGiver;
-                        g_sPartnerName = llKey2Name(g_kPartner);
+                        g_sPartnerName = llGetDisplayName(g_kPartner);
+						if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
                         //added to stop eventual still going animations
                         StopAnims();
                         //llMessageLinked(LINK_SET, CPLANIM_PERMREQUEST, sCommand, g_kPartner);
@@ -314,6 +319,7 @@ default
             {
                 g_fTimeOut = (float)sValue;
             }
+			else if(sToken == "WEARERNAME") WEARERNAME = sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -370,12 +376,13 @@ default
                 {
                     //process return from sensordialog
                     g_kPartner = (key)sMessage;
-                    g_sPartnerName = llKey2Name(g_kPartner);
+                    g_sPartnerName = llGetDisplayName(g_kPartner);
+					if (g_sPartnerName == "???" || g_sPartnerName == "") WEARERNAME = llKey2Name(g_kPartner); //sanity check, fallback if necessary
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                     Notify(g_kWearer, "Offering to "+ sCommand +" "+ g_sPartnerName, FALSE);
-                    Notify(g_kPartner,  llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0) + " would like give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
+                    Notify(g_kPartner,  WEARERNAME + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
             }
             else if (kID == g_kTimerMenu)
@@ -446,8 +453,8 @@ default
         string text = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
         if (text != "")
         {
-            text = StrReplace(text, "_SELF_", llList2String(llParseString2List(llKey2Name(g_kWearer), [" "], []), 0));
-            text = StrReplace(text, "_PARTNER_", llList2String(llParseString2List(g_sPartnerName, [" "], []), 0));
+            text = StrReplace(text, "_SELF_", WEARERNAME);
+            text = StrReplace(text, "_PARTNER_", g_sPartnerName);
             
             //inlined PrettySay function.  Renames collar to wearer's first name for duration of say command
             string sName = llGetObjectName();
