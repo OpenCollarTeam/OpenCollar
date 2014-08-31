@@ -262,7 +262,7 @@ default
                 if (sV == "") sV = "auto";
                 SetPrefix(sV);
             }
-            else if (sT == "WEARERNAME") {
+            else if (sT == "Global_WearerName") {
                 WEARERNAME = sV;
                 gsWear = WEARERNAME;
             }

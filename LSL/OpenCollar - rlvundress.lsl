@@ -771,7 +771,7 @@ default
                 }
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
         }
         else if (iNum == RLV_REFRESH)
         {//rlvmain just started up.  Tell it about our current restrictions

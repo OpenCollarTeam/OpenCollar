@@ -592,7 +592,7 @@ default
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
             } else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
