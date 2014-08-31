@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - couples                               //
-//                                 version 3.961                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -224,8 +224,8 @@ default
         //llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer); //sanity check, fallback if necessary
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer); //sanity check, fallback if necessary
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD)
         {//card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
@@ -288,7 +288,7 @@ default
                     {
                         g_kPartner = g_kCmdGiver;
                         g_sPartnerName = llGetDisplayName(g_kPartner);
-						if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
+                        if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
                         //added to stop eventual still going animations
                         StopAnims();
                         //llMessageLinked(LINK_SET, CPLANIM_PERMREQUEST, sCommand, g_kPartner);
@@ -319,7 +319,7 @@ default
             {
                 g_fTimeOut = (float)sValue;
             }
-			else if(sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if(sToken == "WEARERNAME") WEARERNAME = sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -377,7 +377,7 @@ default
                     //process return from sensordialog
                     g_kPartner = (key)sMessage;
                     g_sPartnerName = llGetDisplayName(g_kPartner);
-					if (g_sPartnerName == "???" || g_sPartnerName == "") WEARERNAME = llKey2Name(g_kPartner); //sanity check, fallback if necessary
+                    if (g_sPartnerName == "???" || g_sPartnerName == "") WEARERNAME = llKey2Name(g_kPartner); //sanity check, fallback if necessary
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);

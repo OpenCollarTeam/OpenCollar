@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - listener                              //
-//                                 version 3.957                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -91,9 +91,12 @@ integer FLAG_TOUCHEND = 0x02;
 integer g_iNeedsPose = FALSE;  // should the avatar be forced into a still pose for making touching easier
 string g_sPOSE_ANIM = "turn_180";
 
+integer g_iTouchNotify = FALSE;  // for Touch Notify
+
+
 Debug(string sStr)
 {
-    //llOwnerSay(llGetScriptName() + " Debug: " + sStr);
+    // llOwnerSay(llGetScriptName() + " Debug: " + sStr);
 }
 
 SetListeners()
@@ -269,7 +272,11 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher)
     {
         if (sendPermanentCommandFromLink(LINK_ROOT, sType, kToucher)) return;
     }
-    if (sType == "touchstart") llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
+    if (sType == "touchstart") 
+    {
+        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
+        if (g_iTouchNotify) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)llDetectedKey(0)+"/about touched your "+CTYPE+".\n",FALSE);
+    }
 }
 
 
@@ -279,8 +286,8 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-		WEARERNAME = llGetDisplayName(g_kWearer);
-		if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
@@ -505,6 +512,26 @@ default
                     {
                         llOwnerSay("Your safeword is: " + g_sSafeWord + ".");
                     }
+                }                
+                else if (sCommand == "busted")
+                {
+                    if (sValue == "on")
+                    {
+                        llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
+                        g_iTouchNotify=TRUE;
+                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                    }                    
+                    else if (sValue == "off")
+                    {
+                        llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
+                        g_iTouchNotify=FALSE;
+                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                    }
+                    else if (sValue == "") 
+                    {
+                        if (g_iTouchNotify) Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                        else Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                    }
                 }
             }
         }
@@ -521,7 +548,8 @@ default
                 SetListeners();
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
-			else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "Global_touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
+            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);
@@ -585,8 +613,8 @@ default
                 if (g_iNeedsPose && [] == g_lTouchRequests) llStopAnimation(g_sPOSE_ANIM);
             }
         }
-
     }
+        
     touch_start(integer iNum)
     {
         //Debug("touched");
