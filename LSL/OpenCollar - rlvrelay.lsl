@@ -791,7 +791,8 @@ default
             if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
-        }
+        	else if (sToken == "Global_WearerName") WEARERNAME = sValue;
+		}
         // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_OFF)
         {

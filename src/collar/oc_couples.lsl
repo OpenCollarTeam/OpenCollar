@@ -319,7 +319,7 @@ default
             {
                 g_fTimeOut = (float)sValue;
             }
-            else if(sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if(sToken == "Global_WearerName") WEARERNAME = sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {

@@ -529,8 +529,15 @@ default
                     }
                     else if (sValue == "") 
                     {
-                        if (g_iTouchNotify) Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-                        else Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                        if (g_iTouchNotify) {
+							Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+							llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
+						}
+                        else {
+							Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+							llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
+							g_iTouchNotify = 0;
+						}
                     }
                 }
             }
@@ -549,7 +556,7 @@ default
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "Global_touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
-            else if (sToken == "WEARERNAME") WEARERNAME = sValue;
+            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);

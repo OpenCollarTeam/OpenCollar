@@ -494,9 +494,9 @@ default {
                 //Debug("owners: " + sValue);
             } else if (sToken=="Global_lock") {
                 g_iCollarLocked=(integer)sValue;
-            } else if (sToken=="CTYPE") {
+            } else if (sToken=="Global_CType") {
                 CTYPE=sValue;
-            } else if (sToken=="WEARERNAME") {
+            } else if (sToken=="Global_WearerName") {
                 WEARERNAME=sValue;
             }
             
