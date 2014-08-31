@@ -530,14 +530,15 @@ default
                     else if (sValue == "") 
                     {
                         if (g_iTouchNotify) {
-							Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
-							llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
-						}
+                            Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                            llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
+                            g_iTouchNotify = 1;
+                        }
                         else {
-							Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-							llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
-							g_iTouchNotify = 0;
-						}
+                            Notify(g_kWearer,"Touch notification is now enabled.",FALSE);                           
+                            llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
+                            g_iTouchNotify = 0;
+                        }
                     }
                 }
             }
