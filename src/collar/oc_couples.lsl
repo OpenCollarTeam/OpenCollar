@@ -452,18 +452,15 @@ default
         
         string text = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
         if (text != "")
-        {
-            text = StrReplace(text, "_SELF_", WEARERNAME);
-            text = StrReplace(text, "_PARTNER_", g_sPartnerName);
-            
+        {	
+			string sName = llGetObjectName();
+			string sObjectName;
+			text = StrReplace(text,"_PARTNER_",g_sPartnerName);
+			text = StrReplace(text,"_SELF_",WEARERNAME);
             //inlined PrettySay function.  Renames collar to wearer's first name for duration of say command
-            string sName = llGetObjectName();
-            list lWords = llParseString2List(text, [" "], []);
-            llSetObjectName(llList2String(lWords, 0));
-            lWords = llDeleteSubList(lWords, 0, 0);
-            llSay(0, "/me " + llDumpList2String(lWords, " "));
-            llSetObjectName(sName);
-            
+            llSetObjectName("");
+            llSay(0, "/me " + text);
+            llSetObjectName(sName);           
         }
         if (g_fTimeOut > 0.0){
             g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
