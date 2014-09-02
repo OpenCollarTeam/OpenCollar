@@ -99,7 +99,20 @@ key REQUEST_KEY;
 
 string g_sScript;
 
-//Debug(string sStr){llOwnerSay(llGetScriptName() + ": " + sStr);}
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+}
+*/
+
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -548,7 +561,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "runaway"){
         list lButtons=[];
-        string message;
+        string message="Only the wearer or an Owner can access this menu";
         if (iNum == COMMAND_WEARER){  //wearer called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
@@ -584,7 +597,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
 default
 {
     state_entry() {   //until set otherwise, wearer is owner
-        //llOwnerSay("Auth: free memory="+(string)llGetFreeMemory());
+        //Debug("Starting");
         g_sScript = "auth_";
         g_kWearer = llGetOwner();
         SetPrefix("auto");
@@ -766,8 +779,8 @@ default
                             "Group ☒","unsetgroup",
                             "Public ☐","setopenaccess",
                             "Public ☒","unsetopenaccess",
-                            "Limit Range ☐","setlimitrange",
-                            "Limit Range ☒","unsetlimitrange",
+                            "LimitRange ☐","setlimitrange",
+                            "LimitRange ☒","unsetlimitrange",
                             //"Give Hud","givehud", 
                             "List Owners","listowners",
                             "Runaway","runaway"
@@ -819,7 +832,7 @@ default
                         if (~iOwnerIndex){
                             string name=llList2String(g_lOwners,iOwnerIndex+1);
                             UserCommand(iAuth, "remowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
-                            llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); //let other scripts know we're running away
+                            //llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); //let other scripts know we're running away
                         } else {
                             Notify(kAv, "You are not on the owners list.", TRUE);
                             UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
@@ -861,6 +874,14 @@ default
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
 
     http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
