@@ -345,18 +345,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
                 SaveElementAlpha(sValue, 0);
             }
         }
-		else if (sCommand == "stealth")
-		{
-			if (g_iAllAlpha == 0) {
-				SetAllElementsAlpha(1);
-				Notify(iNum,"Showing "+CTYPE,FALSE);
-			}
-			else {
-				SetAllElementsAlpha(0);
-				Notify(iNum,"Hiding "+CTYPE,FALSE);
-			}
-				
-		}
         else if (sCommand == "show")
         {
             if(sValue == "" || sValue == CTYPE)
