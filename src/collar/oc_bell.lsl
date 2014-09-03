@@ -374,6 +374,7 @@ default
 
         PrepareSounds();
         SetBellElementAlpha();
+        llSetMemoryLimit(32768);
     }
     on_rez(integer param)
     {
