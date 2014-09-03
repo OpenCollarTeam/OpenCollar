@@ -471,13 +471,6 @@ default
             }
             else if (sToken == "Global_prefix") g_sSubPrefix=sValue;
         }
-        else if (iNum == LM_SETTING_SAVE)
-        {
-            integer i = llSubStringIndex(sStr, "=");
-            string sToken = llGetSubString(sStr, 0, i - 1);
-            string sValue = llGetSubString(sStr, i + 1, -1);
-            if (sToken == "Global_prefix") g_sSubPrefix=sValue;
-        }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
         {
