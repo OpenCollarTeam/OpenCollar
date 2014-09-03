@@ -123,21 +123,14 @@ string AutoPrefix()
     return llToLower(llGetSubString(llList2String(sName, 0), 0, 0)) + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
 }
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer)
-    {
-        llOwnerSay(sMsg);
-    }
-    else
-    {
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else {
         llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer)
-        {
-            llOwnerSay(sMsg);
-        }
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
+
 
 /*
 integer g_iProfiled;
