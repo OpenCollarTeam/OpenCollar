@@ -224,8 +224,8 @@ default
             for (iL = 0; iL < llStringLength(_m); ++iL)
                 sOut += garble(llToLower(llGetSubString(_m, iL, iL)));
             string sMe = llGetObjectName();
-            llSetObjectName(gsWear);
-            llWhisper(0, "/me mumbles: " + sOut);
+            llSetObjectName("");
+            llWhisper(0, "/me " +gsWear+" mumbles: " + sOut);
             llSetObjectName(sMe);
             return;
         }
