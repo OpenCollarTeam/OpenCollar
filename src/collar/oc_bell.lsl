@@ -138,11 +138,6 @@ Debug(string sStr) {
 }
 */
 
-integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
-}
-
 DoMenu(key kID, integer iAuth)
 {
     string sPrompt = "\n";
@@ -237,7 +232,7 @@ PrepareSounds()
     for (i=0;i<m;i++)
     {
         s=llGetInventoryName(INVENTORY_SOUND,i);
-        if (nStartsWith(s,g_sBellSoundIdentifier))
+        if (llSubStringIndex(s,"bell_")==0)
         {
             // sound found, add key to list
             g_listBellSounds+=llGetInventoryKey(s);
@@ -269,7 +264,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         DoMenu(kID, iNum);
     }
     // we now chekc for chat commands
-    else if (nStartsWith(test,"bell"))
+    else if (llSubStringIndex(test,"bell")==0)
     {
         // it is a chat commad for the bell so process it
         list lParams = llParseString2List(test, [" "], []);
