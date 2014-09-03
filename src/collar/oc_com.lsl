@@ -464,7 +464,12 @@ default
                 else if (sCommand == "channel")
                 {
                     integer iNewChan = (integer)llList2String(lParams, 1);
-                    if (iNewChan > 0)
+                    if (sValue=="") {  //they left the param blank, report listener status
+                        string message=CTYPE+" is listening on channel";
+                        if (g_iListenChan0) message += "s 0 and";
+                        message += " "+(string)g_iListenChan+".";
+                        Notify(kID, message, FALSE);
+                    } else if (iNewChan > 0)
                     {
                         g_iListenChan =  iNewChan;
                         SetListeners();
@@ -491,10 +496,6 @@ default
                         SetListeners();
                         Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iListenChan, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "channel=" + (string)g_iListenChan + ",FALSE", "");
-                    }
-                    else
-                    {  //they left the param blank
-                        Notify(kID, "Error: 'channel' must be given a number.", FALSE);
                     }
                 }
             }
