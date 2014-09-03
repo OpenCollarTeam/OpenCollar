@@ -425,7 +425,7 @@ integer validatePlace(string sStr,key kAv, integer iAuth) {
 
 ReadDestinations() { // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks
         key kAv;
-        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks", [HTTP_METHOD, "GET"], "");
+        webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
 
         g_lDestinations = [];
         g_lDestinations_Slurls = [];
