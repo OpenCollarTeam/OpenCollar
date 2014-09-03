@@ -46,7 +46,6 @@ list g_listBellSounds=["7b04c2ee-90d9-99b8-fd70-8e212a72f90d","b442e334-cb8a-c30
 key g_kCurrentBellSound ; // curent bell sound key
 integer g_iCurrentBellSound; // curent bell sound sumber
 integer g_iBellSoundCount; // number of avail bell sounds
-string g_sBellSoundIdentifier="bell_"; // use this to find additional sounds in the inventory
 
 
 list g_lBellElements; // list with number of prims related to the bell
