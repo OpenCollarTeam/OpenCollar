@@ -392,12 +392,6 @@ default
 
         PrepareSounds();
         SetBellElementAlpha();
-        //not needed anymore as we request menus already
-        // now wait  to be sure al other scripts reseted and init the menu system into the collar
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-
     }
     on_rez(integer param)
     {
