@@ -16,8 +16,6 @@
 //show/hide for elements named: Bell
 //2009-01-30 Cleo Collins - 1. draft
 
-integer g_iDebugging=FALSE;
-
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 key g_kDialogID;
@@ -106,7 +104,6 @@ integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";//when your menu hears this, give the parent menu
-string CTYPE = "collar";
 string g_sScript;
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
@@ -495,7 +492,6 @@ default
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             }
             else if (sToken == "Global_prefix") g_sSubPrefix=sValue;
-            else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (iNum == LM_SETTING_SAVE)
         {
