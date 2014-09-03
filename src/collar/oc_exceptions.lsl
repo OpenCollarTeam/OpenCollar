@@ -938,8 +938,12 @@ default
             if (kID != REQUEST_KEY) return;
             list params = llParseString2List(sStr, ["|"], []);
             if (llList2String(params, 0) != g_sScript) return;
-            g_kTmpKey = (key)llList2String(params, 2);
-            AddName(llList2String(params, 5));
+            key kAv = (key)llList2String(params, 2);
+            integer iAuth= llList2Integer(params, 3);
+            if (llList2String(params,5)!=UPMENU){
+                AddName(llList2String(params, 5));
+            }
+            PersonMenu(kAv, g_lNames, "", iAuth);
         }
     }
     dataserver(key kID, string sData)
