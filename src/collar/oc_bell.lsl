@@ -37,7 +37,6 @@ string g_sSubPrefix;
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sBellOn="    ON"; // menu text of bell on
 string g_sBellOff="    OFF"; // menu text of bell on
-integer g_iBellAvailable=FALSE;
 
 integer g_iBellShow=FALSE; // is the bell visible
 string g_sBellShow="    SHOW"; //menu text of bell visible
@@ -49,8 +48,6 @@ integer g_iCurrentBellSound; // curent bell sound sumber
 integer g_iBellSoundCount; // number of avail bell sounds
 string g_sBellSoundIdentifier="bell_"; // use this to find additional sounds in the inventory
 
-
-string g_sBellPrimName="Bell"; // Description for Bell elements
 
 list g_lBellElements; // list with number of prims related to the bell
 
@@ -169,22 +166,15 @@ DoMenu(key kID, integer iAuth)
     }
 
     // Show button for showing/hidding the bell and add a text for it, if there is a bell
-    if (g_iBellAvailable)
+    if (g_iBellShow) // the bell is hidden
     {
-        if (g_iBellShow) // the bell is hidden
-        {
-            lMyButtons+= g_sBellHide;
-            sPrompt += " and shown.\n\n";
-        }
-        else
-        {
-            lMyButtons+= g_sBellShow;
-            sPrompt += " and NOT shown.\n\n";
-        }
+        lMyButtons+= g_sBellHide;
+        sPrompt += " and shown.\n\n";
     }
     else
-    {  // no bell, so no text or sound
-        sPrompt += ".\n";
+    {
+        lMyButtons+= g_sBellShow;
+        sPrompt += " and NOT shown.\n\n";
     }
 
     // and show the volume and timing of the bell sound
@@ -226,22 +216,16 @@ BuildBellElementList()
         // read description
         lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_DESC]), ["~"], []);
         // check inf name is baell name
-        if (llList2String(lParams, 0)==g_sBellPrimName)
+        if (llList2String(lParams, 0)=="Bell")
         {
             // if so store the number of the prim
             g_lBellElements += [n];
             // Debug("added " + (string)n + " to elements");
         }
     }
-    if (llGetListLength(g_lBellElements)>0)
-    {
-        g_iBellAvailable=TRUE;
-    }
-    else
-    {
+    if (llGetListLength(g_lBellElements)==0){
         llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
         llRemoveInventory(llGetScriptName());
-        g_iBellAvailable=FALSE;
     }
 
 }
