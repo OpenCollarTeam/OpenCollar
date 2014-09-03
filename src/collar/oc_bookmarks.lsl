@@ -640,7 +640,7 @@ default {
                     g_lVolatile_Slurls += [sValue];
                 }
             }
-            // or check for specific values from the collar like "auth_owner" (for owners) "auth_secowner" (for secondary owners) etc
+            // or check for specific values from the collar like "auth_owner" (for owners) "auth_secowners" (for secondary owners) etc
             else if (sToken == "auth_owner")
             {
                 // work with the received values, in this case pare the vlaue into a strided list with the owners

@@ -778,7 +778,7 @@ default
             if (sToken == g_sScript + "settings") UpdateSettings(sValue);
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
         }
         else if (iNum == LM_SETTING_SAVE)
@@ -789,7 +789,7 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_secowner") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
             else if (sToken == "Global_WearerName") WEARERNAME = sValue;
         }

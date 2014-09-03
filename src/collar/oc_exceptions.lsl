@@ -775,7 +775,7 @@ default
                 ClearEx();
                 UpdateSettings();
             }
-            else if (sToken == "auth_secowner")
+            else if (sToken == "auth_secowners")
             {
                 g_lSecOwners = llParseString2List(sValue, [","], []);
                 //send accepttp command
