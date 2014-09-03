@@ -20,35 +20,35 @@ integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
 integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
-integer COMMAND_SAFEWORD = 510;
-integer COMMAND_RELAY_SAFEWORD = 511;
+//integer COMMAND_EVERYONE = 504;
+//integer COMMAND_RLV_RELAY = 507;
+//integer COMMAND_SAFEWORD = 510;
+//integer COMMAND_RELAY_SAFEWORD = 511;
 
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REQUEST = 3000;
+//integer MENUNAME_RESPONSE = 3001;
+//integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+//integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
-integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
+//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
+//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -81,30 +81,10 @@ string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
 string g_sScript;
-string g_sGetAviScript = "getavi_";
 
 list g_lSensorDetails;
 integer g_bSensorLock;
 integer g_iSensorTimeout;
-
-string Key2Name(key kId)
-{
-    string sOut = llGetDisplayName(kId);
-    if (sOut) return sOut;
-    else return llKey2Name(kId);
-}
-
-string Integer2String(integer iNum, integer iDigits)
-{
-    string sOut = "";
-    integer i = 0;
-    for (; i <iDigits; i++)
-    {
-        sOut = (string) (iNum%10) + sOut;
-        iNum /= 10;
-    }
-    return sOut;
-}
 
 integer GetStringBytes(string sStr)
 {
@@ -157,155 +137,139 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-
-integer ButtonDigits(list lIn)
-// checks if any of the times is over 20 characters and deduces how many digits are needed
-{
-    integer m=llGetListLength(lIn);
-    integer iDigits;
-    if ( m < 10 ) iDigits = 1;
-    else if (m < 100) iDigits = 2;
-    else if (m < 1000) iDigits = 3; // more than 100 is unlikely, considering the size of a LM
-    integer i;
-    for (i=0;i<m;i++) if (GetStringBytes(llList2String(lIn,i))>18) return iDigits;
-    return 0; // if no button label is too long, then no need for any digit
-}
-
-
-integer RandomUniqueChannel()
-{
-    integer iOut = llRound(llFrand(10000000)) + 100000;
-    if (~llListFindList(g_lMenus, [iOut]))
-    {
-        iOut = RandomUniqueChannel();
-    }
-    return iOut;
-}
-
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
-    //string sThisPrompt = " (Timeout in "+ (string)g_iTimeOut +" seconds.)";
-    string sThisPrompt;
-    string sNumberedButtons;
-    integer iNBPromptlen;
-    list lButtons;
-    list lCurrentItems;
+    //calculate page start and end
     integer iNumitems = llGetListLength(lMenuItems);
-    integer iStart;
+    integer iStart = 0;
     integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
-    
-    //slice the menuitems by page
+    string sPagerPrompt;
     if (iNumitems > iMyPageSize)
     {
         iMyPageSize=iMyPageSize-2;//we'll use two slots for the MORE and PREV button, so shrink the page accordingly
+        
+        integer numPages=(iNumitems-1)/iMyPageSize;
+        if (iPage>numPages)iPage=0;
+        else if (iPage<0) iPage=numPages;
+        
         iStart = iPage * iMyPageSize;
         //multi page menu
-        sThisPrompt = sThisPrompt + "\nPage "+(string)(iPage+1)+"/"+(string)(((iNumitems-1)/iMyPageSize)+1);
+        sPagerPrompt = sPagerPrompt + " Page "+(string)(iPage+1)+"/"+(string)(numPages+1);
     }
-    else iStart = 0;
     integer iEnd = iStart + iMyPageSize - 1;
     if (iEnd >= iNumitems) iEnd = iNumitems - 1;
-    // check prompt lengths
-    integer iPromptlen=GetStringBytes(sPrompt);
-    if (iWithNums && !~llListFindList(MRSBUN, [kRecipient]))
-    { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
-        
-        integer iCur; for (iCur = iStart; iCur <= iEnd; iCur++)
+    integer iPagerPromptLen = GetStringBytes(sPagerPrompt);
+    //Debug("start at "+(string)iStart+", end at "+(string)iEnd);
+    
+    //if we've been told to, calculate numbering from buttons supplied, inlined ButtonDigits function
+    if (iWithNums == -1){
+        integer iNumButtons=llGetListLength(lMenuItems);
+        iWithNums=llStringLength((string)iNumButtons);
+        //if ( iNumButtons < 10 ) iWithNums = 1;
+        //else if (iNumButtons < 100) iWithNums = 2;
+        //else if (iNumButtons < 1000) iWithNums = 3; // more than 100 is unlikely, considering the size of a LM
+        while (iNumButtons--) {
+            if (GetStringBytes(llList2String(lMenuItems,iNumButtons))>18) {
+                jump longButtonName;  //one of the options is too long for a button, thats all we need to know.
+            }
+        }
+        iWithNums=0;
+        @longButtonName;
+    }
+    //Debug("numbered list:"+(string)iWithNums);
+    
+    // create list of buttons to use, and number them if needed
+    string sNumberedButtons;
+    integer iNBPromptlen;
+    list lButtons;  //list of buttons to be used in the dialog, sliced by page and maybe with numbers added, not the lMenuItems we were supplied
+    if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
+        integer iCur; 
+        sNumberedButtons="Menu key:\n";
+        for (iCur = iStart; iCur <= iEnd; iCur++)
         {
             string sButton = llList2String(lMenuItems, iCur);
-            if ((key)sButton) sButton = Key2Name((key)sButton);
-            sButton = Integer2String(iCur, iWithNums) + " " + sButton;
+            if ((key)sButton) {
+                //fixme: inlined single use key2name function
+                if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
+                else sButton=llKey2Name((key)sButton);
+            }
+            
+            //inlined single use Integer2String function
+            string sButtonNumber = (string)iCur;
+            while (llStringLength(sButtonNumber)<iWithNums){
+                sButtonNumber = "0"+sButtonNumber;
+            }
+            sButton=sButtonNumber + " " + sButton;
+            //Debug("ButtonNumber="+sButtonNumber);
+
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
             lButtons += [sButton];
         }
         iNBPromptlen=GetStringBytes(sNumberedButtons);
-        if(iPromptlen+iNBPromptlen>511)
-        {
-            if(iNBPromptlen<1015) Notify(kRecipient,"Menu key:\n"+sNumberedButtons,FALSE);
-            else
-            {
-                integer m=llGetListLength(lButtons);
-                integer iLen;
-                integer x;
-                string sOut;
-                string sLine;
-                while(x<m)
-                {
-                   sLine="/n"+llList2String(lButtons,x);
-                   iLen+=GetStringBytes(sLine);
-                   if(iLen>1024)
-                   {
-                       Notify(kRecipient,sOut,FALSE);
-                       sOut="";
-                       iLen=0;
-                    }
-                    sOut+=sLine;
-                    ++x;
-                }
-                Notify(kRecipient,sOut,FALSE);
+    } else if (iNumitems > iMyPageSize) {
+        lButtons = llList2List(lMenuItems, iStart, iEnd);
+    } else {
+        lButtons = lMenuItems;
+    }
+    //Debug("buttons:"+llDumpList2String(lButtons,","));
+    
+    //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
+    integer iPromptlen=GetStringBytes(sPrompt);
+    string sThisPrompt;
+    string sThisChat;
+    if (iPromptlen + iNBPromptlen + iPagerPromptLen < 512) { //we can fit it all in the dialog
+        sThisPrompt = sPrompt + sNumberedButtons + sPagerPrompt ;
+    } else if (iPromptlen + iPagerPromptLen < 512) { //we can fit in the whole prompt and pager info, but not the buttons list
+        sThisPrompt = sPrompt + sPagerPrompt;
+        sThisChat = sNumberedButtons;
+    } else {  //can't fit prompt and pager, so send truncated prompt, pager and chat full prompt and button list
+        sThisPrompt=TruncateString(sPrompt,510-iPagerPromptLen)+sPagerPrompt;
+        sThisChat = sPrompt+sNumberedButtons;
+    }
+    //Debug("prompt:"+sThisPrompt);
+    
+    //unless asked not to, chat anything that wouldn't fit to menu user
+    if (~llListFindList(MRSBUN, [kRecipient])){  
+        integer iRemainingChatLen;
+        while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
+            if(iRemainingChatLen<1015) Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
+            else {
+                string sMessageChunk=TruncateString(sPrompt,1015);
+                Notify(kRecipient,sMessageChunk,FALSE);
+                sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
             }
         }
     }
-    else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
-    else lButtons = lMenuItems;
-                    
-    if (iPromptlen>511)
-    {
-        Notify(kRecipient,"The dialog prompt message is longer than 512 characters. It will be truncated to 512 characters.",TRUE);
-        sThisPrompt=TruncateString(sPrompt,510);
-        //sThisPrompt = sPrompt;
+    //Debug("chat prompt:"+sThisChat);
+    
+    //calculate random channel number for dialog, inlined single use RandomUniqueChanel function
+    integer iChan=llRound(llFrand(10000000)) + 100000;  
+    while (~llListFindList(g_lMenus, [iChan])){
+        iChan=llRound(llFrand(10000000)) + 100000;
     }
-    else //give us the best prompt we can fit into the space!
-    {
-        string sMkey="";
-        if(iNBPromptlen) sMkey="\n";
-        integer iMkeylen=GetStringBytes(sMkey);
-        integer iAll=iPromptlen + iNBPromptlen +iMkeylen + GetStringBytes(sThisPrompt);
-        if(iAll<512) sThisPrompt = sPrompt + sMkey + sNumberedButtons + sThisPrompt;
-        else if (iAll-iMkeylen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons + sThisPrompt;
-        else if(iPromptlen+iNBPromptlen+iMkeylen<512) sThisPrompt = sPrompt + sMkey + sNumberedButtons;
-        else if (iPromptlen+iNBPromptlen<512) sThisPrompt=sThisPrompt = sPrompt +"\n" + sNumberedButtons;
-        else if (iAll-iNBPromptlen-iMkeylen<512) sThisPrompt= sPrompt + sThisPrompt;
-        else sThisPrompt= sPrompt;
-    }
-
-    
-    //integer stop = llGetListLength(lCurrentItems);
-    //integer n;
-    //for (n = 0; n < stop; n++)
-    //{
-    // string sName = llList2String(lMenuItems, iStart + n);
-    // lButtons += [sName];
-    //}
-    
-
-    // SA: not needed in this script since we actually build lButtons and lUtilityButtons here
-    // both are made from parsing a string. Thus the result is necessarily a list of strings
-    // and if we use llParseString2List instead of llParseStringKeepNulls, there won't be any
-    // empty string.
-    // lButtons = SanitizeButtons()lButtons);
-    // lUtilityButtons = SanitizeButtons(lUtilityButtons);
-    
-    integer iChan = RandomUniqueChannel();
     integer iListener = llListen(iChan, "", kRecipient, "");
-    llSetTimerEvent(g_iReapeat);
-    if (iNumitems > iMyPageSize)
-    {
-        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[PREV,MORE]), iChan);
-    }
-    else if (iNumitems || iMyPageSize != iPagesize)
-    {
-        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
+
+    //send dialog to viewer
+    if (llGetListLength(lMenuItems+lUtilityButtons)){
+        list lNavButtons;
+        if (iNumitems > iMyPageSize) {
+            lNavButtons=[PREV,MORE];
+        }
+        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons, lNavButtons), iChan);
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
+    
+    //set dialog timeout
+    llSetTimerEvent(g_iReapeat);
     integer ts = llGetUnixTime() + g_iTimeOut;
+    
+    //write entry in tracking list
     g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo];
+    //Debug("Made Dialog");
 }
 
-list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
-{//returns a list formatted to that "options" will start in the top left of a dialog, and "utilitybuttons" will start in the bottom right
-    if(~llListFindList(lOptions,["Help/About"])) lOptions=PrettyMain(lOptions); //Quick and dirty way to check for main menu.
+list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons){  //returns a list formatted to that "options" will start in the top left of a dialog, and "utilitybuttons" will start in the bottom right
     list lSpacers;
     list lCombined = lOptions + lUtilityButtons + iPagebuttons;
     while (llGetListLength(lCombined) % 3 != 0 && llGetListLength(lCombined) < 12)
@@ -333,6 +297,7 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 
     return lOut;
 }
+/*
 list PrettyMain(list lOptions)
 {
     integer iA=llListFindList(lOptions,["Access"]);
@@ -351,7 +316,7 @@ list PrettyMain(list lOptions)
     }
     else return lOptions;
 }
-       
+*/     
 
     
 
@@ -408,15 +373,18 @@ ClearUser(key kRCPT)
 }
 
 /*
-Debug(string sStr)
-{
-    llOwnerSay(llGetScriptName() + ": " + sStr);
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
 */
-integer InSim(key id)
-{
-    return llKey2Name(id) != "";
-}
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
@@ -472,8 +440,21 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();
+        //Debug("Starting");
     }
 
+    changed(integer iChange){
+        if (iChange & CHANGED_OWNER) llResetScript();
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
+    }
+    
     on_rez(integer iParam)
     {
         llResetScript();
@@ -536,7 +517,7 @@ default
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
         llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
         
-        //if we have more sensors to run, run another one now, else unlock subsys and quite
+        //if we have more sensors to run, run another one now, else unlock subsys and quit
         if (llGetListLength(g_lSensorDetails) > 0){
             dequeueSensor();            
         } else {
@@ -550,45 +531,38 @@ default
         if (iNum == FIND_AGENT) {
             //Debug("FIND_AGENT:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
-            if (llList2String(lParams, 0) == g_sGetAviScript){
+            if (llList2String(lParams, 0) == "getavi_"){    //identifies a getavi_ request
                 //fixme: REQ(params[1]), 
-                string REQ = llList2String(lParams, 1);
-                key kRCPT = llGetOwnerKey((key)llList2String(lParams, 2));
-                integer iAuth = (integer)llList2String(lParams, 3);
-                string TYPE = llList2String(lParams, 4);
-                string find = llList2String(lParams, 5);
+                string REQ = llList2String(lParams, 1);   //name of script that sent the message 
+                key kRCPT = llGetOwnerKey((key)llList2String(lParams, 2));  //key of requesting user
+                integer iAuth = (integer)llList2String(lParams, 3);   //auth of requesting user
+                string TYPE = llList2String(lParams, 4);  //type field, returned in the response to help calling script track the nature of the search 
+                string find = llList2String(lParams, 5);  //find string.. only return avatars whose neames start with this string
                 if (find == " ") find = "";
-                list excl = llParseString2List(llList2String(lParams, 6), [","], []);
+                list excl = llParseString2List(llList2String(lParams, 6), [","], []); //list of uuids to exclude from the search
                 
-                list AVIS = [];
+                //list AVIS = [];
                 list agentList = llGetAgentList(AGENT_LIST_REGION, []);
-                integer i = llGetListLength(agentList);
-                while(i--){
-                    key avId=llList2Key(agentList, i);
+                integer numAgents = llGetListLength(agentList);
+                while(numAgents--){
+                    key avId=llList2Key(agentList, numAgents);
                     string name = llKey2Name(avId);
-                    if (llSubStringIndex(llToLower(name), llToLower(find)) != -1){       //if this name contains find string
-                        if (! ~llListFindList(excl,[(string)avId])){            //if this key is not in the excludelist
-                            AVIS += avId;
-                        }
+                    if ( !~llSubStringIndex(llToLower(name), llToLower(find)) || ~llListFindList(excl,[(string)avId])) {       //if this name does not contain find string or key is in the exclude list
+                        agentList=llDeleteSubList(agentList,numAgents,numAgents); //delete this agent from the list
                     }
                 }
                 
-                i = llGetListLength(AVIS);
-                if (!i){
+                numAgents = llGetListLength(agentList);
+                if (!numAgents){
                     string findNotify;
                     if (find != "") findNotify = "starting with \"" + find + "\" ";
                     llInstantMessage(kRCPT, "Could not find any avatars "+ findNotify + "in this region.");
-                } else if (i == 1 && llList2Key(AVIS, 0) == kRCPT) {
-                    integer iDigits = ButtonDigits(["Yes", "No"]);
-                    ClearUser(kRCPT);
-                    Dialog(kRCPT, "\nYou are the only one in this region. Add yourself?", ["Yes", "No"], [UPMENU], 0, kID, iDigits, iAuth, "getavi_|"+REQ+"|"+TYPE);
                 } else {
-                    integer iDigits = ButtonDigits(AVIS);
+                    //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     ClearUser(kRCPT);
-                    Dialog(kRCPT, "\nChoose the person you like to add:\n", AVIS, [UPMENU], 0, kID, iDigits, iAuth, "getavi_|"+REQ+"|"+TYPE);
+                    Dialog(kRCPT, "\nChoose the person you like to add:\n", agentList, [UPMENU], 0, kID, -1, iAuth, "getavi_|"+REQ+"|"+TYPE); //iDigits==-1 means dialog should calculate numbered dialogs
                 }
-            }
-            else {
+            //} else {
                 //Debug(sStr);
             }
         } else 
@@ -619,7 +593,7 @@ default
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
             if (~iIndex)
             {
-                if (!InSim(kRCPT))
+                if (llKey2Name(kRCPT)=="")  //if recipient is not in the sim.  Inlined single use InSim(kRCPT) function
                 {
                     llHTTPRequest(llList2String(g_lRemoteMenus, iIndex+1), [HTTP_METHOD, "POST"], sStr+"|"+(string)kID);
                     return;
@@ -631,41 +605,14 @@ default
             }
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
-            // SA: why should we keep nulls? Discarding them now saves us the use of SanitizeButtons()
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
-           // integer iDigits;
-            //if (!~llListFindList(MRSBUN, [kRCPT]))
-            integer iDigits = ButtonDigits(lButtons);
+            integer iDigits=-1;   //iDigits==-1 means Dialog should run idigits on the buttons
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
             integer iAuth = COMMAND_NOAUTH;
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
-            //now give the dialog and save the new stride
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"");
-// if (iDigits) //Removed for Project: despam!
-// {
-// integer iLength = GetStringBytes(sPrompt);
-// string sOut = sPrompt;
-// integer iNb = llGetListLength(lButtons);
-// integer iCount;
-// string sLine;
-// for (iCount = 0; iCount < iNb; iCount++)
-// {
-// string sButton = llList2String(lButtons, iCount);
-// if ((key)sButton) sButton = Key2Name((key)sButton);
-// sLine = "\n"+Integer2String(iCount, iDigits) + " " + sButton;
-// iLength += GetStringBytes(sLine);
-// if (iLength >= 1024)
-// {
-// Notify(kRCPT, sOut, FALSE);
-// iLength = 0;
-// sOut = "";
-// }
-// sOut += sLine;
-// }
-// Notify(kRCPT, sOut, FALSE);
-// }
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
@@ -734,40 +681,10 @@ default
             
             RemoveMenuStride(iMenuIndex);
                    
-            if (sMessage == MORE)
-            {
-                //Debug((string)iPage);
-                //increase the page num and give new menu
-                iPage++;
-                integer thisiPagesize = iPagesize - llGetListLength(ubuttons) - 2;
-                if (iPage * thisiPagesize >= llGetListLength(items))
-                {
-                    iPage = 0;
-                }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth,sExtraInfo);
-            }
-            else if (sMessage == PREV)
-            {
-                //Debug((string)iPage);
-                //increase the page num and give new menu
-                iPage--;
-
-                if (iPage < 0)
-                {
-                    integer thisiPagesize = iPagesize - llGetListLength(ubuttons) - 2;
-
-                    iPage = (llGetListLength(items)-1)/thisiPagesize;
-                }
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
-            }
-            else if (sMessage == BLANK)
-            
-            {
-                //give the same menu back
-                Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
-            }
-            else
-            {
+            if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth,sExtraInfo);
+            else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo);
+            else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
+            else {
                 string sAnswer;
                 integer iIndex = llListFindList(ubuttons, [sMessage]);
                 if (iDigits && !~iIndex)
@@ -776,20 +693,13 @@ default
                     sAnswer = llList2String(items, iBIndex);
                 }
                 else sAnswer = sMessage;
-                if (llSubStringIndex(sExtraInfo,g_sGetAviScript+"|")==0){
+                if (llSubStringIndex(sExtraInfo,"getavi_|")==0){
+                    //Debug("Getavi response:"+sAnswer);
                     list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);    //unpack info for avi dialog
-                    string REQ=llList2String(lExtraInfo,1);
-                    string TYPE=llList2String(lExtraInfo,2);
+                    string REQ=llList2String(lExtraInfo,1);   //name of script that originated the request
+                    string TYPE=llList2String(lExtraInfo,2);  //type string sent in initial request by calling script
                     
-                    if (sMessage==UPMENU){
-                        llMessageLinked(LINK_SET,iAuth,"access",kAv);
-                    } else if (sMessage == "Yes") {
-                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+(string)g_kWearer, kMenuID);
-                    } else if (sMessage == "No") {
-                        //no action
-                    } else {
-                        llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+g_sGetAviScript+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
-                    }
+                    llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
 
                 }
                 llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
