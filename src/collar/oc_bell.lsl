@@ -146,28 +146,10 @@ Debug(string sStr) {
 }
 */
 
-//===============================================================================
-//= parameters   :    string    sMsg    message string received
-//=
-//= return        :    integer TRUE/FALSE
-//=
-//= description  :    checks if a string begin with another string
-//=
-//===============================================================================
-
 integer nStartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
 {
     return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
 }
-
-//===============================================================================
-//= parameters   :   key kID     ID of talking person
-//=
-//= return        :    none
-//=
-//= description  :    generate the menu for the bell
-//=
-//===============================================================================
 
 DoMenu(key kID, integer iAuth)
 {
@@ -219,15 +201,6 @@ DoMenu(key kID, integer iAuth)
     g_kDialogID=Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
 
-//===============================================================================
-//= parameters   :   float fAlpha   alphaing for the prims
-//=
-//= return        :    none
-//=
-//= description  :    loop through stored links of prims of the bell and set the alpha for it
-//=
-//===============================================================================
-
 SetBellElementAlpha()
 {
     if (g_iHide) return ; // ***** if collar is hide, don't do anything 
@@ -240,15 +213,6 @@ SetBellElementAlpha()
         llSetLinkAlpha(llList2Integer(g_lBellElements,n), (float)g_iBellShow, ALL_SIDES);
     }
 }
-
-//===============================================================================
-//= parameters   :   none
-//=
-//= return        :    none
-//=
-//= description  :    loop throug elements and find all Bell Elements, store their prim number in a list
-//=
-//===============================================================================
 
 BuildBellElementList()
 {
@@ -285,16 +249,6 @@ BuildBellElementList()
 
 }
 
-//===============================================================================
-//= parameters   :   none
-//=
-//= return        :    none
-//=
-//= description  :    prepare the list of bell sound, parse sounds in the collar and use when they begin with "bell_"
-//=
-//===============================================================================
-
-
 PrepareSounds()
 {
     // parse names of sounds in inventiory if those are for the bell
@@ -315,18 +269,6 @@ PrepareSounds()
     g_iCurrentBellSound=0;
     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 }
-
-//===============================================================================
-//= parameters   :   none
-//=
-//= return        :    none
-//= 
-//= description  :    Save settings in 1 string at the httpdb
-//=
-//= order of settings in the string:
-//= g_iBellOn (integer),  g_iBellShow (integer), g_iCurrentBellSound (integer), g_sVolToken (integer/10), g_sSpeedToken (integer/10)
-//=
-//===============================================================================
 
 SaveBellSettings()
 {
