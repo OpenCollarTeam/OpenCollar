@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - UpdateShim                             //
-//                                 version 3.928                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,6 +28,12 @@ list lScripts;
 // list where we'll record all the settings and local settings we're sent, for replay later.
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list lSettings;
+
+// list of deprecated tokens to remove from previous collar scripts
+list lDeprecatedSettingTokens = [
+    "collarversion"
+];
+
 
 // Return the name and version of an item as a list.  If item has no version, return empty string for that part.
 list GetNameParts(string name) {
@@ -213,9 +219,22 @@ default
                     //restore settings 
                     integer n;
                     integer stop = llGetListLength(lSettings); 
+                    list sDeprecatedSplitSettingTokenForTest;
                     for (n = 0; n < stop; n++) {
                         string setting = llList2String(lSettings, n);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, setting, "");
+                        //Look through deprecated settings to see if we should ignore any...
+                        // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
+                        sDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(setting,["="],[]),0,0);
+    
+                        if (llListFindList(lDeprecatedSettingTokens,sDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, setting, "");
+                            //Debug("SP - Saving :"+setting);
+                        }
+                        else {
+                            //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
+                             //remove it if it's somehow persistent still
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(sDeprecatedSplitSettingTokenForTest,0), "");
+                        }
                     }
                     
                     // tell scripts to rebuild menus (in case plugins have been removed)
