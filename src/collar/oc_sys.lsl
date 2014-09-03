@@ -312,10 +312,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 //notify news on
                 Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);
                 g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
                 g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
         } else Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
         if (fromMenu) HelpMenu(kID, iNum);
@@ -457,7 +457,7 @@ RebuildMenu()
 }
 
 init (){
-    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET"], "");
+    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     
     llSleep(1.0);//delay menu rebuild until other scripts are ready
     RebuildMenu();
@@ -569,7 +569,7 @@ default
                     } else if (sMessage == LICENSE) {
                         UserCommand(iAuth,"license",kAv, TRUE);
                     } else if (sMessage == CONTACT) {
-                        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~contact", [HTTP_METHOD, "GET"], "");
+                        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                         g_kCurrentUser = kAv;
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage=="☐ News") {
@@ -612,7 +612,7 @@ default
             else if (sToken == "Global_prefix") g_sPrefix = sValue;
             else if (sToken == "Global_news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
-                if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET"], "");
+                if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
         }
         else if (iNum == DIALOG_TIMEOUT)
@@ -721,7 +721,7 @@ default
         llListenRemove(g_iUpdateHandle);
 
         if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
-            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~update", [HTTP_METHOD, "GET"], "");
+            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
         } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
             Notify(g_kCurrentUser,"Multiple updaters were found within 10m.  Please remove all but one and try again",FALSE);
