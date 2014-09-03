@@ -275,7 +275,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher)
     if (sType == "touchstart") 
     {
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
-        if (g_iTouchNotify) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)llDetectedKey(0)+"/about touched your "+CTYPE+".\n",FALSE);
+        if (g_iTouchNotify && kToucher!=g_kWearer) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n",FALSE);
     }
 }
 
