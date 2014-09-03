@@ -138,13 +138,20 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         }
     }
 }
-Debug(string sMsg)
-{
-    if (g_iDebugging)
-    {
-        llOwnerSay(llGetScriptName() + ": " + sMsg);
+
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
     }
+    llOwnerSay(llGetScriptName() + "("+(string)llGetSPMaxMemory()+") : " + sStr);
 }
+*/
 
 //===============================================================================
 //= parameters   :    string    sMsg    message string received
@@ -729,6 +736,14 @@ default
                 SetBellElementAlpha(); // update hide elements 
             }
         }
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
 
 }
