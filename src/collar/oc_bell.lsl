@@ -31,9 +31,6 @@ float g_fSpeedStep=0.5; // stepping for Speed adjusting
 float g_fSpeedMin=0.5; // stepping for Speed adjusting
 float g_fSpeedMax=5.0; // stepping for Speed adjusting
 
-string GLOBAL = "Global_";
-string g_sSubPrefix;
-
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sBellOn="    ON"; // menu text of bell on
 string g_sBellOff="    OFF"; // menu text of bell on
@@ -107,12 +104,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 } 
-
-string AutoPrefix()
-{
-    list sName = llParseString2List(llKey2Name(llGetOwner()), [" "], []);
-    return llToLower(llGetSubString(llList2String(sName, 0), 0, 0)) + llToLower(llGetSubString(llList2String(sName, 1), 0, 0));
-}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -374,7 +365,6 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // key of the owner
         g_kWearer=llGetOwner();
-        g_sSubPrefix=AutoPrefix();
 
         // reset script time used for ringing the bell in intervalls
         llResetTime();
@@ -388,7 +378,6 @@ default
     on_rez(integer param)
     {
         g_kWearer=llGetOwner();
-        g_sSubPrefix=AutoPrefix();
         if (g_iBellOn) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
     }
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -461,7 +450,6 @@ default
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             }
-            else if (sToken == "Global_prefix") g_sSubPrefix=sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
