@@ -6,7 +6,7 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free. //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
@@ -326,7 +326,7 @@ ReadDestinations()   // On inventory change, re-read our ~destinations notecard 
 {
     key kAv;
     webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks", 
-        [HTTP_METHOD, "GET"], "");
+        [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards
