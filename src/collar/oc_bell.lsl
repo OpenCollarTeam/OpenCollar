@@ -53,8 +53,6 @@ list g_lBellElements; // list with number of prims related to the bell
 
 float g_fNextRing; // store time for the next ringing here;
 
-string g_sBellChatPrefix="bell"; // prefix for chat commands
-
 key g_kWearer; // key of the current wearer to reset only on owner changes
 
 integer g_iHasControl=FALSE; // dow we have control over the keyboard?
@@ -265,13 +263,13 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 {
     if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
     string test=llToLower(sStr);
-    if (sStr == "menu " + g_sSubMenu || sStr == g_sBellChatPrefix)
+    if (sStr == "menu " + g_sSubMenu || sStr == "bell")
     {// the command prefix + bell without any extentsion is used in chat
         //give this plugin's menu to kID
         DoMenu(kID, iNum);
     }
     // we now chekc for chat commands
-    else if (nStartsWith(test,g_sBellChatPrefix))
+    else if (nStartsWith(test,"bell"))
     {
         // it is a chat commad for the bell so process it
         list lParams = llParseString2List(test, [" "], []);
