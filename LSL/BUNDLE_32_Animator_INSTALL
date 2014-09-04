@@ -8,7 +8,12 @@ ITEM|~-36
 ITEM|~-37
 ITEM|~-38
 ITEM|~-39
-ITEM|~heightscalars
-ITEM|~PostureOverride
+ITEM|~walk_Male
+ITEM|~walk_Female
+ITEM|~walk_Crawl
+ITEM|~walk_Pony
+ITEM|~walk_Worm
+ITEM|~run
+ITEM|~stiff
 SCRIPT|OpenCollar - anim
 SCRIPT|OpenCollar - couples

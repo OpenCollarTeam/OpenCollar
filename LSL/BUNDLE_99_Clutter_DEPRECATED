@@ -16,6 +16,7 @@ SCRIPT|OpenCollar - coupleanim1
 SCRIPT|OpenCollar - coupleanim2
 SCRIPT|OpenCollar - hovertext
 SCRIPT|OpenCollar - subspy
+SCRIPT|OpenCollar - update
 ITEM|How to set up your #RLV and use SmartStrip
 ITEM|OpenCollar - rlvrelay - Help
 ITEM|OpenCollar RLV Relay Help
@@ -69,14 +70,6 @@ ITEM|yang
 ITEM|Tranquility
 ITEM|Shack
 ITEM|Sandbox
-ITEM|~-40
-ITEM|~-41
-ITEM|~-42
-ITEM|~-43
-ITEM|~-44
-ITEM|~-45
-ITEM|~-46
-ITEM|~-47
-ITEM|~-48
-ITEM|~-49
-ITEM|~-50
+ITEM|~version
+ITEM|Temple
+ITEM|~PostureOverride
