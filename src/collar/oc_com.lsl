@@ -477,14 +477,14 @@ default
                         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
                         message += WEARERNAME;
-            g_iCustomName = FALSE;
+                        g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
                     }
                     else {
-                        string sUpperCaseSupport = llList2String(lParams, 1);
-                        string message=WEARERNAME+"'s new name is " + sUpperCaseSupport;
-                        WEARERNAME = sUpperCaseSupport;
-            g_iCustomName = TRUE;
+                        string message=WEARERNAME+"'s new name is ";
+                        WEARERNAME = llDumpList2String(llList2List(lParams, 1,-1)," ");
+                        message += WEARERNAME;
+                        g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
                         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", ""); //force update scripts                        
