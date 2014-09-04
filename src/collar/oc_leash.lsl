@@ -700,7 +700,7 @@ default
             llReleaseControls();
             DoUnleash();
         } else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+                && llSubStringIndex(sMessage, "Global_WearerName") == 0 ) {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sValue = llGetSubString(sMessage, iInd + 1, -1);
             //We have a broadcasted change to WEARERNAME to work with
