@@ -312,7 +312,6 @@ default
         }
         else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
                 && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            llOwnerSay("I'm changed!");
             integer iInd = llSubStringIndex(sStr, "=");
             string sValue = llGetSubString(sStr, iInd + 1, -1);
             //We have a broadcasted change to WEARERNAME to work with
