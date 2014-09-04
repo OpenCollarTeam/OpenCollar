@@ -30,6 +30,7 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
                             //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
+integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -768,6 +769,18 @@ default
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+            integer iInd = llSubStringIndex(sStr, "=");
+            string sValue = llGetSubString(sStr, iInd + 1, -1);
+            //We have a broadcasted change to WEARERNAME to work with
+            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
+            else {
+                g_kWearer = llGetOwner();
+                WEARERNAME = llGetDisplayName(g_kWearer);
+                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+            }
+        }
         else if (iNum == LM_SETTING_RESPONSE)
         {   //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
@@ -791,7 +804,6 @@ default
             if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
         }
         // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_OFF)

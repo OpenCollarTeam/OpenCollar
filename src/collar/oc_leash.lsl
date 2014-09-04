@@ -89,8 +89,6 @@ key g_kPostMenuDialogID;
 list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
 list g_lButtons;    //buttons added by other scripts
 // ----- collar -----
-string g_sWearer;
-string g_sWearerFirstName;
 
 key g_kWearer;
 integer g_iJustMoved;
@@ -151,7 +149,7 @@ integer CheckCommandAuth(key kCmdGiver, integer iAuth){
     
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
-        Notify(kCmdGiver, "Sorry, someone who outranks you on " + g_sWearer +"'s " + CTYPE + " leashed " + g_sWearerFirstName + " already.", FALSE);
+        Notify(kCmdGiver, "Sorry, someone who outranks you on " + WEARERNAME +"'s " + CTYPE + " leashed " + WEARERNAME + " already.", FALSE);
 
         return FALSE;
     }
@@ -225,23 +223,23 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
             string sCmdMess;
             if (iFollowMode){
                 if (kCmdGiver != kTarget) { // LeashTo someone else
-                    Notify(kTarget, sCmdGiver + " commands " + g_sWearer + " to follow you.", FALSE);
+                    Notify(kTarget, sCmdGiver + " commands " + WEARERNAME + " to follow you.", FALSE);
                     sCmdMess= "You command " + WEARERNAME + " to follow " + sTarget + ".";
                     sWearMess = sCmdGiver + " commands you to follow " + sTarget + ".";
                 } else {
-                    sCmdMess= "You command " + g_sWearer + " to follow you.";
+                    sCmdMess= "You command " + WEARERNAME + " to follow you.";
                     sWearMess = sCmdGiver + " commands you to follow them.";
                 }
             } else {
                 string sPsv = "'s"; // Possessive, will vary if name ends in "s"
-                if (llGetSubString(g_sWearer, -1,-1)=="s") sPsv = "'";
-                sCmdMess= "You grab " + g_sWearer + sPsv + " leash";
+                if (llGetSubString(WEARERNAME, -1,-1)=="s") sPsv = "'";
+                sCmdMess= "You grab " + WEARERNAME + sPsv + " leash";
                 sWearMess = sCmdGiver + " grabs your leash";
                 if (kCmdGiver != kTarget) { // Leasher is not LeashTo
                     if (bTargetIsAvi) { // LeashTo someone else
                         sCmdMess += ", and hand it to " + sTarget + ".";
                         sWearMess += ", and hands it to " + sTarget + ".";
-                        Notify(kTarget, sCmdGiver + " hands you " + g_sWearer + sPsv + " leash.", FALSE);
+                        Notify(kTarget, sCmdGiver + " hands you " + WEARERNAME + sPsv + " leash.", FALSE);
                     } else {// LeashTo object
                         sCmdMess += ", and tie it to " + sTarget + ".";
                         sWearMess += ", and ties it to " + sTarget + ".";
@@ -263,9 +261,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // Don't own the object that sent the command
     if (g_bLeashedToAvi && kCmdGiver != kTarget && llGetOwnerKey(kCmdGiver) != kTarget) {
         if (iFollowMode){
-            llMessageLinked(LINK_SET, POPUP_HELP, g_sWearer + " has been commanded to follow you.  Say \"_PREFIX_unfollow\" to relase them.", g_kLeashedTo);
+            llMessageLinked(LINK_SET, POPUP_HELP, WEARERNAME + " has been commanded to follow you.  Say \"_PREFIX_unfollow\" to relase them.", g_kLeashedTo);
         } else {
-            llMessageLinked(LINK_SET, POPUP_HELP, g_sWearer + " has been leashed to you.  Say \"_PREFIX_unleash\" to unleash them.  Say \"_PREFIX_giveholder\" to get a leash holder.", g_kLeashedTo);
+            llMessageLinked(LINK_SET, POPUP_HELP, WEARERNAME + " has been leashed to you.  Say \"_PREFIX_unleash\" to unleash them.  Say \"_PREFIX_giveholder\" to get a leash holder.", g_kLeashedTo);
         }
     }
     return TRUE;
@@ -324,30 +322,30 @@ Unleash(key kCmdGiver)
             {
                 if (g_bFollowMode) {
                     sWearMess = "You stop following " + sTarget + ".";
-                    sTargetMess = g_sWearerFirstName + " stops following you.";
+                    sTargetMess = WEARERNAME + " stops following you.";
                 } else {
                     sWearMess = "You unleash yourself from " + sTarget + "."; // sTarget might be an object
-                    sTargetMess = g_sWearerFirstName + " unleashes from you.";
+                    sTargetMess = WEARERNAME + " unleashes from you.";
                 }
                 if (g_bLeashedToAvi) Notify(g_kLeashedTo, sTargetMess, FALSE);
             } else { // Unleasher is not Wearer
                 if (kCmdGiver == g_kLeashedTo) {
                     if (g_bFollowMode) {
-                        sCmdMess= "You release " + g_sWearerFirstName + " from following you.";
+                        sCmdMess= "You release " + WEARERNAME + " from following you.";
                         sWearMess = sCmdGiver + " releases you from following.";
                     } else {
-                        sCmdMess= "You unleash  " + g_sWearer + ".";
+                        sCmdMess= "You unleash  " + WEARERNAME + ".";
                         sWearMess = sCmdGiver + " unleashes you.";
                     }
                 } else {
                     if (g_bFollowMode) {
-                        sCmdMess= "You release " + g_sWearerFirstName + " from following " + sTarget + ".";
+                        sCmdMess= "You release " + WEARERNAME + " from following " + sTarget + ".";
                         sWearMess = sCmdGiver + " releases you from following " + sTarget + ".";
-                        sTargetMess = g_sWearer + " stops following you.";
+                        sTargetMess = WEARERNAME + " stops following you.";
                     } else {
-                        sCmdMess= "You unleash  " + g_sWearerFirstName + " from " + sTarget + ".";
+                        sCmdMess= "You unleash  " + WEARERNAME + " from " + sTarget + ".";
                         sWearMess = sCmdGiver + " unleashes you from " + sTarget + ".";
-                        sTargetMess = sCmdGiver + " unleashes " + g_sWearerFirstName + " from you.";
+                        sTargetMess = sCmdGiver + " unleashes " + WEARERNAME + " from you.";
                     }
                     if (g_bLeashedToAvi) Notify(g_kLeashedTo, sTargetMess, FALSE);
                 }
@@ -357,7 +355,7 @@ Unleash(key kCmdGiver)
         }
         DoUnleash();
     } else {
-        Notify(kCmdGiver, g_sWearerFirstName+" is not leashed", FALSE);
+        Notify(kCmdGiver, WEARERNAME+" is not leashed", FALSE);
     }
 }
 
@@ -501,7 +499,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 if (sCmdGiver == "???" | sCmdGiver == "") sCmdGiver = llKey2Name(kMessageID);
                 llRequestPermissions(g_kWearer, PERMISSION_TAKE_CONTROLS);
                 llOwnerSay(sCmdGiver + " commanded you to stay in place, you cannot move until the command is revoked again.");
-                Notify(kMessageID, "You commanded " + g_sWearer + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
+                Notify(kMessageID, "You commanded " + WEARERNAME + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
             
@@ -510,7 +508,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 g_iStay = FALSE;
                 llReleaseControls();
                 llOwnerSay("You are free to move again.");
-                Notify(kMessageID,"You allowed " + g_sWearer + " to move freely again.", FALSE);
+                Notify(kMessageID,"You allowed " + WEARERNAME + " to move freely again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
 
@@ -665,8 +663,6 @@ default
         g_kWearer = llGetOwner();
         WEARERNAME = llGetDisplayName(g_kWearer);
         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-        g_sWearer = WEARERNAME;
-        g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         llMinEventDelay(0.3);
         
         DoUnleash();
@@ -683,8 +679,6 @@ default
             g_kWearer = llGetOwner();
             WEARERNAME = llGetDisplayName(g_kWearer);
             if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            g_sWearer = WEARERNAME;
-            g_sWearerFirstName = llGetSubString(g_sWearer, 0, llSubStringIndex(g_sWearer, " ") - 1);
         }
     }
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
@@ -705,6 +699,17 @@ default
             g_iStay = FALSE;
             llReleaseControls();
             DoUnleash();
+        } else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+            integer iInd = llSubStringIndex(sMessage, "=");
+            string sValue = llGetSubString(sMessage, iInd + 1, -1);
+            //We have a broadcasted change to WEARERNAME to work with
+            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
+            else {
+                g_kWearer = llGetOwner();
+                WEARERNAME = llGetDisplayName(g_kWearer);
+                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+            }
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, iInd -1);
@@ -735,7 +740,6 @@ default
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
             } else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             //else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);
