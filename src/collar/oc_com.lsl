@@ -15,6 +15,8 @@
 integer g_iListenChan = 1;
 integer g_iListenChan0 = TRUE;
 string g_sPrefix = ".";
+integer g_iPollForNameChange = 60; //seconds to poll for name change
+integer g_iCustomName = FALSE; //this is our bit flag to see if we're using an LM_SETTING custom name
 
 integer g_iLockMeisterChan = -8888;
 
@@ -288,6 +290,7 @@ default
         g_kWearer = llGetOwner();
         WEARERNAME = llGetDisplayName(g_kWearer);
         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+		llSetTimerEvent(g_iPollForNameChange);
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
@@ -461,6 +464,31 @@ default
                     Notify(kID, "\n" + WEARERNAME + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
                 }
+                else if (sCommand == "name")
+                {
+                    if (sValue=="") {  //Just let them know their current name
+                        string message= "\n\n"+WEARERNAME+"'s current name is " + WEARERNAME;
+                        message += "\nName command help: <prefix>name [newname|reset]\n";
+                        Notify(kID, message, FALSE);
+                    }
+                    else if(sValue=="reset") { //unset Global_WearerName
+                        string message=WEARERNAME+"'s new name is reset to ";
+                        WEARERNAME = llGetDisplayName(g_kWearer);
+                        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
+                        message += WEARERNAME;
+						g_iCustomName = FALSE;
+                        Notify(kID, message, FALSE);
+                    }
+                    else {
+                        string message=WEARERNAME+"'s new name is " + sValue;
+                        WEARERNAME = sValue;
+						g_iCustomName = TRUE;
+                        Notify(kID, message, FALSE);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", ""); //force update scripts                        
+                    }               
+                }
                 else if (sCommand == "channel")
                 {
                     integer iNewChan = (integer)llList2String(lParams, 1);
@@ -558,7 +586,6 @@ default
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "Global_touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             else if (llGetSubString(sToken, 0, i) == g_sScript)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);
@@ -623,7 +650,7 @@ default
             }
         }
     }
-        
+       
     touch_start(integer iNum)
     {
         //Debug("touched");
@@ -643,7 +670,18 @@ default
             llResetScript();
         }
     }
-
+	timer()
+    {
+		if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
+			string sLoadDisplayName = llGetDisplayName(g_kWearer); //Load this once
+			if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != WEARERNAME)) {
+				//The displayname loaded correctly, and it's different than our current WEARERNAME
+				//wearer changed their displayname since last timer event
+				WEARERNAME = sLoadDisplayName;
+				llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  //force update other scripts
+			}
+		}
+	}
     run_time_permissions(integer iPerm)
     {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;

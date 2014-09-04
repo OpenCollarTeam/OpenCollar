@@ -244,6 +244,21 @@ default
             else llMessageLinked(LINK_SET, RLV_CMD, "chatshout=y,sendim=y,redirchat:" + (string)giCRC + "=rem", NULL_KEY);
         }
         else if (iM == RLV_CLEAR) release(kM,iL);
+        else if ((iM == LM_SETTING_RESPONSE || iM == LM_SETTING_DELETE) 
+                && llSubStringIndex(sM, "Global_WearerName") == 0 ) {
+            integer iInd = llSubStringIndex(sM, "=");
+            string sValue = llGetSubString(sM, iInd + 1, -1);
+            //We have a broadcasted change to WEARERNAME to work with
+            if (iM == LM_SETTING_RESPONSE) {
+                WEARERNAME = sValue;
+                gsWear = WEARERNAME;
+            }
+            else {
+                WEARERNAME = llGetDisplayName(llGetOwner());
+                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(llGetOwner());
+                gsWear = WEARERNAME;
+            }
+        }
         else if (iM == LM_SETTING_RESPONSE)
         {
             list lP = llParseString2List(sM, ["="], []);
@@ -261,10 +276,6 @@ default
             {
                 if (sV == "") sV = "auto";
                 SetPrefix(sV);
-            }
-            else if (sT == "Global_WearerName") {
-                WEARERNAME = sV;
-                gsWear = WEARERNAME;
             }
         }
         else if (iM == LM_SETTING_EMPTY && sM == GetScriptID() + "Binder") release(kM,iL);
