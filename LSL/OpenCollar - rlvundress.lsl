@@ -744,7 +744,7 @@ default
             g_lSubMenus = []; //flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
-		else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
                 && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
             integer iInd = llSubStringIndex(sStr, "=");
             string sValue = llGetSubString(sStr, iInd + 1, -1);

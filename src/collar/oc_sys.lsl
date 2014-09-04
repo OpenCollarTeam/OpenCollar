@@ -583,7 +583,7 @@ default
             }
         }
         else if (UserCommand(iNum, sStr, kID, FALSE)) return;
-		else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
                 && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
             integer iInd = llSubStringIndex(sStr, "=");
             string sValue = llGetSubString(sStr, iInd + 1, -1);

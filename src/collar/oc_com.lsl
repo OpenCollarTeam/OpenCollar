@@ -290,7 +290,7 @@ default
         g_kWearer = llGetOwner();
         WEARERNAME = llGetDisplayName(g_kWearer);
         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-		llSetTimerEvent(g_iPollForNameChange);
+        llSetTimerEvent(g_iPollForNameChange);
         SetPrefix("auto");
         g_iHUDChan = GetOwnerChannel(g_kWearer, 1111); // reinstated. personalized channel for this sub
         SetListeners();
@@ -477,14 +477,14 @@ default
                         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
                         message += WEARERNAME;
-			g_iCustomName = FALSE;
+            g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
                     }
                     else {
-                    	string sUpperCaseSupport = llList2String(lParams, 1);
+                        string sUpperCaseSupport = llList2String(lParams, 1);
                         string message=WEARERNAME+"'s new name is " + sUpperCaseSupport;
                         WEARERNAME = sUpperCaseSupport;
-			g_iCustomName = TRUE;
+            g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
                         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", ""); //force update scripts                        
@@ -671,18 +671,18 @@ default
             llResetScript();
         }
     }
-	timer()
+    timer()
     {
-		if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
-			string sLoadDisplayName = llGetDisplayName(g_kWearer); //Load this once
-			if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != WEARERNAME)) {
-				//The displayname loaded correctly, and it's different than our current WEARERNAME
-				//wearer changed their displayname since last timer event
-				WEARERNAME = sLoadDisplayName;
-				llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  //force update other scripts
-			}
-		}
-	}
+        if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
+            string sLoadDisplayName = llGetDisplayName(g_kWearer); //Load this once
+            if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != WEARERNAME)) {
+                //The displayname loaded correctly, and it's different than our current WEARERNAME
+                //wearer changed their displayname since last timer event
+                WEARERNAME = sLoadDisplayName;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  //force update other scripts
+            }
+        }
+    }
     run_time_permissions(integer iPerm)
     {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
