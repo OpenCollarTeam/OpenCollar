@@ -24,7 +24,7 @@ float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before find
 integer g_iVersionChan = 293847;
 integer g_iRlvVersion;
 integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
-integer g_iMaxViewerChecks=4;
+integer g_iMaxViewerChecks=10;
 integer g_iCollarLocked=FALSE;
 
 string g_sParentMenu = "Main";
