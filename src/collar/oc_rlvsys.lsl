@@ -23,6 +23,7 @@ integer g_iListener;
 float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
 integer g_iVersionChan = 293847;
 integer g_iRlvVersion;
+integer g_iRlvaVersion;
 integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
 integer g_iMaxViewerChecks=10;
 integer g_iCollarLocked=FALSE;
@@ -60,7 +61,8 @@ integer MENUNAME_REMOVE = 3003;
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
 
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
@@ -80,6 +82,7 @@ string WEARERNAME;
 key g_kWearer;
 string g_sScript="rlvmain_";
 string g_sRlvVersionString="(unknown)";
+string g_sRlvaVersionString="(unknown)";
 
 list g_lOwners;
 list g_lSources=[];
@@ -109,7 +112,7 @@ CheckVersion(){
     g_iListener = llListen(g_iVersionChan, "", g_kWearer, "");
     llSetTimerEvent(g_fVersionTimeOut);
     g_iCheckCount++;
-    llOwnerSay("@versionnum=" + (string)g_iVersionChan);
+    llOwnerSay("@versionnew=" + (string)g_iVersionChan);
 }
 
 DoMenu(key kID, integer iAuth){
@@ -118,7 +121,9 @@ DoMenu(key kID, integer iAuth){
     else lButtons += [TURNON];
 
     string sPrompt = "\nRestrained Love Viewer Options\n";
-    if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString+"\n\nwww.opencollar.at/rlv";
+    if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString;
+    if (g_iRlvaVersion) sPrompt += " (RLVa: "+g_sRlvaVersionString+")";
+    sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
 } 
 
@@ -160,6 +165,9 @@ setRlvState(){
                 }
             }
             llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
+            if (g_iRlvaVersion) { //Respond on RLVa as well
+                 llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+            }
             Notify(g_kWearer,"RLV ready! (v" + g_sRlvVersionString + ")",FALSE);
             
             //lock the collar if there are still restrictions from active traps.  Garbage collection will clear lock if they are stale.
@@ -415,21 +423,41 @@ integer UserCommand(integer iNum, string sStr, key kID)
 
 default {
     listen(integer iChan, string sName, key kID, string sMsg) {
+    //RestrainedLove viewer v2.8.0 (RLVa 1.4.10) <-- @versionnew response structure v1.23 (implemented April 2010).
+    //lines commented out are from @versionnum response string (implemented late 2009)
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
         g_iCheckCount = 0;
         g_iViewerCheck = TRUE;
         
         //send the version to rlv plugins
-        g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2);
-        integer i=(integer)sMsg;
-        string s3=llGetSubString((string)(i/100),-2,-1);
-        string s2=llGetSubString((string)(i/10000),-2,-1);
-        string s1=llGetSubString((string)(i/1000000),-2,-1);
-        g_sRlvVersionString = s1+"."+s2+"."+s3;
+        list lParam = llParseString2List(sMsg,[" "],[""]); //(0:RestrainedLove)(1:viewer)(2:v2.8.0)(3:(RLVa)(4:1.4.10))
         
+        //g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2); //expects (208)0000 (old versionnum response)
+        list lVersionSplit = llParseString2List(llGetSubString(llList2String(lParam,2), 1, -1),["."],[]);  //expects (208)0000 | derive from:(2:v2.8.0)
+        g_iRlvVersion = llList2Integer(lVersionSplit,0) * 100 + llList2Integer(lVersionSplit,1);  //we should now have (integer)208
+        //integer i=(integer)sMsg;
+        //string s3=llGetSubString((string)(i/100),-2,-1);
+        //string s2=llGetSubString((string)(i/10000),-2,-1);
+        //string s1=llGetSubString((string)(i/1000000),-2,-1);
+        //g_sRlvVersionString = s1+"."+s2+"."+s3;
+        string sRlvResponseString = llList2String(lParam,2);  //(2:v2.8.0) RLV segmented response from viewer
+        g_sRlvVersionString = llGetSubString(sRlvResponseString,llSubStringIndex(sRlvResponseString,"v")+1,llSubStringIndex(sRlvResponseString,")") );
+        string sRlvaResponseString = llList2String(lParam,4);  //(4:1.4.10)) RLVa segmented response from viewer
+        g_sRlvaVersionString = llGetSubString(sRlvaResponseString,0,llSubStringIndex(sRlvaResponseString,")") -1);
+        
+        lVersionSplit = llParseString2List(g_sRlvaVersionString,["."],[]); //split up RLVa version string (1.4.10)
+        g_iRlvaVersion = llList2Integer(lVersionSplit,0) * 100 + llList2Integer(lVersionSplit,1); //we should now have (integer)104
+        
+        //We should now have: ["2.8.0" in g_sRlvVersionString] and ["1.4.10" in g_sRlvaVersionString]
+        //Debug("g_iRlvVersion: "+(string)g_iRlvVersion+" g_sRlvVersionString: "+g_sRlvVersionString+ " g_sRlvaVersionString: "+g_sRlvaVersionString+ " g_iRlvaVersion: "+(string)g_iRlvaVersion);
+        //Debug("|"+sMsg+"|");
         setRlvState();
-    }
+    } //Firestorm - viewer response: RestrainedLove viewer v2.8.0 (RLVa 1.4.10)
+      //Firestorm - rlvmain parsed result: g_iRlvVersion: 208 (same as before) g_sRlvVersionString: 2.8.0 (same as before) g_sRlvaVersionString: 1.4.10 (new) g_iRlvaVersion: 104 (new)
+      //
+      //Marine's RLV Viewer - viewer response: RestrainedLove viewer v2.09.01.0 (3.7.9.32089)
+      //Marine's RLV Viewer - rlvmain parsed result: g_iRlvVersion: 209 (same as before) g_sRlvVersionString: 2.09.01.0 (same as before) g_sRlvaVersionString: NULL (new) g_iRlvaVersion: 0 (new)
 
     state_entry() {
         //Debug("init");
@@ -623,6 +651,7 @@ default {
             if (g_iRlvActive==TRUE) {
                 llSleep(2);
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
         }
     }
