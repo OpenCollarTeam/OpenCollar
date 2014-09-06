@@ -43,6 +43,7 @@ integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
@@ -74,11 +75,13 @@ list g_lFolderLocks; // strided list: folder path, lock type (4 bits field)
 integer g_iTimeOut = 60;
 
 integer g_iFolderRLV = 78467;
+integer g_iRLVaOn = FALSE; //Assume we don't have RLVa, until we hear that we do
 
 key g_kBrowseID;
 key g_kActionsID;
 key g_kRootActionsID;
 key g_kHistoryMenuID;
+key g_kMultipleFoldersOnSearchMenuID;
 integer g_iPage = 0;//Having a global is nice, if you redisplay the menu after an action on a folder.
 
 integer g_iListener;//Nan:do we still need this? -- SA: of course. It's where the viewer talks.
@@ -472,10 +475,12 @@ searchSingle(string sItem)
         g_sNextsearch=llList2String(tlist,1);
         sItem=g_sFirstsearch;
     }
-    
     llSetTimerEvent(g_iTimeOut);
     //llMessageLinked(LINK_SET, RLV_CMD,  "findfolder:"+sItem+"="+(string)g_iFolderRLV, NULL_KEY);
-    llOwnerSay("@findfolder:"+sItem+"="+(string)g_iFolderRLV); //Unstored one-shot commands are better performed locally to save the linked message.
+    if ((g_iRLVaOn) && (g_sNextsearch == "")) { //use multiple folder matching from RLVa if we have it
+        llOwnerSay("@findfolders:"+sItem+"="+(string)g_iFolderRLV); //Unstored one-shot commands are better performed locally to save the linked message.
+    }
+    else llOwnerSay("@findfolder:"+sItem+"="+(string)g_iFolderRLV); //Unstored one-shot commands are better performed locally to save the linked message.
 
 }
 
@@ -577,14 +582,17 @@ default
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
+        else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
         else if (iNum == DIALOG_RESPONSE)
         {
+            list lMenuParams = llParseString2List(sStr, ["|"], []);
+            key kAv = (key)llList2String(lMenuParams, 0);
+            string sMessage = llList2String(lMenuParams, 1);
+            g_iPage = (integer)llList2String(lMenuParams, 2);
+            integer iAuth = (integer)llList2String(lMenuParams, 3);
             if (kID == g_kHistoryMenuID)
             {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
+
                 if (sMessage == UPMENU)
                 {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -598,12 +606,18 @@ default
                     QueryFolders("history");                    
                 }
             }
+            else if (kID == g_kMultipleFoldersOnSearchMenuID) {
+                if (sMessage == UPMENU) {
+                        g_sCurrentFolder = "";
+                        QueryFolders("browse");
+                        return;
+                }
+                llMessageLinked(LINK_SET, RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMessage+"=force", NULL_KEY);
+                addToHistory(sMessage);
+                Notify(kAv, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMessage, TRUE);            
+            }
             else if (kID == g_kRootActionsID)
             {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
                     SetAsyncMenu(kAv, iAuth); QueryFolders("browse");
@@ -636,11 +650,6 @@ default
             }
             else if (kID == g_kBrowseID)
             {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                g_iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (sMessage == UPMENU)
                 {
@@ -680,10 +689,6 @@ default
 
             else if (kID == g_kActionsID)
             {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (sMessage == ADD)
                 {
@@ -882,8 +887,13 @@ default
                             g_sNextsearch="";
                             g_sBuildpath="";
                         }
-                            
-                        
+                        if ((llSubStringIndex(sMsg,",") >=0) && (g_iRLVaOn)) { //we have multiple results, bring up a menu
+                            list lMultiFolders = llParseString2List(sMsg,[","],[]);
+                            string sPrompt = "Multiple results found.  Please select an item\n";
+                            sPrompt += "Current action is "+g_sFolderType+"\n";
+                            g_kMultipleFoldersOnSearchMenuID = Dialog(g_kAsyncMenuUser, sPrompt, lMultiFolders, [UPMENU], 0, iChan);
+                            return;
+                        }
                         llMessageLinked(LINK_SET, RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
                         addToHistory(sMsg);
                         Notify(g_kAsyncMenuUser, "Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg, TRUE);
