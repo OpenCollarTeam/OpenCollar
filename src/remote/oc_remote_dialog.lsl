@@ -19,13 +19,13 @@ integer DIALOG_TIMEOUT  = -9002;
 integer SEND_CMD_SUB    = -1005;
 
 integer pagesize = 12;
-string  MORE     = ">";
-string  PREV     = "<";
+string  MORE     = "►";
+string  PREV     = "◄";
 
 //  string to identify the UPMENU button in the utility buttons
-string  UPMENU   = "Back";
+string  UPMENU   = "BACK";
 
-string  BLANK    = " ";
+string  BLANK    = "-";
 integer timeout  = 300;
 
 //  how often the timer will go off, in seconds
@@ -90,7 +90,8 @@ integer RandomUniqueChannel()
 
 Dialog(key recipient, string prompt, list menuitems, list utilitybuttons, integer page, key id)
 {
-    string thisprompt = " (Timeout in " + (string)timeout + " seconds.)";
+    //string thisprompt = " (Timeout in " + (string)timeout + " seconds.)";
+    string thisprompt;
     list buttons;
 
     integer numitems = llGetListLength(menuitems);
@@ -111,7 +112,7 @@ Dialog(key recipient, string prompt, list menuitems, list utilitybuttons, intege
 //      currentitems = llList2List(menuitems, start, end);
 
         buttons    = llList2List(menuitems, start, end);
-        thisprompt = thisprompt + " Page " + (string)(page + 1) + "/" + (string)(((numitems - 1)/mypagesize) + 1);
+        thisprompt = thisprompt + "\nPage " + (string)(page + 1) + "/" + (string)(((numitems - 1)/mypagesize) + 1);
     }
     else
     {
