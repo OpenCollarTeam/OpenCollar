@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarHUD - hudoptions                           //
-//                                 version 3.942                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -28,7 +28,7 @@ integer DIALOG            = -9000;
 integer DIALOG_RESPONSE   = -9001;
 integer DIALOG_TIMEOUT    = -9002;
 
-string UPMENU     = "^";
+string UPMENU     = "Back";
 string parentmenu = "Main";
 string submenu    = "Options";
 string submenu1   = "Textures";
@@ -75,9 +75,7 @@ PlaceTheButton(float yOff, float zOff)
     integer LinkCount=llGetListLength(primOrder);
     integer i = 2;
     for (; i <= LinkCount; ++i)
-    {
         llSetLinkPrimitiveParams(llList2Integer(primOrder,i), [PRIM_POSITION, <0.0, yOff * (i - 1), zOff * (i - 1)>]);
-    }
 }
 
 DoTextures(string _style)
@@ -120,8 +118,6 @@ DoTextures(string _style)
                          "a81b25f9-5ab1-dd02-5740-eb06ca5bf219",
                          "cf5b070b-f672-9488-81a4-945243ebb47d"];
 
-//  llOwnerSay("Setting texture scheme to :: \"" + _style + "\"");
-
 //  Upon a texture change we should also reset the 'tint'
     llSetLinkPrimitiveParams(LINK_SET, [PRIM_COLOR, ALL_SIDES, <1, 1, 1>, 1.0]);
 
@@ -133,43 +129,28 @@ DoTextures(string _style)
 
     if (_style == "Gray Square")
     {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graysquare,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        }
+        do llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graysquare,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         while((++_i)<=_primNum);
 
     }
     else if (_style == "Gray Circle")
     {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graycircle,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        }
+        do llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graycircle,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         while((++_i)<=_primNum);
     }
     else if (_style == "Red")
     {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_red,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        }
+        do  llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_red,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         while((++_i)<=_primNum);
     }
     else if (_style == "Blue")
     {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_blue,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        }
+        do  llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_blue,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         while((++_i)<=_primNum);
     }
     else if (_style == "White")
     {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_whitetint,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        }
+        do  llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_whitetint,_i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         while((++_i)<=_primNum);
     }
 
@@ -218,7 +199,7 @@ DefinePosition()
                 yOff = 0.0;
         }
             PlaceTheButton(yOff, zOff); // Does the actual placement
-        }
+    }
 }
 
 DoButtonOrder()
@@ -236,17 +217,11 @@ DoButtonOrder()
         integer _tempPos = llList2Integer(primOrder,i);
 
         if (_tempPos == _oldPos)
-        {
             _tempList += [_newPos];
-        }
         else if (_tempPos == _newPos)
-        {
             _tempList += [_oldPos];
-        }
         else
-        {
             _tempList += [_tempPos];
-        }
     }
 
     primOrder = [];
@@ -265,10 +240,9 @@ DoReset()
     {
         _script = llGetInventoryName(INVENTORY_SCRIPT,n);
         if (_script != llGetScriptName() && _script != "")
-        {
             llResetOtherScript(_script);
-        }
-    } while (--n >= 0);
+    }
+    while (--n >= 0);
     Layout = 0;
     SPosition = 69; // -- Don't we just love that position? *winks*
     tintable = FALSE;
@@ -312,26 +286,20 @@ default
             return;
         }
         else // It's being attached and the attachment point is a HUD position, DefinePosition()
-        {
             DefinePosition();
-        }
     }
 
     state_entry()
     {
         llSleep(1.0);
 
-//      llOwnerSay("Debug: state_entry hudoptions, menu button");
-
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, "");
     }
 
     link_message(integer sender, integer num, string str, key id)
     {
         if (num == MENUNAME_REQUEST && str == parentmenu)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, NULL_KEY);
-        }
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu + "|" + submenu1, "");
         if (num == SUBMENU && str == submenu)
         {
             currentmenu = submenu;
@@ -368,10 +336,9 @@ default
 
                 if (currentmenu == submenu)
                 {   // -- Inside the 'Options' menu, or 'submenu'
+//                  If we press the 'Back' and we are inside the Options menu, go back to OwnerHUD menu
                     if (response == UPMENU)
-                    {   // If we press the '^' and we are inside the Options menu, go back to OwnerHUD menu
                         llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-                    }
                     else if (response == "Horizontal")
                     {
                         Layout = 0;
@@ -388,8 +355,10 @@ default
                         string text = "This is the menu for styles.\n";
                         text += "Selecting one of these options will\n";
                         text += "change the color of the HUD buttons.\n";
-                        if (tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
-                        if (!tintable)text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
+                        if (tintable)
+                            text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
+                        if (!tintable)
+                            text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
 
                         list buttons = [];
                         buttons += ["Gray Square"];
@@ -440,33 +409,16 @@ default
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
                     else if (response == "Confirm")
-                    {
                         DoReset();
-                    }
                 }
 
                 if (currentmenu == submenu1)
                 {   // -- Inside the 'Texture' menu, or 'submenu1'
+//                  -- If we press the 'Back' and we are inside the Texture menu, go back to Options menu
                     if (response == UPMENU)
-                    {   // -- If we press the '^' and we are inside the Texture menu, go back to Options menu
                         llMessageLinked(LINK_SET, SUBMENU, submenu, id);
-                    }
-                    else if (response == "Gray Square")
-                    {
+                    else if ((response == "Gray Square") || (response == "Gray Circle") || (response == "Blue") || (response == "Red"))
                         DoTextures(response);
-                    }
-                    else if (response == "Gray Circle")
-                    {
-                        DoTextures(response);
-                    }
-                    else if (response == "Blue")
-                    {
-                        DoTextures(response);
-                    }
-                    else if (response == "Red")
-                    {
-                        DoTextures(response);
-                    }
                     else if (response == "White")
                     {
                         tintable = TRUE;
@@ -498,10 +450,9 @@ default
 
                 if (currentmenu == submenu2)
                 {    // -- Inside the 'Order' menu, or 'submenu2'
+//                  -- If we press the 'Back' and we are inside the Order menu, go back to Options menu
                     if (response == UPMENU)
-                    {   // -- If we press the '^' and we are inside the Order menu, go back to Options menu
                         llMessageLinked(LINK_SET, SUBMENU, submenu, id);
-                    }
                     else if (response == "Menu")
                     {
                         oldPos = llListFindList(primOrder, [2]);
@@ -678,37 +629,21 @@ default
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
                     else if (response == "Orange")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <1, 0.49804, 0>, 1.0]);
-                    }
                     else if (response == "Yellow")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <1, 1, 0>, 1.0]);
-                    }
                     else if (response == "Light Green")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0, 1, 0>, 1.0]);
-                    }
                     else if (response == "Pink")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <1, 0.58431, 1>, 1.0]);
-                    }
                     else if (response == "Purple")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0.50196, 0, 1>, 1.0]);
-                    }
                     else if (response == "Sky Blue")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0.52941, 0.80784, 1>, 1.0]);
-                    }
                     else if (response == "Cyan")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0, 0.80784, 0.79216>, 1.0]);
-                    }
                     else if (response == "Mint")
-                    {
                         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0.49020, 0.73725, 0.49412>, 1.0]);
-                    }
                 }
             }
         }
@@ -716,9 +651,7 @@ default
         if (num == DIALOG_TIMEOUT)
         {
             if (id == menuid)
-            {
                 llOwnerSay("Options Menu timed out!");
-            }
         }
 
         if (str == "hide")
@@ -735,9 +668,4 @@ default
             }
         }
     }
-
-//  timer()
-//  {
-//      ;
-//  }
 }

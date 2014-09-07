@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - hudleash                            //
-//                                 version 3.901                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -25,18 +25,18 @@ integer DIALOG_TIMEOUT = -9002;
 integer SEND_CMD_PICK_SUB = -1002;
 
 //Strings
-string UPMENU = "^";
+string UPMENU =     "Back";
 
 string parentmenu = "Main";
-string submenu = "LeashMenu";
-string Leash = "Leash";
-string Follow = "Follow";
-string Release = "Release";
-string Post = "Post";
-string ForceSit = "ForceSit";
-string Stand = "Stand";
-string Bound = "Bound";
-string Unbound = "Unbound";
+string submenu =    "LeashMenu";
+string Leash =      "Leash";
+string Follow =     "Follow";
+string Release =    "Release";
+string Post =       "Post";
+string ForceSit =   "ForceSit";
+string Stand =      "Stand";
+string Bound =      "Bound";
+string Unbound =    "Unbound";
 
 string currentmenu;
 
@@ -90,9 +90,7 @@ default
         wearer = llGetOwner();
         llSleep(1.0);
 
-//      llOwnerSay("Debug: state_entry hudleash, menu button");
-
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
     }
 
     changed(integer change)
@@ -106,17 +104,14 @@ default
 //      only the primary owner can use this !!
 
         if (auth == MENUNAME_REQUEST && str == parentmenu)
-        {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
-        }
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
+
         else if (auth == SUBMENU && str == submenu)
-        {
             Dialogleash(id);
-        }
+
         else if (str == "LeashMenus")
-        {
             Dialogleash(id);
-        }
+
         else if (auth == DIALOG_RESPONSE)
         {
             if (id == menuid)
@@ -136,19 +131,19 @@ default
                     llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unleash", id);
 //              brings up the Collar Post menu
                 else if (message == Post)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "post", NULL_KEY);
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "post", "");
 //              brings up the Collar SitNow menu
                 else if (message == ForceSit)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "sitnow", NULL_KEY);
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "sitnow", "");
 //              forces the Collar wearer to stand
                 else if (message == Stand)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "unsit=force", NULL_KEY);
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "unsit=force", "");
 //              attach a #RLV folder called bound
 //              an idea from pandora15 - single button to attach an RLV folder containing items to bind/gag/pose/restrict at once
                 else if (message == Bound)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "+bound", NULL_KEY);
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "+bound", "");
                 else if (message == Unbound)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "-bound", NULL_KEY);
+                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "-bound", "");
             }
         }
         else if (auth == DIALOG_TIMEOUT)

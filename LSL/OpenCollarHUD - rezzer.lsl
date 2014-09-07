@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - rezzer                              //
-//                                 version 3.901                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -19,7 +19,6 @@
 
 integer commchannel = -987654321;
 
-integer debugger = FALSE;
 integer i;
 integer index;
 integer index1 = 0;
@@ -83,9 +82,7 @@ AvMenu(key id)//give list of people in victims list with RLV
     list utility = [];
     index = llGetListLength(victims);
     for (i = 0; i < index; i = i+2)
-    {
         buttons += llGetSubString(llList2String(victims, i),0,(llSubStringIndex(llList2String(victims, i)," ")+1));
-    }
     prompt = "Pick someone to cage.\n";
     prompt += "Choose from these " + (string)(index/2) + " avis, who have RLV enabled.";
     llSetTimerEvent(timeout);
@@ -102,9 +99,7 @@ Choose_Cage(key id)
     {
         msg = llToLower(llGetSubString(llGetInventoryName(INVENTORY_OBJECT,i),-4,-1));
         if (msg == "cage")
-        {
             buttons += llGetInventoryName(INVENTORY_OBJECT,i);
-        }
     }
     prompt += "Choose one of these cages to rez.";
     llSetTimerEvent(timeout);
@@ -121,13 +116,9 @@ list ListCheck4Dup(list lx) // check the list, eliminating duplicates and sort
         for (y = 0; y < llGetListLength(lx); ++y)
         {
             if (~llListFindList(lx,ly))
-            {
                 ly = [];
-            }
             else
-            {
                 lx = lx + ly;
-            }
         }
         index = llGetListLength(lx);
     }
@@ -140,7 +131,6 @@ set_to_default(integer x)
 {
     if (x)
     {
-        debug("cleaning up and getting ready...");
         lx = [];
         buttons = [];
         found = [];
@@ -151,17 +141,6 @@ set_to_default(integer x)
         touched = 0;
         llSensorRemove();
         llListenControl(relaylisten,FALSE);
-    }
-}
-
-debug(string bugger)
-{
-    if (debugger)
-    {
-        temp_obj_name = llGetObjectName();
-        llSetObjectName(llGetScriptName());
-        llOwnerSay(bugger);
-        llSetObjectName(temp_obj_name);
     }
 }
 
@@ -309,7 +288,7 @@ state launch
 
                 else
                 {
-                    llOwnerSay("Please choose a victim or cage.");
+                    llOwnerSay("Please choose a victim to cage.");
                     llSetTimerEvent(0.1);
                 }
             }

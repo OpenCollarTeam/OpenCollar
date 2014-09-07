@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollarHUD - hudmenu                             //
-//                                 version 3.941                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -38,7 +38,7 @@ integer SEND_CMD_PICK_SUB = -1002;
 integer LOCALCMD_REQUEST  = -2000;
 integer LOCALCMD_RESPONSE = -2001;
 
-string UPMENU = "^";
+string UPMENU = "Back";
 
 key wearer;
 key menuid;
@@ -81,14 +81,13 @@ default
             string name = llList2String(menunames, n);
             if (name != "Main")
             {
-                llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|" + name, NULL_KEY);
-                llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, name + "|" + UPMENU, NULL_KEY);
+                llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|" + name, "");
+                llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, name + "|" + UPMENU, "");
             }
         }
-        //add "CollarMenu","CuffMenu" and RLVMenu buttons to main menu
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CollarMenu", NULL_KEY);
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|UnDressMenu", NULL_KEY);
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CuffMenu", NULL_KEY);
+        //add "CollarMenu", and RLVMenu buttons to main menu
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CollarMenu", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|UnDressMenu", "");
     }
 
     touch_start(integer num)
@@ -109,34 +108,22 @@ default
 
 
             if (button == "TPSubs")
-            {
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"TPMenus", id);
-            }
             else if (button == "Menu")
-            {
                 Menu("Main", id);
-            }
             else if (button == "Cage")
-            {
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu",NULL_KEY);
-            }
+                llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu","");
             else if (button == "Couples")
-            {
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", NULL_KEY);
-            }
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", "");
             else if (button == "Leash")
-            {
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"LeashMenus", id);
-            }
             else if (llSubStringIndex(button,"Owner")>=0)
             {
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"hide",NULL_KEY);
+                llMessageLinked(LINK_SET, COMMAND_OWNER,"hide","");
                 llSleep(1);
             }
             else
-            {
                 llMessageLinked(LINK_SET, COMMAND_OWNER,button, id);
-            }
         }
     }
 
@@ -144,7 +131,6 @@ default
     {
         if (num == MENUNAME_RESPONSE)
         {
-//          llOwnerSay("Debug: link_message hudmenu - get menu buttons: " + str);
 //          str will be in form of "parent|menuname"
 //          ignore unless parent is in our list of menu names
 
@@ -187,34 +173,20 @@ default
         else if (num == SUBMENU)
         {
             if (llListFindList(menunames, [str]) != -1)
-            {
                 Menu(str, id);
-            }
 //          lets bring up the special collar menu's
             else if (str == "CollarMenu")
-            {
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "menu", NULL_KEY);
-            }
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "menu", "");
             else if (str == "UnDressMenu")
-            {
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "undress", NULL_KEY);
-            }
-            else if (str == "CuffMenu") //place holder for now
-            {
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "cmenu", NULL_KEY);
-            }
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "undress", "");
         }
         else if (num == COMMAND_OWNER)
         {
             if (str == "menu")
-            {
                 Menu("Main", id);
-            }
         }
         else if (num == LOCALCMD_REQUEST)
-        {
-            llMessageLinked(LINK_THIS, LOCALCMD_RESPONSE, llDumpList2String(localcmds, ","), NULL_KEY);
-        }
+            llMessageLinked(LINK_THIS, LOCALCMD_RESPONSE, llDumpList2String(localcmds, ","), "");
         else if (num == DIALOG_RESPONSE)
         {
             if(id == menuid)
@@ -224,21 +196,15 @@ default
                 string message = llList2String(menuparams, 1);
 
                 if (message == UPMENU)
-                {
                     Menu("Main", llGetOwner());
-                }
                 else
-                {
                     llMessageLinked(LINK_SET, SUBMENU, message, llGetOwner());
-                }
             }
         }
         else if (num == DIALOG_TIMEOUT)
         {
             if(id == menuid)
-            {
                 llOwnerSay("Main Menu timed out!");
-            }
         }
 
     }
@@ -246,16 +212,6 @@ default
     changed(integer change)
     {
         if (change & CHANGED_OWNER)
-        {
             llResetScript();
-        }
     }
-
-//  on_rez(integer param)
-//  {
-//      here we need some lines that request all the menu buttons from the other scripts, using MENUNAME_REQUEST channel
-//      till we got this structure completed - looks like most scripts are allready prepared for this - do a script reset only on user request  or on owner change
-//      llOwnerSay("Debug: on_rez hudmenu - commented out to keep menu buttons");
-//      llResetScript();
-//  }
 }

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarHUD - Ownermenu                            //
-//                                 version 3.901                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -59,7 +59,7 @@ integer DIALOG_TIMEOUT = -9002;
 integer SEND_CMD_PICK_SUB = -1002;
 
 //Strings
-string UPMENU = "^";
+string UPMENU = "Back";
 
 string parentmenu = "Main";
 
@@ -107,24 +107,17 @@ default
     {
         wearer = llGetOwner();//Lets get the ID of who is wearing us
         llSleep(1.0);
-//      llOwnerSay("Debug: state_entry Ownermenu, menu button");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
 
     link_message(integer sender, integer auth, string str, key id)
-    {// only the primary owner can use this !!
+    {
         if (auth == MENUNAME_REQUEST && str == parentmenu)
-        {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
-        }
         else if (auth == SUBMENU && str == submenu)
-        {
             Dialogowner(id);
-        }
         else if (str == "OwnerMenu")
-        {
             Dialogowner(id);
-        }
         else if (auth == DIALOG_RESPONSE)
         {
             if (id == menuid)

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollarHUD - hudforcetp                           //
-//                                 version 3.901                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -33,7 +33,7 @@ string  MAINMENU   = "MainMenu";
 
 integer page = 0;
 
-string  UPMENU           = "^";
+string  UPMENU           = "Back";
 string  CURRENT_LOCATION = "*Here*";
 string  CAMERA_LOCATION  = "*Camera Location*";
 
@@ -59,11 +59,6 @@ integer LOCALCMD_RESPONSE = -2001;
 key autoTPsubKey;
 
 integer autoTpALL = FALSE;
-
-debug(string str)
-{
-    llOwnerSay(llGetScriptName() + ": " + str);
-}
 
 string TPCmd(vector abspos)
 {
@@ -115,9 +110,7 @@ LMMenu(key id, integer page_num)
 //          cap names at 30 chars to avoid hitting 512 char prompt length limit
 
             if (llStringLength(name) > 30)
-            {
                 name = llGetSubString(name, 0, 29);
-            }
 
 //          add 3 instead of 2 to compensate for additional button for cam
 
@@ -143,16 +136,11 @@ LMMenu(key id, integer page_num)
 //  Check dialogs for previous entry and update if needed
     integer index = llListFindList(menuids, [id]);
     if (index == -1)
-    {
         menuids += newstride;
-    }
-    else
-    {
+
 //      this person is already in the dialog list.  replace their entry
-
+    else
         menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }
-
 }
 
 MainMenu(key id)
@@ -176,15 +164,10 @@ MainMenu(key id)
 //  Check dialogs for previous entry and update if needed
     integer index = llListFindList(menuids, [id]);
     if (index == -1)
-    {
         menuids += newstride;
-    }
-    else
-    {
-//      this person is already in the dialog list.  replace their entry
 
-        menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
-    }
+//      this person is already in the dialog list.  replace their entry
+    else menuids = llListReplaceList(menuids, newstride, index, index - 1 + menustride);
 }
 
 TPAllHere()
@@ -192,9 +175,7 @@ TPAllHere()
     vector abspos = llGetRegionCorner() + llGetPos();
     llMessageLinked(LINK_THIS, SEND_CMD_ALL_SUBS, TPCmd(abspos), NULL_KEY);
     if(!autotp)
-    {
-        llOwnerSay("Sending teleport command to subs.");
-    }
+        llOwnerSay("Sending teleport command to collars.");
 }
 
 key wearer;
@@ -204,12 +185,9 @@ default
     {
         wearer = llGetOwner();
         if (llGetAttached())
-        {
             llRequestPermissions(wearer, PERMISSION_TRACK_CAMERA);
-        }
-        llSleep(1.0);
 
-//      llOwnerSay("Debug: state_entry hudforcetp, menu button");
+        llSleep(1.0);
 
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
     }
@@ -217,30 +195,22 @@ default
     link_message(integer sender, integer num, string str, key id)
     {
         if (num == MENUNAME_REQUEST && str == parentmenu)
-        {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
-        }
-        if (num == SUBMENU && str == submenu)
-        {
+
+        else if (num == SUBMENU && str == submenu)
             MainMenu(wearer);
-        }
-//NG
-            else if (str == "TPMenus")
-            {
-                LMMenu(id,page);
-            }
-//NG
+
+        else if (str == "TPMenus")
+            LMMenu(id,page);
+
         else if (num == COMMAND_OWNER)
         {
              if (str == "tpallhere")
-            {
                 TPAllHere();
-            }
         }
         else if (num == LOCALCMD_REQUEST)
-        {
             llMessageLinked(LINK_THIS, LOCALCMD_RESPONSE, llDumpList2String(localcmds, ","), NULL_KEY);
-        }
+
         else if(num == DIALOG_RESPONSE)
         {
             integer menuindex = llListFindList(menuids, [id]);
@@ -262,24 +232,18 @@ default
                 if(menutype == MAINMENU)
                 {
                     if (message == "TP Now")
-                    {
                         LMMenu(id,page_num);
-                    }
+
                     else if (message == "TP Help")
-                    {
                         llGiveInventory(id, "OpenCollar Owner HUD TPHelp");
-                    }
+
                     else if (message == UPMENU)
-                    {
                         llMessageLinked(LINK_THIS, SUBMENU, parentmenu, id);
-                    }
                 }
                 else if(menutype == LMMENU)
                 {
-                    if (message == UPMENU)
-                    {
-                        MainMenu(id);
-                    }
+                    if (message == UPMENU) MainMenu(id);
+
                     else if (message == "1")
                     {
 //                      we got message to TP the sub right here
@@ -293,18 +257,15 @@ default
 //                      First - make sure we have permission to track the camera and get it if not.
 
                         if ( !(llGetPermissions() & PERMISSION_TRACK_CAMERA))
-                        {
-//                          permission not obtained yet, complain
-
                             llOwnerSay("Cannot track camera.  Permission not granted.");
-                        }
+
                         else
                         {
 //                          we already have permission to use the camera - send command
 
                             vector abspos = llGetCameraPos() + llGetRegionCorner();
                             llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, TPCmd(abspos), NULL_KEY);
-                            llOwnerSay("TPing sub to cam position");
+                            llOwnerSay("TPing Collar to current camera position");
                         }
                     }
                     else
@@ -327,9 +288,7 @@ default
 
 //          if it's greater than 0, we know it's for us (this script)
             if (menuindex != -1)
-            {
                 llOwnerSay("TP Menu timed out!");
-            }
         }
     }
 
@@ -345,17 +304,15 @@ default
     changed(integer change)
     {
         if (change & CHANGED_OWNER)
-        {
             llResetScript();
-        }
+
         else if (change & CHANGED_TELEPORT)
         {
             if (autotp)
             {
                 if (autoTpALL)
-                {
                     TPAllHere();
-                }
+
                 else
                 {
                     vector abspos = llGetPos() + llGetRegionCorner();

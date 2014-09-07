@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                          OpenCollarHUD - hudlistener                           //
-//                                 version 3.901                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -62,20 +62,16 @@ default
     {
         SetListeners();
         llSleep(1.0);
-        llMessageLinked(LINK_SET, LOCALCMD_REQUEST, "", NULL_KEY);
+        llMessageLinked(LINK_SET, LOCALCMD_REQUEST, "", "");
     }
 
     listen(integer channel, string name, key id, string message)
     {
         string cmd = llList2String(llParseString2List(message, [" "], []), 0);
         if (~llListFindList(localcmds, [cmd]))
-        {
             llMessageLinked(LINK_SET, COMMAND_OWNER, message, id);
-        }
         else
-        {
             llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, message, id);
-        }
     }
 
     link_message(integer sender, integer num, string str, key id)
@@ -95,25 +91,17 @@ default
                     SetListeners();
                     llOwnerSay("Say /" + (string)listenchannel + "menu to bring up the menu.");
                 }
-                else
-                {
+                
 //                  they left the param blank or tried to use 0
-
+                else
                     llOwnerSay("Error: 'channel' must be set to a number greater than 0.");
-                }
             }
             else if (command == "reset")
-            {
                 llResetScript();
-            }
         }
-        else if (num == POPUP_HELP)
-        {
 //          replace _PREFIX_ with prefix, and _CHANNEL_ with (strin) channel
-
-            str = StringReplace(str, "_CHANNEL_", (string)listenchannel);
-            llOwnerSay(str);
-        }
+        else if (num == POPUP_HELP)
+            llOwnerSay(StringReplace(str, "_CHANNEL_", (string)listenchannel));
         else if (num == LOCALCMD_RESPONSE)
         {
 //          split string by ,
@@ -128,9 +116,7 @@ default
             {
                 list cmd = llList2List(newcmds, n, n);
                 if (llListFindList(localcmds, cmd) == -1)
-                {
                     localcmds += cmd;
-                }
             }
         }
     }
@@ -138,8 +124,6 @@ default
     changed(integer change)
     {
         if (change & CHANGED_OWNER)
-        {
             llResetScript();
-        }
     }
 }
