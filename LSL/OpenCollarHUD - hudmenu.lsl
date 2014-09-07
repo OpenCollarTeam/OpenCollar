@@ -38,7 +38,7 @@ integer SEND_CMD_PICK_SUB = -1002;
 integer LOCALCMD_REQUEST  = -2000;
 integer LOCALCMD_RESPONSE = -2001;
 
-string UPMENU = "Back";
+string UPMENU = "BACK";
 
 key wearer;
 key menuid;
@@ -86,8 +86,7 @@ default
             }
         }
         //add "CollarMenu", and RLVMenu buttons to main menu
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|CollarMenu", "");
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|UnDressMenu", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Collar Menu", "");
     }
 
     touch_start(integer num)
@@ -108,7 +107,7 @@ default
 
 
             if (button == "TPSubs")
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"TPMenus", id);
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "bookmarks", "");
             else if (button == "Menu")
                 Menu("Main", id);
             else if (button == "Cage")
@@ -116,7 +115,7 @@ default
             else if (button == "Couples")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", "");
             else if (button == "Leash")
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"LeashMenus", id);
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "leashmenu", "");
             else if (llSubStringIndex(button,"Owner")>=0)
             {
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"hide","");
@@ -175,10 +174,8 @@ default
             if (llListFindList(menunames, [str]) != -1)
                 Menu(str, id);
 //          lets bring up the special collar menu's
-            else if (str == "CollarMenu")
+            else if (str == "Collar Menu")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "menu", "");
-            else if (str == "UnDressMenu")
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "undress", "");
         }
         else if (num == COMMAND_OWNER)
         {
