@@ -28,9 +28,9 @@ integer DIALOG            = -9000;
 integer DIALOG_RESPONSE   = -9001;
 integer DIALOG_TIMEOUT    = -9002;
 
-string UPMENU     = "Back";
+string UPMENU     = "BACK";
 string parentmenu = "Main";
-string submenu    = "Options";
+string submenu    = " HUD Style";
 string submenu1   = "Textures";
 string submenu2   = "Order";
 string submenu3   = "Tint";
@@ -304,21 +304,20 @@ default
         {
             currentmenu = submenu;
 
-            string text = "\nThis menu sets your HUD options.\n\t";
-            text += "[Horizontal] sets the button layout to Horizontal.\n\t";
-            text += "[Vertical] sets the button layout to Vertical.\n\t";
-            text += "[Textures] opens a sub menu to choose button texture.\n\t";
-            text += "[Order] opens the sub menus to reorder the buttons.\n\t";
-            text += "[Reset] Resets ALL custom HUD settings.\n";
+            string text = "\nCustomize your Owner HUD!\n\n";
+            text += "[Horizontal] aligns buttons horizontally.\n";
+            text += "[Vertical] aligns buttons vertically.\n";
+            text += "[Textures] selects the looks for buttons.\n";
+            text += "[Order]s the arrangement of the button row.\n";
+            text += "[RESET]s all customization to shipping state.";
 
             list buttons = [];
             buttons += ["Horizontal"];
             buttons += ["Vertical"];
             buttons += ["Textures"];
             buttons += ["Order"];
-            buttons += [" "];
-            buttons += ["Reset"];
-            buttons += [" "];
+            buttons += ["RESET"];
+            //buttons += [" "];
 
             list utility = [UPMENU];
 
@@ -391,13 +390,13 @@ default
                             else if (_pos == 5) buttons += ["Couples"];
                             else if (_pos == 6) buttons += ["Leash"];
                         }
-                        buttons += ["Reset"];
+                        buttons += ["RESET"];
 
                         list utility = [UPMENU];
 
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
-                    else if (response == "Reset")
+                    else if (response == "RESET")
                     {
                         string text = "Confirm reset of the entire HUD.\n\n";
                         list buttons = [];
@@ -579,7 +578,7 @@ default
 
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
-                    else if (response == "Reset")
+                    else if (response == "RESET")
                     {
                         string text = "Confirm reset of the button order to default.\n\n";
                         list buttons = [];
@@ -651,7 +650,7 @@ default
         if (num == DIALOG_TIMEOUT)
         {
             if (id == menuid)
-                llOwnerSay("Options Menu timed out!");
+                llOwnerSay("HUD Style Menu timed out!");
         }
 
         if (str == "hide")
