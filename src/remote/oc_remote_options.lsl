@@ -58,9 +58,9 @@ list attachPoints = [
     ATTACH_HUD_CENTER_2
     ];
 
-list primOrder = [0, 1, 2, 3, 4, 5, 6];
+list primOrder = [0, 1, 2, 5, 4, 3, 6];
 //  List must always start with '0','1'
-//  0:Spacer, 1:Root, 2:Menu, 3:TPSubs, 4:Cage, 5:Couples, 6:Leash
+//  0:Spacer, 1:Root, 2:Menu, 3:Beckon, 4:Bookmarks, 5:Couples, 6:Leash
 //  Spacer serves to even up the list with actual link numbers
 
 integer Layout;
@@ -249,7 +249,7 @@ DoReset()
     Hidden = FALSE;
     DoTextures("White");
     llSleep(2.0);
-    primOrder = [0, 1, 2, 3, 4, 5, 6];
+    primOrder = [0, 1, 2, 5, 4, 3, 6];
     DoHide();
     llSleep(1.0);
     DefinePosition();
