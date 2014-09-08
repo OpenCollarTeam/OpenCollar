@@ -376,7 +376,7 @@ default
 
         if (change & CHANGED_INVENTORY)
         {
-            llOwnerSay("\n\nReloading the "+configurationNotecardName+" card\n!");
+            //llOwnerSay("\n\nReloading the "+configurationNotecardName+" card\n!");
             line = 0;
             notecardQueryId = llGetNotecardLine(configurationNotecardName, line);
         }
