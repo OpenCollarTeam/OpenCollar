@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//New Leash menu system added by North Glenwalker
+//North Glenwalker, Romka Swallowtail, Builder's Brewery, Wendy Starfall
 
 //MESSAGE MAP
 
@@ -25,19 +25,20 @@ integer DIALOG_TIMEOUT = -9002;
 integer SEND_CMD_PICK_SUB = -1002;
 
 //Strings
-string UPMENU =     "BACK";
+string UPMENU =     "MORE";
 
 string parentmenu = "Main";
 //string submenu =    "LeashMenu";
-string Leash =      "Leash Menu";
 string Grab =       "Grab";
-string Release =    "Unleash";
-string Beckon =     "Yank";
-string Pass =       "Pass";
-string Post =       "Post";
+string Release =    "STOP";
+string Follow =     "Follow";
+//string Beckon =     "Yank";
+//string Pass =       "Pass";
+//string Post =       "Post";
 string Still =      "Stay";
-string ForceSit =   "Sit";
-string Stand =      "Stand";
+//string ForceSit =   "Sit";
+//string Stand =      "Stand";
+string Thaw =       "Unstay";
 
 string currentmenu;
 
@@ -58,16 +59,18 @@ Dialogleash(key id)
 {
     currentmenu = "leashmenu";
     list buttons ;
-    string text = "\n\nLeash Quickmenu:\n";
+    string text = "\nLeash Quickmenu";
 
     buttons += ["Grab"];
-    buttons += ["Unleash"];
-    buttons += ["Yank"];
-    buttons += ["Pass"];
-    buttons += ["Post"];
+    //buttons += ["Yank"];
+    buttons += ["Follow"];
+    buttons += ["STOP"];
+    //buttons += ["Pass"];
+    //buttons += ["Post"];
     buttons += ["Stay"];
-    buttons += ["Sit"];
-    buttons += ["Stand"];
+    //buttons += ["Sit"];
+    //buttons += ["Stand"];
+    buttons += ["Unstay"];
     list utility = [UPMENU];
     menuid = Dialog(id, text, buttons, utility, 0);
 }
@@ -117,18 +120,22 @@ default
                     llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "grab", "");
                 else if (message == Release)
                     llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unleash", "");
-                else if (message == Beckon)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "beckon", "");
-                else if (message == Pass)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "leashto", "");
-                else if (message == Post)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "post", "");
+                else if (message == Follow)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "follow me", "");
+                //else if (message == Beckon)
+                 //   llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "beckon", "");
+               // else if (message == Pass)
+                 //   llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "leashto", "");
+               // else if (message == Post)
+                 //   llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "post", "");
                 else if (message == Still)
                     llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "stay", "");
-                else if (message == ForceSit)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "sitnow", "");
-                else if (message == Stand)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "standnow", "");
+               // else if (message == ForceSit)
+                 //   llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "sitnow", "");
+              //  else if (message == Stand)
+                 //   llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "standnow", "");
+                else if (message == Thaw)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unstay", "");
             }
         }
         else if (auth == DIALOG_TIMEOUT)
