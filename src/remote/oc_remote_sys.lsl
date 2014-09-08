@@ -68,7 +68,7 @@ string UPMENU       = "BACK";
 string listcollars  = "List";
 string removesub    = "Remove";
 //string list   = "Reload Menu";
-string scansubs     = "Scan & Add";
+string scansubs     = "Add";
 string loadnotecard = "Load";
 string dumpsubs     = "Print";
 string ALLSUBS      = " ALL";
@@ -195,17 +195,17 @@ key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer p
 
 SubMenu(key id) // Single page menu
 {
-    string text = "Pick an option.";
+    string text;
     //list subs in prompt just fyi
     integer n;
     integer stop = llGetListLength(subs);
-    text += "Current subs:";
+    text += "\nCurrently managing:";
     for (n = 0; n < stop; n = n + 4)
         text += "\n" + llList2String(subs, n + 1);
     text += "\n";
     list buttons;
     //add sub
-    buttons += [listcollars,removesub,scansubs,loadnotecard,dumpsubs];
+    buttons += [scansubs,listcollars,removesub,loadnotecard,dumpsubs];
     //parent menu
     list utility = [UPMENU];
 
