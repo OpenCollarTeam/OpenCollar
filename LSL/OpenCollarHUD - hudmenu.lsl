@@ -122,7 +122,10 @@ default
             }
         }
         //add "CollarMenu", and RLVMenu buttons to main menu
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Collar Menu", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Collar", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Cage", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Pose", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|RLV", "");
     }
 
     listen(integer channel, string name, key id, string message)
@@ -261,8 +264,14 @@ default
             if (llListFindList(menunames, [str]) != -1)
                 Menu(str, id);
 //          lets bring up the special collar menu's
-            else if (str == "Collar Menu")
+            else if (str == "Collar")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "menu", "");
+            else if (str == "Cage")
+                llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu","");
+            else if (str == "Pose")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "pose", "");
+            else if (str == "RLV")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "rlv", "");
         }
         else if (num == COMMAND_OWNER)
         {
