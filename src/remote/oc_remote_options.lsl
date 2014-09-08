@@ -265,7 +265,6 @@ default
         if (change & CHANGED_OWNER)
         {
             DoTextures("White");
-            llGiveInventory(llGetOwner(),"OpenCollar Owner HUD Help Image");
             llResetScript();
         }
     }
