@@ -25,18 +25,19 @@ integer DIALOG_TIMEOUT = -9002;
 integer SEND_CMD_PICK_SUB = -1002;
 
 //Strings
-string UPMENU =     "Back";
+string UPMENU =     "BACK";
 
 string parentmenu = "Main";
-string submenu =    "LeashMenu";
-string Leash =      "Leash";
-string Follow =     "Follow";
-string Release =    "Release";
+//string submenu =    "LeashMenu";
+string Leash =      "Leash Menu";
+string Grab =       "Grab";
+string Release =    "Unleash";
+string Beckon =     "Yank";
+string Pass =       "Pass";
 string Post =       "Post";
-string ForceSit =   "ForceSit";
+string Still =      "Stay";
+string ForceSit =   "Sit";
 string Stand =      "Stand";
-string Bound =      "Bound";
-string Unbound =    "Unbound";
 
 string currentmenu;
 
@@ -57,27 +58,16 @@ Dialogleash(key id)
 {
     currentmenu = "leashmenu";
     list buttons ;
-    string text = "[Leash] Grab the leash of a/all sub(s)\n";
-    text += "[Follow] Force a/all sub(s) to follow you without leash.\n";
-    text += "[Post] Brings up the collar 'post' menu, so you may leash your sub to an item, like a leash post.\n";
-    text += "[Release] UnLeash a/all subs.\n";
-    text += "**NOTE** It is not recomended to leash a sub further then 20M away, but will work to a maximum of 60M in some cases.\n";
-    text += "[ForceSit] Opens the ForceSit Collar Menu.\n";
-    text += "[Stand] Forces the Subbie to Stand.\n";
-    text += "[Bound] Attached the Bound folder in #RLV.\n";
-    text += "[UnBound] Detaches the Bound folder in #RLV.\n";
+    string text = "\n\nLeash Quickmenu:\n";
 
-    buttons += ["Leash"];
-    buttons += ["Follow"];
+    buttons += ["Grab"];
+    buttons += ["Unleash"];
+    buttons += ["Yank"];
+    buttons += ["Pass"];
     buttons += ["Post"];
-    buttons += [" "];
-    buttons += ["Release"];
-    buttons += [" "];
-    buttons += ["ForceSit"];
+    buttons += ["Stay"];
+    buttons += ["Sit"];
     buttons += ["Stand"];
-    buttons += [" "];
-    buttons += ["Bound"];
-    buttons += ["Unbound"];
     list utility = [UPMENU];
     menuid = Dialog(id, text, buttons, utility, 0);
 }
@@ -90,7 +80,7 @@ default
         wearer = llGetOwner();
         llSleep(1.0);
 
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
+       // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
     }
 
     changed(integer change)
@@ -104,9 +94,9 @@ default
 //      only the primary owner can use this !!
 
         if (auth == MENUNAME_REQUEST && str == parentmenu)
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
+            //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
 
-        else if (auth == SUBMENU && str == submenu)
+        //else if (auth == SUBMENU && str == submenu)
             Dialogleash(id);
 
         else if (str == "LeashMenus")
@@ -123,27 +113,22 @@ default
 //              lets go up a menu
                 if (message == UPMENU)
                     llMessageLinked(LINK_SET, SUBMENU, parentmenu, id);
-                else if (message == Leash)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower("leashto " + (string)wearer + " handle"), id);
-                else if (message == Follow)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, llToLower("follow " + (string)wearer + " handle"), id);
+                else if (message == Grab)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "grab", "");
                 else if (message == Release)
-                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unleash", id);
-//              brings up the Collar Post menu
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unleash", "");
+                else if (message == Beckon)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "beckon", "");
+                else if (message == Pass)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "leashto", "");
                 else if (message == Post)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "post", "");
-//              brings up the Collar SitNow menu
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "post", "");
+                else if (message == Still)
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "stay", "");
                 else if (message == ForceSit)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "sitnow", "");
-//              forces the Collar wearer to stand
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "sitnow", "");
                 else if (message == Stand)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "unsit=force", "");
-//              attach a #RLV folder called bound
-//              an idea from pandora15 - single button to attach an RLV folder containing items to bind/gag/pose/restrict at once
-                else if (message == Bound)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "+bound", "");
-                else if (message == Unbound)
-                    llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "-bound", "");
+                    llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "standnow", "");
             }
         }
         else if (auth == DIALOG_TIMEOUT)
