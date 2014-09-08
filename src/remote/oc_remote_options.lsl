@@ -179,7 +179,7 @@ DefinePosition()
             <0.0,  0.00,  0.07>,    // Bottom middle    (Position 4)
             <0.0, -0.02,  0.07>];   // Bottom left      (Position 5)
 
-        llSetPos((vector)llList2String(RootOffsets, Position)); // Position the Root Prim on screen
+        //llSetPos((vector)llList2String(RootOffsets, Position)); // Position the Root Prim on screen
         SPosition = Position;
     }
     if (!Hidden) // -- Fixes Issue 615: HUD forgets hide setting on relog.
