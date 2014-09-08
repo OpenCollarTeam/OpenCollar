@@ -520,6 +520,10 @@ default
             }
             if (data != EOF)
             {
+                // first we can filter out & skip blank lines & remarks
+                data = llStringTrim(data, STRING_TRIM_HEAD);
+                if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
+                
                 // check for "continued" line pieces
                 if ( llStringLength(split_line) ) 
                 { 
@@ -531,9 +535,6 @@ default
                     split_line = llDeleteSubString( data, -1, -1) ;
                     jump nextline ;
                 }
-                // first we can filter out & skip blank lines & remarks
-                data = llStringTrim(data, STRING_TRIM_HEAD);
-                if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
                     
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
