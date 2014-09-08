@@ -97,7 +97,7 @@ Menu(string name, key id)
 
     list buttons = llParseString2List(llList2String(menulists, menuindex), ["|"], []);
     list utility = [];
-    string prompt = "Pick an option.";
+    string prompt = "\nOpenCollar Owner HUD\nVersion 3.980";
     menuid = Dialog(id, prompt, buttons, utility, 0);
 }
 
@@ -126,6 +126,8 @@ default
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Cage", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Pose", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|RLV", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Sit", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Stand", "");
     }
 
     listen(integer channel, string name, key id, string message)
@@ -154,12 +156,12 @@ default
             string button = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
 
 
-            if (button == "TPSubs")
+            if (button == "Bookmarks")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "bookmarks", "");
             else if (button == "Menu")
                 Menu("Main", id);
-            else if (button == "Cage")
-                llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu","");
+            else if (button == "Beckon")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "beckon", "");
             else if (button == "Couples")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", "");
             else if (button == "Leash")
@@ -272,6 +274,10 @@ default
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "pose", "");
             else if (str == "RLV")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "rlv", "");
+            else if (str == "Sit")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "sitnow", "");
+            else if (str == "Stand")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "standnow", "");
         }
         else if (num == COMMAND_OWNER)
         {
