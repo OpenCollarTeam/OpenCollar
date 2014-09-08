@@ -97,7 +97,7 @@ Menu(string name, key id)
 
     list buttons = llParseString2List(llList2String(menulists, menuindex), ["|"], []);
     list utility = [];
-    string prompt = "\nOpenCollar Owner HUD\nVersion 3.980";
+    string prompt = "\nOpenCollar Owner HUD - Version 3.980\n\nwww.opencollar.at/owner-hud";
     menuid = Dialog(id, prompt, buttons, utility, 0);
 }
 
