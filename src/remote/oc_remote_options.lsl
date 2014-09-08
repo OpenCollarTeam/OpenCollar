@@ -304,12 +304,7 @@ default
         {
             currentmenu = submenu;
 
-            string text = "\nCustomize your Owner HUD!\n\n";
-            text += "[Horizontal] aligns buttons horizontally.\n";
-            text += "[Vertical] aligns buttons vertically.\n";
-            text += "[Textures] selects the looks for buttons.\n";
-            text += "[Order]s the arrangement of the button row.\n";
-            text += "[RESET]s all customization to shipping state.";
+            string text = "\nCustomize your Owner HUD!";
 
             list buttons = [];
             buttons += ["Horizontal"];
@@ -351,7 +346,7 @@ default
                     else if (response == "Textures")
                     {
                         currentmenu = submenu1;
-                        string text = "This is the menu for styles.\n";
+                        string text = "\nThis is the menu for styles.\n";
                         text += "Selecting one of these options will\n";
                         text += "change the color of the HUD buttons.\n";
                         if (tintable)
@@ -375,7 +370,7 @@ default
                     {
                         currentmenu = submenu2;
 
-                        string text = "This is the order menu, simply select the\n";
+                        string text = "\nThis is the order menu, simply select the\n";
                         text += "button which you want to re-order.\n\n";
 
                         list buttons = [];
@@ -398,7 +393,7 @@ default
                     }
                     else if (response == "RESET")
                     {
-                        string text = "Confirm reset of the entire HUD.\n\n";
+                        string text = "\nConfirm reset of the entire HUD.\n\n";
                         list buttons = [];
                         buttons += ["Confirm"];
                         buttons += ["Cancel"];
@@ -427,7 +422,7 @@ default
                     {
                         currentmenu = submenu3;
 
-                        string text = "Select the color you wish to tint the HUD.\n";
+                        string text = "\nSelect the color you wish to tint the HUD.\n";
                         text += "If you don't see a color you enjoy, simply edit\n";
                         text += "and select a color under the menu you wish.\n";
 
@@ -455,7 +450,7 @@ default
                     else if (response == "Menu")
                     {
                         oldPos = llListFindList(primOrder, [2]);
-                        string text = "Select the new position for "+response+"\n\n";
+                        string text = "\nSelect the new position for "+response+"\n\n";
                         list buttons = [];
 
                         integer i = 2;
@@ -466,8 +461,8 @@ default
                             {
                                 integer _temp = llList2Integer(primOrder,i);
                                 if (_temp == 2) buttons += ["Menu:"+(string)i];
-                                else if (_temp == 3) buttons += ["TPSubs:"+(string)i];
-                                else if (_temp == 4) buttons += ["Cage:"+(string)i];
+                                else if (_temp == 3) buttons += ["Beckon:"+(string)i];
+                                else if (_temp == 4) buttons += ["Bookmarks:"+(string)i];
                                 else if (_temp == 5) buttons += ["Couples:"+(string)i];
                                 else if (_temp == 6) buttons += ["Leash:"+(string)i];
                             }
@@ -477,10 +472,10 @@ default
 
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
-                    else if (response == "TPSubs")
+                    else if (response == "Beckon")
                     {
                         oldPos = llListFindList(primOrder, [3]);
-                        string text = "Select the new position for "+response+"\n\n";
+                        string text = "\nSelect the new position for "+response+"\n\n";
                         list buttons = [];
 
                         integer i = 2;
@@ -491,8 +486,8 @@ default
                             {
                                 integer _temp = llList2Integer(primOrder,i);
                                 if (_temp == 2) buttons += ["Menu:"+(string)i];
-                                else if (_temp == 3) buttons += ["TPSubs:"+(string)i];
-                                else if (_temp == 4) buttons += ["Cage:"+(string)i];
+                                else if (_temp == 3) buttons += ["Beckon:"+(string)i];
+                                else if (_temp == 4) buttons += ["Bookmarks:"+(string)i];
                                 else if (_temp == 5) buttons += ["Couples:"+(string)i];
                                 else if (_temp == 6) buttons += ["Leash:"+(string)i];
                             }
@@ -502,10 +497,10 @@ default
 
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
-                    else if (response == "Cage")
+                    else if (response == "Bookmarks")
                     {
                         oldPos = llListFindList(primOrder, [4]);
-                        string text = "Select the new position for "+response+"\n\n";
+                        string text = "\nSelect the new position for "+response+"\n\n";
 
                         list buttons = [];
 
@@ -517,8 +512,8 @@ default
                             {
                                 integer _temp = llList2Integer(primOrder,i);
                                 if (_temp == 2) buttons += ["Menu:"+(string)i];
-                                else if (_temp == 3) buttons += ["TPSubs:"+(string)i];
-                                else if (_temp == 4) buttons += ["Cage:"+(string)i];
+                                else if (_temp == 3) buttons += ["Beckon:"+(string)i];
+                                else if (_temp == 4) buttons += ["Bookmarks:"+(string)i];
                                 else if (_temp == 5) buttons += ["Couples:"+(string)i];
                                 else if (_temp == 6) buttons += ["Leash:"+(string)i];
                             }
@@ -531,7 +526,7 @@ default
                     else if (response == "Couples")
                     {
                         oldPos = llListFindList(primOrder, [5]);
-                        string text = "Select the new position for "+response+"\n\n";
+                        string text = "\nSelect the new position for "+response+"\n\n";
                         list buttons = [];
 
                         integer i = 2;
@@ -542,8 +537,8 @@ default
                             {
                                 integer _temp = llList2Integer(primOrder,i);
                                 if (_temp == 2) buttons += ["Menu:"+(string)i];
-                                else if (_temp == 3) buttons += ["TPSubs:"+(string)i];
-                                else if (_temp == 4) buttons += ["Cage:"+(string)i];
+                                else if (_temp == 3) buttons += ["Beckon:"+(string)i];
+                                else if (_temp == 4) buttons += ["Bookmarks:"+(string)i];
                                 else if (_temp == 5) buttons += ["Couples:"+(string)i];
                                 else if (_temp == 6) buttons += ["Leash:"+(string)i];
                             }
@@ -556,7 +551,7 @@ default
                     else if (response == "Leash")
                     {
                         oldPos = llListFindList(primOrder, [6]);
-                        string text = "Select the new position for "+response+"\n\n";
+                        string text = "\nSelect the new position for "+response+"\n\n";
                         list buttons = [];
 
                         integer i = 2;
@@ -567,8 +562,8 @@ default
                             {
                                 integer _temp = llList2Integer(primOrder,i);
                                 if (_temp == 2) buttons += ["Menu:"+(string)i];
-                                else if (_temp == 3) buttons += ["TPSubs:"+(string)i];
-                                else if (_temp == 4) buttons += ["Cage:"+(string)i];
+                                else if (_temp == 3) buttons += ["Beckon:"+(string)i];
+                                else if (_temp == 4) buttons += ["Bookmarks:"+(string)i];
                                 else if (_temp == 5) buttons += ["Couples:"+(string)i];
                                 else if (_temp == 6) buttons += ["Leash:"+(string)i];
                             }
@@ -580,7 +575,7 @@ default
                     }
                     else if (response == "RESET")
                     {
-                        string text = "Confirm reset of the button order to default.\n\n";
+                        string text = "\nConfirm reset of the button order to default.\n\n";
                         list buttons = [];
                         buttons += ["Confirm"];
                         buttons += ["Cancel"];
@@ -609,7 +604,7 @@ default
                     if (response == UPMENU)
                     {
                         currentmenu = submenu1;
-                        string text = "This is the menu for styles.\n";
+                        string text = "\nThis is the menu for styles.\n";
                         text += "Selecting one of these options will\n";
                         text += "change the color of the HUD buttons.\n";
                         if (tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
