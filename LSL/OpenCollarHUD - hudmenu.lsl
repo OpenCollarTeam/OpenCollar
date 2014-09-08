@@ -300,11 +300,11 @@ default
                     llMessageLinked(LINK_SET, SUBMENU, message, llGetOwner());
             }
         }
-        else if (num == DIALOG_TIMEOUT)
+       /* else if (num == DIALOG_TIMEOUT)
         {
             if(id == menuid)
                 llOwnerSay("Main Menu timed out!");
-        }
+        } */
 
     }
 
