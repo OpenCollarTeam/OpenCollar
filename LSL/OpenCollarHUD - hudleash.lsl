@@ -28,7 +28,7 @@ integer SEND_CMD_PICK_SUB = -1002;
 string UPMENU =     "MORE";
 
 string parentmenu = "Main";
-string submenu =    " Leash";
+//string submenu =    " Leash";
 string Grab =       "Grab";
 string Release =    "STOP";
 string Follow =     "Follow";
@@ -73,7 +73,7 @@ default
         wearer = llGetOwner();
         llSleep(1.0);
 
-       llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
+       //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
     }
 
     changed(integer change)
@@ -87,9 +87,9 @@ default
 //      only the primary owner can use this !!
 
         if (auth == MENUNAME_REQUEST && str == parentmenu)
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
+           /* llMessageLinked(LINK_SET, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
 
-        else if (auth == SUBMENU && str == submenu)
+        else if (auth == SUBMENU && str == submenu) */
             Dialogleash(id);
 
         else if (str == "LeashMenus")
@@ -118,7 +118,7 @@ default
                     llMessageLinked(LINK_SET, SEND_CMD_PICK_SUB, "unstay", "");
             }
         }
-        else if (auth == DIALOG_TIMEOUT)
+       /* else if (auth == DIALOG_TIMEOUT)
         {
             if (id == menuid)
             {
@@ -127,7 +127,7 @@ default
                 llOwnerSay("Leash Menu timed out!");
                 menuid = NULL_KEY;
             }
-        }
+        } */
     }
 
     on_rez(integer param)
