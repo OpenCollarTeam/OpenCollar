@@ -20,7 +20,7 @@ string g_sDialogUrl;
 list subs = [];
 
 //  these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
-list localcmds = ["reset","removesub","listcollars","help","update","owner"];
+list localcmds = ["reset","help"];
 
 //  list of hud channel handles we are listening for, for building lists
 list LISTENERS;
@@ -118,16 +118,16 @@ SendCmd(key id, string cmd)
     {
         llRegionSayTo(id,getPersonalChannel(id,1111), (string)id + ":" + cmd);
 
-        if (llGetSubString(cmd, 0, 6)=="leashto")
+       /* if (llGetSubString(cmd, 0, 6)=="leashto")
             llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - leashto " + llGetDisplayName(llGetSubString(cmd,8,43)));
         else if (llGetSubString(cmd, 0, 5)=="follow")
             llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - follow " + llGetDisplayName(llGetSubString(cmd, 7, 42)));
         else
-            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd);
+            llOwnerSay("Sending to "+ llGetDisplayName(id) + "'s collar - " + cmd); */
     }
     else
     {
-        llOwnerSay("You have selected someone who cannot be found on this Sim.");
+        llOwnerSay("\n\nSorry!\n\nI can't find "+subname+" in this region.\n");
         PickSubMenu(wearer, 0);
     }
 }
@@ -168,7 +168,7 @@ AddSub(key id, string name)
         if (id!="00000000-0000-0000-0000-000000000000")//Don't register any invalid ID's
         {
             subs+=[id,name,"***","***"];//Well we got here so lets add them to the list.
-            llOwnerSay(name+" has been registered.");//Tell the owner we made it.
+            llOwnerSay("\n\n"+name+" has been registered.\n");//Tell the owner we made it.
         }
     }
 }
@@ -199,7 +199,7 @@ SubMenu(key id) // Single page menu
     //list subs in prompt just fyi
     integer n;
     integer stop = llGetListLength(subs);
-    text += "\nCurrently managing:";
+    text += "\nCurrently managing:\n";
     for (n = 0; n < stop; n = n + 4)
         text += "\n" + llList2String(subs, n + 1);
     text += "\n";
@@ -231,7 +231,7 @@ SubMenu(key id) // Single page menu
 
 PickSubMenu(key id, integer page) // Multi-page menu
 {
-    string text = "Pick the Collar you wish to send the command to.";
+    string text = "\nWho will receive this command?";
     list buttons = [ALLSUBS];
     //add subs
     integer n;
@@ -258,7 +258,7 @@ PickSubMenu(key id, integer page) // Multi-page menu
 
 RemoveSubMenu(key id, integer page) // Multi-page menu
 {
-    string text = "Pick the collar you wish to remove from your hud. This will also delete you as Owner of this collar.";
+    string text = "\nWho would you like to remove?\n\nNOTE: This will also remove you as their owner.";
 
     //add subs
     integer n;
@@ -287,10 +287,10 @@ RemoveSubMenu(key id, integer page) // Multi-page menu
 
 ConfirmSubRemove(key id) // Single page menu
 {
-    string text = "Please confirm that you really want to remove " + subname + " . This will also remove you from " + subname + "'s collar as owner.";
+    string text = "\nAre you sure you want to remove " + subname + "?\n\nNOTE: This will also remove you as their owner.";
 
     list buttons = ["Yes", "No"];
-    list utility = [];
+    list utility = [UPMENU];
 
     key menuid = Dialog(id, text, buttons, utility, 0);
 
@@ -321,7 +321,7 @@ processConfiguration(string data)
     if (data == EOF)
     {
     //  notify the owner
-        llOwnerSay("Finished reading the Notecard");
+        llOwnerSay("\n\nFinished reading the "+configurationNotecardName+" card.\n");
         return;
     }
     if (data != "")//  if we are not working with a blank line
@@ -343,10 +343,10 @@ processConfiguration(string data)
                 else if (name == "subid")//  subid
                     subkey = value;
                 else//  unknown name
-                    llOwnerSay("Unknown configuration value: " + name + " on line " + (string)line);
+                    llOwnerSay("\n\nUnknown configuration value: " + name + " on line " + (string)line);
             }
             else//  line does not contain equal sign
-                llOwnerSay("Configuration could not be read on line " + (string)line);
+                llOwnerSay("\n\nConfiguration could not be read on line " + (string)line);
         }
     }
     if (subname=="")
@@ -367,7 +367,7 @@ default
 
         llSleep(1.0);//giving time for others to reset before populating menu
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, "");
-        llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+        //llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
     }
 
     changed(integer change)
@@ -376,7 +376,7 @@ default
 
         if (change & CHANGED_INVENTORY)
         {
-            llOwnerSay("Note: Reloading the list of Collars from notecard. Something has changed in my inventory");
+            llOwnerSay("\n\nReloading the "+configurationNotecardName+" card\n!");
             line = 0;
             notecardQueryId = llGetNotecardLine(configurationNotecardName, line);
         }
@@ -395,12 +395,12 @@ default
             //only owner may do these things
 
             if (str == "help")   llGiveInventory(id, "OpenCollar Owner HUD Guide");
-            else if (str == "update") llGiveInventory(id, "OpenCollar Owner Update Guide");
-            else if (str == "owner")  llGiveInventory(id, "OpenCollar Owner HUD Ownermenu Guide");
+            //else if (str == "update") llGiveInventory(id, "OpenCollar Owner Update Guide");
+            //else if (str == "owner")  llGiveInventory(id, "OpenCollar Owner HUD Ownermenu Guide");
             else if (str =="reset")
             {
                 subs = [];
-                llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
+                //llOwnerSay("Type /7help for a HUD Guide, /7update for a update Guild, or /7owner for an Owners menu Setup Guide");
                 llResetScript();
             }
         }
@@ -426,7 +426,7 @@ default
             else
             {
 //              you have 0 subs in list (empty)
-                llMessageLinked(LINK_THIS, POPUP_HELP, "Cannot send command because you have no collars listed.  Choose \"Scan Collars\" in the Scan menu after being set as owner or secowner on an OpenCollar.", wearer);
+                llMessageLinked(LINK_THIS, POPUP_HELP, "\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/owner-hud\n", wearer);
             }
 
         }
@@ -468,7 +468,7 @@ default
                         integer length = llGetListLength(subs);
                         for (n = 0; n < length; n = n + 4)
                         tmplist += llList2List(subs, n + 1, n + 1);
-                        llOwnerSay("Registered Collars: " + llDumpList2String(tmplist, ", "));
+                        llOwnerSay("\n\nI'm currently managing:\n\n" + llDumpList2String(tmplist, ", "));
                         SubMenu(id); //return to SubMenu
                     }
                     else if (message == removesub)  // Ok lets remove the sub from the Hud
@@ -478,7 +478,7 @@ default
                         if (llGetInventoryType(configurationNotecardName) != INVENTORY_NOTECARD)
                         {
                             //  notify owner of missing file
-                            llOwnerSay("Missing notecard: " + configurationNotecardName);
+                            llOwnerSay("\n\nThe" + configurationNotecardName +" card couldn't be found in my inventory.\n");
                             return;
                         }
                         line = 0;
@@ -488,7 +488,7 @@ default
                     else if (message == scansubs) //lets add new subbies
                     {
                      // Ping for auth OpenCollars in the region
-                     llOwnerSay("Starting to scan for collars");
+                     //llOwnerSay("Starting to scan for collars");
                      AGENTS = llGetAgentList(AGENT_LIST_REGION, []); //scan for who is in the region.
                      integer i;
                      for (; i < llGetListLength(AGENTS); i++) //build a list of who to scan
@@ -552,12 +552,12 @@ default
                 }
             }
         }
-        else if (num == DIALOG_TIMEOUT)
+        /* else if (num == DIALOG_TIMEOUT)
         {
             integer menuindex = llListFindList(menuids, [id]);
             if (~menuindex)
                 llOwnerSay("Main Menu timed out!");
-        }
+        } */
         else if (num == DIALOG_URL)
             g_sDialogUrl = str;
     }
@@ -573,7 +573,7 @@ default
             if (subName == "")
                 subName="????";
 
-            llOwnerSay(subName+" has been detected.");
+            //llOwnerSay(subName+" has been detected.");
             AddSub(subId,subName);
         }
     }
@@ -582,7 +582,7 @@ default
     {
         llSleep(2.0);
 
-        llOwnerSay("Type these commands on channel 7:\n\t/7help for a HUD Guide\n\t/7update for an update Guide\n\t/7owner for an owners menu Setup Guide");
+        //llOwnerSay("Type these commands on channel 7:\n\t/7help for a HUD Guide\n\t/7update for an update Guide\n\t/7owner for an owners menu Setup Guide");
     }
 
 //  clear things after ping
