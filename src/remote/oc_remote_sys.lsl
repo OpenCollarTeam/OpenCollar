@@ -321,7 +321,7 @@ processConfiguration(string data)
     if (data == EOF)
     {
     //  notify the owner
-        llOwnerSay("\n\nFinished reading the "+configurationNotecardName+" card.\n");
+        llOwnerSay("\n\n"+configurationNotecardName+" card parsed\n");
         return;
     }
     if (data != "")//  if we are not working with a blank line
