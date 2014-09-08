@@ -20,13 +20,13 @@ string g_sDialogUrl;
 list subs = [];
 
 //  these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
-list localcmds = ["reset","removesub","listcollars", "reloadlist","help","update","owner"];
+list localcmds = ["reset","removesub","listcollars","help","update","owner"];
 
 //  list of hud channel handles we are listening for, for building lists
 list LISTENERS;
 
 string parentmenu = "Main";   //  where we return to
-string submenu    = "Scan";   //  which menu are we
+string submenu    = "   MANAGE";   //  which menu are we
 key    subkey     = NULL_KEY; //  clear the sub uuid
 string subname;               //  what is the name of the sub
 list   AGENTS;                //  list of AV's to ping
@@ -63,15 +63,15 @@ integer LOCALCMD_REQUEST     = -2000;
 integer LOCALCMD_RESPONSE    = -2001;
 integer DIALOG_URL           = -2002;
 
-string UPMENU       = "Back";
+string UPMENU       = "BACK";
 
-string listcollars  = "List Collars";
-string removesub    = "Omit Collar";
-string reloadlist   = "Reload Menu";
-string scansubs     = "Scan Collars";
-string loadnotecard = "Load Collars";
-string dumpsubs     = "Dump Collars";
-string ALLSUBS      = "*All*";
+string listcollars  = "List";
+string removesub    = "Remove";
+//string list   = "Reload Menu";
+string scansubs     = "Scan & Add";
+string loadnotecard = "Load";
+string dumpsubs     = "Print";
+string ALLSUBS      = " ALL";
 
 string wearerName;
 key    removedSub;
@@ -205,7 +205,7 @@ SubMenu(key id) // Single page menu
     text += "\n";
     list buttons;
     //add sub
-    buttons += [listcollars,removesub,scansubs,loadnotecard,dumpsubs,reloadlist];
+    buttons += [listcollars,removesub,scansubs,loadnotecard,dumpsubs];
     //parent menu
     list utility = [UPMENU];
 
@@ -485,8 +485,6 @@ default
                         notecardQueryId = llGetNotecardLine(configurationNotecardName, line);
                         SubMenu(id); //return to SubMenu
                     }
-                    else if (message == reloadlist)
-                        SubMenu(id);
                     else if (message == scansubs) //lets add new subbies
                     {
                      // Ping for auth OpenCollars in the region

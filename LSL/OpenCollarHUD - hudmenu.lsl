@@ -122,7 +122,7 @@ default
             }
         }
         //add "CollarMenu", and RLVMenu buttons to main menu
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Collar", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main| Collar", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Cage", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Pose", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|RLV", "");
