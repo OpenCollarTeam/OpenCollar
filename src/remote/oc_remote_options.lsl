@@ -641,11 +641,11 @@ default
             }
         }
 
-        if (num == DIALOG_TIMEOUT)
+       /* if (num == DIALOG_TIMEOUT)
         {
             if (id == menuid)
                 llOwnerSay("HUD Style Menu timed out!");
-        }
+        } */
 
         if (str == "hide")
         {
