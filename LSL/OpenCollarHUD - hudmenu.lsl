@@ -160,7 +160,7 @@ default
             else if (button == "Couples")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "couples", "");
             else if (button == "Leash")
-                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "leashmenu", "");
+                llMessageLinked(LINK_SET, COMMAND_OWNER,"LeashMenus", id);
             else if (llSubStringIndex(button,"Owner")>=0)
             {
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"hide","");
