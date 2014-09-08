@@ -33,7 +33,7 @@ list   AGENTS;                //  list of AV's to ping
 
 //  Notecard reading bits
 
-string  configurationNotecardName = "Subs";
+string  configurationNotecardName = ".subs";
 key     notecardQueryId;
 integer line;
 
