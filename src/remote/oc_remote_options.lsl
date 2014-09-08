@@ -385,9 +385,9 @@ default
                         {
                             integer _pos = llList2Integer(primOrder,i);
                             if (_pos == 2) buttons += ["Menu"];
-                            else if (_pos == 3) buttons += ["TPSubs"];
-                            else if (_pos == 4) buttons += ["Cage"];
-                            else if (_pos == 5) buttons += ["Couples"];
+                            else if (_pos == 3) buttons += ["Couples"];
+                            else if (_pos == 4) buttons += ["Bookmarks"];
+                            else if (_pos == 5) buttons += ["Beckon"];
                             else if (_pos == 6) buttons += ["Leash"];
                         }
                         buttons += ["RESET"];
@@ -403,7 +403,7 @@ default
                         buttons += ["Confirm"];
                         buttons += ["Cancel"];
 
-                        list utility = [];
+                        list utility = [UPMENU];
 
                         menuid = Dialog(id, text, buttons, utility, page);
                     }
