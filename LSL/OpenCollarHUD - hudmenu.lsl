@@ -128,6 +128,7 @@ default
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|RLV", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Sit", "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Stand", "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Leash", "");
     }
 
     listen(integer channel, string name, key id, string message)
@@ -272,6 +273,8 @@ default
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu","");
             else if (str == "Pose")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "pose", "");
+            else if (str == "Leash")
+                llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "leashmenu", "");
             else if (str == "RLV")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "rlv", "");
             else if (str == "Sit")
