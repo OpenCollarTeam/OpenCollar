@@ -544,7 +544,7 @@ SetAllExs(string sVal)
 }
 ClearEx()
 {
-    llMessageLinked(LINK_SET, RLV_CMD, "clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
+    llMessageLinked(LINK_SET, RLV_CMD, "clear=startim:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
     //llOwnerSay("@clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:");
 }
 
