@@ -83,8 +83,8 @@ AvMenu(key id)//give list of people in victims list with RLV
     index = llGetListLength(victims);
     for (i = 0; i < index; i = i+2)
         buttons += llGetSubString(llList2String(victims, i),0,(llSubStringIndex(llList2String(victims, i)," ")+1));
-    prompt = "Pick someone to cage.\n";
-    prompt += "Choose from these " + (string)(index/2) + " avis, who have RLV enabled.";
+    prompt = "\nLet's drop a cage on someone! Yay!\n\n";
+    prompt += "Choose one of the " + (string)(index/2) + " people with active RLV relay:";
     llSetTimerEvent(timeout);
 
     menuid = Dialog(id, prompt, buttons, utility, 0);
