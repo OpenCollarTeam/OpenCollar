@@ -195,14 +195,14 @@ key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer p
 
 SubMenu(key id) // Single page menu
 {
-    string text;
+    string text = "\nClick \"Add\" to register collars!\n\nwww.opencollar.at/ownerhud";
     //list subs in prompt just fyi
-    integer n;
+   /* integer n;
     integer stop = llGetListLength(subs);
     text += "\nCurrently managing:\n";
     for (n = 0; n < stop; n = n + 4)
         text += "\n" + llList2String(subs, n + 1);
-    text += "\n";
+    text += "\n"; */
     list buttons;
     //add sub
     buttons += [scansubs,listcollars,removesub,loadnotecard,dumpsubs];
@@ -426,7 +426,7 @@ default
             else
             {
 //              you have 0 subs in list (empty)
-                llMessageLinked(LINK_THIS, POPUP_HELP, "\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/owner-hud\n", wearer);
+                llMessageLinked(LINK_THIS, POPUP_HELP, "\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/ownerhud\n", wearer);
             }
 
         }
