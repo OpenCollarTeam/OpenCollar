@@ -394,7 +394,7 @@ default
         {
             //only owner may do these things
 
-            if (str == "help")   llGiveInventory(id, "OpenCollar Owner HUD Guide");
+            if (str == "help")   llOwnerSay("\n\n\t[http://www.opencollar.at/ownerhud.html Owner HUD Manual]\n");
             //else if (str == "update") llGiveInventory(id, "OpenCollar Owner Update Guide");
             //else if (str == "owner")  llGiveInventory(id, "OpenCollar Owner HUD Ownermenu Guide");
             else if (str =="reset")
