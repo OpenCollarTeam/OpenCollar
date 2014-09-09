@@ -303,7 +303,7 @@ default
         {
             currentmenu = submenu;
 
-            string text = "\nCustomize your Owner HUD!";
+            string text = "\nCustomize your Owner HUD!\n\nwww.opencollar.at/ownerhud";
 
             list buttons = [];
             buttons += ["Horizontal"];
