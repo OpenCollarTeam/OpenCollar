@@ -267,7 +267,7 @@ default
             if (llListFindList(menunames, [str]) != -1)
                 Menu(str, id);
 //          lets bring up the special collar menu's
-            else if (str == "Collar")
+            else if (str == " Collar")
                 llMessageLinked(LINK_THIS, SEND_CMD_PICK_SUB, "menu", "");
             else if (str == "Cage")
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"cagemenu","");
