@@ -30,11 +30,13 @@ integer type;
 // integer type=1; //for Oracul type AOs
 // integer type=2; // for ZHAO-II type AOs
 // integer type=3; // for Vista type AOs
+// integer type=4; // for AKEYO type AOs
 //----------------------------------------------------------------------
 //Integer map for above
 integer ORACUL=1; 
 integer ZHAO=2;
 integer VISTA=3;
+integer AKEYO=4;
 
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
@@ -90,6 +92,10 @@ determineType() //function to determine AO type.
             llOwnerSay("OC compatibility script configured for Oracul AO. IMPORTANT: for proper functioning, you must now switch your AO on (switching it off first if necessary!)");
         }
     }
+    if (llSubStringIndex(llGetObjectName(),"AKEYO") >=0) { //AKEYO is not a string in their script name, it is in animations but think the object name is a better test for this AO - Sumi Perl
+        type = AKEYO;
+        llOwnerSay("OC compatibility script configured for AKEYO AO.  This support is experimental.  Please let us know if you notice any problems.");
+    }
     if(type==0) llOwnerSay("Cannot identify AO type. The script:"+llGetScriptName()+" is intended to be dropped into a Zhao2 or Oracul AO hud.");
     else 
     {
@@ -102,9 +108,11 @@ AOPause()
 {
     if(g_iAOSwitch)
     {
+        if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
+        else if (type==AKEYO) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause");
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
-        if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
-        else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
+        else if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
+
     }
     g_iOCSwitch=FALSE;
 
@@ -114,8 +122,10 @@ AOUnPause()
 {
     if(g_iAOSwitch)
     {
-        if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
-        else if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
+        if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
+        else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+        else if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
+
     }
     g_iOCSwitch=TRUE;
 
@@ -228,16 +238,20 @@ default
             else if (sMsg=="ZHAO_STANDOFF") AOPause();
             else if (sMsg=="ZHAO_AOOFF")
             {
-                if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
-                else llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
+                if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
+                else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause"); 
+                else if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); 
+               
 
             }
             else if (sMsg=="ZHAO_AOON")
             {
                 if(g_iOCSwitch)// don't switch on AO if we are paused
                 {
-                    if(type>1) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); 
-                    else llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"");
+                    if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
+                    else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+                    else if(type>1 ) llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "ocpause"); 
+                    
                 }
 
                 g_iAOSwitch=TRUE;
