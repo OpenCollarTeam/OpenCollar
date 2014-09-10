@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           OpenCollar - leashParticle                           //
-//                                 version 3.962                                  //
+//                                 version 3.982                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -436,20 +436,20 @@ OptionsMenu(key kIn, integer iAuth)
 
 DensityMenu(key kIn, integer iAuth)
 {
-    list lButtons = ["+", "-", "Default"];
+    list lButtons = ["➕", "➖", "Default"];
     g_sCurrentMenu = L_DENSITY;
     string Default = GetDefaultSetting(L_DENSITY);
-    string sPrompt = "\nChoose '+' for more and '-' for less particles\n'Default' to revert to the default: "+Default;
+    string sPrompt = "\nChoose ➕ for more and ➖ for less particles\n'Default' to revert to the default: "+Default;
     sPrompt += "\n\nCurrent Density = "+Float2String(g_fBurstRate) ;// BurstRate is opposite the implied effect of density
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 GravityMenu(key kIn, integer iAuth)
 {
-    list lButtons = ["+", "-", "Default", "noGravity"];
+    list lButtons = ["➕", "➖", "Default", "noGravity"];
     g_sCurrentMenu = L_GRAVITY;
     string Default = GetDefaultSetting(L_GRAVITY);
-    string sPrompt = "\nChoose '+' for more and '-' for less leash-gravity\n'Default' to revert to the default: "+Default; 
+    string sPrompt = "\nChoose ➕ for more and ➖ for less leash-gravity\n'Default' to revert to the default: "+Default; 
     sPrompt += "\n\nCurrent Gravity = "+Float2String(g_vLeashGravity.z) ;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -751,11 +751,11 @@ default
                     {
                         g_fBurstRate = (float)GetDefaultSetting(L_DENSITY);
                     }
-                    else if (sButton == "+")
+                    else if (sButton == "➕")
                     {
                         g_fBurstRate -= 0.01;
                     }
-                    else if (sButton == "-")
+                    else if (sButton == "➖")
                     {
                         g_fBurstRate += 0.01;
                     }
@@ -772,7 +772,7 @@ default
                     {
                         g_vLeashGravity.z = (float)GetDefaultSetting(L_GRAVITY);
                     }
-                    else if (sButton == "+")
+                    else if (sButton == "➕")
                     {
                         g_vLeashGravity.z -= 0.1;
                         if (g_vLeashGravity.z < -3.0)
@@ -781,7 +781,7 @@ default
                             Notify(kAv, "You have already reached maximum gravity.", FALSE);
                         } 
                     }
-                    else if (sButton == "-")
+                    else if (sButton == "➖")
                     {
                         g_vLeashGravity.z += 0.1;
                         if (g_vLeashGravity.z > 0.0)
