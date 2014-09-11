@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 0.9                                   //
+//                                  version 1.0                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -22,6 +22,7 @@ integer g_iListener;
 
 integer g_iTraceEnabled=FALSE;
 integer g_iListenEnabled=FALSE;
+integer g_iNotifyEnabled=FALSE;
 
 //OC MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -57,7 +58,7 @@ key g_kWearer;
 key g_kDialogSpyID;
 integer serial;
 
-///*
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -69,7 +70,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
-//*/
+*/
 
 DoReports(string sChatLine, integer sendNow, integer fromTimer) {
     if (!(g_iTraceEnabled||g_iListenEnabled)) return;
@@ -94,13 +95,13 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
         while (iMessageLength > iMessageLimit){
             g_sChatBuffer=sHeader+g_sChatBuffer;
             iMessageLength=llStringLength(g_sChatBuffer);
-            Debug("message length:"+(string)iMessageLength);
-            Debug("header length:"+(string)llStringLength(sHeader));
+            //Debug("message length:"+(string)iMessageLength);
+            //Debug("header length:"+(string)llStringLength(sHeader));
             integer index=iMessageLimit;
             while (llGetSubString(g_sChatBuffer,index,index) != "\n"){
                 index--;
             }
-            Debug("Found a return at "+(string) index);
+            //Debug("Found a return at "+(string) index);
             if (index <= llStringLength(sHeader)){
                 index=iMessageLimit;
                 while (llGetSubString(g_sChatBuffer,index,index) != " "){
@@ -108,13 +109,13 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
                 }
                 if (index <= llStringLength(sHeader)) {
                     index=iMessageLimit;
-                    Debug("Found no breaks, breaking at "+(string) index);
-                } else {
-                    Debug("Found a space at "+(string) index);
+                    //Debug("Found no breaks, breaking at "+(string) index);
+                //} else {
+                    //Debug("Found a space at "+(string) index);
                 }
             }
             string sMessageToSend=llGetSubString(g_sChatBuffer,0,index);
-            Debug("send length:"+(string)llStringLength(sMessageToSend));
+            //Debug("send length:"+(string)llStringLength(sMessageToSend));
             NotifyOwners(sMessageToSend);
 //            llMessageLinked(LINK_SET,NOTIFY_OWNERS,sMessageToSend,"ignoreNearby");
             serial++;
@@ -122,7 +123,7 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
             
             g_sChatBuffer=llGetSubString(g_sChatBuffer,index+1,-1);
             iMessageLength=llStringLength(sHeader)+llStringLength(g_sChatBuffer);
-            Debug("remaining:"+(string)iMessageLength);
+            //Debug("remaining:"+(string)iMessageLength);
         }
         if (sendNow || fromTimer){
             sHeader="["+(string)serial + "]"+sLocation+"\n";
@@ -130,17 +131,20 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
             serial++;
 //            llMessageLinked(LINK_SET,NOTIFY_OWNERS,sHeader+g_sChatBuffer,"ignoreNearby");
             g_sChatBuffer="";
-            Debug("Emptied buffer");
+            //Debug("Emptied buffer");
         }
 
-        //make a warning for the user if desired, uncomment line 135 to 140
-       /* string activityWarning="Spy plugin is reporting your ";
+        //make a warning for the user
+        if (g_iNotifyEnabled){
+            
+        string activityWarning="Spy plugin is reporting your ";
         if (g_iTraceEnabled) activityWarning += "location ";
         if (g_iTraceEnabled && g_iListenEnabled)  activityWarning += "and ";
         if (g_iListenEnabled)  activityWarning += "chat activity ";
         activityWarning += "to your primary owners";
-        Notify(g_kWearer,activityWarning,FALSE); */
-        
+        Notify(g_kWearer,activityWarning,FALSE);
+            
+        }        
     } else {
         return;
     }
@@ -153,7 +157,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 DialogSpy(key kID, integer iAuth) {
-    string sPrompt="\nVirtual Disgrace - Spy\n";
+    string sPrompt="\nSpy\n";
     
     if (iAuth != COMMAND_OWNER) {
         sPrompt = "\nACCESS DENIED: Primary Owners Only\n";
@@ -162,13 +166,16 @@ DialogSpy(key kID, integer iAuth) {
     }
     list lButtons ;
 
+    if(g_iTraceEnabled) lButtons += ["☒ Notify"];
+    else lButtons += ["☐ Notify"];
+    
     if(g_iTraceEnabled) lButtons += ["☒ Trace"];
     else lButtons += ["☐ Trace"];
     
     if (g_iListenEnabled) lButtons += ["☒ Listen"];
     else lButtons += ["☐ Listen"];
 
-    sPrompt += "\nTrace notifies if the wearer changes region. Listen transmits directly what the wearer says in Nearby Chat.\n\nNOTE: The nearby chat of other parties and the wearers or other parties private IMs cannot be broadcasted.";
+    sPrompt += "\nTrace notifies if the wearer changes region.\nListen transmits directly what the wearer says in Nearby Chat.\nNotify reminds the wearer each time a report is sent to their owners.\n\nNOTE: The nearby chat of other parties and the wearers or other parties private IMs cannot be broadcasted.";
 
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -207,13 +214,12 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
     if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return FALSE;
 
     sStr = llToLower(sStr);
-    if (iAuth == COMMAND_OWNER) {
-        if(sStr == "☐ trace" || sStr == "trace on") {
+        if (sStr == "☐ trace" || sStr == "trace on") {
             if (kID==g_kWearer) {
                 if (!g_iTraceEnabled) {
                     g_iTraceEnabled=TRUE;
                     Notify(kID,"\n\nTrace enabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_trace=on", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_trace=1", "");
                 }
             } else {
                 Notify(kID,"\n\nOnly the wearer may enable spy functions.\n",TRUE);
@@ -235,7 +241,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (!g_iListenEnabled) {
                     g_iListenEnabled=TRUE;
                     Notify(kID,"\n\nChat Spy enabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_listen=on", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_listen=1", "");
                     llListenRemove(g_iListener);
                     g_iListener = llListen(0, "", g_kWearer, "");
                 }
@@ -256,6 +262,28 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 Notify(kID,"\n\nOnly an owner may disable spy functions.\n",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
+        } else if (sStr == "☐ notify" || sStr == "notify on") {
+            if (kID==g_kWearer) {
+                if (!g_iNotifyEnabled) {
+                    g_iNotifyEnabled=TRUE;
+                    Notify(kID,"Notify enabled.",TRUE);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_notify=1", "");
+                }
+            } else {
+                Notify(kID,"Only the wearer may enable spy functions",TRUE);
+            }
+            if (remenu) DialogSpy(kID,iAuth);
+        } else if (sStr == "☒ notify" || sStr == "notify off") {
+            if (kID==g_kWearer) {
+                if (g_iNotifyEnabled){
+                    g_iNotifyEnabled=FALSE;
+                    Notify(kID,"Notify disabled.",TRUE);
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_notify", "");
+                }
+            } else {
+                Notify(kID,"Only the wearer may enable spy functions",TRUE);
+            }
+            if (remenu) DialogSpy(kID,iAuth);
         } else if ("runaway" == sStr) {
             g_iListenEnabled=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_listen", "");
@@ -265,7 +293,6 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             g_iTraceEnabled=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
         } else if (sStr == "spy" || sStr == "menu spy") DialogSpy(kID, iAuth);
-    }
     return TRUE;
 }
 
@@ -275,7 +302,7 @@ default {
         g_sWearerName = llKey2Name(g_kWearer);
         g_lOwners = [g_kWearer, g_sWearerName];  // initially self-owned until we hear a db message otherwise
         llSetTimerEvent(300);
-        Debug("Starting");
+        //Debug("Starting");
     }
 
     listen(integer channel, string sName, key kID, string sMessage) {
@@ -308,6 +335,11 @@ default {
                         g_iTraceEnabled=TRUE;
                         Notify(g_kWearer,"\n\nTrace enabled.\n",FALSE);
                     }
+                } else if (sToken == "subspy_notify") {
+                    if (!g_iNotifyEnabled) {
+                        g_iNotifyEnabled=TRUE;
+                        Notify(g_kWearer,"Notifications enabled.",FALSE);
+                    }
                 } else if (sToken == "subspy_listen") {
                     if (!g_iListenEnabled) {
                         g_iListenEnabled=TRUE;
@@ -316,8 +348,7 @@ default {
                         g_iListener = llListen(0, "", g_kWearer, "");
                     }
                 }
-            }
-            else if(sToken == "auth_owner" && llStringLength(sValue) > 0) { //owners list
+            } else if(sToken == "auth_owner" && llStringLength(sValue) > 0) { //owners list
                 g_lOwners = llParseString2List(sValue, [","], []);
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == "Apps") {
