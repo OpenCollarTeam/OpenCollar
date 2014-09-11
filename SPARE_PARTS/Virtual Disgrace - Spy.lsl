@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 1.0                                   //
+//                                  version 1.1                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -22,7 +22,7 @@ integer g_iListener;
 
 integer g_iTraceEnabled=FALSE;
 integer g_iListenEnabled=FALSE;
-integer g_iNotifyEnabled=FALSE;
+integer g_iNotifyEnabled=TRUE;
 
 //OC MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -166,7 +166,7 @@ DialogSpy(key kID, integer iAuth) {
     }
     list lButtons ;
 
-    if(g_iTraceEnabled) lButtons += ["☒ Notify"];
+    if(g_iNotifyEnabled) lButtons += ["☒ Notify"];
     else lButtons += ["☐ Notify"];
     
     if(g_iTraceEnabled) lButtons += ["☒ Trace"];
@@ -262,26 +262,26 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 Notify(kID,"\n\nOnly an owner may disable spy functions.\n",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
-        } else if (sStr == "☐ notify" || sStr == "notify on") {
+        } else if (sStr == "☐ notify" || sStr == "spynotify on") {
             if (kID==g_kWearer) {
                 if (!g_iNotifyEnabled) {
                     g_iNotifyEnabled=TRUE;
-                    Notify(kID,"Notify enabled.",TRUE);
+                    Notify(kID,"Spy notifications enabled.",TRUE);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_notify=1", "");
                 }
             } else {
-                Notify(kID,"Only the wearer may enable spy functions",TRUE);
+                Notify(kID,"Only the wearer may enable spy notifications",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
-        } else if (sStr == "☒ notify" || sStr == "notify off") {
+        } else if (sStr == "☒ notify" || sStr == "spynotify off") {
             if (kID==g_kWearer) {
                 if (g_iNotifyEnabled){
                     g_iNotifyEnabled=FALSE;
-                    Notify(kID,"Notify disabled.",TRUE);
+                    Notify(kID,"Spy notifications disabled.",TRUE);
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_notify", "");
                 }
             } else {
-                Notify(kID,"Only the wearer may enable spy functions",TRUE);
+                Notify(kID,"Only the wearer may enable spy notifications",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if ("runaway" == sStr) {
