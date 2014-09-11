@@ -83,9 +83,10 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
 
     string sLocation;
     if (g_iTraceEnabled) {
-        vector vPos = llGetPos();
-        //sLocation += " %WEARERNAME% is at " + llList2String(llGetParcelDetails(vPos, [PARCEL_DETAILS_NAME]),0) + " (" + llGetRegionName() + " <" + (string)((integer)vPos.x)+","+(string)((integer)vPos.y)+","+(string)((integer)vPos.z)+">).";
-        sLocation += " "+g_sWearerName+" is at " + llList2String(llGetParcelDetails(vPos, [PARCEL_DETAILS_NAME]),0) + " (" + llGetRegionName() + " <" + (string)((integer)vPos.x)+","+(string)((integer)vPos.y)+","+(string)((integer)vPos.z)+">).";
+        vector vPos=llGetPos();
+        string sRegionName=llGetRegionName();
+        //sLocation += " %WEARERNAME% is at http://maps.secondlife.com/secondlife/"+ llEscapeURL(sRegionName)+ "/"+ (string)llFloor(vPos.x)+ "/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
+        sLocation += " "+g_sWearerName+" is at http://maps.secondlife.com/secondlife/"+llEscapeURL(sRegionName)+"/"+(string)llFloor(vPos.x)+"/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
     }
     string sHeader="["+(string)serial + "]"+sLocation+"\n";
     
