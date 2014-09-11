@@ -500,7 +500,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu)
     string sParam2 = llList2String(lParams, 3); //param 2
     lParams = []; //clean
     string sMainButton = llToLower(SUBMENU_BUTTON);
-    if(!(iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
+    if(!(iNum >= COMMAND_OWNER && iNum <= COMMAND_OWNER)) {
         return FALSE;
     } else if((g_iRlvOn == FALSE) && (llSubStringIndex(sStr, sMainButton) == 0)) {
         Notify(kID, "RLV is off in " + WEARERNAME + "'s " + CTYPE + ".  Please enable RLV before using this plugin", FALSE);
@@ -540,10 +540,8 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu)
             iToken = llListFindList(g_lActions, [sCommand]);
             ProcessCommand(kID, llList2String(g_lActions, iToken), llList2Integer(g_lActions, iToken + 1), sParam1, sParam2);
             return TRUE;
-        }  else {} //TODO - Use GETCOMMAND to match partial string
-    } else {
-        Notify(kID, "Invalid command", FALSE);
-    }
+        }  else {Notify(kID, "Invalid command", FALSE);} //TODO - Use GETCOMMAND to match partial string
+    } 
     if(remenu) {
         DoMenu(kID, iNum);
     }
