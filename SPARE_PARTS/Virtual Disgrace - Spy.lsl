@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 1.1                                   //
+//                                  version 1.2                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -137,11 +137,11 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
         //make a warning for the user
         if (g_iNotifyEnabled){
             
-        string activityWarning="Spy plugin is reporting your ";
+        string activityWarning="\n\nThe Spy app is reporting your ";
         if (g_iTraceEnabled) activityWarning += "location ";
         if (g_iTraceEnabled && g_iListenEnabled)  activityWarning += "and ";
         if (g_iListenEnabled)  activityWarning += "chat activity ";
-        activityWarning += "to your primary owners";
+        activityWarning += "to your primary owners.\n";
         Notify(g_kWearer,activityWarning,FALSE);
             
         }        
@@ -157,7 +157,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 DialogSpy(key kID, integer iAuth) {
-    string sPrompt="\nSpy\n";
+    string sPrompt="\nVirtual Disgrace - Spy\n";
     
     if (iAuth != COMMAND_OWNER) {
         sPrompt = "\nACCESS DENIED: Primary Owners Only\n";
@@ -175,7 +175,7 @@ DialogSpy(key kID, integer iAuth) {
     if (g_iListenEnabled) lButtons += ["☒ Listen"];
     else lButtons += ["☐ Listen"];
 
-    sPrompt += "\nTrace notifies if the wearer changes region.\nListen transmits directly what the wearer says in Nearby Chat.\nNotify reminds the wearer each time a report is sent to their owners.\n\nNOTE: The nearby chat of other parties and the wearers or other parties private IMs cannot be broadcasted.";
+    sPrompt += "\nTrace reports if the wearer changes region.\nListen transmits directly what the wearer says.\nNotify informs the wearer each time a report is sent.\n\nwww.virtualdisgrace.com/spy";
 
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
