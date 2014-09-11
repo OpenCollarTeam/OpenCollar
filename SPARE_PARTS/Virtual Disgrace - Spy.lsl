@@ -22,7 +22,7 @@ integer g_iListener;
 
 integer g_iTraceEnabled=FALSE;
 integer g_iListenEnabled=FALSE;
-integer g_iNotifyEnabled=TRUE;
+integer g_iNotifyEnabled=FALSE;
 
 //OC MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
