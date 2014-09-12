@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 1.3                                   //
+//                                  version 1.4                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -158,13 +158,8 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 DialogSpy(key kID, integer iAuth) {
-    string sPrompt="\nVirtual Disgrace - Spy (1.3)\n";
+    string sPrompt="\nVirtual Disgrace - Spy (1.4)\n";
     
-    if (iAuth != COMMAND_OWNER) {
-        sPrompt = "\nACCESS DENIED: Primary Owners Only\n";
-        g_kDialogSpyID = Dialog(kID, sPrompt, [], [UPMENU], 0, iAuth);
-        return;
-    }
     list lButtons ;
 
     if(g_iNotifyEnabled) lButtons += ["☒ Notify"];
@@ -227,18 +222,18 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if(sStr == "☒ trace" || sStr == "trace off") {
-            if (kID==g_kWearer) {
+            if (iAuth == COMMAND_OWNER) {
                 if (g_iTraceEnabled){
                     g_iTraceEnabled=FALSE;
                     Notify(kID,"\n\nTrace disabled.\n",TRUE);
                     llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
                 }
             } else {
-                Notify(kID,"\n\nOnly the wearer may enable spy functions.\n",TRUE);
+                Notify(kID,"\n\nOnly an owner may disable spy functions.\n",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if(sStr == "☐ listen" || sStr == "listen on") {
-            if (iAuth == COMMAND_OWNER) {
+            if (kID==g_kWearer) {
                 if (!g_iListenEnabled) {
                     g_iListenEnabled=TRUE;
                     Notify(kID,"\n\nChat Spy enabled.\n",TRUE);
@@ -247,7 +242,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                     g_iListener = llListen(0, "", g_kWearer, "");
                 }
             } else {
-                Notify(kID,"\n\nOnly an owner may disable spy functions.\n",TRUE);
+                Notify(kID,"\n\nOnly the wearer may enable spy functions.\n",TRUE);
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if(sStr == "☒ listen" || sStr == "listen off") {
