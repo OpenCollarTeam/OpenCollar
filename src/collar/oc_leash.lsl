@@ -488,6 +488,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
             //Person holding the leash can yank.
+            if(llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "realleash");
             YankTo(kMessageID);
             
         } else if (sMessage == "beckon" && iAuth == COMMAND_OWNER) {
@@ -791,10 +792,7 @@ default
                 g_vPos = vNewPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-            if (g_vPos != ZERO_VECTOR) {
-                llMoveToTarget(g_vPos,0.7);
-                if (g_iStrictModeOn) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "realleash");
-            }
+            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,0.7);
             else llStopMoveToTarget();
         } else {
             DoUnleash();
