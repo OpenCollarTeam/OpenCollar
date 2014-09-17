@@ -230,11 +230,13 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //Debug("prompt:"+sThisPrompt);
     
     //unless asked not to, chat anything that wouldn't fit to menu user
-    if (~llListFindList(MRSBUN, [kRecipient])){  
+    if (! ~llListFindList(MRSBUN, [kRecipient])){  
         integer iRemainingChatLen;
         while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
-            if(iRemainingChatLen<1015) Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
-            else {
+            if(iRemainingChatLen<1015) {
+                Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
+                sThisChat="";
+            } else {
                 string sMessageChunk=TruncateString(sPrompt,1015);
                 Notify(kRecipient,sMessageChunk,FALSE);
                 sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
