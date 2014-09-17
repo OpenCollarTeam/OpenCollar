@@ -193,6 +193,8 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
         return FALSE;
     }
     
+    if (g_kLeashedTo==kTarget) return TRUE;
+    
     if (g_kLeashedTo){
         DoUnleash();
     }
