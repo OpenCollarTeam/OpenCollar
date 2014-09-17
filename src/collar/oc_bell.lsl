@@ -628,5 +628,16 @@ default
         }
 */        
     }
-
+    
+    touch_start(integer n)
+    {
+        if (g_iBellOn && g_iBellShow)
+        {
+            if (llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]) != -1)
+            {
+                llPlaySound(g_kCurrentBellSound,g_fVolume);
+                llSay(0, llKey2Name(llDetectedKey(0)) + " plays with the trinket on " + llKey2Name(g_kWearer) + "'s collar." );
+            }
+        }
+    }
 }
