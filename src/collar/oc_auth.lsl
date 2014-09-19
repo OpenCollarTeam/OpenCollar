@@ -730,7 +730,7 @@ default
         //added for attachment auth (Garvin)
         else if (iNum == ATTACHMENT_REQUEST) {
           integer iAuth = Auth((string)kID, TRUE);
-          llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, (string)iAuth, kID);
+          llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, (string)iAuth+"|"+sStr, kID);
         }
     // JS: Remove ATTACHMENT_REQUEST & RESPONSE after all attachments have been updated properly
         else if (iNum == INTERFACE_REQUEST) {
