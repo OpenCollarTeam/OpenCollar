@@ -118,7 +118,20 @@ integer g_iListenChan=1;
 string g_sSafeWord="RED";
 string g_sPrefix;
 
-//Debug(string text){llOwnerSay(llGetScriptName() + ": " + text);}
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+}
+*/
+
 
 string AutoPrefix()
 {
@@ -320,6 +333,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         } else Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
+//        if (llGetOwnerKey(kID) == g_kWearer) {
         if (kID == g_kWearer) {
             string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
             g_iWillingUpdaters = 0;
@@ -345,6 +359,12 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (iChan > -10000) iChan -= 30000;
 
         llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
+    } else if (sCmd == "attachmentversion") {
+        // Reply to version request from "garvin style" attachment
+        integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+        if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
+        
+        llWhisper(iInterfaceChannel, "version="+g_sCollarVersion);
     }
     return TRUE;
 }
@@ -482,6 +502,7 @@ default
         
         //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
+        //Debug("Starting");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -583,18 +604,6 @@ default
             }
         }
         else if (UserCommand(iNum, sStr, kID, FALSE)) return;
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
-        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -665,10 +674,7 @@ default
             }
             g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
-        if (iChange & CHANGED_OWNER)
-        {
-            llResetScript();
-        }
+        if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_COLOR) // ********************* 
         {
             integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
@@ -678,6 +684,14 @@ default
             }
         }
         if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
     attach(key kID)
     {
