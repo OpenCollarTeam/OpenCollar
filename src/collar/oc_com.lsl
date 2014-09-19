@@ -317,15 +317,15 @@ default
             }
             else
             {
-                //Debug("command: "+sMsg+" from "+(string)kID);
-                if (llGetOwnerKey(kID)==llGetOwner()){  //if the wearer's attachment requests it, then the command can be proxied for another user
-                    key sDestAv = llGetSubString(sMsg, 0, 35);
-                    if ((key)sDestAv){
-                        sMsg = llGetSubString(sMsg, 36, -1);
-                        kID=sDestAv;
-                        //Debug("command for foreign user");
-                    }
-                }
+//                //Debug("command: "+sMsg+" from "+(string)kID);
+//                if (llGetOwnerKey(kID)==llGetOwner()){  //if the wearer's attachment requests it, then the command can be proxied for another user
+//                    key sDestAv = llGetSubString(sMsg, 0, 35);
+//                    if ((key)sDestAv){
+//                        sMsg = llGetSubString(sMsg, 36, -1);
+//                        kID=sDestAv;
+//                        //Debug("command for foreign user");
+//                    }
+//                }
                 //Debug("command: "+sMsg+" from "+(string)kID);
                 llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
             }
@@ -624,7 +624,7 @@ default
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
-                //Debug("profiling restarted");
+                Debug("profiling restarted");
             }
         }
 */        
