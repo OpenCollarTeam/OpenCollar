@@ -12,13 +12,11 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//201405302026
-
 integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
 
-integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
+//integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
 float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
 integer g_iVersionChan = 293847;
@@ -85,8 +83,8 @@ string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
 list g_lOwners;
-list g_lSources=[];
-list g_lRestrictions=[];  //§ separated list of restrictions strings, keyed by g_lSources
+list g_lRestrictions;  //2 strided list of sourceId, § separated list of restrictions strings
+list g_lExceptions;
 list g_lBaked=[]; //list of restrictions currently in force
 key g_kSitter=NULL_KEY;
 key g_kSitTarget=NULL_KEY;
@@ -94,7 +92,20 @@ key g_kSitTarget=NULL_KEY;
 integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
 
-//Debug(string sStr){llOwnerSay(llGetScriptName() + " DEBUG: " + sStr);}
+///*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    //llSleep(0.1);
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+//*/
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -127,17 +138,29 @@ DoMenu(key kID, integer iAuth){
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
 } 
 
-rebakeSourceRestrictions(integer iSourceNum){
-    if (~iSourceNum) {       // if its a known source, rebake its restrictions
-        list iRestr=llParseString2List(llList2String(g_lRestrictions,iSourceNum),["§"],[]);
-        integer numRestrictions=llGetListLength(iRestr);
-        while (numRestrictions--) {
-            string sBehav=llList2String(iRestr,numRestrictions);
-            //Debug("Re-adding '"+sBehav+"' restriction");
-            ApplyAdd(sBehav);
-            //Debug("(re-add)Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
+rebakeSourceRestrictions(key kSource){
+    //Debug("rebakeSourceRestrictions "+(string)kSource);
+    integer iSourceIndex=llListFindList(g_lRestrictions,[kSource]);
+    if (~iSourceIndex) {       // if its a known source, rebake its restrictions
+        list lRestr=llParseString2List(llList2String(g_lRestrictions,iSourceIndex+1),["§"],[]);
+        while(llGetListLength(lRestr)){
+            ApplyAdd(llList2String(lRestr,-1));
+            lRestr=llDeleteSubList(lRestr,-1,-1);
         }
     }
+}
+
+DoLock(){
+    //lock the collar if there are still restrictions from active traps.  Garbage collection will clear lock if they are stale.
+    integer numSources=llGetListLength(llList2ListStrided(g_lRestrictions,0,-2,2));
+    while (numSources--){
+        if ((key)llList2Key(llList2ListStrided(g_lRestrictions,0,-2,2),numSources)){
+            //an active source has a valid key, so remain locked... return
+            ApplyAdd("detach");
+            return;
+        }
+    }
+    ApplyRem("detach"); //we only get here if none of the active sources is a real source, so remove our lock
 }
 
 setRlvState(){
@@ -154,14 +177,21 @@ setRlvState(){
             llSleep(5); //Make sure the relay is ready before pinging
             //ping inworld object so that they reinstate their restrictions
             integer i;
-            for (i=0;i<llGetListLength(g_lSources);i++) {
-                //Debug("Pinging "+(string)llList2String(g_lSources,i));
-                if ((key)llList2String(g_lSources,i)) {
-                    //Debug("Pinging key "+llList2String(g_lSources,i));
-                    llShout(RELAY_CHANNEL,"ping,"+llList2String(g_lSources,i)+",ping,ping");
-                } else {
-                    //reapply collar's restrictions here
-                    rebakeSourceRestrictions(i);
+            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            }
+            
+            //reinstate exceptions
+            //Debug("adding exceptions:\n"+llDumpList2String(g_lExceptions,",\n"));
+            for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
+                key kSource=(key)llList2String(g_lExceptions,i);
+                list lBehaviours=llParseString2List(llList2String(g_lExceptions,i+1),["§"],[]);
+                while (llGetListLength(lBehaviours)){
+                    //Debug("re-adding exception "+llList2String(lBehaviours,-1)+" for "+(string)kSource);
+                    ApplyAdd(llList2String(lBehaviours,-1)+":"+(string)kSource);
+                    lBehaviours=llDeleteSubList(lBehaviours,-1,-1);
                 }
             }
             llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
@@ -170,125 +200,85 @@ setRlvState(){
             }
             Notify(g_kWearer,"RLV ready! (v" + g_sRlvVersionString + ")",FALSE);
             
-            //lock the collar if there are still restrictions from active traps.  Garbage collection will clear lock if they are stale.
-            if (g_lSources != [] && g_lSources != [NULL_KEY]) ApplyAdd("detach");
+            DoLock();
         }
-    } else {  //someone says RLV off
-        if (g_iRlvActive) {  //its newly deactivated
-            //Debug("RLV went inactive");
-            g_iRlvActive=FALSE;
-            //SafeWord(TRUE);
-            integer numRestrictions = llGetListLength(g_lBaked);
-            while (numRestrictions--){
-                SendCommand(llList2String(g_lBaked,numRestrictions)+"=y"); //remove restriction
-                g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
-            }
-            llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+    } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE, so g_iRLVOn must have just been set FALSE
+        //Debug("RLV went inactive");
+        g_iRlvActive=FALSE;
+        //SafeWord(TRUE);
+        while (llGetListLength(g_lBaked)){
+            SendCommand(llList2String(g_lBaked,-1)+"=y"); //remove restriction
+            g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
-    }
+        llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+    } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above), so g_iRLVOn must have just been set to TRUE, so do viewer check
+        CheckVersion();
+    } //else both are FALSE, its the only combination left, so do nothing
 }
 
 // Book keeping functions
 SendCommand(string sCmd){
     llOwnerSay("@"+sCmd);
-    if (g_iRLVNotify) Notify(g_kWearer, "Sent RLV Command: " + sCmd, TRUE);
-}
-
-HandleCommand(key kID, string sCommand) {
-    sCommand=llToLower(sCommand);
-    list lArgs = llParseString2List(sCommand,["="],[]); //split the command on "="
-    string sCom = llList2String(lArgs,0);               //store first part of command
-    if (llGetSubString(sCom,-1,-1)==":") sCom=llGetSubString(sCom,0,-2);  //remove trailing :
-    string sVal = llList2String(lArgs,1);               //store value
-    
-    if (sVal=="n"||sVal=="add") AddRestriction(kID,sCom); //add a restriction
-    else if (sVal=="y"||sVal=="rem") RemRestriction(kID,sCom);  //remove a restriction
-    else if (sCom=="clear") { //release some or all restrictions FOR THIS OBJECT ONLY
-        //Debug("Got clear command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
-        integer iSource=llListFindList(g_lSources,[kID]);
-        if (~iSource) {   //if this is a known source
-            //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
-            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]); //get a list of this source's restrictions
-            integer numRestrictions=llGetListLength(lSrcRestr);
-            list lRestrictionsToRemove;
-            while (numRestrictions--) { //loop through all of this source's restrictions and store them in a new list
-                string  sBehav=llList2String(lSrcRestr,numRestrictions);  //get the name of the restriction from the list
-                if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
-                    //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
-                    lRestrictionsToRemove+=sBehav;
-                    //RemRestriction(kID,sBehav); //remove the restriction from the list
-                }
-            }
-            lSrcRestr=[]; //delete the list to free memory
-            numRestrictions=llGetListLength(lRestrictionsToRemove);
-            while (numRestrictions--) { //loop through restrictions to remove, and remove them
-                RemRestriction(kID,llList2String(lRestrictionsToRemove,numRestrictions)); //remove the restriction from the list
-            }
-        }
-    } else {         //perform other command
-        //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
-        if (llSubStringIndex(sCom,"tpto")==0) {  //looks like a tpto command, lets check to see if we should honour it or not, and message back if we can if it fails
-            if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
-                Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
-                return;
-            }
-        } else if (sStr=="unsit=force") {
-            if (~llListFindList(g_lBaked,["unsit"]) ) {
-                if ((key)kID) Notify(kID,"Can't force stand due to RLV restrictions",TRUE);
-                return;
-            }
-        }
-        SendCommand(sCommand);
-        if (g_kSitter==NULL_KEY&&llGetSubString(sCommand,0,3)=="sit:") {
-            g_kSitter=kID;
-            //Debug("Sitter:"+(string)(g_kSitter));
-            g_kSitTarget=(key)llGetSubString(sCom,4,-1);
-            //Debug("Sittarget:"+(string)(g_kSitTarget));
-        }
-    }
 }
 
 AddRestriction(key kID, string sBehav) {
-    integer iSource=llListFindList(g_lSources,[kID]);
-    integer iRestr; //flag, -1 if this source has not already set this restriction
 
-    //if (kID != NULL_KEY && (g_lSources == [] || g_lSources == [NULL_KEY])) ApplyAdd("detach"); //if source is collar, AND (sources list is either empty, or just the collar) then lock the collar
-    
-    //add new sources to sources list
-    if (iSource==-1) {  //if this is a restriction from a new source
-        g_lSources+=[kID];    //add it to the sources list
-        g_lRestrictions+=[""]; //add empty restrictions list for new source
-        if ((key)kID) llMessageLinked(LINK_SET, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
-    }
-    
-    //add this restriction to the list for this source
-    list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]);
-    iRestr=llListFindList(lSrcRestr, [sBehav]);
-    if (iRestr==-1) {
-        g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr+[sBehav],"§")],iSource, iSource);
-    }
-    
-    //if its a new restriction for this source, try to apply it
-    if (iRestr==-1) {
-        ApplyAdd(sBehav);
-        if (sBehav=="unsit") {
-            g_kSitTarget = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
-            g_kSitter=kID;
+    if (kID=="rlvex"){  //if its an exception, add it to the exceptions list
+        list lParams = llParseString2List(sBehav, [":"], []);
+        key kAv = (key)llList2String(lParams, 1);
+        string sBehav = llList2String(lParams, 0);
+        
+        //Debug("apply exception ("+(string)kAv+")"+sBehav);
+        if ((key)kAv){
+            integer iSource=llListFindList(g_lExceptions,[kAv]);
+            if (! ~iSource ) {  //if this is an exception for a new agent
+                //Debug("Exception for new agent "+(string)kAv);
+                g_lExceptions+=[kAv,""];    //add UUID and blank list to exceptions list
+                iSource=-2;
+            }
+            //Debug("trying to apply exception ("+(string)kID+")"+sBehav);
+            string sSrcRestr = llList2String(g_lExceptions,iSource+1);
+            if (!(sSrcRestr==sBehav || ~llSubStringIndex(sSrcRestr,"§"+sBehav) || ~llSubStringIndex(sSrcRestr,sBehav+"§")) ) {
+                //Debug("AddRestriction 2.2");
+                sSrcRestr+="§"+sBehav;
+                if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
+
+                g_lExceptions=llListReplaceList(g_lExceptions,[sSrcRestr],iSource+1, iSource+1);
+                ApplyAdd(sBehav+":"+(string)kAv);
+            //} else {
+                //Debug("exception already active ("+(string)kID+")"+sBehav);
+                //Debug(sSrcRestr);
+            }
+        } else {
+            Notify(g_kWearer,"OC doesn't currently support global exceptions",FALSE);
         }
-    }
-    //Debug("Sources:"+llDumpList2String(g_lSources,";"));
-    
-    
-    //if there are sources with valid keys, collar should be locked.
-    integer numSources=llGetListLength(g_lSources);
-    while (numSources--){
-        if ((key)llList2Key(g_lSources,numSources)){
-            //an active source has a valid key, so remain locked... return
-            ApplyAdd("detach");
-            return;
+    } else {      //add this restriction to the list for this source
+        //add new sources to sources list
+        integer iSource=llListFindList(g_lRestrictions,[kID]);
+        if (! ~iSource ) {  //if this is a restriction from a new source
+            g_lRestrictions += [kID,""];
+            iSource=-2;
+            if ((key)kID) llMessageLinked(LINK_SET, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
         }
+    
+        string sSrcRestr = llList2String(g_lRestrictions,iSource+1);
+        //Debug("AddRestriction 2.1");
+        if (!(sSrcRestr==sBehav || ~llSubStringIndex(sSrcRestr,"§"+sBehav) || ~llSubStringIndex(sSrcRestr,sBehav+"§")) ) {
+            //Debug("AddRestriction 2.2");
+            sSrcRestr+="§"+sBehav;
+            if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
+
+            g_lRestrictions=llListReplaceList(g_lRestrictions,[sSrcRestr],iSource+1, iSource+1);
+            //Debug("apply restriction ("+(string)kID+")"+sBehav);
+            ApplyAdd(sBehav);
+            //Debug("AddRestriction 2.3");
+            if (sBehav=="unsit") {
+                g_kSitTarget = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
+                g_kSitter=kID;
+            }
+        }
+        DoLock(); //if there are sources with valid keys, collar should be locked.
     }
-    ApplyRem("detach"); //we only get here if none of the active sources is a real source, so remove our lock
 }
 
 ApplyAdd (string sBehav) {
@@ -296,45 +286,66 @@ ApplyAdd (string sBehav) {
         g_lBaked+=[sBehav];
         SendCommand(sBehav+"=n");
         //Debug("'"+sBehav+"' added to the baked list");
-    } else {
+    //} else {
         //Debug(sBehav+" is already baked");
     }
 }
 
 RemRestriction(key kID, string sBehav) {
-    integer iSource=llListFindList(g_lSources,[kID]); //find index of the source
-    if (~iSource) { //if this source set any restrictions
-        list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource),["§"],[]); //get a list of this source's restrictions
-        integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
-        if (~iRestr) {   //if the restriction is in the list
-            if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
-                g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource);  //remove the restrictions list
-                g_lSources=llDeleteSubList(g_lSources,iSource, iSource);            //remove the source
-                if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
-            } else {                              //else, the source has other restrictions
-                lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
-                g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource,iSource);//store the list in the sources restrictions list
+    if ((string)kID=="rlvex"){
+        //Debug("RemRestriction [rlvex] "+sBehav);
+        list lParams = llParseString2List(sBehav, [":"], []);
+        key kAv = (key)llList2String(lParams, 1);
+        string sBehav = llList2String(lParams, 0);
+        
+        integer iSource=llGetListLength(g_lExceptions);
+        while (iSource){
+            iSource -= 2;
+            key thisAgent=llList2Key(g_lExceptions,iSource);
+            if (thisAgent==kAv || kAv==""){ //if we're clearing this one, or all
+                //Debug("clearing "+(string)sBehav+" for "+(string)thisAgent);
+                list lSrcRestr = llParseString2List(llList2String(g_lExceptions,iSource+1),["§"],[]); //get a list of this source's restrictions
+                integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
+                if (~iRestr) {   //if the restriction is in the list
+                    if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
+                        //Debug("removing last restriction");
+                        g_lExceptions=llDeleteSubList(g_lExceptions,iSource, iSource+1);  //remove the restrictions list
+                    } else {                              //else, the source has other restrictions
+                        lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
+                        g_lExceptions=llListReplaceList(g_lExceptions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
+                        //Debug("removed restriction, there are "+(string)llGetListLength(lSrcRestr)+" remaining "+llDumpList2String(lSrcRestr,"|"));
+                    }
+                    lSrcRestr=[];
+                    ApplyRem(sBehav+":"+(string)thisAgent);
+                //} else {
+                    //Debug("restriction is not in the list");
+                }
             }
-            if (sBehav=="unsit"&&g_kSitter==kID) {
-                g_kSitter=NULL_KEY;
-                g_kSitTarget=NULL_KEY;
+        }
+    } else {
+        //Debug("RemRestriction ("+(string)kID+")"+sBehav);
+        integer iSource=llListFindList(g_lRestrictions,[kID]); //find index of the source
+        if (~iSource) { //if this source set any restrictions
+            list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
+            integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
+            if (~iRestr) {   //if the restriction is in the list
+                if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
+                    g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
+                    if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
+                } else {                              //else, the source has other restrictions
+                    lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
+                    g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
+                }
+                if (sBehav=="unsit"&&g_kSitter==kID) {
+                    g_kSitter=NULL_KEY;
+                    g_kSitTarget=NULL_KEY;
+                }
+                lSrcRestr=[];
+                ApplyRem(sBehav);
             }
-            ApplyRem(sBehav);
         }
+        DoLock();
     }
-    // unlock the collar for the last going relay restriction (change the test if we decide that collar restrictions should un/lock)
-    //if (kID != NULL_KEY && (g_lSources == [] || g_lSources == [NULL_KEY])) ApplyRem("detach");
-    
-    //if there are sources with valid keys, collar should be locked.
-    integer numSources=llGetListLength(g_lSources);
-    while (numSources--){
-        if ((key)llList2Key(g_lSources,numSources)){
-            //an active source has a valid key, so remain locked... return
-            ApplyAdd("detach");
-            return;
-        }
-    }
-    ApplyRem("detach"); //we only get here if none of the active sources is a real source, so remove our lock
 }
 
 ApplyRem(string sBehav) {
@@ -349,7 +360,7 @@ ApplyRem(string sBehav) {
         
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         SendCommand(sBehav+"=y"); //remove restriction
-    } else {
+    //} else {
         //Debug("Restriction '"+sBehav+"'not in baked list"); 
     }
     //Debug("(post rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
@@ -360,10 +371,10 @@ SafeWord(integer iCollarToo) {
     //Debug("Safeword!!!");
     SendCommand("clear");
     g_lBaked=[];
-    g_lSources=[];
     g_lRestrictions=[];
     integer i;
     if (!iCollarToo) {
+        llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
         llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
     }
 }
@@ -383,16 +394,17 @@ integer UserCommand(integer iNum, string sStr, key kID)
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llList2String(lParams, 0);
     string sValue = llToLower(llList2String(lParams, 1));
+    lParams=[];
 
     if (sStr == llToLower(g_sSubMenu) || (sCmd == "menu" && llToUpper(sValue) == g_sSubMenu)) {
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
-    } else if (sStr == "rlvnotify on") {
-        g_iRLVNotify = TRUE;
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=1", "");
-    } else if (sStr == "rlvnotify off") {
-        g_iRLVNotify = FALSE;
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=0", "");
+//    } else if (sStr == "rlvnotify on") {
+//        g_iRLVNotify = TRUE;
+//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=1", "");
+//    } else if (sStr == "rlvnotify off") {
+//        g_iRLVNotify = FALSE;
+//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=0", "");
     } else if (sStr == "rlvon") {
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=1", "");
         g_iRLVOn = TRUE;
@@ -407,19 +419,18 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (iNum == COMMAND_WEARER) {
             Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
         } else {
-            llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
             SafeWord(TRUE);
         }
     } else if (sStr=="showrestrictions") {
-        string sOut="You are being restricted by the following object";
-        if (llGetListLength(g_lSources)==2) sOut+=":";
-        else sOut+="s:";
-        integer i;
-        for (i=0;i<llGetListLength(g_lSources);i++)
-            if ((key)llList2String(g_lSources,i)) 
-                sOut+="\n"+llKey2Name((key)llList2String(g_lSources,i))+" ("+llList2String(g_lSources,i)+"): "+llList2String(g_lRestrictions,i);
+        string sOut="You are being restricted by the following objects";
+        integer numRestrictions=llGetListLength(g_lRestrictions);
+        while (numRestrictions){
+            key kSource=(key)llList2String(g_lRestrictions,numRestrictions);
+            if ((key)kSource) 
+                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             else 
-                sOut+="\nThis " + CTYPE + ": "+llList2String(g_lRestrictions,i);
+                sOut+="\nThis " + CTYPE + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+        }
         Notify(kID,sOut,FALSE);
     }
     return TRUE;
@@ -465,21 +476,23 @@ default {
       //Marine's RLV Viewer - rlvmain parsed result: g_iRlvVersion: 209 (same as before) g_sRlvVersionString: 2.09.01.0 (same as before) g_sRlvaVersionString: NULL (new) g_iRlvaVersion: 0 (new)
 
     state_entry() {
-        //Debug("init");
+        //Debug("Starting");
+        llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         WEARERNAME = llGetDisplayName(g_kWearer);
         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-        CheckVersion();
     }
 
     on_rez(integer param){
+/*        
+        if (g_iProfiled){
+            llScriptProfiler(1);
+            Debug("profiling restarted");
+        }
+*/        
+        g_iRlvActive=FALSE;
         g_iViewerCheck=FALSE;
         g_iRLVOn=FALSE;
-        if (g_iCheckCount==0){  //if checkCount > 0, there is already a check in progress
-            CheckVersion();
-        }
-        //Debug("Sources: "+llDumpList2String("Soures on_rez:\n"+g_lSources,"\n"));
-        //Debug("Baked restrictions on_rez:\n"+llDumpList2String(g_lBaked,"\n"));
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
     }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -497,6 +510,7 @@ default {
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
+                lMenuParams=[];
                 //Debug(sMsg);
                 if (sMsg == TURNON) {
                     UserCommand(iAuth, "rlvon", kAv);
@@ -512,68 +526,39 @@ default {
                     llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
                 }
             }
-        } else if (iNum==RLV_QUERY) {
-            if (g_iRlvActive) {
-                llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
-            } else {
-                llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
-            }
-            
-        } else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if(sToken == "auth_owner" && llStringLength(sValue) > 0) {
-                g_lOwners = llParseString2List(sValue, [","], []);
-                //Debug("owners: " + sValue);
-            } else if (sToken=="Global_lock") {
-                g_iCollarLocked=(integer)sValue;
-            } else if (sToken=="Global_CType") {
-                CTYPE=sValue;
-            } 
-            
+            lParams=[];
+            if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
+            else if (sToken=="Global_CType") CTYPE=sValue;
+            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            integer i = llSubStringIndex(sToken, "_");
-            if(sToken == "auth_owner" && llStringLength(sValue) > 0) {
-                g_lOwners = llParseString2List(sValue, [","], []);
-                //Debug("owners: " + sValue);
-            } else if (sToken=="Global_lock") {
-                g_iCollarLocked=(integer)sValue;
-            } else if (llGetSubString(sToken, 0, i) == g_sScript) {
-                sToken = llGetSubString(sToken, i + 1, -1);
-                if (sToken == "notify") g_iRLVNotify = (integer)sValue;
-                else if (sToken=="on") {
-                    g_iRLVOn=(integer)sValue;
-                    setRlvState();
-                }
+            lParams=[];
+            if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
+            else if (sToken=="Global_CType") CTYPE=sValue;
+            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
+//            else if (sToken=="rlvmain_notify") g_iRLVNotify = (integer)sValue;
+            else if (sToken=="rlvmain_on") {
+                g_iRLVOn=(integer)sValue;
+                setRlvState();
             }
-        } else if (iNum == COMMAND_SAFEWORD) {      // safeWord used, clear rlv settings
-            //Debug("Safeword");
-            llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
-            SafeWord(TRUE);
-        } else if (iNum==COMMAND_RELAY_SAFEWORD) {
-            SafeWord(FALSE);
-        } else if (iNum==RLV_QUERY){
+        } else if (iNum == COMMAND_SAFEWORD) SafeWord(TRUE);
+        else if (iNum==COMMAND_RELAY_SAFEWORD) SafeWord(FALSE);
+        else if (iNum==RLV_QUERY){
             if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
         } else if (iNum == MENUNAME_RESPONSE) {     //sStr will be in form of "parentmenu|menuname"
             list lParams = llParseString2List(sStr, ["|"], []);
             string sThisParent = llList2String(lParams, 0);
             string sChild = llList2String(lParams, 1);
+            lParams=[];
             if (sThisParent == g_sSubMenu) {        //add this str to our menu buttons
                 if (! ~llListFindList(g_lMenu, [sChild])) {
                     g_lMenu += [sChild];
@@ -583,6 +568,7 @@ default {
             list lParams = llParseString2List(sStr, ["|"], []);
             string sThisParent = llList2String(lParams, 0);
             string sChild = llList2String(lParams, 1);
+            lParams=[];
             if (sThisParent == g_sSubMenu) {
                 integer iIndex = llListFindList(g_lMenu, [sChild]);
                 if (iIndex != -1) {
@@ -592,33 +578,91 @@ default {
         }
 
         //these are things we only do if RLV is ready to go
-        if (g_iRlvActive) {                         //if RLV is off, don't even respond to RLV submenu events
+        else if (g_iRlvActive) {                         //if RLV is off, don't even respond to RLV submenu events
             if (iNum == RLV_CMD) {
-                //Debug("Received RLV_CMD:"+sStr+" from "+(string)kID);
-                list sCommands=llParseString2List(sStr,[","],[]);
-                integer i;
-                integer numCommands=llGetListLength(sCommands);
-                for (i=0;i<numCommands;i++) 
-                    HandleCommand(kID,llList2String(sCommands,i));
+                //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
+                list lCommands=llParseString2List(llToLower(sStr),[","],[]);
+                
+                while (llGetListLength(lCommands)){
+                    string sCommand=llToLower(llList2String(lCommands,0));
+                    list lArgs = llParseString2List(sCommand,["="],[]); //split the command on "="
+                    string sCom = llList2String(lArgs,0);               //store first part of command
+                    if (llGetSubString(sCom,-1,-1)==":") sCom=llGetSubString(sCom,0,-2);  //remove trailing :
+                    string sVal = llList2String(lArgs,1);               //store value
+                    lArgs=[];
+                    
+                    if (sVal=="n"||sVal=="add") AddRestriction(kID,sCom); //add a restriction
+                    else if (sVal=="y"||sVal=="rem") RemRestriction(kID,sCom);  //remove a restriction
+                    else if (sCom=="clear") { //release some or all restrictions FOR THIS OBJECT ONLY
+                        //Debug("Got clear command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
+                        integer iSource=llListFindList(g_lRestrictions,[kID]);
+                        if (kID=="rlvex"){
+                            RemRestriction(kID,sVal);
+                        } else if (~iSource) {   //if this is a known source
+                            //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
+                            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
+                            integer numRestrictions=llGetListLength(lSrcRestr);
+                            list lRestrictionsToRemove;
+                            
+                            while (llGetListLength(lSrcRestr)) {  //loop through all of this source's restrictions and store them in a new list
+                                string  sBehav=llList2String(lSrcRestr,-1);  //get the name of the restriction from the list
+                                if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
+                                    //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
+                                    lRestrictionsToRemove+=sBehav;
+                                    //RemRestriction(kID,sBehav); //remove the restriction from the list
+                                }
+                                lSrcRestr=llDeleteSubList(lSrcRestr,-1,-1);
+                            }
+                            lSrcRestr=[]; //delete the list to free memory
+                            //Debug("removing restrictions:"+llDumpList2String(lRestrictionsToRemove,"|")+" for "+(string)kID);
+                            while(llGetListLength(lRestrictionsToRemove)){
+                                RemRestriction(kID,llList2String(lRestrictionsToRemove,-1)); //remove the restriction from the list
+                                lRestrictionsToRemove=llDeleteSubList(lRestrictionsToRemove,-1,-1);
+                            }
+                        }
+                    } else {         //perform other command
+                        //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
+                        if (llSubStringIndex(sCom,"tpto")==0) {  //looks like a tpto command, lets check to see if we should honour it or not, and message back if we can if it fails
+                            if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
+                                if ((key)kID) Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
+                                return;
+                            }
+                        } else if (sStr=="unsit=force") {
+                            if (~llListFindList(g_lBaked,["unsit"]) ) {
+                                if ((key)kID) Notify(kID,"Can't force stand due to RLV restrictions",TRUE);
+                                return;
+                            }
+                        }
+                        SendCommand(sCommand);
+                        if (g_kSitter==NULL_KEY&&llGetSubString(sCommand,0,3)=="sit:") {
+                            g_kSitter=kID;
+                            //Debug("Sitter:"+(string)(g_kSitter));
+                            g_kSitTarget=(key)llGetSubString(sCom,4,-1);
+                            //Debug("Sittarget:"+(string)(g_kSitTarget));
+                        }
+                    }
+                
+                    lCommands=llDeleteSubList(lCommands,0,0);
+                    //Debug("Command list now "+llDumpList2String(lCommands,"|"));
+                }
             } else if (iNum == COMMAND_RLV_RELAY) {
                 if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
                     //Debug("Received pong:"+sStr+" from "+(string)kID);
                     if (kID==g_kSitter) SendCommand("sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
-                    integer iSourceNum=llListFindList(g_lSources, [kID]);   //find the source in the sources list
-                    rebakeSourceRestrictions(iSourceNum);
+                    rebakeSourceRestrictions(kID);
                 }
             }
         }
     }
 
     timer() {
-        llListenRemove(g_iListener);
-        llSetTimerEvent(0.0);
         if (g_iCheckCount <= g_iMaxViewerChecks) {   //no response in timeout period, try again
             CheckVersion();
         } else {    //we've waited long enough, and are out of retries
-            g_iCheckCount=0;
             llSetTimerEvent(0.0);
+            llListenRemove(g_iListener);  
+            g_iCheckCount=0;
+            //llSetTimerEvent(0.0);
             
             g_iViewerCheck = FALSE;
             setRlvState();
@@ -652,6 +696,14 @@ default {
             }
 
         }
+/*        
+        if (change & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
         if (change & CHANGED_INVENTORY) { //A script may have been recompiled or added, lets refresh the RLV state for other scripts
             if (g_iRlvActive==TRUE) {
                 llSleep(2);
