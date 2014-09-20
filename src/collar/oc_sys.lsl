@@ -288,7 +288,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             //inlined old "Lock()" function        
             g_iLocked = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
-            llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
 
