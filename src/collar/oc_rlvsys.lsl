@@ -419,7 +419,15 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (iNum == COMMAND_WEARER) {
             Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
         } else {
-            SafeWord(TRUE);
+            //leave lock and exceptions intact, clear everything else
+            integer numRestrictions=llGetListLength(g_lRestrictions);
+            while (numRestrictions){
+                numRestrictions -= 2;
+                string kSource=llList2String(g_lRestrictions,numRestrictions);
+                if (kSource != "main" && kSource != "rlvex"){
+                    llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
+                }
+            }
         }
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
