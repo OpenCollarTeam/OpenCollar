@@ -48,6 +48,9 @@ key g_kCurrentBellSound ; // curent bell sound key
 integer g_iCurrentBellSound; // curent bell sound sumber
 integer g_iBellSoundCount; // number of avail bell sounds
 
+key g_kLastToucher ; // store tocher key 
+float g_fNextTouch ;  // store time for the next touch
+float g_fTouch = 10.0 ; // timeout for touch chat notify
 
 list g_lBellElements; // list with number of prims related to the bell
 
@@ -618,13 +621,20 @@ default
 */        
     }
     
+
     touch_start(integer n)
     {
         if (g_iTouchOn && g_iBellShow && !g_iHide && llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]) != -1)
         {
+            key toucher = llDetectedKey(0);
             g_fNextRing=llGetTime()+g_fSpeed;
             llPlaySound(g_kCurrentBellSound,g_fVolume);
-            llSay(0, llKey2Name(llDetectedKey(0)) + " plays with the trinket on " + llKey2Name(g_kWearer) + "'s collar." );
+            if (toucher != g_kLastToucher || llGetTime() > g_fNextTouch)
+            {
+                g_fNextTouch=llGetTime()+g_fTouch;
+                g_kLastToucher = toucher;
+                llSay(0, llKey2Name(toucher) + " plays with the trinket on " + llKey2Name(g_kWearer) + "'s collar." );
+            }
         }
     }
 }
