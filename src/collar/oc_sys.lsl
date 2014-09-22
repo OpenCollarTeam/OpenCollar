@@ -604,6 +604,18 @@ default
             }
         }
         else if (UserCommand(iNum, sStr, kID, FALSE)) return;
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+            integer iInd = llSubStringIndex(sStr, "=");
+            string sValue = llGetSubString(sStr, iInd + 1, -1);
+            //We have a broadcasted change to WEARERNAME to work with
+            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
+            else {
+                g_kWearer = llGetOwner();
+                WEARERNAME = llGetDisplayName(g_kWearer);
+                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+            }
+        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
