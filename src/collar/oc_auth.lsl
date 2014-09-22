@@ -562,18 +562,18 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     } else if (sCommand == "runaway"){
         list lButtons=[];
         string message="Only the wearer or an Owner can access this menu";
-        if (iNum == COMMAND_WEARER){  //wearer called for menu
+        if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
             if (g_iRunawayDisable){
-                lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
-                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly primary owners can restore this ability.";
+                lButtons=["Stay","Enable"];
+                message="\nYou chose to disable the runaway function.\n\nAs an owner you can restore this ability if desired.";
             } else {
                 lButtons=["Runaway!", "Disable"];
                 message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
             }
-        } else if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
+        } else if (kID == g_kWearer){  //wearer called for menu
             if (g_iRunawayDisable){
-                lButtons=["Stay","Enable"];
-                message="\nYou chose to disable the runaway function.\n\nAs an owner you can restore this ability if desired.";
+                lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
+                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly primary owners can restore this ability.";
             } else {
                 lButtons=["Runaway!", "Disable"];
                 message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
