@@ -633,7 +633,7 @@ default
                         }
                     }
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
-                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "secowner=", "");
+                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "secowners=", "");
                     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
                     Notify(g_kWearer, "Runaway finished, the " + CTYPE + " will now release locks!",FALSE);
                     // moved reset request from settings to here to allow noticifation of owners.
