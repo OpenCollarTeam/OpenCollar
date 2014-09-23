@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - listener                              //
-//                                 version 3.982                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -128,8 +128,8 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
             else llInstantMessage(kID, sMsg);
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }
-    } else {
-        llOwnerSay("Bad key, can't send notify "+(string)kID+":"+sMsg);
+    //} else {
+        //Debug("Bad key, can't notify:"+sMsg);
     }
 }
 
@@ -145,7 +145,7 @@ NotifyOwners(string sMsg, string comments) {
                 //Debug("notifying " + (string)kAv);
                 //Debug("Sending notify to "+(string)kAv);
                 Notify(kAv, sMsg,FALSE);
-            } else {
+            //} else {
                 //Debug("Not sending notify to "+(string)kAv);
             }
         } else {
@@ -341,14 +341,15 @@ default
             string sw = sMsg; // we'll have to shave pieces off as we go to test
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
-            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))")
-                sw = llGetSubString(sw, 2, -3);
-            if (llSubStringIndex(sw, g_sPrefix)==0)
-                sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
-            if (sw == g_sSafeWord)
-            {
+            if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
+            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 2, -3);
+            if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
+            if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
-                llOwnerSay("You used your safeword, your owner will be notified you did.");
+                
+                llOwnerSay("You used your safeword, your owners will be notified you did.");
+                NotifyOwners("Your sub " + WEARERNAME + " has used the safeword. Please check on their well-being in case further care is required.","");
+                llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
             }
         }
