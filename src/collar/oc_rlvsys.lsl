@@ -416,11 +416,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             setRlvState();
         } else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) {
-            Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
-        } else {
-            SafeWord();
-        }
+        if (iNum == COMMAND_WEARER) Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
+        else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
         integer numRestrictions=llGetListLength(g_lRestrictions);
