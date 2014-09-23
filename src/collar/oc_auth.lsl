@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.982                                  //
+//                                 version 3.980                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -715,16 +715,6 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == "Global_prefix") SetPrefix(sValue);
-        } else if (iNum == COMMAND_SAFEWORD) {
-            string sSubName = llKey2Name(g_kWearer);
-            string sSubFirstName = llList2String(llParseString2List(sSubName, [" "], []), 0);
-            integer n;
-            integer iStop = llGetListLength(g_lOwners+g_lTempOwners);
-            for (n = 0; n < iStop; n += 2) {
-                key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
-                Notify(kOwner, "Your sub " + sSubName + " has used the safeword. Please check on " + sSubFirstName +"'s well-being and if further care is required.",FALSE);
-            }
-            llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
         }        
     // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
         //added for attachment auth (Garvin)
