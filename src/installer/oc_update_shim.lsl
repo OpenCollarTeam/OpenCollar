@@ -238,7 +238,7 @@ default
                     }
                     
                     // tell scripts to rebuild menus (in case plugins have been removed)
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "refreshmenu", llGetOwner());
+                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "fixmenus", llGetOwner());
                     
                     // remove the script pin
                     llSetRemoteScriptAccessPin(0);
