@@ -367,7 +367,7 @@ ApplyRem(string sBehav) {
 }
 
 
-SafeWord(integer iCollarToo) {
+SafeWord() {
     //leave lock and exceptions intact, clear everything else
     integer numRestrictions=llGetListLength(g_lRestrictions);
     while (numRestrictions){
