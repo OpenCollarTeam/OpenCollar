@@ -368,14 +368,14 @@ ApplyRem(string sBehav) {
 
 
 SafeWord(integer iCollarToo) {
-    //Debug("Safeword!!!");
-    SendCommand("clear");
-    g_lBaked=[];
-    g_lRestrictions=[];
-    integer i;
-    if (!iCollarToo) {
-        llMessageLinked(LINK_SET, RLV_CLEAR, "", NULL_KEY);
-        llMessageLinked(LINK_SET,RLV_REFRESH,"",NULL_KEY);
+    //leave lock and exceptions intact, clear everything else
+    integer numRestrictions=llGetListLength(g_lRestrictions);
+    while (numRestrictions){
+        numRestrictions -= 2;
+        string kSource=llList2String(g_lRestrictions,numRestrictions);
+        if (kSource != "main" && kSource != "rlvex"){
+            llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
+        }
     }
 }
 // End of book keeping functions
@@ -419,15 +419,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (iNum == COMMAND_WEARER) {
             Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
         } else {
-            //leave lock and exceptions intact, clear everything else
-            integer numRestrictions=llGetListLength(g_lRestrictions);
-            while (numRestrictions){
-                numRestrictions -= 2;
-                string kSource=llList2String(g_lRestrictions,numRestrictions);
-                if (kSource != "main" && kSource != "rlvex"){
-                    llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
-                }
-            }
+            SafeWord();
         }
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -557,8 +549,8 @@ default {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
             }
-        } else if (iNum == COMMAND_SAFEWORD) SafeWord(TRUE);
-        else if (iNum==COMMAND_RELAY_SAFEWORD) SafeWord(FALSE);
+        } else if (iNum == COMMAND_SAFEWORD) SafeWord();
+        else if (iNum==COMMAND_RELAY_SAFEWORD) SafeWord();
         else if (iNum==RLV_QUERY){
             if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
