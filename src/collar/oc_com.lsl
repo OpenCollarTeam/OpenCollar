@@ -343,7 +343,7 @@ default
             // and may include prefix
             if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))")
                 sw = llGetSubString(sw, 2, -3);
-            if (!llSubStringIndex(sw, g_sPrefix)==0)
+            if (llSubStringIndex(sw, g_sPrefix)==0)
                 sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord)
             {
