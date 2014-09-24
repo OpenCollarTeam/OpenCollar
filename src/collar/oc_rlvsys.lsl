@@ -377,6 +377,7 @@ SafeWord() {
             llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
         }
     }
+    llMessageLinked(LINK_SET,RLV_CLEAR,"","");
 }
 // End of book keeping functions
 
