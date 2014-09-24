@@ -370,7 +370,7 @@ SafeWord() {
     while (numRestrictions){
         numRestrictions -= 2;
         string kSource=llList2String(g_lRestrictions,numRestrictions);
-        if (kSource != "main" && kSource != "rlvex"){
+        if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0){
             llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
         }
     }
