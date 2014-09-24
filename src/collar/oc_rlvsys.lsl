@@ -12,6 +12,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//201409242030
+
 integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
@@ -207,18 +209,13 @@ setRlvState(){
         g_iRlvActive=FALSE;
         //SafeWord(TRUE);
         while (llGetListLength(g_lBaked)){
-            SendCommand(llList2String(g_lBaked,-1)+"=y"); //remove restriction
+            llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
     } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above), so g_iRLVOn must have just been set to TRUE, so do viewer check
         CheckVersion();
     } //else both are FALSE, its the only combination left, so do nothing
-}
-
-// Book keeping functions
-SendCommand(string sCmd){
-    llOwnerSay("@"+sCmd);
 }
 
 AddRestriction(key kID, string sBehav) {
@@ -284,7 +281,7 @@ AddRestriction(key kID, string sBehav) {
 ApplyAdd (string sBehav) {
     if (! ~llListFindList(g_lBaked, [sBehav])) {  //if this restriction is not already baked
         g_lBaked+=[sBehav];
-        SendCommand(sBehav+"=n");
+        llOwnerSay("@"+sBehav+"=n");
         //Debug("'"+sBehav+"' added to the baked list");
     //} else {
         //Debug(sBehav+" is already baked");
@@ -328,7 +325,7 @@ RemRestriction(key kID, string sBehav) {
         if (~iSource) { //if this source set any restrictions
             list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
             integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
-            if (~iRestr) {   //if the restriction is in the list
+            if (~iRestr || sBehav=="ALL") {   //if the restriction is in the list
                 if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
                     g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
                     if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
@@ -359,7 +356,7 @@ ApplyRem(string sBehav) {
         }
         
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
-        SendCommand(sBehav+"=y"); //remove restriction
+        llOwnerSay("@"+sBehav+"=y"); //remove restriction
     //} else {
         //Debug("Restriction '"+sBehav+"'not in baked list"); 
     }
@@ -381,23 +378,18 @@ SafeWord() {
 }
 // End of book keeping functions
 
-integer UserCommand(integer iNum, string sStr, key kID)
-{
-    if (iNum == COMMAND_EVERYONE) {
-        return TRUE;  // No command for people with no privilege in this plugin.
-    } else if (sStr=="runaway") { // some scripts reset on runaway, we want to resend RLV state.
-        llSleep(2); //give some time for scripts to get ready.
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on="+(string)g_iRLVOn, "");
-    } else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) {
-        return FALSE; // sanity check
-    }
+UserCommand(integer iNum, string sStr, key kID) {
+    if (iNum == COMMAND_EVERYONE) return;  // No command for people with no privilege in this plugin.
     
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llList2String(lParams, 0);
     string sValue = llToLower(llList2String(lParams, 1));
     lParams=[];
 
-    if (sStr == llToLower(g_sSubMenu) || (sCmd == "menu" && llToUpper(sValue) == g_sSubMenu)) {
+    if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
+        llSleep(2); //give some time for scripts to get ready.
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on="+(string)g_iRLVOn, "");
+    } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
 //    } else if (sStr == "rlvnotify on") {
@@ -431,7 +423,6 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         Notify(kID,sOut,FALSE);
     }
-    return TRUE;
 }
 
 
@@ -498,8 +489,9 @@ default {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-        } else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
-        else if (UserCommand(iNum, sStr, kID)) return;
+        } 
+        else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
+        else if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             if (kID == kMenuID) {
@@ -631,7 +623,7 @@ default {
                                 return;
                             }
                         }
-                        SendCommand(sCommand);
+                        llOwnerSay("@"+sCommand);
                         if (g_kSitter==NULL_KEY&&llGetSubString(sCommand,0,3)=="sit:") {
                             g_kSitter=kID;
                             //Debug("Sitter:"+(string)(g_kSitter));
@@ -646,7 +638,7 @@ default {
             } else if (iNum == COMMAND_RLV_RELAY) {
                 if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
                     //Debug("Received pong:"+sStr+" from "+(string)kID);
-                    if (kID==g_kSitter) SendCommand("sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
+                    if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
                     rebakeSourceRestrictions(kID);
                 }
             }
