@@ -667,8 +667,8 @@ default
         }
         else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR)
         {
-            if (g_iLocked) llMessageLinked(LINK_SET, RLV_CMD, "detach=n", NULL_KEY);
-            else llMessageLinked(LINK_SET, RLV_CMD, "detach=y", NULL_KEY);
+            if (g_iLocked) llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
+            else llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
         }
     }
 
