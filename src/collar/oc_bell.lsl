@@ -112,9 +112,11 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 } 
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
+{
     if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
+    else
+    {
         if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
