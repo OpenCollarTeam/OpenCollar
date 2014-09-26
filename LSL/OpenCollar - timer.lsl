@@ -128,18 +128,18 @@ integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
 // messages for RLV commands
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+//integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 
 // messages for poses and couple anims
-integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
-integer CPLANIM_PERMREQUEST = 7002;//id should be av's key, str should be cmd name "hug", "kiss", etc
-integer CPLANIM_PERMRESPONSE = 7003;//str should be "1" for got perms or "0" for not.  id should be av's key
-integer CPLANIM_START = 7004;//str should be valid anim name.  id should be av
-integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
+//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
+//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
+//integer CPLANIM_PERMREQUEST = 7002;//id should be av's key, str should be cmd name "hug", "kiss", etc
+//integer CPLANIM_PERMRESPONSE = 7003;//str should be "1" for got perms or "0" for not.  id should be av's key
+//integer CPLANIM_START = 7004;//str should be valid anim name.  id should be av
+//integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -167,36 +167,15 @@ string PeelToken(string in, integer slot)
     if (!slot) return llGetSubString(in, 0, i);
     return llGetSubString(in, i + 1, -1);
 }
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan>0)
-    {
-        iChan=iChan*(-1);
-    }
-    if (iChan > -10000)
-    {
-        iChan -= 30000;
-    }
-    return iChan;
-}
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
-    if (kID == g_kWearer)
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else
     {
-        llOwnerSay(sMsg);
-    }
-    else if (llGetAgentSize(kID) != ZERO_VECTOR)
-    {
-        llInstantMessage(kID,sMsg);
-        if (iAlsoNotifyWearer)
-        {
-            llOwnerSay(sMsg);
-        }
-    }
-    else // remote request
-    {
-        llRegionSayTo(kID, GetOwnerChannel(g_kWearer, 1111), sMsg);
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
 
