@@ -74,7 +74,8 @@ Notify(key _k, string _m, integer NotifyWearer)
     if (_k == gkWear) llOwnerSay(_m);
     else
     {
-        if (llGetAgentSize(_k) != ZERO_VECTOR) llInstantMessage(_k, _m);
+        if (llGetAgentSize(_k)) llRegionSayTo(_k, 0, _m);
+        else llInstantMessage(_k, _m);
         if (NotifyWearer) llOwnerSay(_m);
     }
 }
