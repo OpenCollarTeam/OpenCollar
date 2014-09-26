@@ -113,7 +113,6 @@ Debug(string sStr) {
 }
 */
 
-
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
