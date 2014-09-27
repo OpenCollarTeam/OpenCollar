@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.985                                  //
+//                                 version 3.987                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -295,11 +295,11 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         if (kPerson != g_kWearer) {
             Notify(g_kWearer, "Added " + sName + " to " + sToken + ".", FALSE);
             if (sToken == "owner") 
-                Notify(g_kWearer, "Your owner can have a lot  power over you and you consent to that by making them your owner on your " + CTYPE + ". They can leash you, put you in poses, lock your " + CTYPE + ", see your location and what you say in local chat.  If you are using RLV they can  undress you, make you wear clothes, restrict your  chat, IMs and TPs as well as force TP you anywhere they like. Please read the help for more info. If you do not consent, you can use the command \"" + g_sPrefix + "runaway\" to remove all owners from the " + CTYPE + ".", FALSE);
+                Notify(g_kWearer, "Your owner can have a lot  power over you and you consent to that by adding " + sName + " as owner to your " + CTYPE + ". They can leash you, put you in poses and lock your " + CTYPE + ". If you are using RLV they can undress you, make you wear clothes, restrict your  chat, IMs and TPs as well as force TP you anywhere they like. Please read the [http://www.opencollar.at/manual.html manual on the web] for more info. If you do not consent, you can use the command \"" + g_sPrefix + "runaway\" to remove all owners from the " + CTYPE + ".", FALSE);
         }
 
         if (sToken == "owner" || sToken == "secowner") {
-            Notify(kPerson, "You have been added to the " + sToken + " list on " + llKey2Name(g_kWearer) + "'s " + CTYPE + ".\nFor help concerning the " + CTYPE + " usage either say \"" + g_sPrefix + "help\" in chat or go to http://www.opencollar.at/user-guide.html .",FALSE);
+            Notify(kPerson, "You have been added to the " + sToken + " list on " + llKey2Name(g_kWearer) + "'s " + CTYPE + ". For help concerning the " + CTYPE + " usage, please see the [http://www.opencollar.at/manual.html manual on the web] or type \"" + g_sPrefix + "menu\" in chat to explore the " + CTYPE + " and find links to dedicated manual pages in the menu headers.",FALSE);
             llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
         }
         
