@@ -124,7 +124,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 //            if (~llListFindList(g_lHudComms,[kID])){
 //                llRegionSayTo(kID,g_iHUDChan,sMsg);
 //            } else 
-            if (llGetAgentSize(kID) != ZERO_VECTOR) llRegionSayTo(kID,0,sMsg);
+            if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }

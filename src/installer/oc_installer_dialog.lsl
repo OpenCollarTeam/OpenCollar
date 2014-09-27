@@ -79,20 +79,14 @@ key g_kWearer;
 Notify(key keyID, string sMsg, integer nAlsoNotifyWearer)
 {
     Debug((string)keyID);
-    if (keyID == g_kWearer)
-    {
-        llOwnerSay(sMsg);
-    }
+    if (keyID == g_kWearer) llOwnerSay(sMsg);
     else
     {
-        llInstantMessage(keyID,sMsg);
-        if (nAlsoNotifyWearer)
-        {
-            llOwnerSay(sMsg);
-        }
+        if (llGetAgentSize(keyID)) llRegionSayTo(keyID,0,sMsg);
+        else llInstantMessage(keyID,sMsg);
+        if (nAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
 
 list CharacterCountCheck(list lIn, key ID)
 // checks if any of the times is over 24 characters and removes them if needed
