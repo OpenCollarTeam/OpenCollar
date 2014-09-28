@@ -335,7 +335,7 @@ Unleash(key kCmdGiver)
                         sCmdMess= "You release " + WEARERNAME + " from following you.";
                         sWearMess = sCmdGiver + " releases you from following.";
                     } else {
-                        sCmdMess= "You unleash  " + WEARERNAME + ".";
+                        sCmdMess= "You unleash " + WEARERNAME + ".";
                         sWearMess = sCmdGiver + " unleashes you.";
                     }
                 } else {
