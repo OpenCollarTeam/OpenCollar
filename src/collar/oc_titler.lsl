@@ -203,6 +203,7 @@ default{
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                 if (llList2Integer(llGetLinkPrimitiveParams(linkNumber,[PRIM_TYPE]),0)==PRIM_TYPE_BOX){
                     g_iTextPrim = linkNumber;
+                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide"]);
                     linkNumber = 0 ; // break while cycle
                 } else {
                     llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
