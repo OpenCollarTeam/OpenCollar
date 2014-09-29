@@ -250,7 +250,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         
         //store temp list
         if (sToken=="owner") g_lOwners = lPeople;
-        else if (sToken=="tmepowner") g_lTempOwners = lPeople;
+        else if (sToken=="tempowner") g_lTempOwners = lPeople;
         else if (sToken=="secowner") g_lSecOwners = lPeople;
         else if (sToken=="blacklist") g_lBlackList = lPeople;
 
