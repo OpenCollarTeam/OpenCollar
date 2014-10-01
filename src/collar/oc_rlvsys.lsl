@@ -421,6 +421,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             else 
                 sOut+="\nThis " + CTYPE + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+            numRestrictions -= 2;
         }
         Notify(kID,sOut,FALSE);
     }
