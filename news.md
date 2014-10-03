@@ -1,5 +1,5 @@
-Issue: 20141109.1
+Issue: 20141110.1
 
-A new Spy app for the OpenCollar is here!
+Sprechen Sie Deutsch?
 
-Now available at [http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21 The Temple of the Collar]. Detailed information can be found on the [http://www.opencollar.at/blog OpenCollar Website].
+Vist us at [http://maps.secondlife.com/secondlife/Keraxic/52/199/25 Der Tempel des Collars]! Detailed information can be found on the [http://www.opencollar.at/blog OpenCollar Website].
