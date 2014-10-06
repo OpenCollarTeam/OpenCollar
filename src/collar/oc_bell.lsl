@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.988                                  //
+//                                 version 3.989                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -20,8 +20,7 @@ string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 key g_kDialogID;
 
-list g_lLocalButtons = ["Vol +","Delay +","Next Sound","Vol -","Delay -","Ring it!"];
-
+list g_lLocalButtons = ["Next Sound","Vol +","Delay +","Ring it!","Vol -","Delay -"];
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
 string g_sVolToken="bellvolume"; // token for saving bell volume
@@ -32,16 +31,14 @@ float g_fSpeedMin=0.5; // stepping for Speed adjusting
 float g_fSpeedMax=5.0; // stepping for Speed adjusting
 
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
-string g_sBellOn="☐ WalkRing"; // menu text of bell on
-string g_sBellOff="☒ WalkRing"; // menu text of bell off
+string g_sBellOn="    ON"; // menu text of bell on
+string g_sBellOff="    OFF"; // menu text of bell off
 integer g_iTouchOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
-string g_sTouchOn="☐ TouchRing"; // menu text of touch on
-string g_sTouchOff="☒ TouchRing"; // menu text of touch off
 string g_sTouchToken="bellvolume"; // token for saving bell volume
 
 integer g_iBellShow=FALSE; // is the bell visible
-string g_sBellShow="SHOW"; //menu text of bell visible
-string g_sBellHide="HIDE"; //menu text of bell hidden
+string g_sBellShow="    SHOW"; //menu text of bell visible
+string g_sBellHide="    HIDE"; //menu text of bell hidden
 
 list g_listBellSounds=["7b04c2ee-90d9-99b8-fd70-8e212a72f90d","b442e334-cb8a-c30e-bcd0-5923f2cb175a","1acaf624-1d91-a5d5-5eca-17a44945f8b0","5ef4a0e7-345f-d9d1-ae7f-70b316e73742","da186b64-db0a-bba6-8852-75805cb10008","d4110266-f923-596f-5885-aaf4d73ec8c0","5c6dd6bc-1675-c57e-0847-5144e5611ef9","1dc1e689-3fd8-13c5-b57f-3fedd06b827a"]; // list with bell sounds
 key g_kCurrentBellSound ; // curent bell sound key
@@ -162,24 +159,13 @@ DoMenu(key kID, integer iAuth)
     if (g_iBellShow) // the bell is hidden
     {
         lMyButtons+= g_sBellHide;
-        sPrompt += " and shown.\n";
+        sPrompt += " and shown.\n\n";
     }
     else
     {
         lMyButtons+= g_sBellShow;
-        sPrompt += " and NOT shown.\n";
+        sPrompt += " and NOT shown.\n\n";
     }
-    
-    if (g_iTouchOn) // the bell is touchable
-    {
-        lMyButtons+= g_sTouchOff;
-        sPrompt += " and ring on touch.\n\n";
-    }
-    else
-    {
-        lMyButtons+= g_sTouchOn;
-        sPrompt += " and NOT ring on touch.\n\n";
-    }    
 
     // and show the volume and timing of the bell sound
     sPrompt += "The volume of the bell is now: "+(string)((integer)(g_fVolume*10))+"/10.\n";
@@ -533,7 +519,7 @@ default
                     }
                 }
                 else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
-                    // someone wants to change ioif the bell rings or not
+                    // someone wants to change if the bell rings or not
                 {
                     string s;
                     if (g_iBellOn>0) s="bell off";
@@ -544,12 +530,8 @@ default
                     // someone wants to hide or show the bell
                 {
                     g_iBellShow=!g_iBellShow;
-                    SetBellElementAlpha();
-                    SaveBellSettings();
-                }
-                else if (sMessage == g_sTouchOff || sMessage == g_sTouchOn)
-                {
                     g_iTouchOn=!g_iTouchOn;
+                    SetBellElementAlpha();
                     SaveBellSettings();
                 }
                 else if (~llListFindList(g_lButtons, [sMessage]))
