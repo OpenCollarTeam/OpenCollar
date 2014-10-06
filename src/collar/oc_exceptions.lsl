@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.988                                  //
+//                                 version 3.989                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -545,6 +545,13 @@ ClearEx()
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
+    if (iNum == COMMAND_WEARER) {
+        if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
+            Notify(kID,"Sorry, only primary owners can manage exceptions",TRUE);
+            llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
+        }
+        return TRUE;
+    }
     if (iNum != COMMAND_OWNER) return FALSE; // Only Primary Owners
     if (sStr == "runaway") llResetScript();
     string sLower = llToLower(sStr);
