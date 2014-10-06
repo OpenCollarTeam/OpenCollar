@@ -100,6 +100,8 @@ integer DIALOG_RESPONSE = -9001;
 string UPMENU = "BACK";//when your menu hears this, give the parent menu
 string g_sScript;
 
+string WEARERNAME;
+
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -366,6 +368,8 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // key of the owner
         g_kWearer=llGetOwner();
+        WEARERNAME = llGetDisplayName(g_kWearer);
+        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
 
         // reset script time used for ringing the bell in intervalls
         llResetTime();
@@ -414,6 +418,18 @@ default
                 {
                     g_lButtons = llDeleteSubList(g_lButtons , iIndex, iIndex);
                 }
+            }
+        }
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE)
+            && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+        integer iInd = llSubStringIndex(sStr, "=");
+        string sValue = llGetSubString(sStr, iInd + 1, -1);
+        //We have a broadcasted change to WEARERNAME to work with
+        if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
+        else {
+            g_kWearer = llGetOwner();
+            WEARERNAME = llGetDisplayName(g_kWearer);
+            if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
             }
         }
         else if (iNum == LM_SETTING_RESPONSE)
@@ -613,7 +629,7 @@ default
             {
                 g_fNextTouch=llGetTime()+g_fTouch;
                 g_kLastToucher = toucher;
-                llSay(0, llKey2Name(toucher) + " plays with the trinket on " + llKey2Name(g_kWearer) + "'s collar." );
+                llSay(0, llKey2Name(toucher) + " plays with the trinket on " + WEARERNAME + "'s collar." );
             }
         }
     }
