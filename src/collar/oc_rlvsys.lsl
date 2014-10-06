@@ -12,7 +12,7 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//201409242030
+//201410060330
 
 integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
@@ -21,7 +21,6 @@ integer g_iRlvActive = FALSE;
 //integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
 float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
-integer g_iVersionChan = 293847;
 integer g_iRlvVersion;
 integer g_iRlvaVersion;
 integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
@@ -118,17 +117,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     }
 }
 
-CheckVersion(){
-    //Debug("Sending viewer check string");
-    if (g_iListener){
-        llListenRemove(g_iListener);
-    }
-    g_iListener = llListen(g_iVersionChan, "", g_kWearer, "");
-    llSetTimerEvent(g_fVersionTimeOut);
-    g_iCheckCount++;
-    llOwnerSay("@versionnew=" + (string)g_iVersionChan);
-}
-
 DoMenu(key kID, integer iAuth){
     list lButtons;
     if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
@@ -205,7 +193,7 @@ setRlvState(){
             
             DoLock();
         }
-    } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE, so g_iRLVOn must have just been set FALSE
+    } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
         //SafeWord(TRUE);
@@ -214,9 +202,15 @@ setRlvState(){
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
         llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
-    } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above), so g_iRLVOn must have just been set to TRUE, so do viewer check
-        CheckVersion();
-    } //else both are FALSE, its the only combination left, so do nothing
+    } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
+        if (g_iListener) llListenRemove(g_iListener);
+        g_iListener = llListen(293847, "", g_kWearer, "");
+        llSetTimerEvent(g_fVersionTimeOut);
+        g_iCheckCount=0;
+        llOwnerSay("@versionnew=293847");
+    } else {  //else both are FALSE, its the only combination left, No need to do viewercheck if g_iRLVOn is FALSE
+        llSetTimerEvent(0.0);
+    }
 }
 
 AddRestriction(key kID, string sBehav) {
@@ -648,8 +642,9 @@ default {
     }
 
     timer() {
-        if (g_iCheckCount <= g_iMaxViewerChecks) {   //no response in timeout period, try again
-            CheckVersion();
+        if (g_iCheckCount++ <= g_iMaxViewerChecks) {   //no response in timeout period, try again
+            llOwnerSay("@versionnew=293847");
+            if (g_iCheckCount==3) llOwnerSay("If your viewer doesn't support RLV, you can stop the \"@versioncheck\" message by switching RLV off in your "+CTYPE+"'s RLV menu.");
         } else {    //we've waited long enough, and are out of retries
             llSetTimerEvent(0.0);
             llListenRemove(g_iListener);  
