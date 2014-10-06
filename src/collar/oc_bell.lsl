@@ -33,7 +33,6 @@ float g_fSpeedMax=5.0; // stepping for Speed adjusting
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sBellOn="    ON"; // menu text of bell on
 string g_sBellOff="    OFF"; // menu text of bell off
-integer g_iTouchOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sTouchToken="bellvolume"; // token for saving bell volume
 
 integer g_iBellShow=FALSE; // is the bell visible
@@ -245,7 +244,6 @@ SaveBellSettings()
 {
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "touch=" + (string)g_iTouchOn, "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
@@ -453,7 +451,6 @@ default
                 }
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
-                else if (sToken == "touch") g_iTouchOn=(integer)sValue;
             }
         }
         else if (UserCommand(iNum, sStr, kID)) return;
@@ -530,7 +527,6 @@ default
                     // someone wants to hide or show the bell
                 {
                     g_iBellShow=!g_iBellShow;
-                    g_iTouchOn=!g_iTouchOn;
                     SetBellElementAlpha();
                     SaveBellSettings();
                 }
@@ -608,7 +604,7 @@ default
 
     touch_start(integer n)
     {
-        if (g_iTouchOn && g_iBellShow && !g_iHide && llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]) != -1)
+        if (g_iBellShow && !g_iHide && llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]) != -1)
         {
             key toucher = llDetectedKey(0);
             g_fNextRing=llGetTime()+g_fSpeed;
