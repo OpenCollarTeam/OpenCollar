@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - dialog                               //
-//                                 version 3.988                                  //
+//                                 version 3.989                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -149,7 +149,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         
         iStart = iPage * iMyPageSize;
         //multi page menu
-        sPagerPrompt = sPagerPrompt + " Page "+(string)(iPage+1)+"/"+(string)(numPages+1);
+        sPagerPrompt = sPagerPrompt + "\nPage "+(string)(iPage+1)+"/"+(string)(numPages+1);
     }
     integer iEnd = iStart + iMyPageSize - 1;
     if (iEnd >= iNumitems) iEnd = iNumitems - 1;
@@ -179,7 +179,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     list lButtons;  //list of buttons to be used in the dialog, sliced by page and maybe with numbers added, not the lMenuItems we were supplied
     if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
         integer iCur; 
-        sNumberedButtons="Menu key:\n";
+        sNumberedButtons="\n"; //let's make this a linebreak instead
         for (iCur = iStart; iCur <= iEnd; iCur++)
         {
             string sButton = llList2String(lMenuItems, iCur);
