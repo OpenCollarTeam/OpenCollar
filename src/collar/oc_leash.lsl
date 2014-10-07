@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.982                                  //
+//                                 version 3.988                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -335,7 +335,7 @@ Unleash(key kCmdGiver)
                         sCmdMess= "You release " + WEARERNAME + " from following you.";
                         sWearMess = sCmdGiver + " releases you from following.";
                     } else {
-                        sCmdMess= "You unleash  " + WEARERNAME + ".";
+                        sCmdMess= "You unleash " + WEARERNAME + ".";
                         sWearMess = sCmdGiver + " unleashes you.";
                     }
                 } else {
