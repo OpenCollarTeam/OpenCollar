@@ -39,7 +39,16 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvtouch_","fartouch","FarTouch","Touch objects >1.5m away",
     "rlvtouch_","touchworld","Touch","Touch in-world objects",
     "rlvtouch_","touchattach","Attachments","Touch your attachments",
-    "rlvtouch_","touchattachother","OtherAttachments","Touch others' attachments"
+    "rlvtouch_","touchattachother","OtherAttachments","Touch others' attachments",
+    "rlvmisc_","shownames","Names","See Avatar Names",
+    "rlvmisc_","fly","Fly","Ability to Fly",
+    "rlvmisc_","edit","Edit","Edit Objects",
+    "rlvmisc_","rez","Rez","Rez Objects",
+    "rlvmisc_","showinv","Inventory","View Inventory",
+    "rlvmisc_","viewnote","Notecards","View Notecards",
+    "rlvmisc_","viewscript","Scripts","View Scripts",
+    "rlvmisc_","viewtexture","Textures","View Textures",
+    "rlvmisc_","showhovertext","Title","See Title"
 ];
 
 //commands take effect immediately and are not stored, like: force sit and force stand
@@ -52,9 +61,10 @@ list g_lIdmtCmds = [
 
 list g_lMenuHelpMap = [
     "rlvsit_","sit",
-    "rlvtp_","maptp",
+    "rlvtp_","travel",
     "rlvtalk_","rlvtalk",
-    "rlvtouch_","rlvtouch"
+    "rlvtouch_","rlvtouch",
+    "rlvmisc_","misc"
 ];
 
 string TURNON = "Allow";
@@ -286,9 +296,10 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     sStr=llStringTrim(sStr,STRING_TRIM);
     
     if (llToLower(sStr) == "sitmenu" || llToLower(sStr) == "menu sit") Menu(kID, iNum, "rlvsit_");
-    else if (llToLower(sStr) == "rlvtp" || llToLower(sStr) == "menu map/tp") Menu(kID, iNum, "rlvtp_");
+    else if (llToLower(sStr) == "rlvtp" || llToLower(sStr) == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (llToLower(sStr) == "rlvtalk" || llToLower(sStr) == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (llToLower(sStr) == "rlvtouch" || llToLower(sStr) == "menu touch") Menu(kID, iNum, "rlvtouch_");
+    else if (llToLower(sStr) == "rlvmisc" || llToLower(sStr) == "menu misc") Menu(kID, iNum, "rlvmisc_");
     else if (llToLower(sStr) == "sitnow") {
         if (!g_iRLVOn) {
             Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
@@ -406,9 +417,10 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Sit", "");
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Map/TP", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Travel", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE) UserCommand(iNum, sStr, kID, "");
         else if (iNum == LM_SETTING_RESPONSE) {
