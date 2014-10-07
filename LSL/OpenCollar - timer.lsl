@@ -264,10 +264,6 @@ TimerFinish()
         return;
     }
     llMessageLinked(LINK_THIS, WEARERLOCKOUT, "off", "");
-    g_iOnSetTime=g_iRealSetTime=0;
-    g_iOnRunning=g_iRealRunning=0;
-    g_iOnTimeUpAt=g_iRealTimeUpAt=0;
-    g_iWhoCanChangeTime=504;
     if(g_iUnlockCollar)
     {
         llMessageLinked(LINK_THIS, COMMAND_OWNER, "unlock", g_kWearer);
@@ -281,11 +277,15 @@ TimerFinish()
             llMessageLinked(LINK_THIS, COMMAND_OWNER, "lock", g_kWearer);
         }
     }
-    if(g_iUnleash)
+    if(g_iUnleash && g_iWhoCanChangeTime <= g_iWhoCanChangeLeash)
     {
         llMessageLinked(LINK_THIS, COMMAND_OWNER, "unleash", "");
     }
     g_iUnlockCollar=g_iClearRLVRestions=g_iUnleash=0;
+    g_iOnSetTime=g_iRealSetTime=0;
+    g_iOnRunning=g_iRealRunning=0;
+    g_iOnTimeUpAt=g_iRealTimeUpAt=0;
+    g_iWhoCanChangeTime=504;
     Notify(g_kWearer, "The timer has expired", TRUE);
     
     llMessageLinked(LINK_THIS, TIMER_EVENT, "end", "");
@@ -682,7 +682,6 @@ default
                 if (auth < g_iWhoCanChangeLeash)
                 {
                     g_iWhoCanChangeLeash = auth;
-                    g_iUnleash = 0;
                 }
             }
         }
