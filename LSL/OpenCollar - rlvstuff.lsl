@@ -36,10 +36,10 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvtalk_","recvim",    "RcvIM",   "Ability to Receive IM",
     "rlvtalk_","emote",     "Emote",   "Allowed length of Emotes",
     "rlvtalk_","recvemote", "RcvEmote","Ability to Receive Emote",
-    "rlvtouch_","fartouch","FarTouch","Touch objects >1.5m away",
-    "rlvtouch_","touchworld","Touch","Touch in-world objects",
-    "rlvtouch_","touchattach","Attachments","Touch your attachments",
-    "rlvtouch_","touchattachother","OtherAttachments","Touch others' attachments",
+    "rlvtouch_","fartouch","Far","Touch objects >1.5m away",
+    "rlvtouch_","touchworld","World","Touch in-world objects",
+    "rlvtouch_","touchattach","Self","Touch your attachments",
+    "rlvtouch_","touchattachother","Others","Touch others' attachments",
     "rlvmisc_","shownames","Names","See Avatar Names",
     "rlvmisc_","fly","Fly","Ability to Fly",
     "rlvmisc_","edit","Edit","Edit Objects",
@@ -67,8 +67,8 @@ list g_lMenuHelpMap = [
     "rlvmisc_","misc"
 ];
 
-string TURNON = "Allow";
-string TURNOFF = "Forbid";
+string TURNON = "✔";
+string TURNOFF = "✘";
 string CTYPE = "collar";
 
 float g_fScanRange = 20.0;//range we'll scan for scripted objects when doing a force-sit
