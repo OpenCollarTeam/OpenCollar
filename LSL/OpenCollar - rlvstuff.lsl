@@ -48,7 +48,7 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvmisc_","viewnote","Notecards","View Notecards",
     "rlvmisc_","viewscript","Scripts","View Scripts",
     "rlvmisc_","viewtexture","Textures","View Textures",
-    "rlvmisc_","showhovertext","Title","See Title",
+    "rlvmisc_","showhovertextworld","Hovertext","See hovertext like titles",
     "rlvview_","camdistmax:0","Mouselook","Leave Mouselook",
     "rlvview_","camunlock","Alt Zoom","Alt zoom/pan around",
     "rlvview_","camdrawalphamax:1","See","See anything at all"
