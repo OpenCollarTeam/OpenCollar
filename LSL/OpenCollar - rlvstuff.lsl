@@ -131,7 +131,7 @@ list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and t
 integer g_iMenuStride = 3;
 
 
-///*
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -167,7 +167,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 } 
 
 Menu(key kID, integer iAuth, string sMenuName) {
-    Debug("Making menu"+sMenuName);
+    //Debug("Making menu"+sMenuName);
     if (!g_iRLVOn) {
         Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
@@ -244,7 +244,7 @@ SetSetting(string sCategory, string sOption, string sValue){
 UpdateSettings() {    //build one big string from the settings list, and send to to the viewer to reset rlv settings
     //llOwnerSay("TP settings: " + llDumpList2String(lSettings, ","));
     integer iSettingsLength = llGetListLength(g_lSettings);
-    Debug("Applying "+(string)(iSettingsLength/3)+" settings");
+    //Debug("Applying "+(string)(iSettingsLength/3)+" settings");
     if (iSettingsLength > 0) {
         list lTempSettings;
         string sTempRLVSetting;
@@ -346,7 +346,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             else if (~iBehaviourIndex) {
                 string sCategory=llList2String(g_lRLVcmds,iBehaviourIndex-1);
                 if (llGetSubString(sCategory,-1,-1)=="_"){  //
-                    Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
+                    //Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
                     //filter commands from wearer, if wearer is not owner
                     if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
                     else {
@@ -357,13 +357,13 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                     }
                 }
             } else if (~llListFindList(llList2ListStrided(g_lIdmtCmds,0,-1,g_lIdmtCmds_stride), ["rlvsit_",sBehavior])) {
-                Debug(sBehavior+" is an immediate command that we handle");
+                //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
                 if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
                 else llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             }
             else if (sBehavior == "clear" && iNum == COMMAND_OWNER) ClearSettings("");
-            else Debug("We don't handle "+sBehavior);
+            //else Debug("We don't handle "+sBehavior);
         }
 
         if (llGetListLength(g_lChangedCategories)) {
@@ -378,7 +378,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
 default {
     state_entry() {
         g_kWearer = llGetOwner();
-        Debug("Starting");
+        //Debug("Starting");
     }
     
     on_rez(integer iParam) {
@@ -440,7 +440,7 @@ default {
             
             string category=llList2String(llParseString2List(sToken,["_"],[]),0)+"_";
             if (~llListFindList(g_lMenuHelpMap,[category])){
-                Debug("got settings token: "+category);
+                //Debug("got settings token: "+category);
                 sToken=llList2String(llParseString2List(sToken,["_"],[]),1);
                 if (sToken == "List") {
                     //throw away first element
@@ -449,7 +449,7 @@ default {
                     list lNewSettings = llParseString2List(sValue, [","], []);
                     while (llGetListLength(lNewSettings)){
                         list lTempSettings=[category,llList2String(lNewSettings,-2),llList2String(lNewSettings,-1)];
-                        Debug(llDumpList2String(lTempSettings,"  -  "));
+                        //Debug(llDumpList2String(lTempSettings,"  -  "));
                         g_lSettings+=lTempSettings;
                         lNewSettings=llDeleteSubList(lNewSettings,-2,-1);
                     }
@@ -542,7 +542,7 @@ default {
         }
     }
     
-///*        
+/*        
     changed(integer iChange)
     {
         if (iChange & CHANGED_REGION) {
