@@ -48,7 +48,10 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvmisc_","viewnote","Notecards","View Notecards",
     "rlvmisc_","viewscript","Scripts","View Scripts",
     "rlvmisc_","viewtexture","Textures","View Textures",
-    "rlvmisc_","showhovertext","Title","See Title"
+    "rlvmisc_","showhovertext","Title","See Title",
+    "rlvview_","camdistmax:0","Mouselook","Leave Mouselook",
+    "rlvview_","camunlock","Alt Zoom","Alt zoom/pan around",
+    "rlvview_","camdrawalphamax:1","See","See anything at all"
 ];
 
 //commands take effect immediately and are not stored, like: force sit and force stand
@@ -64,7 +67,8 @@ list g_lMenuHelpMap = [
     "rlvtp_","travel",
     "rlvtalk_","rlvtalk",
     "rlvtouch_","rlvtouch",
-    "rlvmisc_","misc"
+    "rlvmisc_","misc",
+    "rlvview_","view"
 ];
 
 string TURNON = "✔";
@@ -300,6 +304,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     else if (llToLower(sStr) == "rlvtalk" || llToLower(sStr) == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (llToLower(sStr) == "rlvtouch" || llToLower(sStr) == "menu touch") Menu(kID, iNum, "rlvtouch_");
     else if (llToLower(sStr) == "rlvmisc" || llToLower(sStr) == "menu misc") Menu(kID, iNum, "rlvmisc_");
+    else if (llToLower(sStr) == "rlvview" || llToLower(sStr) == "menu v̶i̶e̶w̶") Menu(kID, iNum, "rlvview_");
     else if (llToLower(sStr) == "sitnow") {
         if (!g_iRLVOn) {
             Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
@@ -421,6 +426,7 @@ default {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|V̶i̶e̶w̶", "");
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE) UserCommand(iNum, sStr, kID, "");
         else if (iNum == LM_SETTING_RESPONSE) {
