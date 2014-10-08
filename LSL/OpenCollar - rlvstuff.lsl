@@ -143,7 +143,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
-//*/
+*/
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
@@ -503,7 +503,7 @@ default {
     
                         list lParams = llParseString2List(sMessage, [" "], []);
                         string sSwitch = llList2String(lParams, 0);
-                        string sCmd = llList2String(lParams, 1);
+                        string sCmd = llDumpList2String(llDeleteSubList(lParams,0,0)," ");
                         integer iIndex = llListFindList(g_lRLVcmds, [sCmd]);
                         if (sCmd == "All") {
                             //handle the "Allow All" and "Forbid All" commands
@@ -526,8 +526,8 @@ default {
                         } else if (~iIndex && llList2String(g_lRLVcmds,iIndex-2)==sMenu) {
                             string sOut = llList2String(g_lRLVcmds, iIndex-1);
                             sOut += "=";
-                            if (llList2String(lParams, 0) == TURNON) sOut += "y";
-                            else if (llList2String(lParams, 0) == TURNOFF) sOut += "n";
+                            if (sSwitch == TURNON) sOut += "y";
+                            else if (sSwitch == TURNOFF) sOut += "n";
                             //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
                             UserCommand(iAuth, sOut, kAv, sMenu);
                         }
@@ -552,5 +552,5 @@ default {
             }
         }
     }
-//*/        
+*/        
 }
