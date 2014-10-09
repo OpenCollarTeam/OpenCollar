@@ -394,7 +394,7 @@ default
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                    Notify(g_kWearer, "Offering to "+ sCommand +" "+ g_sPartnerName, FALSE);
+                    llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName);
                     Notify(g_kPartner,  WEARERNAME + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
             }

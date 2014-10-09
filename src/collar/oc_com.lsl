@@ -214,7 +214,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
 
     if (sType == "touchstart") {
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n",FALSE);
+        if (g_iTouchNotify && kToucher!=g_kWearer) llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n");
     }
 }
 
@@ -274,12 +274,10 @@ default
         //g_kWearer = llGetOwner();
         if (kID == NULL_KEY)
         {
-            //llWhisper(g_iInterfaceChannel, "OpenCollar=No");
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
         }
         else
         {
-            //llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
         }
         integer iAttachPt = llGetAttached();
@@ -380,7 +378,6 @@ default
                 }
                 else if (iAuth == EXT_COMMAND_COLLAR) //command from attachment to AO
                 {
-                    //llWhisper(g_iInterfaceChannel, sMsg);
                     llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
                 }
                 else
@@ -514,23 +511,23 @@ default
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                         g_iTouchNotify=TRUE;
-                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                        llOwnerSay("Touch notification is now enabled.");
                     }                    
                     else if (sValue == "off")
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                         g_iTouchNotify=FALSE;
-                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                        llOwnerSay("Touch notification is now disabled.");
                     }
                     else if (sValue == "") 
                     {
                         if (g_iTouchNotify) {
-                            Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                            llOwnerSay("Touch notification is now disabled.");
                             llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                             g_iTouchNotify = FALSE;
                         }
                         else {
-                            Notify(g_kWearer,"Touch notification is now enabled.",FALSE);                           
+                            llOwnerSay("Touch notification is now enabled.");                           
                             llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                             g_iTouchNotify = TRUE;
                         }
@@ -583,7 +580,6 @@ default
             // llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "auth", UUID);
             //where "auth" has to be (string)COMMAND_XY
             //reason for this is: i dont want to have all other scripts recieve a COMMAND+xy and check further for the command
-            //llWhisper(g_iInterfaceChannel, "RequestReply|" + sStr);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "RequestReply|" + sStr);
         }
         else if (iNum == TOUCH_REQUEST)

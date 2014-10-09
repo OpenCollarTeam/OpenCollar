@@ -354,7 +354,7 @@ SafeWord()
     if (g_iSafeMode)
     {
         llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "","");
-        Notify(g_kWearer, "You have safeworded",TRUE);
+        llOwnerSay("You have safeworded");
         g_lTempBlackList=[];
         g_lTempWhiteList=[];
         g_lTempUserBlackList=[];
@@ -371,7 +371,7 @@ SafeWord()
     }
     else
     {
-        Notify(g_kWearer, "Sorry, safewording is disabled now!", TRUE);
+        llOwnerSay("Sorry, safewording is disabled now!");
     }
 }
 
@@ -519,7 +519,7 @@ RemListItem(string sMsg, integer iAuth)
     }
     else if (iAuth==COMMAND_WEARER && g_iMinBaseMode > 0)
     {
-        Notify(g_kWearer,"Sorry, your owner does not allow you to remove trusted sources.",TRUE);
+        llOwnerSay("Sorry, your owner does not allow you to remove trusted sources.");
     }
     else if (g_sListType=="Trusted Object")
     {

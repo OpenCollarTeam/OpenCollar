@@ -338,7 +338,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             integer iBehaviourIndex=llListFindList(g_lRLVcmds, [sBehavior]);
             
             if (sStr == "standnow") {
-                if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
+                if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                 else {
                     sStr = "unsit=force";
                     if (GetSetting("rlvsit_","unsit")=="n") sStr = "unsit=y," + sStr + ",unsit=n";
@@ -350,7 +350,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                 if (llGetSubString(sCategory,-1,-1)=="_"){  //
                     //Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
                     //filter commands from wearer, if wearer is not owner
-                    if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
+                    if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                     else {
                         string sOption = llList2String(llParseString2List(sThisItem, ["="], []), 0);
                         string sParam = llList2String(llParseString2List(sThisItem, ["="], []), 1);
@@ -361,7 +361,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             } else if (~llListFindList(llList2ListStrided(llDeleteSubList(g_lIdmtCmds,0,0),0,-1,g_lIdmtCmds_stride), [sBehavior])) {
                 //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
-                if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
+                if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
                 else llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             }
             else if (sBehavior == "clear" && iNum == COMMAND_OWNER) ClearSettings("");

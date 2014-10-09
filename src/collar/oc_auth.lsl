@@ -229,11 +229,9 @@ RemovePerson(string sName, string sToken, key kCmdr) {
             
             if (sToken == "owner") {
                 Notify(llList2String(lPeople,numPeople*2),"You have been removed as owner on the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".",FALSE);
-                //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             } else if (sToken == "secowner") {
                 Notify(llList2String(lPeople,numPeople*2),"You have been removed as secowner on the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".",FALSE);
-                //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
             lPeople = llDeleteSubList(lPeople, numPeople*2, numPeople*2+1);
@@ -293,14 +291,13 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
             lPeople += [(string)kPerson, sName];
 
         if (kPerson != g_kWearer) {
-            Notify(g_kWearer, "Added " + sName + " to " + sToken + ".", FALSE);
+            Notify(kAv, "Added " + sName + " to " + sToken + ".", FALSE);
             if (sToken == "owner") 
-                Notify(g_kWearer, "Your owner can have a lot  power over you and you consent to that by adding " + sName + " as owner to your " + CTYPE + ". They can leash you, put you in poses and lock your " + CTYPE + ". If you are using RLV they can undress you, make you wear clothes, restrict your  chat, IMs and TPs as well as force TP you anywhere they like. Please read the [http://www.opencollar.at/manual.html manual on the web] for more info. If you do not consent, you can use the command \"" + g_sPrefix + "runaway\" to remove all owners from the " + CTYPE + ".", FALSE);
+                llOwnerSay("Your owner can have a lot  power over you and you consent to that by adding " + sName + " as owner to your " + CTYPE + ". They can leash you, put you in poses and lock your " + CTYPE + ". If you are using RLV they can undress you, make you wear clothes, restrict your  chat, IMs and TPs as well as force TP you anywhere they like. Please read the [http://www.opencollar.at/manual.html manual on the web] for more info. If you do not consent, you can use the command \"" + g_sPrefix + "runaway\" to remove all owners from the " + CTYPE + ".");
         }
 
         if (sToken == "owner" || sToken == "secowner") {
             Notify(kPerson, "You have been added to the " + sToken + " list on " + llKey2Name(g_kWearer) + "'s " + CTYPE + ". For help concerning the " + CTYPE + " usage, please see the [http://www.opencollar.at/manual.html manual on the web] or type \"" + g_sPrefix + "menu\" in chat to explore the " + CTYPE + " and find links to dedicated manual pages in the menu headers.",FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
@@ -515,7 +512,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "groupname", "");
             g_iGroupEnabled = FALSE;
             Notify(kID, "Group unset.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
@@ -526,7 +522,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "openaccess=" + (string) g_iOpenAccess, "");
             Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
@@ -537,7 +532,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "openaccess", "");
             Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
@@ -624,9 +618,9 @@ default
             integer iAuth = Auth((string)kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable){
-                    Notify(g_kWearer, "Runaway is currently disabled.",FALSE);
+                    llOwnerSay("Runaway is currently disabled.");
                 } else {
-                    Notify(g_kWearer, "Running away from all owners started, your owners will now be notified!",FALSE);
+                    llOwnerSay("Running away from all owners started, your owners will now be notified!");
                     integer n;
                     integer stop = llGetListLength(g_lOwners+g_lTempOwners);
                     for (n = 0; n < stop; n += 2) {
@@ -639,7 +633,7 @@ default
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "secowners=", "");
                     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
-                    Notify(g_kWearer, "Runaway finished, the " + CTYPE + " will now release locks!",FALSE);
+                    llOwnerSay("Runaway finished, the " + CTYPE + " will now release locks!");
                     // moved reset request from settings to here to allow noticifation of owners.
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", kID); // clear RLV restrictions
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
@@ -819,7 +813,7 @@ default
                     } else if (sMessage == "Disable") {
                         g_iRunawayDisable=TRUE;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"runawayDisable=1","");
-                        Notify(g_kWearer,"You have disabled your ability to runaway.", TRUE);
+                        llOwnerSay("You have disabled your ability to runaway.");
                         UserCommand(iAuth, "runaway", kAv, TRUE);
                     } else if (sMessage == "Cancel") {
                         return;  //no remenu on canel
