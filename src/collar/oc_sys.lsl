@@ -736,7 +736,7 @@ default
 
                 if (compareVersions(this_news_time,g_sLastNewsTime)) {
                     string news = "Newsflash " + body;
-                    Notify(llGetOwner(), news, FALSE);
+                    llOwnerSay(news);
                     g_sLastNewsTime = this_news_time;
                 } 
             }
