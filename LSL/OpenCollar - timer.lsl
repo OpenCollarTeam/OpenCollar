@@ -575,13 +575,15 @@ default
         }
         g_iFirstOnTime=MAX_TIME;
         g_iFirstRealTime=MAX_TIME;
-        llWhisper(g_iInterfaceChannel, "timer|sendtimers");
+        //llWhisper(g_iInterfaceChannel, "timer|sendtimers");
+        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
         //end of timekeeper
     }
     on_rez(integer iParam)
     {
         g_iLastTime=g_iLastRez=llGetUnixTime();
-        llWhisper(g_iInterfaceChannel, "timer|sendtimers");
+        //llWhisper(g_iInterfaceChannel, "timer|sendtimers");
+        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
         if (g_iRealRunning == 1 || g_iOnRunning == 1)
         {
             llMessageLinked(LINK_THIS, WEARERLOCKOUT, "on", "");
@@ -657,7 +659,8 @@ default
             }
             if(iNum==ATTACHMENT_FORWARD)
             {
-                llWhisper(g_iInterfaceChannel, g_sMessage);//need to wispear
+                //llWhisper(g_iInterfaceChannel, g_sMessage);//need to wispear
+                llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
             }
         }
         else if(iNum == COMMAND_WEARERLOCKEDOUT && sStr == "menu")
@@ -782,7 +785,8 @@ default
         {
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
-            llWhisper(g_iInterfaceChannel, g_sMessage);
+            //llWhisper(g_iInterfaceChannel, g_sMessage);
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
             
             g_iFirstOnTime=MAX_TIME;
             g_iTimesLength=llGetListLength(g_lTimes);
@@ -806,8 +810,9 @@ default
         {
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
-            llWhisper(g_iInterfaceChannel, g_sMessage);
-            
+            //llWhisper(g_iInterfaceChannel, g_sMessage);
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
+             
             g_iFirstRealTime=MAX_TIME;
             g_iTimesLength=llGetListLength(g_lTimes);
             for(n = 0; n < g_iTimesLength; n = n + 2)// send notice and find the next time.
