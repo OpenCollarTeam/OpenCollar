@@ -19,27 +19,39 @@ list g_lChangedCategories;//list of categories that changed since last saved
 
 integer g_lRLVcmds_stride=4;
 list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
-    "rlvsit_","unsit","Stand","Ability to Stand If Seated",
-    "rlvsit_","sittp","Sit","Ability to Sit On Objects 1.5M+ Away",
-    "rlvtp_","tplm","LM","Teleport to Landmark",
-    "rlvtp_","tploc","Loc","Teleport to Location",
-    "rlvtp_","tplure","Lure","Teleport by Friend",
-    "rlvtp_","showworldmap","Map","World Map",
-    "rlvtp_","showminimap","Minimap","Mini Map",
-    "rlvtp_","showloc","ShowLoc","Current Location",
-    "rlvtalk_","sendchat",  "Chat",    "Ability to Send Chat",
-    "rlvtalk_","chatshout", "Shouting","Ability to Shout Chat",
-    "rlvtalk_","chatnormal","Normal",  "Ability to Speak Without Whispering",
-    "rlvtalk_","startim",   "StartIM", "Ability to Start IM Sessions",
-    "rlvtalk_","sendim",    "SendIM",  "Ability to Send IM",
-    "rlvtalk_","recvchat",  "RcvChat", "Ability to Receive Chat",
-    "rlvtalk_","recvim",    "RcvIM",   "Ability to Receive IM",
-    "rlvtalk_","emote",     "Emote",   "Allowed length of Emotes",
-    "rlvtalk_","recvemote", "RcvEmote","Ability to Receive Emote",
-    "rlvtouch_","fartouch","FarTouch","Touch objects >1.5m away",
-    "rlvtouch_","touchworld","Touch","Touch in-world objects",
-    "rlvtouch_","touchattach","Attachments","Touch your attachments",
-    "rlvtouch_","touchattachother","OtherAttachments","Touch others' attachments"
+    "rlvsit_","unsit","Stand","Stand up if seated",
+    "rlvsit_","sittp","Sit","Sit on objects >1.5m away",
+    "rlvtp_","tplm","Landmark","Teleport via Landmark",
+    "rlvtp_","tploc","Slurl","Teleport via Slurl/Map",
+    "rlvtp_","tplure","Lure","Teleport via offers",
+    "rlvtp_","showworldmap","Map","View World-map",
+    "rlvtp_","showminimap","Mini-map","View Mini-map",
+    "rlvtp_","showloc","Location","See current location",
+    "rlvtalk_","sendchat","Chat","Ability to Chat",
+    "rlvtalk_","chatshout","Shout","Ability to Shout",
+    "rlvtalk_","chatnormal","Whisper","Forced to Whisper",
+    "rlvtalk_","startim","Start IMs","Initiate IM Sessions",
+    "rlvtalk_","sendim","Send IMs","Respond to IMs",
+    "rlvtalk_","recvim","Get IMs","Receive IMs",
+    "rlvtalk_","recvchat","See Chat","Receive Chat",
+    "rlvtalk_","recvemote","See Emote","Receive Emotes",
+    "rlvtalk_","emote","Emote","Short Emotes if Chat blocked",
+    "rlvtouch_","fartouch","Far","Touch objects >1.5m away",
+    "rlvtouch_","touchworld","World","Touch in-world objects",
+    "rlvtouch_","touchattach","Self","Touch your attachments",
+    "rlvtouch_","touchattachother","Others","Touch others' attachments",
+    "rlvmisc_","shownames","Names","See Avatar Names",
+    "rlvmisc_","fly","Fly","Ability to Fly",
+    "rlvmisc_","edit","Edit","Edit Objects",
+    "rlvmisc_","rez","Rez","Rez Objects",
+    "rlvmisc_","showinv","Inventory","View Inventory",
+    "rlvmisc_","viewnote","Notecards","View Notecards",
+    "rlvmisc_","viewscript","Scripts","View Scripts",
+    "rlvmisc_","viewtexture","Textures","View Textures",
+    "rlvmisc_","showhovertextworld","Hovertext","See hovertext like titles",
+    "rlvview_","camdistmax:0","Mouselook","Leave Mouselook",
+    "rlvview_","camunlock","Alt Zoom","Alt zoom/pan around",
+    "rlvview_","camdrawalphamax:1","See","See anything at all"
 ];
 
 //commands take effect immediately and are not stored, like: force sit and force stand
@@ -52,13 +64,15 @@ list g_lIdmtCmds = [
 
 list g_lMenuHelpMap = [
     "rlvsit_","sit",
-    "rlvtp_","maptp",
-    "rlvtalk_","rlvtalk",
-    "rlvtouch_","rlvtouch"
+    "rlvtp_","travel",
+    "rlvtalk_","talk",
+    "rlvtouch_","touch",
+    "rlvmisc_","misc",
+    "rlvview_","view"
 ];
 
-string TURNON = "Allow";
-string TURNOFF = "Forbid";
+string TURNON = "✔";
+string TURNOFF = "✘";
 string CTYPE = "collar";
 
 float g_fScanRange = 20.0;//range we'll scan for scripted objects when doing a force-sit
@@ -117,7 +131,7 @@ list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and t
 integer g_iMenuStride = 3;
 
 
-///*
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -129,13 +143,14 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
-//*/
+*/
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
-        llInstantMessage(kID, sMsg);
+        if (llGetAgentSize(kID)) llRegionSayTo(kID, 0, sMsg);
+        else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
@@ -153,7 +168,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 } 
 
 Menu(key kID, integer iAuth, string sMenuName) {
-    Debug("Making menu"+sMenuName);
+    //Debug("Making menu"+sMenuName);
     if (!g_iRLVOn) {
         Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
@@ -230,7 +245,7 @@ SetSetting(string sCategory, string sOption, string sValue){
 UpdateSettings() {    //build one big string from the settings list, and send to to the viewer to reset rlv settings
     //llOwnerSay("TP settings: " + llDumpList2String(lSettings, ","));
     integer iSettingsLength = llGetListLength(g_lSettings);
-    Debug("Applying "+(string)(iSettingsLength/3)+" settings");
+    //Debug("Applying "+(string)(iSettingsLength/3)+" settings");
     if (iSettingsLength > 0) {
         list lTempSettings;
         string sTempRLVSetting;
@@ -286,9 +301,11 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     sStr=llStringTrim(sStr,STRING_TRIM);
     
     if (llToLower(sStr) == "sitmenu" || llToLower(sStr) == "menu sit") Menu(kID, iNum, "rlvsit_");
-    else if (llToLower(sStr) == "rlvtp" || llToLower(sStr) == "menu map/tp") Menu(kID, iNum, "rlvtp_");
+    else if (llToLower(sStr) == "rlvtp" || llToLower(sStr) == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (llToLower(sStr) == "rlvtalk" || llToLower(sStr) == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (llToLower(sStr) == "rlvtouch" || llToLower(sStr) == "menu touch") Menu(kID, iNum, "rlvtouch_");
+    else if (llToLower(sStr) == "rlvmisc" || llToLower(sStr) == "menu misc") Menu(kID, iNum, "rlvmisc_");
+    else if (llToLower(sStr) == "rlvview" || llToLower(sStr) == "menu v̶i̶e̶w̶") Menu(kID, iNum, "rlvview_");
     else if (llToLower(sStr) == "sitnow") {
         if (!g_iRLVOn) {
             Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
@@ -330,7 +347,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             else if (~iBehaviourIndex) {
                 string sCategory=llList2String(g_lRLVcmds,iBehaviourIndex-1);
                 if (llGetSubString(sCategory,-1,-1)=="_"){  //
-                    Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
+                    //Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
                     //filter commands from wearer, if wearer is not owner
                     if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
                     else {
@@ -341,13 +358,13 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                     }
                 }
             } else if (~llListFindList(llList2ListStrided(g_lIdmtCmds,0,-1,g_lIdmtCmds_stride), ["rlvsit_",sBehavior])) {
-                Debug(sBehavior+" is an immediate command that we handle");
+                //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
                 if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
                 else llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
             }
             else if (sBehavior == "clear" && iNum == COMMAND_OWNER) ClearSettings("");
-            else Debug("We don't handle "+sBehavior);
+            //else Debug("We don't handle "+sBehavior);
         }
 
         if (llGetListLength(g_lChangedCategories)) {
@@ -362,7 +379,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
 default {
     state_entry() {
         g_kWearer = llGetOwner();
-        Debug("Starting");
+        //Debug("Starting");
     }
     
     on_rez(integer iParam) {
@@ -406,9 +423,11 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Sit", "");
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Map/TP", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Travel", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|V̶i̶e̶w̶", "");
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE) UserCommand(iNum, sStr, kID, "");
         else if (iNum == LM_SETTING_RESPONSE) {
@@ -422,7 +441,7 @@ default {
             
             string category=llList2String(llParseString2List(sToken,["_"],[]),0)+"_";
             if (~llListFindList(g_lMenuHelpMap,[category])){
-                Debug("got settings token: "+category);
+                //Debug("got settings token: "+category);
                 sToken=llList2String(llParseString2List(sToken,["_"],[]),1);
                 if (sToken == "List") {
                     //throw away first element
@@ -431,7 +450,7 @@ default {
                     list lNewSettings = llParseString2List(sValue, [","], []);
                     while (llGetListLength(lNewSettings)){
                         list lTempSettings=[category,llList2String(lNewSettings,-2),llList2String(lNewSettings,-1)];
-                        Debug(llDumpList2String(lTempSettings,"  -  "));
+                        //Debug(llDumpList2String(lTempSettings,"  -  "));
                         g_lSettings+=lTempSettings;
                         lNewSettings=llDeleteSubList(lNewSettings,-2,-1);
                     }
@@ -485,7 +504,7 @@ default {
     
                         list lParams = llParseString2List(sMessage, [" "], []);
                         string sSwitch = llList2String(lParams, 0);
-                        string sCmd = llList2String(lParams, 1);
+                        string sCmd = llDumpList2String(llDeleteSubList(lParams,0,0)," ");
                         integer iIndex = llListFindList(g_lRLVcmds, [sCmd]);
                         if (sCmd == "All") {
                             //handle the "Allow All" and "Forbid All" commands
@@ -508,8 +527,8 @@ default {
                         } else if (~iIndex && llList2String(g_lRLVcmds,iIndex-2)==sMenu) {
                             string sOut = llList2String(g_lRLVcmds, iIndex-1);
                             sOut += "=";
-                            if (llList2String(lParams, 0) == TURNON) sOut += "y";
-                            else if (llList2String(lParams, 0) == TURNOFF) sOut += "n";
+                            if (sSwitch == TURNON) sOut += "y";
+                            else if (sSwitch == TURNOFF) sOut += "n";
                             //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
                             UserCommand(iAuth, sOut, kAv, sMenu);
                         }
@@ -524,7 +543,7 @@ default {
         }
     }
     
-///*        
+/*        
     changed(integer iChange)
     {
         if (iChange & CHANGED_REGION) {
@@ -534,5 +553,5 @@ default {
             }
         }
     }
-//*/        
+*/        
 }
