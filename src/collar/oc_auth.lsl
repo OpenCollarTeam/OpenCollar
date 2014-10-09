@@ -229,11 +229,9 @@ RemovePerson(string sName, string sToken, key kCmdr) {
             
             if (sToken == "owner") {
                 Notify(llList2String(lPeople,numPeople*2),"You have been removed as owner on the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".",FALSE);
-                //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             } else if (sToken == "secowner") {
                 Notify(llList2String(lPeople,numPeople*2),"You have been removed as secowner on the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".",FALSE);
-                //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
             lPeople = llDeleteSubList(lPeople, numPeople*2, numPeople*2+1);
@@ -300,7 +298,6 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
 
         if (sToken == "owner" || sToken == "secowner") {
             Notify(kPerson, "You have been added to the " + sToken + " list on " + llKey2Name(g_kWearer) + "'s " + CTYPE + ". For help concerning the " + CTYPE + " usage, please see the [http://www.opencollar.at/manual.html manual on the web] or type \"" + g_sPrefix + "menu\" in chat to explore the " + CTYPE + " and find links to dedicated manual pages in the menu headers.",FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
@@ -515,7 +512,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "groupname", "");
             g_iGroupEnabled = FALSE;
             Notify(kID, "Group unset.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
@@ -526,7 +522,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "openaccess=" + (string) g_iOpenAccess, "");
             Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
@@ -537,7 +532,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "openaccess", "");
             Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|499|OwnerChange");    //tell attachments owner changed
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
             Notify(kID, sOwnerError, FALSE);
