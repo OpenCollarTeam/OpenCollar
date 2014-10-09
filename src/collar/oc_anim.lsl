@@ -376,7 +376,7 @@ RefreshAnim()
         }
         else
         {
-            Notify(g_kWearer, "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.", FALSE);
+            llOwnerSay("Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
         }
     }
 }
@@ -460,7 +460,7 @@ StartAnim(string sAnim)
     }
     else
     {
-        Notify(g_kWearer, "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.", FALSE);
+        llOwnerSay("Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
     }
 }
 
@@ -533,7 +533,7 @@ StopAnim(string sAnim)
     }
     else
     {
-        Notify(g_kWearer, "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.", FALSE);
+        llOwnerSay("Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
     }
 }
 
@@ -648,13 +648,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if ( sStr=="posture on" || sStr == UNTICKED+POSTURE) {
         if(iNum<COMMAND_WEARER) {
             SetPosture(TRUE,kID);
-            Notify(g_kWearer, "Your neck is locked in place.", FALSE);
+            llOwnerSay("Your neck is locked in place.");
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + "'s neck is locked in place.", FALSE);
         } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     } else if ( sStr=="posture off" || sStr == UNTICKED+POSTURE) {
         if(iNum<COMMAND_WEARER) {
             SetPosture(FALSE,kID);
-            Notify(g_kWearer, "You can move your neck again.", FALSE);
+            llOwnerSay("You can move your neck again.");
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to move their neck.", FALSE);
         } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     }
@@ -663,14 +663,14 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if(iNum<COMMAND_WEARER) {
             g_iAnimLock = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sLockToken + "=1", "");
-            Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
+            llOwnerSay("Only owners can change or stop your poses now.");
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " can have their poses changed or stopped only by owners.", FALSE);
         } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     } else if ( sStr=="animlock off" || sStr == TICKED+ANIMLOCK){
         if(iNum<COMMAND_WEARER) {
             g_iAnimLock = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sLockToken, "");
-            Notify(g_kWearer, "You are now free to change or stop poses on your own.", FALSE);
+            llOwnerSay("You are now free to change or stop poses on your own.");
             if(kID != g_kWearer) Notify(kID, llKey2Name(g_kWearer) + " is free to change or stop poses on their own.", FALSE);
         } else Notify(kID,"Only owners can do that, sorry.",FALSE);
     //heightfix
@@ -678,7 +678,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iHeightFix = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + g_sHeightFixToken, "");
-            Notify(g_kWearer, "HeightFix override activated.", TRUE);
+            Notify(kID, "HeightFix override activated.", TRUE);
             if (g_sCurrentPose != "") {
                 string sTemp = g_sCurrentPose;
                 StopAnim(sTemp);
@@ -691,7 +691,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)){
             g_iHeightFix = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + g_sHeightFixToken + "=0", "");
-            Notify(g_kWearer, "HeightFix override deactivated.", TRUE);
+            Notify(kID, "HeightFix override deactivated.", TRUE);
             if (g_sCurrentPose != "") {
                 string sTemp = g_sCurrentPose;
                 StopAnim(sTemp);
@@ -756,7 +756,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
         }
         else {
-            Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
+            llOwnerSay("Only owners can change or stop your poses now.");
         }
     }
     else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION)
@@ -808,11 +808,10 @@ AdjustOffset(integer direction){
             
             if (g_iAdjustment > maxHeightAdjust){
                 g_iAdjustment = 0;
-                Notify(g_kWearer,sNewAnim+" height fix cancelled",FALSE);
+                llOwnerSay(sNewAnim+" height fix cancelled");
             } else if (g_iAdjustment < minHeightAdjust){
                 g_iAdjustment = minHeightAdjust;
-            }
-            
+            }            
             
         } else if (direction == -1){
             g_iAdjustment=maxHeightAdjust;
@@ -823,7 +822,7 @@ AdjustOffset(integer direction){
             //now calculate the new offset for notecard dump print
             vector avscale = llGetAgentSize(llGetOwner());
             float test = (float)g_iAdjustment/avscale.z;
-            Notify(g_kWearer,sNewAnim+"|"+(string)test+"|"+sleepTime,FALSE);
+            llOwnerSay(sNewAnim+"|"+(string)test+"|"+sleepTime);
             
             //and store it
             g_lAnimScalars+=[sNewAnim,test,sleepTime];
@@ -1158,7 +1157,7 @@ default
                         }
                     }
                     else {
-                        Notify(g_kWearer, "Only owners can change or stop your poses now.", FALSE);
+                        llOwnerSay("Only owners can change or stop your poses now.");
                     }
                 }
             }
