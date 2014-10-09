@@ -214,7 +214,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
 
     if (sType == "touchstart") {
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n",FALSE);
+        if (g_iTouchNotify && kToucher!=g_kWearer) llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n");
     }
 }
 
@@ -511,23 +511,23 @@ default
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                         g_iTouchNotify=TRUE;
-                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                        llOwnerSay("Touch notification is now enabled.");
                     }                    
                     else if (sValue == "off")
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                         g_iTouchNotify=FALSE;
-                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                        llOwnerSay("Touch notification is now disabled.");
                     }
                     else if (sValue == "") 
                     {
                         if (g_iTouchNotify) {
-                            Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                            llOwnerSay("Touch notification is now disabled.");
                             llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                             g_iTouchNotify = FALSE;
                         }
                         else {
-                            Notify(g_kWearer,"Touch notification is now enabled.",FALSE);                           
+                            llOwnerSay("Touch notification is now enabled.");                           
                             llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                             g_iTouchNotify = TRUE;
                         }
