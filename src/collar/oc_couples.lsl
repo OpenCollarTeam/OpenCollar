@@ -460,7 +460,8 @@ default
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llStartAnimation(g_sDomAnim);//note that we don't double check for permissions here, so if the coupleanim1 script sends its messages out of order, this might fail
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
-        llInstantMessage(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.");
+        //llInstantMessage(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.");
+        Notify(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.", FALSE);
     
         
         string text = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
