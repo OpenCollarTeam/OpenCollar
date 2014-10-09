@@ -66,8 +66,6 @@ string g_sShockSound;
 
 integer g_iShock = FALSE ;
 
-//Debug(string sMsg) { Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE); }
-
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
