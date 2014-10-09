@@ -272,7 +272,7 @@ TimerFinish()
     }
     if(g_iUnleash && g_iWhoCanChangeTime <= g_iWhoCanChangeLeash)
     {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "unleash", "");
+        llMessageLinked(LINK_THIS, COMMAND_OWNER, "unleash", g_kWearer);
     }
     g_iUnlockCollar=g_iClearRLVRestions=g_iUnleash=0;
     g_iOnSetTime=g_iRealSetTime=0;
