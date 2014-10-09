@@ -189,7 +189,7 @@ setRlvState(){
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-            Notify(g_kWearer,"RLV ready! (v" + g_sRlvVersionString + ")",FALSE);
+            llOwnerSay("RLV ready! (v" + g_sRlvVersionString + ")");
             
             DoLock();
         }
@@ -242,7 +242,7 @@ AddRestriction(key kID, string sBehav) {
                 //Debug(sSrcRestr);
             }
         } else {
-            Notify(g_kWearer,"OC doesn't currently support global exceptions",FALSE);
+            llOwnerSay("OC doesn't currently support global exceptions");
         }
     } else {      //add this restriction to the list for this source
         //add new sources to sources list
@@ -404,7 +404,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             setRlvState();
         } else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) Notify(g_kWearer,"Sorry, but the sub cannot clear RLV settings.",TRUE);
+        if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but the sub cannot clear RLV settings.");
         else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -654,7 +654,7 @@ default {
             g_iViewerCheck = FALSE;
             setRlvState();
 
-            Notify(g_kWearer,"Could not detect Restrained Love Viewer.  Restrained Love functions disabled.",TRUE);
+            llOwnerSay("Could not detect Restrained Love Viewer.  Restrained Love functions disabled.");
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
                 string sMsg = WEARERNAME+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
 
@@ -664,8 +664,8 @@ default {
                     Notify(llList2Key(g_lOwners,i), sMsg, FALSE);
                 }
                 
-                if (i_OwnerCount == 2) Notify(g_kWearer,"Your owner has been notified.",FALSE);
-                else Notify(g_kWearer,"Your owners have been notified.",FALSE);
+                if (i_OwnerCount == 2) llOwnerSay("Your owner has been notified.");
+                else llOwnerSay("Your owners have been notified.");
             }
         }
     }
