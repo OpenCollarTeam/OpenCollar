@@ -127,65 +127,58 @@ DoMenu(key keyID, integer iAuth)
         return;
     }
     Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "\n- Timer Menu -\n";
+    
+    string sPrompt = "\n A frozen pizza takes ~12 min to bake.\n";
     list lMyButtons = g_lLocalButtons + lButtons;
 
-    sPrompt += "\n Online timer - "+Int2Time(g_iOnSetTime);
+    sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);
     if (g_iOnRunning==1)
     {
-        sPrompt += "\n Online timer - "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left";
+        sPrompt += "\n Online Timer: "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left\n";
     }
     else
     {
-        sPrompt += "\n Online timer - not running";
+        sPrompt += "\n Online Timer: not running\n";
     }
-    sPrompt += "\n Realtime timer - "+Int2Time(g_iRealSetTime);
+    sPrompt += "\n RL Timer: "+Int2Time(g_iRealSetTime);
     if (g_iRealRunning==1)
     {
-        sPrompt += "\n Realtime timer - "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
+        sPrompt += "\n RL Timer: "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
     }
     else
     {
-        sPrompt += "\n RL timer - not running";
+        sPrompt += "\n RL Timer: not running";
     }
     if (g_iBoth)
     {
-        sPrompt += "\n When BOTH the Online and RL timer go off:";
         lMyButtons += ["☒ combined"];
     }
     else
     {
-        sPrompt += "\n When EITHER the Online or RL timer go off:";
         lMyButtons += ["☐ combined"];
     }
     if (g_iUnlockCollar)
     {
-        sPrompt += "\n\t the " + CTYPE + " WILL be unlocked";
         lMyButtons += ["☒ unlock"];
     }
     else
     {
-        sPrompt += "\n\t the " + CTYPE + " will NOT be unlocked";
         lMyButtons += ["☐ unlock"];
     }
     if (g_iUnleash)
     {
-        sPrompt += "\n\t the " + CTYPE + " WILL be unleashed";
         lMyButtons += ["☒ unleash"];
     }
     else
     {
-        sPrompt += "\n\t the " + CTYPE + " will NOT be unleashed";
         lMyButtons += ["☐ unleash"];
     }
     if (g_iClearRLVRestions)
     {
-        sPrompt += "\n\t the RLV restrictions WILL be cleared";
         lMyButtons += ["☒ clear RLV"];
     }
     else
     {
-        sPrompt += "\n\t the RLV restrictions will NOT be cleared";
         lMyButtons += ["☐ clear RLV"];
     }
     if (g_iRealRunning || g_iOnRunning)
@@ -209,15 +202,15 @@ DoOnMenu(key keyID, integer iAuth)
 {
     if (keyID == NULL_KEY) return;
     
-    string sPrompt = "\n- Online Time Menu -\n";
-    sPrompt += "\n Online timer - "+Int2Time(g_iOnSetTime);
+    string sPrompt = "\n Online Time Settings\n";
+    sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);
     if (g_iOnRunning)
     {
-        sPrompt += "\n Online timer - "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left";
+        sPrompt += "\n Online Timer: "+Int2Time(g_iOnTimeUpAt-g_iOnTime)+" left";
     }
     else
     {
-        sPrompt += "\n Online timer - not running";
+        sPrompt += "\n Online Timer: not running";
     }
     g_kOnMenuID = Dialog(keyID, sPrompt, g_lTimeButtons, [UPMENU], 0, iAuth);
 }
@@ -226,15 +219,15 @@ DoRealMenu(key keyID, integer iAuth)
 {
     if (keyID == NULL_KEY) return;
 
-    string sPrompt = "\n- RL Time Menu -\n";
-    sPrompt += "\n RL timer - " + Int2Time(g_iRealSetTime);
+    string sPrompt = "\n RL Time Settings\n";
+    sPrompt += "\n RL timer: " + Int2Time(g_iRealSetTime);
     if (g_iRealRunning)
     {
-        sPrompt += "\n RL timer - "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
+        sPrompt += "\n RL Timer: "+Int2Time(g_iRealTimeUpAt-g_iCurrentTime)+" left";
     }
     else
     {
-        sPrompt += "\n RL timer - not running";
+        sPrompt += "\n RL Timer: not running";
     }
     g_kRealMenuID = Dialog(keyID, sPrompt, g_lTimeButtons, [UPMENU], 0, iAuth);
 }
@@ -286,7 +279,7 @@ TimerFinish()
     g_iOnRunning=g_iRealRunning=0;
     g_iOnTimeUpAt=g_iRealTimeUpAt=0;
     g_iWhoCanChangeTime=504;
-    Notify(g_kWearer, "The timer has expired", TRUE);
+    Notify(g_kWearer, "Yay! Timer expired!", TRUE);
     
     llMessageLinked(LINK_THIS, TIMER_EVENT, "end", "");
 }
@@ -575,14 +568,12 @@ default
         }
         g_iFirstOnTime=MAX_TIME;
         g_iFirstRealTime=MAX_TIME;
-        //llWhisper(g_iInterfaceChannel, "timer|sendtimers");
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
         //end of timekeeper
     }
     on_rez(integer iParam)
     {
         g_iLastTime=g_iLastRez=llGetUnixTime();
-        //llWhisper(g_iInterfaceChannel, "timer|sendtimers");
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
         if (g_iRealRunning == 1 || g_iOnRunning == 1)
         {
@@ -659,7 +650,6 @@ default
             }
             if(iNum==ATTACHMENT_FORWARD)
             {
-                //llWhisper(g_iInterfaceChannel, g_sMessage);//need to wispear
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
             }
         }
@@ -785,7 +775,6 @@ default
         {
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)ON_TIME+"|"+(string)g_iOnTime;
-            //llWhisper(g_iInterfaceChannel, g_sMessage);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
             
             g_iFirstOnTime=MAX_TIME;
@@ -810,7 +799,6 @@ default
         {
             //could store which is need but if both are trigered it will have to send both anyway I prefer not to check for that.
             g_sMessage="timer|timeis|"+(string)REAL_TIME+"|"+(string)g_iCurrentTime;
-            //llWhisper(g_iInterfaceChannel, g_sMessage);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
              
             g_iFirstRealTime=MAX_TIME;
