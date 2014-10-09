@@ -274,12 +274,10 @@ default
         //g_kWearer = llGetOwner();
         if (kID == NULL_KEY)
         {
-            //llWhisper(g_iInterfaceChannel, "OpenCollar=No");
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
         }
         else
         {
-            //llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
         }
         integer iAttachPt = llGetAttached();
@@ -380,7 +378,6 @@ default
                 }
                 else if (iAuth == EXT_COMMAND_COLLAR) //command from attachment to AO
                 {
-                    //llWhisper(g_iInterfaceChannel, sMsg);
                     llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
                 }
                 else
@@ -583,7 +580,6 @@ default
             // llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "auth", UUID);
             //where "auth" has to be (string)COMMAND_XY
             //reason for this is: i dont want to have all other scripts recieve a COMMAND+xy and check further for the command
-            //llWhisper(g_iInterfaceChannel, "RequestReply|" + sStr);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "RequestReply|" + sStr);
         }
         else if (iNum == TOUCH_REQUEST)
