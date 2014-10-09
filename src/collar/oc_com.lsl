@@ -274,11 +274,13 @@ default
         //g_kWearer = llGetOwner();
         if (kID == NULL_KEY)
         {
-            llWhisper(g_iInterfaceChannel, "OpenCollar=No");
+            //llWhisper(g_iInterfaceChannel, "OpenCollar=No");
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
         }
         else
         {
-            llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
+            //llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
         }
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
@@ -359,7 +361,8 @@ default
             //Debug(sMsg);
             //do nothing if wearer isnt owner of the object
             if (llGetOwnerKey(kID) != g_kWearer) return;
-            if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
+            //if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
+            if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
             else if (sMsg == "version") llMessageLinked(LINK_SET, COMMAND_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
             else {
                 list lParams = llParseString2List(sMsg, ["|"], []);
@@ -377,7 +380,8 @@ default
                 }
                 else if (iAuth == EXT_COMMAND_COLLAR) //command from attachment to AO
                 {
-                    llWhisper(g_iInterfaceChannel, sMsg);
+                    //llWhisper(g_iInterfaceChannel, sMsg);
+                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
                 }
                 else
                 {
@@ -579,7 +583,8 @@ default
             // llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "auth", UUID);
             //where "auth" has to be (string)COMMAND_XY
             //reason for this is: i dont want to have all other scripts recieve a COMMAND+xy and check further for the command
-            llWhisper(g_iInterfaceChannel, "RequestReply|" + sStr);
+            //llWhisper(g_iInterfaceChannel, "RequestReply|" + sStr);
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "RequestReply|" + sStr);
         }
         else if (iNum == TOUCH_REQUEST)
         {   //str will be pipe-delimited list with rcpt|flags|auth
