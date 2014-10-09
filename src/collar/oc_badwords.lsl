@@ -83,7 +83,7 @@ string g_sScript;
 
 Debug(string sMsg)
 {
-    //Notify(g_kWearer,llGetScriptName() + ": " + sMsg,TRUE);
+    //llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
@@ -622,7 +622,7 @@ default
                 if(g_sBadWordSound != g_sNoSound) llStopSound();
                 //stop anim
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, "");
-                Notify(g_kWearer, "Penance accepted.",FALSE);
+                llOwnerSay("Penance accepted.");
                 g_iHasSworn = FALSE;
             }
             else if (Contains(sMessage, "rembadword"))
