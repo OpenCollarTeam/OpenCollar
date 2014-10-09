@@ -364,8 +364,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         // Reply to version request from "garvin style" attachment
         integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
-        
-        //llWhisper(iInterfaceChannel, "version="+g_sCollarVersion);
         llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
     }
     return TRUE;
