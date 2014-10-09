@@ -222,9 +222,7 @@ AnimMenu(key kID, integer iAuth)
 
 AOMenu(key kID, integer iAuth) // wrapper to send menu back to the AO's menu
 {
-    //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iAuth + "|" + AO_MENU + "|" + (string)kID);
     llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iAuth + "|" + AO_MENU + "|" + (string)kID);
-    //llWhisper(g_iAOChannel, AO_MENU + "|" + (string)kID);
     llRegionSayTo(g_kWearer, g_iAOChannel, AO_MENU + "|" + (string)kID);
 }
 
@@ -429,9 +427,7 @@ StartAnim(string sAnim)
             else {
                llStartAnimation(sAnim);
             }
-            //llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_OFF);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_OFF);
-            //llWhisper(g_iAOChannel, AO_OFF);
             llRegionSayTo(g_kWearer, g_iAOChannel, AO_OFF);
             
             if (g_iHeightFix)
@@ -526,9 +522,7 @@ StopAnim(string sAnim)
             }
             else
             {
-                //llWhisper(g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
-                //llWhisper(g_iAOChannel, AO_ON);
                 llRegionSayTo(g_kWearer, g_iAOChannel, AO_ON);
             }
         }
@@ -714,16 +708,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if(sValue == "off")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOOFF" + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOOFF" + "|" + (string)kID);
-            //llWhisper(g_iAOChannel,"ZHAO_AOOFF");
             llRegionSayTo(g_kWearer, g_iAOChannel,"ZHAO_AOOFF");
         }
         else if(sValue == "on")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOON" + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOON" + "|" + (string)kID);
-            //llWhisper(g_iAOChannel,"ZHAO_AOON");
             llRegionSayTo(g_kWearer, g_iAOChannel,"ZHAO_AOON");
         }
         else if(sValue == "menu")
@@ -732,22 +722,18 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if (sValue == "lock")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_LOCK"  + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_LOCK"  + "|" + (string)kID);
         }
         else if (sValue == "unlock")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_UNLOCK"  + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_UNLOCK"  + "|" + (string)kID);
         }
         else if(sValue == "hide")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOHIDE" + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOHIDE" + "|" + (string)kID);
         }
         else if(sValue == "show")
         {
-            //llWhisper(g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW" + "|" + (string)kID);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW" + "|" + (string)kID);
         }
     }
@@ -925,9 +911,7 @@ default
         {
             //Debug("detached");
             //we were just detached.  clear the anim list and tell the ao to play stands again.
-            //llWhisper(g_iInterfaceChannel, (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, (string)EXT_COMMAND_COLLAR + "|" + AO_ON);
-            //llWhisper(g_iAOChannel, AO_ON);
             llRegionSayTo(g_kWearer, g_iAOChannel, AO_ON);
             g_lAnims = [];
         }
