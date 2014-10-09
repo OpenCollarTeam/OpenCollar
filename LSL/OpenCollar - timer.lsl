@@ -279,7 +279,7 @@ TimerFinish()
     g_iOnRunning=g_iRealRunning=0;
     g_iOnTimeUpAt=g_iRealTimeUpAt=0;
     g_iWhoCanChangeTime=504;
-    Notify(g_kWearer, "Yay! Timer expired!", TRUE);
+    llOwnerSay("Yay! Timer expired!");
     
     llMessageLinked(LINK_THIS, TIMER_EVENT, "end", "");
 }
