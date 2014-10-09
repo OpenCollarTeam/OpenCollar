@@ -126,7 +126,7 @@ string Mode2String(integer iMin)
 {
     string sOut;
     if (iMin)
-    { 
+    {
         if (!g_iMinBaseMode) sOut+="off";
         else if (g_iMinBaseMode==1) sOut+="restricted";
         else if (g_iMinBaseMode==2) sOut+="ask";
@@ -139,7 +139,7 @@ string Mode2String(integer iMin)
         else sOut+=", landowner not trusted.";
     }
     else
-    { 
+    {
         if (!g_iBaseMode) sOut+="off";
         else if (g_iBaseMode==1) sOut+="restricted";
         else if (g_iBaseMode==2) sOut+="ask";
@@ -345,8 +345,8 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
 sendrlvr(string sIdent, key kID, string sCom, string sAck)
 {
     llRegionSayTo(kID, RELAY_CHANNEL, sIdent+","+(string)kID+","+sCom+","+sAck);
-    if (g_kDebugRcpt == g_kWearer) llOwnerSay("From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);    
-    else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);    
+    if (g_kDebugRcpt == g_kWearer) llOwnerSay("From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
+    else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
 }
 
 SafeWord()
@@ -482,7 +482,7 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     for (i=0;i<(lOList!=[]);++i)
     {
         lButtons+=(string)(i+1);
-        llInstantMessage(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i));
+        Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i), FALSE );
     }
     sPrompt+="\n\nMake a choice:";
     g_kListID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -491,10 +491,10 @@ PListsMenu(key kID, string sMsg, integer iAuth)
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
-} 
+}
 
 RemListItem(string sMsg, integer iAuth)
 {
@@ -503,7 +503,7 @@ RemListItem(string sMsg, integer iAuth)
     {
         if (sMsg==ALL) {g_lAvBlackList=[];g_lAvBlackListNames=[];return;}
         if  (i<(g_lAvBlackList!=[]))
-        { 
+        {
             g_lAvBlackList=llDeleteSubList(g_lAvBlackList,i,i);
             g_lAvBlackListNames=llDeleteSubList(g_lAvBlackListNames,i,i);
         }
@@ -533,8 +533,8 @@ RemListItem(string sMsg, integer iAuth)
     else if (g_sListType=="Trusted Avatar")
     {
         if (sMsg==ALL) {g_lAvWhiteList=[];g_lAvWhiteListNames=[];return;}
-        if  (i<(g_lAvWhiteList!=[])) 
-        { 
+        if  (i<(g_lAvWhiteList!=[]))
+        {
             g_lAvWhiteList=llDeleteSubList(g_lAvWhiteList,i,i);
             g_lAvWhiteListNames=llDeleteSubList(g_lAvWhiteListNames,i,i);
         }
@@ -605,7 +605,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") MinModeMenu(kID, iNum);
     else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
-        llInstantMessage(kID, "Sorry, only the wearer of the " + CTYPE + " or their owner can change the relay options.");
+        Notify(kID, "Sorry, only the wearer of the " + CTYPE + " or their owner can change the relay options.", FALSE);
     else if (sStr=="safeword") SafeWord();
     else if (sStr=="getdebug")
     {
@@ -662,7 +662,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             else iOSuccess = 3;
         }
-        else 
+        else
         {
             integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
             if (~modetype)
@@ -716,7 +716,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else if (sChangevalue == "on") g_iPlayMode = TRUE;
             else iWSuccess = 3;
         }
-        else 
+        else
         {
             integer modetype = llListFindList(["off", "restricted", "ask", "auto"], [sChangetype]);
             if (~modetype)
@@ -764,7 +764,7 @@ default
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE)
                 && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
             integer iInd = llSubStringIndex(sStr, "=");
             string sValue = llGetSubString(sStr, iInd + 1, -1);
@@ -870,7 +870,7 @@ default
                     {
                         ListsMenu(kAv, iAuth);
                     }
-                    else 
+                    else
                     {
                         RemListItem(sMsg, iAuth);
                         ListsMenu(kAv, iAuth);
@@ -999,7 +999,7 @@ default
         if (iAuth==-1) return;
         else if (iAuth==1) {HandleCommand(sIdent,kID,sMsg,TRUE); llSetTimerEvent(g_iGarbageRate);}
         else if (g_iBaseMode == 2)
-        {   
+        {
 //            llOwnerSay("Free memory before queueing: "+(string)(llGetMemoryLimit() - llGetUsedMemory()));
 //            if (llGetMemoryLimit() - llGetUsedMemory()> 5000) //keeps margin for this event + next arriving chat message
 //            {
