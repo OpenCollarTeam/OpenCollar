@@ -248,7 +248,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
             }
             Notify(kCmdGiver, sCmdMess, FALSE);
         }
-        Notify(g_kWearer, sWearMess, FALSE);
+        llOwnerSay(sWearMess);
     }
 
     g_bFollowMode = iFollowMode; // leashing, or following
@@ -352,7 +352,7 @@ Unleash(key kCmdGiver)
                 }
                 Notify(kCmdGiver, sCmdMess, FALSE);
             }
-            Notify(g_kWearer, sWearMess, FALSE);
+            llOwnerSay(sWearMess);
         }
         DoUnleash();
     } else {
