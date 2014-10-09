@@ -168,7 +168,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 } 
 
 Menu(key kID, integer iAuth, string sMenuName) {
-    //Debug("Making menu"+sMenuName);
+    //Debug("Making menu "+sMenuName);
     if (!g_iRLVOn) {
         Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
@@ -299,14 +299,15 @@ ClearSettings(string _category) { //clear local settings list, delte from settin
 UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     if (iNum > COMMAND_WEARER) return;  //nothing for lower than wearer here
     sStr=llStringTrim(sStr,STRING_TRIM);
+    string sStrLower=llToLower(sStr);
     
-    if (llToLower(sStr) == "sitmenu" || llToLower(sStr) == "menu sit") Menu(kID, iNum, "rlvsit_");
-    else if (llToLower(sStr) == "rlvtp" || llToLower(sStr) == "menu travel") Menu(kID, iNum, "rlvtp_");
-    else if (llToLower(sStr) == "rlvtalk" || llToLower(sStr) == "menu talk") Menu(kID, iNum, "rlvtalk_");
-    else if (llToLower(sStr) == "rlvtouch" || llToLower(sStr) == "menu touch") Menu(kID, iNum, "rlvtouch_");
-    else if (llToLower(sStr) == "rlvmisc" || llToLower(sStr) == "menu misc") Menu(kID, iNum, "rlvmisc_");
-    else if (llToLower(sStr) == "rlvview" || llToLower(sStr) == "menu v̶i̶e̶w̶") Menu(kID, iNum, "rlvview_");
-    else if (llToLower(sStr) == "sitnow") {
+    if (sStrLower == "sitmenu" || sStrLower == "menu sit") Menu(kID, iNum, "rlvsit_");
+    else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
+    else if (sStrLower == "rlvtalk" || sStrLower == "menu talk") Menu(kID, iNum, "rlvtalk_");
+    else if (sStrLower == "rlvtouch" || sStrLower == "menu touch") Menu(kID, iNum, "rlvtouch_");
+    else if (sStrLower == "rlvmisc" || sStrLower == "menu misc") Menu(kID, iNum, "rlvmisc_");
+    else if (sStrLower == "rlvview" || sStrLower == "menu v̶i̶e̶w̶") Menu(kID, iNum, "rlvview_");
+    else if (sStrLower == "sitnow") {
         if (!g_iRLVOn) {
             Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
             llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
@@ -357,7 +358,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                         SetSetting(sCategory, sOption, sParam);
                     }
                 }
-            } else if (~llListFindList(llList2ListStrided(g_lIdmtCmds,0,-1,g_lIdmtCmds_stride), ["rlvsit_",sBehavior])) {
+            } else if (~llListFindList(llList2ListStrided(llDeleteSubList(g_lIdmtCmds,0,0),0,-1,g_lIdmtCmds_stride), [sBehavior])) {
                 //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
                 if (iNum == COMMAND_WEARER) Notify(g_kWearer, "Sorry, but RLV commands may only be given by owner, secowner, or group (if set).", FALSE);
@@ -373,7 +374,6 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
         }
         if (fromMenu!="") Menu(kID, iNum, fromMenu);
     }
-    return;
 }
 
 default {
@@ -492,7 +492,8 @@ default {
                 if (sMenu == "FindSeatMenu") {
                     if (sMessage==UPMENU) Menu(kAv, iAuth, "rlvsit_");
                     else if ((key) sMessage) {
-                        UserCommand(iAuth, "sit:" + sMessage + "=force", kAv, "rlvsit");
+                        //Debug("Sending \""+"sit:" + sMessage + "=force\" to "+(string)kAv+" with auth "+(string)iAuth);
+                        UserCommand(iAuth, "sit:" + sMessage + "=force", kAv, "rlvsit_");
                     }                            
                 } else {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
