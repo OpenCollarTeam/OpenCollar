@@ -153,8 +153,8 @@ FetchAvi(integer iAuth, string type, string name, key kAv) {
 }
 
 AuthMenu(key kAv, integer iAuth) {
-    string sPrompt = "\n✓: add someone\n✗: remove someone\n\nwww.opencollar.at/access";
-    list lButtons = ["✓ Owner", "✓ Secowner", "✓ Blacklisted", "✗ Owner", "✗ Secowner", "✗ Blacklisted"];
+    string sPrompt = "\nOpen the pod bay doors, "+CTYPE+".\n\nwww.opencollar.at/access";
+    list lButtons = ["➕ Owner", "➕ Secowner", "➕ Blacklisted", "➖ Owner", "➖ Secowner", "➖ Blacklisted"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☒"];    //unset group
@@ -757,14 +757,14 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else {
                         list lTranslation=[
-                            "✓ Owner","owner",
-//                            "✓ Temp Owner","tempowner",
-                            "✓ Secowner","secowner",
-                            "✓ Blacklisted","blacklist",
-                            "✗ Owner","remowner",
-//                            "✗ Temp Owner","remtempowner",
-                            "✗ Secowner","remsecowner",
-                            "✗ Blacklisted","remblacklist",
+                            "➕ Owner","owner",
+//                            "➕ Temp Owner","tempowner",
+                            "➕ Secowner","secowner",
+                            "➕ Blacklisted","blacklist",
+                            "➖ Owner","remowner",
+//                            "➖ Temp Owner","remtempowner",
+                            "➖ Secowner","remsecowner",
+                            "➖ Blacklisted","remblacklist",
                             "Group ☐","setgroup",
                             "Group ☒","unsetgroup",
                             "Public ☐","setopenaccess",
