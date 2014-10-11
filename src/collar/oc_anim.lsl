@@ -90,7 +90,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     }
 }
 
-///*
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -102,7 +102,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
-//*/
+*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -231,8 +231,6 @@ RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and
 }
 
 StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and calls AO as necessary
-    Debug("Start anim "+sAnim);
-    Debug("Anims in the queue:"+llDumpList2String(g_lAnims,","));
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
             //stop currently playing anim
@@ -534,7 +532,7 @@ default {
                 g_lAnimScalars += llParseString2List(sData, ["|"], []);
                 g_kDataID = llGetNotecardLine("~heightscalars", ++g_iLine);
             }
-            else Debug("Starting");
+            //else Debug("Starting");
         }
     }
 
