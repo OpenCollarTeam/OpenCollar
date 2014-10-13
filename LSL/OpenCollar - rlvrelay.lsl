@@ -742,8 +742,7 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
     }
@@ -764,18 +763,6 @@ default
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE)
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
-        }
         else if (iNum == LM_SETTING_RESPONSE)
         {   //this is tricky since our db value contains equals signs
             //split string on both comma and equals sign
@@ -785,6 +772,7 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sScript + "settings") UpdateSettings(sValue);
             else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             else if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
