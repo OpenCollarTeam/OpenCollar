@@ -1,5 +1,7 @@
-Issue: 20141110.1
+Issue: 20141111.1
 
-Sprechen Sie Deutsch?
+OpenCollar 3.990 has been released and concludes the 3.9 API era.
 
-Vist us at [http://maps.secondlife.com/secondlife/Keraxic/52/199/25 Der Tempel des Collars]! Detailed information can be found on the [http://www.opencollar.at/blog OpenCollar Website].
+We want to thank everyone for their feedback and interest and hope you enjoy this very polished version.
+
+Details can be found on the [http://www.opencollar.at/blog OpenCollar Website].
