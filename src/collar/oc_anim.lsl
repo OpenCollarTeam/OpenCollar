@@ -538,14 +538,7 @@ default {
     }
 
     changed(integer iChange) {
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
+        if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_TELEPORT) RefreshAnim();
 
         if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
@@ -554,7 +547,14 @@ default {
             if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
         }
-        if (iChange & CHANGED_OWNER) llResetScript();
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
     }
 
     run_time_permissions(integer iPerm) {
