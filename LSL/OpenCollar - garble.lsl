@@ -96,7 +96,7 @@ SetPrefix(string in)
     if (in != "auto") gsPref = in;
     else
     {
-        sName = llKey2Name(g_kWearer);
+        string sName = llKey2Name(g_kWearer);
         integer i = llSubStringIndex(sName, " ") + 1;
         string init = llGetSubString(sName, 0, 0) + llGetSubString(sName, i, i);
         gsPref = llToLower(init);
@@ -260,7 +260,7 @@ default
             {
                 if (sV == "") sV = "auto";
                 SetPrefix(sV);
-            } else if (sT=="Global_WearerName") WEARERNAME=sValue;
+            } else if (sT=="Global_WearerName") WEARERNAME=sV;
         }
         else if (iM == LM_SETTING_EMPTY && sM == GetScriptID() + "Binder") release(kM,iL);
         else if (iM == LM_SETTING_SAVE) // Have to update the safeword if it is changed between resets
