@@ -359,6 +359,13 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     return TRUE;
 }
 
+string GetName(key uuid)
+{
+    string name = llGetDisplayName(uuid);
+    if (name == "???" || name == "") name = llKey2Name(uuid);
+    return name;
+}
+
 default
 {
     state_entry()
@@ -366,7 +373,7 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // key of the owner
         g_kWearer=llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        WEARERNAME = GetName(g_kWearer);  //quick and dirty default, will get replaced by value from settings
 
         // reset script time used for ringing the bell in intervalls
         llResetTime();
