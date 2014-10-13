@@ -81,26 +81,17 @@ list g_lHeightFixAnims;  //stores a list of all of the heighfix anims installed 
 integer g_iMaxHeightAdjust;  //largest height fix anim
 integer g_iMinHeightAdjust;  //smallest height fix anim
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
-
 /*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
+    //  profiling is off, debug is off, and the compiler will remind you to 
     //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled) {
+    if (!g_iProfiled){
         g_iProfiled=1;
         llScriptProfiler(1);
     }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
 
@@ -112,6 +103,15 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);  //we've alread given a menu to this user.  overwrite their entry
     else g_lMenuIDs += [kID, kMenuID, sName];  //we've not already given this user a menu. append to list
     //Debug("Made "+sName+" menu.");
+}
+
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else {
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+    }
 }
 
 AnimMenu(key kID, integer iAuth) {
@@ -524,6 +524,7 @@ default {
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);  //start reading the ~heightscalars notecard
+        //Debug("Starting");
     }
 
     dataserver(key kID, string sData) {
@@ -532,7 +533,7 @@ default {
                 g_lAnimScalars += llParseString2List(sData, ["|"], []);
                 g_kDataID = llGetNotecardLine("~heightscalars", ++g_iLine);
             }
-            //else Debug("Starting");
+            //else Debug("Notecard read complete");
         }
     }
 
