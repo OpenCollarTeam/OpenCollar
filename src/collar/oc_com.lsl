@@ -264,7 +264,9 @@ default
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
         
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
+
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
+        llSetTimerEvent(60.0);  //set timer event to catch changes in display name
         //Debug("Starting");
     }
 
