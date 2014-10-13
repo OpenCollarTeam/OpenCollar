@@ -510,7 +510,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 default {
     on_rez(integer iNum) {
-        if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
+        if (llGetAttached()) llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
     }
 
     state_entry() {
