@@ -487,8 +487,7 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
@@ -604,18 +603,6 @@ default
             }
         }
         else if (UserCommand(iNum, sStr, kID, FALSE)) return;
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
-        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -625,7 +612,6 @@ default
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
             } else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
@@ -646,7 +632,7 @@ default
             else if (sToken == "Global_news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            }
+            } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         }
         else if (iNum == DIALOG_TIMEOUT)
         {

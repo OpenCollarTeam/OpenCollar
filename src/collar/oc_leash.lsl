@@ -663,8 +663,7 @@ default
     state_entry() {
         //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         llMinEventDelay(0.3);
         
         DoUnleash();
@@ -679,8 +678,6 @@ default
     changed (integer change){
         if (change & CHANGED_OWNER){
             g_kWearer = llGetOwner();
-            WEARERNAME = llGetDisplayName(g_kWearer);
-            if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         }
     }
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
@@ -701,17 +698,6 @@ default
             g_iStay = FALSE;
             llReleaseControls();
             DoUnleash();
-        } else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sMessage, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sMessage, "=");
-            string sValue = llGetSubString(sMessage, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, iInd -1);
@@ -742,6 +728,7 @@ default
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
             } else if (sToken == "Global_CType") CTYPE = sValue;
+             else if (sToken=="Global_WearerName") WEARERNAME=sValue;
             //else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);

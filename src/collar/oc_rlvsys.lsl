@@ -464,8 +464,7 @@ default {
         //Debug("Starting");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
     }
 
     on_rez(integer param){
@@ -520,7 +519,6 @@ default {
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
             else if (sToken=="Global_CType") CTYPE=sValue;
-            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);

@@ -184,7 +184,6 @@ list g_lLockedAttach; // list of locked attachmemts
 
 key g_kWearer;
 string g_sScript;
-string g_sWearerName;
 integer g_iAllLocked = 0;  //1=all clothes are locked on
 
 Debug(string sMsg)
@@ -568,14 +567,14 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (sMessage==ALL||sStr== "lockclothing")
         {
             g_lLockedItems += [ALL];
-            Notify(kID, g_sWearerName+"'s clothing has been locked.", TRUE);
+            Notify(kID, WEARERNAME+"'s clothing has been locked.", TRUE);
             llMessageLinked(LINK_SET, iNum,  "remoutfit=n", kID);
             llMessageLinked(LINK_SET, iNum,  "addoutfit=n", kID);
         }
         else if (llListFindList(LOCK_CLOTH_POINTS,[sMessage])!=-1)
         {
             g_lLockedItems += sMessage;
-            Notify(kID, g_sWearerName+"'s "+sMessage+" has been locked.", TRUE);
+            Notify(kID, WEARERNAME+"'s "+sMessage+" has been locked.", TRUE);
             llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=n", kID);
             llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=n", kID);
         }
@@ -594,7 +593,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 llMessageLinked(LINK_SET, iNum,  "remoutfit=y", kID);
                 llMessageLinked(LINK_SET, iNum,  "addoutfit=y", kID);
-                Notify(kID, g_sWearerName+"'s clothing has been unlocked.", TRUE);
+                Notify(kID, WEARERNAME+"'s clothing has been unlocked.", TRUE);
                 integer iIndex = llListFindList(g_lLockedItems,[ALL]);
                 if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
             }
@@ -602,7 +601,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 llMessageLinked(LINK_SET, iNum,  "remoutfit:" + sMessage + "=y", kID);
                 llMessageLinked(LINK_SET, iNum,  "addoutfit:" + sMessage + "=y", kID);
-                Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
+                Notify(kID, WEARERNAME+"'s "+sMessage+" has been unlocked.", TRUE);
                 integer iIndex = llListFindList(g_lLockedItems,[sMessage]);
                 if (iIndex!=-1) g_lLockedItems = llDeleteSubList(g_lLockedItems,iIndex,iIndex);
             }
@@ -619,7 +618,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (llListFindList(ATTACH_POINTS ,[sPoint])!=-1)
         {
             if (llListFindList(g_lLockedAttach, [sPoint]) == -1) g_lLockedAttach += [sPoint];
-            Notify(kID, g_sWearerName+"'s "+sPoint+" attachment point is now locked.", TRUE);
+            Notify(kID, WEARERNAME+"'s "+sPoint+" attachment point is now locked.", TRUE);
             llMessageLinked(LINK_SET, iNum,  "detach:" + sPoint + "=n", kID);
         }
         else
@@ -637,7 +636,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             DoLockAll(kID); //lock all clothes and attachment points
             SaveLockAllFlag(1);
-            Notify(kID, g_sWearerName+"'s clothing and attachments have been locked.", TRUE);
+            Notify(kID, WEARERNAME+"'s clothing and attachments have been locked.", TRUE);
         }
     }
     else  if (sStr == "unlockall")
@@ -650,7 +649,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             DoUnlockAll(kID); //unlock all clothes and attachment points
             SaveLockAllFlag(0);
-            Notify(kID, g_sWearerName+"'s clothing and attachments have been unlocked.", TRUE);
+            Notify(kID, WEARERNAME+"'s clothing and attachments have been unlocked.", TRUE);
         }
     }
     else if (llGetSubString(sStr, 0, 15) == "unlockattachment")
@@ -664,7 +663,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             string sMessage = llGetSubString(sStr, 17, -1);
         {
             llMessageLinked(LINK_SET, iNum,  "detach:" + sMessage + "=y", kID);
-            Notify(kID, g_sWearerName+"'s "+sMessage+" has been unlocked.", TRUE);
+            Notify(kID, WEARERNAME+"'s "+sMessage+" has been unlocked.", TRUE);
             integer iIndex = llListFindList(g_lLockedAttach,[sMessage]);
             if (iIndex!=-1) g_lLockedAttach = llDeleteSubList(g_lLockedAttach,iIndex,iIndex);
         }
@@ -717,9 +716,7 @@ default
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-        g_sWearerName = WEARERNAME;
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         //llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -738,18 +735,6 @@ default
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lSubMenus = []; //flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-        }
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {   //this is tricky since our db value contains equals signs
@@ -778,6 +763,7 @@ default
                 }
             }
             else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         }
         else if (iNum == RLV_REFRESH)
         {//rlvmain just started up.  Tell it about our current restrictions

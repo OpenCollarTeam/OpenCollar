@@ -359,13 +359,6 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     return TRUE;
 }
 
-string GetName(key uuid)
-{
-    string name = llGetDisplayName(uuid);
-    if (name == "???" || name == "") name = llKey2Name(uuid);
-    return name;
-}
-    
 default
 {
     state_entry()
@@ -373,7 +366,7 @@ default
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         // key of the owner
         g_kWearer=llGetOwner();
-        WEARERNAME = GetName(g_kWearer);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
 
         // reset script time used for ringing the bell in intervalls
         llResetTime();
@@ -426,17 +419,6 @@ default
                 }
             }
         }
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE)
-            && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-        integer iInd = llSubStringIndex(sStr, "=");
-        string sValue = llGetSubString(sStr, iInd + 1, -1);
-        //We have a broadcasted change to WEARERNAME to work with
-        if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-        else {
-            g_kWearer = llGetOwner();
-            WEARERNAME = GetName(g_kWearer);
-            }
-        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             // some responses from the DB are coming in, check if it is about bell values
@@ -472,7 +454,7 @@ default
                 }
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
-            }
+            } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)

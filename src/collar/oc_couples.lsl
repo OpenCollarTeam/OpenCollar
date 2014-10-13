@@ -226,8 +226,7 @@ default
         //llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer); //sanity check, fallback if necessary
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD)
         {//card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
@@ -312,18 +311,6 @@ default
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
-            }
-        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -332,7 +319,7 @@ default
             if(sToken == g_sScript + "timeout")
             {
                 g_fTimeOut = (float)sValue;
-            }
+            } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -390,7 +377,7 @@ default
                     //process return from sensordialog
                     g_kPartner = (key)sMessage;
                     g_sPartnerName = llGetDisplayName(g_kPartner);
-                    if (g_sPartnerName == "???" || g_sPartnerName == "") WEARERNAME = llKey2Name(g_kPartner); //sanity check, fallback if necessary
+                    if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kPartner); //sanity check, fallback if necessary
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);

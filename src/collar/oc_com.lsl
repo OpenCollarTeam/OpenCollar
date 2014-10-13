@@ -224,8 +224,6 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
         
         list name = llParseString2List(llKey2Name(g_kWearer), [" "], []);
         g_sPrefix = llGetSubString(llList2String(name, 0), 0, 0);
@@ -264,7 +262,8 @@ default
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_prefix", "");
+        
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
         //Debug("Starting");
     }
@@ -435,6 +434,7 @@ default
                         WEARERNAME = llGetDisplayName(g_kWearer);
                         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
+                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
                         message += WEARERNAME;
                         g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
@@ -446,7 +446,7 @@ default
                         g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
-                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", ""); //force update scripts                        
+                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
                     }               
                 }
                 else if (sCommand == "channel")
@@ -539,6 +539,12 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+        } else if (iNum == LM_SETTING_EMPTY) {
+            if (sStr=="Global_WearerName"){
+                WEARERNAME = llGetDisplayName(g_kWearer);
+                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
+                llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+WEARERNAME,"");
+            }
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -640,7 +646,7 @@ default
                 //The displayname loaded correctly, and it's different than our current WEARERNAME
                 //wearer changed their displayname since last timer event
                 WEARERNAME = sLoadDisplayName;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  //force update other scripts
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  //force update other scripts
             }
         }
     }
