@@ -128,10 +128,29 @@ Debug(string sStr) {
         g_iProfiled=1;
         llScriptProfiler(1);
     }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
 
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, sName];
+
+    //Debug("Made "+sName+" menu.");
+} 
+
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else {
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+    }
+}
 
 string AutoPrefix()
 {
@@ -178,27 +197,6 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
     }
     //Debug((string)(v1a > v2a));
     return v1a > v2a;
-}
-
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) { //we've alread given a menu to this user.  overwrite their entry
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    } else { //we've not already given this user a menu. append to list
-        g_lMenuIDs += [kID, kMenuID, sName];
-    }
-} 
-
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
 }
 
 AppsMenu(key kID, integer iAuth) {
@@ -499,8 +497,6 @@ default
         
         g_sPrefix=AutoPrefix();
         
-        //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
-        //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
         //Debug("Starting");
     }
     
@@ -663,34 +659,6 @@ default
         init();
     }
     
-    changed(integer iChange)
-    {
-        if (iChange & CHANGED_INVENTORY)
-        {
-            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
-                RebuildMenu(); //llResetScript();
-            }
-            g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
-        }
-        if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_COLOR) // ********************* 
-        {
-            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
-                g_iHide = iNewHide;
-                SetLockElementAlpha(); // update hide elements 
-            }
-        }
-        if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
-/*        
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/        
-    }
     attach(key kID)
     {
         if (g_iLocked)
@@ -754,5 +722,34 @@ default
             llSetRemoteScriptAccessPin(pin);
             llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
         }
+    }
+    
+    changed(integer iChange)
+    {
+        if (iChange & CHANGED_INVENTORY)
+        {
+            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
+                RebuildMenu(); //llResetScript();
+            }
+            g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
+        }
+        if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_COLOR) // ********************* 
+        {
+            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
+                g_iHide = iNewHide;
+                SetLockElementAlpha(); // update hide elements 
+            }
+        }
+        if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
 }

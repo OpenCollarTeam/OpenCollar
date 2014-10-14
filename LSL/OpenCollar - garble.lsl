@@ -48,7 +48,6 @@ integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon
 string g_sParentMenu = "Apps";
 string GARBLE = "☐ Garble";
 string UNGARBLE = "☒ Garble";
-integer g_nDebugMode=FALSE; // set to TRUE to enable Debug messages
 
 string WEARERNAME;
 
@@ -62,11 +61,19 @@ integer bOn;
 integer g_iBinder;
 key g_kBinder;
 
-Debug(string _m)
-{
-    if (!g_nDebugMode) return;
-    llOwnerSay(llGetScriptName() + ": " + _m);
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
+*/
 
 Notify(key _k, string _m, integer NotifyWearer)
 {
@@ -85,12 +92,14 @@ string GetScriptID()
     list parts = llParseString2List(llGetScriptName(), ["-"], []);
     return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
 }
+
 string PeelToken(string in, integer slot)
 {
     integer i = llSubStringIndex(in, "_");
     if (!slot) return llGetSubString(in, 0, i);
     return llGetSubString(in, i + 1, -1);
 }
+
 SetPrefix(string in)
 {
     if (in != "auto") gsPref = in;
@@ -101,8 +110,9 @@ SetPrefix(string in)
         string init = llGetSubString(sName, 0, 0) + llGetSubString(sName, i, i);
         gsPref = llToLower(init);
     }
-    Debug("Prefix set to: " + gsPref);
+    //Debug("Prefix set to: " + gsPref);
 }
+
 string garble(string _i)
 {
     // return punctuations unharmed
@@ -194,6 +204,7 @@ default
         llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", "");
         llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, GetScriptID() + "Binder", "");
         //llSleep(1.0);
+        //Debug("Starting");
     }
     listen(integer _c, string _n, key _k, string _m)
     {
@@ -277,4 +288,15 @@ default
         }
         if (iM == COMMAND_SAFEWORD) release(kM,iL);
     }
+    
+/*
+    changed(integer iChange) {
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+    }
+*/
 }

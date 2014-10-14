@@ -78,6 +78,28 @@ integer g_iAllAlpha = 1 ;
 
 integer g_iHasElements = FALSE;
 
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
+}
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -87,14 +109,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
 }
 
 string Float2String(float in)
@@ -418,6 +432,7 @@ default
         BuildElementList();
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
+        //Debug("Starting");
     }
 
     on_rez(integer iParam)
@@ -427,12 +442,6 @@ default
         if (!g_iHasElements) BuildElementList();
     }
     
-    changed(integer change)
-    {
-        if (change & CHANGED_LINK) BuildElementList();
-        if (change & CHANGED_OWNER) llResetScript();
-    }
-
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (UserCommand(iNum, sStr, kID)) return;
@@ -519,4 +528,18 @@ default
             }
         }
     }
+    
+    changed(integer change) {
+        if (change & CHANGED_LINK) BuildElementList();
+        if (change & CHANGED_OWNER) llResetScript();
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
+    }
 }
+

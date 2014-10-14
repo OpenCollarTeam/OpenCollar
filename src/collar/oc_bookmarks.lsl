@@ -62,16 +62,23 @@ integer DIALOG_RESPONSE            = -9001;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
+    //  profiling is off, debug is off, and the compiler will remind you to 
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
         llScriptProfiler(1);
     }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
 
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
+}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -94,14 +101,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-                    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
-}
 
 DoMenu(key keyID, integer iAuth)
 {
@@ -432,21 +431,6 @@ default {
         }
     }
 
-    changed(integer iChange) {
-        if(iChange & CHANGED_INVENTORY) {
-            ReadDestinations();
-        }
-        if(iChange & CHANGED_OWNER) { llResetScript(); }
-        /*
-         if (iChange & CHANGED_REGION) {
-             if (g_iProfiled){
-                 llScriptProfiler(1);
-                 Debug("profiling restarted");
-              }
-         }
-         */
-    }
-
 
     state_entry() {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
@@ -457,6 +441,7 @@ default {
         // send request to main menu and ask other menus if they want to register with us
         llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
         llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
+        //Debug("Starting");
     }
 
     on_rez(integer iParam) {
@@ -561,4 +546,20 @@ default {
             }
         }
     }
+    
+    changed(integer iChange) {
+        if(iChange & CHANGED_INVENTORY) {
+            ReadDestinations();
+        }
+        if(iChange & CHANGED_OWNER) { llResetScript(); }
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
+    }
 }
+

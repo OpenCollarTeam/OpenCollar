@@ -56,15 +56,30 @@ integer g_iAppLock = FALSE;
 string g_sAppLockToken = "Appearance_Lock";
 
 //standard OC functions
-Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string menuType) {
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    list lAddMe = [kRCPT, kID, menuType];
+    list lAddMe = [kRCPT, kID, sName];
     if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
     else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
+    //Debug("Made "+sName+" menu.");
 } 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
@@ -75,8 +90,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
-Debug(string sStr){llOwnerSay(llGetScriptName() + ": " + sStr);}
 
 //menu generators
 StyleMenu(key kAv, integer iAuth) 
@@ -224,6 +237,7 @@ default
             g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,0);
         }
         //else llOwnerSay(g_sNotecardName+" notecard absent!");        
+        //Debug("Starting");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) 
@@ -330,5 +344,13 @@ default
             }            
         }
         if (change & CHANGED_OWNER) llResetScript();            
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
     }
 }

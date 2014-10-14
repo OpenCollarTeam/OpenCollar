@@ -109,9 +109,20 @@ Debug(string sStr) {
         g_iProfiled=1;
         llScriptProfiler(1);
     }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
+
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, sName];
+
+    //Debug("Made "+sName+" menu.");
+} 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -121,18 +132,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) { //we've alread given a menu to this user.  overwrite their entry
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    } else { //we've not already given this user a menu. append to list
-        g_lMenuIDs += [kID, kMenuID, sName];
-    }
-} 
 
 FetchAvi(integer iAuth, string type, string name, key kAv) {
     if (name == "") name = " ";
@@ -595,7 +594,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
 default
 {
     state_entry() {   //until set otherwise, wearer is owner
-        //Debug("Starting");
         g_sScript = "auth_";
         g_kWearer = llGetOwner();
         SetPrefix("auto");
@@ -611,6 +609,7 @@ default
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "secowners", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "tempowners", "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "blacklist", "");
+        //Debug("Starting");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {  

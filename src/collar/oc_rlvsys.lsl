@@ -99,7 +99,6 @@ Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
     //  remove the debug calls from the code, we're back to production mode
-    //llSleep(0.1);
     if (!g_iProfiled){
         g_iProfiled=1;
         llScriptProfiler(1);
@@ -127,6 +126,7 @@ DoMenu(key kID, integer iAuth){
     if (g_iRlvaVersion) sPrompt += " (RLVa: "+g_sRlvaVersionString+")";
     sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
+    //Debug("Made menu.");
 } 
 
 rebakeSourceRestrictions(key kSource){
@@ -454,6 +454,7 @@ default {
         //Debug("g_iRlvVersion: "+(string)g_iRlvVersion+" g_sRlvVersionString: "+g_sRlvVersionString+ " g_sRlvaVersionString: "+g_sRlvaVersionString+ " g_iRlvaVersion: "+(string)g_iRlvaVersion);
         //Debug("|"+sMsg+"|");
         setRlvState();
+        //Debug("Starting");
     } //Firestorm - viewer response: RestrainedLove viewer v2.8.0 (RLVa 1.4.10)
       //Firestorm - rlvmain parsed result: g_iRlvVersion: 208 (same as before) g_sRlvVersionString: 2.8.0 (same as before) g_sRlvaVersionString: 1.4.10 (new) g_iRlvaVersion: 104 (new)
       //
@@ -681,14 +682,6 @@ default {
             }
 
         }
-/*        
-        if (change & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/        
         if (change & CHANGED_INVENTORY) { //A script may have been recompiled or added, lets refresh the RLV state for other scripts
             if (g_iRlvActive==TRUE) {
                 llSleep(2);
@@ -697,4 +690,12 @@ default {
             }
         }
     }
+/*        
+        if (change & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
 }

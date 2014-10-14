@@ -80,7 +80,26 @@ list g_lColours=[
     "White",<1.00000, 1.00000, 1.00000>
 ];
 
-//Debug(string sMsg) {llOwnerSay(llGetScriptName() + " (debug): " + sMsg);}
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
+}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -89,12 +108,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
 }
 
 ShowHideText(){
@@ -192,8 +205,6 @@ integer UserCommand(integer iAuth, string sStr, key kAv){
 
 default{
     state_entry(){
-        //llOwnerSay("state entry:"+(string)llGetFreeMemory());
-
         //get colour, description and 
         g_iTextPrim = -1 ;
         // find the text prim
@@ -211,12 +222,12 @@ default{
             }
         }
         g_kWearer = llGetOwner();
-        //Debug("State Entry Event ended");
         
         if (g_iTextPrim < 0) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sFeatureName, "");
             llRemoveInventory(llGetScriptName());
         }
+        //Debug("Starting");
     } 
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -281,12 +292,20 @@ default{
             }
         }
     }
-
-    changed(integer iChange){
-        if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
-    }
     
     on_rez(integer param){
         llResetScript();
+    }
+
+    changed(integer iChange){
+        if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
     }
 }

@@ -92,6 +92,28 @@ integer WEARERLOCKOUT = 620;
 
 string UPMENU = "BACK";
 
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
+} 
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -102,19 +124,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
-Debug(string sMsg)
-{
-    //llOwnerSay(llGetScriptName() + ": " + sMsg);
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" 
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
-} 
 
 DoMenu(key keyID, integer iAuth)
 {
@@ -570,6 +579,7 @@ default
         g_iFirstRealTime=MAX_TIME;
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
         //end of timekeeper
+        //Debug("Starting");
     }
     on_rez(integer iParam)
     {
@@ -831,4 +841,15 @@ default
         }
         g_iLastTime=g_iCurrentTime;
     }
+    
+/*
+    changed(integer iChange) {
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+    }
+*/
 }

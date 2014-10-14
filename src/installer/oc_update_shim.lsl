@@ -34,6 +34,19 @@ list lDeprecatedSettingTokens = [
     "collarversion"
 ];
 
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
 
 // Return the name and version of an item as a list.  If item has no version, return empty string for that part.
 list GetNameParts(string name) {
@@ -73,10 +86,6 @@ integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on 
 integer LM_SETTING_DELETE = 2003;//delete token from store
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
-debug(string msg) {
-    //llOwnerSay(llGetScriptName() + ": " + msg);
-}
-
 // Some versions of the collar have a hover text script in them that breaks
 // updates because it set a script pin that overwrites the one set by this shim
 // script.  So before starting, delete any script that starts with "OpenCollar
@@ -113,7 +122,7 @@ default
             lScripts += GetNameParts(name);
         }
         
-        debug(llDumpList2String(lScripts, "|"));
+        //Debug(llDumpList2String(lScripts, "|"));
         
         // listen on the start param channel
         llListen(iStartParam, "", "", "");
@@ -121,10 +130,11 @@ default
         // let mama know we're ready
         llWhisper(iStartParam, "reallyready");
 
+        //Debug("Starting");
     }
     
     listen(integer channel, string name, key id, string msg) {
-        //debug("heard: " + msg);
+        //Debug("heard: " + msg);
         if (llGetOwnerKey(id) == llGetOwner()) {
             list parts = llParseString2List(msg, ["|"], []);
             if (llGetListLength(parts) == 4) {
@@ -170,10 +180,10 @@ default
                         }
                     }                
                 } else if (mode == "REMOVE" || mode == "DEPRECATED") {
-                    debug("remove: " + msg);
+                    //Debug("remove: " + msg);
                     if (type == "SCRIPT") {
                         string script_name = GetScriptFullname(name);
-                        debug("script name: " + script_name);
+                        //Debug("script name: " + script_name);
                         if (llGetInventoryType(script_name) != INVENTORY_NONE) {
                             llRemoveInventory(script_name);
                         }
@@ -185,7 +195,7 @@ default
                     cmd = "OK";
                 }
                 string response = llDumpList2String([type, name, cmd], "|");
-                //debug("responding: " + response);
+                //Debug("responding: " + response);
                 llRegionSayTo(id, channel, response);                                                                
             } else {
                 if (llSubStringIndex(msg, "CLEANUP") == 0) {

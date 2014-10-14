@@ -28,9 +28,19 @@ integer deathtimer = 3;
 
 integer UPDATE = 10001;
 
-Debug(string str) {
-    //llOwnerSay(llGetScriptName() + ": " + str);
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
+*/
 
 // Function that will look at all items in the prim and delete any
 // whose names contain the pattern.
@@ -61,7 +71,6 @@ DelItems(list items) {
 default
 {
     state_entry() {
-        Debug("starting");    
         // Don't run cleanup if placed in an updater
         if (llSubStringIndex(llGetObjectName(), "Updater") != -1) {
             Debug("In an updater.  Sleeping.");
@@ -93,6 +102,7 @@ default
             // and set the death timer
             llSetTimerEvent(deathtimer);            
         }
+        //Debug("starting");    
     }
     
     link_message(integer sender, integer num, string str, key id) {
@@ -114,4 +124,16 @@ default
         Debug("timer");
         llRemoveInventory(llGetScriptName());
     }
+    
+/*
+    changed(integer iChange) {
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+    }
+*/
+
 }

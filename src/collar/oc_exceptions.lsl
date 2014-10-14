@@ -155,9 +155,27 @@ string UPMENU = "BACK";
 key REQUEST_KEY;
 string g_sScript;
 
-Debug(string sMsg)
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-   //llOwnerSay(llGetScriptName() + ": " + sMsg);
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
@@ -169,14 +187,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
-
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
 }
 
 Menu(key kID, string sWho, integer iAuth)
@@ -221,7 +231,7 @@ PersonMenu(key kID, list lPeople, string sType, integer iAuth)
   
 ExMenu(key kID, string sWho, integer iAuth)
 {
-    Debug("ExMenu for :"+sWho);
+    //Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn)
     { 
         Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
@@ -278,8 +288,8 @@ ExMenu(key kID, string sWho, integer iAuth)
     {
         lButtons += ["List"];
     }
-    Debug(sPrompt);
-    Debug((string)llStringLength(sPrompt));
+    //Debug(sPrompt);
+    //Debug((string)llStringLength(sPrompt));
     key kTmp = Dialog(kID, sPrompt, lButtons, ["Defaults", UPMENU], 0, iAuth);
     g_lExMenus = [kTmp, sWho] + g_lExMenus;
 }
@@ -296,12 +306,12 @@ SaveDefaults()
     //save to DB
     if (OWNER_DEFAULT == g_iOwnerDefault && SECOWNER_DEFAULT == g_iSecOwnerDefault)
     {
-        Debug("Defaults");
+        //Debug("Defaults");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "owner", "");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "secowner", "");
         return;
     }
-    Debug("ownerdef: " + (string)g_iOwnerDefault + "\nsecdef: " + (string)g_iSecOwnerDefault);
+    //Debug("ownerdef: " + (string)g_iOwnerDefault + "\nsecdef: " + (string)g_iSecOwnerDefault);
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "owner=" + (string)g_iOwnerDefault, "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "secowner=" + (string)g_iSecOwnerDefault, "");
 }
@@ -693,7 +703,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else g_lSettings += [sWho, iSet];
             bChange = bChange | 2;
             @nextcom;
-            Debug("processed " + sWho + ":" + sCom + "=" + sVal);
+            //Debug("processed " + sWho + ":" + sCom + "=" + sVal);
         }
         @nextwho;
         if (bChange)
@@ -724,6 +734,7 @@ default
         //llSleep(1.0);
         //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, "");
+        //Debug("Starting");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -824,7 +835,7 @@ default
         {
             if (kID == g_kMenuID)
             {
-                Debug("dialog response: " + sStr);
+                //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -849,7 +860,7 @@ default
             }
             else if (llListFindList(g_lExMenus, [kID]) != -1 )
             {
-                Debug("dialog response: " + sStr);
+                //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -886,7 +897,7 @@ default
                         if (sSwitch == TURNOFF) sOut += "=y"; // exempt
                         else if (sSwitch == TURNON) sOut += "=n"; // enforce
                         //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
-                        Debug("ExMenu sending UC: " + sOut);
+                        //Debug("ExMenu sending UC: " + sOut);
                         UserCommand(iAuth, sOut, kAv);
                         ExMenu(kAv, sMenu, iAuth);
                     }
@@ -916,7 +927,7 @@ default
             }
             else if(kID == g_kPersonMenuID)
             {
-                Debug("dialog response: " + sStr);
+                //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -980,4 +991,15 @@ default
         g_kTmpKey = g_kTestKey = NULL_KEY;
         g_sTmpName = g_sUserCommand = "";
     }
+    
+/*
+    changed(integer iChange) {
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+    }
+*/
 }

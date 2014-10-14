@@ -135,9 +135,54 @@ list g_lLeashPrims;
 integer g_iLoop;
 string g_sScript;
 
-debug(string sText)
+//Particle system and variables
+
+string g_sParticleTexture = "chain";
+string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
+float g_fLeashLength;
+vector g_vLeashColor = <1,1,1>;
+//vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
+vector g_vLeashSize = <0.07, 0.07, 1.0>;    // CHANGED back
+integer g_bParticleGlow = TRUE;
+float g_fParticleAge = 1.0;
+float g_fParticleAlpha = 1.0;
+vector g_vLeashGravity = <0.0,0.0,-1.0>;
+integer g_iParticleCount = 1;
+float g_fBurstRate = 0.04;
+//same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
+
+
+/*
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
+*/
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
-    //llOwnerSay(llGetScriptName() + " DEBUG: " + sText);
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    //Debug("Made menu.");
+    return kID;
+}
+
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
+{
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else
+    {
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+    }
 }
 
 FindLinkedPrims()
@@ -173,23 +218,6 @@ FindLinkedPrims()
         g_lLeashPrims = ["collar", LINK_THIS, "1"];
     }
 }
-
-//Particle system and variables
-
-string g_sParticleTexture = "chain";
-string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
-float g_fLeashLength;
-vector g_vLeashColor = <1,1,1>;
-//vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
-vector g_vLeashSize = <0.07, 0.07, 1.0>;    // CHANGED back
-integer g_bParticleGlow = TRUE;
-float g_fParticleAge = 1.0;
-float g_fParticleAlpha = 1.0;
-vector g_vLeashGravity = <0.0,0.0,-1.0>;
-integer g_iParticleCount = 1;
-float g_fBurstRate = 0.04;
-//same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
-
 
 Particles(integer iLink, key kParticleTarget)
 {
@@ -255,17 +283,6 @@ StopParticles(integer iEnd)
         g_kLeashToPoint = NULLKEY;
         g_kParticleTarget = NULLKEY;
         llSensorRemove();
-    }
-}
-
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
 
@@ -404,14 +421,6 @@ integer KeyIsAv(key id)
 
 //Menus
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
-}
-
 OptionsMenu(key kIn, integer iAuth)
 {
     g_sCurrentMenu = SUBMENU;
@@ -546,7 +555,7 @@ default
          //   StartParticles(g_kParticleTarget);
         //}        
         llListen(COMMAND_PARTICLE,"","","");    // ADDED FOR BETA 0.1
-        //llOwnerSay((string)llGetFreeMemory());
+        //Debug("Starting");
     }
     on_rez(integer iRez)
     {
@@ -976,4 +985,15 @@ default
             }
         }
     }
+    
+/*
+    changed(integer iChange) {
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+    }
+*/
 }
