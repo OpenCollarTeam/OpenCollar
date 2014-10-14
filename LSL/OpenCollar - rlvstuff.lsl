@@ -339,7 +339,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                 else {
                     sStr = "unsit=force";
                     if (GetSetting("rlvsit_","unsit")=="n") sStr = "unsit=y," + sStr + ",unsit=n";
-                    llMessageLinked(LINK_SET, RLV_CMD, "unsit=y," + sStr + ",unsit=n", NULL_KEY);
+                    llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
                 }
             }
             else if (~iBehaviourIndex) {
