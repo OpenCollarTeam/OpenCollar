@@ -362,7 +362,7 @@ default {
                     }
                     //start anim
                     llMessageLinked(LINK_SET, ANIM_START, g_sBadWordAnim, "");
-                    llWhisper(0, llList2String(llParseString2List(llKey2Name(g_kWearer), [" "], []), 0) + " has said a bad word and is being punished.");
+                    llWhisper(0, WEARERNAME + " has said a bad word and is being punished.");
                     g_iHasSworn = TRUE;
                 }
                 lWords=llDeleteSubList(lWords,-1,-1);
