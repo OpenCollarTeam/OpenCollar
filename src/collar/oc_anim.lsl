@@ -517,7 +517,7 @@ default {
     state_entry() {
         g_kWearer = llGetOwner();
         g_sWearerName = llGetDisplayName(g_kWearer);
-        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
+        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
 
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
