@@ -197,7 +197,7 @@ FindLinkedPrims()
         for (iLoop = 0; iLoop < llGetListLength(lTemp); iLoop++)
         {
             string sTest = llList2String(lTemp, iLoop);
-            debug(sTest);
+            //Debug(sTest);
             //expected either "leashpoint" or "leashpoint:point"
             if (llGetSubString(sTest, 0, 9) == "leashpoint")
             {
@@ -259,7 +259,7 @@ Particles(integer iLink, key kParticleTarget)
 
 StartParticles(key kParticleTarget)
 {
-    debug(llList2CSV(g_lLeashPrims));
+    //Debug(llList2CSV(g_lLeashPrims));
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3)
     {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2))
@@ -391,16 +391,16 @@ SetTexture(string sIn, key kIn)
         {
             g_bInvisibleLeash = FALSE;
         }
-        debug("particleTexture= " + sIn);
+        //Debug("particleTexture= " + sIn);
         g_sParticleTextureID = llGetInventoryKey(sIn);
         if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
     }        
-    debug("particleTextureID= " + (string)g_sParticleTextureID);
+    //Debug("particleTextureID= " + (string)g_sParticleTextureID);
     if (kIn)
     {
         Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
     }
-    debug("activeleashpoints= " + (string)g_bLeashActive);
+    //Debug("activeleashpoints= " + (string)g_bLeashActive);
     if (g_bLeashActive)
     {
         if (g_bInvisibleLeash)
@@ -551,7 +551,7 @@ default
         //SetTexture("chain", NULLKEY);
         //if (g_kLeashedTo != NULLKEY)
        // {
-       //     debug ("entry leash targeted");
+       //     Debug ("entry leash targeted");
          //   StartParticles(g_kParticleTarget);
         //}        
         llListen(COMMAND_PARTICLE,"","","");    // ADDED FOR BETA 0.1
@@ -575,7 +575,7 @@ default
             }
             else
             {
-                debug("leash active");
+                //Debug("leash active");
                 if (! g_bInvisibleLeash)
                 {
                     integer bLeasherIsAv = (integer)llList2String(llParseString2List(sMessage, ["|"], [""]), 1);
@@ -903,7 +903,7 @@ default
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {
-            debug ("LocalSettingsResponse: " + sMessage);
+            //Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);

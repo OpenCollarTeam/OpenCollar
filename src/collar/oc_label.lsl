@@ -412,7 +412,7 @@ SetOffsets(key font)
             if (n < 8 && o == 9) g_vOffset.y += 0.0015;
             else if (o < 8 && n == 9) g_vOffset.y -= 0.0015;
         }
-        Debug("Offset = " + (string)g_vOffset);
+        //Debug("Offset = " + (string)g_vOffset);
     }
     g_kFontTexture = font;
 }

@@ -538,26 +538,6 @@ default {
         }
     }
 
-    changed(integer iChange) {
-        if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_TELEPORT) RefreshAnim();
-
-        if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
-            g_lAnimScalars = [];
-            g_iLine = 0;
-            if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
-            if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
-        }
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
-    }
-
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) {
             if (g_iPosture) llStartAnimation("~stiff");
@@ -615,12 +595,6 @@ default {
                 else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
                 else if (sToken == "HFix") g_iHeightFix = (integer)sValue;
             } else if (sToken == "Global_WearerName") g_sWearerName = sValue;
-        } else if (iNum == LM_SETTING_DELETE) {
-            if (llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-                integer iInd = llSubStringIndex(sStr, "=");
-                g_sWearerName = llGetDisplayName(g_kWearer);
-                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
-            }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {  //got a menu response meant for us.  pull out values
@@ -673,5 +647,25 @@ default {
                 }
             }
         }
+    }
+
+    changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_TELEPORT) RefreshAnim();
+
+        if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
+            g_lAnimScalars = [];
+            g_iLine = 0;
+            if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
+            if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
+        }
+/*
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/
     }
 }

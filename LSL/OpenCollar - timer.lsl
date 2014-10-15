@@ -135,7 +135,7 @@ DoMenu(key keyID, integer iAuth)
     {
         return;
     }
-    Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
+    //Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
     
     string sPrompt = "\n A frozen pizza takes ~12 min to bake.\n";
     list lMyButtons = g_lLocalButtons + lButtons;
@@ -329,7 +329,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     if (llToLower(sStr) == "timer" || sStr == "menu "+g_sSubMenu) DoMenu(kID, iNum);
     else if(llGetSubString(sStr, 0, 5) == "timer ")
     {
-        Debug(sStr);
+        //Debug(sStr);
         string sMsg=llGetSubString(sStr, 6, -1);
         //we got a response for something we handle locally
         if (sMsg == "RL") DoRealMenu(kID, iNum);
@@ -588,7 +588,7 @@ default
         if (g_iRealRunning == 1 || g_iOnRunning == 1)
         {
             llMessageLinked(LINK_THIS, WEARERLOCKOUT, "on", "");
-            Debug("timer is running real:"+(string)g_iRealRunning+" on:"+(string)g_iOnRunning);
+            //Debug("timer is running real:"+(string)g_iRealRunning+" on:"+(string)g_iOnRunning);
         }
     }
 
@@ -597,7 +597,7 @@ default
         list info  = llParseString2List (sStr, ["|"], []);
         if(iNum==ATTACHMENT_FORWARD && llList2String(info, 0)=="timer")//request for us
         {
-            Debug(sStr);
+            //Debug(sStr);
             string sCommand = llList2String(info, 1);
             integer type = llList2Integer(info, 2);
             if(sCommand=="settimer")

@@ -344,7 +344,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
             return TRUE;
         }   
-        Debug("g_iLastNum=" + (string)g_iLastNum);                        
+        //Debug("g_iLastNum=" + (string)g_iLastNum);                        
         if (sValue == "clear")
         {
             ClearCam();
@@ -362,7 +362,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
             //CamFocus((vector)sValue, (vector)sValue2);
             g_iLastNum = iNum;                        
-            Debug("newiNum=" + (string)iNum);
+            //Debug("newiNum=" + (string)iNum);
         }
         else
         {
@@ -518,6 +518,4 @@ default
         }
 */
     }
-                    
-
 }

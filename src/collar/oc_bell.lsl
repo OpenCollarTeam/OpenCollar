@@ -590,28 +590,6 @@ default
 
         }
     }
-    changed(integer change)
-    {
-        if(change & CHANGED_LINK) BuildBellElementList();
-        else if (change & CHANGED_INVENTORY) PrepareSounds();
-        if (change & CHANGED_COLOR) // ********************* 
-        {
-            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
-                g_iHide = iNewHide;
-                SetBellElementAlpha(); // update hide elements 
-            }
-        }
-/*        
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/        
-    }
-    
 
     touch_start(integer n)
     {
@@ -627,5 +605,25 @@ default
                 llSay(0, GetName(toucher) + " plays with the trinket on " + WEARERNAME + "'s collar." );
             }
         }
+    }
+    
+    changed(integer change) {
+        if(change & CHANGED_LINK) BuildBellElementList();
+        else if (change & CHANGED_INVENTORY) PrepareSounds();
+        if (change & CHANGED_COLOR) {
+            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
+                g_iHide = iNewHide;
+                SetBellElementAlpha(); // update hide elements 
+            }
+        }
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
 }

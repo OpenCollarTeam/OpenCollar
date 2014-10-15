@@ -128,7 +128,7 @@ SetStyle(string sStyle, integer iAuth, key kAv)
             }
         }
     }
-    else Debug("Can't do Style to "+sStyle);    
+    //else Debug("Can't do Style to "+sStyle);    
 }
 
 AddElementSetting(string element, string value, integer n )

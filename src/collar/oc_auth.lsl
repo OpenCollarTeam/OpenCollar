@@ -866,18 +866,6 @@ default
         llResetScript();
     }
 
-    changed(integer iChange) {
-        if (iChange & CHANGED_OWNER) llResetScript();
-/*        
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/        
-    }
-
     http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
         integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
         if (listIndex!= -1){
@@ -923,5 +911,17 @@ default
                 }
             }
         }
+    }
+    
+    changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) llResetScript();
+/*        
+        if (iChange & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }
+*/        
     }
 }

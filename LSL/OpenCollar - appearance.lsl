@@ -361,7 +361,7 @@ SizeMenu(key kAv, integer iAuth)
     {
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
     }
-        Debug("FreeMem: " + (string)llGetFreeMemory());
+    //Debug("FreeMem: " + (string)llGetFreeMemory());
 }
 
 DoMenu(key kAv, integer iAuth)
@@ -732,6 +732,14 @@ default
             }            
         }
     } 
+   
+    timer()
+    {
+        // the timer is needed as the changed_size even is triggered twice
+        llSetTimerEvent(0);
+        if (g_iSizedByScript)
+            g_iSizedByScript = FALSE;
+    }
     
     changed(integer iChange)
     {
@@ -762,12 +770,4 @@ default
         }
 */
     }
-    
-    timer()
-    {
-        // the timer is needed as the changed_size even is triggered twice
-        llSetTimerEvent(0);
-        if (g_iSizedByScript)
-            g_iSizedByScript = FALSE;
-    }
-}
+ }

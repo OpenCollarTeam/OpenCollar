@@ -527,6 +527,25 @@ default
             }
         }
     }
+
+    run_time_permissions(integer perm)
+    {
+        if (perm & PERMISSION_TRIGGER_ANIMATION)
+        {
+            key kID = llGetPermissionsKey();
+            //Debug("changed anim permissions\nPerm ID="+(string)kID+"g_kPartner="+(string)g_kPartner);
+            if (kID == g_kPartner)
+            {
+                g_iPermissionTimeout=0;
+                MoveToPartner();
+            }
+            else
+            {
+                Notify(kID, "Sorry, but the request timed out.",TRUE);
+            }
+        }
+    }
+
     changed(integer iChange)
     {
         if (iChange & CHANGED_INVENTORY)
@@ -551,22 +570,5 @@ default
             }
         }
 */
-    }
-    run_time_permissions(integer perm)
-    {
-        if (perm & PERMISSION_TRIGGER_ANIMATION)
-        {
-            key kID = llGetPermissionsKey();
-            //Debug("changed anim permissions\nPerm ID="+(string)kID+"g_kPartner="+(string)g_kPartner);
-            if (kID == g_kPartner)
-            {
-                g_iPermissionTimeout=0;
-                MoveToPartner();
-            }
-            else
-            {
-                Notify(kID, "Sorry, but the request timed out.",TRUE);
-            }
-        }
     }
 }
