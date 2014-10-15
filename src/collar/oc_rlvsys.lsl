@@ -423,6 +423,27 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 
 default {
+    on_rez(integer param) {
+/*        
+        if (g_iProfiled){
+            llScriptProfiler(1);
+            Debug("profiling restarted");
+        }
+*/        
+        g_iRlvActive=FALSE;
+        g_iViewerCheck=FALSE;
+        g_iRLVOn=FALSE;
+        g_lBaked=[];    //just been rezzed, so should have no baked restrictions
+    }
+    
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llOwnerSay("@clear");
+        g_kWearer = llGetOwner();
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        //Debug("Starting");
+    }
+
     listen(integer iChan, string sName, key kID, string sMsg) {
     //RestrainedLove viewer v2.8.0 (RLVa 1.4.10) <-- @versionnew response structure v1.23 (implemented April 2010).
     //lines commented out are from @versionnum response string (implemented late 2009)
@@ -461,25 +482,6 @@ default {
       //Marine's RLV Viewer - viewer response: RestrainedLove viewer v2.09.01.0 (3.7.9.32089)
       //Marine's RLV Viewer - rlvmain parsed result: g_iRlvVersion: 209 (same as before) g_sRlvVersionString: 2.09.01.0 (same as before) g_sRlvaVersionString: NULL (new) g_iRlvaVersion: 0 (new)
 
-    state_entry() {
-        //Debug("Starting");
-        llOwnerSay("@clear");
-        g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
-    }
-
-    on_rez(integer param){
-/*        
-        if (g_iProfiled){
-            llScriptProfiler(1);
-            Debug("profiling restarted");
-        }
-*/        
-        g_iRlvActive=FALSE;
-        g_iViewerCheck=FALSE;
-        g_iRLVOn=FALSE;
-        g_lBaked=[];    //just been rezzed, so should have no baked restrictions
-    }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");

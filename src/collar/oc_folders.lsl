@@ -555,17 +555,15 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+default {
+    on_rez(integer iParam) {
+        llResetScript();
+    }
+    
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = "rlvfolders_";
         g_kWearer = llGetOwner();
-        //integer i;
-        //for (i=0;i < llGetListLength(g_lChildren);i++)
-        //{
-        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + llList2String(g_lChildren,i), "");
-        //}
         //Debug("Starting");
     }
 
@@ -913,11 +911,6 @@ default
         llSetTimerEvent(0.0);
     }
 
-    on_rez(integer iParam)
-    {
-        llResetScript();
-    }
-    
 /*
     changed(integer iChange) {
         if (iChange & CHANGED_REGION) {

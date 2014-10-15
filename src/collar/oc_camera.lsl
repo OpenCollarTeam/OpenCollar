@@ -411,21 +411,16 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     return TRUE;
 }
 
-default
-{
-    on_rez(integer iNum)
-    {
+default {
+    on_rez(integer iNum) {
         llResetScript();
     }    
     
-    state_entry()
-    {
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        if (llGetAttached())
-        {
-            llRequestPermissions(llGetOwner(), PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
-        }
         g_kWearer = llGetOwner();
+        if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
         //Debug("Starting");
     }
     

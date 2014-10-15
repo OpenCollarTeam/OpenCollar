@@ -68,8 +68,7 @@ DelItems(list items) {
     }
 }
 
-default
-{
+default {
     state_entry() {
         // Don't run cleanup if placed in an updater
         if (llSubStringIndex(llGetObjectName(), "Updater") != -1) {

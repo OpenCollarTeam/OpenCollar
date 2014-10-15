@@ -369,6 +369,21 @@ PrintDestinations(key kID)   // On inventory change, re-read our ~destinations n
 }
 
 default {
+    on_rez(integer iParam) {
+        if(llGetOwner() != g_kWearer) llResetScript();  // Reset if wearer changed
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        g_kWearer = llGetOwner();  // store key of wearer
+
+        ReadDestinations(); //Grab our presets
+        // send request to main menu and ask other menus if they want to register with us
+        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
+        //Debug("Starting");
+    }
 
     http_response(key id, integer status, list meta, string body) {
         if(status == 200) {  // be silent on failures.
@@ -431,25 +446,6 @@ default {
         }
     }
 
-
-    state_entry() {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        // store key of wearer
-        g_kWearer = llGetOwner();
-        // sleep a second to allow all scripts to be initialized
-        ReadDestinations(); //Grab our presets
-        // send request to main menu and ask other menus if they want to register with us
-        llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
-        //Debug("Starting");
-    }
-
-    on_rez(integer iParam) {
-        if(llGetOwner() != g_kWearer) {
-            // Reset if wearer changed
-            llResetScript();
-        }
-    }
 
     // listen for linked messages from OC scripts
     link_message(integer iSender, integer iNum, string sStr, key kID) {

@@ -374,15 +374,16 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
 }
 
 default {
-    state_entry() {
-        g_kWearer = llGetOwner();
-        //Debug("Starting");
-    }
-    
     on_rez(integer iParam) {
         llSetTimerEvent(0.0);
     }
 
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_kWearer = llGetOwner();
+        //Debug("Starting");
+    }
+    
     timer() {
         if (!g_iRLVOn) return;  // Nothing to do if RLV isn't enabled
 

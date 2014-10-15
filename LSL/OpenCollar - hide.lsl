@@ -425,23 +425,21 @@ string SplitTokenValue(string in, integer slot)
     return out ;
 }
 
-default
-{
-    state_entry()
-    {
-        BuildElementList();
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_kWearer = llGetOwner();
-        //Debug("Starting");
-    }
-
-    on_rez(integer iParam)
-    {        
+default {
+    on_rez(integer iParam) {        
         g_iAllAlpha=0;
         if (llGetAlpha(ALL_SIDES)>0) g_iAllAlpha=1;
         if (!g_iHasElements) BuildElementList();
     }
     
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        BuildElementList();
+        g_sScript = "hide_";
+        g_kWearer = llGetOwner();
+        //Debug("Starting");
+    }
+
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (UserCommand(iNum, sStr, kID)) return;

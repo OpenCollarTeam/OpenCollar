@@ -203,9 +203,13 @@ integer UserCommand(integer iAuth, string sStr, key kAv){
     return TRUE;
 }
 
-default{
-    state_entry(){
-        //get colour, description and 
+default {
+    on_rez(integer param) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_iTextPrim = -1 ;
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
@@ -293,10 +297,6 @@ default{
         }
     }
     
-    on_rez(integer param){
-        llResetScript();
-    }
-
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
 /*

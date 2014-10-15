@@ -393,23 +393,20 @@ DoMenu(key kAv, integer iAuth)
     }    
 }
 
-default
-{
-    state_entry()
-    {
+default {
+    on_rez(integer iParam) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();       
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration   
 
         Store_StartScaleLoop();
-        
         //Debug("Starting");
     }
     
-    on_rez(integer iParam)
-    {
-        llResetScript();
-    }
-
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)

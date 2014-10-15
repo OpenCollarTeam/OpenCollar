@@ -264,18 +264,17 @@ string Vec2String(vector vVec)
     return "<" + llDumpList2String(lParts, ",") + ">";
 }
 
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+default {
+    on_rez(integer iParam) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = "color_";
         g_kWearer = llGetOwner();
-        //loop through non-root prims, build element list
-        BuildElementList();
-        // no more needed
-        // we need to unify the initialization of the menu system for 3.5
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+      
+        BuildElementList();  //loop through non-root prims, build element list
         //Debug("Starting");
     }
 
@@ -477,11 +476,6 @@ default
                 }
             }
         }
-    }
-
-    on_rez(integer iParam)
-    {
-        llResetScript();
     }
 
 /*

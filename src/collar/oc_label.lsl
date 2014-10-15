@@ -540,30 +540,26 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
 
 default
 {
-    state_entry()
-    {   // Initialize the character index.
-        //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
-        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+    on_rez(integer iNum) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = "label_";
         g_kWearer = llGetOwner();
 
-        //first count the label prims.
-        integer ok = LabelsCount();
+        integer ok = LabelsCount();  //first count the label prims.
         SetOffsets(NULL_KEY);
-        ResetCharIndex();
+        ResetCharIndex();  // Initialize the character index.
 
         if (g_iCharLimit <= 0) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }        
-        //if(ok) SetLabel();
+
         g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
         //Debug("Starting");
-    }
-
-    on_rez(integer iNum)
-    {
-        llResetScript();
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)

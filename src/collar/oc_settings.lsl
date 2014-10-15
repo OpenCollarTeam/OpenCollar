@@ -477,11 +477,22 @@ integer UserCommand(integer iAuth, string sStr, key kID)
     return TRUE;
 }
 
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+default {
+    on_rez(integer iParam) {
+        // reset the whole lot.
+        if (g_kWearer == llGetOwner()) {  //if owner hasn't changed, resend settings to plugins
+            llSleep(0.5);  // brief wait for others to reset
+            SendValues();    
+        } else llResetScript();  //  else reset completely
+        
+        // check alpha
+        if (llGetAlpha(ALL_SIDES) > 0) STEALTH = FALSE;
+        else STEALTH = TRUE;
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = "settings_";
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -499,22 +510,6 @@ default
         i = llSubStringIndex(DESIGN_ID, "~");
         DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
         //Debug("Starting");
-    }
-
-    on_rez(integer iParam)
-    {
-        // resend settings to plugins, if owner hasn't changed, in which case
-        // reset the whole lot.
-        if (g_kWearer == llGetOwner())
-        {
-            llSleep(0.5); // brief wait for others to reset
-            SendValues();    
-        }
-        else llResetScript();
-        
-        // check alpha
-        if (llGetAlpha(ALL_SIDES) > 0) STEALTH = FALSE;
-        else STEALTH = TRUE;
     }
 
     dataserver(key id, string data)

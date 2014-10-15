@@ -481,9 +481,13 @@ init (){
     RebuildMenu();
 }
 
-default
-{
+default {
+    on_rez(integer iParam) {
+        init();
+    }
+    
     state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
@@ -496,7 +500,6 @@ default
         init(); //do stuf needed on_rez AND on script start
         
         g_sPrefix=AutoPrefix();
-        
         //Debug("Starting");
     }
     
@@ -654,11 +657,6 @@ default
         }
     }
 
-    on_rez(integer iParam)
-    {
-        init();
-    }
-    
     attach(key kID)
     {
         if (g_iLocked)

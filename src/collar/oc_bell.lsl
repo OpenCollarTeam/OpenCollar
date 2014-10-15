@@ -366,31 +366,24 @@ string GetName(key uuid)
     return name;
 }
 
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        // key of the owner
+default {
+    on_rez(integer param) {
         g_kWearer=llGetOwner();
+        if (g_iBellOn) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
+    }
+    
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        g_kWearer=llGetOwner();  // key of the wearer
         WEARERNAME = GetName(g_kWearer);  //quick and dirty default, will get replaced by value from settings
 
-        // reset script time used for ringing the bell in intervalls
-        llResetTime();
-
-        // bild up list of prims with bell elements
-        BuildBellElementList();
+        llResetTime();  // reset script time used for ringing the bell in intervalls
+        BuildBellElementList();  //build up list of prims with bell elements
 
         PrepareSounds();
         SetBellElementAlpha();
-        //llSetMemoryLimit(32768); //The risk is limited memory scenario when there is a local menu
         //Debug("Starting");
-    }
-    
-    on_rez(integer param)
-    {
-        g_kWearer=llGetOwner();
-        if (g_iBellOn) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)

@@ -617,12 +617,24 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
     } else return FALSE;
     return TRUE;
 }
-// ---------------------------------------------
-// ------ IMPLEMENTATION ------
-default
-{
-    timer()
-    {
+
+default {
+    on_rez(integer start_param) {
+        DoUnleash();
+    }
+    
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_kWearer = llGetOwner();
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        llMinEventDelay(0.3);
+        
+        DoUnleash();
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
+        //Debug("Starting");
+    }
+    
+    timer() {
         
         //inlined old isInSimOrJustOutside function
         vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
@@ -672,22 +684,6 @@ default
             }
         }
     }
-    state_entry() {
-        //llOwnerSay("statentry:"+(string)llGetFreeMemory( ));
-        g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
-        llMinEventDelay(0.3);
-        
-        DoUnleash();
-        //llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, ""); //no need 
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
-        //Debug("Starting");
-    }
-    
-    on_rez(integer start_param) {
-        DoUnleash();
-    }
-    
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
         if (UserCommand(iNum, sMessage, kMessageID, FALSE)) return;
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {

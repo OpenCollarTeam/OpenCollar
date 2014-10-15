@@ -219,10 +219,13 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
 }
 
 
-default
-{
-    state_entry()
-    {
+default {
+    on_rez(integer iParam) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         
         list name = llParseString2List(llKey2Name(g_kWearer), [" "], []);
@@ -645,11 +648,6 @@ default
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
     }
     
-    on_rez(integer iParam)
-    {
-        llResetScript();
-    }
-
     changed(integer iChange)
     {
         if (iChange & CHANGED_OWNER) llResetScript();

@@ -221,34 +221,29 @@ MoveToPartner() {
     llMoveToTarget(partnerPos, g_fWalkingTau);
 }
 
-default
-{
-    listen(integer channel, string sName, key kID, string sMessage)
-    {
-        //Debug("listen: " + sMessage + ", channel=" + (string)channel);
-        llListenRemove(g_iListener);
-        if (channel == g_iStopChan)
-        {//this abuses the GROUP auth a bit but i think it's ok.
-            //Debug("message on stop channel");
-            llMessageLinked(LINK_SET, COMMAND_GROUP, "stopcouples", kID);
+default {
+    on_rez(integer start) {
+        //added to stop anims after relog when you logged off while in an endless couple anim
+        if (g_sSubAnim != "" && g_sDomAnim != "") {
+             llSleep(1.0);  // wait a second to make sure the poses script reseted properly
+             StopAnims();
         }
+        llResetScript();
     }
-    state_entry()
-    {
-        //llOwnerSay("Coupleanim1, default state_entry: "+(string)llGetFreeMemory());
+    
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
-        if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD)
-        {//card is present, start reading
+        if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
             g_iLine1 = 0;
             g_lAnimCmds = [];
             g_lAnimSettings = [];
             g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
         }
-        if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD)
-        {//card is present, start reading
+        if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID2 = llGetInventoryKey(CARD2);
             g_iLine2 = 0;
             g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
@@ -257,18 +252,17 @@ default
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
-    on_rez(integer start)
-    {
-
-        //added to stop anims after relog when you logged off while in an endless couple anim
-        if (g_sSubAnim != "" && g_sDomAnim != "")
-        {
-             // wait a second to make sure the poses script reseted properly
-             llSleep(1.0);
-             StopAnims();
+    
+    listen(integer channel, string sName, key kID, string sMessage) {
+        //Debug("listen: " + sMessage + ", channel=" + (string)channel);
+        llListenRemove(g_iListener);
+        if (channel == g_iStopChan)
+        {//this abuses the GROUP auth a bit but i think it's ok.
+            //Debug("message on stop channel");
+            llMessageLinked(LINK_SET, COMMAND_GROUP, "stopcouples", kID);
         }
-        llResetScript();
     }
+    
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:

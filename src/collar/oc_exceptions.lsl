@@ -717,23 +717,18 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
-default
-{
-    on_rez(integer iParam)
-    {
+default {
+    on_rez(integer iParam) {
         llResetScript();
     }
 
-    state_entry()
-    {
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
         llMessageLinked(LINK_SET, RLV_QUERY, "", "");
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sDBToken, "");
         //Debug("Starting");
     }
 

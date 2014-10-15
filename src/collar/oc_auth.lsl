@@ -591,11 +591,15 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     return TRUE;
 }
 
-default
-{
-    state_entry() {   //until set otherwise, wearer is owner
+default {
+    on_rez(integer iParam) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = "auth_";
-        g_kWearer = llGetOwner();
+        g_kWearer = llGetOwner();  //until set otherwise, wearer is owner
         SetPrefix("auto");
         //added for attachment auth
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
@@ -860,10 +864,6 @@ default
             //we have to subtract from the index because the dialog id comes in the middle of the stride
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
         }
-    }
-
-    on_rez(integer iParam) {
-        llResetScript();
     }
 
     http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup

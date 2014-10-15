@@ -431,18 +431,17 @@ dequeueSensor(){
     llSetTimerEvent(g_iReapeat);
 
 }
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
-        g_kWearer=llGetOwner();
-        //Debug("Starting");
+
+default {
+    on_rez(integer iParam) {
+        llResetScript();
     }
 
-    on_rez(integer iParam)
-    {
-        llResetScript();
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = "dialog_";
+        g_kWearer=llGetOwner();
+        //Debug("Starting");
     }
 
     sensor(integer num_detected){

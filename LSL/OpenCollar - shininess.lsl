@@ -308,20 +308,16 @@ RequestSettings()
 */
 
 
-default
-{
-    
-    on_rez(integer iParam)
-    {
+default {
+    on_rez(integer iParam) {
         llResetScript();
     }
     
-    state_entry()
-    {
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         g_sScript = GetScriptID();
         BuildElementList();
-        //RequestSettings(); // request settings from DB
         //Debug("Starting");
     }
 

@@ -438,10 +438,9 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE ;
 }
 
-default
-{
-    state_entry()
-    {
+default {
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         loadNotecardTextures();
@@ -450,14 +449,9 @@ default
         integer n;
         integer iLinkCount = llGetNumberOfPrims();
         //root prim is 1, so start at 2
-        for (n = 2; n <= iLinkCount; n++)
-        {
+        for (n = 2; n <= iLinkCount; n++) {
             string sElement = ElementType(n);
-            if (!(~llListFindList(g_lElements, [sElement])) && sElement != "notexture")
-            {
-                g_lElements += [sElement];
-                //llSay(0, "added " + sElement + " to g_lElements");
-            }
+            if (!(~llListFindList(g_lElements, [sElement])) && sElement != "notexture") g_lElements += [sElement];
         }
         //Debug("Starting");
     }
@@ -587,13 +581,6 @@ default
             }
         }
     }
-
-    on_rez(integer iParam)
-    {
-        //llResetScript();
-    }
-    //Is this necessary for anything? Removing for now, we'll see.
-    //yeah it was necessary cos our menu structuring is MESSED UP and relies on all sorts of scripts resetting. This should do the trick instead, however.
 
     changed(integer change)
     {

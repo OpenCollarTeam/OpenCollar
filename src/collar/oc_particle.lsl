@@ -536,32 +536,21 @@ LMSay()
     llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) +  "handle");
 }
 
-default
-{
-    state_entry()
-    {
+default {
+    on_rez(integer iRez) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = "leashParticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();
         StopParticles(TRUE);
-        //SetTexture(g_sParticleTexture, NULLKEY);
-        //llSleep(1.0);
-        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
-                
-        //SetTexture("chain", NULLKEY);
-        //if (g_kLeashedTo != NULLKEY)
-       // {
-       //     Debug ("entry leash targeted");
-         //   StartParticles(g_kParticleTarget);
-        //}        
         llListen(COMMAND_PARTICLE,"","","");    // ADDED FOR BETA 0.1
         //Debug("Starting");
     }
-    on_rez(integer iRez)
-    {
-        llResetScript();
-    }
-
+    
     link_message(integer iSenderPrim, integer iNum, string sMessage, key kMessageID)
     {
         if (iNum == COMMAND_PARTICLE)

@@ -219,24 +219,19 @@ DumpSettings(key kAv, string sep)
 
 
 
-default 
-{
-    on_rez(integer param)
-    {
-        //llResetScript();
+default {
+    on_rez(integer param) {
         g_lElementsSettings = [] ;
     }
     
-    state_entry() 
-    {
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         g_iNotecardId = llGetInventoryKey(g_sNotecardName);
-        if(g_iNotecardId)
-        {
+        if(g_iNotecardId) {
             g_iNotecardLine=0;
             g_kNotecardReadRequest=llGetNotecardLine(g_sNotecardName,0);
         }
-        //else llOwnerSay(g_sNotecardName+" notecard absent!");        
         //Debug("Starting");
     }
     

@@ -751,11 +751,14 @@ integer UserCommand(integer iNum, string sStr, key kID)
     return TRUE;
 }
 
-default
-{
-    state_entry()
-    {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+default {
+    on_rez(integer iNum) {
+        llResetScript();
+    }
+
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        g_sScript = "rlvrelay_";
         g_kWearer = llGetOwner();
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         g_lSources=[];
@@ -1031,11 +1034,6 @@ default
             if (!g_iAuthPending) Dequeue();
         }
         else if (g_iPlayMode) {HandleCommand(sIdent,kID,sMsg,FALSE); llSetTimerEvent(g_iGarbageRate);}
-    }
-
-    on_rez(integer iNum)
-    {
-        llResetScript();
     }
 
     timer()

@@ -563,33 +563,25 @@ integer UserCommand(integer iNum, string sStr, key kID)
 }
 
 
-default
-{
-    state_entry()
-    {
+default {
+    on_rez(integer iParam) {
+        g_iLastTime=g_iLastRez=llGetUnixTime();
+        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
+        if (g_iRealRunning == 1 || g_iOnRunning == 1) {
+            llMessageLinked(LINK_THIS, WEARERLOCKOUT, "on", "");
+        }
+    }
+    state_entry() {
+        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_iLastTime=llGetUnixTime();
         llSetTimerEvent(1);
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0)
-        {
-              g_iInterfaceChannel = -g_iInterfaceChannel;
-        }
+        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iFirstOnTime=MAX_TIME;
         g_iFirstRealTime=MAX_TIME;
         llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
-        //end of timekeeper
         //Debug("Starting");
-    }
-    on_rez(integer iParam)
-    {
-        g_iLastTime=g_iLastRez=llGetUnixTime();
-        llRegionSayTo(g_kWearer, g_iInterfaceChannel, "timer|sendtimers");
-        if (g_iRealRunning == 1 || g_iOnRunning == 1)
-        {
-            llMessageLinked(LINK_THIS, WEARERLOCKOUT, "on", "");
-            //Debug("timer is running real:"+(string)g_iRealRunning+" on:"+(string)g_iOnRunning);
-        }
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
