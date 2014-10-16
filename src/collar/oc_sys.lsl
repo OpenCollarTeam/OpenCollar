@@ -74,6 +74,7 @@ string LICENSE="License";
 key g_kWebLookup;
 key g_kCurrentUser;
 
+list g_lAppearanceButtons;
 list g_lAppsButtons;
 
 integer g_iLocked = FALSE;
@@ -91,6 +92,8 @@ string g_sDefaultLockSound="caa78697-8493-ead3-4737-76dcc926df30";
 string g_sDefaultUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
 string g_sLockSound="caa78697-8493-ead3-4737-76dcc926df30";
 string g_sUnlockSound="ff09cab4-3358-326e-6426-ec8d3cd3b98e";
+
+integer g_iAppLock = FALSE;  //appearance lock flag
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
@@ -118,7 +121,7 @@ integer g_iListenChan=1;
 string g_sSafeWord="RED";
 string g_sPrefix;
 
-/*
+///*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -130,7 +133,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+//*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -201,41 +204,50 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
 
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\nBrowse apps, extras and custom features.\n\nwww.opencollar.at/apps";
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
     Dialog(kID, sPrompt, g_lAppsButtons, [UPMENU], 0, iAuth, "Apps");
+}
+AppearanceMenu(key kID, integer iAuth) {
+    string sPrompt;
+    string sLooksLockButton;
+    if (g_iAppLock){
+        sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";
+        sLooksLockButton="☒ LooksLock";
+    } else {
+        sPrompt="\nMake changes to the "+CTYPE+"'s appearance.";
+        sLooksLockButton="☐ LooksLock";
+    }
+    sPrompt += "\n\nwww.opencollar.at/apps";
+    Dialog(kID, sPrompt, [sLooksLockButton]+g_lAppearanceButtons, [UPMENU], 0, iAuth, "Appearance");
 }
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion+"\n";
     if(!g_iLatestVersion) sPrompt+="Update available!";
-    sPrompt+="\n\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iListenChan+"\nSafeword: "+g_sSafeWord;
-    sPrompt+="\n\nwww.opencollar.at/helpabout";
+    sPrompt+="\n\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iListenChan+"\nSafeword: "+g_sSafeWord+"\n\nwww.opencollar.at/helpabout";
 
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    list lUtility = [UPMENU];
-    
     string sNewsButton="☐ News";
     if (g_iNews){
         sNewsButton="☒ News";
     }
     list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
-    Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
+    Dialog(kID, sPrompt, lStaticButtons, [UPMENU], 0, iAuth, "Help/About");
 }
 MainMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version "+g_sCollarVersion;
     if(!g_iLatestVersion) sPrompt+="\nUpdate available!";
     sPrompt += "\n\nwww.opencollar.at/main-menu";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    list lStaticButtons=["Apps"];
+    list lStaticButtons;
+    
+    if (g_iLocked) lStaticButtons+="UNLOCK";
+    else lStaticButtons+="LOCK";
+    
+    lStaticButtons+="Apps";
     if (g_iAnimsMenu){
         lStaticButtons+="Animations";
     } else {
         lStaticButtons+=" ";
     }
-    if (g_iPaintMenu){
-        lStaticButtons+="Paint";
-    } else if (g_iCustomizeMenu){
-        lStaticButtons+="Customize";
-    } else if (g_iAppearanceMenu){
+    if (llGetListLength(g_lAppearanceButtons)>0) {
         lStaticButtons+="Appearance";
     } else {
         lStaticButtons+=" ";
@@ -248,123 +260,7 @@ MainMenu(key kID, integer iAuth) {
     }
     lStaticButtons+=["Access","Options","Help/About"];
     
-    if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
-    else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
-}
-
-integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
-    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
-    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
-
-    list lParams = llParseString2List(sStr, [" "], []);
-    string sCmd = llToLower(llList2String(lParams, 0));
-
-    if (sCmd == "menu") {
-        string sSubmenu = llToLower(llList2String(lParams, 1));
-        if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
-        else if (sSubmenu == "apps" || sSubmenu=="addons") AppsMenu(kID, iNum);
-        else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
-    } else if (sStr == "license") {
-        if(llGetInventoryType("OpenCollar License")==INVENTORY_NOTECARD) llGiveInventory(kID,"OpenCollar License");
-        else Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sStr == "help") {
-        llGiveInventory(kID, HELPCARD);
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);               
-    else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
-    else if (sCmd == "menuto") {
-        key kAv = (key)llList2String(lParams, 1);
-        if (llGetAgentSize(kAv) != ZERO_VECTOR) //if kAv is an avatar in this region
-        {
-            if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
-            else  llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);   //else send an auth request for the menu
-        }
-    } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {    //does anything use togglelock?  If not, it'd be nice to get rid of it
-        //Debug("User command:"+sCmd);
-
-        if (iNum == COMMAND_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
-            //inlined old "Lock()" function        
-            g_iLocked = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
-            llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
-            llPlaySound(g_sLockSound, 1.0);
-            SetLockElementAlpha();//EB
-
-            Notify(kID,CTYPE + " has been locked.",TRUE);
-        }
-        else Notify(kID, "Sorry, only primary owners and wearer can lock the " + CTYPE + ".", FALSE);
-        if (fromMenu) MainMenu(kID, iNum);
-    } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
-        if (iNum == COMMAND_OWNER)  {  //primary owners can lock and unlock. no one else
-            //inlined old "Unlock()" function
-            g_iLocked = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", "");
-            llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
-            llPlaySound(g_sUnlockSound, 1.0);
-            SetLockElementAlpha(); //EB
-
-            Notify(kID,CTYPE + " has been unlocked.",TRUE);
-        }
-        else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
-        if (fromMenu) MainMenu(kID, iNum);
-    } else if (sCmd == "fixmenus") {
-        if (kID == g_kWearer){
-            RebuildMenu();
-            Notify(kID, "Rebuilding menus, this may take several seconds.", FALSE);
-        } else Notify(kID, "Sorry, only the wearer can fix menus.", FALSE);
-    } else if (sCmd == "news"){
-        if (kID == g_kWearer || iNum==COMMAND_OWNER){
-            if (sStr=="news off"){
-                g_iNews=FALSE;
-                //notify news off
-                Notify(kID,"News items will no longer be downloaded from the OpenCollar web site.",TRUE);
-            } else if (sStr=="news on"){
-                g_iNews=TRUE;
-                //notify news on
-                Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            } else {
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            }
-        } else Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sCmd == "update") {
-//        if (llGetOwnerKey(kID) == g_kWearer) {
-        if (kID == g_kWearer) {
-            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
-            g_iWillingUpdaters = 0;
-            g_kCurrentUser = kID;
-            g_iUpdateAuth = iNum;
-            Notify(kID,"Searching for nearby updater",FALSE);
-            g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
-            g_iUpdateFromMenu=fromMenu;
-            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
-            llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
-        } else {
-            Notify(kID,"Only the wearer can update the " + CTYPE + ".",FALSE);
-            if (fromMenu) HelpMenu(kID, iNum);
-        }
-    } else if (sCmd == "version") {
-        Notify(kID, "I am running OpenCollar version " + g_sCollarVersion, FALSE);
-    } else if (sCmd == "objectversion") {
-        // ping from an object, we answer to it on the object channel
-        
-        // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
-        integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
-        if (iChan>0) iChan=iChan*(-1);
-        if (iChan > -10000) iChan -= 30000;
-
-        llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
-    } else if (sCmd == "attachmentversion") {
-        // Reply to version request from "garvin style" attachment
-        integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
-        llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
-    }
-    return TRUE;
+    Dialog(kID, sPrompt, lStaticButtons, [], 0, iAuth, "Main");
 }
 
 NotifyOwners(string sMsg) {
@@ -472,6 +368,7 @@ RebuildMenu()
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Appearance", "");
 }
 
 init (){
@@ -479,6 +376,133 @@ init (){
     
     llSleep(1.0);//delay menu rebuild until other scripts are ready
     RebuildMenu();
+}
+
+integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
+    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    Debug("Got message "+sStr);
+
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llToLower(llList2String(lParams, 0));
+
+    if (sCmd == "menu") {
+        string sSubmenu = llToLower(llList2String(lParams, 1));
+        if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
+        else if (sSubmenu == "apps" || sSubmenu=="addons") AppsMenu(kID, iNum);
+        else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
+        else if (sSubmenu == "appearance") AppearanceMenu(kID, iNum);
+    } else if (sStr == "license") {
+        if(llGetInventoryType("OpenCollar License")==INVENTORY_NOTECARD) llGiveInventory(kID,"OpenCollar License");
+        else Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
+        if (fromMenu) HelpMenu(kID, iNum);
+    } else if (sStr == "help") {
+        llGiveInventory(kID, HELPCARD);
+        if (fromMenu) HelpMenu(kID, iNum);
+    } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);               
+    else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
+    else if (sStr == "appearance") AppearanceMenu(kID, iNum);
+    else if (sCmd == "menuto") {
+        key kAv = (key)llList2String(lParams, 1);
+        if (llGetAgentSize(kAv) != ZERO_VECTOR) //if kAv is an avatar in this region
+        {
+            if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
+            else  llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);   //else send an auth request for the menu
+        }
+    } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {    //does anything use togglelock?  If not, it'd be nice to get rid of it
+        //Debug("User command:"+sCmd);
+
+        if (iNum == COMMAND_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
+            //inlined old "Lock()" function        
+            g_iLocked = TRUE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
+            llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
+            llPlaySound(g_sLockSound, 1.0);
+            SetLockElementAlpha();//EB
+
+            Notify(kID,CTYPE + " has been locked.",TRUE);
+        }
+        else Notify(kID, "Sorry, only primary owners and wearer can lock the " + CTYPE + ".", FALSE);
+        if (fromMenu) MainMenu(kID, iNum);
+    } else if (sStr=="☒ LooksLock" || llToLower(sStr)=="lookslock off") {
+        if (iNum == COMMAND_OWNER) {
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Appearance_Lock", "");
+            llMessageLinked(LINK_SET, iNum, "lockappearance 0", kID);
+            g_iAppLock=FALSE;
+        } else Notify(kID,"Only owners can change the looks lock.", FALSE);
+        if (fromMenu) AppearanceMenu(kID,iNum);
+    } else if (sStr=="☐ LooksLock" || llToLower(sStr)=="lookslock on") {
+        if (iNum == COMMAND_OWNER) {
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Appearance_Lock" + "=1", "");
+            llMessageLinked(LINK_SET, iNum, "lockappearance 1", kID);
+            g_iAppLock=TRUE;
+        } else Notify(kID,"Only owners can change the looks lock.", FALSE);
+        if (fromMenu) AppearanceMenu(kID,iNum);
+    } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
+        if (iNum == COMMAND_OWNER)  {  //primary owners can lock and unlock. no one else
+            //inlined old "Unlock()" function
+            g_iLocked = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", "");
+            llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
+            llPlaySound(g_sUnlockSound, 1.0);
+            SetLockElementAlpha(); //EB
+
+            Notify(kID,CTYPE + " has been unlocked.",TRUE);
+        }
+        else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
+        if (fromMenu) MainMenu(kID, iNum);
+    } else if (sCmd == "fixmenus") {
+        if (kID == g_kWearer){
+            RebuildMenu();
+            Notify(kID, "Rebuilding menus, this may take several seconds.", FALSE);
+        } else Notify(kID, "Sorry, only the wearer can fix menus.", FALSE);
+    } else if (sCmd == "news"){
+        if (kID == g_kWearer || iNum==COMMAND_OWNER){
+            if (sStr=="news off"){
+                g_iNews=FALSE;
+                Notify(kID,"News items will no longer be downloaded from the OpenCollar web site.",TRUE);  //notify news off
+            } else if (sStr=="news on"){
+                g_iNews=TRUE;
+                Notify(kID,"News items will be downloaded from the OpenCollar web site when they are available.",TRUE);  //notify news on
+                g_sLastNewsTime="0";
+                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+            } else {
+                g_sLastNewsTime="0";
+                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+            }
+        } else Notify(kID,"Only primary owners and wearer can change news settings.",FALSE);
+        if (fromMenu) HelpMenu(kID, iNum);
+    } else if (sCmd == "update") {
+//        if (llGetOwnerKey(kID) == g_kWearer) {
+        if (kID == g_kWearer) {
+            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
+            g_iWillingUpdaters = 0;
+            g_kCurrentUser = kID;
+            g_iUpdateAuth = iNum;
+            Notify(kID,"Searching for nearby updater",FALSE);
+            g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
+            g_iUpdateFromMenu=fromMenu;
+            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+            llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
+        } else {
+            Notify(kID,"Only the wearer can update the " + CTYPE + ".",FALSE);
+            if (fromMenu) HelpMenu(kID, iNum);
+        }
+    } else if (sCmd == "version") {
+        Notify(kID, "I am running OpenCollar version " + g_sCollarVersion, FALSE);
+    } else if (sCmd == "objectversion") {  // ping from an object, we answer to it on the object channel
+        integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
+        if (iChan>0) iChan=iChan*(-1);
+        if (iChan > -10000) iChan -= 30000;
+
+        llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
+    } else if (sCmd == "attachmentversion") {
+        // Reply to version request from "garvin style" attachment
+        integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+        if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
+        llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
+    }
+    return TRUE;
 }
 
 default {
@@ -492,7 +516,6 @@ default {
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
-        
         
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
@@ -509,6 +532,7 @@ default {
         // /SA
         else if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"
+            Debug("got menu button "+sStr);
             list lParams = llParseString2List(sStr, ["|"], []);
             string sName = llList2String(lParams, 0);
             string sSubMenu = llList2String(lParams, 1);
@@ -518,12 +542,18 @@ default {
                     g_lAppsButtons += [sSubMenu];
                     g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
                 }
+            } else if (sName=="Appearance") {  //and appearance
+                 if (llListFindList(g_lAppearanceButtons, [sSubMenu]) == -1) {
+                    g_lAppearanceButtons += [sSubMenu];
+                    g_lAppearanceButtons = llListSort(g_lAppearanceButtons, 1, TRUE);
+                }
+               
             } else if (sStr=="Main|Animations"){
                 g_iAnimsMenu=TRUE;
             } else if (sStr=="Main|RLV"){
                 g_iRlvMenu=TRUE;
-            } else if (sStr=="Main|Appearance"){
-                g_iAppearanceMenu=TRUE;
+//            } else if (sStr=="Main|Appearance"){
+//                g_iAppearanceMenu=TRUE;
             } else if (sStr=="Main|Customize"){
                 g_iCustomizeMenu=TRUE;
             } else if (sStr=="Main|Paint"){
@@ -535,26 +565,25 @@ default {
             string parent = llList2String(lParams, 0);
             string child = llList2String(lParams, 1);
 
-            if (parent=="Apps" || parent=="AddOns")
-            {
+            if (parent=="Apps" || parent=="AddOns") {
                 integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
-                //only remove if it's there
                 if (gutiIndex != -1) g_lAppsButtons = llDeleteSubList(g_lAppsButtons, gutiIndex, gutiIndex);
+            }
+            if (parent=="Appearance") {
+                integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
+                if (gutiIndex != -1) g_lAppearanceButtons = llDeleteSubList(g_lAppearanceButtons, gutiIndex, gutiIndex);
             }
         } else if (iNum == DIALOG_RESPONSE) {
             //Debug("Menu response");
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1)
-            {
-                //got a menu response meant for us.  pull out values
+            if (iMenuIndex != -1) {  //got a menu response meant for us.  pull out values
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 
-                //remove stride from g_lMenuIDs
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
+                //remove stride from g_lMenuIDs.  We have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                
                 
@@ -568,13 +597,17 @@ default {
                         HelpMenu(kAv, iAuth);
                     } else if (sMessage == "Apps"){
                         AppsMenu(kAv, iAuth);
+                    } else if (sMessage == "Appearance"){
+                        AppearanceMenu(kAv, iAuth);
                     } else {
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
-                } else if (sMenu=="Apps"){
+                } else if (sMenu=="Apps" || sMenu=="Appearance"){
                     //Debug("Apps menu response:"+sMessage);
                     if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
+                    } else if (llSubStringIndex(sMessage,"LooksLock")==2) {
+                        UserCommand(iAuth, sMessage, kAv, TRUE);
                     } else {
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
                     }
@@ -620,6 +653,7 @@ default {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
             }
+            else if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
             else if(sToken =="lock_unlocksound")
             {
                 if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;

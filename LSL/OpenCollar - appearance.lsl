@@ -15,8 +15,8 @@
 //handle appearance menu
 //handle saving position on detach, and restoring it on httpdb_response
 
-string g_sSubMenu = "Appearance";
-string g_sParentMenu = "Main";
+string g_sSubMenu = "Size/Position";
+string g_sParentMenu = "Appearance";
 
 string CTYPE = "collar";
 
@@ -28,7 +28,6 @@ string ROTMENU = "Rotation";
 string SIZEMENU = "Size";
 
 list g_lLocalButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
-list g_lButtons;
 float g_fSmallNudge=0.0005;
 float g_fMediumNudge=0.005;
 float g_fLargeNudge=0.05;
@@ -46,9 +45,7 @@ integer g_iSizedByScript = FALSE; // prevent reseting of the script when the ite
 string TICKED = "☒ ";
 string UNTICKED = "☐ ";
 
-string APPLOCK = "LooksLock";
 integer g_iAppLock = FALSE;
-string g_sAppLockToken = "Appearance_Lock";
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -126,18 +123,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-string GetScriptID()
-{
-    // strip away "OpenCollar - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
 integer MinMaxUnscaled(vector vSize, float fScale)
 {
     if (fScale < 1.0)
@@ -368,29 +353,83 @@ DoMenu(key kAv, integer iAuth)
 {
     list lMyButtons;
     string sPrompt;
-    if (g_iAppLock)
-    {
+    if (g_iAppLock) {
         sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";
-        lMyButtons = [TICKED + APPLOCK];
-    }
-    else
-    {
+    } else {
         sPrompt = "\nChange the looks, adjustment and size of your "+CTYPE+".\n\nwww.opencollar.at/appearance";
-    
-        lMyButtons = [UNTICKED + APPLOCK] + g_lButtons + g_lLocalButtons ;
-        //lMyButtons += llListSort(g_lLocalButtons + g_lButtons, 1, TRUE);
+        lMyButtons = g_lLocalButtons ;
     }
+    
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, g_sSubMenu];
-    if (iMenuIndex == -1)
+    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
+    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
+}
+
+UserCommand(integer iNum, string sStr, key kID) {
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCommand = llToLower(llList2String(lParams, 0));
+    string sValue = llToLower(llList2String(lParams, 1));
+    if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu)
     {
-        g_lMenuIDs += lAddMe;
+        //someone asked for our menu
+        //give this plugin's menu to id
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
+        }
+        else DoMenu(kID, iNum);
+    } else if (sCommand=="lockappearance") {
+        g_iAppLock=(integer)sValue;
+    } else if (sStr == "appearance")
+    {
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
+        }
+        else DoMenu(kID, iNum);
     }
-    else
+    else if (sStr == "rotation")
     {
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
-    }    
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID,"You are not allowed to change the "+CTYPE+"'s rotation.", FALSE);
+        }
+        else if (g_iAppLock)
+        {
+            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            DoMenu(kID, iNum);
+        }
+        else RotMenu(kID, iNum);
+        }
+    else if (sStr == "position")
+    {
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID,"You are not allowed to change the "+CTYPE+"'s position.", FALSE);
+        }
+        else if (g_iAppLock)
+        {
+            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            DoMenu(kID, iNum);
+        }
+        else PosMenu(kID, iNum);
+    }
+    else if (sStr == "size")
+    {
+        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        {
+            Notify(kID,"You are not allowed to change the "+CTYPE+"'s size.", FALSE);
+        }
+        else if (g_iAppLock)
+        {
+            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            DoMenu(kID, iNum);
+        }
+        else SizeMenu(kID, iNum);
+    }
 }
 
 default {
@@ -412,120 +451,10 @@ default {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-            g_lButtons = []; // flush buttons before
-            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-        }
-        else if (iNum == MENUNAME_RESPONSE)
-        {
-            list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubMenu)
-            {//someone wants to stick something in our menu
-                string button = llList2String(lParts, 1);
-                if (llListFindList(g_lButtons, [button]) == -1)
-                {
-                    g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
-                }
-            }
-        }
-        else if (iNum == MENUNAME_REMOVE)
-        {
-            list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubMenu)
-            {//someone wants to stick something in our menu
-                string button = llList2String(lParts, 1);
-                integer index = llListFindList(g_lButtons, [button]);                
-                if (index != -1) g_lButtons = llDeleteSubList(g_lButtons, index, index);
-            }
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
         {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llToLower(llList2String(lParams, 0));
-            string sValue = llToLower(llList2String(lParams, 1));
-            if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu)
-            {
-                //someone asked for our menu
-                //give this plugin's menu to id
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
-                    llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
-                }
-                else DoMenu(kID, iNum);
-            }
-            /*else if (sStr == "refreshmenu")
-            {
-                g_lButtons = [];
-                llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
-            }*/
-            else if (sStr == "appearance")
-            {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
-                }
-                else DoMenu(kID, iNum);
-            }
-            else if (sStr == "rotation")
-            {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID,"You are not allowed to change the "+CTYPE+"'s rotation.", FALSE);
-                }
-                else if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID, iNum);
-                }
-                else RotMenu(kID, iNum);
-             }
-            else if (sStr == "position")
-            {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID,"You are not allowed to change the "+CTYPE+"'s position.", FALSE);
-                }
-                else if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID, iNum);
-                }
-                else PosMenu(kID, iNum);
-            }
-            else if (sStr == "size")
-            {
-                if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
-                {
-                    Notify(kID,"You are not allowed to change the "+CTYPE+"'s size.", FALSE);
-                }
-                else if (g_iAppLock)
-                {
-                    Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
-                    DoMenu(kID, iNum);
-                }
-                else SizeMenu(kID, iNum);
-            }
-            else if (sCommand == "lockappearance")
-            {
-                if (iNum == COMMAND_OWNER)
-                {
-                    g_iAppLock = (sValue!="0");
-                    if(g_iAppLock) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sAppLockToken + "=1", "");
-                    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sAppLockToken, "");
-                }
-                else Notify(kID,"Only owners can use this option.", FALSE);
-            }
-        }
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-
-            if (sToken == g_sAppLockToken)
-            {
-                g_iAppLock = (integer)sValue;
-            }
+            UserCommand( iNum, sStr, kID);
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -549,26 +478,6 @@ default {
                         //give kID the parent menu
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     }
-                    else if(llGetSubString(sMessage, llStringLength(TICKED), -1) == APPLOCK)
-                    {
-                        integer lock = llGetSubString(sMessage, 0, llStringLength(UNTICKED) - 1) == UNTICKED;
-                        // Hack: change local lock state in order for the menu to appear updated
-                        //      without waiting for the result of the "lockappearance" asynchronous call.
-                        //      We use this call here is because appearance lock has to be propagated
-                        //      to other scripts. Thus we cannot prevent the local handler from
-                        //      being called too although we would be better with just calling a
-                        //      shared function (synchronously).
-                        //      The alternative would be calling DoMenu in the "lockappearance" LM
-                        //      handler, using a global variable such as g_iRemenu
-                        //      ... which we do not like anymore.
-                        //      The only drawback is to make sure the auth test remains consistant
-                        //      in both places: here and in the "lockappearance" handler.
-                        if (iAuth == COMMAND_OWNER) g_iAppLock = lock;
-                        // /Hack
-                        if (lock) llMessageLinked(LINK_SET, iAuth, "lockappearance 1", kAv);
-                        else llMessageLinked(LINK_SET, iAuth, "lockappearance 0", kAv);
-                        DoMenu(kAv, iAuth);
-                    }
                     else if (~llListFindList(g_lLocalButtons, [sMessage]))
                     {
                         //we got a response for something we handle locally
@@ -585,11 +494,6 @@ default {
                             SizeMenu(kAv, iAuth);
                         }
                     }
-                    else if (~llListFindList(g_lButtons, [sMessage]))
-                    {
-                        //we got a submenu selection
-                        llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);
-                    }                                
                 }
                 else if (sMenuType == POSMENU)
                 {
