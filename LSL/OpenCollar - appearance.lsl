@@ -289,7 +289,7 @@ AdjustRot(vector vDelta)
 RotMenu(key kAv, integer iAuth)
 {
     string sPrompt = "\nAdjust the "+CTYPE+"'s rotation.\n\nNOTE: Arrows refer to the neck joint.";
-    list lMyButtons = ["tilt up ↻", "right ↷", "tilt left ↙", "tilt down ↺", "left ↶", "tilt right ↘"];// ria change
+    list lMyButtons = ["tilt up ↻", "left ↷", "tilt left ↙", "tilt down ↺", "right ↶", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, ROTMENU];
@@ -513,10 +513,10 @@ default {
                     {
                         if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt up ↻") AdjustRot(<0, g_fRotNudge, 0>);
-                        else if (sMessage == "right ↷") AdjustRot(<0, 0, g_fRotNudge>);
+                        else if (sMessage == "left ↶") AdjustRot(<0, 0, g_fRotNudge>);
+                        else if (sMessage == "right ↷") AdjustRot(<0, 0, -g_fRotNudge>);
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
-                        else if (sMessage == "left ↶") AdjustRot(<0, 0, -g_fRotNudge>);
                     }
                     else Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
                     RotMenu(kAv, iAuth);                     
