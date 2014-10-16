@@ -246,20 +246,42 @@ ForceUpdate()
     llSetText("", <1,1,1>, 1.0);
 }
 
+vector ConvertPos(vector pos)
+{
+    integer ATTACH = llGetAttached();
+    vector out ;
+    if (ATTACH == 1) { out.x = pos.y; out.y = pos.z; out.z = pos.x; }
+    else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21 ) { out.x = pos.x; out.y = -pos.z; out.z = pos.y ; }
+    else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19 ) { out.x = pos.x; out.y = pos.z; out.z = -pos.y; }
+    else out = pos ;
+    return out ;
+}
+
 AdjustPos(vector vDelta)
 {
     if (llGetAttached())
     {
-        llSetPos(llGetLocalPos() + vDelta);
+        llSetPos(llGetLocalPos() + ConvertPos(vDelta));
         ForceUpdate();
     }
+}
+
+vector ConvertRot(vector rot)
+{
+    integer ATTACH = llGetAttached();
+    vector out ;
+    if (ATTACH == 1) { out.x = rot.y; out.y = rot.z; out.z = rot.x; }
+    else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21) { out.x = rot.x; out.y = -rot.z; out.z = rot.y; }
+    else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19) { out.x = rot.x; out.y = rot.z; out.z = -rot.y; }
+    else out = rot ;
+    return out ;
 }
 
 AdjustRot(vector vDelta)
 {
     if (llGetAttached())
     {
-        llSetLocalRot(llGetLocalRot() * llEuler2Rot(vDelta));
+        llSetLocalRot(llGetLocalRot() * llEuler2Rot(ConvertRot(vDelta)));
         ForceUpdate();
     }
 }
