@@ -27,7 +27,6 @@ string POSMENU = "Position";
 string ROTMENU = "Rotation";
 string SIZEMENU = "Size";
 
-list g_lLocalButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
 float g_fSmallNudge=0.0005;
 float g_fMediumNudge=0.005;
 float g_fLargeNudge=0.05;
@@ -42,9 +41,6 @@ list g_lPrimStartSizes; // area for initial prim sizes (stored on rez)
 integer g_iScaleFactor = 100; // the size on rez is always regarded as 100% to preven problem when scaling an item +10% and than - 10 %, which would actuall lead to 99% of the original size
 integer g_iSizedByScript = FALSE; // prevent reseting of the script when the item has been chnged by the script
 
-string TICKED = "☒ ";
-string UNTICKED = "☐ ";
-
 integer g_iAppLock = FALSE;
 
 //MESSAGE MAP
@@ -57,29 +53,18 @@ integer COMMAND_EVERYONE = 504;
 integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//integer LM_SETTING_DELETE = 2003;//delete token from DB
+//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
-
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-
-integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
-integer CPLANIM_PERMREQUEST = 7002;//id should be av's key, str should be cmd name "hug", "kiss", etc
-integer CPLANIM_PERMRESPONSE = 7003;//str should be "1" for got perms or "0" for not.  id should be av's key
-integer CPLANIM_START = 7004;//str should be valid anim name.  id should be av
-integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -127,21 +112,15 @@ integer MinMaxUnscaled(vector vSize, float fScale)
 {
     if (fScale < 1.0)
     {
-        if (vSize.x <= 0.01)
-            return TRUE;
-        if (vSize.y <= 0.01)
-            return TRUE;
-        if (vSize.z <= 0.01)
-            return TRUE;
+        if (vSize.x <= 0.01) return TRUE;
+        if (vSize.y <= 0.01) return TRUE;
+        if (vSize.z <= 0.01) return TRUE;
     }
     else
     {
-        if (vSize.x >= 10.0)
-            return TRUE;
-        if (vSize.y >= 10.0)
-            return TRUE;
-        if (vSize.z >= 10.0)
-            return TRUE;
+        if (vSize.x >= 10.0) return TRUE;
+        if (vSize.y >= 10.0) return TRUE;
+        if (vSize.z >= 10.0) return TRUE;
     }
     return FALSE;
 }
@@ -150,21 +129,15 @@ integer MinMaxScaled(vector vSize, float fScale)
 {
     if (fScale < 1.0)
     {
-        if (vSize.x < 0.01)
-            return TRUE;
-        if (vSize.y < 0.01)
-            return TRUE;
-        if (vSize.z < 0.01)
-            return TRUE;
+        if (vSize.x < 0.01) return TRUE;
+        if (vSize.y < 0.01) return TRUE;
+        if (vSize.z < 0.01) return TRUE;
     }
     else
     {
-        if (vSize.x > 10.0)
-            return TRUE;
-        if (vSize.y > 10.0)
-            return TRUE;
-        if (vSize.z > 10.0)
-            return TRUE;
+        if (vSize.x > 10.0) return TRUE;
+        if (vSize.y > 10.0) return TRUE;
+        if (vSize.z > 10.0) return TRUE;
     }
     return FALSE;
 }
@@ -351,13 +324,13 @@ SizeMenu(key kAv, integer iAuth)
 
 DoMenu(key kAv, integer iAuth)
 {
-    list lMyButtons;
+    list lMyButtons ;
     string sPrompt;
-    if (g_iAppLock) {
-        sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";
+    if (g_iAppLock && iAuth != COMMAND_OWNER) {
+        sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";        
     } else {
         sPrompt = "\nChange the looks, adjustment and size of your "+CTYPE+".\n\nwww.opencollar.at/appearance";
-        lMyButtons = g_lLocalButtons ;
+        lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
     }
     
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
@@ -456,6 +429,13 @@ default {
         {
             UserCommand( iNum, sStr, kID);
         }
+        else if (iNum == LM_SETTING_RESPONSE)
+        {
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
+        }
         else if (iNum == DIALOG_RESPONSE)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -473,27 +453,10 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                  
                 if (sMenuType == g_sSubMenu)
                 {
-                    if (sMessage == UPMENU)
-                    {
-                        //give kID the parent menu
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                    }
-                    else if (~llListFindList(g_lLocalButtons, [sMessage]))
-                    {
-                        //we got a response for something we handle locally
-                        if (sMessage == POSMENU)
-                        {
-                            PosMenu(kAv, iAuth);
-                        }
-                        else if (sMessage == ROTMENU)
-                        {
-                            RotMenu(kAv, iAuth);
-                        }
-                        else if (sMessage == SIZEMENU)
-                        {
-                            SizeMenu(kAv, iAuth);
-                        }
-                    }
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == POSMENU) PosMenu(kAv, iAuth);
+                    else if (sMessage == ROTMENU) RotMenu(kAv, iAuth);
+                    else if (sMessage == SIZEMENU) SizeMenu(kAv, iAuth);
                 }
                 else if (sMenuType == POSMENU)
                 {
@@ -504,47 +467,17 @@ default {
                     }
                     else if (llGetAttached())
                     {
-                        if (sMessage == "forward ↳")
-                        {
-                            AdjustPos(<g_fNudge, 0, 0>);
-                        }
-                        else if (sMessage == "left ←")
-                        {
-                            AdjustPos(<0, g_fNudge, 0>);                
-                        }
-                        else if (sMessage == "up ↑")
-                        {
-                            AdjustPos(<0, 0, g_fNudge>);                
-                        }            
-                        else if (sMessage == "backward ↲")
-                        {
-                            AdjustPos(<-g_fNudge, 0, 0>);                
-                        }            
-                        else if (sMessage == "right →")
-                        {
-                            AdjustPos(<0, -g_fNudge, 0>);                    
-                        }            
-                        else if (sMessage == "down ↓")
-                        {
-                            AdjustPos(<0, 0, -g_fNudge>);                
-                        }                            
-                        else if (sMessage == "▸")
-                        {
-                            g_fNudge=g_fSmallNudge;
-                        }
-                        else if (sMessage == "▸▸")
-                        {
-                            g_fNudge=g_fMediumNudge;                
-                        }
-                        else if (sMessage == "▸▸▸")
-                        {
-                            g_fNudge=g_fLargeNudge;                
-                        }
+                        if (sMessage == "forward ↳") AdjustPos(<g_fNudge, 0, 0>);
+                        else if (sMessage == "left ←") AdjustPos(<0, g_fNudge, 0>);
+                        else if (sMessage == "up ↑") AdjustPos(<0, 0, g_fNudge>);
+                        else if (sMessage == "backward ↲") AdjustPos(<-g_fNudge, 0, 0>);
+                        else if (sMessage == "right →") AdjustPos(<0, -g_fNudge, 0>);
+                        else if (sMessage == "down ↓") AdjustPos(<0, 0, -g_fNudge>);
+                        else if (sMessage == "▸") g_fNudge=g_fSmallNudge;
+                        else if (sMessage == "▸▸") g_fNudge=g_fMediumNudge;
+                        else if (sMessage == "▸▸▸") g_fNudge=g_fLargeNudge;
                     }
-                    else
-                    {
-                        Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
-                    }
+                    else Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
                     PosMenu(kAv, iAuth);                    
                 }
                 else if (sMenuType == ROTMENU)
@@ -556,35 +489,14 @@ default {
                     }
                     else if (llGetAttached())
                     {
-                        if (sMessage == "tilt right ↘") // was tilt up
-                        {
-                            AdjustRot(<g_fRotNudge, 0, 0>);
-                        }
-                        else if (sMessage == "tilt up ↻") // was right
-                        {
-                            AdjustRot(<0, g_fRotNudge, 0>);             
-                        }
-                        else if (sMessage == "right ↷") // was tilt left
-                        {
-                            AdjustRot(<0, 0, g_fRotNudge>);           
-                        }            
-                        else if (sMessage == "tilt left ↙") // was tilt down
-                        {
-                            AdjustRot(<-g_fRotNudge, 0, 0>);              
-                        }            
-                        else if (sMessage == "tilt down ↺") // was left
-                        {
-                            AdjustRot(<0, -g_fRotNudge, 0>);              
-                        }            
-                        else if (sMessage == "left ↶") // was tilt right
-                        {
-                            AdjustRot(<0, 0, -g_fRotNudge>);            
-                        }                        
+                        if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
+                        else if (sMessage == "tilt up ↻") AdjustRot(<0, g_fRotNudge, 0>);
+                        else if (sMessage == "right ↷") AdjustRot(<0, 0, g_fRotNudge>);
+                        else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
+                        else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
+                        else if (sMessage == "left ↶") AdjustRot(<0, 0, -g_fRotNudge>);
                     }
-                    else
-                    {
-                        Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
-                    }
+                    else Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
                     RotMenu(kAv, iAuth);                     
                 }
                 else if (sMenuType == SIZEMENU)
@@ -655,7 +567,7 @@ default {
             else
             // it was a user change, so we have to store the basic values again
             {
-                    Store_StartScaleLoop();
+                Store_StartScaleLoop();
             }
         }
         if (iChange & (CHANGED_SHAPE | CHANGED_LINK))
