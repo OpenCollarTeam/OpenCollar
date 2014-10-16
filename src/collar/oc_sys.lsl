@@ -121,7 +121,7 @@ integer g_iListenChan=1;
 string g_sSafeWord="RED";
 string g_sPrefix;
 
-///*
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -133,7 +133,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-//*/
+*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -162,23 +162,16 @@ string AutoPrefix()
 }
 
 integer compareVersions(string v1, string v2){ //compares two symantic version strings, true if v1 >= v2
-    //Debug("compare "+v1+" with "+v2);
-        
     integer v1Index=llSubStringIndex(v1,".");
     integer v2Index=llSubStringIndex(v2,".");
-    
-    //Debug("v1Index: "+(string)v1Index);
-    //Debug("v2Index: "+(string)v2Index);
     
     integer v1a=(integer)llGetSubString(v1,0,v1Index);
     integer v2a=(integer)llGetSubString(v2,0,v2Index);
     
     if (v1a == v2a) {
-        //Debug((string)v1a+" == "+(string)v2a);
         if (~v1Index || ~v2Index){
             string v1b;
             if (v1Index == -1 || v1Index==llStringLength(v1)) {
-                //Debug("v1b empty");
                 v1b="0";
             } else {
                 v1b=llGetSubString(v1,v1Index+1,-1);
@@ -186,7 +179,6 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
 
             string v2b;
             if (v2Index == -1 || v2Index==llStringLength(v2)) {
-                //Debug("v2b empty");
                 v2b="0";
             } else {
                 v2b=llGetSubString(v2,v2Index+1,-1);
@@ -194,11 +186,9 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
 
             return compareVersions(v1b,v2b);
         } else {
-            //Debug("0 as nothing to compare");
             return FALSE;
         }
     }
-    //Debug((string)(v1a > v2a));
     return v1a > v2a;
 }
 
@@ -381,7 +371,7 @@ init (){
 integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
-    Debug("Got message "+sStr);
+    //Debug("Got message "+sStr);
 
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llToLower(llList2String(lParams, 0));
@@ -532,7 +522,7 @@ default {
         // /SA
         else if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"
-            Debug("got menu button "+sStr);
+            //Debug("got menu button "+sStr);
             list lParams = llParseString2List(sStr, ["|"], []);
             string sName = llList2String(lParams, 0);
             string sSubMenu = llList2String(lParams, 1);
