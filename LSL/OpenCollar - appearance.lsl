@@ -246,20 +246,42 @@ ForceUpdate()
     llSetText("", <1,1,1>, 1.0);
 }
 
+vector ConvertPos(vector pos)
+{
+    integer ATTACH = llGetAttached();
+    vector out ;
+    if (ATTACH == 1) { out.x = pos.y; out.y = pos.z; out.z = pos.x; }
+    else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21 ) { out.x = pos.x; out.y = -pos.z; out.z = pos.y ; }
+    else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19 ) { out.x = pos.x; out.y = pos.z; out.z = -pos.y; }
+    else out = pos ;
+    return out ;
+}
+
 AdjustPos(vector vDelta)
 {
     if (llGetAttached())
     {
-        llSetPos(llGetLocalPos() + vDelta);
+        llSetPos(llGetLocalPos() + ConvertPos(vDelta));
         ForceUpdate();
     }
+}
+
+vector ConvertRot(vector rot)
+{
+    integer ATTACH = llGetAttached();
+    vector out ;
+    if (ATTACH == 1) { out.x = rot.y; out.y = rot.z; out.z = rot.x; }
+    else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21) { out.x = rot.x; out.y = -rot.z; out.z = rot.y; }
+    else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19) { out.x = rot.x; out.y = rot.z; out.z = -rot.y; }
+    else out = rot ;
+    return out ;
 }
 
 AdjustRot(vector vDelta)
 {
     if (llGetAttached())
     {
-        llSetLocalRot(llGetLocalRot() * llEuler2Rot(vDelta));
+        llSetLocalRot(llGetLocalRot() * llEuler2Rot(ConvertRot(vDelta)));
         ForceUpdate();
     }
 }
@@ -267,7 +289,7 @@ AdjustRot(vector vDelta)
 RotMenu(key kAv, integer iAuth)
 {
     string sPrompt = "\nAdjust the "+CTYPE+"'s rotation.\n\nNOTE: Arrows refer to the neck joint.";
-    list lMyButtons = ["tilt up ↻", "right ↷", "tilt left ↙", "tilt down ↺", "left ↶", "tilt right ↘"];// ria change
+    list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, ROTMENU];
@@ -491,10 +513,10 @@ default {
                     {
                         if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt up ↻") AdjustRot(<0, g_fRotNudge, 0>);
-                        else if (sMessage == "right ↷") AdjustRot(<0, 0, g_fRotNudge>);
+                        else if (sMessage == "left ↶") AdjustRot(<0, 0, g_fRotNudge>);
+                        else if (sMessage == "right ↷") AdjustRot(<0, 0, -g_fRotNudge>);
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
-                        else if (sMessage == "left ↶") AdjustRot(<0, 0, -g_fRotNudge>);
                     }
                     else Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
                     RotMenu(kAv, iAuth);                     
