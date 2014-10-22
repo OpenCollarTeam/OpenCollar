@@ -80,24 +80,13 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-//integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-
-//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
-//integer CPLANIM_PERMREQUEST = 7002;//id should be av's key, str should be cmd name "hug", "kiss", etc
-//integer CPLANIM_PERMRESPONSE = 7003;//str should be "1" for got perms or "0" for not.  id should be av's key
-//integer CPLANIM_START = 7004;//str should be valid anim name.  id should be av
-//integer CPLANIM_STOP = 7005;//str should be valid anim name.  id should be av
-
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";//when your menu hears this, give the parent menu
 string g_sScript;
-
+string CTYPE="collar";
 string WEARERNAME;
 
 /*
@@ -240,15 +229,6 @@ PrepareSounds()
     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 }
 
-SaveBellSettings()
-{
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
-}
-
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
 {
@@ -273,7 +253,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if (n<1) n=1;
             if (n>10) n=10;
             g_fVolume=(float)n/10;
-            SaveBellSettings();
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
             Notify(kID,"Bell volume set to "+(string)n, TRUE);
         }
         else if (sToken=="delay")
@@ -281,7 +261,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_fSpeed=(float)sValue;
             if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
             if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
-            SaveBellSettings();
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
             Notify(kID,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.", TRUE);
         }
         else if (sToken=="show" || sToken=="hide")
@@ -297,7 +277,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 Notify(kID,"The bell is now invisible.",TRUE);
             }
             SetBellElementAlpha();
-            SaveBellSettings();
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
         }
         else if (sToken=="on")
         {
@@ -307,7 +287,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 {
                     g_iBellOn=iNum;
                     if (!g_iHasControl) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
-                    SaveBellSettings();
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
                     Notify(kID,"The bell rings now.",TRUE);
                 }
             }
@@ -327,8 +307,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     llReleaseControls();
                     g_iHasControl=FALSE;
                 }
-
-                SaveBellSettings();
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
                 Notify(kID,"The bell is now quiet.",TRUE);
             }
             else
@@ -344,6 +323,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 g_iCurrentBellSound=0;
             }
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
             Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
         }
         // let the bell ring one time
@@ -456,6 +436,7 @@ default {
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
+            else if (sToken == "Global_CType") CTYPE = sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
@@ -482,32 +463,32 @@ default {
                     {
                         g_fVolume+=g_fVolumeStep;
                         if (g_fVolume>1.0) g_fVolume=1.0;                        
-                        SaveBellSettings();
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
                     }
                     else if (sMessage == "Vol -") // be more quiet, and store the value
                     {
                         g_fVolume-=g_fVolumeStep;
                         if (g_fVolume<0.1) g_fVolume=0.1;                        
-                        SaveBellSettings();
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
                     }
                     else if (sMessage == "Delay +") // dont annoy people and ring slower
                     {
                         g_fSpeed+=g_fSpeedStep;
                         if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
-                        SaveBellSettings();
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
                     }
                     else if (sMessage == "Delay -") // annoy the hell out of the, ring plenty, ring often
                     {
                         g_fSpeed-=g_fSpeedStep;
                         if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
-                        SaveBellSettings();
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
                     }
                     else if (sMessage == "Next Sound") // choose another sound for the bell
                     {
                         g_iCurrentBellSound++;
                         if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
                         g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                        SaveBellSettings();
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
                     }
                     //added a button to ring the bell. same call as when walking.
                     else if (sMessage == "Ring it!")
@@ -532,7 +513,7 @@ default {
                 {
                     g_iBellShow=!g_iBellShow;
                     SetBellElementAlpha();
-                    SaveBellSettings();
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
                 }
                 else if (~llListFindList(g_lButtons, [sMessage]))
                 {
@@ -595,7 +576,7 @@ default {
             {
                 g_fNextTouch=llGetTime()+g_fTouch;
                 g_kLastToucher = toucher;
-                llSay(0, GetName(toucher) + " plays with the trinket on " + WEARERNAME + "'s collar." );
+                llSay(0, GetName(toucher) + " plays with the trinket on " + WEARERNAME + "'s "+CTYPE+"." );
             }
         }
     }
