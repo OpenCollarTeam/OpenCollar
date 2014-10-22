@@ -355,6 +355,7 @@ RebuildMenu()
     g_iRlvMenu=FALSE;
     g_iAppearanceMenu=FALSE;
     g_lAppsButtons = [] ;
+    g_lAppearanceButtons = [];
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
