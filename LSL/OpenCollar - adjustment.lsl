@@ -351,7 +351,7 @@ DoMenu(key kAv, integer iAuth)
     if (g_iAppLock && iAuth != COMMAND_OWNER) {
         sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";        
     } else {
-        sPrompt = "\nChange the looks, adjustment and size of your "+CTYPE+".\n\nwww.opencollar.at/appearance";
+        sPrompt = "\nChange the position, rotation and size of your "+CTYPE+".\n\nwww.opencollar.at/appearance";
         lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
     }
     

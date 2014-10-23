@@ -206,7 +206,7 @@ AppearanceMenu(key kID, integer iAuth) {
         sPrompt="\nMake changes to the "+CTYPE+"'s appearance.";
         sLooksLockButton="☐ LooksLock";
     }
-    sPrompt += "\n\nwww.opencollar.at/apps";
+    sPrompt += "\n\nwww.opencollar.at/appearance";
     Dialog(kID, sPrompt, [sLooksLockButton]+g_lAppearanceButtons, [UPMENU], 0, iAuth, "Appearance");
 }
 HelpMenu(key kID, integer iAuth) {
