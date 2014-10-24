@@ -272,7 +272,7 @@ TimerFinish()
     }
     if(g_iClearRLVRestions)
     {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "RESET", g_kWearer);
+        llMessageLinked(LINK_THIS, COMMAND_OWNER, "clear", g_kWearer);
         if(!g_iUnlockCollar && g_iCollarLocked)
         {
             llSleep(2);
