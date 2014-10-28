@@ -168,7 +168,8 @@ You can enter:
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND) - 1) == PLUGIN_CHAT_COMMAND) {
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
-        if(llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
+        if(llGetSubString(sStr,-2,-1) == "=n" || llGetSubString(sStr,-2,-1) == "=y" || llGetSubString(sStr,-4,-1) == "=add" || llGetSubString(sStr,-4,-1) == "=rem") { //ignore RLV restriction commands in this script
+        } else if(llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations, [sCmd]);
             TeleportTo(llList2String(g_lVolatile_Slurls, iIndex));
         } else if(llListFindList(g_lDestinations, [sCmd]) >= 0) { //Found exact match, TP over
