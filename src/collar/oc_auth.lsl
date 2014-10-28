@@ -685,7 +685,7 @@ default {
                 else if (sToken == "groupname") g_sGroupName = sValue;
                 else if (sToken == "openaccess") g_iOpenAccess = (integer)sValue;
                 else if (sToken == "limitrange") g_iLimitRange = (integer)sValue;
-                else if (sToken == "runawaydisable") g_iRunawayDisable = (integer)sValue;
+                else if (sToken == "runawayDisable") g_iRunawayDisable = (integer)sValue;
                 else if (sToken == "secowners") g_lSecOwners = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "blacklist") g_lBlackList = llParseString2List(sValue, [","], [""]);
             }
@@ -709,7 +709,7 @@ default {
                 else if (sStr == "groupname") g_sGroupName = "";
                 else if (sStr == "openaccess") g_iOpenAccess = FALSE;
                 else if (sStr == "limitrange") g_iLimitRange = TRUE;
-                else if (sStr == "runawaydisable") g_iRunawayDisable = FALSE;
+                else if (sStr == "runawayDisable") g_iRunawayDisable = FALSE;
                 else if (sStr == "secowners") g_lSecOwners = [];
                 else if (sStr == "blacklist") g_lBlackList = [];
             }
