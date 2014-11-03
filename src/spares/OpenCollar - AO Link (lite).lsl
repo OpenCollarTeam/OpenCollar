@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                          OpenCollar - AO Link (lite)                           //
-//                                 version 3.980                                  //
+//                                 version 3.987                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -31,12 +31,14 @@ integer type;
 // integer type=2; // for ZHAO-II type AOs
 // integer type=3; // for Vista type AOs
 // integer type=4; // for AKEYO type AOs
+// integer type=5; // for Gaeline type AOs
 //----------------------------------------------------------------------
 //Integer map for above
 integer ORACUL=1; 
 integer ZHAO=2;
 integer VISTA=3;
 integer AKEYO=4;
+integer GAELINE=5;
 
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
@@ -85,6 +87,14 @@ determineType() //function to determine AO type.
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
             
         }
+        else if(~llSubStringIndex(t,"z_ao")) //if we find a script with "z_ao" in the name.
+        {
+            type=GAELINE;
+            x=0;
+            llOwnerSay("OC compatibility script configured for Gaeline AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
+            llMessageLinked(LINK_SET, 103, "", "");
+            
+        }
         else if(~llSubStringIndex(t,"oracul")) //if we find a script with "oracul" in the name.
         {
             type=ORACUL;
@@ -110,6 +120,7 @@ AOPause()
     {
         if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
         else if (type==AKEYO) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause");
+        else if(type==GAELINE) llMessageLinked(LINK_THIS, 102, "", "ocpause");
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
         else if(type>1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
 
@@ -124,6 +135,7 @@ AOUnPause()
     {
         if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
         else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+        else if(type==GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
         else if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
 
     }
@@ -240,6 +252,7 @@ default
             {
                 if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
                 else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause"); 
+                else if(type==GAELINE) llMessageLinked(LINK_THIS, 102, "", "ocpause");
                 else if(type>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); 
                
 
@@ -250,6 +263,7 @@ default
                 {
                     if (type==ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
                     else if(type==AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+                    else if(type==GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
                     else if(type>1 ) llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "ocpause"); 
                     
                 }
