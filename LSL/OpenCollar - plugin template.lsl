@@ -8,7 +8,7 @@
 
 
 string  SUBMENU_BUTTON              = "Plugin"; // Name of the submenu
-string  COLLAR_PARENT_MENU          = "AddOns"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where want to plug it in
 string  PLUGIN_CHAT_COMMAND         = "plugin"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 
