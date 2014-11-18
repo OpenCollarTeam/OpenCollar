@@ -518,7 +518,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         llOwnerSay("Searching folder containing string \"" + sPattern + "\" for browsing.");
         searchSingle(sPattern);
     }
-    else if (sStr=="save" /*|| sStr=="menu Save"*/)
+    else if (sStr=="save")
     {
         g_sCurrentFolder = "";
         g_lOutfit=[];
@@ -622,6 +622,7 @@ default {
                 if (sMessage == UPMENU)
                 {
                     SetAsyncMenu(kAv, iAuth); QueryFolders("browse");
+                    return;
                 }
                 else if (sMessage == "Save") UserCommand(iAuth, "save", kAv);
                 else if (sMessage == "Restore") UserCommand(iAuth, "restore", kAv);
