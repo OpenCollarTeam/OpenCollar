@@ -242,6 +242,11 @@ RemovePerson(string sName, string sToken, key kCmdr) {
 
     if (iFound){
         //save to db
+                        
+        string sOldToken=sToken;
+        if (sToken == "secowner") sOldToken+="s";
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
+        
         if (llGetListLength(lPeople)>0)
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sToken + "=" + llDumpList2String(lPeople, ","), "");
         else
