@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - auth                                //
-//                                 version 3.993                                  //
+//                                 version 3.994                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -242,16 +242,12 @@ RemovePerson(string sName, string sToken, key kCmdr) {
 
     if (iFound){
         //save to db
-                        
-        string sOldToken=sToken;
-        if (sToken == "secowner") sOldToken+="s";
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
-        
-        if (llGetListLength(lPeople)>0)
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sToken + "=" + llDumpList2String(lPeople, ","), "");
-        else
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + sToken, "");
-        
+         string sOldToken=sToken;
+         if (sToken == "secowner") sOldToken+="s";
+            if (llGetListLength(lPeople)>0)
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
+            else
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + sOldToken, "");
         //store temp list
         if (sToken=="owner") g_lOwners = lPeople;
         else if (sToken=="tempowner") g_lTempOwners = lPeople;
