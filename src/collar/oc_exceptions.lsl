@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - rlvex                                //
-//                                 version 3.989                                  //
+//                                 version 3.994                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -768,6 +768,20 @@ default {
                 {
                     SetAllExs("");//sendcommands
                 }
+            }
+        }
+        else if (iNum == LM_SETTING_DELETE){
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            if (sToken == "auth_owner"){
+                g_lOwners = [];
+                ClearEx();
+                UpdateSettings();
+            }
+            else if (sToken == "auth_secowners"){
+                g_lSecOwners = [];
+                ClearEx();
+                UpdateSettings();
             }
         }
         else if (iNum == LM_SETTING_SAVE)
