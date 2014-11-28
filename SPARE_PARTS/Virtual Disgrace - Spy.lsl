@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 1.4                                   //
+//                                  version 1.7                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Based on the OpenCollar - subspy 3.957
-// Compatible with OpenCollar API   3.9.8
+// Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 1.3.2
 
 string g_sChatBuffer;  //if this has anything in it at end of interval, then tell owners (if listen enabled)
@@ -52,6 +52,7 @@ string g_sScript = "subspy_";
 string UPMENU = "BACK";
 
 list g_lOwners;
+list g_lTempOwners;
 string g_sWearerName;
 key g_kWearer;
 
@@ -158,20 +159,15 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 DialogSpy(key kID, integer iAuth) {
-    string sPrompt="\nVirtual Disgrace - Spy (1.4)\n";
+    string sPrompt="\n[http://www.virtualdisgrace.com/spy Virtual Disgrace - Spy]";
     
     list lButtons ;
 
-    if(g_iNotifyEnabled) lButtons += ["☒ Notify"];
-    else lButtons += ["☐ Notify"];
-    
     if(g_iTraceEnabled) lButtons += ["☒ Trace"];
     else lButtons += ["☐ Trace"];
     
     if (g_iListenEnabled) lButtons += ["☒ Listen"];
     else lButtons += ["☐ Listen"];
-
-    sPrompt += "\nTrace reports if the wearer changes region.\nListen transmits directly what the wearer says.\nNotify informs the wearer each time a report is sent.\n\nwww.virtualdisgrace.com/spy";
 
     g_kDialogSpyID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -194,9 +190,9 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 
 NotifyOwners(string sMsg) {
     integer n;
-    integer iStop = llGetListLength(g_lOwners);
+    integer iStop = llGetListLength(g_lOwners+g_lTempOwners);
     for (n = 0; n < iStop; n += 2) {
-        key kAv = (key)llList2String(g_lOwners, n);
+        key kAv = (key)llList2String(g_lOwners+g_lTempOwners, n);
         //we don't want to bother the owner if he/she is right there, so check distance
         vector vOwnerPos = (vector)llList2String(llGetObjectDetails(kAv, [OBJECT_POS]), 0);
         if (vOwnerPos == ZERO_VECTOR || llVecDist(vOwnerPos, llGetPos()) > 20.0) {//vOwnerPos will be ZERO_VECTOR if not in sim
@@ -286,6 +282,9 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             llListenRemove(g_iListener);
             g_iListener = 0;
 
+            g_lOwners = [];
+            g_lTempOwners = [];
+            
             g_iTraceEnabled=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
         } else if (sStr == "spy" || sStr == "menu spy") DialogSpy(kID, iAuth);
@@ -315,11 +314,17 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (UserCommand(iNum, sStr, kID, FALSE)) {
             // do nothing more if TRUE
+        } else if (iNum == LM_SETTING_DELETE) {
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            if(sToken == "auth_owner") g_lOwners = [];
+            else if(sToken == "auth_tempowner") g_lTempOwners = [];
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if(sToken == "auth_tempowner" && llStringLength(sValue) > 0) g_lTempOwners = llParseString2List(sValue, [","], []);
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -344,9 +349,8 @@ default {
                         g_iListener = llListen(0, "", g_kWearer, "");
                     }
                 }
-            } else if(sToken == "auth_owner" && llStringLength(sValue) > 0) { //owners list
-                g_lOwners = llParseString2List(sValue, [","], []);
-            }
+            } else if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []); //owners list
+            else if(sToken == "auth_tempowner" && llStringLength(sValue) > 0) g_lTempOwners = llParseString2List(sValue, [","], []); //tempowners list
         } else if (iNum == MENUNAME_REQUEST && sStr == "Apps") {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Apps|Spy", "");
         } else if (iNum == DIALOG_RESPONSE) {
