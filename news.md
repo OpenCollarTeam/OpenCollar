@@ -1,7 +1,5 @@
-Issue: 20141111.1
+Issue: 20141128.1
 
-OpenCollar 3.990 has been released and concludes the 3.9 API era.
+OpenCollar Updates are available again on [https://marketplace.secondlife.com/p/Wendys-OpenCollar-Updater/6620453 Marketplace]. This time, in a more simple, alternative style.
 
-We want to thank everyone for their feedback and interest and hope you enjoy this very polished version.
-
-Details can be found on the [http://www.opencollar.at/blog OpenCollar Website].
+More information can be found on our [http://www.opencollar.at/blog/marketplace-and-little-fixes blog].
