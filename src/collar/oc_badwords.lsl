@@ -284,12 +284,6 @@ default {
             if(g_sBadWordSound != g_sNoSound) llStopSound();
             llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, "");
             g_iHasSworn = FALSE;
-            //disable
-            g_iIsEnabled = 0;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_on","");
-            //clear badwords
-            g_lBadWords = [];
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_words","");
         }
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
