@@ -144,7 +144,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     lNewBadWords=llDeleteSubList(lNewBadWords,-1,-1);
                 }
                 if (llGetListLength(g_lBadWords)) {
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");          integer n;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");
                     Notify(kID, WordPrompt(),TRUE);
                 }
                 if (remenu) MenuBadwords(kID,iNum);
@@ -228,7 +228,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     if (~iIndex) g_lBadWords = llDeleteSubList(g_lBadWords,iIndex,iIndex);
                     lNewBadWords=llDeleteSubList(lNewBadWords,-1,-1);
                 }
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");          integer n;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");
                 Notify(kID, WordPrompt(),TRUE);
                 if (remenu) MenuBadwords(kID,iNum);
             } else {
@@ -278,7 +278,19 @@ default {
         //Debug("Got message:"+(string)iNum+" "+sStr);
         if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == MENUNAME_REQUEST && sStr == "Apps") llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Apps|Badwords", "");
-        else if (iNum == COMMAND_SAFEWORD) UserCommand(iNum, "badwords clear", kID, FALSE);
+        else if (iNum == COMMAND_SAFEWORD)
+        {
+            //stop sound and animation
+            if(g_sBadWordSound != g_sNoSound) llStopSound();
+            llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, "");
+            g_iHasSworn = FALSE;
+            //disable
+            g_iIsEnabled = 0;
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_on","");
+            //clear badwords
+            g_lBadWords = [];
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_words","");
+        }
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
