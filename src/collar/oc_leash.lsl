@@ -265,7 +265,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
 
     g_bFollowMode = iFollowMode; // leashing, or following
     if (bTargetIsAvi) g_bLeashedToAvi = TRUE;
-    if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=COMMAND_GROUP;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
+    if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=COMMAND_WEARER;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
     DoLeash(kTarget, iAuth, lPoints);
     
     // Notify Target how to unleash, only if:
