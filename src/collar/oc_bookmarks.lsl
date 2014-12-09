@@ -203,7 +203,7 @@ You can enter:
             }
             if(found == 0) {
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
-                if (llSubStringIndex(sCmd,"o:") == 0) {}//llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); (enable this to support hud forcetp.  disabled now since rlvtp still does this
+                if (llSubStringIndex(sCmd,"o:") == 0) llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); //(enable this to support hud forcetp.
                 else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".", FALSE);
             } else if(found > 1) {
                 g_kMenuID = Dialog(kID, "More than one matching landmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + 
