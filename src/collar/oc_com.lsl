@@ -413,7 +413,7 @@ default {
             string sValue = llToLower(llList2String(lParams, 1));
             
             if (sStr == "ping") {  // ping from an object, we answer to it on the object channel
-                llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
+                llSay(g_iHUDChan,(string)g_kWearer+":pong");    //say the response instead of regionsay.  Regionsay goes further, but always goes to the object's owner, not the object itself.  This breaks grabbypost.
             } else if (iNum == COMMAND_OWNER) {  //handle changing prefix and channel from owner
                 if (sCommand == "prefix")
                 {
