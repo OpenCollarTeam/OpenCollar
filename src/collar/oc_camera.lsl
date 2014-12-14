@@ -123,6 +123,7 @@ ClearCam()
     if (llGetPermissions()&PERMISSION_CONTROL_CAMERA) llClearCameraParams();
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
+    llMessageLinked(LINK_SET, RLV_CMD, "camunlock=y", "camera");
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");    
 }
 
