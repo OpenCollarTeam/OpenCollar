@@ -66,6 +66,8 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
+integer RLV_CMD = 6000;
+
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
