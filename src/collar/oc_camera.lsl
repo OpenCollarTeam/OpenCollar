@@ -382,6 +382,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             {
                 CamMode(sValue);
                 g_iLastNum = iNum;
+                llMessageLinked(LINK_SET, RLV_CMD, "camunlock=n", "camera");
                 Notify(kID, "Set " + sValue + " camera mode.", TRUE);
                 SaveSetting(sValue);
             }
