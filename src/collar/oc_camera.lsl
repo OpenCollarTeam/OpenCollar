@@ -67,6 +67,7 @@ integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
+integer RLV_CLEAR = 6002;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -124,6 +125,7 @@ ClearCam()
     g_iLastNum = 0;    
     g_iSync2Me = FALSE;
     llMessageLinked(LINK_SET, RLV_CMD, "camunlock=y", "camera");
+    llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=y", "camera");
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");    
 }
 
@@ -189,15 +191,13 @@ LockCam()
 CamMenu(key kID, integer iAuth)
 {
     string sPrompt = "\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera";
-    list lButtons = ["CLEAR"];
+    list lButtons = ["CLEAR","FREEZE","MOUSELOOK"];
     integer n;
     integer stop = llGetListLength(g_lModes);    
     for (n = 0; n < stop; n +=2)
     {
         lButtons += [Capitalize(llList2String(g_lModes, n))];
     }
-    
-    lButtons += ["FREEZE"];
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -361,6 +361,13 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             g_iLastNum = iNum;                    
             SaveSetting("freeze");                          
         }
+        else if (sValue == "mouselook")
+        {
+            Notify(kID, "Enforcing mouselook.", TRUE);
+            g_iLastNum = iNum; 
+            llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");                   
+            SaveSetting("mouselook");                          
+        }
         else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR)
         {
             Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
@@ -440,7 +447,7 @@ default {
     {
         //only respond to owner, secowner, group, wearer
         if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == COMMAND_SAFEWORD)
+        else if (iNum == COMMAND_SAFEWORD || iNum == RLV_CLEAR)
         {
             ClearCam();
             llResetScript();
@@ -461,6 +468,7 @@ default {
                 if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)
                 {
                     if (sToken == "freeze") LockCam();
+                    else if (sToken == "mouselook") llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera"); 
                     else if (~llListFindList(g_lModes, [sToken])) CamMode(sToken);
                     g_iLastNum = (integer)sValue;
                 }
