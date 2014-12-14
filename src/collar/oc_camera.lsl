@@ -181,7 +181,8 @@ LockCam()
         CAMERA_ACTIVE, TRUE,
         //CAMERA_POSITION, llGetCameraPos()
         CAMERA_POSITION_LOCKED, TRUE
-    ]);  
+    ]);
+    llMessageLinked(LINK_SET, RLV_CMD, "camunlock=n", "camera");
 }
 
 CamMenu(key kID, integer iAuth)
