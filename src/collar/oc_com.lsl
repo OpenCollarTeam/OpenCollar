@@ -303,21 +303,21 @@ default {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
             {
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", kID);
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
             }
             // an object wants to know the version, we check if it is allowed to
             else if (sMsg==(string)g_kWearer + ":version")
             {
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", kID);
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
             }
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":"))
             {
                 sMsg = llGetSubString(sMsg, 37, -1);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
             }
             else
             {
@@ -331,7 +331,8 @@ default {
 //                    }
 //                }
                 //Debug("command: "+sMsg+" from "+(string)kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
             }
             return;
         }
