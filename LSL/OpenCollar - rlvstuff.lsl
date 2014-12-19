@@ -364,7 +364,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                         SetSetting(sCategory, sOption, sValue);
                     }
                 }
-            } else if (~llListFindList(g_lIdmtCmds,[llList2String(llParseString2List(sThisItem,[":"],[]),0)])) {
+            } else if (~llListFindList(g_lIdmtCmds,[llList2String(llParseString2List(sThisItem,[":","="],[]),0)])) {
                 //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
                 if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
