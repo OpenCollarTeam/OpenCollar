@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                              OpenCollar - leash                                //
-//                                 version 3.990                                  //
+//                                 version 3.995                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -107,6 +107,8 @@ integer g_bFollowMode;
 string g_sScript="leash_";
 string CTYPE = "collar";
 string WEARERNAME;
+
+integer g_iRezAuth;
 
 string g_sCheck;
 
@@ -489,11 +491,12 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
         } else if (sMessage == "givepost" || sMessage == "give post") {
-            llGiveInventory(kMessageID, "Grabby Post");
+            llGiveInventory(kMessageID, "Leash Post");
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "rezpost" || sMessage == "rez post") {
-            llRezObject("Grabby Post", llGetPos() + (<0.1, 0.0, 0.37> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 270> * DEG_TO_RAD), 0);
+            g_iRezAuth=iAuth;
+            llRezObject("Leash Post", llGetPos() + (<0.1, 0.0, 0.37> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 270> * DEG_TO_RAD), 0);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
@@ -795,7 +798,10 @@ default {
             llTakeControls(CONTROL_ROT_LEFT | CONTROL_ROT_RIGHT | CONTROL_LBUTTON | CONTROL_ML_LBUTTON, FALSE, FALSE);
         }
     }
-    
+    object_rez(key id) {
+        g_iLength=3;
+        DoLeash(id, g_iRezAuth, []);
+    }    
     changed (integer change){
         if (change & CHANGED_OWNER){
             g_kWearer = llGetOwner();
