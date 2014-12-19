@@ -338,7 +338,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             //split off the parameters (anything after a : or =)
             //and see if the thing being set concerns us
             string sThisItem = llList2String(lItems, n);
-            string sBehavior = llList2String(llParseString2List(sThisItem, ["="], []), 0);
+            string sBehavior = llList2String(llParseString2List(sThisItem, ["=",":"], []), 0);
             integer iBehaviourIndex=llListFindList(g_lRLVcmds, [sBehavior]);
             
             if (sStr == "standnow") {
