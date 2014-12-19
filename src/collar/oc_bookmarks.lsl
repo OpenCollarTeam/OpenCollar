@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - bookmarks                              //
-//                                 version 3.988                                  //
+//                                 version 3.995                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -206,7 +206,7 @@ You can enter:
                 if (llSubStringIndex(sCmd,"o:") == 0){} // prevents errors in obsolete huds
                 else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".", FALSE);
             } else if(found > 1) {
-                g_kMenuID = Dialog(kID, "More than one matching landmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + 
+                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + 
                     ".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_COMMAND + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
