@@ -68,7 +68,7 @@ list g_lMenuHelpMap = [
     "rlvtalk_","talk",
     "rlvtouch_","touch",
     "rlvmisc_","misc",
-    "rlvview_","view"
+    "rlvview_","view\n\nNOTE: This will only work on RLV API v2.9 and greater."
 ];
 
 string TURNON = "✔";
