@@ -338,7 +338,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             //split off the parameters (anything after a : or =)
             //and see if the thing being set concerns us
             string sThisItem = llList2String(lItems, n);
-            string sBehavior = llList2String(llParseString2List(sThisItem, ["=",":"], []), 0);
+            string sBehavior = llList2String(llParseString2List(sThisItem, ["="], []), 0);
             integer iBehaviourIndex=llListFindList(g_lRLVcmds, [sBehavior]);
             
             if (sStr == "standnow") {
@@ -364,7 +364,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                         SetSetting(sCategory, sOption, sValue);
                     }
                 }
-            } else if (~llListFindList(llList2ListStrided(llDeleteSubList(g_lIdmtCmds,0,0),0,-1,g_lIdmtCmds_stride), [sBehavior])) {
+            } else if (~llListFindList(g_lIdmtCmds,[llList2String(llParseString2List(sThisItem,[":"],[]),0)])) {
                 //Debug(sBehavior+" is an immediate command that we handle");
                 //filter commands from wearer, if wearer is not owner
                 if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
