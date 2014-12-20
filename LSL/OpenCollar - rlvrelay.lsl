@@ -199,7 +199,7 @@ SaveSettings()
         +",avwhitelistnames:"+llDumpList2String(g_lAvWhiteListNames,"/");
     if ( g_lAvBlackList != [] ) sNewSettings+=",avblacklist:"+llDumpList2String(g_lAvBlackList,"/")
         +",avblacklistnames:"+llDumpList2String(g_lAvBlackListNames,"/");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, NULL_KEY);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, "");
 }
 
 UpdateSettings(string sSettings)
@@ -270,6 +270,13 @@ integer Auth(key object, key user)
     return iAuth;
 }
 
+string Name(key id) // return DisplayName + LegacyName or URI if avatar not in region
+{
+    string sName = llGetDisplayName(id)+"("+llKey2Name(id)+")";
+    //if (sName == "()") sName = "secondlife:///app/agent/"+(string)id+"/completename";
+    if (sName == "()") sName = "secondlife:///app/agent/"+(string)id+"/about";
+    return sName;
+}
 
 Dequeue()
 {
@@ -284,19 +291,19 @@ Dequeue()
             return;
         }
         sCurIdent=llList2String(g_lQueue,0);
-        kCurID=llList2String(g_lQueue,1);
+        kCurID=(key)llList2String(g_lQueue,1);
         sCommand=HandleCommand(sCurIdent,kCurID,llList2String(g_lQueue,2),FALSE);
         g_lQueue = llDeleteSubList(g_lQueue, 0, QSTRIDES-1);
     }
     g_lQueue=[sCurIdent,kCurID,sCommand]+g_lQueue;
     list lButtons=["Yes","No","Trust Object","Ban Object","Trust Owner","Ban Owner"];
-    string sOwner=llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")";
-    if (sOwner!="") sOwner= ", owned by "+sOwner+",";
-    string sPrompt=llKey2Name(kCurID)+sOwner+" wants to control your viewer.";
+    string sOwner=Name(llGetOwnerKey(kCurID)) ;
+    string sPrompt=llKey2Name(kCurID)+", owned by "+sOwner+" wants to control your viewer.";
     if (llGetSubString(sCommand,0,6)=="!x-who/")
     {
+        key kUser = SanitizeKey(llGetSubString(sCommand,7,42));        
         lButtons+=["Trust User","Ban User"];
-        sPrompt+="\n"+llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"+" is currently using this device.";
+        sPrompt+="\n" + Name(kUser) + " is currently using this device.";
     }
     sPrompt+="\n\nDo you want to allow this?";
     g_iAuthPending = TRUE;
@@ -501,12 +508,15 @@ PListsMenu(key kID, string sMsg, integer iAuth)
     g_sListType=sMsg;
 
     list lButtons=[ALL];
+    
     integer i;
     for (i=0;i<(lOList!=[]);++i)
     {
         lButtons+=(string)(i+1);
-        Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i), FALSE );
+        //Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i), FALSE );
+        Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i), FALSE );
     }
+    
     sPrompt+="\n\nMake a choice:";
     g_kListID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -554,6 +564,7 @@ RemListItem(string sMsg, integer iAuth)
             g_lAvWhiteListNames=llDeleteSubList(g_lAvWhiteListNames,i,i);
         }
     }
+    SaveSettings();
 }
 
 refreshRlvListener()
@@ -770,7 +781,7 @@ default {
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, NULL_KEY);
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum==CMD_ADDSRC)
         {
@@ -890,6 +901,7 @@ default {
                     key kCurID=llList2String(g_lQueue,1); //GetQObj(0);
                     string sCom = llList2String(g_lQueue,2);  //GetQCom(0));
                     key kUser = NULL_KEY;
+                    key kOwner = llGetOwnerKey(kCurID);
                     integer iSave=TRUE;
                     if (llGetSubString(sCom,0,6)=="!x-who/") kUser = SanitizeKey(llGetSubString(sCom,7,42));
                     if (sMsg=="Yes")
@@ -922,18 +934,18 @@ default {
                     }
                     else if (sMsg=="Trust Owner")
                     {
-                        if (!~llListFindList(g_lAvWhiteList, [(string)llGetOwnerKey(kCurID)]))
+                        if (!~llListFindList(g_lAvWhiteList, [(string)kOwner]))
                         {
-                            g_lAvWhiteList+=[(string)llGetOwnerKey(kCurID)];
-                            g_lAvWhiteListNames+=[llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"];
+                            g_lAvWhiteList+=[(string)kOwner];
+                            g_lAvWhiteListNames+=[Name(kOwner)];
                         }
                     }
                     else if (sMsg=="Ban Owner")
                     {
-                        if (!~llListFindList(g_lAvBlackList, [(string)llGetOwnerKey(kCurID)]))
+                        if (!~llListFindList(g_lAvBlackList, [(string)kOwner]))
                         {
-                            g_lAvBlackList+=[(string)llGetOwnerKey(kCurID)];
-                            g_lAvBlackListNames+=[llGetDisplayName(llGetOwnerKey(kCurID))+"("+llKey2Name(llGetOwnerKey(kCurID))+")"];
+                            g_lAvBlackList+=[(string)kOwner];
+                            g_lAvBlackListNames+=[Name(kOwner)];
                         }
                     }
                     else if (sMsg=="Trust User")
@@ -941,7 +953,7 @@ default {
                         if (!~llListFindList(g_lAvWhiteList, [(string)kUser]))
                         {
                             g_lAvWhiteList+=[(string)kUser];
-                            g_lAvWhiteListNames+=[llGetDisplayName(llGetOwnerKey(kUser))+"("+llKey2Name(llGetOwnerKey(kUser))+")"];
+                            g_lAvWhiteListNames+=[Name(kUser)];
                         }
                     }
                     else if (sMsg=="Ban User")
@@ -949,7 +961,7 @@ default {
                         if (!~llListFindList(g_lAvBlackList, [(string)kUser]))
                         {
                             g_lAvBlackList+=[(string)kUser];
-                            g_lAvBlackListNames+=[llGetDisplayName(llGetOwnerKey(kUser))+"("+llKey2Name(llGetOwnerKey(kUser))+")"];
+                            g_lAvBlackListNames+=[Name(kUser)];
                         }
                     }
                     if (iSave) SaveSettings();
