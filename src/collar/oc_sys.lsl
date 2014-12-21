@@ -443,10 +443,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else Notify(kID, "Sorry, only primary owners can unlock the " + CTYPE + ".", FALSE);
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fixmenus") {
-        if (kID == g_kWearer){
+        if (kID == g_kWearer || iNum==COMMAND_OWNER){
             RebuildMenu();
             Notify(kID, "Rebuilding menus, this may take several seconds.", FALSE);
-        } else Notify(kID, "Sorry, only the wearer can fix menus.", FALSE);
+        } else Notify(kID, "Sorry, only primary owners and wearer can fix menus.", FALSE);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==COMMAND_OWNER){
             if (sStr=="news off"){
