@@ -118,12 +118,17 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 
 DoMenu(key kID, integer iAuth){
     list lButtons;
-    if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
+    if (g_iRLVOn)
+    {
+        lButtons += [TURNOFF];
+        if (g_iViewerCheck) lButtons += [CLEAR] + llListSort(g_lMenu, 1, TRUE);
+    }
     else lButtons += [TURNON];
 
     string sPrompt = "\nRestrained Love Viewer Options\n";
     if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString;
     if (g_iRlvaVersion) sPrompt += " (RLVa: "+g_sRlvaVersionString+")";
+    if (!g_iViewerCheck) sPrompt += "Could not detect Restrained Love Viewer.\nRestrained Love functions disabled.";
     sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
     //Debug("Made menu.");
@@ -653,6 +658,8 @@ default {
             //llSetTimerEvent(0.0);
             
             g_iViewerCheck = FALSE;
+            g_iRlvVersion = FALSE;
+            g_iRlvaVersion = FALSE;
             setRlvState();
 
             llOwnerSay("Could not detect Restrained Love Viewer.  Restrained Love functions disabled.");
