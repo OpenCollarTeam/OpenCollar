@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                               OpenCollar - bell                                //
-//                                 version 3.989                                  //
+//                                 version 3.995                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -47,6 +47,7 @@ float g_fNextTouch ;  // store time for the next touch
 float g_fTouch = 10.0 ; // timeout for touch chat notify
 
 list g_lBellElements; // list with number of prims related to the bell
+list g_lGlows; // 2-strided list [integer link_num, float glow]
 
 float g_fNextRing; // store time for the next ringing here;
 
@@ -176,9 +177,40 @@ SetBellElementAlpha()
     for (n = 0; n < iLinkElements; n++)
     {
         llSetLinkAlpha(llList2Integer(g_lBellElements,n), (float)g_iBellShow, ALL_SIDES);
+        UpdateGlow(llList2Integer(g_lBellElements,n), g_iBellShow);
     }
 }
 
+UpdateGlow(integer link, integer alpha)
+{
+    if (alpha == 0)
+    {
+        SavePrimGlow(link);
+        llSetLinkPrimitiveParamsFast(link, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
+    }
+    else RestorePrimGlow(link);
+}
+
+SavePrimGlow(integer link)
+{
+    float glow = llList2Float(llGetLinkPrimitiveParams(link,[PRIM_GLOW,0]),0) ;
+    if (glow > 0)
+    {
+        integer i = llListFindList(g_lGlows,[link]);
+        if (i !=-1 ) g_lGlows = llListReplaceList(g_lGlows,[glow],i+1,i+1) ;            
+        else g_lGlows += [link, glow];            
+    }
+}
+
+RestorePrimGlow(integer link)
+{
+    integer i = llListFindList(g_lGlows,[link]);
+    if (i != -1) 
+    {
+        float glow = (float)llList2String(g_lGlows, i+1);
+        llSetLinkPrimitiveParamsFast(link, [PRIM_GLOW, ALL_SIDES, glow]);
+    }
+}
 BuildBellElementList()
 {
     integer n;
