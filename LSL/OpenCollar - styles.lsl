@@ -278,7 +278,7 @@ CheckScripts()
 {
     g_iHasColorScript = FALSE;
     g_iHasTextureScript = FALSE;
-    else g_iHasShineScript = FALSE;
+    g_iHasShineScript = FALSE;
     if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) g_iHasColorScript = TRUE;
     if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) g_iHasTextureScript = TRUE;
     if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) g_iHasShineScript = TRUE;
