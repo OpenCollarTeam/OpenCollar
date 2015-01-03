@@ -276,18 +276,14 @@ DumpSettings(key kAv, string sep)
 
 CheckScripts()
 {
-    if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) g_iHasColorScript = TRUE;
-    else g_iHasColorScript = FALSE;
-
-    if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) g_iHasTextureScript = TRUE;
-    else g_iHasTextureScript = FALSE;
-
-    if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) g_iHasShineScript = TRUE;
+    g_iHasColorScript = FALSE;
+    g_iHasTextureScript = FALSE;
     else g_iHasShineScript = FALSE;
-
+    if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) g_iHasColorScript = TRUE;
+    if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) g_iHasTextureScript = TRUE;
+    if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) g_iHasShineScript = TRUE;
     // this is for my own script:
     if (llGetInventoryType("OpenCollar - customizer") == INVENTORY_SCRIPT) g_iHasTextureScript = g_iHasColorScript = g_iHasShineScript = TRUE;
-    else g_iHasTextureScript = g_iHasColorScript = g_iHasShineScript = FALSE;
 }
 
 default
