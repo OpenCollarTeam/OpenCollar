@@ -17,7 +17,7 @@
 string g_sParentMenu = "Appearance";
 string g_sSubMenu = "Shininess";
 
-string g_sIgnoreType = "notexture" ;  //  or "noshiny" if you want use alternate prims descriptions;
+string g_sIgnoreType = "noshine" ;  // or "notexture" if you don't want use alternate prims descriptions;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
