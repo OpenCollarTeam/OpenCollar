@@ -48,6 +48,12 @@ list g_lCurrentParam ;
 list g_lMenuIDs;//3-strided list of kAv, dialogid, menuname
 integer g_iMenuStride = 3;
 
+integer g_iTexture = FALSE;
+integer g_iColor = FALSE;
+integer g_iHide = FALSE;
+integer g_iShine = FALSE;
+integer g_iGlow = FALSE;
+
 /*
 integer g_iProfiled=TRUE;
 Debug(string sStr) {
@@ -61,7 +67,6 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
-
 
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType)
 {
@@ -90,99 +95,87 @@ ElementMenu(key kAv, integer iPage, integer iAuth)
 {
     BuildElementsList();
     string sPrompt = "\nChange the Elements descriptions, "+CTYPE+".\nSelect an element from the list";
-    
+
     list lButtons = llListSort(g_lElementsList, 1, TRUE);
-    
+
     Dialog(kAv, sPrompt, lButtons, [REMOVE,RESET,UPMENU], iPage, iAuth, "ElementMenu");
+}
+
+GetParam(list params)
+{
+    if ( ~llListFindList(params,["notexture"]) ) g_iTexture = FALSE;
+    else g_iTexture = TRUE;
+    if ( ~llListFindList(params,["nocolor"]) ) g_iColor = FALSE;
+    else g_iColor = TRUE;
+    if ( ~llListFindList(params,["nohide"]) ) g_iHide = FALSE;
+    else g_iHide = TRUE;
+    if ( ~llListFindList(params,["noshine"]) ) g_iShine = FALSE;
+    else g_iShine = TRUE;
+    if ( ~llListFindList(params,["noglow"]) ) g_iGlow = FALSE;
+    else g_iGlow = TRUE;
 }
 
 CustomMenu(key kAv, integer iPage, integer iAuth)
 {
     string sPrompt = "\nSelect an option for element '"+g_sCurrentElement+"':";
-    
-    sPrompt += "\n" +g_sCurrentElement + "~" + llDumpList2String( g_lCurrentParam, "~") ;
-    
+    sPrompt += "\n" + llDumpList2String(g_lCurrentParam, "~");
     list lButtons;
-
-    if ( ~llListFindList(g_lCurrentParam,["notexture"]) ) lButtons += ["☐ texture"];
-    else lButtons += ["☒ texture"];
-
-    if ( ~llListFindList(g_lCurrentParam,["nocolor"]) ) lButtons += ["☐ color"];
-    else lButtons += ["☒ color"];
-
-    if ( ~llListFindList(g_lCurrentParam,["nohide"]) ) lButtons += ["☐ hide"];
-    else lButtons += ["☒ hide"];
-
-    if ( ~llListFindList(g_lCurrentParam,["noshine"]) ) lButtons += ["☐ shine"];
-    else lButtons += ["☒ shine"];
-
-    if ( ~llListFindList(g_lCurrentParam,["noglow"]) ) lButtons += ["☐ glow"];
-    else lButtons += ["☒ glow"];
-
+    if (g_iTexture) lButtons += ["▣ texture"];
+    else lButtons += ["☐ texture"];
+    if (g_iColor) lButtons += ["▣ color"];
+    else lButtons += ["☐ color"];
+    if (g_iHide) lButtons += ["▣ hide"];
+    else lButtons += ["☐ hide"];
+    if (g_iShine) lButtons += ["▣ shine"];
+    else lButtons +=  ["☐ shine"];
+    if (g_iGlow) lButtons += ["▣ glow"];
+    else lButtons += ["☐ glow"];
     Dialog(kAv, sPrompt, lButtons, [SAVE, UPMENU], iPage, iAuth, "CustomMenu");
 }
 
-ChangeCurrentParam(string str)
+string ChangeParam(list params)
 {
-    
-    CurrentParam("noshiny", TRUE); // fix for my old 
-    
-    if (str == "☐ texture") CurrentParam("notexture", TRUE);
-    else if (str == "☒ texture") CurrentParam("notexture", FALSE);
-    
-    else if (str == "☐ color") CurrentParam("nocolor", TRUE);
-    else if (str == "☒ color") CurrentParam("nocolor", FALSE);
-    
-    else if (str == "☐ hide") CurrentParam("nohide", TRUE);
-    else if (str == "☒ hide") CurrentParam("nohide", FALSE);
+    integer iTexture = llListFindList(params,["notexture"]);
+    if (g_iTexture && iTexture!=-1) params = llDeleteSubList(params,iTexture,iTexture);
+    else if (!g_iTexture && iTexture==-1) params += ["notexture"];
 
-    else if (str== "☐ shine") CurrentParam("noshine", TRUE);
-    else if (str == "☒ shine") CurrentParam("noshine", FALSE);
+    integer iColor = llListFindList(params,["nocolor"]);
+    if (g_iColor && iColor!=-1) params = llDeleteSubList(params,iColor,iColor);
+    else if (!g_iColor && iColor==-1) params += ["nocolor"];
 
-    else if (str == "☐ glow") CurrentParam("noglow", TRUE);
-    else if (str == "☒ glow") CurrentParam("noglow", FALSE);    
+    integer iHide = llListFindList(params,["nohide"]);
+    if (g_iHide && iHide!=-1) params = llDeleteSubList(params,iHide,iHide);
+    else if (!g_iHide && iHide==-1) params += ["nohide"];
+
+    integer iShine = llListFindList(params,["noshine"]);
+    if (g_iShine && iShine!=-1) params = llDeleteSubList(params,iShine,iShine);
+    else if (!g_iShine && iShine==-1) params += ["noshine"];
+
+    integer iGlow = llListFindList(params,["noglow"]);
+    if (g_iGlow && iGlow!=-1) params = llDeleteSubList(params,iGlow,iGlow);
+    else if (!g_iGlow && iGlow==-1) params += ["noglow"];
+
+    return llDumpList2String(params,"~");
 }
 
-CurrentParam(string type, integer set)
+SaveCurrentParam(string sElement)
 {
-    integer i ;
-    if (set)
-    {
-        i = llListFindList(g_lCurrentParam,[type]);
-        if (i != -1) g_lCurrentParam = llDeleteSubList(g_lCurrentParam, i, i);
-    }
-    else
-    {
-        i = llListFindList(g_lCurrentParam,[type]);
-        if (i == -1) g_lCurrentParam += [type];
-    }
-}
-
-SaveCurrentParam()
-{
-    string params = llDumpList2String(g_lCurrentParam, "~") ;
-    string newdescr = g_sCurrentElement + "~" + params ;
-    
-    integer i = llListFindList(g_lElementsList,[g_sCurrentElement]);    
-    g_lParams = llListReplaceList(g_lParams, [params], i,i);    
-    
-    integer count = llGetNumberOfPrims();
+    integer i = llGetNumberOfPrims();
     do
     {
-        string description = llStringTrim(llList2String(llGetLinkPrimitiveParams(count,[PRIM_DESC]),0),STRING_TRIM);
+        string description = llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),STRING_TRIM);
         list lParts = llParseStringKeepNulls(description,["~"],[]);
-        string element = llList2String(lParts,0);        
-        if (element == g_sCurrentElement) llSetLinkPrimitiveParamsFast(count, [PRIM_DESC, newdescr]);
-    } while (count-- > 2) ;
+        if (llList2String(lParts,0)==sElement) llSetLinkPrimitiveParamsFast(i,[PRIM_DESC,ChangeParam(lParts)]);
+    } while (i-- > 2) ;
 }
 
 ResetScripts()
 {
-    if (llGetInventoryType("OpenCollar - hide") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - hide");    
+    if (llGetInventoryType("OpenCollar - hide") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - hide");
     if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - texture");
-    if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - color");  
+    if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - color");
     if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - shininess");
-    if (llGetInventoryType("OpenCollar - glow") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - glow");    
+    if (llGetInventoryType("OpenCollar - glow") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - glow");
 }
 
 BuildElementsList()
@@ -205,7 +198,6 @@ BuildElementsList()
         }
     } while (count-- > 2) ;
 }
-
 
 UserCommand(integer iAuth, string sStr, key kAv )
 {
@@ -270,7 +262,7 @@ default
                     else if (sMessage == RESET)
                     {
                         ResetScripts();
-                        llMessageLinked(LINK_THIS, iAuth, "Load Defaults", kID); 
+                        llMessageLinked(LINK_THIS, iAuth, "Load Defaults", kID);
                         g_sCurrentElement = "";
                         ElementMenu(kAv, iPage, iAuth);
                     }
@@ -284,10 +276,9 @@ default
                     else if (~llListFindList(g_lElementsList, [sMessage]))
                     {
                         g_sCurrentElement = sMessage;
-                        
                         integer i = llListFindList(g_lElementsList,[g_sCurrentElement]);
-                        g_lCurrentParam = llParseStringKeepNulls( llList2String(g_lParams ,i),["~"],[]);
-    
+                        g_lCurrentParam = llParseStringKeepNulls(llList2String(g_lParams ,i),["~"],[]);
+                        GetParam(g_lCurrentParam);
                         CustomMenu(kAv, iPage, iAuth);
                     }
                     else
@@ -301,18 +292,26 @@ default
                     if (sMessage == UPMENU) ElementMenu(kAv, iPage, iAuth);
                     else if (sMessage == SAVE)
                     {
-                        SaveCurrentParam();
+                        SaveCurrentParam(g_sCurrentElement);
                         g_sCurrentElement = "";
                         g_lCurrentParam = [];
                         ElementMenu(kAv, iPage, iAuth);
                     }
                     else
                     {
-                        ChangeCurrentParam(sMessage);
+                        if (sMessage == "☐ texture") g_iTexture = TRUE;
+                        else if (sMessage == "▣ texture") g_iTexture = FALSE;
+                        else if (sMessage == "☐ color") g_iColor = TRUE;
+                        else if (sMessage == "▣ color") g_iColor = FALSE;
+                        else if (sMessage == "☐ hide") g_iHide = TRUE;
+                        else if (sMessage == "▣ hide") g_iHide = FALSE;
+                        else if (sMessage == "☐ shine") g_iShine = TRUE;
+                        else if (sMessage == "▣ shine") g_iShine = FALSE;
+                        else if (sMessage == "☐ glow") g_iGlow = TRUE;
+                        else if (sMessage == "▣ glow") g_iGlow = FALSE;
                         CustomMenu(kAv, iPage, iAuth);
                     }
                 }
-
             }
         }
         else if (iNum == DIALOG_TIMEOUT)
