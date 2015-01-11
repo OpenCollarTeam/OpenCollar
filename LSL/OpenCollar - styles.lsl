@@ -121,22 +121,22 @@ SetStyle(string sStyle, integer iAuth, key kAv)
                 string sTexture = llStringTrim(llList2String(lParams,1),STRING_TRIM);
                 if (sTexture != "")
                 {
-                    if (g_iHasTextureScript) llMessageLinked(LINK_SET, iAuth, "settexture " + sElement+" "+sTexture, kAv);
-                    else SetTexture(sElement, sTexture);
+                    llMessageLinked(LINK_SET, iAuth, "settexture " + sElement+" "+sTexture, kAv);
+                    if (!g_iHasTextureScript) SetTexture(sElement, sTexture);
                 }
 
                 string sColor = llStringTrim(llList2String(lParams,2),STRING_TRIM);
                 if (sColor != "")
                 {
-                    if (g_iHasColorScript) llMessageLinked(LINK_SET, iAuth, "setcolor "+sElement+" "+sColor, kAv);
-                    else SetColor(sElement, (vector)sColor);
+                    llMessageLinked(LINK_SET, iAuth, "setcolor "+sElement+" "+sColor, kAv);
+                    if (!g_iHasColorScript) SetColor(sElement, (vector)sColor);
                 }
 
                 string sShine = llStringTrim(llList2String(lParams,3),STRING_TRIM);
                 if (sShine != "")
                 {
-                    if (g_iHasShineScript) llMessageLinked(LINK_SET, iAuth, "setshiny " + sElement+" "+sShine, kAv);
-                    else SetShine(sElement, (integer)sShine);
+                    llMessageLinked(LINK_SET, iAuth, "setshiny " + sElement+" "+sShine, kAv);
+                    if (!g_iHasShineScript) SetShine(sElement, (integer)sShine);
                 }
             }
         }
@@ -276,14 +276,12 @@ DumpSettings(key kAv, string sep)
 
 CheckScripts()
 {
-    g_iHasColorScript = FALSE;
-    g_iHasTextureScript = FALSE;
-    g_iHasShineScript = FALSE;
+    g_iHasTextureScript = g_iHasColorScript = g_iHasShineScript = FALSE;
     if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) g_iHasColorScript = TRUE;
     if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) g_iHasTextureScript = TRUE;
     if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) g_iHasShineScript = TRUE;
     // this is for my own script:
-    if (llGetInventoryType("OpenCollar - customizer") == INVENTORY_SCRIPT) g_iHasTextureScript = g_iHasColorScript = g_iHasShineScript = TRUE;
+    //if (llGetInventoryType("OpenCollar - customize") == INVENTORY_SCRIPT) g_iHasTextureScript = g_iHasColorScript = g_iHasShineScript = TRUE;
 }
 
 default
