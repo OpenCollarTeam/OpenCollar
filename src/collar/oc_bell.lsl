@@ -193,21 +193,17 @@ UpdateGlow(integer link, integer alpha)
 
 SavePrimGlow(integer link)
 {
-    float glow = llList2Float(llGetLinkPrimitiveParams(link,[PRIM_GLOW,0]),0) ;    
-    integer i = llListFindList(g_lGlows,[link]);        
-    if (i !=-1 && glow > 0) g_lGlows = llListReplaceList(g_lGlows,[glow],i+1,i+1) ;
-    else if (i !=-1 && glow == 0) g_lGlows = llDeleteSubList(g_lGlows,i,i+1) ;
-    else if (i == -1 && glow > 0) g_lGlows += [link, glow];    
+    float glow = llList2Float(llGetLinkPrimitiveParams(link,[PRIM_GLOW,0]),0);
+    integer i = llListFindList(g_lGlows,[link]);
+    if (i !=-1 && glow > 0) g_lGlows = llListReplaceList(g_lGlows,[glow],i+1,i+1);
+    if (i !=-1 && glow == 0) g_lGlows = llDeleteSubList(g_lGlows,i,i+1);
+    if (i == -1 && glow > 0) g_lGlows += [link, glow];
 }
 
 RestorePrimGlow(integer link)
 {
     integer i = llListFindList(g_lGlows,[link]);
-    if (i != -1) 
-    {
-        float glow = (float)llList2String(g_lGlows, i+1);
-        llSetLinkPrimitiveParamsFast(link, [PRIM_GLOW, ALL_SIDES, glow]);
-    }
+    if (i != -1) llSetLinkPrimitiveParamsFast(link, [PRIM_GLOW, ALL_SIDES, llList2Float(g_lGlows, i+1)]);
 }
 
 BuildBellElementList()
