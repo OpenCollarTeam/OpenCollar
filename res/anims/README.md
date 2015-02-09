@@ -2,9 +2,8 @@
 
 ###### In this place we are going to collaborate on animations.
 
-This readme will be expanded during the next weeks!
-
-**The format for animations will be Biovision Hierarchy (BVH).**
+For collaboration native QAvimator files (AVM) are preferred.
+The final format for animations will be Biovision Hierarchy (BVH).
 
 Free software to create animations:
 * [Blender](http://www.blender.org/)
