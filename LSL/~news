@@ -1,5 +1,7 @@
-Issue: 20141128.1
+﻿Issue: 20150213.1
 
-OpenCollar Updates are available again on [https://marketplace.secondlife.com/p/Wendys-OpenCollar-Updater/6620453 Marketplace]. This time, in a more simple, alternative style.
+VALENTINE'S DAY SUCKS!
 
-More information can be found on our [http://www.opencollar.at/blog/marketplace-and-little-fixes blog].
+OpenCollar wishes you a good time anyway with a batch of free new designer collars. ❤
+
+Links and blurbs: www.opencollar.at/blog
