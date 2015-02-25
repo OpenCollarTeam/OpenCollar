@@ -354,6 +354,26 @@ ApplyRem(string sBehav) {
             list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,i),["§"],[]); //get its restrictions list
             if (llListFindList(lSrcRestr, [sBehav])!=-1) return; //check it for this restriction
         }
+
+//        //also check the exceptions list, in case its an exception
+        list lParts=llParseString2List(sBehav,[":"],[]);
+        key exceptee=llList2Key(lParts,1);
+        if (exceptee) {
+            integer exceptionIndex=llListFindList(g_lExceptions,[exceptee]);
+            if (~exceptionIndex){
+                //Debug("This exceptee has exceptions");
+                list lExceptions=llParseString2List(llList2String(g_lExceptions,exceptionIndex+1),["§"],[]);
+                string exception=llList2String(lParts,0);
+                if (~llListFindList(lExceptions,[exception])){
+                    //Debug("we found this exception for this person set by rlvex, so don't release it");
+                    return;
+                }
+            //} else {
+                //Debug("Exceptions list is "+llDumpList2String(g_lExceptions,",")+"\n checking for "+exception+" from "+(string)exceptee);
+            }
+        //} else {
+            //Debug((string)exceptee+" is not a key, so this is not an exception");
+        }
         
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
