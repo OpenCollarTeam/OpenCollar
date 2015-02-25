@@ -14,7 +14,7 @@
 
 //201410060330
 
-integer g_iRLVOn = FALSE;//set to TRUE if DB says user has turned RLV features on
+integer g_iRLVOn = TRUE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
 
@@ -463,6 +463,7 @@ default {
     
     state_entry() {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
