@@ -44,7 +44,7 @@ integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
 
-//integer POPUP_HELP = 1001;
+integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -374,7 +374,7 @@ ApplyRem(string sBehav) {
         //} else {
             //Debug((string)exceptee+" is not a key, so this is not an exception");
         }
-        
+
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
     //} else {
@@ -671,7 +671,7 @@ default {
     timer() {
         if (g_iCheckCount++ <= g_iMaxViewerChecks) {   //no response in timeout period, try again
             llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount==3) llOwnerSay("If your viewer doesn't support RLV, you can stop the \"@versioncheck\" message by switching RLV off in your "+CTYPE+"'s RLV menu.");
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, POPUP_HELP, "\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your "+CTYPE+"'s RLV menu or by typing: _PREFIX_rlvoff\n", g_kWearer);
         } else {    //we've waited long enough, and are out of retries
             llSetTimerEvent(0.0);
             llListenRemove(g_iListener);  
