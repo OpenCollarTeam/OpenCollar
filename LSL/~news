@@ -1,7 +1,3 @@
-﻿Issue: 20150213.1
+﻿Issue: 20150227.1
 
-VALENTINE'S DAY SUCKS!
-
-OpenCollar wishes you a good time anyway with a batch of free new designer collars. ❤
-
-Links and blurbs: www.opencollar.at/blog
+MAINTENANCE RELEASE: OpenCollar 3.997 is now available. If you need a current Updater, get one free at [http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21 The Temple of the Collar] and please check out [http://www.opencollar.at/blog our website] for marketplace links and details.
