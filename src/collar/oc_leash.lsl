@@ -157,7 +157,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 
 integer CheckCommandAuth(key kCmdGiver, integer iAuth){
     // Check for invalid auth
-    if (iAuth < COMMAND_OWNER && iAuth > COMMAND_WEARER) return FALSE;
+    if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return FALSE;
     
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
@@ -201,7 +201,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // can't leash wearer to self.
     if (kTarget == g_kWearer) return FALSE;
     
-    if (!CheckCommandAuth(kCmdGiver, g_iLastRank)){
+    if (!CheckCommandAuth(kCmdGiver, iAuth)){
         return FALSE;
     }
     
