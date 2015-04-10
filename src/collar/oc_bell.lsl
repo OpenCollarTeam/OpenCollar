@@ -618,8 +618,9 @@ default {
                 SetBellElementAlpha(); // update hide elements 
             }
         }
+        if (change & CHANGED_OWNER) llResetScript();
 /*        
-        if (iChange & CHANGED_REGION) {
+        if (change & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
