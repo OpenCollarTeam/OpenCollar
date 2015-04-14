@@ -555,6 +555,7 @@ ClearEx()
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
+    if (iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE) {
         if (iNum != COMMAND_OWNER) {
             if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
             Notify(kID,"Sorry, only primary owners can manage exceptions",TRUE);
