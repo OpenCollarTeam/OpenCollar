@@ -555,12 +555,12 @@ ClearEx()
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum == COMMAND_WEARER) {
-        if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
+        if (iNum != COMMAND_OWNER) {
+            if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
             Notify(kID,"Sorry, only primary owners can manage exceptions",TRUE);
             llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
+            } return TRUE;
         }
-        return TRUE;
     }
     if (iNum != COMMAND_OWNER) return FALSE; // Only Primary Owners
     if (sStr == "runaway") llResetScript();
