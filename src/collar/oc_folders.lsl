@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            OpenCollar - rlvfolders                             //
-//                                 version 3.989                                  //
+//                                 version 3.990                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -12,9 +12,9 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-string g_sParentMenu = "Un/Dress";
+string g_sParentMenu = "RLV";
 
-list g_lChildren = ["Browse #RLV", "#RLV History"];
+list g_lChildren = ["# Folders"];
 
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
@@ -224,11 +224,11 @@ FolderActionsMenu(integer iState, key kAv, integer iAuth)
         }
 
         if ( iStateThis == 1 || iStateThis == 2) // there are items that can be added in current folder
-            lActions += [REPLACE, ADD, lockFolderButton(iLock, 0, iAuth)];
+            lActions += [ADD, lockFolderButton(iLock, 0, iAuth)];
         if ( iStateThis == 2 || iStateThis == 3) // there are items that can be removed
             lActions += [DETACH,  lockFolderButton(iLock, 1, iAuth)];
         if ( iStateSub == 1 || iStateSub == 2) // there are items that can be added in descendant folder
-            lActions += [REPLACE_ALL, ADD_ALL,  lockFolderButton(iLock, 2, iAuth)];
+            lActions += [ADD_ALL,  lockFolderButton(iLock, 2, iAuth)];
         if ( iStateSub == 2 || iStateSub == 3) // there are items that can be removed from descendant folders
             lActions += [DETACH_ALL,  lockFolderButton(iLock, 3, iAuth)];
     }
@@ -383,7 +383,7 @@ FolderBrowseMenu(string sStr)
         sPrompt += ".\n";
         lUtilityButtons += [ACTIONS_CURRENT];
     }
-    else lUtilityButtons += [ROOT_ACTIONS];
+    //else lUtilityButtons += [ROOT_ACTIONS];
     for (i=0;i<llGetListLength(sData);i++) {
         lItem=llParseString2List(llList2String(sData,i),["|"],[]);
         string sFolder = llList2String(lItem,0);
@@ -500,13 +500,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llToLower(llList2String(lParams, 1));
-    if (llToLower(sStr) == "#rlv" || sStr == "menu Browse #RLV")
+    if (llToLower(sStr) == "folders" || llToLower(sStr) == "#rlv" || sStr == "menu # Folders")
     {
         g_sCurrentFolder = "";
         QueryFolders("browse");
         SetAsyncMenu(kID, iNum);
     }
-    else if (llToLower(sStr) == "history" || sStr == "menu #RLV History")
+    else if (llToLower(sStr) == "history" || sStr == "menu ﹟RLV History")
     {
         HistoryMenu(kID, iNum);
     }
