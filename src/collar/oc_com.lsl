@@ -228,10 +228,7 @@ default {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         
-        list name = llParseString2List(llKey2Name(g_kWearer), [" "], []);
-        g_sPrefix = llGetSubString(llList2String(name, 0), 0, 0);
-        g_sPrefix += llGetSubString(llList2String(name, 1), 0, 0);
-        g_sPrefix = llToLower(g_sPrefix);
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
 
         //inlined single use getOwnerChannel function
@@ -303,21 +300,21 @@ default {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
             {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", kID);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
             }
             // an object wants to know the version, we check if it is allowed to
             else if (sMsg==(string)g_kWearer + ":version")
             {
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", kID);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
             }
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":"))
             {
                 sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
             }
             else
             {
@@ -331,8 +328,8 @@ default {
 //                    }
 //                }
                 //Debug("command: "+sMsg+" from "+(string)kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
+                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
             }
             return;
         }
@@ -437,7 +434,7 @@ default {
                     }
                     else if(sValue=="reset") { //unset Global_WearerName
                         string message=WEARERNAME+"'s new name is reset to ";
-                        WEARERNAME = llGetDisplayName(g_kWearer);
+                        WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
                         if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
@@ -447,7 +444,7 @@ default {
                     }
                     else {
                         string message=WEARERNAME+"'s new name is ";
-                        WEARERNAME = llDumpList2String(llList2List(lParams, 1,-1)," ");
+                        WEARERNAME = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + llDumpList2String(llList2List(lParams, 1,-1)," ") + "]";
                         message += WEARERNAME;
                         g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
@@ -547,7 +544,7 @@ default {
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
         } else if (iNum == LM_SETTING_EMPTY) {
             if (sStr=="Global_WearerName"){
-                WEARERNAME = llGetDisplayName(g_kWearer);
+                WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
                 if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
                 llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+WEARERNAME,"");
             }
@@ -634,7 +631,7 @@ default {
     timer()
     {
         if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
-            string sLoadDisplayName = llGetDisplayName(g_kWearer); //Load this once
+            string sLoadDisplayName = "secondlife:///app/agent/"+(string)g_kWearer+"/about"; //Load this once
             if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != WEARERNAME)) {
                 //The displayname loaded correctly, and it's different than our current WEARERNAME
                 //wearer changed their displayname since last timer event
