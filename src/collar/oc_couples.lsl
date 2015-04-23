@@ -31,8 +31,8 @@ integer g_iLine1;
 integer g_iLine2;
 key g_kDataID1;
 key g_kDataID2;
-string CARD1 = "coupleanims";
-string CARD2 = "coupleanims_personal";
+string CARD1 = ".couples";
+string CARD2 = "!couples";
 integer card1line1;
 integer card1line2;
 integer iCardComplete;
@@ -165,7 +165,7 @@ CoupleAnimMenu(key kID, integer iAuth)
     string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;    
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";    
-    sPrompt += "\n\nwww.opencollar.at/animations\n\n";
+    //sPrompt += "\n\nwww.opencollar.at/animations\n\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
@@ -290,12 +290,12 @@ default {
                 {
                     if (kID == g_kWearer)                    //if commander is not sub, then treat commander as partner
                     {
-                        llMessageLinked(LINK_SET, POPUP_HELP, "Error: you didn't give the name of the person you want to animate.  To " + sCommand + " Nandana Singh, for example, you could say /_CHANNEL__PREFIX" + sCommand + " nan", g_kWearer);
+                        llMessageLinked(LINK_SET, POPUP_HELP, "\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /_CHANNEL__PREFIX_" + sCommand + " wen\n", g_kWearer);
                     }
                     else                //else set partner to commander
                     {
                         g_kPartner = g_kCmdGiver;
-                        g_sPartnerName = llGetDisplayName(g_kPartner);
+                        g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
                         //added to stop eventual still going animations
                         StopAnims();
@@ -383,12 +383,12 @@ default {
                 {
                     //process return from sensordialog
                     g_kPartner = (key)sMessage;
-                    g_sPartnerName = llGetDisplayName(g_kPartner);
+                    g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                     if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kPartner); //sanity check, fallback if necessary
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                    llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName);
+                    llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName + ".");
                     Notify(g_kPartner,  WEARERNAME + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
             }
@@ -466,7 +466,7 @@ default {
             text = StrReplace(text,"_PARTNER_",g_sPartnerName);
             text = StrReplace(text,"_SELF_",WEARERNAME);
             llSetObjectName("");
-            llSay(0, "/me " + text);
+            llSay(0, text);
             llSetObjectName(sName);           
         }
         if (g_fTimeOut > 0.0){
