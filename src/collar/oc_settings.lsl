@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                             OpenCollar - settings                              //
-//                                 version 3.988                                  //
+//                                 version 3.990                                  //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -30,27 +30,12 @@
 //  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
 //      texture_Base=steel,texture_Ring=stripes (in the scripts)
 
-string PARENT_MENU = "Main";
-string SUBMENU = "Options"; 
-
-string DUMPCACHE = "Dump Cache";
-string PREFUSER = "☐ Personal";
-string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
-string STEALTH_OFF = "☐ Stealth"; // show the whole CTYPE
-string STEALTH_ON = "☒ Stealth"; // hide the whole CTYPE
-string LOADCARD="Load Defaults";
-string REFRESH_MENU = "Fix Menus";
-string UPMENU = "BACK";
-key g_kMenuID;
-key g_kWearer;
-string g_sScript;
-integer STEALTH;
-
-string defaultscard = "defaultsettings";
+string defaultscard = ".settings";
 string split_line; // to parse lines that were split due to lsl constraints
 integer defaultsline = 0;
 key defaultslineid;
 key card_key;
+key g_kWearer;
 
 // Message Map
 integer COMMAND_NOAUTH = 0;
@@ -70,14 +55,6 @@ integer LM_SETTING_DELETE = 2003;//delete token from store
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
 integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
-
-integer DIALOG = -9000;
-integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
-
 integer INTERFACE_CHANNEL;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
@@ -90,27 +67,8 @@ integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
 
-/*
-integer g_iProfiled;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
-}
+//Debug (string str) { llOwnerSay(llGetScriptName() + ": " + str);}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -121,29 +79,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
-
-DoMenu(key keyID, integer iAuth)
-{
-    string sPrompt = "\n" + DUMPCACHE + " prints current settings to chat.";
-    sPrompt += "\n" +LOADCARD+" restores the default settings.";
-    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU];
-    if (USER_PREF)
-    {
-        sPrompt += "\n\nUncheck " + PREFDESI + " to give designer settings priority.\n";
-        lButtons += [PREFDESI];
-    }
-    else
-    {
-        sPrompt += "\n\nCheck " + PREFUSER + " to give your personal settings priority.\n";
-        lButtons += [PREFUSER];
-    }
-    
-    if (STEALTH) lButtons += [STEALTH_ON];
-    else lButtons += [STEALTH_OFF];
-    
-    sPrompt +="\nwww.opencollar.at/options";
-    g_kMenuID = Dialog(keyID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 // Get Group or Token, 0=Group, 1=Token
@@ -356,9 +291,7 @@ DumpCache(key id)
 {
     // compile everything into one list, so we can tell the user everything seamlessly
     list out;
-    list say = ["Settings (Designer defaults, followed by User Entries)\n"];
-    say += ["The below can be copied and pasted to \"defaultsettings\" notecard\n"];
-    say += ["Replacing old entries, but must include Designer defaults (if present):\n"];
+    list say = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
     say += Add2OutList(DESIGN_SETTINGS) + ["\n"];
     say += Add2OutList(USER_SETTINGS);
     string old;
@@ -421,11 +354,6 @@ SendValues()
 integer UserCommand(integer iAuth, string sStr, key kID)
 {
     if (iAuth != COMMAND_OWNER && iAuth != COMMAND_WEARER) return FALSE;
-    if (sStr == "menu " + SUBMENU || llToLower(sStr) == llToLower(SUBMENU))
-    {
-        DoMenu(kID, iAuth);
-        return TRUE;
-    }
     if (llToLower(llGetSubString(sStr, 0, 4)) == "dump_")
     {
         sStr = llToLower(llGetSubString(sStr, 5, -1));
@@ -433,66 +361,21 @@ integer UserCommand(integer iAuth, string sStr, key kID)
         else DumpGroupSettings(sStr, kID);
         return TRUE;
     }
-        
-    integer i = llSubStringIndex(sStr, " ");
-    string sid = llToLower(llGetSubString(sStr, 0, i - 1)) + "_";
-    if (sid != llToLower(g_sScript)) return TRUE;
-    string C = llToLower(llGetSubString(sStr, i + 1, -1));
-    if (C == llToLower(PREFUSER))
-    {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
-        USER_PREF = TRUE;
-    }
-    else if (C == llToLower(PREFDESI))
-    {
-        USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
-        USER_PREF = FALSE;
-    }
-    else if (C == llToLower(DUMPCACHE))
-    {
-        DumpCache(kID);
-    }
-    else if (C == llToLower(LOADCARD))
+    if (llToLower(sStr) == "load")
     {
         defaultsline = 0;
         if (llGetInventoryKey(defaultscard)) {
             defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
         }
     }
-    else if (C == llToLower(REFRESH_MENU))
-    {
-        llMessageLinked(LINK_THIS, iAuth,"fixmenus",kID);
-    }
-    else if (C == llToLower(STEALTH_OFF)) 
-    {
-        STEALTH = TRUE;
-        llMessageLinked(LINK_THIS, iAuth,"hide",kID);
-    }
-    else if (C == llToLower(STEALTH_ON))
-    {
-        STEALTH = FALSE;
-        llMessageLinked(LINK_THIS, iAuth,"show",kID);
-    }
     else return FALSE;
     return TRUE;
 }
 
-default {
-    on_rez(integer iParam) {
-        // reset the whole lot.
-        if (g_kWearer == llGetOwner()) {  //if owner hasn't changed, resend settings to plugins
-            llSleep(0.5);  // brief wait for others to reset
-            SendValues();    
-        } else llResetScript();  //  else reset completely
-        
-        // check alpha
-        if (llGetAlpha(ALL_SIDES) > 0) STEALTH = FALSE;
-        else STEALTH = TRUE;
-    }
-
-    state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
-        g_sScript = "settings_";
+default
+{
+    state_entry()
+    {
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -509,7 +392,18 @@ default {
         DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
         i = llSubStringIndex(DESIGN_ID, "~");
         DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
-        //Debug("Starting");
+    }
+
+    on_rez(integer iParam)
+    {
+        // resend settings to plugins, if owner hasn't changed, in which case
+        // reset the whole lot.
+        if (g_kWearer == llGetOwner())
+        {
+            llSleep(0.5); // brief wait for others to reset
+            SendValues();    
+        }
+        else llResetScript();
     }
 
     dataserver(key id, string data)
@@ -557,10 +451,6 @@ default {
                 {
                     tok = llList2String(lData, i);
                     val = llList2String(lData, i + 1);
-                    if (sid == g_sScript) // a setting for this script
-                    {
-                        if (tok == "Pref" && val == "User") USER_PREF = TRUE;
-                    }
                     if (id == DESIGN_ID) DESIGN_SETTINGS = SetSetting(DESIGN_SETTINGS, sid + tok, val);
                     else USER_SETTINGS = SetSetting(USER_SETTINGS, sid + tok, val);
                 }
@@ -592,112 +482,26 @@ default {
             if (~llListFindList(DESIGN_SETTINGS, [token, value])) DelSetting(token);
             else USER_SETTINGS = SetSetting(USER_SETTINGS, token, value);
         }
-        else if (iNum == LM_SETTING_REQUEST)
-        {
-            //check the cache for the token
-            if (SettingExists(sStr))
-            {
+        else if (iNum == LM_SETTING_REQUEST) {  
+             //check the cache for the token 
+            if (SettingExists(sStr)) {
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
-            } 
-            else
-            {
+            } else {
                 llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
             }
-        }
-        else if (iNum == LM_SETTING_DELETE)
-        {
+        } else if (iNum == LM_SETTING_DELETE) {
             DelSetting(sStr);
-        }
-        else if (iNum == DIALOG_RESPONSE)
-        {
-            if (id == g_kMenuID)
-            {
-                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
-                string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
-                integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-                // request to switch to parent menu
-                if (sMessage == UPMENU)
-                {
-                    llMessageLinked(LINK_THIS, iAuth, "menu "+ PARENT_MENU, kAv);
-                    return;
-                }
-                if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
-                
-                if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
-                { //moving everything to UserCommand to save doubling up on code.
-                    UserCommand(iAuth,llGetSubString(g_sScript,0,-2)+" "+sMessage,kAv);
-                }
-                else Notify(kAv,"Sorry, only Owners & Wearers may acces this feature.",FALSE);
-                                
-                //if (sMessage == PREFDESI)
-                //{
-                //    USER_PREF = FALSE;
-                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "Designer");
-                //}
-                //else if (sMessage == PREFUSER)
-                //{
-                //    USER_PREF = TRUE;
-                //    USER_SETTINGS = SetSetting(USER_SETTINGS, g_sScript + "Pref", "User");
-                //}
-                //else if (sMessage == DUMPCACHE)
-                //{
-                //    if (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER) DumpCache(kAv);
-                //    else Notify(kAv, "Only Owners & Wearer may access this feature.", FALSE);
-                //}
-                //else if (sMessage == LOADCARD)
-                //{
-                //    if(kAv==g_kWearer)
-                //    {
-                //        defaultsline = 0;
-                //        defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-                //    }
-                //    else Notify(kAv,"Only the collar wearer may reload defaults.",FALSE);
-                //}
-                // else if (sMessage == REFRESH_MENU)
-                //{
-                //     if(iAuth==COMMAND_OWNER||iAuth==COMMAND_WEARER)
-                //   {
-                //       llDialog(kAv, "\n\nRebuilding menu.\n\nThis may take several seconds.", [], -341321); 
-                //        llResetOtherScript(g_sMenuScript);
-                //    }
-                //    else Notify(kAv,"Only the collar wearer and owners may refresh menus.",FALSE);
-                //}
-                
-                DoMenu(kAv, iAuth);
-            }
-        }
-        //else if (iNum == MENUNAME_REQUEST && sStr == PARENT_MENU)
-        //{
-        //    llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENT_MENU + "|" + SUBMENU, "");
-        //}
-        else if (iNum == DIALOG_TIMEOUT)
-        {
-            // timeout from menu system, you do not have to react on this, but you can
-            if (id == g_kMenuID)
-            {
-                //Debug("The user was to slow or lazy, we got a timeout!");
-            }
         }
     }
 
     changed(integer change)
     {
-        if (change & CHANGED_COLOR)
-        {
-            //llSleep(0.1); // not sure for need this sleep...
-            {
-                if (llGetAlpha(ALL_SIDES) > 0) STEALTH = FALSE;
-                else STEALTH = TRUE;
-            }
-        }
         if (change & CHANGED_OWNER) llResetScript();
         if (change & CHANGED_INVENTORY)
         {
             if (llGetInventoryKey(defaultscard) != card_key)
             {
-                // the defaultsettings card changed.  Re-read it.
+                // the .settings card changed.  Re-read it.
                 defaultsline = 0;
                 if (llGetInventoryKey(defaultscard)) {
                     defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
@@ -707,13 +511,5 @@ default {
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
             SendValues();
         }
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }
