@@ -12,11 +12,11 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//201410060330
-
 integer g_iRLVOn = TRUE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
+
+string g_sAuthError = "Access denied.";
 
 //integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
@@ -118,18 +118,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 
 DoMenu(key kID, integer iAuth){
     list lButtons;
-    if (g_iRLVOn)
-    {
-        lButtons += [TURNOFF];
-        if (g_iViewerCheck) lButtons += [CLEAR] + llListSort(g_lMenu, 1, TRUE);
-    }
+    if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
 
-    string sPrompt = "\nRestrained Love Viewer Options\n";
-    if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString;
-    if (g_iRlvaVersion) sPrompt += " (RLVa: "+g_sRlvaVersionString+")";
-    if (!g_iViewerCheck) sPrompt += "Could not detect Restrained Love Viewer.\nRestrained Love functions disabled.";
-    sPrompt +="\n\nwww.opencollar.at/rlv";
+    string sPrompt = "\n[http://www.virtualdisgrace.com/collar#rlv Remote Scripted Viewer Controls]\n";
+    if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
+    if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
+    //if (!g_iViewerCheck) sPrompt += "\nCould not detect Restrained Love Viewer.";
+    //sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
     //Debug("Made menu.");
 } 
@@ -194,7 +190,7 @@ setRlvState(){
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-            llOwnerSay("RLV ready! (v" + g_sRlvVersionString + ")");
+            llOwnerSay("RLV ready!");
             
             DoLock();
         }
@@ -246,8 +242,8 @@ AddRestriction(key kID, string sBehav) {
                 //Debug("exception already active ("+(string)kID+")"+sBehav);
                 //Debug(sSrcRestr);
             }
-        } else {
-            llOwnerSay("OC doesn't currently support global exceptions");
+        /*} else {
+            llOwnerSay("OC doesn't currently support global exceptions");*/
         }
     } else {      //add this restriction to the list for this source
         //add new sources to sources list
@@ -427,9 +423,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
-        } else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
+            llOwnerSay("RLV disabled.");
+        } else Notify(kID, g_sAuthError, FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but the sub cannot clear RLV settings.");
+        if (iNum == COMMAND_WEARER) llOwnerSay(g_sAuthError);
         else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -683,7 +680,7 @@ default {
             g_iRlvaVersion = FALSE;
             setRlvState();
 
-            llOwnerSay("Could not detect Restrained Love Viewer.  Restrained Love functions disabled.");
+            /*llOwnerSay("Could not detect Restrained Love Viewer. Restrained Love functions disabled.");
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
                 string sMsg = WEARERNAME+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
 
@@ -695,7 +692,7 @@ default {
                 
                 if (i_OwnerCount == 2) llOwnerSay("Your owner has been notified.");
                 else llOwnerSay("Your owners have been notified.");
-            }
+            }*/
         }
     }
     changed(integer change) {
