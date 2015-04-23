@@ -46,6 +46,7 @@ list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
 
 integer COMMAND_OWNER              = 500;
+integer COMMAND_GROUP              = 502;
 integer COMMAND_WEARER             = 503;
 integer LM_SETTING_SAVE            = 2000; // scripts send messages on this channel to have settings saved to settings store
 integer LM_SETTING_RESPONSE        = 2002; // the settings script will send responses on this channel
@@ -101,7 +102,6 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     }
 }
 
-
 DoMenu(key keyID, integer iAuth)
 {
     string sPrompt = "\nTake me away, gumby!\n\nwww.opencollar.at/bookmarks";
@@ -114,6 +114,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
     if(!(iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
         return FALSE;
     }
+
     // a validated command from a owner, secowner, groupmember or the wearer has been received
     list lParams = llParseString2List(sStr, [" "], []);
     //string sCommand = llToLower(llList2String(lParams, 0));
@@ -126,9 +127,17 @@ integer UserCommand(integer iNum, string sStr, key kID)
             llResetScript();
         }
     } else if(sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_COMMAND_ALT) {
+        if (iNum==COMMAND_GROUP){
+            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            return TRUE;
+        }
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " save") - 1) == PLUGIN_CHAT_COMMAND + " save") { //grab partial string match to capture destination name
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " save") - 1) == PLUGIN_CHAT_COMMAND + " save") {           if (iNum==COMMAND_GROUP){
+            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            return TRUE;
+        }
+//grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0) {
@@ -148,6 +157,10 @@ You can enter:
 
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " remove") - 1) == PLUGIN_CHAT_COMMAND + " remove") { //grab partial string match to capture destination name
+        if (iNum==COMMAND_GROUP){
+            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            return TRUE;
+        }
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_COMMAND + " remove"), -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
@@ -164,12 +177,19 @@ You can enter:
             g_kRemoveMenu = Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum);
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " print") - 1) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
+        if (iNum==COMMAND_GROUP){
+            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            return TRUE;
+        }
         PrintDestinations(kID);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND) - 1) == PLUGIN_CHAT_COMMAND) {
+        if (iNum==COMMAND_GROUP){
+            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            return TRUE;
+        }
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
-        if(llGetSubString(sStr,-2,-1) == "=n" || llGetSubString(sStr,-2,-1) == "=y" || llGetSubString(sStr,-4,-1) == "=add" || llGetSubString(sStr,-4,-1) == "=rem") { //ignore RLV restriction commands in this script
-        } else if(llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
+        if(llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations, [sCmd]);
             TeleportTo(llList2String(g_lVolatile_Slurls, iIndex));
         } else if(llListFindList(g_lDestinations, [sCmd]) >= 0) { //Found exact match, TP over
@@ -203,10 +223,10 @@ You can enter:
             }
             if(found == 0) {
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
-                if (llSubStringIndex(sCmd,"o:") == 0){} // prevents errors in obsolete huds
+                if (llSubStringIndex(sCmd,"o:") == 0) {}//llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); (enable this to support hud forcetp.  disabled now since rlvtp still does this
                 else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".", FALSE);
             } else if(found > 1) {
-                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + 
+                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) +
                     ".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_COMMAND + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
@@ -326,7 +346,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth);
 ReadDestinations()   // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks
 {
     key kAv;
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks", 
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks", 
         [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
@@ -447,7 +467,6 @@ default {
         }
     }
 
-
     // listen for linked messages from OC scripts
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //     Debug((string)iSender + "|" + (string)iNum + "|" + sStr + "|" + (string)kID);
@@ -559,4 +578,3 @@ default {
 */
     }
 }
-
