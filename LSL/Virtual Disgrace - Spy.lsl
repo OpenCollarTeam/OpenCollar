@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                            Virtual Disgrace - Spy                              //
-//                                  version 1.7                                   //
+//                                  version 1.8                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
@@ -287,6 +287,9 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             
             g_iTraceEnabled=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
+            
+            g_iNotifyEnabled=FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_notify", "");
         } else if (sStr == "spy" || sStr == "menu spy") DialogSpy(kID, iAuth);
     return TRUE;
 }
