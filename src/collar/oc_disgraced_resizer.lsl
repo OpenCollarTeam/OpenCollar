@@ -1,22 +1,25 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
-//                            OpenCollar - adjustment                             //
-//                                 version 3.988                                  //
+//                          Virtual Disgrace - Resizer                            //
+//                                  version 1.0                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+//               Copyright © 2008 - 2015: Individual Contributors,                //
+//            OpenCollar - submission set free™ and Virtual Disgrace™             //
 // ------------------------------------------------------------------------------ //
-//                    github.com/OpenCollar/OpenCollarUpdater                     //
+//                       github.com/VirtualDisgrace/Collar                        //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//handle appearance menu
-//handle saving position on detach, and restoring it on httpdb_response
+// Based on a split of OpenCollar - appearance by Romka Swallowtail
+// Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
+// Compatible with OpenCollar API   3.9
+// and/or minimum Disgraced Version 2.1.0
 
 string g_sSubMenu = "Size/Position";
-string g_sParentMenu = "Appearance";
+string g_sParentMenu = "Options";
 
 string CTYPE = "collar";
 
@@ -250,7 +253,9 @@ vector ConvertPos(vector pos)
 {
     integer ATTACH = llGetAttached();
     vector out ;
-    if (ATTACH == 1) { out.x = pos.y; out.y = pos.z; out.z = pos.x; }
+    if (ATTACH == 1) { out.x = -pos.y; out.y = pos.z; out.z = pos.x; }
+    else if (ATTACH == 9) { out.x = -pos.y; out.y = -pos.z; out.z = -pos.x; }
+    else if (ATTACH == 39) { out.x = pos.x; out.y = -pos.y; out.z = pos.z; }
     else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21 ) { out.x = pos.x; out.y = -pos.z; out.z = pos.y ; }
     else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19 ) { out.x = pos.x; out.y = pos.z; out.z = -pos.y; }
     else out = pos ;
@@ -270,7 +275,9 @@ vector ConvertRot(vector rot)
 {
     integer ATTACH = llGetAttached();
     vector out ;
-    if (ATTACH == 1) { out.x = rot.y; out.y = rot.z; out.z = rot.x; }
+    if (ATTACH == 1) { out.x = -rot.y; out.y = -rot.z; out.z = -rot.x; }
+    else if (ATTACH == 9) { out.x = -rot.y; out.y = rot.z; out.z = rot.x; }
+    else if (ATTACH == 39) { out.x = -rot.x; out.y = -rot.y; out.z = -rot.z; }
     else if (ATTACH == 5 || ATTACH == 20 || ATTACH == 21) { out.x = rot.x; out.y = -rot.z; out.z = rot.y; }
     else if (ATTACH == 6 || ATTACH == 18 || ATTACH == 19) { out.x = rot.x; out.y = rot.z; out.z = -rot.y; }
     else out = rot ;
@@ -288,7 +295,7 @@ AdjustRot(vector vDelta)
 
 RotMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nAdjust the "+CTYPE+"'s rotation.\n\nNOTE: Arrows refer to the neck joint.";
+    string sPrompt = "\nHere you can tilt and rotate the "+CTYPE+".";
     list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -305,14 +312,14 @@ RotMenu(key kAv, integer iAuth)
 
 PosMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nAdjust the "+CTYPE+"'s position.\n\nNOTE: Arrows refer to the neck joint.\n\nCurrent nudge strength is: ";
+    string sPrompt = "\nHere you can nudge the "+CTYPE+" in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
-    if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▸"];
-    else sPrompt += "▸";
-    if (g_fNudge!=g_fMediumNudge) lMyButtons+=["▸▸"];
-    else sPrompt += "▸▸";
-    if (g_fNudge!=g_fLargeNudge) lMyButtons+=["▸▸▸"];
-    else sPrompt += "▸▸▸";
+    if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▁"];
+    else sPrompt += "▁";
+    if (g_fNudge!=g_fMediumNudge) lMyButtons+=["▁ ▂"];
+    else sPrompt += "▁ ▂";
+    if (g_fNudge!=g_fLargeNudge) lMyButtons+=["▁ ▂ ▃"];
+    else sPrompt += "▁ ▂ ▃";
     
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -329,7 +336,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nAdjust the "+CTYPE+"'s scale.\n\nIt is based on the size the "+CTYPE+" has upon rezzing. You can change back to this size by using '100%'.\n\nCurrent size: " + (string)g_iScaleFactor + "%\n\nWARNING: Make a backup copy of your "+CTYPE+" first! Considering the massive variation of designs, this feature is not granted to work in all cases. Possible rendering bugs mean having to right-click your "+CTYPE+" first to see the actual result.";
+    string sPrompt = "\nNumbers are based on the original size of the "+CTYPE+".\n\nCurrent size: " + (string)g_iScaleFactor + "%";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -484,7 +491,8 @@ default {
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv, iAuth);
+                        //DoMenu(kAv, iAuth);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     }
                     else if (llGetAttached())
@@ -495,9 +503,9 @@ default {
                         else if (sMessage == "backward ↲") AdjustPos(<-g_fNudge, 0, 0>);
                         else if (sMessage == "right →") AdjustPos(<0, -g_fNudge, 0>);
                         else if (sMessage == "down ↓") AdjustPos(<0, 0, -g_fNudge>);
-                        else if (sMessage == "▸") g_fNudge=g_fSmallNudge;
-                        else if (sMessage == "▸▸") g_fNudge=g_fMediumNudge;
-                        else if (sMessage == "▸▸▸") g_fNudge=g_fLargeNudge;
+                        else if (sMessage == "▁") g_fNudge=g_fSmallNudge;
+                        else if (sMessage == "▁ ▂") g_fNudge=g_fMediumNudge;
+                        else if (sMessage == "▁ ▂ ▃") g_fNudge=g_fLargeNudge;
                     }
                     else Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
                     PosMenu(kAv, iAuth);                    
@@ -506,7 +514,8 @@ default {
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv, iAuth);
+                        //DoMenu(kAv, iAuth);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     }
                     else if (llGetAttached())
@@ -525,7 +534,8 @@ default {
                 {
                     if (sMessage == UPMENU)
                     {
-                        DoMenu(kAv, iAuth);
+                        //DoMenu(kAv, iAuth);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
                     }
                     else
