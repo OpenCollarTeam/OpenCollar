@@ -16,7 +16,7 @@ integer g_iListenChan = 1;
 integer g_iListenChan0 = TRUE;
 string g_sPrefix = ".";
 integer g_iPollForNameChange = 60; //seconds to poll for name change
-integer g_iCustomName = FALSE; //this is our bit flag to see if we're using an LM_SETTING custom name
+//integer g_iCustomName = FALSE; //this is our bit flag to see if we're using an LM_SETTING custom name
 
 integer g_iLockMeisterChan = -8888;
 
@@ -263,7 +263,7 @@ default {
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
         
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
 
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
         llSetTimerEvent(60.0);  //set timer event to catch changes in display name
@@ -439,14 +439,14 @@ default {
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
                         message += WEARERNAME;
-                        g_iCustomName = FALSE;
+                       // g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
                     }
                     else {
                         string message=WEARERNAME+"'s new name is ";
                         WEARERNAME = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + llDumpList2String(llList2List(lParams, 1,-1)," ") + "]";
                         message += WEARERNAME;
-                        g_iCustomName = TRUE;
+                        //g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
@@ -628,6 +628,7 @@ default {
     }
 
     //no more self resets
+    /* no timer needed for DisplayName change check URI name covers this
     timer()
     {
         if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
@@ -640,7 +641,7 @@ default {
             }
         }
     }
-
+*/
     run_time_permissions(integer iPerm)
     {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
