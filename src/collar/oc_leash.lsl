@@ -108,6 +108,8 @@ string g_sScript="leash_";
 string g_sDeviceType = "collar";
 string g_sWearerName;
 
+string g_sAuthError = "Access denied.";
+
 integer g_iRezAuth;
 
 string g_sCheck;
@@ -161,7 +163,7 @@ integer CheckCommandAuth(key kCmdGiver, integer iAuth){
     
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
-        Notify(kCmdGiver, "Sorry, someone who outranks you on " + g_sWearerName +"'s " + g_sDeviceType + " leashed " + g_sWearerName + " already.", FALSE);
+        Notify(kCmdGiver,g_sAuthError, FALSE);
 
         return FALSE;
     }

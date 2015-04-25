@@ -32,6 +32,9 @@ string g_tempLoc                      = "";   //This holds a global temp locatio
 
 key     g_kMenuID;                              // menu handler
 key     g_kWearer;                              // key of the current wearer to reset only on owner changes
+
+string g_sAuthError = "Access denied.";
+
 key     g_kTBoxIdSave = "null";
 key     g_kTBoxIdLocationOnly = "null";
 string  g_sScript;                              // part of script name used for settings
@@ -40,7 +43,7 @@ integer g_iLine = 0;
 string  UPMENU                      = "BACK"; // when your menu hears this, give the parent menu
 key     g_kCommander;
 
-string g_sDeviceType                        = "collar";    // designer can set in notecard to appropriate word for their item
+string g_sDeviceType                = "collar";    // designer can set in notecard to appropriate word for their item
 
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
@@ -128,13 +131,13 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
     } else if(sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_COMMAND_ALT) {
         if (iNum==COMMAND_GROUP){
-            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " save") - 1) == PLUGIN_CHAT_COMMAND + " save") {           if (iNum==COMMAND_GROUP){
-            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
 //grab partial string match to capture destination name
@@ -158,7 +161,7 @@ You can enter:
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " remove") - 1) == PLUGIN_CHAT_COMMAND + " remove") { //grab partial string match to capture destination name
         if (iNum==COMMAND_GROUP){
-            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " remove")) {
@@ -178,13 +181,13 @@ You can enter:
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " print") - 1) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
         if (iNum==COMMAND_GROUP){
-            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         PrintDestinations(kID);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND) - 1) == PLUGIN_CHAT_COMMAND) {
         if (iNum==COMMAND_GROUP){
-            Notify(kID,"Only Owners, the Wearer and their trusted friends can use this function",FALSE);
+            Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1), STRING_TRIM);

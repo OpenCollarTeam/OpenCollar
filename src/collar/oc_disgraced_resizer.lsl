@@ -78,6 +78,8 @@ string UPMENU = "BACK";
 
 key g_kWearer;
 
+string g_sAuthError = "Access denied.";
+
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -379,7 +381,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         //give this plugin's menu to id
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s appearance.", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
         else DoMenu(kID, iNum);
@@ -389,7 +391,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s appearance.", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         else DoMenu(kID, iNum);
     }
@@ -397,11 +399,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s rotation.", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
         }
         else RotMenu(kID, iNum);
@@ -410,11 +412,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s position.", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
         }
         else PosMenu(kID, iNum);
@@ -423,11 +425,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s size.", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
         }
         else SizeMenu(kID, iNum);

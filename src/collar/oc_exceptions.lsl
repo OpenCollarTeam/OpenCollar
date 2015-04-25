@@ -207,7 +207,7 @@ PersonMenu(key kID, list lPeople, string sType, integer iAuth)
     if (iAuth != COMMAND_OWNER && kID != g_kWearer)
     {
         Menu(kID, "", iAuth);
-        Notify(kID, "You are not allowed to see who is exempted.", FALSE);
+        Notify(kID,g_sAuthError, FALSE);
         return;
     }
     //g_sRequestType = sType;

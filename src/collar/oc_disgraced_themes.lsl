@@ -28,6 +28,8 @@ list g_lColourDefaults;
 
 string g_sDeviceType = "collar";
 
+string g_sAuthError = "Access denied.";
+
 list g_lTextures;  //stores names of all textures in collar and notecard
 list g_lTextureShortNames;  //stores names of all textures in collar and notecard
 list g_lTextureKeys;  //stores keys of notecard textures, and names of textures in collar, indexed by the names in g_lTextures
@@ -357,7 +359,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     //if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
     if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
         if (g_iAppLock) {  //no one can do anything when appearrance is locked
-            Notify(kID, "The appearance of the " + g_sDeviceType + " is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
         } else if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
             list lParams = llParseString2List(sStr, [" "], []);
@@ -564,7 +566,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 }
             }
         } else {  //anyone else gets an error
-            Notify(kID, "You are not allowed to change the appearance of the "+g_sDeviceType+".", FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
         }
     }

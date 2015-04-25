@@ -35,6 +35,8 @@ integer g_iQueryStride=5;
 //added for attachment auth
 integer g_iInterfaceChannel;
 
+string g_sAuthError = "Access denied.";
+
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -215,7 +217,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
     else return;
     
     if (~llListFindList(g_lTempOwners,[(string)kCmdr]) && ! ~llListFindList(g_lOwners,[(string)kCmdr]) && sToken != "tempowner"){
-        Notify(kCmdr,"Temporary owners can only change the temporary owners list",FALSE);
+        Notify(kCmdr,g_sAuthError,FALSE);
         return;
     }
 
@@ -261,7 +263,7 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
     if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) && sToken != "tempowner"){
         //Notify(kAv,"Temporary owners can only change the temporary owners list",FALSE);
-        Notify(kAv,"Kidnappers can't do that.",FALSE);
+        Notify(kAv,g_sAuthError,FALSE);
     } else {
         if (sToken=="owner") {
             lPeople=g_lOwners;
@@ -409,7 +411,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     string sMessage=llToLower(sStr);
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
-    string sOwnerError="Sorry, only an owner can do that.";
     
     if (sStr == "menu "+g_sSubMenu) {
         AuthMenu(kID, iNum);
@@ -452,7 +453,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             //if (g_iLimitRange) sOutput="true";
             //Notify(kID, "LimitRange: "+ sOutput,FALSE);
         }
-        else Notify(kID, "Only Owners & Wearer may access this command",FALSE);
+        else Notify(kID,g_sAuthError,FALSE);
         if (remenu) AuthMenu(kID, iNum);
     } else if (sStr == "owners" || sStr == "access") {   //give owner menu
         AuthMenu(kID, iNum);
@@ -466,7 +467,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     } else if (sCommand == "owner" || sCommand == "tempowner" || sCommand == "trust" || sCommand == "block") { //add a person to a list
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,0), " "); //get full name
         if (iNum!=COMMAND_OWNER && !( sCommand == "trust" && kID==g_kWearer )) {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if ((key)sTmpName){
             g_lQueryId+=[llRequestAgentData( sTmpName, DATA_NAME ),sTmpName,sCommand, kID, remenu];
@@ -480,7 +481,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         //Debug("got token "+sToken);
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,0), " "); //get full name
         if (iNum!=COMMAND_OWNER && !( sToken == "trust" && kID==g_kWearer )) {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
             if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if (sTmpName=="") 
             RemPersonMenu(kID, sToken, iNum);
@@ -504,7 +505,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
                 llMessageLinked(LINK_SET, RLV_CMD, "setgroup=n", "auth");
             }
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "setgroupname") {
@@ -512,7 +513,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
     } else if (sCommand == "unsetgroup") {
         if (iNum==COMMAND_OWNER){
@@ -525,7 +526,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             llMessageLinked(LINK_SET, RLV_CMD, "setgroup=y", "auth");
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "public") {
@@ -535,7 +536,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "private") {
@@ -545,7 +546,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "limitrange") {
@@ -555,7 +556,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
             Notify(kID, "Public access range is limited.", FALSE);
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "unlimitrange") {
@@ -565,7 +566,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
             Notify(kID, "Public access range is simwide.", FALSE);
         } else {
-            Notify(kID, sOwnerError, FALSE);
+            Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "runaway"){
@@ -821,7 +822,7 @@ default {
                         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
                     } else if (sMessage == "Enable") {
                         if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) ){
-                            Notify(kAv,"Temporary owners can't enable runaway.",FALSE);
+                            Notify(kAv,g_sAuthError,FALSE);
                         } else {
                             g_iRunawayDisable=FALSE;
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"norun","");

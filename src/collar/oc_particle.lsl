@@ -105,6 +105,8 @@ White|<1.00000, 1.00000, 1.00000>"
 string g_sDeviceType = "collar";
 key g_kWearer;
 
+string g_sAuthError = "Access denied.";
+
 key NULLKEY = "";
 key g_kLeashedTo = ""; //NULLKEY;
 key g_kLeashToPoint = ""; //NULLKEY;
@@ -594,14 +596,14 @@ default {
             if (llToLower(sMessage) == llToLower(SUBMENU))
             {
                 if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
-                else Notify(kMessageID, "Leash Options can only be changed by " + g_sDeviceType + " Owners and the Wearer.", FALSE);
+                else Notify(kMessageID,g_sAuthError, FALSE);
             }
             else if (sMessage == "menu "+SUBMENU)
             {
                 if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
                 else
                 {
-                    Notify(kMessageID, "Leash Options can only be changed by " + g_sDeviceType + " Owners and the Wearer.", FALSE);
+                    Notify(kMessageID,g_sAuthError, FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }

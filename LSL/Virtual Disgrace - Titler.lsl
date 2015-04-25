@@ -69,6 +69,8 @@ float g_sEvilDuration=1800;
 key g_kWearer;
 string g_sWearerName;
 
+string g_sAuthError = "Access denied.";
+
 key g_kDialogID;    //menu handle
 key g_kColourDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
@@ -175,7 +177,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
         string sCommand = llToLower(llList2String(lParams, 0));
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth             
-            Notify(kAv,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
+            Notify(kAv,g_sAuthError, FALSE);
         } else if (sCommand=="color" || sStr=="colour") {
             string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColour != "") {    //we got a colour, so set the colour

@@ -73,6 +73,8 @@ integer g_iInterfaceChannel = -12587429;
 key g_kWearer;
 string g_sWearerName;
 
+string g_sAuthError = "Access denied.";
+
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 /*
@@ -326,7 +328,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PostureRank="+(string)g_iLastPostureRank,"");
                 llOwnerSay( "Your neck is locked in place.");
                 if (kID != g_kWearer) Notify(kID, g_sWearerName + "'s neck is locked in place.", FALSE);
-            } else Notify(kID,"Only owners can do that, sorry.",FALSE);
+            } else Notify(kID,g_sAuthError,FALSE);
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPostureRank) {
                 g_iLastPostureRank=COMMAND_WEARER;
@@ -334,7 +336,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PostureRank", "");
                 llOwnerSay( "You can move your neck again.");
                 if (kID != g_kWearer) Notify(kID, g_sWearerName + " is free to move their neck.", FALSE);
-            } else Notify(kID,"Someone more important locked "+g_sWearerName+"'s neck in this position",FALSE);
+            } else Notify(kID,g_sAuthError,FALSE);
         }
     } else if ( sCommand=="animlock") {  //anim lock
         if ( sValue=="on") {  //anim lock
@@ -345,7 +347,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_animlock=1", "");
                 llOwnerSay( "Only owners can change or stop your poses now.");
                 if (kID != g_kWearer) Notify(kID, g_sWearerName + " can have their poses changed or stopped only by owners.", FALSE);
-            } else Notify(kID,"You don't have permission to lock "+g_sWearerName+" in this position",FALSE);
+            } else Notify(kID,g_sAuthError,FALSE);
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPoselockRank) {
                 g_iAnimLock = FALSE;
@@ -353,7 +355,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PoselockRank", "");
                 llOwnerSay( "You are now free to change or stop poses on your own.");
                 if (kID != g_kWearer) Notify(kID, g_sWearerName + " is free to change or stop poses on their own.", FALSE);
-            } else Notify(kID,"Someone more important locked "+g_sWearerName+" in this position",FALSE);
+            } else Notify(kID,g_sAuthError,FALSE);
         }
     } else if (sCommand == "ao") {  //AO
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
@@ -403,7 +405,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iLastRank = iNum;
             llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
-        } else Notify(kID, "Someone more important has locked "+g_sWearerName+" in this position.",FALSE);
+        } else Notify(kID,g_sAuthError,FALSE);
     }
 }
 
