@@ -26,7 +26,7 @@ list g_lShinyDefaults;
 list g_lHideDefaults;
 list g_lColourDefaults;
 
-string CTYPE = "collar";
+string g_sDeviceType = "collar";
 
 list g_lTextures;  //stores names of all textures in collar and notecard
 list g_lTextureShortNames;  //stores names of all textures in collar and notecard
@@ -166,7 +166,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose a visual theme for your "+CTYPE+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 HideMenu(key kID, integer iAuth, string sElement) {
@@ -225,7 +225,7 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     else if (_sType == "color") iMask=ELEMENT_NOCOLOR;
     else if (_sType == "hide" || _sType == "show" || _sType == "show/hide" ) iMask=ELEMENT_NOHIDE;
     
-    string sPrompt = "\nSelect an element of the " + CTYPE + " who's apearance should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + CTYPE + ".";
+    string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's apearance should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
 
     list lButtons;
     integer numElements=g_iNumElements;
@@ -247,9 +247,9 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
         else if (iNumCurrentlyHidden==0) lExtraButtons += "☐ ALL";
         else lExtraButtons += "◪ ALL";
         
-        //do CTYPE button
-        if (g_iCollarHidden) lExtraButtons += "☒ "+CTYPE;
-        else lExtraButtons += "☐ "+CTYPE;
+        //do g_sDeviceType button
+        if (g_iCollarHidden) lExtraButtons += "☒ "+g_sDeviceType;
+        else lExtraButtons += "☐ "+g_sDeviceType;
     } else {
         lExtraButtons += "ALL";
     }
@@ -292,7 +292,7 @@ BuildTexturesList(){
         string sTextureName = llGetInventoryName(INVENTORY_TEXTURE, numInventoryTextures);
         string sShortName=llList2String(llParseString2List(sTextureName, ["~"], []), -1);
         if (!(llGetSubString(sTextureName, 0, 5) == "leash_" || sTextureName == "chain" || sTextureName == "rope")) {  // we want to ignore particle textures, and textures named in the notecard
-            if(llStringLength(sShortName)>23) llOwnerSay("Texture name "+sTextureName+" in "+CTYPE+" is too long, dropping.");
+            if(llStringLength(sShortName)>23) llOwnerSay("Texture name "+sTextureName+" in "+g_sDeviceType+" is too long, dropping.");
             else {
                 g_lTextures += sTextureName;
                 g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
@@ -357,7 +357,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     //if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
     if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
         if (g_iAppLock) {  //no one can do anything when appearrance is locked
-            Notify(kID, "The appearance of the " + CTYPE + " is locked. You cannot access this menu now!", FALSE);
+            Notify(kID, "The appearance of the " + g_sDeviceType + " is locked. You cannot access this menu now!", FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
         } else if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
             list lParams = llParseString2List(sStr, [" "], []);
@@ -369,7 +369,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 lParams=llDeleteSubList(lParams,1,1);
                 sElement=llList2String(lParams,1);
             }
-            integer iElementIndex=llListFindList(g_lElements+"ALL"+CTYPE,[sElement]);
+            integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
 
             //if (sCommand == "styles" || sStrLower == "menu styles") {
@@ -392,7 +392,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             } else if (sCommand == "hide" || sCommand == "show" || sCommand == "show/hide" || sCommand == "stealth" ) {
                 //get currently shown state
                 integer iCurrentlyShown;
-                if (sElement=="") sElement=CTYPE;
+                if (sElement=="") sElement=g_sDeviceType;
                 //track which elements are supposed to be hidden
                 if (sElement=="ALL") {
                     integer iNumCurrentlyHidden=llGetListLength(g_lCurrentlyHidden);
@@ -402,7 +402,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     } else {
                         //iCurrentlyShown=0;  //all shown, so now hide by setting iCurrentlyShown=1
                     }
-                } else if (sElement == CTYPE) {
+                } else if (sElement == g_sDeviceType) {
                     if (sCommand=="show") {
                         g_iCollarHidden=1;
                     } else if (sCommand=="hide") {
@@ -431,9 +431,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {
                     string sLinkType=LinkType(iLinkCount, "no"+sCommand);
-                    if (sLinkType == sElement  || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL") || (sElement==CTYPE) ) {
+                    if (sLinkType == sElement  || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL") || (sElement==g_sDeviceType) ) {
                         
-                        if (!g_iCollarHidden || sElement == CTYPE ) {  //don't change things if collar is set hidden, unless we're doing the hiding now
+                        if (!g_iCollarHidden || sElement == g_sDeviceType ) {  //don't change things if collar is set hidden, unless we're doing the hiding now
                             llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
                             
                             //update glow settings for this link
@@ -477,7 +477,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         string sLinkType=LinkType(iLinkCount, "no"+sCommand);
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
                             //Debug("Setting shiny for link "+(string)iLinkCount+" to "+(string)iShiny);
-                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);  //change "notexture" to "noshiny" if your CTYPE supports it
+                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);  //change "notexture" to "noshiny" if your g_sDeviceType supports it
                         }
                     }
                     //save to settings DB
@@ -564,7 +564,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 }
             }
         } else {  //anyone else gets an error
-            Notify(kID, "You are not allowed to change the appearance of the "+CTYPE+".", FALSE);
+            Notify(kID, "You are not allowed to change the appearance of the "+g_sDeviceType+".", FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
         }
     }
@@ -607,7 +607,7 @@ default {
             string sCategory=llGetSubString(sID, 0, i);
             string sToken = llGetSubString(sID, i + 1, -1);
             if (sID == "Appearance_Lock") g_iAppLock = (integer)sValue;
-            else if (sID == "Global_CType") CTYPE = sValue;
+            else if (sID == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sCategory == "texture_") {  //add any recieved textures as defaults. Default here means whatever was current last time settings spoke.
                 i = llListFindList(g_lTextureDefaults, [sToken]);
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
@@ -648,7 +648,7 @@ default {
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
                         if (sMessage == "*Touch*") {
-                            Notify(kAv, "Please touch the part of the " + CTYPE + " you want to change. Press ctr+alt+T to see invisible parts.", FALSE);
+                            Notify(kAv, "Please touch the part of the " + g_sDeviceType + " you want to change. Press ctr+alt+T to see invisible parts.", FALSE);
                             key kTouchID = llGenerateKey();
                             llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kAv + "|3|" + (string)iAuth, kTouchID);  //3 = touchStart and touchEnd
                             

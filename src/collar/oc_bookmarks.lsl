@@ -6,7 +6,7 @@
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2008 - 2015  Individual Contributors and OpenCollar - submission set free™ //
 // ------------------------------------------------------------------------------ //
 //                    github.com/OpenCollar/OpenCollarUpdater                     //
 // ------------------------------------------------------------------------------ //
@@ -40,7 +40,7 @@ integer g_iLine = 0;
 string  UPMENU                      = "BACK"; // when your menu hears this, give the parent menu
 key     g_kCommander;
 
-string CTYPE                        = "collar";    // designer can set in notecard to appropriate word for their item
+string g_sDeviceType                        = "collar";    // designer can set in notecard to appropriate word for their item
 
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
@@ -224,9 +224,9 @@ You can enter:
             if(found == 0) {
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
                 if (llSubStringIndex(sCmd,"o:") == 0) {}//llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); (enable this to support hud forcetp.  disabled now since rlvtp still does this
-                else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + CTYPE + " of " + llKey2Name(g_kWearer) + ".", FALSE);
+                else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) + ".", FALSE);
             } else if(found > 1) {
-                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + CTYPE + " of " + llKey2Name(g_kWearer) +
+                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) +
                     ".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_COMMAND + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
@@ -505,7 +505,7 @@ default {
                     g_lVolatile_Destinations += lDestination;
                     g_lVolatile_Slurls += [sValue];
                 }
-            } else if(sToken == "Global_CType") { CTYPE = sValue; }
+            } else if(sToken == "Global_DeviceType") { g_sDeviceType = sValue; }
         } else if(UserCommand(iNum, sStr, kID)) {
             // do nothing more if TRUE
         } else if(iNum == DIALOG_RESPONSE) {

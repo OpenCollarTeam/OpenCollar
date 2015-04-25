@@ -37,7 +37,7 @@ integer card1line1;
 integer card1line2;
 integer iCardComplete;
 
-string WEARERNAME;
+string g_sWearerName;
 
 list g_lAnimCmds;//1-strided list of strings that will trigger
 list g_lAnimSettings;//4-strided list of subAnim|domAnim|offset|text, running parallel to g_lAnimCmds,
@@ -235,7 +235,7 @@ default {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        g_sWearerName = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
             g_iLine1 = 0;
@@ -326,7 +326,7 @@ default {
             if(sToken == g_sScript + "timeout")
             {
                 g_fTimeOut = (float)sValue;
-            } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
+            } else if (sToken=="Global_WearerName") g_sWearerName=sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -389,7 +389,7 @@ default {
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                     llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName + ".");
-                    Notify(g_kPartner,  WEARERNAME + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
+                    Notify(g_kPartner,  g_sWearerName + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
             }
             else if (kID == g_kTimerMenu)
@@ -464,7 +464,7 @@ default {
             string sName = llGetObjectName();
             string sObjectName;
             text = StrReplace(text,"_PARTNER_",g_sPartnerName);
-            text = StrReplace(text,"_SELF_",WEARERNAME);
+            text = StrReplace(text,"_SELF_",g_sWearerName);
             llSetObjectName("");
             llSay(0, text);
             llSetObjectName(sName);           

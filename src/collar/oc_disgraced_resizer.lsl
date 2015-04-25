@@ -21,7 +21,7 @@
 string g_sSubMenu = "Size/Position";
 string g_sParentMenu = "Options";
 
-string CTYPE = "collar";
+string g_sDeviceType = "collar";
 
 list g_lMenuIDs;//3-strided list of avkey, dialogid, menuname
 integer g_iMenuStride = 3;
@@ -237,7 +237,7 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
         }
         g_iScaleFactor = iScale;
         g_iSizedByScript = TRUE;
-        Notify(kAV, "Scaling finished, the "+CTYPE+" is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
+        Notify(kAV, "Scaling finished, the "+g_sDeviceType+" is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
     }
 }
 
@@ -295,7 +295,7 @@ AdjustRot(vector vDelta)
 
 RotMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nHere you can tilt and rotate the "+CTYPE+".";
+    string sPrompt = "\nHere you can tilt and rotate the "+g_sDeviceType+".";
     list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -312,7 +312,7 @@ RotMenu(key kAv, integer iAuth)
 
 PosMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nHere you can nudge the "+CTYPE+" in place.\n\nCurrent nudge strength is: ";
+    string sPrompt = "\nHere you can nudge the "+g_sDeviceType+" in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
     if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▁"];
     else sPrompt += "▁";
@@ -336,7 +336,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nNumbers are based on the original size of the "+CTYPE+".\n\nCurrent size: " + (string)g_iScaleFactor + "%";
+    string sPrompt = "\nNumbers are based on the original size of the "+g_sDeviceType+".\n\nCurrent size: " + (string)g_iScaleFactor + "%";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -356,9 +356,9 @@ DoMenu(key kAv, integer iAuth)
     list lMyButtons ;
     string sPrompt;
     if (g_iAppLock && iAuth != COMMAND_OWNER) {
-        sPrompt = "\nThe appearance of the "+CTYPE+" has been locked.\n\nAn owner must unlock it to allow modification.";        
+        sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
     } else {
-        sPrompt = "\nChange the position, rotation and size of your "+CTYPE+".\n\nwww.opencollar.at/appearance";
+        sPrompt = "\nChange the position, rotation and size of your "+g_sDeviceType+".\n\nwww.opencollar.at/appearance";
         lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
     }
     
@@ -379,7 +379,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         //give this plugin's menu to id
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
+            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s appearance.", FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
         else DoMenu(kID, iNum);
@@ -389,7 +389,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
+            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s appearance.", FALSE);
         }
         else DoMenu(kID, iNum);
     }
@@ -397,11 +397,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+CTYPE+"'s rotation.", FALSE);
+            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s rotation.", FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
             DoMenu(kID, iNum);
         }
         else RotMenu(kID, iNum);
@@ -410,11 +410,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+CTYPE+"'s position.", FALSE);
+            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s position.", FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
             DoMenu(kID, iNum);
         }
         else PosMenu(kID, iNum);
@@ -423,11 +423,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,"You are not allowed to change the "+CTYPE+"'s size.", FALSE);
+            Notify(kID,"You are not allowed to change the "+g_sDeviceType+"'s size.", FALSE);
         }
         else if (g_iAppLock)
         {
-            Notify(kID,"The appearance of the "+CTYPE+" is locked. You cannot access this menu now!", FALSE);
+            Notify(kID,"The appearance of the "+g_sDeviceType+" is locked. You cannot access this menu now!", FALSE);
             DoMenu(kID, iNum);
         }
         else SizeMenu(kID, iNum);
@@ -549,7 +549,7 @@ default {
                                 // ResSize requested
                                 if (g_iScaleFactor == 100)
                                 {
-                                    Notify(kAv, "Resizing canceled; the "+CTYPE+" is already at original size.", FALSE); 
+                                    Notify(kAv, "Resizing canceled; the "+g_sDeviceType+" is already at original size.", FALSE); 
                                 }
                                 else
                                 {

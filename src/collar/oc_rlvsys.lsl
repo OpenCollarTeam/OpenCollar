@@ -76,8 +76,8 @@ string UPMENU = "BACK";
 string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
-string CTYPE = "collar";
-string WEARERNAME;
+string g_sDeviceType = "collar";
+string g_sWearerName;
 key g_kWearer;
 string g_sScript="rlvmain_";
 string g_sRlvVersionString="(unknown)";
@@ -436,7 +436,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if ((key)kSource) 
                 sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             else 
-                sOut+="\nThis " + CTYPE + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+                sOut+="\nThis " + g_sDeviceType + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             numRestrictions -= 2;
         }
         Notify(kID,sOut,FALSE);
@@ -463,7 +463,7 @@ default {
         setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        g_sWearerName = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         //Debug("Starting");
     }
 
@@ -544,7 +544,7 @@ default {
             lParams=[];
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_CType") CTYPE=sValue;
+            else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -552,8 +552,8 @@ default {
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_CType") CTYPE=sValue;
-            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
+            else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
+            else if (sToken=="Global_WearerName") g_sWearerName=sValue;
 //            else if (sToken=="rlvmain_notify") g_iRLVNotify = (integer)sValue;
             else if (sToken=="rlvmain_on") {
                 g_iRLVOn=(integer)sValue;
@@ -668,7 +668,7 @@ default {
     timer() {
         if (g_iCheckCount++ <= g_iMaxViewerChecks) {   //no response in timeout period, try again
             llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, POPUP_HELP, "\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your "+CTYPE+"'s RLV menu or by typing: _PREFIX_rlvoff\n", g_kWearer);
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, POPUP_HELP, "\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your "+g_sDeviceType+"'s RLV menu or by typing: _PREFIX_rlvoff\n", g_kWearer);
         } else {    //we've waited long enough, and are out of retries
             llSetTimerEvent(0.0);
             llListenRemove(g_iListener);  
@@ -682,7 +682,7 @@ default {
 
             /*llOwnerSay("Could not detect Restrained Love Viewer. Restrained Love functions disabled.");
             if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
-                string sMsg = WEARERNAME+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
+                string sMsg = g_sWearerName+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
 
                 integer i_OwnerCount=llGetListLength(g_lOwners);
                 integer i;

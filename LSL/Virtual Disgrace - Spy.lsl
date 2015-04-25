@@ -86,7 +86,7 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
     if (g_iTraceEnabled) {
         vector vPos=llGetPos();
         string sRegionName=llGetRegionName();
-        //sLocation += " %WEARERNAME% is at http://maps.secondlife.com/secondlife/"+ llEscapeURL(sRegionName)+ "/"+ (string)llFloor(vPos.x)+ "/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
+        //sLocation += " %g_sWearerName% is at http://maps.secondlife.com/secondlife/"+ llEscapeURL(sRegionName)+ "/"+ (string)llFloor(vPos.x)+ "/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
         sLocation += " "+g_sWearerName+" is at http://maps.secondlife.com/secondlife/"+llEscapeURL(sRegionName)+"/"+(string)llFloor(vPos.x)+"/"+(string)llFloor(vPos.y)+"/"+(string)llFloor(vPos.z);
     }
     string sHeader="["+(string)serial + "]"+sLocation+"\n";
@@ -306,9 +306,9 @@ default {
     listen(integer channel, string sName, key kID, string sMessage) {
         if(kID == g_kWearer && channel == 0) {
             //process emotes, replace with sub name
-            //if(llGetSubString(sMessage, 0, 3) == "/me ") sMessage="%WEARERNAME%" + llGetSubString(sMessage, 3, -1);
+            //if(llGetSubString(sMessage, 0, 3) == "/me ") sMessage="%g_sWearerName%" + llGetSubString(sMessage, 3, -1);
             if(llGetSubString(sMessage, 0, 3) == "/me ") sMessage=g_sWearerName + llGetSubString(sMessage, 3, -1);
-            //else sMessage="%WEARERNAME%: " + sMessage;
+            //else sMessage="%g_sWearerName%: " + sMessage;
             else sMessage=g_sWearerName+": " + sMessage;
             DoReports(sMessage,FALSE,FALSE);
         }

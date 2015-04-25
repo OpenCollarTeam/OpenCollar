@@ -79,8 +79,8 @@ integer ATTACHMENT_FORWARD = 610;
 
 key g_kWearer;
 string g_sScript = "listener_";
-string CTYPE = "collar";
-string WEARERNAME;
+string g_sDeviceType = "collar";
+string g_sWearerName;
 list g_lOwners;
 
 //globlals for supporting touch requests
@@ -111,11 +111,11 @@ Debug(string sStr) {
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 //    integer pos;
-//    while (~pos=llSubStringIndex(sMsg, "%WEARERNAME%")) {
-//        if (llStringLength(sMsg) == 12) { sMsg = WEARERNAME; }
-//        else if (pos == 0) { sMsg = WEARERNAME+llGetSubString(sMsg, pos+12, -1); }
-//        else if (pos == llStringLength(sMsg)-12) { sMsg = llGetSubString(sMsg, 0, pos-1)+WEARERNAME; }
-//        else { sMsg = llGetSubString(sMsg, 0, pos-1)+WEARERNAME+llGetSubString(sMsg, pos+12, -1); }
+//    while (~pos=llSubStringIndex(sMsg, "%g_sWearerName%")) {
+//        if (llStringLength(sMsg) == 12) { sMsg = g_sWearerName; }
+//        else if (pos == 0) { sMsg = g_sWearerName+llGetSubString(sMsg, pos+12, -1); }
+//        else if (pos == llStringLength(sMsg)-12) { sMsg = llGetSubString(sMsg, 0, pos-1)+g_sWearerName; }
+//        else { sMsg = llGetSubString(sMsg, 0, pos-1)+g_sWearerName+llGetSubString(sMsg, pos+12, -1); }
 //    }
     if ((key)kID){
         if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -213,7 +213,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
 
     if (sType == "touchstart") {
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer) llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+CTYPE+".\n");
+        if (g_iTouchNotify && kToucher!=g_kWearer) llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n");
     }
 }
 
@@ -262,7 +262,7 @@ default {
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
         
-        WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
 
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
@@ -350,7 +350,7 @@ default {
                 llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
                 
                 llOwnerSay("You used your safeword, your owners will be notified you did.");
-                NotifyOwners("Your sub " + WEARERNAME + " has used the safeword. Please check on their well-being in case further care is required.","");
+                NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
                 llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
             }
@@ -422,41 +422,41 @@ default {
                         return;
                     }
                     g_sPrefix=value;
-                    Notify(kID, "\n" + WEARERNAME + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + CTYPE + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
+                    Notify(kID, "\n" + g_sWearerName + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + g_sDeviceType + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
                 }
                 else if (sCommand == "name")
                 {
                     if (sValue=="") {  //Just let them know their current name
-                        string message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + WEARERNAME;
+                        string message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + g_sWearerName;
                         message += "\nName command help: <prefix>name [newname|reset]\n";
                         Notify(kID, message, FALSE);
                     }
                     else if(sValue=="reset") { //unset Global_WearerName
-                        string message=WEARERNAME+"'s new name is reset to ";
-                        WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-                        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
+                        string message=g_sWearerName+"'s new name is reset to ";
+                        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+                        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
-                        message += WEARERNAME;
+                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+g_sWearerName, "");  
+                        message += g_sWearerName;
                        // g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
                     }
                     else {
-                        string message=WEARERNAME+"'s new name is ";
-                        WEARERNAME = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + llDumpList2String(llList2List(lParams, 1,-1)," ") + "]";
-                        message += WEARERNAME;
+                        string message=g_sWearerName+"'s new name is ";
+                        g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + llDumpList2String(llList2List(lParams, 1,-1)," ") + "]";
+                        message += g_sWearerName;
                         //g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + WEARERNAME, ""); //store            
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + g_sWearerName, ""); //store            
+                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+g_sWearerName, "");  
                     }               
                 }
                 else if (sCommand == "channel")
                 {
                     integer iNewChan = (integer)sValue;
                     if (sValue=="") {  //they left the param blank, report listener status
-                        string message=CTYPE+" is listening on channel";
+                        string message=g_sDeviceType+" is listening on channel";
                         if (g_iListenChan0) message += "s 0 and";
                         message += " "+(string)g_iListenChan+".";
                         Notify(kID, message, FALSE);
@@ -544,9 +544,9 @@ default {
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
         /*} else if (iNum == LM_SETTING_EMPTY) {
             if (sStr=="Global_WearerName"){
-                WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
-                llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+WEARERNAME,"");
+                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
+                llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+g_sWearerName,"");
             }*/
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -557,9 +557,9 @@ default {
             {
                 if (sValue != "") g_sPrefix=sValue;
             }
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "Global_touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
             else if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "listener_safeword") g_sSafeWord = sValue;
             else if (sToken == "listener_channel") {
@@ -633,11 +633,11 @@ default {
     {
         if (g_iCustomName == FALSE) { //If we don't have a custom LM_SETTING Global_WearerName
             string sLoadDisplayName = "secondlife:///app/agent/"+(string)g_kWearer+"/about"; //Load this once
-            if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != WEARERNAME)) {
-                //The displayname loaded correctly, and it's different than our current WEARERNAME
+            if (((sLoadDisplayName != "") && (sLoadDisplayName != "???")) && (sLoadDisplayName != g_sWearerName)) {
+                //The displayname loaded correctly, and it's different than our current g_sWearerName
                 //wearer changed their displayname since last timer event
-                WEARERNAME = sLoadDisplayName;
-                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+WEARERNAME, "");  //force update other scripts
+                g_sWearerName = sLoadDisplayName;
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+g_sWearerName, "");  //force update other scripts
             }
         }
     }

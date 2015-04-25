@@ -64,8 +64,8 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
-string CTYPE="collar";
-string WEARERNAME;
+string g_sDeviceType="collar";
+string g_sWearerName;
 
 string GIVECARD = "Help";
 string HELPCARD = ".help";
@@ -122,8 +122,8 @@ string g_sAuthError = "Access denied.";
 string DUMPCACHE = "Print";
 string PREFUSER = "☐ Personal";
 string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
-string STEALTH_OFF = "☐ Stealth"; // show the whole CTYPE
-string STEALTH_ON = "☒ Stealth"; // hide the whole CTYPE
+string STEALTH_OFF = "☐ Stealth"; // show the whole device
+string STEALTH_ON = "☒ Stealth"; // hide the whole device
 string LOADCARD="Load";
 string REFRESH_MENU = "Fix";
 
@@ -247,7 +247,7 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your "+CTYPE+" and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, COMMAND_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your "+g_sDeviceType+" and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, COMMAND_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
@@ -343,7 +343,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
 
-            Notify(kID,WEARERNAME+"'s "+ CTYPE + " has been locked.",TRUE);
+            Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been locked.",TRUE);
         }
         else Notify(kID, g_sAuthError, FALSE);
         if (fromMenu) MainMenu(kID, iNum);
@@ -356,7 +356,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llPlaySound(g_sUnlockSound, 1.0);
             SetLockElementAlpha(); //EB
 
-            Notify(kID,WEARERNAME+"'s "+ CTYPE + " has been unlocked.",TRUE);
+            Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been unlocked.",TRUE);
         }
         else Notify(kID, g_sAuthError, FALSE);
         if (fromMenu) MainMenu(kID, iNum);
@@ -410,7 +410,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
-            Notify(kID,"Only the wearer can update the " + CTYPE + ".",FALSE);
+            Notify(kID,"Only the wearer can update the " + g_sDeviceType + ".",FALSE);
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (sCmd == "version") {
@@ -556,8 +556,8 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+        g_sWearerName = llGetDisplayName(g_kWearer);
+        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
@@ -708,12 +708,12 @@ default
                 && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
             integer iInd = llSubStringIndex(sStr, "=");
             string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if (iNum == LM_SETTING_RESPONSE) WEARERNAME = sValue;
+            //We have a broadcasted change to g_sWearerName to work with
+            if (iNum == LM_SETTING_RESPONSE) g_sWearerName = sValue;
             else {
                 g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME == llKey2Name(g_kWearer);
+                g_sWearerName = llGetDisplayName(g_kWearer);
+                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
             }
         }
         else if (iNum == LM_SETTING_RESPONSE)
@@ -724,8 +724,8 @@ default
             if (sToken == "Global_locked") {
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
-            } else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
+            } else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
             else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
@@ -812,11 +812,11 @@ default
             if(kID == NULL_KEY)
             {
                 g_bDetached = TRUE;
-                NotifyOwners(WEARERNAME + " has detached me while locked at " + GetTimestamp() + "!");
+                NotifyOwners(g_sWearerName + " has detached me while locked at " + GetTimestamp() + "!");
             }
             else if(g_bDetached)
             {
-                NotifyOwners(WEARERNAME + " has re-atached me at " + GetTimestamp() + "!");
+                NotifyOwners(g_sWearerName + " has re-atached me at " + GetTimestamp() + "!");
                 g_bDetached = FALSE;
             }
         }

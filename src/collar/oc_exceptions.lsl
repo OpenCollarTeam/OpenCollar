@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 key g_kLMID;//store the request id here when we look up a LM
-string CTYPE = "collar";
+string g_sDeviceType = "collar";
 key g_kMenuID;
 key g_kSensorMenuID;
 key g_kPersonMenuID;
@@ -192,7 +192,7 @@ Menu(key kID, string sWho, integer iAuth)
 {
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -233,7 +233,7 @@ ExMenu(key kID, string sWho, integer iAuth)
     //Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn)
     { 
-        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
+        Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -663,7 +663,7 @@ default {
                     MakeNamesList();
                 }
             }
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []);

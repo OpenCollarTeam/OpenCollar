@@ -102,7 +102,7 @@ White|<1.00000, 1.00000, 1.00000>"
 
 // ----- collar -----
 //string g_sWearerName;
-string CTYPE = "collar";
+string g_sDeviceType = "collar";
 key g_kWearer;
 
 key NULLKEY = "";
@@ -594,14 +594,14 @@ default {
             if (llToLower(sMessage) == llToLower(SUBMENU))
             {
                 if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
-                else Notify(kMessageID, "Leash Options can only be changed by " + CTYPE + " Owners and the Wearer.", FALSE);
+                else Notify(kMessageID, "Leash Options can only be changed by " + g_sDeviceType + " Owners and the Wearer.", FALSE);
             }
             else if (sMessage == "menu "+SUBMENU)
             {
                 if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
                 else
                 {
-                    Notify(kMessageID, "Leash Options can only be changed by " + CTYPE + " Owners and the Wearer.", FALSE);
+                    Notify(kMessageID, "Leash Options can only be changed by " + g_sDeviceType + " Owners and the Wearer.", FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
@@ -639,7 +639,7 @@ default {
                     if (sButton == L_DEFAULTS)
                     {
                         g_lSettings = []; // clear current settings
-                        Notify(kAv, "Leash-settings restored to " + CTYPE + " defaults.", FALSE);
+                        Notify(kAv, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
                         if (!g_bInvisibleLeash && g_bLeashActive)
@@ -926,7 +926,7 @@ default {
                 SaveSettings(sToken, sValue, FALSE);
                 SaveDefaultSettings(sToken, sValue);
             }
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent")             
             {
