@@ -95,7 +95,6 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -263,10 +262,11 @@ default {
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
         
+        WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
 
         //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
-        llSetTimerEvent(60.0);  //set timer event to catch changes in display name
+        //llSetTimerEvent(60.0);  //set timer event to catch changes in display name
         //Debug("Starting");
     }
 
@@ -428,7 +428,7 @@ default {
                 else if (sCommand == "name")
                 {
                     if (sValue=="") {  //Just let them know their current name
-                        string message= "\n\n"+WEARERNAME+"'s current name is " + WEARERNAME;
+                        string message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + WEARERNAME;
                         message += "\nName command help: <prefix>name [newname|reset]\n";
                         Notify(kID, message, FALSE);
                     }
@@ -542,12 +542,12 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-        } else if (iNum == LM_SETTING_EMPTY) {
+        /*} else if (iNum == LM_SETTING_EMPTY) {
             if (sStr=="Global_WearerName"){
                 WEARERNAME = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
                 if (WEARERNAME == "???" || WEARERNAME == "") WEARERNAME = llKey2Name(g_kWearer);
                 llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+WEARERNAME,"");
-            }
+            }*/
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
