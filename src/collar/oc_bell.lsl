@@ -42,7 +42,7 @@ key g_kCurrentBellSound ; // curent bell sound key
 integer g_iCurrentBellSound; // curent bell sound sumber
 integer g_iBellSoundCount; // number of avail bell sounds
 
-key g_kLastToucher ; // store tocher key 
+key g_kLastToucher ; // store toucher key 
 float g_fNextTouch ;  // store time for the next touch
 float g_fTouch = 10.0 ; // timeout for touch chat notify
 
@@ -87,8 +87,8 @@ integer DIALOG_RESPONSE = -9001;
 
 string UPMENU = "BACK";//when your menu hears this, give the parent menu
 string g_sScript;
-string CTYPE="collar";
-string WEARERNAME;
+string g_sDeviceType="collar";
+string g_sWearerName;
 
 /*
 integer g_iProfiled;
@@ -366,13 +366,6 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
     return TRUE;
 }
 
-string GetName(key uuid)
-{
-    string name = llGetDisplayName(uuid);
-    if (name == "???" || name == "") name = llKey2Name(uuid);
-    return name;
-}
-
 default {
     on_rez(integer param) {
         g_kWearer=llGetOwner();
@@ -383,7 +376,7 @@ default {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();  // key of the wearer
-        WEARERNAME = GetName(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
 
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();  //build up list of prims with bell elements
@@ -462,8 +455,8 @@ default {
                 }
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
-            } else if (sToken=="Global_WearerName") WEARERNAME=sValue;
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            } else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
@@ -603,7 +596,7 @@ default {
             {
                 g_fNextTouch=llGetTime()+g_fTouch;
                 g_kLastToucher = toucher;
-                llSay(0, GetName(toucher) + " plays with the trinket on " + WEARERNAME + "'s "+CTYPE+"." );
+                llSay(0, "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on " + g_sWearerName + "'s "+g_sDeviceType+"." );
             }
         }
     }
