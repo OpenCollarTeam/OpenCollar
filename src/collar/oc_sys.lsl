@@ -17,7 +17,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="2.2.0";
+string g_sCollarVersion="3.7.1";
 integer g_iLatestVersion=TRUE;
 
 list g_lOwners;
@@ -556,8 +556,7 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
-        g_sWearerName = llGetDisplayName(g_kWearer);
-        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
@@ -712,8 +711,7 @@ default
             if (iNum == LM_SETTING_RESPONSE) g_sWearerName = sValue;
             else {
                 g_kWearer = llGetOwner();
-                g_sWearerName = llGetDisplayName(g_kWearer);
-                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
+                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
             }
         }
         else if (iNum == LM_SETTING_RESPONSE)

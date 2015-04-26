@@ -463,7 +463,7 @@ default {
         setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        g_sWearerName = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         //Debug("Starting");
     }
 

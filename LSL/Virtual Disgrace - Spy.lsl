@@ -297,7 +297,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
 default {
     state_entry() {
         g_kWearer = llGetOwner();
-        g_sWearerName = llKey2Name(g_kWearer);
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         g_lOwners = [g_kWearer, g_sWearerName];  // initially self-owned until we hear a db message otherwise
         llSetTimerEvent(300);
         //Debug("Starting");

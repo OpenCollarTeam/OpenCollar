@@ -210,8 +210,7 @@ default{
     state_entry() {
         llSetMemoryLimit(32768);
         g_kWearer = llGetOwner();
-        g_sWearerName = llGetDisplayName(g_kWearer);
-        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //Debug("Starting");
     }
     
@@ -244,8 +243,7 @@ default{
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             if (sToken == "Global_WearerName") {
-                g_sWearerName = llGetDisplayName(g_kWearer);
-                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName == llKey2Name(g_kWearer);
+                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
             }
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
