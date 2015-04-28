@@ -85,6 +85,9 @@ key g_kLeashTargetDialogID;
 key g_kFollowTargetDialogID;
 key g_kPostTargetDialogID;
 key g_kPostMenuDialogID;
+key g_kLeashTargetConfirmDialogID;
+key g_kFollowTargetConfirmDialogID;
+key g_kLeashCmderID;
 
 list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
 list g_lButtons;    //buttons added by other scripts
@@ -105,17 +108,17 @@ key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
 string g_sScript="leash_";
-string g_sDeviceType = "collar";
-string g_sWearerName;
+string CTYPE = "collar";
+string WEARERNAME;
 
-string g_sAuthError = "Access denied.";
-
+integer g_iPassConfirmed;
 integer g_iRezAuth;
 
 string g_sCheck;
 
 //realleash variables
-integer g_iStrictModeOn=TRUE; //default is Real-Leash OFF
+integer g_iStrictModeOn=FALSE; //default is Real-Leash OFF
+integer g_iTurnModeOn = FALSE;
 integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
@@ -148,6 +151,33 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 } 
 
+ConfirmDialog(key kAv, key kCmdGiver, key kType, integer iAuth)
+{
+    if ((string)kAv == BUTTON_UPMENU) {
+        UserCommand(iAuth, "leashmenu", kCmdGiver ,TRUE);
+        return;
+    }
+    string sCmdGiverURI = "secondlife:///app/agent/"+(string)kCmdGiver+"/about";
+    string sPrompt;
+    string sMessage;
+    if (kCmdGiver == g_kWearer) sPrompt = WEARERNAME + " wants to ";
+    else sPrompt = sCmdGiverURI + " wants to ";
+    if (kType == g_kLeashTargetDialogID) {
+        sMessage = "Asking " + "secondlife:///app/agent/"+(string)kAv+"/about to accept " + WEARERNAME + "'s leash.";
+        if (kCmdGiver == g_kWearer) sPrompt += "pass you their leash.";
+        else sPrompt += "pass you " + WEARERNAME + "'s leash.";
+        sPrompt += "\nAre you OK with this?";
+        g_kLeashTargetConfirmDialogID = Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth);
+    } else {
+        sMessage = "Asking " + "secondlife:///app/agent/"+(string)kAv+"/about to accept " + WEARERNAME + " to follow them.";
+        if (kCmdGiver == g_kWearer) sPrompt += "follow you.";
+        else sPrompt += " command " + WEARERNAME + " to follow you.";
+        sPrompt += "\nAre you OK with this?";
+        g_kFollowTargetConfirmDialogID = Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth);
+    }
+    Notify(kCmdGiver, sMessage, FALSE);
+}
+
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else{
@@ -163,7 +193,7 @@ integer CheckCommandAuth(key kCmdGiver, integer iAuth){
     
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
-        Notify(kCmdGiver,g_sAuthError, FALSE);
+        Notify(kCmdGiver, "Sorry, someone who outranks you on " + WEARERNAME +"'s " + CTYPE + " leashed " + WEARERNAME + " already.", FALSE);
 
         return FALSE;
     }
@@ -204,7 +234,17 @@ ApplyRestrictions(){
 integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer iFollowMode){
     // can't leash wearer to self.
     if (kTarget == g_kWearer) return FALSE;
-    
+    if (!g_iPassConfirmed) {
+        g_kLeashCmderID = kCmdGiver;
+        if (iFollowMode) {
+            g_kFollowTargetDialogID = llGenerateKey();
+            ConfirmDialog(kTarget, kCmdGiver, g_kFollowTargetDialogID, iAuth);
+        } else {
+            g_kLeashTargetDialogID = llGenerateKey();
+            ConfirmDialog(kTarget, kCmdGiver, g_kLeashTargetDialogID, iAuth);
+        }
+        return FALSE;
+    }
     if (!CheckCommandAuth(kCmdGiver, iAuth)){
         return FALSE;
     }
@@ -242,23 +282,23 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
             string sCmdMess;
             if (iFollowMode){
                 if (kCmdGiver != kTarget) { // LeashTo someone else
-                    Notify(kTarget, sCmdGiver + " commands " + g_sWearerName + " to follow you.", FALSE);
-                    sCmdMess= "You command " + g_sWearerName + " to follow " + sTarget + ".";
+                    Notify(kTarget, sCmdGiver + " commands " + WEARERNAME + " to follow you.", FALSE);
+                    sCmdMess= "You command " + WEARERNAME + " to follow " + sTarget + ".";
                     sWearMess = sCmdGiver + " commands you to follow " + sTarget + ".";
                 } else {
-                    sCmdMess= "You command " + g_sWearerName + " to follow you.";
+                    sCmdMess= "You command " + WEARERNAME + " to follow you.";
                     sWearMess = sCmdGiver + " commands you to follow them.";
                 }
             } else {
                 string sPsv = "'s"; // Possessive, will vary if name ends in "s"
-                if (llGetSubString(g_sWearerName, -1,-1)=="s") sPsv = "'";
-                sCmdMess= "You grab " + g_sWearerName + sPsv + " leash";
+                if (llGetSubString(WEARERNAME, -1,-1)=="s") sPsv = "'";
+                sCmdMess= "You grab " + WEARERNAME + sPsv + " leash";
                 sWearMess = sCmdGiver + " grabs your leash";
                 if (kCmdGiver != kTarget) { // Leasher is not LeashTo
                     if (bTargetIsAvi) { // LeashTo someone else
                         sCmdMess += ", and hand it to " + sTarget + ".";
                         sWearMess += ", and hands it to " + sTarget + ".";
-                        Notify(kTarget, sCmdGiver + " hands you " + g_sWearerName + sPsv + " leash.", FALSE);
+                        Notify(kTarget, sCmdGiver + " hands you " + WEARERNAME + sPsv + " leash.", FALSE);
                     } else {// LeashTo object
                         sCmdMess += ", and tie it to " + sTarget + ".";
                         sWearMess += ", and ties it to " + sTarget + ".";
@@ -274,16 +314,16 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     if (bTargetIsAvi) g_bLeashedToAvi = TRUE;
     if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=COMMAND_WEARER;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
     DoLeash(kTarget, iAuth, lPoints);
-    
+    g_iPassConfirmed = FALSE;
     // Notify Target how to unleash, only if:
     // Avatar
     // Didn't send the command
     // Don't own the object that sent the command
     if (g_bLeashedToAvi && kCmdGiver != kTarget && llGetOwnerKey(kCmdGiver) != kTarget) {
         if (iFollowMode){
-            llMessageLinked(LINK_SET, POPUP_HELP, g_sWearerName + " has been commanded to follow you.  Say \"_PREFIX_unfollow\" to relase them.", g_kLeashedTo);
+            llMessageLinked(LINK_SET, POPUP_HELP, WEARERNAME + " has been commanded to follow you.  Say \"_PREFIX_unfollow\" to relase them.", g_kLeashedTo);
         } else {
-            llMessageLinked(LINK_SET, POPUP_HELP, g_sWearerName + " has been leashed to you.  Say \"_PREFIX_unleash\" to unleash them.  Say \"_PREFIX_giveholder\" to get a leash holder.", g_kLeashedTo);
+            llMessageLinked(LINK_SET, POPUP_HELP, WEARERNAME + " has been leashed to you.  Say \"_PREFIX_unleash\" to unleash them.  Say \"_PREFIX_giveholder\" to get a leash holder.", g_kLeashedTo);
         }
     }
     return TRUE;
@@ -314,6 +354,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     llStopMoveToTarget();
     g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
     if (g_vPos != ZERO_VECTOR) {
+       // llMoveToTarget(g_vPos, 1.0);
         llMoveToTarget(g_vPos, 0.7);
     }
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
@@ -343,30 +384,30 @@ Unleash(key kCmdGiver)
             {
                 if (g_bFollowMode) {
                     sWearMess = "You stop following " + sTarget + ".";
-                    sTargetMess = g_sWearerName + " stops following you.";
+                    sTargetMess = WEARERNAME + " stops following you.";
                 } else {
                     sWearMess = "You unleash yourself from " + sTarget + "."; // sTarget might be an object
-                    sTargetMess = g_sWearerName + " unleashes from you.";
+                    sTargetMess = WEARERNAME + " unleashes from you.";
                 }
                 if (g_bLeashedToAvi) Notify(g_kLeashedTo, sTargetMess, FALSE);
             } else { // Unleasher is not Wearer
                 if (kCmdGiver == g_kLeashedTo) {
                     if (g_bFollowMode) {
-                        sCmdMess= "You release " + g_sWearerName + " from following you.";
+                        sCmdMess= "You release " + WEARERNAME + " from following you.";
                         sWearMess = sCmdGiver + " releases you from following.";
                     } else {
-                        sCmdMess= "You unleash " + g_sWearerName + ".";
+                        sCmdMess= "You unleash " + WEARERNAME + ".";
                         sWearMess = sCmdGiver + " unleashes you.";
                     }
                 } else {
                     if (g_bFollowMode) {
-                        sCmdMess= "You release " + g_sWearerName + " from following " + sTarget + ".";
+                        sCmdMess= "You release " + WEARERNAME + " from following " + sTarget + ".";
                         sWearMess = sCmdGiver + " releases you from following " + sTarget + ".";
-                        sTargetMess = g_sWearerName + " stops following you.";
+                        sTargetMess = WEARERNAME + " stops following you.";
                     } else {
-                        sCmdMess= "You unleash  " + g_sWearerName + " from " + sTarget + ".";
+                        sCmdMess= "You unleash  " + WEARERNAME + " from " + sTarget + ".";
                         sWearMess = sCmdGiver + " unleashes you from " + sTarget + ".";
-                        sTargetMess = sCmdGiver + " unleashes " + g_sWearerName + " from you.";
+                        sTargetMess = sCmdGiver + " unleashes " + WEARERNAME + " from you.";
                     }
                     if (g_bLeashedToAvi) Notify(g_kLeashedTo, sTargetMess, FALSE);
                 }
@@ -376,7 +417,7 @@ Unleash(key kCmdGiver)
         }
         DoUnleash();
     } else {
-        Notify(kCmdGiver, g_sWearerName+" is not leashed.", FALSE);
+        Notify(kCmdGiver, WEARERNAME+" is not leashed.", FALSE);
     }
 }
 
@@ -431,18 +472,12 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             else lButtons += " ";
             
             lButtons += ["Follow"];
-            
             lButtons += ["Post","Pass"];
-
             lButtons += ["Length"];
-
-            
             lButtons += g_lButtons;
             
             string sPrompt = "\nLet's go walkies!";
             g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
-            
-        
             
         } else  if (sComm == "post") {
             if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);   //hack to keep old chat comand behaviour
@@ -458,6 +493,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 g_kPostMenuDialogID = Dialog(kMessageID, "\nAnchor the leash to something nearby\nor use instant parking mode!", ["Anchor", "Park"], [BUTTON_UPMENU], 0, iAuth);
             }
         } else  if (sMessage == "grab" || sMessage == "leash" || (sMessage == "toggleleash" && NULL_KEY == g_kLeashedTo)) {
+            g_iPassConfirmed = TRUE;
             LeashTo(kMessageID, kMessageID, iAuth, ["handle"], FALSE);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
@@ -472,6 +508,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             } else if (sVal == "me") {
                 LeashTo(kMessageID, kMessageID, iAuth, [], TRUE);
             }   else if ((key)sVal) {
+                g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, [], TRUE);
                 //no remenu to leash menu
                 //if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -516,7 +553,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 if (sCmdGiver == "???" | sCmdGiver == "") sCmdGiver = llKey2Name(kMessageID);
                 llRequestPermissions(g_kWearer, PERMISSION_TAKE_CONTROLS);
                 llOwnerSay(sCmdGiver + " commanded you to stay in place, you cannot move until the command is revoked again.");
-                Notify(kMessageID, "You commanded " + g_sWearerName + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
+                Notify(kMessageID, "You commanded " + WEARERNAME + " to stay in place. Either leash the slave with the grab command or use \"unstay\" to enable movement again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
             
@@ -525,11 +562,11 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 g_iStay = FALSE;
                 llReleaseControls();
                 llOwnerSay("You are free to move again.");
-                Notify(kMessageID,"You allowed " + g_sWearerName + " to move freely again.", FALSE);
+                Notify(kMessageID,"You allowed " + WEARERNAME + " to move freely again.", FALSE);
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             }
 
-        } else if (sMessage == "strict on" || sMessage == "strict ☐") {
+        } else if (sMessage == "strict on") {
             g_iStrictModeOn=TRUE;
             llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", "");
             llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
@@ -537,17 +574,19 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             ApplyRestrictions();
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             
-        } else if (sMessage == "strict off" || sMessage == "strict ☒") {
-            if (g_kLeashedTo) {
-                Notify(kMessageID, "You can't disable Strict Mode while leashed.",FALSE);
-            } else {
-                g_iStrictModeOn=FALSE;
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
-                ApplyRestrictions();
-                Notify(kMessageID,"Strict leashing disabled.",FALSE);
-            }
-            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            
+        } else if (sMessage == "strict off") {
+            g_iStrictModeOn=FALSE;
+            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
+            ApplyRestrictions();
+            Notify(kMessageID,"Strict leashing disabled.",FALSE);
+        } else if (sMessage == "turn on") {
+            g_iTurnModeOn=TRUE;
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "turn=1", "");
+            Notify(kMessageID,"Turning towards leasher enabled.",TRUE);
+        } else if (sMessage == "turn off") {
+            g_iTurnModeOn=FALSE;
+            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "turn", "");
+            Notify(kMessageID,"Turning towards leasher disabled.",FALSE);        
         } else if (sComm == "leashto" || sComm == "pass") {
             if (!CheckCommandAuth(kMessageID, iAuth)) return TRUE;
             if (sVal==llToLower(BUTTON_UPMENU)){
@@ -559,6 +598,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 list lPoints;
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
                 //debug("leash target is key");//could be a post, or could be we specified an av key
+                g_kLeashTargetDialogID = "";
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
                 //remenu to sensor dialog
                 //if (bFromMenu) UserCommand(iAuth, "leashto", kMessageID ,bFromMenu);
@@ -604,6 +644,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
                 //debug("leash target is key");//could be a post, or could be we specified an av key
                 if (bFromMenu) UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
+                g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
             } else {
                 g_kPostTargetDialogID=llGenerateKey();
@@ -630,8 +671,8 @@ default {
     state_entry() {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
-        llMinEventDelay(0.3);
+        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        llMinEventDelay(0.33);
         
         DoUnleash();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
@@ -662,6 +703,7 @@ default {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vLeashedToPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
+                //if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 1.0);
                 if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
                 ApplyRestrictions();
             }
@@ -735,8 +777,8 @@ default {
                 //Debug("SetRLV:"+sValue);
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
-            } else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
-             else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+            } else if (sToken == "Global_CType") CTYPE = sValue;
+             else if (sToken=="Global_WearerName") WEARERNAME=sValue;
             //else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);
@@ -752,11 +794,40 @@ default {
                     UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
             }
-            else if (kMessageID == g_kLeashTargetDialogID) UserCommand(iAuth, "leashto " + sButton, kAV, TRUE);
-            else if (kMessageID == g_kFollowTargetDialogID) UserCommand(iAuth, "follow " + sButton, kAV, TRUE);
             else if (kMessageID == g_kPostTargetDialogID) UserCommand(iAuth, "findpost " + sButton, kAV, TRUE);
             else if (kMessageID == g_kSetLengthDialogID) UserCommand(iAuth, "length " + sButton, kAV, TRUE);
             else if (kMessageID == g_kPostMenuDialogID) UserCommand(iAuth, "post " + sButton, kAV, TRUE);
+            // added for Confirmation Request 15-04-17 Otto
+            else if (kMessageID == g_kLeashTargetDialogID) {
+                g_kLeashCmderID = kAV;
+                ConfirmDialog((key)sButton, kAV, g_kLeashTargetDialogID, iAuth);
+            } else if (kMessageID == g_kLeashTargetConfirmDialogID) {
+                if (sButton == "Yes") {
+                    g_iPassConfirmed = TRUE;
+                    if (g_kLeashCmderID == g_kWearer) iAuth = COMMAND_WEARER;
+                    UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
+                } else {
+                    Notify(g_kLeashCmderID,  "secondlife:///app/agent/"+(string)kAV+"/about did not accept " + WEARERNAME + "'s leash.", FALSE);
+                    g_iPassConfirmed = FALSE;
+                }
+                g_kLeashCmderID = "";
+            } else if (kMessageID == g_kFollowTargetDialogID) {
+                if (kAV == (key)sButton) UserCommand(iAuth, "follow " + (string)kAV, kAV, TRUE);
+                else {
+                    g_kLeashCmderID = kAV;
+                    ConfirmDialog((key)sButton, kAV, g_kFollowTargetDialogID, iAuth);
+                }
+            } else if (kMessageID == g_kFollowTargetConfirmDialogID) {
+                if (sButton == "Yes") {
+                    g_iPassConfirmed = TRUE;
+                    if (g_kLeashCmderID == g_kWearer) iAuth = COMMAND_WEARER;
+                    UserCommand(iAuth, "follow " + (string)kAV, g_kLeashCmderID, TRUE);
+            } else {
+                Notify(g_kLeashCmderID, "secondlife:///app/agent/"+(string)kAV+"/about denied " + WEARERNAME + " to follow them.", FALSE);
+                g_iPassConfirmed = FALSE;
+                }
+                g_kLeashCmderID = "";
+            }
         }
     }
 
@@ -768,7 +839,7 @@ default {
         if(g_iJustMoved) {
             vector pointTo = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0) - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
-            llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
+            if (g_iTurnModeOn) llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
             g_iJustMoved = 0;
         }   
     }
@@ -785,6 +856,7 @@ default {
                 g_vPos = vNewPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
+           // if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
             if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,0.7);
             else llStopMoveToTarget();
         } else {
