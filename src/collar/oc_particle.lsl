@@ -52,7 +52,7 @@ integer COMMAND_LEASH_SENSOR = 20001;
 // --- menu tokens ---
 string UPMENU       = "BACK";
 string PARENTMENU   = "Leash";
-string SUBMENU      = "Customize";
+string SUBMENU      = "Configure";
 string L_TEXTURE    = "Texture";
 string L_COLOR      = "Color";
 string L_GRAVITY    = "Gravity";
@@ -74,7 +74,7 @@ key g_kDialogID;
 string g_sCurrentCategory = "";
 list g_lCategories = ["Bright", "Soft"];
 list g_lColors;
-list g_lAllColors = [
+/*list g_lAllColors = [
 "Magenta|<1.00000, 0.00000, 0.50196>
 Pink|<1.00000, 0.14902, 0.50980>
 Hot Pink|<1.00000, 0.05490, 0.72157>
@@ -96,9 +96,32 @@ Yolk|<0.98824, 0.73333, 0.29412>
 Wasabi|<0.47059, 1.00000, 0.65098>
 Lavender|<0.89020, 0.65882, 0.99608>
 Black|<0.00000, 0.00000, 0.00000>
-White|<1.00000, 1.00000, 1.00000>"
+White<1.00000, 1.00000, 1.00000>"
+];*/
+list g_lAllColors = [
+"Magenta",<1.00000, 0.00000, 0.50196>,
+"Pink",<1.00000, 0.14902, 0.50980>,
+"Hot Pink",<1.00000, 0.05490, 0.72157>,
+"Firefighter",<0.88627, 0.08627, 0.00392>,
+"Sun",<1.00000, 1.00000, 0.18039>,
+"Flame",<0.92941, 0.43529, 0.00000>,
+"Matrix",<0.07843, 1.00000, 0.07843>,
+"Electricity",<0.00000, 0.46667, 0.92941>,
+"Violet Wand",<0.63922, 0.00000, 0.78824>,
+"Black",<0.00000, 0.00000, 0.00000>,
+"White",<1.00000, 1.00000, 1.00000>,
+"Baby Blue",<0.75686, 0.75686, 1.00000>,
+"Baby Pink",<1.00000, 0.52157, 0.76078>,
+"Rose",<0.93333, 0.64314, 0.72941>,
+"Beige",<0.86667, 0.78039, 0.71765>,
+"Earth",<0.39608, 0.27451, 0.18824>,
+"Ocean",<0.25882, 0.33725, 0.52549>,
+"Yolk",<0.98824, 0.73333, 0.29412>,
+"Wasabi",<0.47059, 1.00000, 0.65098>,
+"Lavender",<0.89020, 0.65882, 0.99608>,
+"Black",<0.00000, 0.00000, 0.00000>,
+"White",<1.00000, 1.00000, 1.00000>
 ];
-
 // ----- collar -----
 //string g_sWearerName;
 string g_sDeviceType = "collar";
@@ -136,7 +159,7 @@ vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 //vector g_vLeashSize = <0.22, 0.17, 0.0>;    // CHANGED FROM DEFAULT <0.07, 0.07, 1.0>, JEAN SEVERINE 2012-02-22
 vector g_vLeashSize = <0.04, 0.04, 1.0>;    // CHANGED back
 integer g_iParticleGlow = TRUE;
-float g_fParticleAge = 1.0;
+float g_fParticleAge = 3.5;
 float g_fParticleAlpha = 1.0;
 vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
@@ -203,13 +226,13 @@ Particles(integer iLink, key kParticleTarget)
     //float fMinSpeed = 3.0;          // Min speed each particle is spit out at
     //these values do nothing when particles go to a target, the speed is determined by the particle age then
     //integer iFlags = PSYS_PART_INTERP_COLOR_MASK | PSYS_PART_INTERP_SCALE_MASK | PSYS_PART_FOLLOW_VELOCITY_MASK | PSYS_PART_TARGET_POS_MASK;
-    integer iFlags = PSYS_PART_FOLLOW_VELOCITY_MASK | PSYS_PART_TARGET_POS_MASK | PSYS_PART_FOLLOW_SRC_MASK | PSYS_PART_RIBBON_MASK;
-
+    integer iFlags = PSYS_PART_FOLLOW_VELOCITY_MASK | PSYS_PART_TARGET_POS_MASK | PSYS_PART_FOLLOW_SRC_MASK;
+    
+    if (g_iRibbon) iFlags = iFlags | PSYS_PART_RIBBON_MASK;
     if (g_iParticleGlow) iFlags = iFlags | PSYS_PART_EMISSIVE_MASK;
 
     list lTemp = [
-       // PSYS_PART_MAX_AGE,g_fParticleAge,
-        PSYS_PART_MAX_AGE,2.0,
+        PSYS_PART_MAX_AGE,g_fParticleAge,
         PSYS_PART_FLAGS,iFlags,
         PSYS_PART_START_COLOR, g_vLeashColor,
         //PSYS_PART_END_COLOR, g_vLeashColor,
@@ -232,9 +255,11 @@ Particles(integer iLink, key kParticleTarget)
 
 StartParticles(key kParticleTarget) {
     //Debug(llList2CSV(g_lLeashPrims));
+    StopParticles(FALSE);
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
+            if (!g_iRibbon) g_iLoop = g_iLoop + 3;
         }
     }
     g_iLeashActive = TRUE;
@@ -258,7 +283,6 @@ string Vec2String(vector vVec) {
     for (g_iLoop = 0; g_iLoop < 3; g_iLoop++) {
         string sStr = llList2String(lParts, g_iLoop);
         //remove any trailing 0's or .'s from sStr
-        //while ((~(integer)llSubStringIndex(sStr, ".")) && (llGetSubString(sStr, -1, -1) == "0" || llGetSubString(sStr, -1, -1) == "."))
         while (~llSubStringIndex(sStr, ".") && (llGetSubString(sStr, -1, -1) == "0" || llGetSubString(sStr, -1, -1) == ".")) {
             sStr = llGetSubString(sStr, 0, -2);
         }
@@ -276,12 +300,12 @@ string Float2String(float in) {
     return out;
 }
 
-SaveSettings(string sToken, string sValue, integer bSaveToLocal) {
+SaveSettings(string sToken, string sValue, integer iSaveToLocal) {
     integer iIndex = llListFindList(g_lSettings, [sToken]);
     if (iIndex>=0) g_lSettings = llListReplaceList(g_lSettings, [sValue], iIndex +1, iIndex +1);
     else g_lSettings += [sToken, sValue];
   
-    if (bSaveToLocal) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sToken + "=" + sValue, "");
+    if (iSaveToLocal) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sToken + "=" + sValue, "");
 }
 
 SaveDefaultSettings(string sToken, string sValue) {
@@ -306,10 +330,10 @@ GetSettings() {
     g_vLeashSize = (vector)GetSetting(L_FEEL);
     g_vLeashColor = (vector)GetSetting(L_COLOR);
     g_vLeashGravity.z = (float)GetSetting(L_GRAVITY);
-    //g_iParticleGlow = (integer)GetSetting(L_GLOW);
-    string glow = llToLower(GetSetting(L_GLOW));
-    if (glow == " ☑" || glow == "0") g_iParticleGlow = 0 ;
-    if (glow == " ☐" || glow == "1") g_iParticleGlow = 1 ;
+    g_iParticleGlow = (integer)GetSetting(L_GLOW);
+    g_iTurn = (integer)GetSetting(L_TURN);
+    g_iStrict = (integer)GetSetting(L_STRICT);
+    g_iRibbon = (integer)GetSetting("Ribbon");
     SetTexture(GetSetting(L_TEXTURE), NULLKEY);
 }
 
@@ -317,7 +341,7 @@ GetSettings() {
 SetTexture(string sIn, key kIn) {
     g_sParticleTexture = sIn;
     if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
-    else if (sIn=="Rope") g_sParticleTextureID="c63b0ed0-948a-6ec5-8119-a66aef9ab5b9";
+    else if (sIn=="Chain") g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
     else if (sIn=="Silk") g_sParticleTextureID="cdb7025a-9283-17d9-8d20-cee010f36e90";
     else if (sIn=="totallytransparent") g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
     else {
@@ -352,8 +376,8 @@ OptionsMenu(key kIn, integer iAuth) {
     else lButtons += "☐ Turn";
     if (g_iStrict) lButtons += "☑ Strict";
     else lButtons += "☐ Strict";
-    if (g_iRibbon) lButtons += ["☒ Chain", "☐ Leather"];
-    else lButtons += ["☐ Chain", "☒ Leather"];
+    if (g_iRibbon) lButtons += ["☐ Chain", "☒ Silk"];
+    else lButtons += ["☒ Chain", "☐ Silk"];
     
     lButtons += [L_FEEL, L_COLOR, L_DEFAULTS];
     string sPrompt = "\nCustomize the looks and feel of your leash.";
@@ -367,17 +391,17 @@ FeelMenu(key kIn, integer iAuth) {
     string sPrompt = "\nHere you can change the weight and size of your leash.";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
-
+/*
 ColorCategoryMenu(key kIn, integer iAuth) {
     //give kAv a dialog with a list of color cards
     string sPrompt = "\nChoose a color category.";
     g_sCurrentMenu = "L-ColorCat";
     g_kDialogID = Dialog(kIn, sPrompt, g_lCategories, [UPMENU], 0, iAuth);
 }
-
+*/
 ColorMenu(key kIn, integer iAuth) {
     string sPrompt = "\nChoose a color.";
-    list lButtons = llList2ListStrided(g_lColors,0,-1,2);
+    list lButtons =llList2ListStrided(g_lAllColors,0,-1,2);
     g_sCurrentMenu = L_COLOR;
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -457,7 +481,7 @@ default {
                 if (sButton == UPMENU) {
                     if(g_sCurrentMenu == SUBMENU) llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
 
-                    else if (g_sCurrentMenu == L_COLOR) ColorCategoryMenu(kAv, iAuth);
+                    //else if (g_sCurrentMenu == L_COLOR) ColorCategoryMenu(kAv, iAuth);
 
                     else OptionsMenu(kAv, iAuth);
                 }
@@ -465,16 +489,17 @@ default {
                     string sButtonType = llGetSubString(sButton,2,-1);
                     string sButtonCheck = llGetSubString(sButton,0,0);
                     if (sButton == L_DEFAULTS) {
-                        g_lSettings = []; // clear current settings
+                        g_lSettings = []; // set back default settings
                         Notify(kAv, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
                         // Cleo: as we use standard, no reason to keep the local settings
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
+                        GetSettings(); // get settings before 
                         if (!g_iInvisibleLeash && g_iLeashActive) {
-                            GetSettings(); // get settings before 
+                            llSleep(0.1);
                             StartParticles(g_kParticleTarget);
                         }
                     } else if (sButton == L_COLOR) {
-                        ColorCategoryMenu(kAv, iAuth);
+                        ColorMenu(kAv, iAuth);
                         return;
                     } else if (sButton == L_FEEL) {
                         FeelMenu(kAv, iAuth);
@@ -492,27 +517,42 @@ default {
                         if (sButtonCheck == "☐") g_iStrict = TRUE;
                         else g_iStrict = FALSE;
                         SaveSettings(sButtonType, (string)g_iStrict, TRUE);
-                    } else if(sButtonType == "Leather") {
-                        if (sButtonCheck == "☐") g_iRibbon = FALSE;
-                        else g_iRibbon = TRUE;
+                    } else if(sButtonType == "Silk") {
+                        if (sButtonCheck == "☐") {
+                            g_iRibbon = TRUE;
+                            if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
+                            SetTexture("Silk", kAv);
+                        } else {
+                            g_iRibbon = FALSE;
+                            g_vLeashSize = g_vLeashSize + <0.03, 0.03, 0.0>;
+                            SetTexture("Chain", kAv);
+                            }
                         SaveSettings("Ribbon", (string)g_iRibbon, TRUE);
                     } else if(sButtonType == "Chain") {
-                        if (sButtonCheck == "☐") g_iRibbon = TRUE;
-                        else g_iRibbon = FALSE;
+                        if (sButtonCheck == "☐") {
+                            g_iRibbon = FALSE;
+                            g_vLeashSize = g_vLeashSize + <0.03, 0.03, 0.0>;
+                            SetTexture("Chain", kAv);
+                        } else {
+                            g_iRibbon = TRUE;
+                            if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
+                            SetTexture("Silk", kAv);
+                        }
                         SaveSettings("Ribbon", (string)g_iRibbon, TRUE);
                     }
                     if (!g_iInvisibleLeash && g_iLeashActive) StartParticles(g_kParticleTarget);
                     OptionsMenu(kAv, iAuth);
-                }
+                }/*
                 else if (g_sCurrentMenu == "L-ColorCat") {
                     g_sCurrentCategory = sButton;
                     integer iIndex = llListFindList(g_lCategories,[sButton]);
                     g_lColors = llParseString2List(llList2String(g_lAllColors, iIndex), ["\n", "|"], []);
                     g_lColors = llListSort(g_lColors, 2, TRUE);
                     ColorMenu(kAv, iAuth);
-                }
+                }*/
                 else if (g_sCurrentMenu == L_COLOR) {
                     integer iIndex = llListFindList(g_lColors, [sButton]) +1;
+                    llOwnerSay((string)llList2Vector(g_lColors, iIndex));
                     if (iIndex) {
                         g_vLeashColor = (vector)llList2String(g_lColors, iIndex);
                         SaveSettings(L_COLOR, Vec2String(g_vLeashColor), TRUE);
@@ -553,10 +593,9 @@ default {
                             Notify(kAv, "It can't get any lighter now.", FALSE);
                         }
                     }
-                    if (!g_iInvisibleLeash && g_iLeashActive) StartParticles(g_kParticleTarget);
-
                     SaveSettings(L_GRAVITY, Float2String(g_vLeashGravity.z), TRUE);
                     SaveSettings(L_FEEL, Vec2String(g_vLeashSize), TRUE);
+                    if (!g_iInvisibleLeash && g_iLeashActive) StartParticles(g_kParticleTarget);
                     FeelMenu(kAv, iAuth);
                 }
 
@@ -564,19 +603,14 @@ default {
                 //Debug("Not our menu");
             }
         }
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
+        else if (iNum == LM_SETTING_RESPONSE) {
             //Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);
             i = llSubStringIndex(sToken, "_");
-            if (sToken == "leash_leashedto")
-            {
-                g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
-            }
-            else if (llGetSubString(sToken, 0, i) == g_sScript)
-            {
+            if (sToken == "leash_leashedto") g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
+            else if (llGetSubString(sToken, 0, i) == g_sScript) {
                 // load current settings
                 sToken = llGetSubString(sToken, i + 1, -1);                
                 SaveSettings(sToken, sValue, FALSE);
@@ -584,18 +618,13 @@ default {
             }
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
-            else if (sMessage == "settings=sent")             
-            {
+            else if (sMessage == "settings=sent") {
                 GetSettings(); // get settings before
                 if (g_kLeashedTo != NULLKEY) StartParticles(g_kParticleTarget);
             }
         }
-        else if (iNum == LM_SETTING_DELETE)
-        {
-            if (sMessage == "leash_leashedto")
-            {
-                StopParticles(TRUE);
-            }
+        else if (iNum == LM_SETTING_DELETE) {
+            if (sMessage == "leash_leashedto") StopParticles(TRUE);
         }
     }
     listen(integer iChannel, string sName, key kID, string sMessage)
