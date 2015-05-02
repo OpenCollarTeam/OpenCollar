@@ -76,10 +76,12 @@ string L_GLOW       = "Shine";
 string L_STRICT     = "Strict";
 string L_TURN       = "Turn";
 string L_DEFAULTS   = "RESET";
-
+string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle stream
+string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
+string L_COSTUM_TEX_ID;
 // Defalut leash particle, can read from defaultsettings:
-// User_leashDefaults=Shine~1~Turn~1~Strict~1~ParticleMode~Ribbon~Texture~Silk~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7
-list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon",L_TEXTURE,"Silk",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"]; 
+// User_leashParticle=Shine~1~Turn~1~Strict~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7
+list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"]; 
 
 list g_lSettings=g_lDefaultSettings;
 
@@ -100,8 +102,9 @@ integer g_iAwayCounter;
 integer g_iLeashActive;
 integer g_iTurnMode;
 integer g_iStrictMode;
-string g_sParticleMode = "Ribbon"; //modes can be: Ribbon, Chain and noParticle
-
+string g_sParticleMode = "Ribbon"; //modes can be: Ribbon, Classic and noParticle
+string g_sRibbonTexture;
+string g_sClassicTexture;
 //List of 4 leash/chain points, lockmeister names used (list has to be all lower case, prims dont matter, converting on compare to lower case)
 //strided list... LM name, linkNumber, BOOL_ACVTIVE
 list g_lLeashPrims;
@@ -122,11 +125,11 @@ float g_fParticleAge = 3.0;
 float g_fParticleAlpha = 1.0;
 vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
-float g_fBurstRate = 0.04;
+float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
-/*
-integer g_iProfiled;
+
+integer g_iProfiled = TRUE;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -137,7 +140,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
@@ -217,7 +220,7 @@ StartParticles(key kParticleTarget) {
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
-           if (g_sParticleMode == "Chain") g_iLoop = g_iLoop + 3;
+           if (g_sParticleMode == "Classic") g_iLoop = g_iLoop + 3;
         }
     }
     g_iLeashActive = TRUE;
@@ -266,10 +269,12 @@ SaveSettings(string sToken, string sValue, integer iSaveToLocal, integer iAuth, 
         if ((integer)sValue) llMessageLinked(LINK_SET, iAuth, "strict on", kAv);
         else  llMessageLinked(LINK_SET, iAuth, "strict off", kAv);
     }
-    if (sToken == L_TURN) {
+    else if (sToken == L_TURN) {
          if ((integer)sValue) llMessageLinked(LINK_SET, iAuth, "turn on", kAv);
          else llMessageLinked(LINK_SET, iAuth, "turn off", kAv);
     }
+    else if (sToken == "R_Texture") L_RIBBON_TEX == sValue;
+    else if (sToken == "C_Texture") L_CLASSIC_TEX == sValue;    
     if (iSaveToLocal) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sToken + "=" + sValue, "");
 }
 
@@ -292,33 +297,48 @@ string GetSetting(string sToken) {
 
 // get settings before StartParticles
 GetSettings(integer iStartParticles) {
+    g_sParticleMode = GetSetting("ParticleMode");
+    g_sClassicTexture = GetSetting("C_Texture");
+    g_sRibbonTexture = GetSetting("R_Texture");
     g_vLeashSize = (vector)GetSetting(L_SIZE);
     g_vLeashColor = (vector)GetSetting(L_COLOR);
     g_vLeashGravity.z = (float)GetSetting(L_GRAVITY);
     g_iParticleGlow = (integer)GetSetting(L_GLOW);
     g_iTurnMode = (integer)GetSetting(L_TURN);
     g_iStrictMode = (integer)GetSetting(L_STRICT);
-    g_sParticleMode = GetSetting("ParticleMode");
-    SetTexture(GetSetting(L_TEXTURE), NULLKEY);
-    llSleep(0.1);
-    if (iStartParticles &&  g_kLeashedTo != NULLKEY) StartParticles(g_kParticleTarget);
+    if (g_sParticleMode == "Classic") SetTexture(g_sClassicTexture, NULLKEY);
+    else if (g_sParticleMode == "Ribbon") SetTexture(g_sRibbonTexture, NULLKEY);
+    if (iStartParticles &&  g_kLeashedTo != NULLKEY){
+        llSleep(0.1);
+        StartParticles(g_kParticleTarget);
+    }
 }
 
 // Added bSave as a boolean, to make this a more versatile wrapper
 SetTexture(string sIn, key kIn) {
     g_sParticleTexture = sIn;
-    if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
+    if (sIn=="Silk") g_sParticleTextureID="cdb7025a-9283-17d9-8d20-cee010f36e90";
     else if (sIn=="Chain") g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
-    else if (sIn=="Silk") g_sParticleTextureID="cdb7025a-9283-17d9-8d20-cee010f36e90";
+    else if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
+    else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
     else if (sIn=="totallytransparent") g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
     else {
         if (llToLower(g_sParticleTexture) == "noleash") g_sParticleMode = "noParticle"; 
         //Debug("particleTexture= " + sIn);
-        g_sParticleTextureID = llGetInventoryKey(sIn);
+        g_sParticleTextureID = llGetInventoryKey(g_sParticleTexture);
         if(g_sParticleTextureID == NULL_KEY) g_sParticleTextureID=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
     }        
+    if (g_sParticleMode == "Ribbon") {
+        if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
+        else L_RIBBON_TEX = sIn;
+        if (kIn) Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
+    }
+    else if (g_sParticleMode == "Classic") {
+        if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
+        else L_CLASSIC_TEX = sIn;
+        if (kIn) Notify(kIn, "Leash texture set to " + L_CLASSIC_TEX, FALSE);
+    } else  if (kIn) Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
     //Debug("particleTextureID= " + (string)g_sParticleTextureID);
-    if (kIn) Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
     //Debug("activeleashpoints= " + (string)g_iLeashActive);
     if (g_iLeashActive) {
         if (g_sParticleMode == "noParticle") StopParticles(FALSE);
@@ -332,7 +352,7 @@ integer KeyIsAv(key id) {
 
 //Menus
 
-OptionsMenu(key kIn, integer iAuth) {
+ConfigureMenu(key kIn, integer iAuth) {
     g_sCurrentMenu = SUBMENU;
     list lButtons; 
     if (g_iParticleGlow) lButtons += "☑ Shine";
@@ -341,9 +361,9 @@ OptionsMenu(key kIn, integer iAuth) {
     else lButtons += "☐ Turn";
     if (g_iStrictMode) lButtons += "☑ Strict";
     else lButtons += "☐ Strict";
-    if (g_sParticleMode == "Ribbon") lButtons += ["☐ Chain", "☒ Silk", "☐ Invisible"];
-    else if (g_sParticleMode == "noParticle") lButtons += ["☐ Chain", "☐ Silk", "☒ Invisible"];
-    else if (g_sParticleMode == "Chain")  lButtons += ["☒ Chain", "☐ Silk", "☐ Invisible"];
+    if (g_sParticleMode == "Ribbon") lButtons += ["☐ "+L_CLASSIC_TEX,"☒ "+L_RIBBON_TEX,"☐ Invisible"];
+    else if (g_sParticleMode == "noParticle") lButtons += ["☐ "+L_CLASSIC_TEX,"☐ "+L_RIBBON_TEX,"☒ Invisible"];
+    else if (g_sParticleMode == "Classic")  lButtons += ["☒ "+L_CLASSIC_TEX,"☐ "+L_RIBBON_TEX,"☐ Invisible"];
     
     lButtons += [L_FEEL, L_COLOR];
     string sPrompt = "\nCustomize the looks and feel of your leash.";
@@ -416,11 +436,11 @@ default {
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
             if (llToLower(sMessage) == llToLower(SUBMENU)) {
-                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
+                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
                 else Notify(kMessageID,g_sAuthError, FALSE);
             }
             else if (sMessage == "menu "+SUBMENU) {
-                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) OptionsMenu(kMessageID, iNum);
+                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
                     Notify(kMessageID,g_sAuthError, FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
@@ -445,7 +465,7 @@ default {
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sButton == UPMENU) {
                     if(g_sCurrentMenu == SUBMENU) llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
-                    else OptionsMenu(kAv, iAuth);
+                    else ConfigureMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == SUBMENU) {
                     string sButtonType = llGetSubString(sButton,2,-1);
@@ -468,30 +488,30 @@ default {
                         if (sButtonCheck == "☐") g_iStrictMode = TRUE;
                         else g_iStrictMode = FALSE;
                         SaveSettings(sButtonType, (string)g_iStrictMode, TRUE, iAuth, kAv);
-                    } else if(sButtonType == "Silk") {
+                    } else if(sButtonType == L_RIBBON_TEX) {
                         if (sButtonCheck == "☐") {
                             g_sParticleMode = "Ribbon"; 
                             if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03,0.03,0.0>;
-                            SetTexture("Silk", kAv);
-                            SaveSettings(L_TEXTURE, "Silk", TRUE,0,"");
+                            SetTexture(g_sRibbonTexture, kAv);
+                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         } else {
                             g_vLeashSize = g_vLeashSize + <0.03,0.03,0.0>;
-                            g_sParticleMode = "Chain";
-                            SetTexture("Chain", kAv);
-                            SaveSettings(L_TEXTURE, "Chain", TRUE,0,"");
+                            g_sParticleMode = "Classic";
+                            SetTexture(g_sClassicTexture, kAv);
+                            SaveSettings("C_Texture", g_sClassicTexture, TRUE,0,"");
                         }
                         SaveSettings("ParticleMode",g_sParticleMode , TRUE,0,"");
-                    } else if(sButtonType == "Chain") {
+                    } else if(sButtonType == L_CLASSIC_TEX) {
                         if (sButtonCheck == "☐") {
                             if (g_sParticleMode == "Ribbon" || g_vLeashSize.x == 0.04) g_vLeashSize = g_vLeashSize + <0.03,0.03,0.0>;
-                            g_sParticleMode = "Chain";
-                            SetTexture("Chain", kAv);
-                            SaveSettings(L_TEXTURE, "Chain", TRUE,0,"");
+                            g_sParticleMode = "Classic";
+                            SetTexture(g_sClassicTexture, kAv);
+                            SaveSettings("C_Texture", g_sClassicTexture, TRUE,0,"");
                         } else {
                             g_sParticleMode = "Ribbon";
                             if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
-                            SetTexture("Silk", kAv);
-                            SaveSettings(L_TEXTURE, "Silk", TRUE,0,"");
+                            SetTexture(g_sRibbonTexture, kAv);
+                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         }
                         SaveSettings("ParticleMode", g_sParticleMode, TRUE,0,"");
                     } else if(sButtonType == "Invisible") {
@@ -499,19 +519,18 @@ default {
                             g_sParticleMode = "noParticle";
                             g_sParticleTexture = "noleash";
                             SetTexture("noleash", kAv);
-                            SaveSettings(L_TEXTURE, "noleash", TRUE,0,"");
                         } else {
                             g_sParticleMode = "Ribbon";
                             if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
-                            SetTexture("Silk", kAv);
-                            SaveSettings(L_TEXTURE, "Silk", TRUE,0,"");
+                            SetTexture(g_sRibbonTexture, kAv);
+                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         }
                         SaveSettings("ParticleMode", g_sParticleMode, TRUE,0,"");
                     }
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
                     else if (g_iLeashActive) StopParticles(FALSE);
                     else StopParticles(TRUE);
-                    OptionsMenu(kAv, iAuth);
+                    ConfigureMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_COLOR) {
                     integer iIndex = llListFindList(g_lColors, [sButton]) +1;
@@ -576,7 +595,7 @@ default {
             if (sToken == "leash_leashedto") g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
             else if (llGetSubString(sToken, 0, i) == g_sScript) {
                 // load current settings
-                sToken = llGetSubString(sToken, i + 1, -1);                
+                sToken = llGetSubString(sToken, i + 1, -1);
                 SaveSettings(sToken, sValue, FALSE,0,"");
                 SaveDefaultSettings(sToken, sValue);
             }
@@ -592,47 +611,36 @@ default {
     }
     listen(integer iChannel, string sName, key kID, string sMessage)
     {
-        if (iChannel == LOCKMEISTER)
-        {
+        if (iChannel == LOCKMEISTER) {
             //leash holder announced it got detached... send particles to avi
-            if (sMessage == (string)g_kLeashedTo + "handle detached")
-            {
+            if (sMessage == (string)g_kLeashedTo + "handle detached") {
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
             }
             // We heard from a leash holder. re-direct particles
-            if (llGetOwnerKey(kID) == g_kLeashedTo)
-            {
+            if (llGetOwnerKey(kID) == g_kLeashedTo) {
                 sMessage = llGetSubString(sMessage, 36, -1);
-                if (sMessage == "collar ok")
-                {
+                if (sMessage == "collar ok") {
                     g_kParticleTarget = kID;
                     StartParticles(g_kParticleTarget);
                 }
-                if (sMessage == "handle ok")
-                {
+                if (sMessage == "handle ok") {
                     g_kParticleTarget = kID;
                     StartParticles(g_kParticleTarget);
                 }
             }
         }
         // ADDED BELOW FOR BETA 0.1  TOGGLES LEASH PARTICLES OFF IF COFFLES BEING USED.        
-        else if(iChannel == COMMAND_PARTICLE)
-        {
-            if(llGetOwnerKey(kID) == g_kWearer)
-            {
+        else if(iChannel == COMMAND_PARTICLE) {
+            if(llGetOwnerKey(kID) == g_kWearer) {
                 integer currentglow;
-                
-                if(sMessage == "noLeash")
-                {
+                if(sMessage == "noLeash") {
                     currentglow = g_iParticleGlow;
                     g_iParticleGlow = FALSE;
                     SetTexture(sMessage, g_kWearer);
                     StartParticles(g_kParticleTarget);
                 }
-                
-                if(sMessage == "Leather")
-                {
+                if(sMessage == "Leather") {
                     g_iParticleGlow = currentglow;
                     SetTexture(sMessage, g_kWearer);
                     StartParticles(g_kParticleTarget);
@@ -640,8 +648,38 @@ default {
             }
         }
     }
-/*
+
     changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) {
+            integer iNumberOfTextures = llGetInventoryNumber(INVENTORY_TEXTURE);
+            integer iLeashTexture;
+            if (iNumberOfTextures) {
+                for (g_iLoop =0 ; g_iLoop < iNumberOfTextures; ++g_iLoop){
+                    string sName = llGetInventoryName(INVENTORY_TEXTURE, g_iLoop);
+                    if (llToLower(llGetSubString(sName,0,6)) == "!ribbon") {
+                        g_sRibbonTexture = sName;
+                        L_RIBBON_TEX = llGetSubString(g_sRibbonTexture, 8, -1);
+                        SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
+                        iLeashTexture = iLeashTexture +1;
+                    }
+                    else if (llToLower(llGetSubString(sName,0,7)) == "!classic"){
+                        g_sClassicTexture = sName;
+                        L_CLASSIC_TEX = llGetSubString(g_sClassicTexture, 9, -1);
+                        SaveSettings("C_Texture", g_sClassicTexture, TRUE,0,"");
+                        iLeashTexture = iLeashTexture +2;
+                    }
+                }
+            } 
+            if (!iLeashTexture) {
+                if (llSubStringIndex(GetSetting("C_Texture"), "!")==0) SaveSettings("C_Texture", "Chain", TRUE,0,"");
+                if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE,0,"");
+            } else if (iLeashTexture == 1) {
+                if (llSubStringIndex(GetSetting("C_Texture"), "!")==0) SaveSettings("C_Texture", "Chain", TRUE,0,"");
+            } else if (iLeashTexture == 2) {
+                if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE,0,"");
+            }
+           // GetSettings(TRUE);
+        }
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
@@ -649,5 +687,5 @@ default {
             }
         }
     }
-*/
+
 }
