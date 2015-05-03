@@ -80,7 +80,7 @@ string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle st
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
 string L_COSTUM_TEX_ID;
 // Defalut leash particle, can read from defaultsettings:
-// User_leashParticle=Shine~1~Turn~1~Strict~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7
+// User_leashParticle=Shine~1~Turn~1~Strict~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
 list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"]; 
 
 list g_lSettings=g_lDefaultSettings;
@@ -117,7 +117,6 @@ string g_sScript;
 
 string g_sParticleTexture = "Silk";
 string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
-float g_fLeashLength;
 vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 vector g_vLeashSize = <0.04, 0.04, 1.0>;   
 integer g_iParticleGlow = TRUE;
@@ -128,7 +127,7 @@ integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
-
+/*
 integer g_iProfiled = TRUE;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -140,7 +139,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-
+*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
@@ -286,7 +285,8 @@ SaveDefaultSettings(string sToken, string sValue) {
 
 string GetDefaultSetting(string sToken) {
     integer index = llListFindList(g_lDefaultSettings, [sToken]);
-    return llList2String(g_lDefaultSettings, index + 1);
+    if (index != -1) return llList2String(g_lDefaultSettings, index + 1);
+    else return "";
 }
 
 string GetSetting(string sToken) {
@@ -320,7 +320,7 @@ SetTexture(string sIn, key kIn) {
     if (sIn=="Silk") g_sParticleTextureID="cdb7025a-9283-17d9-8d20-cee010f36e90";
     else if (sIn=="Chain") g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
     else if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
-    else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
+    //else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
     else if (sIn=="totallytransparent") g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
     else {
         if (llToLower(g_sParticleTexture) == "noleash") g_sParticleMode = "noParticle"; 
@@ -331,11 +331,13 @@ SetTexture(string sIn, key kIn) {
     if (g_sParticleMode == "Ribbon") {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
+        if (GetSetting("R_TextureID")) g_sParticleTextureID = (key)GetSetting("R_TextureID");
         if (kIn) Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
     }
     else if (g_sParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
         else L_CLASSIC_TEX = sIn;
+        if (GetSetting("C_TextureID")) g_sParticleTextureID = GetSetting("C_TextureID");
         if (kIn) Notify(kIn, "Leash texture set to " + L_CLASSIC_TEX, FALSE);
     } else  if (kIn) Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
     //Debug("particleTextureID= " + (string)g_sParticleTextureID);
@@ -396,7 +398,7 @@ default {
     }
 
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(57344);  //this script needs to be profiled, and its memory limited
         g_sScript = "leashParticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();
@@ -679,13 +681,13 @@ default {
                 if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE,0,"");
             }
            // GetSettings(TRUE);
-        }
+        }/*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
+        }*/
     }
 
 }
