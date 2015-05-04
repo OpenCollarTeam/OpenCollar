@@ -1,19 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           Virtual Disgrace - Titler                            //
-//                                  version 2.0                                   //
+//                                  version 1.7                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-//               Copyright © 2008 - 2015: Individual Contributors,                //
-//            OpenCollar - submission set free™ and Virtual Disgrace™             //
+//        ©   2013 - 2015  Individual Collaborators and Virtual Disgrace™         //
 // ------------------------------------------------------------------------------ //
 //                       github.com/VirtualDisgrace/Collar                        //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Based on OpenCollar - titler 3.988
+// Based on the OpenCollar - Titler 3.988
 // Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 2.2.0
 
@@ -69,8 +68,6 @@ float g_sEvilDuration=1800;
 key g_kWearer;
 string g_sWearerName;
 
-string g_sAuthError = "Access denied.";
-
 key g_kDialogID;    //menu handle
 key g_kColourDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
@@ -94,8 +91,8 @@ list g_lColours=[
     "White",<1.00000, 1.00000, 1.00000>
 ];
 
-/*
-integer g_iProfiled;
+
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -106,7 +103,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
@@ -121,6 +118,13 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
+}
+
+Whisper(string sMessage) {
+    string sObjectName = llGetObjectName();
+    llSetObjectName("");
+    llWhisper(0, "/me " + sMessage);
+    llSetObjectName(sObjectName);
 }
 
 httpRequest() {
@@ -177,7 +181,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
         string sCommand = llToLower(llList2String(lParams, 0));
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth             
-            Notify(kAv,g_sAuthError, FALSE);
+            Notify(kAv,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
         } else if (sCommand=="color" || sStr=="colour") {
             string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColour != "") {    //we got a colour, so set the colour
@@ -324,8 +328,8 @@ default{
     }
     
     state_entry(){
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
-
+        llSetMemoryLimit(40960);  //this script needs to be profiled, and its memory limited
+        g_sEvilDuration = 900 + (integer)llFrand(900);
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
@@ -382,11 +386,11 @@ default{
             if (g_iEvilListenHandle){    //listener is already set, so we cancel it, and start a 5 minute timer until it opens again
                 llListenRemove(g_iEvilListenHandle);
                 g_iEvilListenHandle=0;
-                llWhisper(0,"Awww, no one gave "+g_sWearerName+" a new title.  You'll have another chance later");
+                Whisper("Awww, no one gave "+g_sWearerName+" a new title.  You'll have another chance later");
                 llSetTimerEvent(g_sEvilDuration);
             } else {    //no listener, so set one up with a timer for 1 minute listening for a new title
                 g_iEvilListenChannel=10+(integer)llFrand(89);
-                llWhisper(0,"Now is YOUR chance to give "+g_sWearerName+" a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!");
+                Whisper("Now is YOUR chance to give "+g_sWearerName+" a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!");
                 g_iEvilListenHandle=llListen(g_iEvilListenChannel, "", "", "");
                 llSetTimerEvent(g_sEvilTimeout);
             }
@@ -397,11 +401,15 @@ default{
         if (g_sType=="evil"){
             //assume any text on our channel is a new title
             if (id == g_kWearer) {
-                Notify(id, "You don't serious think that you can give yourself a title here, do you?", FALSE);
+                string sObjectName = llGetObjectName();
+                llSetObjectName("");
+                Whisper("Oh really? "+ g_sWearerName + " tried to change their own title, how silly is that?");
+                llSetObjectName(sObjectName);
                 return;
             } else {
-                llWhisper(0,g_sWearerName+" has been blessed with the title \""+message+"\" they should thank you thouroughly.");
-                
+                string sTitleGiver = "secondlife:///app/agent/" + (string)id + "/about";
+                Whisper(g_sWearerName +" has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.");
+            
                 g_sNormalTitleText=message;
                 g_sCurrentTitleText=message;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sCurrentTitleText, "");
@@ -510,12 +518,19 @@ default{
             if (llGetInventoryType("OpenCollar - titler") == INVENTORY_SCRIPT) llRemoveInventory("OpenCollar - titler"); //gives error if not there
         if (iChange & CHANGED_REGION) {
             httpRequest();
-/*
+
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-*/
+
+        }
+        if ((iChange & CHANGED_TELEPORT) && g_sType=="evil") {
+            if (g_iEvilListenHandle) {
+                llListenRemove(g_iEvilListenHandle);
+                g_iEvilListenHandle=0;
+            }
+            llSetTimerEvent(198);
         }
     }
 }
