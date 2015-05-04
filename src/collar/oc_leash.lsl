@@ -131,7 +131,7 @@ string OWNER_STRING = "auth_owner";
 
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=TRUE;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -669,10 +669,10 @@ default {
     }
     
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(57344);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
-        llMinEventDelay(0.33);
+        llMinEventDelay(0.44);
         
         DoUnleash();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
@@ -704,7 +704,7 @@ default {
                 g_vPos = vLeashedToPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
                 //if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 1.0);
-                if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.7);
+                if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.8);
                 ApplyRestrictions();
             }
         }
@@ -856,8 +856,8 @@ default {
                 g_vPos = vNewPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-           // if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
-            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,0.7);
+            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
+            //if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,0.7);
             else llStopMoveToTarget();
         } else {
             DoUnleash();
@@ -875,8 +875,8 @@ default {
         g_iLength=3;
         DoLeash(id, g_iRezAuth, []);
     }    
-    changed (integer change){
-        if (change & CHANGED_OWNER){
+    changed (integer iChange){
+        if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
         }
 /*
@@ -885,7 +885,7 @@ default {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
-*/
+        }*/
+
     }
 }
