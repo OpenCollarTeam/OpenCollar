@@ -885,7 +885,7 @@ default {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }*/
-
+        }
+*/
     }
 }
