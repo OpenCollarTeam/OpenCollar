@@ -1,18 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------------------------ //
 //                           Virtual Disgrace - Titler                            //
-//                                  version 1.7                                   //
+//                                  version 2.1                                   //
 // ------------------------------------------------------------------------------ //
 // Licensed under the GPLv2 with additional requirements specific to Second Life® //
 // and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
 // ------------------------------------------------------------------------------ //
-//        ©   2013 - 2015  Individual Collaborators and Virtual Disgrace™         //
+//               Copyright © 2008 - 2015: Individual Contributors,                //
+//            OpenCollar - submission set free™ and Virtual Disgrace™             //
 // ------------------------------------------------------------------------------ //
 //                       github.com/VirtualDisgrace/Collar                        //
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Based on the OpenCollar - Titler 3.988
+// Based on OpenCollar - titler 3.988
 // Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 2.2.0
 
@@ -68,6 +69,8 @@ float g_sEvilDuration=1800;
 key g_kWearer;
 string g_sWearerName;
 
+string g_sAuthError = "Access denied.";
+
 key g_kDialogID;    //menu handle
 key g_kColourDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
@@ -91,7 +94,7 @@ list g_lColours=[
     "White",<1.00000, 1.00000, 1.00000>
 ];
 
-
+/*
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -103,7 +106,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-
+*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
@@ -181,7 +184,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
         string sCommand = llToLower(llList2String(lParams, 0));
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth             
-            Notify(kAv,"You currently have not the right to change the Titler settings, someone with a higher rank set it!", FALSE);
+            Notify(kAv,g_sAuthError, FALSE);
         } else if (sCommand=="color" || sStr=="colour") {
             string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColour != "") {    //we got a colour, so set the colour
@@ -518,12 +521,12 @@ default{
             if (llGetInventoryType("OpenCollar - titler") == INVENTORY_SCRIPT) llRemoveInventory("OpenCollar - titler"); //gives error if not there
         if (iChange & CHANGED_REGION) {
             httpRequest();
-
+/*
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-
+*/
         }
         if ((iChange & CHANGED_TELEPORT) && g_sType=="evil") {
             if (g_iEvilListenHandle) {
