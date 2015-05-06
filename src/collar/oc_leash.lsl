@@ -897,6 +897,11 @@ default {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
+<<<<<<< HEAD
         }*/
+=======
+        }
+*/
+>>>>>>> origin/workshop
     }
 }
