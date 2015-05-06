@@ -101,6 +101,7 @@ integer g_iStay = FALSE;
 integer g_iTargetHandle;
 integer g_iLastRank;
 integer g_iStayRank;
+integer g_iStrictRank;
 vector g_vPos = ZERO_VECTOR;
 string g_sTmpName;
 key g_kCmdGiver;
@@ -110,7 +111,7 @@ integer g_bFollowMode;
 string g_sScript="leash_";
 string CTYPE = "collar";
 string WEARERNAME;
-
+string g_sAuthError = "Access denied.";
 integer g_iPassConfirmed;
 integer g_iRezAuth;
 
@@ -129,7 +130,6 @@ string OWNER_STRING = "auth_owner";
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
-
 /*
 integer g_iProfiled=TRUE;
 Debug(string sStr) {
@@ -141,8 +141,7 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+}*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
@@ -567,21 +566,32 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             }
 
         } else if (sMessage == "strict on") {
-            g_iStrictModeOn=TRUE;
-            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1", "");
-            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
-            Notify(kMessageID,"Strict leashing enabled.",TRUE);
-            ApplyRestrictions();
-            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            
+            if (g_iStrictModeOn) Notify(kMessageID,"Strict leashing is already enabled.",TRUE);
+            else {
+                g_iStrictRank = iAuth;
+                g_iStrictModeOn=TRUE;
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1,"+ (string)iAuth, "");
+                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "strict=1,"+ (string)iAuth, kMessageID);
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
+                Notify(kMessageID,"Strict leashing enabled.",TRUE);
+                ApplyRestrictions();
+            }
+          //  if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else if (sMessage == "strict off") {
-            g_iStrictModeOn=FALSE;
-            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
-            ApplyRestrictions();
-            Notify(kMessageID,"Strict leashing disabled.",FALSE);
+            if (iAuth <= g_iStrictRank) {
+                g_iStrictModeOn=FALSE;
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
+                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "strict=0,"+ (string)iAuth,kMessageID);
+                ApplyRestrictions();
+                Notify(kMessageID,"Strict leashing disabled.",TRUE);
+            } else {
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE,"strictAuthError="+(string)iAuth,kMessageID);
+                Notify(kMessageID, g_sAuthError, FALSE);
+            }
         } else if (sMessage == "turn on") {
             g_iTurnModeOn=TRUE;
             llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "turn=1", "");
+            llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "turn=1", "");
             Notify(kMessageID,"Turning towards leasher enabled.",TRUE);
         } else if (sMessage == "turn off") {
             g_iTurnModeOn=FALSE;
@@ -769,16 +779,19 @@ default {
                     else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints);
                }
                 else if (sToken == TOK_LENGTH) SetLength((integer)sValue);
-                if (sToken=="strict"){
+                else if (sToken=="strict"){
+                    list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
                     g_iStrictModeOn = (integer)sValue;
+                    g_iStrictRank = (integer)llList2String(lParam, 1);
                     ApplyRestrictions();
-                }
+                } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
+                
             } else if (sToken == RLV_STRING) { // something enabled or disabled RLV.  Remember which
                 //Debug("SetRLV:"+sValue);
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
             } else if (sToken == "Global_CType") CTYPE = sValue;
-             else if (sToken=="Global_WearerName") WEARERNAME=sValue;
+            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
             //else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);
@@ -878,14 +891,12 @@ default {
     changed (integer iChange){
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
-        }
-/*
+        }/*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }*/
-
     }
 }

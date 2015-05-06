@@ -20,22 +20,22 @@
 //integer COMMAND_NOAUTH      = 0;
 integer COMMAND_OWNER       = 500;
 integer COMMAND_SECOWNER    = 501;
-integer COMMAND_GROUP       = 502;
+//integer COMMAND_GROUP       = 502;
 integer COMMAND_WEARER      = 503;
-integer COMMAND_EVERYONE    = 504;
-integer COMMAND_SAFEWORD    = 510;
-integer POPUP_HELP          = 1001;
+//integer COMMAND_EVERYONE    = 504;
+//integer COMMAND_SAFEWORD    = 510;
+//integer POPUP_HELP          = 1001;
 // -- SETTINGS
 // - Setting strings must be in the format: "token=value"
 integer LM_SETTING_SAVE             = 2000; // to have settings saved to settings store
-integer LM_SETTING_REQUEST          = 2001; // send requests for settings on this channel
+//integer LM_SETTING_REQUEST          = 2001; // send requests for settings on this channel
 integer LM_SETTING_RESPONSE         = 2002; // responses received on this channel
 integer LM_SETTING_DELETE           = 2003; // delete token from store
-integer LM_SETTING_EMPTY            = 2004; // returned when a token has no value in the store
+//integer LM_SETTING_EMPTY            = 2004; // returned when a token has no value in the store
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
-integer MENUNAME_REMOVE     = 3003;
+//integer MENUNAME_REMOVE     = 3003;
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
@@ -128,7 +128,7 @@ float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
 /*
-integer g_iProfiled = TRUE;
+integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -138,8 +138,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+}*/
+
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
@@ -297,6 +297,7 @@ string GetSetting(string sToken) {
 
 // get settings before StartParticles
 GetSettings(integer iStartParticles) {
+   // Debug("settings: "+llList2CSV(g_lSettings));
     g_sParticleMode = GetSetting("ParticleMode");
     g_sClassicTexture = GetSetting("C_Texture");
     g_sRibbonTexture = GetSetting("R_Texture");
@@ -320,7 +321,7 @@ SetTexture(string sIn, key kIn) {
     if (sIn=="Silk") g_sParticleTextureID="cdb7025a-9283-17d9-8d20-cee010f36e90";
     else if (sIn=="Chain") g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
     else if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
-    //else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
+    else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
     else if (sIn=="totallytransparent") g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
     else {
         if (llToLower(g_sParticleTexture) == "noleash") g_sParticleMode = "noParticle"; 
@@ -438,7 +439,7 @@ default {
         }
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
             if (llToLower(sMessage) == llToLower(SUBMENU)) {
-                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
+                if(iNum <= COMMAND_SECOWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
                 else Notify(kMessageID,g_sAuthError, FALSE);
             }
             else if (sMessage == "menu "+SUBMENU) {
@@ -485,11 +486,12 @@ default {
                     } else if(sButtonType == L_TURN) {
                         if (sButtonCheck == "☐") g_iTurnMode = TRUE;
                         else g_iTurnMode = FALSE;
-                        SaveSettings(sButtonType, (string)g_iTurnMode, TRUE, iAuth, kAv);
+                        SaveSettings(sButtonType, (string)g_iTurnMode, FALSE, iAuth, kAv);
                     } else if(sButtonType == L_STRICT) {
-                        if (sButtonCheck == "☐") g_iStrictMode = TRUE;
+                        if (sButtonCheck == "☐")  g_iStrictMode = TRUE;
                         else g_iStrictMode = FALSE;
-                        SaveSettings(sButtonType, (string)g_iStrictMode, TRUE, iAuth, kAv);
+                        SaveSettings(sButtonType, (string)g_iStrictMode, FALSE, iAuth, kAv);
+                        return;
                     } else if(sButtonType == L_RIBBON_TEX) {
                         if (sButtonCheck == "☐") {
                             g_sParticleMode = "Ribbon"; 
@@ -589,7 +591,7 @@ default {
             }
         }
         else if (iNum == LM_SETTING_RESPONSE) {
-            //Debug ("LocalSettingsResponse: " + sMessage);
+           // Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);
@@ -600,6 +602,27 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 SaveSettings(sToken, sValue, FALSE,0,"");
                 SaveDefaultSettings(sToken, sValue);
+            }
+            else if (llGetSubString(sToken, 0, i) == "leash_") {
+                sToken = llGetSubString(sToken, i + 1, -1);
+                //Debug(sToken + sValue);
+                if (sToken == "strict"){
+                    integer iAuth = (integer)llGetSubString(sValue, 2, 4);
+                   // Debug((string)iAuth);
+                    sValue = llGetSubString(sValue, 0, 0);
+                    g_iStrictMode = (integer)sValue;
+                    SaveSettings("Strict", sValue, FALSE,0,"");
+                    SaveDefaultSettings("Strict", sValue);
+                    ConfigureMenu(kMessageID, iAuth);
+                } else if (sToken == "turn") {
+                    g_iTurnMode = (integer)sValue;
+                    SaveSettings("Turn", sValue, FALSE,0,"");
+                    SaveDefaultSettings("Turn", sValue);
+                }
+            }
+            else if (sToken == "strictAuthError"){
+                g_iStrictMode = TRUE;
+                ConfigureMenu(kMessageID, (integer)sValue);
             }
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
@@ -681,8 +704,8 @@ default {
                 if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE,0,"");
             }
            // GetSettings(TRUE);
-        }/*
-        if (iChange & CHANGED_REGION) {
+        }
+      /*  if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
