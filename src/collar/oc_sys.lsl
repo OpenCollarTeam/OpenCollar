@@ -17,7 +17,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="20150506.2";
+string g_sCollarVersion="20150506.3";
 integer g_iLatestVersion=TRUE;
 
 list g_lOwners;
