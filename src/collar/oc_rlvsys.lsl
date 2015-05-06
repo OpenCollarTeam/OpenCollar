@@ -459,7 +459,7 @@ default {
     }
     
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(49152);  //2015-05-06 (6724 bytes free)
         setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();

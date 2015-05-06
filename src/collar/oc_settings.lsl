@@ -378,6 +378,7 @@ default
     {
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
+        llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free)
         g_kWearer = llGetOwner();
         INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
         if (INTERFACE_CHANNEL > 0) INTERFACE_CHANNEL *= -1;

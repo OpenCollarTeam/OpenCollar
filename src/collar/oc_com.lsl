@@ -224,7 +224,7 @@ default {
     }
 
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(40960);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));

@@ -438,7 +438,7 @@ default {
     }
 
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(49152);  //2015-05-06 (9926 bytes free)
         g_sScript = "dialog_";
         g_kWearer=llGetOwner();
         //Debug("Starting");

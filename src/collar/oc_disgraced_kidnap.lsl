@@ -208,7 +208,7 @@ WhisperVulnerable() {
 default{
     
     state_entry() {
-        llSetMemoryLimit(32768);
+        llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //Debug("Starting");

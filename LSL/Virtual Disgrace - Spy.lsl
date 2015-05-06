@@ -296,6 +296,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
 
 default {
     state_entry() {
+        llSetMemoryLimit(32768);  //2015-05-06 (6622 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         g_lOwners = [g_kWearer, g_sWearerName];  // initially self-owned until we hear a db message otherwise

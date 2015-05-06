@@ -399,7 +399,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(57344);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(57344);  //2015-05-06 (7884 bytes free)
         g_sScript = "leashParticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();

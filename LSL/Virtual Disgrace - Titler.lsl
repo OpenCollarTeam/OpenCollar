@@ -331,7 +331,7 @@ default{
     }
     
     state_entry(){
-        llSetMemoryLimit(40960);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(40960);  //2015-05-06 (5538 bytes free)
         g_sEvilDuration = 900 + (integer)llFrand(900);
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;

@@ -680,7 +680,7 @@ default {
     }
     
     state_entry() {
-        llSetMemoryLimit(57344);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(57344);  //2015-05-06 (5848 bytes free)
         g_kWearer = llGetOwner();
         WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         llMinEventDelay(0.44);

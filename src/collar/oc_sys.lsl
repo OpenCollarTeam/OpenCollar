@@ -555,6 +555,7 @@ StartUpdate(){
 default
 {
     state_entry() {
+        //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time

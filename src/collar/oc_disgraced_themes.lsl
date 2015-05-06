@@ -583,7 +583,7 @@ default {
 */
       
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited... hahaha, not a chance!
+        //llSetMemoryLimit(65536);  //2015-05-06 (10732 bytes free)
         g_kWearer = llGetOwner();
         BuildTexturesList();
         BuildElementsList();

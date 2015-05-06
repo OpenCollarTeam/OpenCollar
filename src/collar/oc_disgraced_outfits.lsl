@@ -166,6 +166,7 @@ default {
     state_entry()
     {
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        llSetMemoryLimit(32768); //2015-05-06 (10952 bytes free)
         g_kWearer = llGetOwner();
     }
     timer()

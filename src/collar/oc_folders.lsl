@@ -563,7 +563,7 @@ default {
     }
     
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        //llSetMemoryLimit(65536);  ////2015-05-06 (10602 bytes free)
         g_sScript = "rlvfolders_";
         g_kWearer = llGetOwner();
         //Debug("Starting");
