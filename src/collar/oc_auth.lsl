@@ -100,9 +100,10 @@ integer g_iMenuStride = 3;
 key REQUEST_KEY;
 
 string g_sScript;
+string g_sWearerName;
 
-/*
-integer g_iProfiled;
+
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -113,7 +114,6 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -172,6 +172,7 @@ AuthMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
 }
 
+
 RemPersonMenu(key kID, string sToken, integer iAuth) {
     list lPeople;
     if (sToken=="owner") lPeople=g_lOwners;
@@ -216,6 +217,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
     else if (sToken=="block") lPeople=g_lBlackList;
     else return;
     
+// ~ is bitwise NOT which is used for the llListFindList function to simply turn the result "-1" for "not found" into a 0 (FALSE) 
     if (~llListFindList(g_lTempOwners,[(string)kCmdr]) && ! ~llListFindList(g_lOwners,[(string)kCmdr]) && sToken != "tempowner"){
         Notify(kCmdr,g_sAuthError,FALSE);
         return;
@@ -230,12 +232,12 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         if (sName == sThisName || sName == "remove all") {   //remove name and key
             
             if (sToken == "owner" || sToken == "trust") {
-                Notify(llList2String(lPeople,numPeople*2),"Your access to " + llKey2Name(g_kWearer) + "'s " + CTYPE + " has been revoked.",FALSE);
+                Notify(llList2String(lPeople,numPeople*2),"Your access to " + g_sWearerName + "'s " + CTYPE + " has been revoked.",FALSE);
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
             lPeople = llDeleteSubList(lPeople, numPeople*2, numPeople*2+1);
 
-            Notify(kCmdr, sThisName + " removed from access list.", TRUE);
+            Notify(kCmdr, sThisName + " removed from " + sToken + " list.", TRUE);
             iFound=TRUE;
         }
     }
@@ -276,6 +278,9 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
             if (llGetListLength (lPeople) >=24) {
                 Notify(kAv, "\n\nSorry, we reached a limit!\n\nTwelve people at a time can have this role.\n",FALSE);
                 return;
+            } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
+                Notify(kAv, "\n\nOops!\n\n"+sName+" is already Owner! You should really trust them already.\n",FALSE);
+                return;
             }
         } else if (sToken=="tempowner") {
             lPeople=g_lTempOwners;
@@ -288,6 +293,12 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
             if (llGetListLength (lPeople) >=18) {
                 Notify(kAv, "\n\nOops!\n\nYour Blacklist is already full.\n",FALSE);
                 return;
+            } else if (~llListFindList(g_lSecOwners,[(string)kPerson])) {
+                Notify(kAv, "\n\nOops!\n\nYou trust "+sName+". Remove them as trusted before you block them.\n",FALSE);
+                return;
+            } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
+                Notify(kAv, "\n\nOops!\n\n"+sName+" is aleady Owner! Remove them as owner before you block them.\n",FALSE);
+                return;
             }
         } else
             return;
@@ -298,22 +309,25 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         if (kPerson != g_kWearer) {
             Notify(g_kWearer, "Building relationship...", FALSE);
             if (sToken == "owner") {
+                if (~llListFindList(g_lSecOwners,[(string)kPerson])) RemovePerson(sName, "trust", kAv);
+                if (~llListFindList(g_lBlackList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
                 Notify(g_kWearer, "You belong to " + sName +" now!", FALSE);
                 llPlaySound("1ec0f327-df7f-9b02-26b2-8de6bae7f9d5",1.0);
             }
             else if (sToken == "trust") {
+                if (~llListFindList(g_lBlackList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
                 Notify(g_kWearer, "Looks like " + sName +" is someone you can trust!", FALSE);
                 llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
             }
         }
 
         if (sToken == "owner") {
-            Notify(kPerson, "\n\n"+ llGetDisplayName(g_kWearer) + " belongs to you now.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
+            Notify(kPerson, "\n\n"+ g_sWearerName + " belongs to you now.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
         if (sToken == "trust") {
-            Notify(kPerson, "\n\n"+ llGetDisplayName(g_kWearer) + " seems to trust you.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
+            Notify(kPerson, "\n\n"+ g_sWearerName + " seems to trust you.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
@@ -350,6 +364,7 @@ SayOwners() {
         // end with a period.
         msg += ".";
         Notify(llGetOwner(), msg, FALSE);
+ //       Debug("Lists Loaded!");
     }
 }
 
@@ -404,14 +419,13 @@ integer Auth(string kObjID, integer attachment) {
 
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
-    //Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
+   // Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
     
     if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
     else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
     string sMessage=llToLower(sStr);
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
-    
     if (sStr == "menu "+g_sSubMenu) {
         AuthMenu(kID, iNum);
     } else if (sStr == "list") {   //say owner, secowners, group
@@ -549,60 +563,103 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             Notify(kID,g_sAuthError, FALSE);
         }
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
-    } else if (sCommand == "limitrange") {
-        if (iNum==COMMAND_OWNER){
-            g_iLimitRange = TRUE;
-            // as the default is range limit on, we do not need to store anything for this
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
-            Notify(kID, "Public access range is limited.", FALSE);
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
+    } else if (~llSubStringIndex(sCommand, "limitrange")) {
+        if (sCommand == "limitrange") {
+            if (iNum==COMMAND_OWNER){
+                g_iLimitRange = TRUE;
+                // as the default is range limit on, we do not need to store anything for this
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
+                Notify(kID, "Public access range is limited.", FALSE);
+            } else {
+                Notify(kID,g_sAuthError, FALSE);
+            }
+            if (remenu) AuthMenu(kID, Auth(kID,FALSE));
+        } else if (sCommand == "unlimitrange") {
+            if (iNum==COMMAND_OWNER){
+                g_iLimitRange = FALSE;
+                // save off state for limited range (default is on)
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
+                Notify(kID, "Public access range is simwide.", FALSE);
+            } else {
+                Notify(kID,g_sAuthError, FALSE);
+            }
+            if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         }
-        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
-    } else if (sCommand == "unlimitrange") {
-        if (iNum==COMMAND_OWNER){
-            g_iLimitRange = FALSE;
-            // save off state for limited range (default is on)
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
-            Notify(kID, "Public access range is simwide.", FALSE);
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
-        if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "runaway"){
         list lButtons=[];
         string message="Only the wearer or an Owner can access this menu";
-        if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
+       /* if (iNum == COMMAND_OWNER && kID == g_kWearer) {  //wearer-owner called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Enable"];
                 message="\nYou chose to disable the runaway function.\n\nAs an owner you can restore this ability if desired.";
             } else {
-                lButtons=["Runaway!", "Disable"];
+                lButtons=["Runaway!", "Stay"];
                 message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
             }
-        } else if (kID == g_kWearer){  //wearer called for menu
+        } else*/ if (kID == g_kWearer){  //wearer called for menu
             if (g_iRunawayDisable){
                 lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
                 message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly primary owners can restore this ability.";
             } else {
-                lButtons=["Runaway!", "Disable"];
-                message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
+                lButtons=["Runaway!", "Stay"];
+                message="\nYou can run away from your owners or you can stay with them.";
+               // message="\nYou can run away from your owners or you can disable your ability to ever run from them.";
             }
         } else if (iNum == COMMAND_OWNER ) {  //owner called for menu
-            if (g_iRunawayDisable){
+           /* if (g_iRunawayDisable){
                 lButtons=["Release", "Enable"];
                 message="\nYou can release this sub of your service or you can return their ability to run away on their own.";
-            } else {
+            } else {*/
                 lButtons=["Release"];
                 message="\nYou can release this sub of your service.";
-            }
+           // }
         }
         //Debug("runaway button");
         Dialog(kID, message, lButtons, [UPMENU], 0, iNum, "runawayMenu");
+    } else if (~llSubStringIndex(sMessage,"runaway")) {
+        if (sCommand == "enable") {
+            if (iNum == COMMAND_OWNER) {
+                g_iRunawayDisable = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"norun","");
+                Notify(kID, "The ability to runaway is enabled.", TRUE);                
+            } else Notify(kID,g_sAuthError,FALSE);
+        }
+        else if (sCommand == "disable") {
+            if (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER) {
+                g_iRunawayDisable = TRUE;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"norun=1","");
+                Notify(kID, "The ability to runaway is disabled.", TRUE);                
+            } else Notify(kID,g_sAuthError,FALSE);
+        }
     }
-
     return TRUE;
 }
+
+RunAway() {
+    //llOwnerSay("Runaway initiated.");
+    integer n;
+    integer stop = llGetListLength(g_lOwners+g_lTempOwners);
+    for (n = 0; n < stop; n += 2) {
+        key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
+        if (kOwner != g_kWearer)
+        {
+            Notify(kOwner, g_sWearerName + " ran away!",FALSE);
+        }
+    }
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "tempowner=", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "owner", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "tempowner", "");
+    //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "trust=", "");
+    //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
+    //llOwnerSay("Reset finished, the " + CTYPE + " will now release locks!");
+    // moved reset request from settings to here to allow noticifation of owners.
+    llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", g_kWearer); // clear RLV restrictions
+    llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", g_kWearer); // this is not a LM loop, since it is now really authed
+    llOwnerSay("Runaway finished.");
+    llResetScript();
+}
+
 
 default {
     on_rez(integer iParam) {
@@ -610,10 +667,15 @@ default {
     }
 
     state_entry() {
+      /*  if (g_iProfiled){
+            llScriptProfiler(1);
+           // Debug("profiling restarted");
+        }*/
         //llSetMemoryLimit(65536);  //2015-05-06 (10084 bytes free)
         g_sScript = "auth_";
         g_kWearer = llGetOwner();  //until set otherwise, wearer is owner
         SetPrefix("auto");
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //added for attachment auth
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
@@ -622,10 +684,11 @@ default {
         // because we can easily flood the 64 event limit in LSL's event queue
         // if all the scripts send a ton of link messages at the same time on
         // startup.
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "owner", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "trust", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "tempowner", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "block", "");
+        // why request what is sent anyway ???
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "owner", "");
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "trust", "");
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "tempowner", "");
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "block", "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {  
@@ -635,14 +698,17 @@ default {
                 if (g_iRunawayDisable){
                     llOwnerSay("Runaway is currently disabled.");
                 } else {
-                    //llOwnerSay("Runaway initiated.");
+                    UserCommand(iAuth,"runaway",kID, FALSE);
+                }
+            }
+             /*       //llOwnerSay("Runaway initiated.");
                     integer n;
                     integer stop = llGetListLength(g_lOwners+g_lTempOwners);
                     for (n = 0; n < stop; n += 2) {
                         key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
                         if (kOwner != g_kWearer)
                         {
-                            Notify(kOwner, llKey2Name(g_kWearer) + " ran away!",FALSE);
+                            Notify(kOwner, g_sWearerName + " ran away!",FALSE);
                         }
                     }
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
@@ -658,8 +724,9 @@ default {
                     llOwnerSay("Runaway finished.");
                     llResetScript();
                 }
-            } 
-            else if (kID != g_kWearer && iAuth == COMMAND_OWNER && sStr == "runaway") {  //owner requests the runaway menu
+            } */
+            else if (iAuth == COMMAND_OWNER && sStr == "runaway") { 
+           // else if (kID != g_kWearer && iAuth == COMMAND_OWNER && sStr == "runaway") {  //owner requests the runaway menu
                 //We trap here and pull up the UserCommand manually to avoid passing 'runaway' prematurely to linkmessage (this was unlocking/unleashing)
                 UserCommand(iAuth, "runaway", kID, FALSE); 
             }
@@ -706,6 +773,7 @@ default {
                 else if (sToken == "block") g_lBlackList = llParseString2List(sValue, [","], [""]);
             }
             else if (sToken == "Global_prefix") SetPrefix(sValue);
+            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
             else if (sToken == "Global_CType") CTYPE = sValue;
         } else if (iNum == LM_SETTING_EMPTY) {
             //Debug("Got setting empty: "+sStr);
@@ -729,11 +797,15 @@ default {
                 else if (sStr == "trust") g_lSecOwners = [];
                 else if (sStr == "block") g_lBlackList = [];
             }
-        } else if (iNum == LM_SETTING_SAVE) {
+        } else if (iNum == LM_SETTING_DELETE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == "Global_prefix") SetPrefix(sValue);
+            if (sToken == "Global_WearerName") g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        } else if (iNum == LM_SETTING_SAVE) {
+        list lParams = llParseString2List(sStr, ["="], []);
+        string sToken = llList2String(lParams, 0);
+        string sValue = llList2String(lParams, 1);
+        if (sToken == "Global_prefix") SetPrefix(sValue);
         }        
     // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
         //added for attachment auth (Garvin)
@@ -819,8 +891,9 @@ default {
                     if (sMessage == UPMENU) {
                         AuthMenu(kAv, iAuth);
                     } else  if (sMessage == "Runaway!") {
-                        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
-                    } else if (sMessage == "Enable") {
+                        //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "runaway", kAv);
+                        RunAway();
+                    } /*else if (sMessage == "Enable") {
                         if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) ){
                             Notify(kAv,g_sAuthError,FALSE);
                         } else {
@@ -834,7 +907,7 @@ default {
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"norun=1","");
                         llOwnerSay("You have disabled your ability to runaway.");
                         UserCommand(iAuth, "runaway", kAv, TRUE);
-                    } else if (sMessage == "Cancel") {
+                    } */else if (sMessage == "Cancel" || sMessage == "Stay") {
                         return;  //no remenu on canel
                     } else if (sMessage == "Release") {
                         integer iOwnerIndex=llListFindList(g_lOwners,[(string)kAv]);
@@ -846,8 +919,9 @@ default {
                             Notify(kAv, "You are not on the access list.", TRUE);
                             UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
                         }
-                    } else {
-                        UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
+                    } else { 
+                        AuthMenu(kAv, iAuth);
+                       // UserCommand(iAuth,"runaway",kAv, TRUE); //remenu to runaway
                     }
                 }
             }
@@ -931,14 +1005,13 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-/*        
+
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/        
-
+        
     }
 }
