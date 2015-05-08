@@ -139,8 +139,19 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
             list lNewBadWords = llDeleteSubList(lParams, 0, 1);
             if (llGetListLength(lNewBadWords)){
                 while (llGetListLength(lNewBadWords)){
-                    string sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));
-                    if (llListFindList(g_lBadWords, [sNewWord]) == -1) g_lBadWords += [sNewWord];
+                    string sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));  
+                    if (remenu) {
+                        string sCRLF= llUnescapeURL("%0A");
+                        if (~llSubStringIndex(sNewWord, sCRLF)) {
+                            list lTemp = llParseString2List(sNewWord, [sCRLF], []);
+                            lNewBadWords = llDeleteSubList(lNewBadWords,-1,-1);
+                            lNewBadWords = lTemp + lNewBadWords;
+                        }
+                    }
+                    sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));
+                    if (~llSubStringIndex(g_sPenance, sNewWord)) {
+                        Notify(kID, "\"" + sNewWord + "\" is part of the Penance phrase and cannot be a badword!", FALSE);
+                    } else if (llListFindList(g_lBadWords, [sNewWord]) == -1) g_lBadWords += [sNewWord];
                     lNewBadWords=llDeleteSubList(lNewBadWords,-1,-1);
                 }
                 if (llGetListLength(g_lBadWords)) {
@@ -210,10 +221,24 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
         } else if (sCommand == "penance") {
             if (llGetListLength(lParams)>2){
                 integer iPos=llSubStringIndex(llToLower(sStr),"ce");
-                g_sPenance = llStringTrim(llGetSubString(sStr, iPos+2, -1),STRING_TRIM);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_penance=" + g_sPenance, "");
-                Notify(kID, WordPrompt() ,TRUE);
-                if (remenu) MenuBadwords(kID,iNum);
+                string sPenance = llStringTrim(llGetSubString(sStr, iPos+2, -1),STRING_TRIM);
+                integer i;
+                list lTemp;
+                string sCheckWord;
+                for (i=0;i<llGetListLength(g_lBadWords); i++) {
+                    sCheckWord = llList2String(g_lBadWords,i);
+                     if (~llSubStringIndex(sPenance,sCheckWord)) {
+                         lTemp += [sCheckWord];
+                    }
+                }
+                if (llGetListLength(lTemp)) {
+                    Notify(kID, "You cannot have badwords in your Penance phrase, please try again without these word(s):\n"+llList2CSV(lTemp),FALSE);
+                } else { 
+                    g_sPenance = sPenance;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_penance=" + g_sPenance, "");
+                    Notify(kID, WordPrompt() ,TRUE);
+                    if (remenu) MenuBadwords(kID,iNum);
+                }
             } else {
                 string sText = "\n- Submit the new penance in the field below.\n- Submit a blank field to go back.";
                 sText += "\n\n- Current penance is: " + g_sPenance;
