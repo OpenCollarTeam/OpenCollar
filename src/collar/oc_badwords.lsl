@@ -32,8 +32,8 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 //5000 block is reserved for IM slaves
-string CTYPE = "collar";
-string WEARERNAME;
+//string g_sDeviceType = "collar";
+string g_sWearerName;
 
 string g_sNoSound = "silent" ;
 string g_sBadWordSound;
@@ -52,7 +52,7 @@ integer g_iIsEnabled=0;
 integer g_iHasSworn = FALSE;
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -146,9 +146,9 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                             list lTemp = llParseString2List(sNewWord, [sCRLF], []);
                             lNewBadWords = llDeleteSubList(lNewBadWords,-1,-1);
                             lNewBadWords = lTemp + lNewBadWords;
+                            sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));   
                         }
                     }
-                    sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));
                     if (~llSubStringIndex(g_sPenance, sNewWord)) {
                         Notify(kID, "\"" + sNewWord + "\" is part of the Penance phrase and cannot be a badword!", FALSE);
                     } else if (llListFindList(g_lBadWords, [sNewWord]) == -1) g_lBadWords += [sNewWord];
@@ -195,7 +195,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                 string sName = llStringTrim(llGetSubString(sStr, iPos+2, -1),STRING_TRIM);
                 if (sName == "silent") Notify(kID, "Punishment will be silent.",FALSE);
                 else if (llGetInventoryType(sName) == INVENTORY_SOUND) {
-                    Notify(kID, "You will hear the sound "+sName+" when "+WEARERNAME+" is punished.",FALSE);
+                    Notify(kID, "You will hear the sound "+sName+" when "+g_sWearerName+" is punished.",FALSE);
                 } else {
                     Notify(kID, "Can't find sound "+sName+", using default.",FALSE);
                     sName = "Default" ;
@@ -291,11 +291,11 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(36*1024);
+        llSetMemoryLimit(40960);
         g_kWearer = llGetOwner();
         g_sBadWordAnim = "~shock" ;
         g_sBadWordSound = "Default" ;
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         //Debug("Starting");
     }
 
@@ -323,8 +323,8 @@ default {
                 else if (sToken == "words") g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                 else if (sToken == "penance") g_sPenance = sValue;
                 ListenControl();
-            } else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
+            } else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
         } 
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -393,14 +393,13 @@ default {
                     }
                     //start anim
                     llMessageLinked(LINK_SET, ANIM_START, g_sBadWordAnim, "");
-                    llWhisper(0, WEARERNAME + " has said a bad word and is being punished.");
+                    llWhisper(0, g_sWearerName + " has said a bad word and is being punished.");
                     g_iHasSworn = TRUE;
                 }
                 lWords=llDeleteSubList(lWords,-1,-1);
             }
         }
     }
-    
 /*
     changed(integer iChange) {
         if (iChange & CHANGED_REGION) {
@@ -411,5 +410,4 @@ default {
         }
     }
 */
-
 }
