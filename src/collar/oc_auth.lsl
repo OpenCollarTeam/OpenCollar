@@ -54,7 +54,7 @@ integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
 integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
@@ -88,7 +88,7 @@ integer WEARERLOCKOUT=620;
 
 string UPMENU = "BACK";
 
-string CTYPE = "collar";
+string g_sDeviceType = "collar";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
@@ -145,8 +145,7 @@ FetchAvi(integer iAuth, string type, string name, key kAv) {
     if (type == "trust") src += g_lSecOwners;
     else if (type == "block") src = g_lBlackList;
     list exclude; // build list of existing-listed keys to exclude from name search
-    for (; i < llGetListLength(src); i += 2)
-    {
+    for (; i < llGetListLength(src); i += 2) {
         exclude += [llList2String(src, i)];
     }
     if (llGetListLength(exclude))
@@ -160,15 +159,12 @@ AuthMenu(key kAv, integer iAuth) {
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☒"];    //unset group
-
     if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-
     if (g_iLimitRange) lButtons += ["LimitRange ☒"];    //set ranged
     else lButtons += ["LimitRange ☐"];    //unset open ranged
-
+    
     lButtons += ["Runaway","Access List"];
-
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
 }
 
@@ -180,11 +176,9 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     else if (sToken=="trust") lPeople=g_lSecOwners;
     else if (sToken=="block") lPeople=g_lBlackList;
     else return;
-
     if (llGetListLength(lPeople)){
         string sPrompt = "\nChoose the person to remove:\n";
         list lButtons;
-        
         integer iNum= llGetListLength(lPeople);
         integer n;
         for (n=1; n <= iNum/2; n = n + 1) {
@@ -195,7 +189,6 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
             }
         }
         lButtons += ["Remove All"];
-
         Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "remove"+sToken);
     } else {
         Notify(kID, "The list is empty", FALSE);
@@ -209,20 +202,17 @@ RemovePerson(string sName, string sToken, key kCmdr) {
     //also handles notifications so as to reduce code duplication in the link message event
     //Debug("removing: " + sName);
     //all our comparisons will be cast to lower case first
-
     list lPeople;
     if (sToken=="owner") lPeople=g_lOwners;
     else if (sToken=="tempowner") lPeople=g_lTempOwners;
     else if (sToken=="trust") lPeople=g_lSecOwners;
     else if (sToken=="block") lPeople=g_lBlackList;
     else return;
-    
 // ~ is bitwise NOT which is used for the llListFindList function to simply turn the result "-1" for "not found" into a 0 (FALSE) 
     if (~llListFindList(g_lTempOwners,[(string)kCmdr]) && ! ~llListFindList(g_lOwners,[(string)kCmdr]) && sToken != "tempowner"){
         Notify(kCmdr,g_sAuthError,FALSE);
         return;
     }
-
     sName = llToLower(sName);
     integer iFound=FALSE;
     integer numPeople= llGetListLength(lPeople)/2;
@@ -230,20 +220,16 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         string sThisName = llToLower(llList2String(lPeople, numPeople*2+1));
         //Debug("checking " + sThisName);
         if (sName == sThisName || sName == "remove all") {   //remove name and key
-            
             if (sToken == "owner" || sToken == "trust") {
-                Notify(llList2String(lPeople,numPeople*2),"Your access to " + g_sWearerName + "'s " + CTYPE + " has been revoked.",FALSE);
+                Notify(llList2String(lPeople,numPeople*2),"Your access to " + g_sWearerName + "'s " + g_sDeviceType + " has been revoked.",FALSE);
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
             lPeople = llDeleteSubList(lPeople, numPeople*2, numPeople*2+1);
-
             Notify(kCmdr, sThisName + " removed from " + sToken + " list.", TRUE);
             iFound=TRUE;
         }
     }
-
     if (iFound){
-        //save to db
          string sOldToken=sToken;
          if (sToken == "secowner") sOldToken+="s";
             if (llGetListLength(lPeople)>0)
@@ -255,7 +241,6 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         else if (sToken=="tempowner") g_lTempOwners = lPeople;
         else if (sToken=="trust") g_lSecOwners = lPeople;
         else if (sToken=="block") g_lBlackList = lPeople;
-
     } else 
         Notify(kCmdr, "Error: '" + sName + "' not in list.",FALSE);
 }
@@ -263,10 +248,9 @@ RemovePerson(string sName, string sToken, key kCmdr) {
 AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
     list lPeople;
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
-    if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) && sToken != "tempowner"){
-        //Notify(kAv,"Temporary owners can only change the temporary owners list",FALSE);
+    if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) && sToken != "tempowner")
         Notify(kAv,g_sAuthError,FALSE);
-    } else {
+    else {
         if (sToken=="owner") {
             lPeople=g_lOwners;
             if (llGetListLength (lPeople) >=12) {
@@ -279,7 +263,7 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
                 Notify(kAv, "\n\nSorry, we reached a limit!\n\nTwelve people at a time can have this role.\n",FALSE);
                 return;
             } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
-                Notify(kAv, "\n\nOops!\n\n"+sName+" is already Owner! You should really trust them already.\n",FALSE);
+                Notify(kAv, "\n\nOops!\n\n"+sName+" is already Owner! You should really trust them.\n",FALSE);
                 return;
             }
         } else if (sToken=="tempowner") {
@@ -294,10 +278,10 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
                 Notify(kAv, "\n\nOops!\n\nYour Blacklist is already full.\n",FALSE);
                 return;
             } else if (~llListFindList(g_lSecOwners,[(string)kPerson])) {
-                Notify(kAv, "\n\nOops!\n\nYou trust "+sName+". Remove them as trusted before you block them.\n",FALSE);
+                Notify(kAv, "\n\nOops!\n\nYou trust "+sName+". If you really want to block "+sName+" then you should remove them as trusted first.\n",FALSE);
                 return;
             } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
-                Notify(kAv, "\n\nOops!\n\n"+sName+" is aleady Owner! Remove them as owner before you block them.\n",FALSE);
+                Notify(kAv, "\n\nOops!\n\n"+sName+" is Owner! Remove them as owner before you block them.\n",FALSE);
                 return;
             }
         } else
@@ -348,13 +332,13 @@ SayOwners() {
     integer ownercount = llGetListLength(ownernames);
     if (ownercount) {
         string msg = "You belong to ";
-        if (ownercount == 1) {
+        if (ownercount == 1) 
             // if one person, then just name.
             msg += (string)ownernames;
-        } else if (ownercount == 2) {
+        else if (ownercount == 2)
             // if two people, then A and B.
             msg += llDumpList2String(ownernames, " and ");
-        } else {
+        else {
             // if >2 people, then A, B, and C
             list init = llDeleteSubList(ownernames, -1, -1);
             list tail = llDeleteSubList(ownernames, 0, -2);
@@ -426,9 +410,8 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     string sMessage=llToLower(sStr);
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
-    if (sStr == "menu "+g_sSubMenu) {
-        AuthMenu(kID, iNum);
-    } else if (sStr == "list") {   //say owner, secowners, group
+    if (sStr == "menu "+g_sSubMenu) AuthMenu(kID, iNum);
+    else if (sStr == "list") {   //say owner, secowners, group
         if (iNum == COMMAND_OWNER || kID == g_kWearer) {
             //Do Owners list
             integer iLength = llGetListLength(g_lOwners);
@@ -451,13 +434,11 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             while (iLength)
                 sOutput += "\n" + llList2String(g_lSecOwners, --iLength) + " (" + llList2String(g_lSecOwners, --iLength) + ")";
             if (sOutput) Notify(kID, "Trusted: " + sOutput,FALSE);
-            
             iLength = llGetListLength(g_lBlackList);
             sOutput="";
             while (iLength)
                 sOutput += "\n" + llList2String(g_lBlackList, --iLength) + " (" + llList2String(g_lBlackList, --iLength) + ")";
             if (sOutput) Notify(kID, "Blocked: " + sOutput,FALSE);
-            
             if (g_sGroupName) Notify(kID, "Group: " + g_sGroupName,FALSE);
             if (g_kGroup) Notify(kID, "Group Key: " + (string)g_kGroup,FALSE);
             sOutput="closed"; 
@@ -476,7 +457,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
 //        else llGiveInventory(kID,"Virtual Disgrace - Owner HUD");
 //        if (remenu) AuthMenu(kID, iNum);
         
-    } else  if (sMessage == "owner" && remenu==FALSE) { //request for access menu from chat
+    } else if (sMessage == "owner" && remenu==FALSE) { //request for access menu from chat
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" || sCommand == "tempowner" || sCommand == "trust" || sCommand == "block") { //add a person to a list
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,0), " "); //get full name
@@ -497,8 +478,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         if (iNum!=COMMAND_OWNER && !( sToken == "trust" && kID==g_kWearer )) {
             Notify(kID,g_sAuthError, FALSE);
             if (remenu) AuthMenu(kID, Auth(kID,FALSE));
-        } else if (sTmpName=="") 
-            RemPersonMenu(kID, sToken, iNum);
+        } else if (sTmpName=="") RemPersonMenu(kID, sToken, iNum);
         else {
             RemovePerson(sTmpName, sToken, kID);
             if (remenu) RemPersonMenu(kID, sToken, Auth(kID,FALSE));
@@ -518,17 +498,13 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
                 g_lQueryId+=[kGroupHTTPID,"","group", kID, FALSE];
                 llMessageLinked(LINK_SET, RLV_CMD, "setgroup=n", "auth");
             }
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
+        } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "setgroupname") {
         if (iNum==COMMAND_OWNER){
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
+        } else Notify(kID,g_sAuthError, FALSE);
     } else if (sCommand == "unsetgroup") {
         if (iNum==COMMAND_OWNER){
             g_kGroup = "";
@@ -539,29 +515,23 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             Notify(kID, "Group unset.", FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             llMessageLinked(LINK_SET, RLV_CMD, "setgroup=y", "auth");
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
+        } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "public") {
         if (iNum==COMMAND_OWNER){
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "public=" + (string) g_iOpenAccess, "");
-            Notify(kID, "Your " + CTYPE + " is open to the public.", FALSE);
+            Notify(kID, "Your " + g_sDeviceType + " is open to the public.", FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
+        } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "private") {
         if (iNum==COMMAND_OWNER){
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "public", "");
-            Notify(kID, "Your " + CTYPE + " is closed to the public.", FALSE);
+            Notify(kID, "Your " + g_sDeviceType + " is closed to the public.", FALSE);
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
-        } else {
-            Notify(kID,g_sAuthError, FALSE);
-        }
+        } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (~llSubStringIndex(sCommand, "limitrange")) {
         if (sCommand == "limitrange") {
@@ -570,9 +540,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
                 // as the default is range limit on, we do not need to store anything for this
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
                 Notify(kID, "Public access range is limited.", FALSE);
-            } else {
-                Notify(kID,g_sAuthError, FALSE);
-            }
+            } else Notify(kID,g_sAuthError, FALSE);
             if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if (sCommand == "unlimitrange") {
             if (iNum==COMMAND_OWNER){
@@ -580,9 +548,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
                 // save off state for limited range (default is on)
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
                 Notify(kID, "Public access range is simwide.", FALSE);
-            } else {
-                Notify(kID,g_sAuthError, FALSE);
-            }
+            } else Notify(kID,g_sAuthError, FALSE);
             if (remenu) AuthMenu(kID, Auth(kID,FALSE));
         }
     } else if (sCommand == "runaway"){
@@ -623,8 +589,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"norun","");
                 Notify(kID, "The ability to runaway is enabled.", TRUE);                
             } else Notify(kID,g_sAuthError,FALSE);
-        }
-        else if (sCommand == "disable") {
+        } else if (sCommand == "disable") {
             if (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER) {
                 g_iRunawayDisable = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"norun=1","");
@@ -641,10 +606,7 @@ RunAway() {
     integer stop = llGetListLength(g_lOwners+g_lTempOwners);
     for (n = 0; n < stop; n += 2) {
         key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
-        if (kOwner != g_kWearer)
-        {
-            Notify(kOwner, g_sWearerName + " ran away!",FALSE);
-        }
+        if (kOwner != g_kWearer) Notify(kOwner, g_sWearerName + " ran away!",FALSE);
     }
     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "tempowner=", "");
@@ -652,7 +614,7 @@ RunAway() {
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "tempowner", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "trust=", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
-    //llOwnerSay("Reset finished, the " + CTYPE + " will now release locks!");
+    //llOwnerSay("Reset finished, the " + g_sDeviceType + " will now release locks!");
     // moved reset request from settings to here to allow noticifation of owners.
     llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", g_kWearer); // clear RLV restrictions
     llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", g_kWearer); // this is not a LM loop, since it is now really authed
@@ -717,7 +679,7 @@ default {
                     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "tempowner", "");
                     //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "trust=", "");
                     //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
-                    //llOwnerSay("Reset finished, the " + CTYPE + " will now release locks!");
+                    //llOwnerSay("Reset finished, the " + g_sDeviceType + " will now release locks!");
                     // moved reset request from settings to here to allow noticifation of owners.
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "clear", kID); // clear RLV restrictions
                     llMessageLinked(LINK_SET, COMMAND_OWNER, "runaway", kID); // this is not a LM loop, since it is now really authed
@@ -774,7 +736,7 @@ default {
             }
             else if (sToken == "Global_prefix") SetPrefix(sValue);
             else if (sToken == "Global_WearerName") g_sWearerName = sValue;
-            else if (sToken == "Global_CType") CTYPE = sValue;
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
         } else if (iNum == LM_SETTING_EMPTY) {
             //Debug("Got setting empty: "+sStr);
             integer i = llSubStringIndex(sStr, "_");
@@ -931,8 +893,8 @@ default {
                 if (llList2String(params, 0) == g_sScript) {
                     string sRequestType = llList2String(params, 4);
                     key kAv = llList2Key(params, 2);
-                    integer iAuth= llList2Integer(params, 3);
-                    key kNewOwner=(key)llList2String(params, 5);
+                    integer iAuth = llList2Integer(params, 3);
+                    key kNewOwner = (key)llList2String(params, 5);
                     if ((key)kNewOwner){
                         AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), sRequestType, kAv); //should be safe to uase key2name here, as we added from sensor dialog
                         //FetchAvi(llList2Integer(params, 3), sRequestType, "", kAv);   //remenu
@@ -943,7 +905,7 @@ default {
                         } else {
                             AuthMenu(kAv,iNewAuth);
                         }
-                    } else if (llList2String(params, 5)=="BACK"){
+                    } else if (llList2String(params, 5) == "BACK"){
                         AuthMenu(kAv,iAuth);
                     }
                 }
@@ -981,18 +943,18 @@ default {
     }
     
     dataserver(key kQueryId, string sData){ //response after an add-by-uuid
-        integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
+        integer listIndex = llListFindList(g_lQueryId,[kQueryId]);
         if (listIndex!= -1){
-            key newOwner=llList2Key(g_lQueryId,listIndex+1);
-            string sRequestType=llList2String(g_lQueryId,listIndex+2);
-            key kAv =llList2Key(g_lQueryId,listIndex+3);
-            integer remenu =llList2Integer(g_lQueryId,listIndex+4);
+            key newOwner = llList2Key(g_lQueryId,listIndex+1);
+            string sRequestType = llList2String(g_lQueryId,listIndex+2);
+            key kAv  =llList2Key(g_lQueryId,listIndex+3);
+            integer remenu = llList2Integer(g_lQueryId,listIndex+4);
             
             g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
             
             AddUniquePerson(newOwner, sData, sRequestType, kAv);
             if (remenu){
-                integer iNewAuth=Auth(kAv,FALSE);
+                integer iNewAuth = Auth(kAv,FALSE);
                 if (iNewAuth == COMMAND_OWNER){
                     UserCommand(iNewAuth,sRequestType,kAv,TRUE);
                     //FetchAvi(COMMAND_OWNER, sRequestType, "", kAv);   //remenu
