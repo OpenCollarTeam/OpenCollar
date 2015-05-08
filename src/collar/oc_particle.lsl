@@ -495,11 +495,9 @@ default {
                     } else if(sButtonType == L_RIBBON_TEX) {
                         if (sButtonCheck == "☐") {
                             g_sParticleMode = "Ribbon"; 
-                            if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03,0.03,0.0>;
                             SetTexture(g_sRibbonTexture, kAv);
                             SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         } else {
-                            g_vLeashSize = g_vLeashSize + <0.03,0.03,0.0>;
                             g_sParticleMode = "Classic";
                             SetTexture(g_sClassicTexture, kAv);
                             SaveSettings("C_Texture", g_sClassicTexture, TRUE,0,"");
@@ -507,13 +505,11 @@ default {
                         SaveSettings("ParticleMode",g_sParticleMode , TRUE,0,"");
                     } else if(sButtonType == L_CLASSIC_TEX) {
                         if (sButtonCheck == "☐") {
-                            if (g_sParticleMode == "Ribbon" || g_vLeashSize.x == 0.04) g_vLeashSize = g_vLeashSize + <0.03,0.03,0.0>;
                             g_sParticleMode = "Classic";
                             SetTexture(g_sClassicTexture, kAv);
                             SaveSettings("C_Texture", g_sClassicTexture, TRUE,0,"");
                         } else {
                             g_sParticleMode = "Ribbon";
-                            if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
                             SetTexture(g_sRibbonTexture, kAv);
                             SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         }
@@ -525,7 +521,6 @@ default {
                             SetTexture("noleash", kAv);
                         } else {
                             g_sParticleMode = "Ribbon";
-                            if (g_vLeashSize.x > 0.06) g_vLeashSize = g_vLeashSize - <0.03, 0.03, 0.0>;
                             SetTexture(g_sRibbonTexture, kAv);
                             SaveSettings("R_Texture", g_sRibbonTexture, TRUE,0,"");
                         }
