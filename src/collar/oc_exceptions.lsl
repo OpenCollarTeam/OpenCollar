@@ -111,25 +111,25 @@ string g_sUserCommand = "";
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
+//integer COMMAND_GROUP = 502;
+//integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
 integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave descripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //sStr must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
 
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -141,8 +141,8 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 integer RLV_QUERY = 6102; //query from a script asking if RLV is currently functioning
 integer RLV_RESPONSE = 6103;  //reply to RLV_QUERY, with "ON" or "OFF" as the message
 
-integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
+//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
+//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -155,7 +155,7 @@ key REQUEST_KEY;
 string g_sScript;
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -201,7 +201,7 @@ Menu(key kID, string sWho, integer iAuth)
     string sPrompt = "\nSet exemptions to the restrictions for RLV commands. That means the people added here will not be blocked from talking to the wearer. Also the ability to make teleports happen instantly can be set here.\n\n(\"Force Teleports\" are already defaulted for owners.)";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
-
+/*
 PersonMenu(key kID, list lPeople, string sType, integer iAuth)
 {
     if (iAuth != COMMAND_OWNER && kID != g_kWearer)
@@ -227,7 +227,7 @@ PersonMenu(key kID, list lPeople, string sType, integer iAuth)
     g_lPersonMenu = lPeople;
     g_kPersonMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
-  
+*/
 ExMenu(key kID, string sWho, integer iAuth)
 {
     //Debug("ExMenu for :"+sWho);
@@ -337,7 +337,7 @@ ClearSettings()
     //avoid race conditions
     llSleep(1.0);
 }
-
+/*
 MakeNamesList()
 {
     g_lNames = [];
@@ -376,7 +376,7 @@ AddName(string sKey)
         g_kHTTPID = NULL_KEY;
         g_lNames += [sKey, g_sTmpName];
         if (g_kTmpKey != NULL_KEY) Notify(g_kTmpKey, g_sTmpName + " has been successfully added to Exceptions User List.", FALSE);
-    }*/
+    }
     if (~iInd)
     {
         g_lNames += [sKey, llList2String(g_lOwners, iInd + 1)];
@@ -399,7 +399,7 @@ AddName(string sKey)
     g_kTmpKey = g_kTestKey = NULL_KEY;
     g_sTmpName = g_sUserCommand = "";
 }
-
+*/
 SetAllExs(string sVal) {
     if (!g_iRLVOn) return;
 
@@ -418,6 +418,8 @@ SetAllExs(string sVal) {
             }
             string sStr = llDumpList2String(sCmd, ",");
             llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+            // lets give rlvmain a break
+            llSleep(0.2);
         }
     }
     
@@ -432,6 +434,8 @@ SetAllExs(string sVal) {
             }
             string sStr = llDumpList2String(sCmd, ",");
             llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+            // lets give rlvmain a break
+            llSleep(0.2);
         }
     }
         
@@ -485,20 +489,21 @@ integer UserCommand(integer iNum, string sStr, key kID)
         if (sCom == "owner") ExMenu(kID, "owner", iNum);
         else if (sCom == "trusted") ExMenu(kID, "trusted", iNum);
         //else if (sCom == "other") PersonMenu(kID, g_lNames, "", iNum);
-        else if (sCom == "add")
+       /* else if (sCom == "add")
         {
             FetchAvi(iNum, "ex", "", kID);
             jump UCDone;
-        }
+        }*/
         if (!llSubStringIndex(sCom, ":")) jump UCDone;// not done if we received a 1-who 1-exception case
     }
     string sVal = llList2String(lParts, 1);
+/*
     if (sCom == "add") // request to add specified user to names list - must be "add First Last" or "add uuid"
     {
         if ((key)sVal) AddName(sVal);
         else FetchAvi(iNum, "ex", sVal, kID);
         jump UCDone;
-    }
+    }*/
     // anything else should be <prefix>ex user:command=value & may be strided with commas
     // if user is unknown to us, we'll re-run undone commands after they are sucessfully added, to prevent errors
     lParts = llParseString2List(llList2String(lParts, 0), [":"], []);
@@ -520,7 +525,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         sLower = llToLower(sWho);
         iNames = llListFindList(g_lNames, [sWho]);
         // let's make certain that we carry unprocessed requests thru AddNames
-        g_sUserCommand = "ex " + llDumpList2String(lParts, ":");
+        g_sUserCommand = "ex " + llDumpList2String(lParts, ":");/*
         if (sLower == "clear" || sLower == "owner" || sLower == "trusted") {}
         else if ((key)sWho)
         {
@@ -538,7 +543,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             Notify(kID, "Sorry, but you must first add " + sWho + " to the list with <prefix>ex add " + sWho, FALSE);
             jump nextwho;
-        }
+        }*/
         // okay, now we have a key for sWho (if avatar) & they are in g_lNames - this will deliver all settings to the right places
         g_sUserCommand = "";
         lCom = llParseString2List(llToLower(llList2String(lParts, iL + 1)), [","], []);
@@ -607,7 +612,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             else g_lSettings += [sWho, iSet];
             bChange = bChange | 2;
             @nextcom;
-            //Debug("processed " + sWho + ":" + sCom + "=" + sVal);
+           // Debug("processed " + sWho + ":" + sCom + "=" + sVal);
         }
         @nextwho;
         if (bChange)
@@ -627,7 +632,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(57344);  //2015-05-06 (7456 bytes free)
+        llSetMemoryLimit(49152);  //2015-05-06 (7456 bytes free)
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
@@ -657,11 +662,11 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") g_iOwnerDefault = (integer)sValue;
                 else if (sToken == "trusted") g_iSecOwnerDefault = (integer)sValue;
-                else if (sToken == "List")
+               /* else if (sToken == "List")
                 {
                     g_lSettings = llParseString2List(sValue, [","], []);
                     MakeNamesList();
-                }
+                }*/
             }
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
@@ -835,9 +840,10 @@ default {
                     else if (sMessage == "Defaults")
                     {
                         UserCommand(iAuth, sOut + "defaults", kAv);
-                        if(~llListFindList(g_lNames,[sMenu])) PersonMenu(kAv, g_lNames, "", iAuth); // person removed, let's go back to the person menu.
-                        else ExMenu(kAv, sMenu, iAuth);
-                    }
+                        //if(~llListFindList(g_lNames,[sMenu])) PersonMenu(kAv, g_lNames, "", iAuth); // person removed, let's go back to the person menu.
+                        //else 
+                        ExMenu(kAv, sMenu, iAuth);
+                    }/*
                     else if (sMessage == "List")
                     {
                         if (sMenu == "owner")
@@ -848,14 +854,14 @@ default {
                         {
                             PersonMenu(kAv, g_lSecOwners, "", iAuth);
                         }
-                    }
+                    }*/
                     else
                     {
                         //something went horribly wrong. We got a command that we can't find in the list
                     }
                     llDeleteSubList(g_lExMenus, iMenuIndex, iMenuIndex + 1);
                 }
-            }
+            }/*
             else if(kID == g_kPersonMenuID)
             {
                 //Debug("dialog response: " + sStr);
@@ -887,9 +893,9 @@ default {
             if (llList2String(params,5)!=UPMENU){
                 AddName(llList2String(params, 5));
             }
-            PersonMenu(kAv, g_lNames, "", iAuth);
+            PersonMenu(kAv, g_lNames, "", iAuth);*/
         }
-    }
+    }/*
     dataserver(key kID, string sData)
     {
         integer iIndex = llListFindList(g_lNames, [kID]);
@@ -921,7 +927,7 @@ default {
         g_iAuth = 0;
         g_kTmpKey = g_kTestKey = NULL_KEY;
         g_sTmpName = g_sUserCommand = "";
-    }
+    }*/
 /*
     changed(integer iChange) {
         if (iChange & CHANGED_REGION) {
