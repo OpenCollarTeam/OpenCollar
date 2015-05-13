@@ -44,7 +44,7 @@ integer g_iSecOwnerDefault = 110;//all off
 string g_sLatestRLVersionSupport = "1.15.1"; //the version which brings the latest used feature to check against
 string g_sDetectedRLVersion;
 list g_lSettings;//2-strided list in form of [key, value]
-list g_lNames;
+//list g_lNames;
 
 
 list g_lRLVcmds = [
@@ -251,12 +251,14 @@ ExMenu(key kID, string sWho, integer iAuth)
     {
         iExSettings = llList2Integer(g_lSettings, iInd + 1);
     }
+    /*
     string sName;
     integer _i=llListFindList(g_lNames,[sWho]);
     if(~_i) sName=llList2String(g_lNames,_i+1);
     else sName=sWho;
     string sPrompt = "\nCurrent Settings for "+sName+": "+"\n";
-    
+    */
+    string sPrompt = "\nCurrent Settings for "+sWho+": "+"\n";    
     list lButtons;
     integer n;
     integer iStop = llGetListLength(g_lPrettyCmds);
@@ -325,7 +327,7 @@ SaveSettings()
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", "");
     }
 }
-
+/* never used?
 ClearSettings()
 {
     //clear settings list
@@ -337,7 +339,7 @@ ClearSettings()
     //avoid race conditions
     llSleep(1.0);
 }
-/*
+
 MakeNamesList()
 {
     g_lNames = [];
@@ -522,10 +524,22 @@ integer UserCommand(integer iNum, string sStr, key kID)
     {
         // Let's get a uuid to work with, if who is an avatar. This enables users to type in names OR keys for chat commands.
         sWho = llList2String(lParts, iL);
+        string sWhoName;
+        if ((key)sWho) sWhoName = "secondlife:///app/agent/"+sWho+"/about";
+        else sWhoName = sWho;
         sLower = llToLower(sWho);
-        iNames = llListFindList(g_lNames, [sWho]);
+        // preventing from getting owners and trusted messed up in the "other" list
+        if (~llListFindList(g_lOwners, [sWho])){
+            Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.", FALSE);
+            jump nextwho;
+        } else if (~llListFindList(g_lSecOwners, [sWho])) {
+            Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.", FALSE);
+            jump nextwho;            
+        }
+        //iNames = -1; //llListFindList(g_lNames, [sWho]);
         // let's make certain that we carry unprocessed requests thru AddNames
-        g_sUserCommand = "ex " + llDumpList2String(lParts, ":");/*
+        //g_sUserCommand = "ex " + llDumpList2String(lParts, ":");
+        /*
         if (sLower == "clear" || sLower == "owner" || sLower == "trusted") {}
         else if ((key)sWho)
         {
@@ -597,7 +611,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if (sCom == "defaults")
             {
                 if (~iNames) g_lSettings = llDeleteSubList(g_lSettings, iNames, iNames + 1);
-                if (~iNames = llListFindList(g_lNames, [sWho])) g_lNames = llDeleteSubList(g_lNames, iNames, iNames + 1);
+                //if (~iNames = llListFindList(g_lNames, [sWho])) g_lNames = llDeleteSubList(g_lNames, iNames, iNames + 1);
                 bChange = bChange | 2;
                 jump nextcom;
             }
