@@ -319,7 +319,7 @@ BuildTexturesList(){
     }
 
     //after inventory, start reading textures notecard
-    g_sTextureCard="textures_custom";
+    g_sTextureCard=".textures";
     if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard="textures";
     if(llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) {
         g_iTexturesNotecardLine=0;
@@ -708,7 +708,10 @@ default {
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
-                    if (sMessage == "BACK") ElementMenu(kAv, 0, iAuth, sBackMenu);
+                    if (sMessage == "BACK") {
+                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_SET, iAuth, "options", kAv);
+                        else  ElementMenu(kAv, 0, iAuth, sBackMenu);
+                    }
                     //if (sMessage == "BACK")  llMessageLinked(LINK_SET, iAuth, "options", kAv);
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
                 }
