@@ -322,7 +322,9 @@ BuildElementsList(){
     while (iLinkNum-- > 2) {  //root prim is 1, so stop at 2
         
         string sElement = llList2String(llGetLinkPrimitiveParams(iLinkNum, [PRIM_DESC]),0);
-        if (sElement != "" && sElement != "(No Description)") {  //element has a description, so parse it
+        if (~llSubStringIndex(llToLower(sElement),"floattext") || ~llSubStringIndex(llToLower(sElement),"leashpoint")) {
+             } //do nothing, these are alwasys no-anything
+        else if (sElement != "" && sElement != "(No Description)") {  //element has a description, so parse it
             //prim desc will be elementtype~notexture(maybe)
             list lParams = llParseString2List(llStringTrim(sElement,STRING_TRIM), ["~"], []);
             string sElementName=llList2String(lParams,0);
