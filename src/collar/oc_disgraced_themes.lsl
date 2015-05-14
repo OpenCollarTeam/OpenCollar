@@ -161,6 +161,10 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     }
 }
 
+LooksMenu(key kID, integer iAuth) {
+    Dialog(kID, "\nChoose which look you want to change for your "+g_sDeviceType+".", ["Color","Glow","Shiny","Texture","Show/Hide"], ["Cancel"],0, iAuth, "LooksMenu~menu");
+}
+
 StyleMenu(key kID, integer iAuth) {
     Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
@@ -267,8 +271,8 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     }
 
     lButtons = llListSort(lButtons, 1, TRUE);
-    Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "Cancel"], _iPage, _iAuth, "ElementMenu~"+_sType);
-    //Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
+    //Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "Cancel"], _iPage, _iAuth, "ElementMenu~"+_sType);
+    Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -370,7 +374,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
     //Debug(sStr);
     //if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
-    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow") {  //this is for us....
+    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
        /* if (g_iAppLock) {  //no one can do anything when appearrance is locked
             Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
@@ -400,7 +404,8 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 } else {
                     StyleMenu(kID,iNum);
                 }
-            } else if (sCommand == "menu") {
+            } else if (sCommand == "looks") LooksMenu(kID,iNum);
+            else if (sCommand == "menu") {
                 ElementMenu(kID, 0, iNum, sElement);  //if its for us, and its a menu call, then the element parameter is the menu name, honest.
 //            } else if (sElement=="" || (! ~iElementIndex) ) {  //no or invalid element name supplied, send element menu
             } else if ((sElement=="" || (! ~iElementIndex) ) && sCommand != "show" && sCommand != "hide" && sCommand != "stealth" ) {  //no or invalid element name supplied, send element menu
@@ -503,7 +508,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 string sGlow=llList2String(lParams,2);
                 integer iGlowIndex=llListFindList(g_lGlow,[sGlow]);
                 if (~iGlowIndex) sGlow=(string)llList2String(g_lGlow,iGlowIndex+1);  //if found, convert string to index and overwrite supplied string
-                float fGlow=(float)sGlow;  //cast string to float, we now have the index, or 0 for a bad value
+                float fGlow = llList2Float(g_lGlow,iGlowIndex+1);   //cast string to float, we now have the index, or 0 for a bad value
                 if (sGlow=="") {  //got no value for glow, make glow menu
                     GlowMenu(kID, iNum, sStr);
                 } else if ((fGlow >= 0.0 && fGlow <= 1.0)|| sGlow=="0") {  //if we have a value, or if 0 was passed in as a string value
@@ -602,7 +607,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             }
         } else {  //anyone else gets an error
             Notify(kID,g_sAuthError, FALSE);
-            llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
+            llMessageLinked(LINK_SET, iNum, "menu " + "options", kID);
         }
     }
 }
@@ -673,9 +678,9 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
+                if (sMessage == "Cancel") return;
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == "Cancel") return;
                  //remove stride from g_lMenuIDs.  We have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -683,7 +688,7 @@ default {
                 //Debug("Got response from menu: "+sMenu);
                 
                 if (llSubStringIndex(sMenu,"ElementMenu~")==0) {  //they just chose an element (or chose to touch to select one) , now choose a texture
-                    if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "options", kAv);//llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
+                    if (sMessage == "BACK") LooksMenu(kAv, iAuth);//llMessageLinked(LINK_SET, iAuth, "options", kAv);//llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
                         if (sMessage == "*Touch*") {
@@ -702,6 +707,7 @@ default {
                 } else {  //rest of menu responses are all pretty formulaic really, just pass the breadcrumbs in to UserCommand along with the next argument
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
+                    //Debug(sBreadcrumbs+" "+sMessage);
                     if (sMessage == "BACK") ElementMenu(kAv, 0, iAuth, sBackMenu);
                     //if (sMessage == "BACK")  llMessageLinked(LINK_SET, iAuth, "options", kAv);
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
