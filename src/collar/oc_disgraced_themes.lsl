@@ -73,12 +73,8 @@ integer ELEMENT_NOSHINY     =  4;
 integer ELEMENT_NOGLOW      =  8;
 integer ELEMENT_NOHIDE      = 16;
 
-list g_lColourCategories = [
-"Shades",  // 0 - 10, llDeleteSubList(g_lAllColors,22,-1)
-"Bright",  //11 - 21, llDeleteSubList(g_lAllColors,44,21)
-"Soft"     //22 - -1, llDeleteSubList(g_lAllColors, 0,43)
-];
-list g_lAllColors = [
+
+list g_lColors = [
 "Light Shade",<0.82745, 0.82745, 0.82745>,
 "Gray Shade",<0.70588, 0.70588, 0.70588>,
 "Dark Shade",<0.20784, 0.20784, 0.20784>,
@@ -88,8 +84,6 @@ list g_lAllColors = [
 "Green Shade",<0.62353, 0.69412, 0.61569>,
 "Pink Shade",<0.74510, 0.62745, 0.69020>,
 "Gold Shade",<0.69020, 0.61569, 0.43529>,
-"Black",<0.00000, 0.00000, 0.00000>,
-"White",<1.00000, 1.00000, 1.00000>,
 
 "Magenta",<1.00000, 0.00000, 0.50196>,
 "Pink",<1.00000, 0.14902, 0.50980>,
@@ -100,8 +94,6 @@ list g_lAllColors = [
 "Matrix",<0.07843, 1.00000, 0.07843>,
 "Electricity",<0.00000, 0.46667, 0.92941>,
 "Violet Wand",<0.63922, 0.00000, 0.78824>,
-"Black",<0.00000, 0.00000, 0.00000>,
-"White",<1.00000, 1.00000, 1.00000>,
 
 "Baby Blue",<0.75686, 0.75686, 1.00000>,
 "Baby Pink",<1.00000, 0.52157, 0.76078>,
@@ -112,6 +104,7 @@ list g_lAllColors = [
 "Yolk",<0.98824, 0.73333, 0.29412>,
 "Wasabi",<0.47059, 1.00000, 0.65098>,
 "Lavender",<0.89020, 0.65882, 0.99608>,
+
 "Black",<0.00000, 0.00000, 0.00000>,
 "White",<1.00000, 1.00000, 1.00000>
 ];
@@ -176,7 +169,8 @@ HideMenu(key kID, integer iAuth, string sElement) {
 }
 
 ShinyMenu(key kID, integer iAuth, string sElement) {
-    Dialog(kID, "\nSelect a degree of shine.", g_lShiny, ["BACK"], 0, iAuth, "ShinyMenu~"+sElement);
+    string sShineElement = llList2String(llParseString2List(sElement,[" "],[]),-1);
+    Dialog(kID, "\nSelect a degree of shine for "+sShineElement+".", g_lShiny, ["BACK"], 0, iAuth, "ShinyMenu~"+sElement);
 }
 
 TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
@@ -199,35 +193,40 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
             }
         }
     }
-    Dialog(kID, "\nSelect a texture to apply.", lElementTextures, ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
+    Dialog(kID, "\nSelect a texture to apply to "+sElement+".", lElementTextures, ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
 }
 
+/*
 ColourCategoryMenu(key kID, integer iPage, integer iAuth, string sElement) {
     Dialog(kID, "\nSelect a color catagory.", g_lColourCategories, ["BACK"], iPage, iAuth, "ColourCategory~"+sElement);
-}
+}*/
 
 ColourMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
-    //Debug("ColourMenu "+sBreadcrumbs);
-    string sCategory=llToLower(llList2String(llParseString2List(sBreadcrumbs,[" "],[]),-1));
+    //Debug("ColourMenu: "+sBreadcrumbs);
+    string sCategory=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),-1);
     sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once colour is selected
-    
-    list lButtons;
-    if (sCategory=="shades") lButtons= llList2ListStrided(llDeleteSubList(g_lAllColors,22,-1),0,-1,2);
-    else if (sCategory=="bright") lButtons= llList2ListStrided(llDeleteSubList(g_lAllColors,44,21),0,-1,2);
-    else if (sCategory=="soft") lButtons= llList2ListStrided(llDeleteSubList(g_lAllColors, 0,43),0,-1,2);
-    
-    Dialog(kID, "\nSelect a color.", lButtons, ["BACK"], iPage, iAuth, "ColourMenu~"+sBreadcrumbs);
+    list lButtons = llList2ListStrided(g_lColors,0,-1,2);
+    Dialog(kID, "\nSelect a color for "+sCategory+".", lButtons, ["BACK"], iPage, iAuth, "ColourMenu~"+sBreadcrumbs);
 }
 
 ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     integer iMask;
+    string sType;
     _sType=llToLower(_sType);
-    if (_sType == "texture") iMask=ELEMENT_NOTEXTURE;
-    else if (_sType == "shiny") iMask=ELEMENT_NOSHINY;
-    else if (_sType == "color") iMask=ELEMENT_NOCOLOR;
-    else if (_sType == "hide" || _sType == "show" || _sType == "show/hide" ) iMask=ELEMENT_NOHIDE;
-    
-    string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's apearance should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
+    if (_sType == "texture") {
+        iMask=ELEMENT_NOTEXTURE;
+        sType = "Texture";
+    } else if (_sType == "shiny") {
+        iMask=ELEMENT_NOSHINY;
+        sType = "Shininess";
+    } else if (_sType == "color") {
+        iMask=ELEMENT_NOCOLOR;
+        sType = "Color";
+    } else if (_sType == "hide" || _sType == "show" || _sType == "show/hide" ) {
+        iMask=ELEMENT_NOHIDE;
+        sType = "Stealth";
+    }    
+    string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's "+sType+" should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
 
     list lButtons;
     integer numElements=g_iNumElements;
@@ -257,6 +256,7 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     }
 
     lButtons = llListSort(lButtons, 1, TRUE);
+    //Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "Cancel"], _iPage, _iAuth, "ElementMenu~"+_sType);
     Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
 }
 
@@ -492,13 +492,14 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 //Debug("Colour command:"+sStr);
                 string sColour=llDumpList2String(llDeleteSubList(lParams,0,1)," ");
 
-                integer iColourIndex=llListFindList(llList2ListStrided(g_lAllColors,0,-1,2),[sColour]);
+                integer iColourIndex=llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColour]);
                 vector vColourValue=(vector)sColour;
-                if (~iColourIndex) vColourValue=llList2Vector(llList2ListStrided(llDeleteSubList(g_lAllColors,0,0),0,-1,2),iColourIndex);
+                if (~iColourIndex) vColourValue=llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColourIndex);
                 
-                if (~llListFindList(g_lColourCategories,[sColour])) {  //got a category name.  Do menu for that category
+               /*if (~llListFindList(g_lColourCategories,[sColour])) {  //got a category name.  Do menu for that category
                     ColourMenu(kID, 0, iNum, sStr);
-                } else if (vColourValue != ZERO_VECTOR || llToLower(sColour)=="black"){  //we have command, element and valid colour name
+                } else */
+                if (vColourValue != ZERO_VECTOR || llToLower(sColour)=="black"){  //we have command, element and valid colour name
                     integer iLinkCount = llGetNumberOfPrims()+1;
                     while (iLinkCount-- > 2) {
                         string sLinkType=LinkType(iLinkCount, "nocolor");
@@ -508,9 +509,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     }
                     //save to settings
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColourValue, "");
-                    if (reMenu) ColourCategoryMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    if (reMenu) ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else if (! ~iColourIndex) {  //not category, not a colour either. Send category menu
-                    ColourCategoryMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             } else if (sCommand=="texture") {
                 //Debug("Texture command:"+sStr);
@@ -648,7 +649,7 @@ default {
                 //Debug("Got response from menu: "+sMenu);
                 
                 if (llSubStringIndex(sMenu,"ElementMenu~")==0) {  //they just chose an element (or chose to touch to select one) , now choose a texture
-                    if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
+                    if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "options", kAv);//llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
                         if (sMessage == "*Touch*") {
@@ -667,8 +668,8 @@ default {
                 } else {  //rest of menu responses are all pretty formulaic really, just pass the breadcrumbs in to UserCommand along with the next argument
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
-                    //if (sMessage == "BACK") ElementMenu(kAv, 0, iAuth, sBackMenu);
-                    if (sMessage == "BACK")  llMessageLinked(LINK_SET, iAuth, "options", kAv);
+                    if (sMessage == "BACK") ElementMenu(kAv, 0, iAuth, sBackMenu);
+                    //if (sMessage == "BACK")  llMessageLinked(LINK_SET, iAuth, "options", kAv);
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
                 }
             }
