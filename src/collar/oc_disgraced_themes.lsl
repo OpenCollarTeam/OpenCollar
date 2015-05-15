@@ -71,7 +71,7 @@ integer ELEMENT_NOTEXTURE   =  1;
 integer ELEMENT_NOCOLOR     =  2;
 integer ELEMENT_NOSHINY     =  4;
 integer ELEMENT_NOGLOW      =  8;
-integer ELEMENT_NOHIDE      = 16;
+//integer ELEMENT_NOHIDE      = 16;
 
 
 list g_lColors = [
@@ -113,7 +113,7 @@ list g_lShiny = ["none","low","medium","high"];
 list g_lHide = ["Hide","Show"];
 list g_lGlows;
 list g_lGlow = ["none",0.0,"low",0.1,"medium",0.2,"high",0.4,"veryHigh",0.8];
-list g_lCurrentlyHidden;
+//list g_lCurrentlyHidden;
 integer g_iNumHideableElements;
 integer g_iNumElements;
 integer g_iCollarHidden;
@@ -162,7 +162,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 }
 
 LooksMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose which look you want to change for your "+g_sDeviceType+".", ["Color","Glow","Shiny","Texture","Show/Hide"], ["Cancel"],0, iAuth, "LooksMenu~menu");
+    Dialog(kID, "\nChoose which look you want to change for your "+g_sDeviceType+".", ["Color","Glow","Shiny","Texture"], ["Cancel"],0, iAuth, "LooksMenu~menu");
 }
 
 StyleMenu(key kID, integer iAuth) {
@@ -237,10 +237,10 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     } else if (_sType == "color") {
         iMask=ELEMENT_NOCOLOR;
         sType = "Color";
-    } else if (_sType == "hide" || _sType == "show" || _sType == "show/hide" ) {
+    }/* else if (_sType == "hide" || _sType == "show" || _sType == "show/hide" ) {
         iMask=ELEMENT_NOHIDE;
         sType = "Stealth";
-    }    
+    }    */
     string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's "+sType+" should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
 
     list lButtons;
@@ -248,31 +248,31 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
     while(numElements--) {
         if ( ~llList2Integer(g_lElementFlags,numElements) & iMask) {  //if the flags fit the mask
             string sElement=llList2String(g_lElements,numElements);
-            if (_sType == "hide") {
+           /* if (sType == "Stealth") {
                 if (~llListFindList(g_lCurrentlyHidden,[sElement])) lButtons += "☒ "+sElement;
                 else lButtons += "☐ "+sElement;
-            } else lButtons += sElement;
+            } else */lButtons += sElement;
         }
     }
     
-    list lExtraButtons;
-    if (iMask==ELEMENT_NOHIDE) {
-        //do ALL button
+   // list lExtraButtons = ["ALL"];
+  /*  if (iMask==ELEMENT_NOHIDE) {
+        /*do ALL button
         integer iNumCurrentlyHidden=llGetListLength(g_lCurrentlyHidden);
         if (iNumCurrentlyHidden == g_iNumHideableElements) lExtraButtons += "☒ ALL";
         else if (iNumCurrentlyHidden==0) lExtraButtons += "☐ ALL";
         else lExtraButtons += "◪ ALL";
         
         //do g_sDeviceType button
-        if (g_iCollarHidden) lExtraButtons += "☒ "+g_sDeviceType;
+        if (!g_iCollarHidden) lExtraButtons += "☒ "+g_sDeviceType;
         else lExtraButtons += "☐ "+g_sDeviceType;
     } else {
         lExtraButtons += "ALL";
-    }
+    }*/
 
     lButtons = llListSort(lButtons, 1, TRUE);
     //Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "Cancel"], _iPage, _iAuth, "ElementMenu~"+_sType);
-    Dialog(_kAv, sPrompt, lButtons, lExtraButtons+["*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
+    Dialog(_kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -372,9 +372,9 @@ BuildElementsList(){
 
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
-    //Debug(sStr);
-    //if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny") {  //this is for us....
-    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
+    Debug("UserCOmmandStr: "+sStr);
+   // if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
+    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
        /* if (g_iAppLock) {  //no one can do anything when appearrance is locked
             Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
@@ -385,9 +385,14 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             //sStr=llGetSubString(llStringLength(sCommand),-1);
             
             string sElement=llList2String(lParams,1);
-            if (sElement=="☒" || sElement=="☐" || sElement=="◪") {
+            if (sElement=="☒") {
+                sCommand = "show";
                 lParams=llDeleteSubList(lParams,1,1);
                 sElement=llList2String(lParams,1);
+            } else if (sElement=="☐") {
+                sCommand = "hide";
+                lParams=llDeleteSubList(lParams,1,1);
+                sElement=llList2String(lParams,1);                
             }
             integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
@@ -408,14 +413,15 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             else if (sCommand == "menu") {
                 ElementMenu(kID, 0, iNum, sElement);  //if its for us, and its a menu call, then the element parameter is the menu name, honest.
 //            } else if (sElement=="" || (! ~iElementIndex) ) {  //no or invalid element name supplied, send element menu
-            } else if ((sElement=="" || (! ~iElementIndex) ) && sCommand != "show" && sCommand != "hide" && sCommand != "stealth" ) {  //no or invalid element name supplied, send element menu
-                ElementMenu(kID, 0, iNum, sCommand);
-            } else if (sCommand == "hide" || sCommand == "show" || sCommand == "show/hide" || sCommand == "stealth" ) {
+            //} else if ((sElement=="" || (! ~iElementIndex) ) && sCommand != "show" && sCommand != "hide" && sCommand != "stealth" ) {  //no or invalid element name supplied, send element menu
+             //  ElementMenu(kID, 0, iNum, sCommand);
+            } //else if (sCommand == "hide" || sCommand == "show" || sCommand == "show/hide" || sCommand == "stealth" ) {
+            else if (sCommand == "hide" || sCommand == "show") {
                 //get currently shown state
                 integer iCurrentlyShown;
                 if (sElement=="") sElement=g_sDeviceType;
                 //track which elements are supposed to be hidden
-                if (sElement=="ALL") {
+/*                if (sElement=="ALL") {
                     integer iNumCurrentlyHidden=llGetListLength(g_lCurrentlyHidden);
                     if (iNumCurrentlyHidden == g_iNumHideableElements || sCommand=="show") {  //if all hideable elements are hidden
                         g_lCurrentlyHidden=[];  //unhide everything
@@ -423,7 +429,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     } else {
                         //iCurrentlyShown=0;  //all shown, so now hide by setting iCurrentlyShown=1
                     }
-                } else if (sElement == g_sDeviceType) {
+                } else*/ if (sElement == g_sDeviceType) {
                     if (sCommand=="show") {
                         g_iCollarHidden=1;
                     } else if (sCommand=="hide") {
@@ -432,7 +438,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         g_iCollarHidden = !g_iCollarHidden;  //toggle whole collar visibility
                     }
                     iCurrentlyShown=g_iCollarHidden;  //set visibility flag to match new collar visibility
-                } else {
+                }/* else {
                     integer iCurrentlyHiddenIndex = llListFindList(g_lCurrentlyHidden, [sElement]);
                     if (sCommand=="show") {  //showing currently hidden element
                         g_lCurrentlyHidden = llDeleteSubList(g_lCurrentlyHidden,iCurrentlyHiddenIndex,iCurrentlyHiddenIndex);  //remove from shown list
@@ -445,14 +451,15 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     } else {  //hiding currently shown element
                         g_lCurrentlyHidden += [sElement];  //add to shown list
                     }
-                }
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "hide_" + sElement + "=" + (string)(!iCurrentlyShown), "");
+                }*/
+               // llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "hide_" + sElement + "=" + (string)(!iCurrentlyShown), "");
                 
                 //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {
                     string sLinkType=LinkType(iLinkCount, "no"+sCommand);
-                    if (sLinkType == sElement  || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL") || (sElement==g_sDeviceType) ) {
+                   // if (sLinkType == sElement  || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL") || (sElement==g_sDeviceType) ) {
+                    if (sLinkType == sElement || sElement==g_sDeviceType) {
                         if (!g_iCollarHidden || sElement == g_sDeviceType ) {  //don't change things if collar is set hidden, unless we're doing the hiding now
                             llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
                             //update glow settings for this link
@@ -473,15 +480,12 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                                 }
                                 llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
                             }
-                            if (sElement=="ALL" && !iCurrentlyShown){
-                                if (! ~llListFindList(g_lCurrentlyHidden, [sLinkType])) g_lCurrentlyHidden+=sLinkType;
-                            }
+                           // if (sElement=="ALL" && !iCurrentlyShown){
+                            //    if (! ~llListFindList(g_lCurrentlyHidden, [sLinkType])) g_lCurrentlyHidden+=sLinkType;
+                           // }
                         }
                     }
                 }
-                //Debug("Currently hidden elements: "+llDumpList2String(g_lCurrentlyHidden,","));
-                //save to settings DB
-                if (reMenu) ElementMenu(kID, 0, iNum, "hide");
             } else if (sCommand == "shiny") {
                 string sShiny=llList2String(lParams,2);
                 integer iShinyIndex=llListFindList(g_lShiny,[sShiny]);
