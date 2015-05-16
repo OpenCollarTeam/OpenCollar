@@ -690,14 +690,14 @@ default
                         llMessageLinked(LINK_SET, iAuth,"show",kAv);
                         STEALTH = FALSE;
                     } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
-                        integer iCount = llGetInventoryNumber(INVENTORY_SCRIPT);
-                        integer iTest=FALSE;
+                        integer iCount = g_iScriptCount;
+                        integer iTest;
                         while(iCount) {
                             iCount--;
                             if (~llSubStringIndex(llToLower(llGetInventoryName(INVENTORY_SCRIPT,iCount)), "resizer")) {
                                 llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
                                 iCount = 0;
-                                iTest = TRUE;
+                                iTest = 1;
                             } 
                         }
                         if (!iTest) {
