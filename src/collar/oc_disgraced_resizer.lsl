@@ -44,16 +44,16 @@ list g_lPrimStartSizes; // area for initial prim sizes (stored on rez)
 integer g_iScaleFactor = 100; // the size on rez is always regarded as 100% to preven problem when scaling an item +10% and than - 10 %, which would actuall lead to 99% of the original size
 integer g_iSizedByScript = FALSE; // prevent reseting of the script when the item has been chnged by the script
 
-integer g_iAppLock = FALSE;
+//integer g_iAppLock = FALSE;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_SECOWNER = 501;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
+//integer COMMAND_EVERYONE = 504;
+//integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -67,7 +67,7 @@ integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on th
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -81,7 +81,7 @@ key g_kWearer;
 string g_sAuthError = "Access denied.";
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -357,12 +357,12 @@ DoMenu(key kAv, integer iAuth)
 {
     list lMyButtons ;
     string sPrompt;
-    if (g_iAppLock && iAuth != COMMAND_OWNER) {
-        sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
-    } else {
+   // if (g_iAppLock && iAuth != COMMAND_OWNER) {
+    //    sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
+   // } else {
         sPrompt = "\nChange the position, rotation and size of your "+g_sDeviceType+".\n\nwww.opencollar.at/appearance";
         lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
-    }
+   // }
     
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -385,8 +385,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
         else DoMenu(kID, iNum);
-    } else if (sCommand=="lockappearance") {
-        g_iAppLock=(integer)sValue;
+   // } else if (sCommand=="lockappearance") {
+   //     g_iAppLock=(integer)sValue;
     } else if (sStr == "appearance")
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
@@ -401,11 +401,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         {
             Notify(kID,g_sAuthError, FALSE);
         }
-        else if (g_iAppLock)
+       /* else if (g_iAppLock)
         {
             Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
-        }
+        }*/
         else RotMenu(kID, iNum);
         }
     else if (sStr == "position")
@@ -414,11 +414,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         {
             Notify(kID,g_sAuthError, FALSE);
         }
-        else if (g_iAppLock)
+        /*else if (g_iAppLock)
         {
             Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
-        }
+        }*/
         else PosMenu(kID, iNum);
     }
     else if (sStr == "size")
@@ -427,11 +427,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         {
             Notify(kID,g_sAuthError, FALSE);
         }
-        else if (g_iAppLock)
+       /* else if (g_iAppLock)
         {
             Notify(kID,g_sAuthError, FALSE);
             DoMenu(kID, iNum);
-        }
+        }*/
         else SizeMenu(kID, iNum);
     }
 }
@@ -442,7 +442,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(40960);  //2015-05-06 (4892 bytes free)
+        llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();       
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration   
 
@@ -465,7 +465,7 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
+           // if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
