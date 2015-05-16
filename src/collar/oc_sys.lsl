@@ -34,20 +34,20 @@ integer g_iScriptCount;//when the scriptcount changes, rebuild menus
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_SECOWNER = 501;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -120,8 +120,8 @@ string g_sAuthError = "Access denied.";
 
 //Option Menu variables
 string DUMPCACHE = "Print";
-string PREFUSER = "☐ Personal";
-string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
+//string PREFUSER = "☐ Personal";
+//string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
 string STEALTH_OFF = "☐ Stealth"; // show the whole device
 string STEALTH_ON = "☒ Stealth"; // hide the whole device
 string LOADCARD="Load";
@@ -131,7 +131,7 @@ string g_sScript;
 integer STEALTH;
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -141,8 +141,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
-}
-*/
+}*/
+
 string AutoPrefix()
 {
     return llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
@@ -562,8 +562,8 @@ default
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
         
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
+       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
         
         init(); //do stuf needed on_rez AND on script start
         
@@ -795,14 +795,14 @@ default
             }
         }
         if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
-/*        
+       /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/        
+       */
     }
     attach(key kID)
     {
