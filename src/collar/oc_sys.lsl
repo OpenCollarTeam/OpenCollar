@@ -229,6 +229,14 @@ OptionsMenu(key kID, integer iAuth)
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
     list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
+/*    integer iCount = llGetInventoryNumber(INVENTORY_SCRIPT);
+    while(iCount) {
+        iCount--;
+        if (~llSubStringIndex(llToLower(llGetInventoryName(INVENTORY_SCRIPT,iCount)), "resizer")){
+            lButtons += ["Position","Rotation","Size"];
+            iCount = 0;
+        }
+    }*/
     if (STEALTH) {
         sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
         lButtons += [STEALTH_ON];
@@ -561,7 +569,6 @@ default
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
-        
        // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
        // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
         
@@ -682,11 +689,26 @@ default
                     } else if (sMessage == STEALTH_ON) {
                         llMessageLinked(LINK_SET, iAuth,"show",kAv);
                         STEALTH = FALSE;
-                    }
-                    else if (sMessage == "Themes") {
+                    } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
+                        integer iCount = llGetInventoryNumber(INVENTORY_SCRIPT);
+                        integer iTest=FALSE;
+                        while(iCount) {
+                            iCount--;
+                            if (~llSubStringIndex(llToLower(llGetInventoryName(INVENTORY_SCRIPT,iCount)), "resizer")) {
+                                llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
+                                iCount = 0;
+                                iTest = TRUE;
+                            } 
+                        }
+                        if (!iTest) {
+                            Notify(kAv,"You do not have the Resizer in your "+g_sDeviceType+" installt, please go and get it here:... if you want it.", FALSE);
+                            OptionsMenu(kAv,iAuth);
+                        }
+                        return;
+                    } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_THIS, iAuth, "menu Themes", kAv);
                         return;
-                    } else if (sMessage == "Position") {
+                    }/* else if (sMessage == "Position") {
                         llMessageLinked(LINK_THIS, iAuth, "position", kAv);
                         return;
                     } else if (sMessage == "Rotation") {
@@ -695,7 +717,7 @@ default
                     } else if (sMessage == "Size") {
                         llMessageLinked(LINK_THIS, iAuth, "size", kAv);
                         return;
-                    } else if (sMessage == UPMENU) {
+                    }*/ else if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
                         return;
                     }
