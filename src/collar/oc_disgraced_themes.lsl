@@ -374,7 +374,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
     //Debug("UserCOmmandStr: "+sStr);
    // if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || sStrLower == "menu show/hide" || sStrLower == "stealth" ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
-    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
+    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
        /* if (g_iAppLock) {  //no one can do anything when appearrance is locked
             Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + "Appearance", kID);
@@ -385,7 +385,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             //sStr=llGetSubString(llStringLength(sCommand),-1);
             
             string sElement=llList2String(lParams,1);
-            if (sElement=="☒") {
+           /* if (sElement=="☒") {
                 sCommand = "show";
                 lParams=llDeleteSubList(lParams,1,1);
                 sElement=llList2String(lParams,1);
@@ -393,7 +393,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 sCommand = "hide";
                 lParams=llDeleteSubList(lParams,1,1);
                 sElement=llList2String(lParams,1);                
-            }
+            }*/
             integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
 
@@ -406,8 +406,11 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     g_kSetStyleUser=kID;
                     g_iSetStyleAuth=iNum;
                     g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
-                } else {
+                } else if (g_kStylesCardUUID) {
                     StyleMenu(kID,iNum);
+                } else {
+                    llMessageLinked(LINK_SET, iNum, "options", kID);
+                    Notify(kID,"Unable to find \".themes\" notecard in the " + g_sDeviceType + " contents.", FALSE);
                 }
             } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") {
@@ -416,7 +419,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             //} else if ((sElement=="" || (! ~iElementIndex) ) && sCommand != "show" && sCommand != "hide" && sCommand != "stealth" ) {  //no or invalid element name supplied, send element menu
              //  ElementMenu(kID, 0, iNum, sCommand);
             } //else if (sCommand == "hide" || sCommand == "show" || sCommand == "show/hide" || sCommand == "stealth" ) {
-            else if (sCommand == "hide" || sCommand == "show") {
+            else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
                 //get currently shown state
                 integer iCurrentlyShown;
                 if (sElement=="") sElement=g_sDeviceType;
