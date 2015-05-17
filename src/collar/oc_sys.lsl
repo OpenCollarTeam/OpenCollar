@@ -95,6 +95,7 @@ string g_sUnlockSound="e6482ba6-eae1-4d1b-049e-4de13bbd0f5b";
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iKidnapMenu=FALSE;
+integer g_iResizer=FALSE;
 
 integer g_iUpdateChan = -7483214;
 integer g_iUpdateHandle;
@@ -229,14 +230,6 @@ OptionsMenu(key kID, integer iAuth)
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
     list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
-/*    integer iCount = llGetInventoryNumber(INVENTORY_SCRIPT);
-    while(iCount) {
-        iCount--;
-        if (~llSubStringIndex(llToLower(llGetInventoryName(INVENTORY_SCRIPT,iCount)), "resizer")){
-            lButtons += ["Position","Rotation","Size"];
-            iCount = 0;
-        }
-    }*/
     if (STEALTH) {
         sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
         lButtons += [STEALTH_ON];
@@ -275,6 +268,7 @@ HelpMenu(key kID, integer iAuth) {
     list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
+
 MainMenu(key kID, integer iAuth) {
     //string sPrompt="\nOpenCollar Version "+g_sCollarVersion;
     //if(!g_iLatestVersion) sPrompt+="\nUpdate available!";
@@ -542,10 +536,12 @@ RebuildMenu()
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
     g_iKidnapMenu=FALSE;
+    g_iResizer=FALSE;
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Options", "");
 }
 
 init (){
@@ -596,21 +592,17 @@ default
                     g_lAppsButtons += [sSubMenu];
                     g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
                 }
-            } else if (sStr=="Main|Animations"){
-                g_iAnimsMenu=TRUE;
-            } else if (sStr=="Main|RLV"){
-                g_iRlvMenu=TRUE;
-            } else if (sStr=="Main|Kidnap"){
-                g_iKidnapMenu=TRUE;
-            }
+            } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
+            else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
+            else if (sStr=="Main|Kidnap") g_iKidnapMenu=TRUE;
+            else if (sStr=="Options|Size/Position") g_iResizer=TRUE;
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
             list lParams = llParseString2List(sStr, ["|"], []);
             string parent = llList2String(lParams, 0);
             string child = llList2String(lParams, 1);
 
-            if (parent=="Apps" || parent=="AddOns")
-            {
+            if (parent=="Apps" || parent=="AddOns") {
                 integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
                 //only remove if it's there
                 if (gutiIndex != -1) g_lAppsButtons = llDeleteSubList(g_lAppsButtons, gutiIndex, gutiIndex);
@@ -618,8 +610,7 @@ default
         } else if (iNum == DIALOG_RESPONSE) {
             //Debug("Menu response");
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1)
-            {
+            if (iMenuIndex != -1) {
                 //got a menu response meant for us.  pull out values
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
@@ -689,36 +680,18 @@ default
                     } else if (sMessage == STEALTH_ON) {
                         llMessageLinked(LINK_SET, iAuth,"show",kAv);
                         STEALTH = FALSE;
-                    } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
-                        integer iCount = g_iScriptCount;
-                        integer iTest;
-                        while(iCount) {
-                            iCount--;
-                            if (~llSubStringIndex(llToLower(llGetInventoryName(INVENTORY_SCRIPT,iCount)), "resizer")) {
-                                llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
-                                iCount = 0;
-                                iTest = 1;
-                            } 
-                        }
-                        if (!iTest) {
-                            Notify(kAv,"You do not have the Resizer in your "+g_sDeviceType+" installt, please go and get it here:... if you want it.", FALSE);
-                            OptionsMenu(kAv,iAuth);
-                        }
-                        return;
                     } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_THIS, iAuth, "menu Themes", kAv);
                         return;
-                    }/* else if (sMessage == "Position") {
-                        llMessageLinked(LINK_THIS, iAuth, "position", kAv);
-                        return;
-                    } else if (sMessage == "Rotation") {
-                        llMessageLinked(LINK_THIS, iAuth, "rotation", kAv);
-                        return;
-                    } else if (sMessage == "Size") {
-                        llMessageLinked(LINK_THIS, iAuth, "size", kAv);
-                        return;
-                    }*/ else if (sMessage == UPMENU) {
+                    } else if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
+                        return;
+                    } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
+                        if (g_iResizer) llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
+                        else {
+                            Notify(kAv,"You do not have the Resizer in your "+g_sDeviceType+" installed, please use an Updater to install it. If you think the script is already there, hit the \"Fix\" Button.", FALSE);
+                            OptionsMenu(kAv,iAuth);
+                        }
                         return;
                     }
                     OptionsMenu(kAv,iAuth);
