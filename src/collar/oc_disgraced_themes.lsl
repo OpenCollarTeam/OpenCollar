@@ -345,186 +345,186 @@ BuildElementsList(){
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
     //Debug("UserCOmmandStr: "+sStr);
-// no idea why this should be suddenly done here (it is done this way in no other script's UserCommand function. Every single term is going to get checked again anyway later, why do it twice and with lots of extra llSubStringIndex functions needed, i dont see how this performs better or saves anything, so remove it for now--- Otto
+// This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
+   if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
 
- /*   if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....*/
-
-    if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
-        list lParams = llParseString2List(sStr, [" "], []);
-        string sCommand=llToLower(llList2String(lParams,0));
-        //sStr=llGetSubString(llStringLength(sCommand),-1);
-        
-        string sElement=llList2String(lParams,1);
-        integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
-        //Debug("Command: "+sCommand+"\nElement: "+sElement);
-        if (sCommand == "themes" || sStrLower == "menu themes" || sCommand == "styles" || sStrLower == "menu styles") {
-            if (~llListFindList(g_lStyles,[sElement])) {
-                g_sStylesNotecardReadType=sElement;
-                //Notify(kID,"Setting style:"+sElement,TRUE);
-                g_iStylesNotecardLine=0;
-                g_kSetStyleUser=kID;
-                g_iSetStyleAuth=iNum;
-                g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
-            } else if (g_kStylesCardUUID) {
-                StyleMenu(kID,iNum);
-            } else {
-                llMessageLinked(LINK_SET, iNum, "options", kID);
-                Notify(kID,"Unable to find \".themes\" notecard in the " + g_sDeviceType + " contents.", FALSE);
-            }
-        }  else if (sCommand == "looks") LooksMenu(kID,iNum);
-        else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement); 
-        else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
-            //get currently shown state
-            integer iCurrentlyShown;
-            if (sElement=="") sElement=g_sDeviceType;
-            if (sElement == g_sDeviceType) {
-                if (sCommand=="show")       g_iCollarHidden=1;
-                else if (sCommand=="hide")  g_iCollarHidden=0;
-                else                        g_iCollarHidden = !g_iCollarHidden;  //toggle whole collar visibility
-                iCurrentlyShown=g_iCollarHidden;  //set visibility flag to match new collar visibility
-            }
-            //do the actual hiding and re/de-glowing of elements
-            integer iLinkCount = llGetNumberOfPrims()+1;
-            while (iLinkCount-- > 1) {
-                string sLinkType=LinkType(iLinkCount, "no"+sCommand);
-                if (sLinkType == sElement || sElement==g_sDeviceType) {
-                    if (!g_iCollarHidden || sElement == g_sDeviceType ) { 
-                        //don't change things if collar is set hidden, unless we're doing the hiding now
-                        llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
-                        //update glow settings for this link
-                        integer iGlowsIndex = llListFindList(g_lGlows,[iLinkCount]);
-                        if (iCurrentlyShown){  //restore glow if it is now shown
-                            if (~iGlowsIndex) {  //if it had a glow, restore it, otherwise don't
-                                float fGlow = (float)llList2String(g_lGlows, iGlowsIndex+1);
-                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, fGlow]);
-                            } else  llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex);  //remove glow from list
-                        } else {  //save glow and switch it off if it is now hidden
-                            float fGlow = llList2Float(llGetLinkPrimitiveParams(iLinkCount,[PRIM_GLOW,0]),0) ;
-                            if (fGlow > 0) {  //if it glows, store glow
-                                if (~iGlowsIndex) g_lGlows = llListReplaceList(g_lGlows,[fGlow],iGlowsIndex+1,iGlowsIndex+1) ;            
-                                else g_lGlows += [iLinkCount, fGlow];            
-                            }
-                            llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
-                        }
-                    }
-                }
-            }
-        } else if (sCommand == "shiny") {
-            string sShiny=llList2String(lParams,2);
-            integer iShinyIndex=llListFindList(g_lShiny,[sShiny]);
-            if (~iShinyIndex) sShiny=(string)iShinyIndex;  //if found, convert string to index and overwrite supplied string
-            integer iShiny=(integer)sShiny;  //cast string to integer, we now have the index, or 0 for a bad value
+        if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
+            list lParams = llParseString2List(sStr, [" "], []);
+            string sCommand=llToLower(llList2String(lParams,0));
+            //sStr=llGetSubString(llStringLength(sCommand),-1);
             
-            if (sShiny=="") {  //got no value for shiny, make shiny menu
-                ShinyMenu(kID, iNum, sStr);
-            } else if (iShiny || sShiny=="0") {  //if we have a value, or if 0 was passed in as a string value
+            string sElement=llList2String(lParams,1);
+            integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
+            //Debug("Command: "+sCommand+"\nElement: "+sElement);
+            if (sCommand == "themes" || sStrLower == "menu themes" || sCommand == "styles" || sStrLower == "menu styles") {
+                if (~llListFindList(g_lStyles,[sElement])) {
+                    g_sStylesNotecardReadType=sElement;
+                    //Notify(kID,"Setting style:"+sElement,TRUE);
+                    g_iStylesNotecardLine=0;
+                    g_kSetStyleUser=kID;
+                    g_iSetStyleAuth=iNum;
+                    g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
+                } else if (g_kStylesCardUUID) {
+                    StyleMenu(kID,iNum);
+                } else {
+                    llMessageLinked(LINK_SET, iNum, "options", kID);
+                    Notify(kID,"Unable to find \".themes\" notecard in the " + g_sDeviceType + " contents.", FALSE);
+                }
+            }  else if (sCommand == "looks") LooksMenu(kID,iNum);
+            else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement); 
+            else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
+                //get currently shown state
+                integer iCurrentlyShown;
+                if (sElement=="") sElement=g_sDeviceType;
+                if (sElement == g_sDeviceType) {
+                    if (sCommand=="show")       g_iCollarHidden=1;
+                    else if (sCommand=="hide")  g_iCollarHidden=0;
+                    else                        g_iCollarHidden = !g_iCollarHidden;  //toggle whole collar visibility
+                    iCurrentlyShown=g_iCollarHidden;  //set visibility flag to match new collar visibility
+                }
+                //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
-                while (iLinkCount-- > 2) {
+                while (iLinkCount-- > 1) {
                     string sLinkType=LinkType(iLinkCount, "no"+sCommand);
-                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                        //Debug("Setting shiny for link "+(string)iLinkCount+" to "+(string)iShiny);
-                        llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]); 
-                        //change "notexture" to "noshiny" if your g_sDeviceType supports it
-                    }
-                }
-                //save to settings DB
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
-                if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
-            }
-        }
-        else if (sCommand == "glow") {
-            string sGlow=llList2String(lParams,2);
-            integer iGlowIndex=llListFindList(g_lGlow,[sGlow]);
-            if (~iGlowIndex) sGlow=(string)llList2String(g_lGlow,iGlowIndex+1);//if found, convert string to index and overwrite supplied string
-            float fGlow = llList2Float(g_lGlow,iGlowIndex+1);   //cast string to float, we now have the index, or 0 for a bad value
-            if (sGlow=="") {  //got no value for glow, make glow menu
-                GlowMenu(kID, iNum, sStr);
-            } else if ((fGlow >= 0.0 && fGlow <= 1.0)|| sGlow=="0") {  //if we have a value, or if 0 was passed in as a string value
-                integer iLinkCount = llGetNumberOfPrims()+1;
-                while (iLinkCount-- > 2) {
-                    string sLinkType=LinkType(iLinkCount, "no"+sCommand);
-                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                       //Debug("Setting Glow for link "+(string)iLinkCount+" to "+(string)fGlow);
-                        llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);  //change "notexture" to "noGlow" if your g_sDeviceType supports it
-                    }
-                }
-                //save to settings DB
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
-                if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
-            }
-        } else if (sCommand == "color") {
-            //Debug("Colour command:"+sStr);
-            string sColour = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-            integer iColourIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColour]);
-            vector vColourValue=(vector)sColour;
-            if (~iColourIndex) vColourValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColourIndex);
-            if (vColourValue != ZERO_VECTOR || llToLower(sColour)=="black"){  //we have command, element and valid colour name
-                integer iLinkCount = llGetNumberOfPrims()+1;
-                while (iLinkCount-- > 2) {
-                    string sLinkType=LinkType(iLinkCount, "nocolor");
-                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                        llSetLinkColor(iLinkCount, vColourValue, ALL_SIDES);  //set link to new color
-                    }
-                }
-                //save to settings
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColourValue, "");
-                if (reMenu) ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
-            } else if (! ~iColourIndex) {  //not category, not a colour either. Send category menu
-                ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
-            }
-        } else if (sCommand=="texture") {
-            //Debug("Texture command:"+sStr);
-            //swap "Default" for the name of the default texture
-            string sTextureShortName=llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-            if (sTextureShortName=="Default") {  //if we have one, set the default texture for this element type, else error and give texture menu
-                integer iDefaultTextureIndex = llListFindList(g_lTextureDefaults, [sElement]);
-                if (~iDefaultTextureIndex) sTextureShortName=llList2String(g_lTextureDefaults, iDefaultTextureIndex + 1);
-            }
-            //get long name from short name
-            integer iTextureIndex=llListFindList(g_lTextures,[sElement+"~"+sTextureShortName]);  //first try to get index of custom texture
-            if ((key)sTextureShortName) iTextureIndex=0;  //we have been given a key, so pretend we found it in the list
-            else if (! ~iTextureIndex) {
-                iTextureIndex=llListFindList(g_lTextures,[sTextureShortName]);  //else get index of regular texture
-            }
-                
-            if (sTextureShortName=="") {  //no texture name supplied, send texture menu for this element
-                TextureMenu(kID, 0, iNum, sStr);
-            } else if (! ~iTextureIndex) {  //invalid texture name supplied, send texture menu for this element
-                Notify(kID,"No texture "+sTextureShortName+" found, please choose one from the menu.", FALSE);
-                TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
-            } else {  //valid element and texture names supplied, apply texture
-                //get key from long name
-                //Debug("Texture command is good:"+sStr);
-                string sTextureKey;
-                if ((key)sTextureShortName) sTextureKey=sTextureShortName;
-                else sTextureKey=llList2String(g_lTextureKeys,iTextureIndex);
-                //Debug("Key for "+sTextureShortName+" is "+sTextureKey);
-                //loop through prims and apply texture key
-                integer iLinkCount = llGetNumberOfPrims()+1;
-                while (iLinkCount-- > 2) {
-                    string sLinkType=LinkType(iLinkCount, "notexture");
-                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                        //Debug("Applying texture to element number "+(string)iLinkCount);
-                        // update prim texture for each face with save texture repeats, offsets and rotations
-                        integer iSides = llGetLinkNumberOfSides(iLinkCount);
-                        integer iFace ;
-                        for (iFace = 0; iFace < iSides; iFace++) {
-                            list lParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                            lParams = llDeleteSubList(lParams,0,0); // get texture params
-                            llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lParams);
+                    if (sLinkType == sElement || sElement==g_sDeviceType) {
+                        if (!g_iCollarHidden || sElement == g_sDeviceType ) { 
+                            //don't change things if collar is set hidden, unless we're doing the hiding now
+                            llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
+                            //update glow settings for this link
+                            integer iGlowsIndex = llListFindList(g_lGlows,[iLinkCount]);
+                            if (iCurrentlyShown){  //restore glow if it is now shown
+                                if (~iGlowsIndex) {  //if it had a glow, restore it, otherwise don't
+                                    float fGlow = (float)llList2String(g_lGlows, iGlowsIndex+1);
+                                    llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, fGlow]);
+                                } else  llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex);  //remove glow from list
+                            } else {  //save glow and switch it off if it is now hidden
+                                float fGlow = llList2Float(llGetLinkPrimitiveParams(iLinkCount,[PRIM_GLOW,0]),0) ;
+                                if (fGlow > 0) {  //if it glows, store glow
+                                    if (~iGlowsIndex) g_lGlows = llListReplaceList(g_lGlows,[fGlow],iGlowsIndex+1,iGlowsIndex+1) ;            
+                                    else g_lGlows += [iLinkCount, fGlow];            
+                                }
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
+                            }
                         }
-                    //} else {
-                        //Debug("Not applying texture to element number "+(string)iLinkCount);
                     }
                 }
-                //save to settings
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
-                if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
+            } else if (sCommand == "shiny") {
+                string sShiny=llList2String(lParams,2);
+                integer iShinyIndex=llListFindList(g_lShiny,[sShiny]);
+                if (~iShinyIndex) sShiny=(string)iShinyIndex;  //if found, convert string to index and overwrite supplied string
+                integer iShiny=(integer)sShiny;  //cast string to integer, we now have the index, or 0 for a bad value
+                
+                if (sShiny=="") {  //got no value for shiny, make shiny menu
+                    ShinyMenu(kID, iNum, sStr);
+                } else if (iShiny || sShiny=="0") {  //if we have a value, or if 0 was passed in as a string value
+                    integer iLinkCount = llGetNumberOfPrims()+1;
+                    while (iLinkCount-- > 2) {
+                        string sLinkType=LinkType(iLinkCount, "no"+sCommand);
+                        if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                            //Debug("Setting shiny for link "+(string)iLinkCount+" to "+(string)iShiny);
+                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]); 
+                            //change "notexture" to "noshiny" if your g_sDeviceType supports it
+                        }
+                    }
+                    //save to settings DB
+                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
+                    if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
+                }
             }
+            else if (sCommand == "glow") {
+                string sGlow=llList2String(lParams,2);
+                integer iGlowIndex=llListFindList(g_lGlow,[sGlow]);
+                if (~iGlowIndex) sGlow=(string)llList2String(g_lGlow,iGlowIndex+1);//if found, convert string to index and overwrite supplied string
+                float fGlow = llList2Float(g_lGlow,iGlowIndex+1);   //cast string to float, we now have the index, or 0 for a bad value
+                if (sGlow=="") {  //got no value for glow, make glow menu
+                    GlowMenu(kID, iNum, sStr);
+                } else if ((fGlow >= 0.0 && fGlow <= 1.0)|| sGlow=="0") {  //if we have a value, or if 0 was passed in as a string value
+                    integer iLinkCount = llGetNumberOfPrims()+1;
+                    while (iLinkCount-- > 2) {
+                        string sLinkType=LinkType(iLinkCount, "no"+sCommand);
+                        if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                           //Debug("Setting Glow for link "+(string)iLinkCount+" to "+(string)fGlow);
+                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);  //change "notexture" to "noGlow" if your g_sDeviceType supports it
+                        }
+                    }
+                    //save to settings DB
+                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
+                    if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
+                }
+            } else if (sCommand == "color") {
+                //Debug("Colour command:"+sStr);
+                string sColour = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
+                integer iColourIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColour]);
+                vector vColourValue=(vector)sColour;
+                if (~iColourIndex) vColourValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColourIndex);
+                if (vColourValue != ZERO_VECTOR || llToLower(sColour)=="black"){  //we have command, element and valid colour name
+                    integer iLinkCount = llGetNumberOfPrims()+1;
+                    while (iLinkCount-- > 2) {
+                        string sLinkType=LinkType(iLinkCount, "nocolor");
+                        if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                            llSetLinkColor(iLinkCount, vColourValue, ALL_SIDES);  //set link to new color
+                        }
+                    }
+                    //save to settings
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColourValue, "");
+                    if (reMenu) ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
+                } else if (! ~iColourIndex) {  //not category, not a colour either. Send category menu
+                    ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
+                }
+            } else if (sCommand=="texture") {
+                //Debug("Texture command:"+sStr);
+                //swap "Default" for the name of the default texture
+                string sTextureShortName=llDumpList2String(llDeleteSubList(lParams,0,1)," ");
+                if (sTextureShortName=="Default") {  //if we have one, set the default texture for this element type, else error and give texture menu
+                    integer iDefaultTextureIndex = llListFindList(g_lTextureDefaults, [sElement]);
+                    if (~iDefaultTextureIndex) sTextureShortName=llList2String(g_lTextureDefaults, iDefaultTextureIndex + 1);
+                }
+                //get long name from short name
+                integer iTextureIndex=llListFindList(g_lTextures,[sElement+"~"+sTextureShortName]);  //first try to get index of custom texture
+                if ((key)sTextureShortName) iTextureIndex=0;  //we have been given a key, so pretend we found it in the list
+                else if (! ~iTextureIndex) {
+                    iTextureIndex=llListFindList(g_lTextures,[sTextureShortName]);  //else get index of regular texture
+                }
+                    
+                if (sTextureShortName=="") {  //no texture name supplied, send texture menu for this element
+                    TextureMenu(kID, 0, iNum, sStr);
+                } else if (! ~iTextureIndex) {  //invalid texture name supplied, send texture menu for this element
+                    Notify(kID,"No texture "+sTextureShortName+" found, please choose one from the menu.", FALSE);
+                    TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
+                } else {  //valid element and texture names supplied, apply texture
+                    //get key from long name
+                    //Debug("Texture command is good:"+sStr);
+                    string sTextureKey;
+                    if ((key)sTextureShortName) sTextureKey=sTextureShortName;
+                    else sTextureKey=llList2String(g_lTextureKeys,iTextureIndex);
+                    //Debug("Key for "+sTextureShortName+" is "+sTextureKey);
+                    //loop through prims and apply texture key
+                    integer iLinkCount = llGetNumberOfPrims()+1;
+                    while (iLinkCount-- > 2) {
+                        string sLinkType=LinkType(iLinkCount, "notexture");
+                        if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                            //Debug("Applying texture to element number "+(string)iLinkCount);
+                            // update prim texture for each face with save texture repeats, offsets and rotations
+                            integer iSides = llGetLinkNumberOfSides(iLinkCount);
+                            integer iFace ;
+                            for (iFace = 0; iFace < iSides; iFace++) {
+                                list lParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
+                                lParams = llDeleteSubList(lParams,0,0); // get texture params
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lParams);
+                            }
+                        //} else {
+                            //Debug("Not applying texture to element number "+(string)iLinkCount);
+                        }
+                    }
+                    //save to settings
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
+                    if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
+                }
+            }
+        } else {  //anyone else gets an error
+            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET, iNum, "menu " + "options", kID);
         }
-    } else {  //anyone else gets an error
-        Notify(kID,g_sAuthError, FALSE);
-        llMessageLinked(LINK_SET, iNum, "menu " + "options", kID);
     }
 }
 
