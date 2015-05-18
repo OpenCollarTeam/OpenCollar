@@ -244,7 +244,9 @@ DoMenu(key id, integer page)
         mainMenu += ["Sits","Ground Sits","Walks"];
         //mainMenu += ["Sit Any "+Checkbox(sitAnywhere),"Typing "+Checkbox(typingOverrideOn),"Stand Time"];
         mainMenu += ["Sits "+Checkbox(sitOverride),"Typing "+Checkbox(typingOverrideOn),"Stand Time"];
-        mainMenu += ["Next Stand","Shuffle "+Checkbox(randomStands),"MORE"];
+        mainMenu += ["Next Stand","Shuffle "+Checkbox(randomStands)];
+        if (id == Owner) mainMenu += ["MORE"];
+        else mainMenu += ["Cancel"];
     }
     else
     { // Else, if we're not attached, we must be updating and therefore only display the update menu
@@ -461,7 +463,7 @@ default {
         }
         else if (num == DIALOG_RESPONSE)
         {
-//llSay(0,"got DIALOG_RESPONSE:"+str);
+
             integer menuindex = llListFindList(menuids, [id]);
             if (menuindex != -1)
             {
@@ -474,7 +476,7 @@ default {
                 //remove stride from menuids
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 menuids = llDeleteSubList(menuids, menuindex - 1, menuindex - 2 + menustride);             
-                
+               // llSay(0,"got DIALOG_RESPONSE:"+str+ ".From secondlife:///app/agent/"+(string)_id +"/about");
                 if (menutype == MENU)
                 {
                     if (_message == AOON)
@@ -606,10 +608,10 @@ default {
                     {
                         if (_id==Owner){     //wearer's menu, go to quick menu
                             llMessageLinked(LINK_THIS, COMMAND_OWNER, "OCAO_MENU", _id);
-                        } else {                    //fixme:  must be owner's menu, send back to collar anim menu
-                            //llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, "animations", _id);
-                            llMessageLinked(LINK_THIS, COMMAND_OWNER, "OCAO_MENU", _id);
-                        }
+                        }// else {                    //fixme:  must be owner's menu, send back to collar anim menu
+                           // llMessageLinked(LINK_THIS, COMMAND_TO_COLLAR, "animations", _id);
+                            //llMessageLinked(LINK_THIS, COMMAND_OWNER, "OCAO_MENU", _id);
+                        //}
                     }
                 }
                 else if (menutype == "SetsMenu")
