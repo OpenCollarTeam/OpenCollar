@@ -38,14 +38,14 @@ key card_key;
 key g_kWearer;
 
 // Message Map
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_SECOWNER = 501;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
+//integer COMMAND_EVERYONE = 504;
 
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
@@ -58,17 +58,27 @@ integer LM_SETTING_REQUEST_NOCACHE = 2005;
 integer INTERFACE_CHANNEL;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
-string DESIGN_ID;
-list DESIGN_SETTINGS;
-list USER_SETTINGS;
-integer USER_PREF = FALSE; // user switch
+//string DESIGN_ID;
+//list DESIGN_SETTINGS;
+list SETTINGS;
+list g_lScriptNames;
+//integer USER_PREF = FALSE; // user switch
 
 integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
 
-
-//Debug (string str) { llOwnerSay(llGetScriptName() + ": " + str);}
+integer g_iProfiled=1;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled) {
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
+}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -102,8 +112,8 @@ integer GroupIndex(list cache, string token)
 }
 integer SettingExists(string token)
 {
-    if (~llListFindList(USER_SETTINGS, [token])) return TRUE;
-    if (~llListFindList(DESIGN_SETTINGS, [token])) return TRUE;
+    if (~llListFindList(SETTINGS, [token])) return TRUE;
+   // if (~llListFindList(DESIGN_SETTINGS, [token])) return TRUE;
     return FALSE;
 }
 list SetSetting(list cache, string token, string value)
@@ -127,11 +137,11 @@ list AddSetting(list cache, string token, string value)
 
 string GetSetting(string token)
 {
-    integer i = llListFindList(USER_SETTINGS, [token]);
-    if (USER_PREF && ~i) return llList2String(USER_SETTINGS, i + 1);
-    integer d = llListFindList(DESIGN_SETTINGS, [token]);
-    if (~d) return llList2String(DESIGN_SETTINGS, d + 1);
-    return llList2String(USER_SETTINGS, i + 1);
+    integer i = llListFindList(SETTINGS, [token]);
+ //   if (USER_PREF && ~i) return llList2String(SETTINGS, i + 1);
+//    integer d = llListFindList(DESIGN_SETTINGS, [token]);
+//   if (~d) return llList2String(DESIGN_SETTINGS, d + 1);
+    return llList2String(SETTINGS, i + 1);
 }
 // per = number of entries to put in each bracket
 list ListCombineEntries(list in, string add, integer per)
@@ -156,7 +166,7 @@ DumpGroupSettings(string group, key id)
     string val;
     integer i;
     integer x;
-    if (!USER_PREF) jump user;
+/*    if (!USER_PREF) jump user;
     @designer;
     for (i = 0; i < llGetListLength(DESIGN_SETTINGS); i += 2)
     {
@@ -170,20 +180,20 @@ DumpGroupSettings(string group, key id)
         }
     }
     if (!USER_PREF) jump done;
-    @user;
-    for (i = 0; i < llGetListLength(USER_SETTINGS); i += 2)
+    @user;*/
+    for (i = 0; i < llGetListLength(SETTINGS); i += 2)
     {
-        tok = llList2String(USER_SETTINGS, i);
+        tok = llList2String(SETTINGS, i);
         if (SplitToken(tok, 0) == group)
         {
             tok = SplitToken(tok, 1);
-            val = llList2String(USER_SETTINGS, i + 1);
+            val = llList2String(SETTINGS, i + 1);
             if (~x=llListFindList(out, [tok])) out = llListReplaceList(out, [val], x + 1, x + 1);
             else out += [tok, val];
         }
     }
-    if (!USER_PREF) jump designer;
-    @done;
+ //   if (!USER_PREF) jump designer;
+ //  @done;
     out = ListCombineEntries(out, "=", 2);
     tok = (string)id + "\\" + group+ " settings\\";
     while (llGetListLength(out))
@@ -202,33 +212,33 @@ DumpGroupSettings(string group, key id)
 
 DelSetting(string token) // we'll only ever delete user settings
 {
-    integer i = llGetListLength(USER_SETTINGS) - 1;
+    integer i = llGetListLength(SETTINGS) - 1;
     if (SplitToken(token, 1) == "all")
     {
         token = SplitToken(token, 0);
         string var;
         for (; ~i; i -= 2)
         {
-            if (SplitToken(llList2String(USER_SETTINGS, i - 1), 0) == token)
-                USER_SETTINGS = llDeleteSubList(USER_SETTINGS, i - 1, i);
+            if (SplitToken(llList2String(SETTINGS, i - 1), 0) == token)
+                SETTINGS = llDeleteSubList(SETTINGS, i - 1, i);
         }
         return;
     }
-    i = llListFindList(USER_SETTINGS, [token]);
-    if (~i) USER_SETTINGS = llDeleteSubList(USER_SETTINGS, i, i + 1);
+    i = llListFindList(SETTINGS, [token]);
+    if (~i) SETTINGS = llDeleteSubList(SETTINGS, i, i + 1);
 }
 
 // run delimiters & add escape-characters for DumpCache
 list Add2OutList(list in)
 {
     if (!llGetListLength(in)) return [];
-    string set = DESIGN_ID;
-    list out = ["#---Designer Defaults---#"];
-    if (in == USER_SETTINGS)
-    {
-        set = "User_";
-        out = ["#---My Settings---#"];
-    }
+//    string set = DESIGN_ID;
+//    list out = ["#---Designer Defaults---#"];
+//    if (in == SETTINGS)
+//    {
+//        set = "User_";
+    list out = ["#---My Settings---#"];
+//    }
     string buffer;
     string temp;
     string sid;
@@ -246,13 +256,14 @@ list Add2OutList(list in)
         tok = SplitToken(tok, 1);
         integer bIsSplit = FALSE ;
         integer iAddedLength = llStringLength(buffer) + llStringLength(val) 
-            + llStringLength(sid) +llStringLength(set) + 2;
+            + llStringLength(sid) +2; //+llStringLength(set);
         if (group != sid || llStringLength(buffer) == 0 || iAddedLength >= CARD_LIMIT ) // new group
         {
             // Starting a new group.. flush the buffer to the output.
             if ( llStringLength(buffer) ) out += [buffer] ;
             sid = group;
-            pre = "\n" + set + sid + "=";
+           // pre = "\n" + set + sid + "=";
+            pre = "\n" + sid + "=";
         }
         else pre = buffer + "~";
         temp = pre + tok + "~" + val;
@@ -292,8 +303,8 @@ DumpCache(key id)
     // compile everything into one list, so we can tell the user everything seamlessly
     list out;
     list say = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
-    say += Add2OutList(DESIGN_SETTINGS) + ["\n"];
-    say += Add2OutList(USER_SETTINGS);
+//    say += Add2OutList(DESIGN_SETTINGS) + ["\n"];
+    say += Add2OutList(SETTINGS);
     string old;
     string new;
     integer c;
@@ -324,17 +335,17 @@ SendValues()
     integer n = 0;
     string tok;
     list out;
-    if (USER_PREF) jump DesignSet;
-    @UserSet;
-    for (; n < llGetListLength(USER_SETTINGS); n += 2)
+//    if (USER_PREF) jump DesignSet;
+//    @UserSet;
+    for (; n < llGetListLength(SETTINGS); n += 2)
     {
-        tok = llList2String(USER_SETTINGS, n) + "=";
-        tok += llList2String(USER_SETTINGS, n + 1);
+        tok = llList2String(SETTINGS, n) + "=";
+        tok += llList2String(SETTINGS, n + 1);
         if (llListFindList(out, [tok]) == -1) out += [tok];
     }
     n = 0;
-    if (USER_PREF) jump done;
-    @DesignSet;
+//    if (USER_PREF) jump done;
+/*    @DesignSet;
     for (; n < llGetListLength(DESIGN_SETTINGS); n += 2)
     {
         tok = llList2String(DESIGN_SETTINGS, n) + "=";
@@ -343,7 +354,7 @@ SendValues()
     }
     n = 0;
     if (USER_PREF) jump UserSet;
-    @done;
+    @done;*/
     for (; n < llGetListLength(out); n++)
     {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(out, n), "");
@@ -372,10 +383,23 @@ integer UserCommand(integer iAuth, string sStr, key kID)
     return TRUE;
 }
 
+GetPossibleSettings() {
+    g_lScriptNames = [];
+    integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+    while(i) {
+        i--;
+        string sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
+        integer index = llSubStringIndex(sScriptName, "- ");
+        g_lScriptNames += [llToLower(llGetSubString(sScriptName, index + 2, -1))];
+    }
+}
+
+
 default
 {
     state_entry()
     {
+        GetPossibleSettings();
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free)
@@ -388,11 +412,11 @@ default
             defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
             card_key = llGetInventoryKey(defaultscard);
         }
-        DESIGN_ID = llGetObjectDesc();
+/*        DESIGN_ID = llGetObjectDesc();
         integer i = llSubStringIndex(DESIGN_ID, "~");
         DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
         i = llSubStringIndex(DESIGN_ID, "~");
-        DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
+        DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);*/
     }
 
     on_rez(integer iParam)
@@ -425,7 +449,6 @@ default
                 // first we can filter out & skip blank lines & remarks
                 data = llStringTrim(data, STRING_TRIM_HEAD);
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
-                
                 // check for "continued" line pieces
                 if ( llStringLength(split_line) ) 
                 { 
@@ -440,20 +463,23 @@ default
                     
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
-                i = llSubStringIndex(data, "_");
-                string id = llGetSubString(data, 0, i);
-                if (id != DESIGN_ID && id != "User_") jump nextline;
-                data = llGetSubString(data, i + 1, -1); // shave id off
+              //  i = llSubStringIndex(data, "_");
+              //  string id = llGetSubString(data, 0, i);
+             //   if (id != DESIGN_ID && id != "User_") jump nextline;
+             //   data = llGetSubString(data, i + 1, -1); // shave id off
                 i = llSubStringIndex(data, "=");
-                sid = (llGetSubString(data, 0, i - 1)) + "_";
+                sid = (llGetSubString(data, 0, i - 1));
+                if (~llListFindList(g_lScriptNames, [sid])) sid += "_";
+                else  jump nextline ;
                 data = llGetSubString(data, i + 1, -1);
                 list lData = llParseString2List(data, ["~"], []);
                 for (i = 0; i < llGetListLength(lData); i += 2)
                 {
                     tok = llList2String(lData, i);
                     val = llList2String(lData, i + 1);
-                    if (id == DESIGN_ID) DESIGN_SETTINGS = SetSetting(DESIGN_SETTINGS, sid + tok, val);
-                    else USER_SETTINGS = SetSetting(USER_SETTINGS, sid + tok, val);
+                //    if (id == DESIGN_ID) DESIGN_SETTINGS = SetSetting(DESIGN_SETTINGS, sid + tok, val);
+                 //   else 
+                    SETTINGS = SetSetting(SETTINGS, sid + tok, val);
                 }
                 @nextline;
                 defaultsline++;
@@ -480,8 +506,9 @@ default
             string value = llList2String(params, 1);
             // if it's a revert to a designer setting, wipe it from user list
             // otherwise, set it to user list
-            if (~llListFindList(DESIGN_SETTINGS, [token, value])) DelSetting(token);
-            else USER_SETTINGS = SetSetting(USER_SETTINGS, token, value);
+           // if (~llListFindList(DESIGN_SETTINGS, [token, value])) DelSetting(token);
+           // else 
+            SETTINGS = SetSetting(SETTINGS, token, value);
         }
         else if (iNum == LM_SETTING_REQUEST) {  
              //check the cache for the token 
@@ -502,6 +529,7 @@ default
         {
             if (llGetInventoryKey(defaultscard) != card_key)
             {
+                GetPossibleSettings();
                 // the .settings card changed.  Re-read it.
                 defaultsline = 0;
                 if (llGetInventoryKey(defaultscard)) {
@@ -511,6 +539,12 @@ default
             }
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
             SendValues();
+        }
+        if (change & CHANGED_REGION) {
+            if (g_iProfiled) {
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
         }
     }
 }
