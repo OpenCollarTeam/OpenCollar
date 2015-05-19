@@ -128,7 +128,7 @@ float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -138,8 +138,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
-
+}
+*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
@@ -332,7 +332,7 @@ SetTexture(string sIn, key kIn) {
     if (g_sParticleMode == "Ribbon") {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
-        if (GetSetting("R_TextureID")) g_sParticleTextureID = (key)GetSetting("R_TextureID");
+        if (GetSetting("R_TextureID")) g_sParticleTextureID = GetSetting("R_TextureID");
         if (kIn) Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
     }
     else if (g_sParticleMode == "Classic") {
@@ -400,7 +400,7 @@ default {
 
     state_entry() {
         llSetMemoryLimit(57344);  //2015-05-06 (7884 bytes free)
-        g_sScript = "leashParticle_";
+        g_sScript = "leashparticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();
         StopParticles(TRUE);
@@ -449,9 +449,9 @@ default {
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
-            else if (sMessage == "leashParticle reset") {
+            else if (llToLower(sMessage) == "leashparticle reset") {
                 g_lSettings = []; // clear current settings
-                Notify(kMessageID, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
+                if (kMessageID) Notify(kMessageID, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
                 GetSettings(TRUE); 
             }
@@ -594,9 +594,10 @@ default {
             if (sToken == "leash_leashedto") g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
             else if (llGetSubString(sToken, 0, i) == g_sScript) {
                 // load current settings
+                //Debug("Setting Response. "+sToken+sValue);
                 sToken = llGetSubString(sToken, i + 1, -1);
                 SaveSettings(sToken, sValue, FALSE,0,"");
-                SaveDefaultSettings(sToken, sValue);
+             //   SaveDefaultSettings(sToken, sValue);
             }
             else if (llGetSubString(sToken, 0, i) == "leash_") {
                 sToken = llGetSubString(sToken, i + 1, -1);
@@ -607,12 +608,12 @@ default {
                     sValue = llGetSubString(sValue, 0, 0);
                     g_iStrictMode = (integer)sValue;
                     SaveSettings("Strict", sValue, FALSE,0,"");
-                    SaveDefaultSettings("Strict", sValue);
+                  //  SaveDefaultSettings("Strict", sValue);
                     ConfigureMenu(kMessageID, iAuth);
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
                     SaveSettings("Turn", sValue, FALSE,0,"");
-                    SaveDefaultSettings("Turn", sValue);
+                 //   SaveDefaultSettings("Turn", sValue);
                 }
             }
             else if (sToken == "strictAuthError"){

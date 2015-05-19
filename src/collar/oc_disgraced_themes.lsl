@@ -37,6 +37,7 @@ integer g_iTexturesNotecardLine;  //current number in notecard read
 key g_kTextureCardUUID;  //UUID of textures notecard, used to determine when it changed so it can be re-read only when needed
 string g_sTextureCard;  //stores name of current textures card.  Might be "textures" or ="textures_custom", set in BuildTexturesList()
 key g_kTexturesNotecardRead;  //key of the dataserver request for notecard read
+string g_sCurrentTheme;
 
 list g_lMenuIDs;  //menu information
 integer g_iMenuStride=3;
@@ -52,6 +53,8 @@ integer COMMAND_EVERYONE    =   504;
 integer LM_SETTING_SAVE     =  2000;  //scripts send messages on this channel to have settings saved to httpdb
 integer LM_SETTING_RESPONSE =  2002;  //the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE   =  2003;  //delete token from DB
+
+integer POPUP_HELP = 1001;
 
 //integer MENUNAME_REQUEST    =  3000;
 integer MENUNAME_RESPONSE   =  3001;
@@ -126,7 +129,7 @@ key g_kSetStyleUser;
 string g_sStylesNotecardReadType;
 list g_lStyles;
 integer g_iStylesNotecardLine;
-
+integer g_iLeashParticle;
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -352,7 +355,6 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
             //sStr=llGetSubString(llStringLength(sCommand),-1);
-            
             string sElement=llList2String(lParams,1);
             integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
@@ -368,7 +370,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     StyleMenu(kID,iNum);
                 } else {
                     llMessageLinked(LINK_SET, iNum, "options", kID);
-                    Notify(kID,"Unable to find \".themes\" notecard in the " + g_sDeviceType + " contents.", FALSE);
+                    llMessageLinked(LINK_SET, POPUP_HELP,"This "+g_sDeviceType+" has no themes installed. You can type \"_PREFIX_looks\" to fine-tune your "+g_sDeviceType+" (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement); 
@@ -675,20 +677,36 @@ default {
                             g_lStyles += sData;
                         } else if (sData==g_sStylesNotecardReadType) {  //we just found our section
                             g_sStylesNotecardReadType="processing";
+                            g_sCurrentTheme = sData;
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
-                            Notify(g_kSetStyleUser, "Theme applied!", FALSE);
+                            if (!g_iLeashParticle) llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                            else g_iLeashParticle = FALSE;
+                            Notify(g_kSetStyleUser, "Theme \""+g_sCurrentTheme+"\" applied!", FALSE);
                             UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                             return;
                         }
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
                     } else {
                         if (g_sStylesNotecardReadType=="processing"){
-                            //Debug("[good line]:"+sData);
+                           // llOwnerSay("[good line]:"+sData);
+                           //llOwnerSay("iLeash="+(string)iLeashParticle);
                             //do what the notecard says
                             list lParams = llParseStringKeepNulls(sData,["~"],[]);
                             string element = llStringTrim(llList2String(lParams,0),STRING_TRIM);
                             if (element != "")
                             {
+                                if (~llSubStringIndex(element,"leashparticle")) {
+                                   // llOwnerSay("[good line]:"+sData);
+                                    llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                                    integer i;
+                                    for (i=1; i < llGetListLength(lParams); i=i+2) {
+                                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
+                                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
+                                    }
+                                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent","");
+                                    g_iLeashParticle = TRUE;
+                                    jump next ;
+                                }
                                 sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
                                 if (sData != "") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
@@ -696,13 +714,16 @@ default {
                                 sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
                                 if (sData != "") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
                             }
+                            @next;
                         }
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
                     }
                 } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
             } else {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
-                    Notify(g_kSetStyleUser, "Theme applied!", FALSE);
+                    if (!g_iLeashParticle) llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                    else g_iLeashParticle = FALSE;
+                    Notify(g_kSetStyleUser, "Theme \""+g_sCurrentTheme+"\" applied!", FALSE);
                     UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                 //} else {
                     //Debug(llDumpList2String(g_lStyles,","));
@@ -716,7 +737,9 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
+            else g_kTextureCardUUID == "";
             if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
+            else g_kStylesCardUUID = "";
         }
 /*
         if (iChange & CHANGED_REGION) {
