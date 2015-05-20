@@ -169,7 +169,7 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".\n\nProcessing a Theme might take up to a minute!\n\nApplying a Theme will overide all individual changes made to the "+g_sDeviceType+"'s look.", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".\n\nProcessing a Theme might take up to a minute!", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 HideMenu(key kID, integer iAuth, string sElement) {
@@ -702,7 +702,7 @@ default {
                                    // llOwnerSay("[good line]:"+sData);
                                     llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
                                     integer i;
-                                    for (i=1; i < llGetListLength(lParams); i=i+2) {
+                                    for (; i < llGetListLength(lParams); i=i+2) {
                                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                     }
@@ -714,13 +714,10 @@ default {
                                 if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
                                 if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                else UserCommand(g_iSetStyleAuth, "color " + element+" <1,1,1>", g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
                                 if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                else UserCommand(g_iSetStyleAuth, "shiny " + element+" none", g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,4),STRING_TRIM);
                                 if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "glow " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                else UserCommand(g_iSetStyleAuth, "glow " + element+" 0.0", g_kSetStyleUser, FALSE);
                             }
                             @next;
                         }
