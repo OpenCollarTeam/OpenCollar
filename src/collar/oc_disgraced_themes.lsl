@@ -24,7 +24,7 @@ list g_lElementFlags;
 list g_lTextureDefaults;  //default textures for each element, actually the last textures sent out by the settings script, so not so much "default settings", closer to "what wa set when worn"
 list g_lShinyDefaults;
 list g_lHideDefaults;
-list g_lColourDefaults;
+list g_lColorDefaults;
 
 string g_sDeviceType = "collar";
 
@@ -130,7 +130,7 @@ string g_sStylesNotecardReadType;
 list g_lStyles;
 integer g_iStylesNotecardLine;
 integer g_iLeashParticle;
-/*
+
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -142,7 +142,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -169,7 +169,7 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".\n\nProcessing a Theme might take up to a minute!\n\nApplying a Theme will overide all individual changes made to the "+g_sDeviceType+"'s look.", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 HideMenu(key kID, integer iAuth, string sElement) {
@@ -211,12 +211,12 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
     Dialog(kID, "\nSelect a texture to apply to "+sTexElement+".", lElementTextures, ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
 }
 
-ColourMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
-    //Debug("ColourMenu: "+sBreadcrumbs);
+ColorMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
+    //Debug("ColorMenu: "+sBreadcrumbs);
     string sCategory = llList2String(llParseString2List(sBreadcrumbs,[" "],[]),-1);
-    sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once colour is selected
+    sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once color is selected
     list lButtons = llList2ListStrided(g_lColors,0,-1,2);
-    Dialog(kID, "\nSelect a color for "+sCategory+".", lButtons, ["BACK"], iPage, iAuth, "ColourMenu~"+sBreadcrumbs);
+    Dialog(kID, "\nSelect a color for "+sCategory+".", lButtons, ["BACK"], iPage, iAuth, "ColorMenu~"+sBreadcrumbs);
 }
 
 ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
@@ -318,7 +318,7 @@ BuildElementsList(){
             //prim desc will be elementtype~notexture(maybe)
             list lParams = llParseString2List(llStringTrim(sElement,STRING_TRIM), ["~"], []);
             string sElementName=llList2String(lParams,0);
-            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolour, 4=noshiny, 8=noglow
+            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow
             if (~llListFindList(lParams,["notexture"])) iLinkFlags = iLinkFlags | 1;
             if (~llListFindList(lParams,["nocolor"])) iLinkFlags = iLinkFlags | 2;
             if (~llListFindList(lParams,["noshiny"])) iLinkFlags = iLinkFlags | 4;
@@ -436,8 +436,11 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             else if (sCommand == "glow") {
                 string sGlow=llList2String(lParams,2);
                 integer iGlowIndex=llListFindList(g_lGlow,[sGlow]);
-                if (~iGlowIndex) sGlow=(string)llList2String(g_lGlow,iGlowIndex+1);//if found, convert string to index and overwrite supplied string
-                float fGlow = llList2Float(g_lGlow,iGlowIndex+1);   //cast string to float, we now have the index, or 0 for a bad value
+                float fGlow = (float)sGlow;
+                if (~iGlowIndex) { 
+                    sGlow=(string)llList2String(g_lGlow,iGlowIndex+1);//if found, convert string to index and overwrite supplied string
+                    fGlow = llList2Float(g_lGlow,iGlowIndex+1);   //cast string to float, we now have the index, or 0 for a bad value
+                }                    
                 if (sGlow=="") {  //got no value for glow, make glow menu
                     GlowMenu(kID, iNum, sStr);
                 } else if ((fGlow >= 0.0 && fGlow <= 1.0)|| sGlow=="0") {  //if we have a value, or if 0 was passed in as a string value
@@ -454,24 +457,24 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
                 }
             } else if (sCommand == "color") {
-                //Debug("Colour command:"+sStr);
-                string sColour = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-                integer iColourIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColour]);
-                vector vColourValue=(vector)sColour;
-                if (~iColourIndex) vColourValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColourIndex);
-                if (vColourValue != ZERO_VECTOR || llToLower(sColour)=="black"){  //we have command, element and valid colour name
+                //Debug("Color command:"+sStr);
+                string sColor = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
+                integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColor]);
+                vector vColorValue=(vector)sColor;
+                if (~iColorIndex) vColorValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
+                if (vColorValue != ZERO_VECTOR || llToLower(sColor)=="black"){  //we have command, element and valid color name
                     integer iLinkCount = llGetNumberOfPrims()+1;
                     while (iLinkCount-- > 2) {
                         string sLinkType=LinkType(iLinkCount, "nocolor");
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                            llSetLinkColor(iLinkCount, vColourValue, ALL_SIDES);  //set link to new color
+                            llSetLinkColor(iLinkCount, vColorValue, ALL_SIDES);  //set link to new color
                         }
                     }
                     //save to settings
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColourValue, "");
-                    if (reMenu) ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
-                } else if (! ~iColourIndex) {  //not category, not a colour either. Send category menu
-                    ColourMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColorValue, "");
+                    if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
+                } else if (! ~iColorIndex) {  //not category, not a color either. Send category menu
+                    ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             } else if (sCommand=="texture") {
                 //Debug("Texture command:"+sStr);
@@ -573,10 +576,10 @@ default {
                 if (~i) g_lHideDefaults = llListReplaceList(g_lHideDefaults, [sValue], i + 1, i + 1);
                 else g_lHideDefaults += [sToken, sValue];
             }
-            else if (sCategory == "color_") {  //add any received colour as defaults. Default here means whatever was current last time settings spoke.
-                i = llListFindList(g_lColourDefaults, [sToken]);
-                if (~i) g_lColourDefaults = llListReplaceList(g_lColourDefaults, [sValue], i + 1, i + 1);
-                else g_lColourDefaults += [sToken, sValue];
+            else if (sCategory == "color_") {  //add any received color as defaults. Default here means whatever was current last time settings spoke.
+                i = llListFindList(g_lColorDefaults, [sToken]);
+                if (~i) g_lColorDefaults = llListReplaceList(g_lColorDefaults, [sValue], i + 1, i + 1);
+                else g_lColorDefaults += [sToken, sValue];
             }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -708,11 +711,16 @@ default {
                                     jump next ;
                                 }
                                 sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-                                if (sData != "") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
-                                if (sData != "") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                else UserCommand(g_iSetStyleAuth, "color " + element+" <1,1,1>", g_kSetStyleUser, FALSE);
                                 sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
-                                if (sData != "") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                else UserCommand(g_iSetStyleAuth, "shiny " + element+" none", g_kSetStyleUser, FALSE);
+                                sData = llStringTrim(llList2String(lParams,4),STRING_TRIM);
+                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "glow " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                else UserCommand(g_iSetStyleAuth, "glow " + element+" 0.0", g_kSetStyleUser, FALSE);
                             }
                             @next;
                         }
@@ -741,13 +749,13 @@ default {
             if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
             else g_kStylesCardUUID = "";
         }
-/*
+
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/
+
     }
 }
