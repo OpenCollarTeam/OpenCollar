@@ -85,6 +85,43 @@ string g_sScript;
 list g_lSensorDetails;
 integer g_bSensorLock;
 integer g_iSensorTimeout;
+integer g_iColorMenu;
+
+list g_lColors = [
+"Light Shade",<0.82745,0.82745,0.82745>,
+"Gray Shade",<0.70588, 0.70588, 0.70588>,
+"Dark Shade",<0.20784, 0.20784, 0.20784>,
+"Brown Shade",<0.65490, 0.58431, 0.53333>,
+"Red Shade",<0.66275, 0.52549, 0.52549>,
+"Blue Shade",<0.64706, 0.66275, 0.71765>,
+"Green Shade",<0.62353, 0.69412, 0.61569>,
+"Pink Shade",<0.74510, 0.62745, 0.69020>,
+"Gold Shade",<0.69020, 0.61569, 0.43529>,
+
+"Magenta",<1.00000, 0.00000, 0.50196>,
+"Pink",<1.00000, 0.14902, 0.50980>,
+"Hot Pink",<1.00000, 0.05490, 0.72157>,
+"Firefighter",<0.88627, 0.08627, 0.00392>,
+"Sun",<1.00000, 1.00000, 0.18039>,
+"Flame",<0.92941, 0.43529, 0.00000>,
+"Matrix",<0.07843, 1.00000, 0.07843>,
+"Electricity",<0.00000, 0.46667, 0.92941>,
+"Violet Wand",<0.63922, 0.00000, 0.78824>,
+
+"Baby Blue",<0.75686, 0.75686, 1.00000>,
+"Baby Pink",<1.00000, 0.52157, 0.76078>,
+"Rose",<0.93333, 0.64314, 0.72941>,
+"Beige",<0.86667, 0.78039, 0.71765>,
+"Earth",<0.39608, 0.27451, 0.18824>,
+"Ocean",<0.25882, 0.33725, 0.52549>,
+"Yolk",<0.98824, 0.73333, 0.29412>,
+"Wasabi",<0.47059, 1.00000, 0.65098>,
+"Lavender",<0.89020, 0.65882, 0.99608>,
+
+"Black",<0.00000, 0.00000, 0.00000>,
+"White",<1.00000, 1.00000, 1.00000>
+];
+
 
 /*
 integer g_iProfiled;
@@ -99,6 +136,7 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
+
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -590,6 +628,10 @@ default {
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
+            if (llList2String(lButtons,0) == "colormenu please") {
+                lButtons = llList2ListStrided(g_lColors,0,-1,2);
+                g_iColorMenu = TRUE;
+            }
             integer iDigits=-1;   //iDigits==-1 means Dialog should run idigits on the buttons
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
             integer iAuth = COMMAND_NOAUTH;
@@ -675,6 +717,12 @@ default {
                 {
                     integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
                     sAnswer = llList2String(items, iBIndex);
+                }
+                else if (g_iColorMenu) {
+                    integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sMessage]);
+                    if (~iColorIndex) sAnswer = llList2String(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
+                    else sAnswer = sMessage;
+                    g_iColorMenu = FALSE;
                 }
                 else sAnswer = sMessage;
                 if (llSubStringIndex(sExtraInfo,"getavi_|")==0){

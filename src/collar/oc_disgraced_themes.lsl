@@ -76,7 +76,7 @@ integer ELEMENT_NOSHINY     =  4;
 integer ELEMENT_NOGLOW      =  8;
 //integer ELEMENT_NOHIDE      = 16;
 
-
+/*
 list g_lColors = [
 "Light Shade",<0.82745, 0.82745, 0.82745>,
 "Gray Shade",<0.70588, 0.70588, 0.70588>,
@@ -110,7 +110,7 @@ list g_lColors = [
 
 "Black",<0.00000, 0.00000, 0.00000>,
 "White",<1.00000, 1.00000, 1.00000>
-];
+];*/
 
 list g_lShiny = ["none","low","medium","high"];
 list g_lHide = ["Hide","Show"];
@@ -141,8 +141,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+}*/
+
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -184,7 +184,7 @@ ShinyMenu(key kID, integer iAuth, string sElement) {
 GlowMenu(key kID, integer iAuth, string sElement) {
     string sGlowElement = llList2String(llParseString2List(sElement,[" "],[]),-1);
     list lButtons = llList2ListStrided(g_lGlow, 0, -1, 2);
-    Dialog(kID, "\nSelect a degree of glow for "+sGlowElement+".", lButtons, ["BACK"], 0, iAuth, "ShinyMenu~"+sElement);
+    Dialog(kID, "\nSelect a degree of glow for "+sGlowElement+".", lButtons, ["BACK"], 0, iAuth, "GlowMenu~"+sElement);
 }
 
 TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
@@ -214,8 +214,8 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
 ColorMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
     //Debug("ColorMenu: "+sBreadcrumbs);
     string sCategory = llList2String(llParseString2List(sBreadcrumbs,[" "],[]),-1);
-    sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once color is selected
-    list lButtons = llList2ListStrided(g_lColors,0,-1,2);
+    //sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once color is selected
+    list lButtons = ["colormenu please"];//llList2ListStrided(g_lColors,0,-1,2);
     Dialog(kID, "\nSelect a color for "+sCategory+".", lButtons, ["BACK"], iPage, iAuth, "ColorMenu~"+sBreadcrumbs);
 }
 
@@ -347,7 +347,7 @@ BuildElementsList(){
 
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
-    //Debug("UserCOmmandStr: "+sStr);
+    //Debug("UserCommandStr: "+sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
 
@@ -459,9 +459,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             } else if (sCommand == "color") {
                 //Debug("Color command:"+sStr);
                 string sColor = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-                integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColor]);
-                vector vColorValue=(vector)sColor;
-                if (~iColorIndex) vColorValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
+               // integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColor]);
+                vector vColorValue=(vector)llDumpList2String(llDeleteSubList(lParams,0,1)," ");
+               // if (~iColorIndex) vColorValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
                 if (vColorValue != ZERO_VECTOR || llToLower(sColor)=="black"){  //we have command, element and valid color name
                     integer iLinkCount = llGetNumberOfPrims()+1;
                     while (iLinkCount-- > 2) {
@@ -473,7 +473,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     //save to settings
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColorValue, "");
                     if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
-                } else if (! ~iColorIndex) {  //not category, not a color either. Send category menu
+                } else {// if (! ~iColorIndex) {  //not category, not a color either. Send category menu
                     ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             } else if (sCommand=="texture") {
@@ -592,6 +592,7 @@ default {
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                  //remove stride from g_lMenuIDs.  We have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
+                //Debug("sMenu="+sMenu);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuPath = llParseString2List(sMenu,[" "],[]);
                 //Debug("Got response from menu: "+sMenu);
