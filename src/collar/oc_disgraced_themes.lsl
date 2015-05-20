@@ -130,7 +130,7 @@ string g_sStylesNotecardReadType;
 list g_lStyles;
 integer g_iStylesNotecardLine;
 integer g_iLeashParticle;
-
+/*
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -142,7 +142,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-
+*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -746,13 +746,13 @@ default {
             if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
             else g_kStylesCardUUID = "";
         }
-
+/*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-
+*/
     }
 }
