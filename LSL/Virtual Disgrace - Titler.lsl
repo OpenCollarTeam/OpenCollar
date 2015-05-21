@@ -80,7 +80,8 @@ string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.02,0.02,0.4>; // prim size, initial value (z - text offset height)
-list g_lColours=[
+
+/*list g_lColours=[
     "Magenta",<1.00000, 0.00000, 0.50196>,
     "Pink",<1.00000, 0.14902, 0.50980>,
     "Hot Pink",<1.00000, 0.05490, 0.72157>,
@@ -92,7 +93,7 @@ list g_lColours=[
     "Violet Wand",<0.63922, 0.00000, 0.78824>,
     "Black",<0.00000, 0.00000, 0.00000>,
     "White",<1.00000, 1.00000, 1.00000>
-];
+];*/
 
 /*
 integer g_iProfiled=1;
@@ -185,22 +186,23 @@ UserCommand(integer iAuth, string sStr, key kAv){
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth             
             Notify(kAv,g_sAuthError, FALSE);
-        } else if (sCommand=="color" || sStr=="colour") {
-            string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
-            if (sColour != "") {    //we got a colour, so set the colour
-                integer colourIndex=llListFindList(g_lColours,[sColour]);
-                if (~colourIndex){
-                    g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
+        } else if (sCommand=="color") {
+            string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+            if (sColor != "") {    //we got a colour, so set the colour
+               // integer colourIndex=llListFindList(g_lColours,[sColour]);
+               // if (~colourIndex){
+                   //g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
+                   g_vColor=(vector)sColor;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
-                }
+                //}
                 renderTitle();
             } else {    //no colour given, so pop the dialog.
-                list lColourNames;
-                integer numColours=llGetListLength(g_lColours)/2;
-                while (numColours--){
-                    lColourNames+=llList2String(g_lColours,numColours*2);
-                }
-                g_kColourDialogID = Dialog(kAv, "\n\nSelect a colour from the list", lColourNames, [UPMENU],0, iAuth);
+              //  list lColourNames;
+              //  integer numColours=llGetListLength(g_lColours)/2;
+              //  while (numColours--){
+              //      lColourNames+=llList2String(g_lColours,numColours*2);
+               // }
+                g_kColourDialogID = Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth);
                 return;
             }
         } else if (sCommand == "on") {

@@ -48,7 +48,7 @@ integer g_iLMListernerDetach;
 
 integer COMMAND_PARTICLE = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
-
+/*
 list g_lColors = [
 "Magenta",<1.00000, 0.00000, 0.50196>, "Pink",<1.00000, 0.14902, 0.50980>, "Hot Pink",<1.00000, 0.05490, 0.72157>,
 "Firefighter",<0.88627, 0.08627, 0.00392>, "Sun",<1.00000, 1.00000, 0.18039>, "Flame",<0.92941, 0.43529, 0.00000>,
@@ -59,7 +59,7 @@ list g_lColors = [
 "Earth",<0.39608, 0.27451, 0.18824>, "Ocean",<0.25882, 0.33725, 0.52549>, "Yolk",<0.98824, 0.73333, 0.29412>,
 
 "Black",<0.00000, 0.00000, 0.00000>, "White",<1.00000, 1.00000, 1.00000>
-];
+];*/
 // ----- collar -----
 //string g_sWearerName;
 
@@ -383,9 +383,9 @@ FeelMenu(key kIn, integer iAuth) {
 
 ColorMenu(key kIn, integer iAuth) {
     string sPrompt = "\nChoose a color.";
-    list lButtons =llList2ListStrided(g_lColors,0,-1,2);
+    //list lButtons =llList2ListStrided(g_lColors,0,-1,2);
     g_sCurrentMenu = L_COLOR;
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    g_kDialogID = Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth);
 }
 
 LMSay() {
@@ -532,12 +532,8 @@ default {
                     ConfigureMenu(kAv, iAuth);
                 }
                 else if (g_sCurrentMenu == L_COLOR) {
-                    integer iIndex = llListFindList(g_lColors, [sButton]) +1;
-                    llOwnerSay((string)llList2Vector(g_lColors, iIndex));
-                    if (iIndex) {
-                        g_vLeashColor = llList2Vector(g_lColors, iIndex);
-                        SaveSettings(L_COLOR, Vec2String(g_vLeashColor), TRUE,0,"");
-                    }
+                    g_vLeashColor = (vector)sButton;
+                    SaveSettings(L_COLOR, sButton, TRUE,0,"");
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
 
                     ColorMenu(kAv, iAuth);
