@@ -169,7 +169,7 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".\n\nProcessing a Theme might take up to a minute!", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 HideMenu(key kID, integer iAuth, string sElement) {
