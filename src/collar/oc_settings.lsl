@@ -68,6 +68,7 @@ integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
 
+/*
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -79,6 +80,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
+*/
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -540,11 +542,13 @@ default
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
             SendValues();
         }
+/*        
         if (change & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
+*/
     }
 }
