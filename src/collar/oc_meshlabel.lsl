@@ -17,8 +17,8 @@ string g_sSubMenu = "Label";
 
 key g_kWearer;
 
-integer g_iAppLock = FALSE;
-string g_sAppLockToken = "Appearance_Lock";
+//integer g_iAppLock = FALSE;
+//string g_sAppLockToken = "Appearance_Lock";
 
 //opencollar MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -104,6 +104,19 @@ string g_sScript;
 float Ureps;
 float Vreps;
 
+/*
+integer g_iProfiled=1;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")|"+(string)llGetFreeMemory()+") :\n" + sStr);
+}
+*/
 
 integer GetIndex(string sChar)
 {
@@ -279,8 +292,8 @@ FontMenu(key kID, integer iAuth)
 integer UserCommand(integer iAuth, string sStr, key kAv)
 {
     if (iAuth > COMMAND_WEARER || iAuth < COMMAND_OWNER) return FALSE; // sanity check
-    
-    if (iAuth == COMMAND_OWNER || !g_iAppLock)
+    //Debug("Command: "+sStr);
+    if (iAuth == COMMAND_OWNER)
     {
         if (sStr == "menu " + g_sSubMenu || llToLower(sStr)=="label") 
         {
@@ -291,12 +304,13 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
 
-        if (sCommand == "lockappearance" && iAuth == COMMAND_OWNER)
+/*        if (sCommand == "lockappearance" && iAuth == COMMAND_OWNER)
         {
             if (llToLower(llList2String(lParams, 1)) == "0") g_iAppLock = FALSE;
             else g_iAppLock = TRUE;
         }        
-        else if (sCommand == "labeltext")
+        else*/
+        if (sCommand == "labeltext")
         {
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);            
@@ -342,7 +356,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             SetLabel();            
         }        
     }
-    else if ((iAuth >= COMMAND_SECOWNER && iAuth <= COMMAND_WEARER) && g_iAppLock)
+    else if (iAuth >= COMMAND_SECOWNER && iAuth <= COMMAND_WEARER) 
     {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));        
         if (sStr=="menu "+g_sSubMenu)
@@ -363,6 +377,7 @@ default
 {
     state_entry()
     {
+        llSetMemoryLimit(45056);
         g_sScript = "label_";
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
@@ -399,7 +414,7 @@ default
                 else if (sToken == "show") g_iShow = (integer)sValue;
                 else if (sToken == "scroll") g_iScroll = (integer)sValue;                
             }
-            else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
+            //else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
             else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "settings" && sValue == "sent")
             {
@@ -504,5 +519,11 @@ default
         {
             if (LabelsCount()==TRUE) SetLabel();
         }
+/*        if (change & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }*/
     }
 }
