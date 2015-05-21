@@ -58,7 +58,7 @@ key g_kDialogID;
 key g_kTBoxID;
 key g_kFontID;
 key g_kColorID;
-
+/*
 list g_lColours=[
     "Gray Shade",<0.70588, 0.70588, 0.70588>,
     "Gold Shade",<0.69020, 0.61569, 0.43529>,
@@ -71,7 +71,7 @@ list g_lColours=[
     "Violet Wand",<0.63922, 0.00000, 0.78824>,
     "Black",<0.00000, 0.00000, 0.00000>,
     "White",<1.00000, 1.00000, 1.00000>
-];
+];*/
 
 integer g_iScroll = FALSE;
 integer g_iShow = TRUE;
@@ -168,7 +168,7 @@ string g_sScript;
 /////////// END GLOBAL VARIABLES ////////////
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -178,28 +178,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+}*/
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
-}
-
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
 
 ResetCharIndex() {
 
@@ -417,6 +397,25 @@ SetOffsets(key font)
     g_kFontTexture = font;
 }
 
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
+{
+    if (kID == g_kWearer) llOwnerSay(sMsg);
+    else
+    {
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
+        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+    }
+}
+
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
+{
+    key kID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    return kID;
+}
+
 MainMenu(key kID, integer iAuth)
 {
     list lButtons= [g_sTextMenu, g_sColorMenu, g_sFontMenu];
@@ -439,13 +438,13 @@ TextMenu(key kID, integer iAuth)
 ColorMenu(key kID, integer iAuth)
 {
     string sPrompt = "\n\nSelect a colour from the list";
-    list lColourNames;
+ /*   list lColourNames;
     integer numColours=llGetListLength(g_lColours)/2;
     while (numColours--)
     {
         lColourNames+=llList2String(g_lColours,numColours*2);
-    }
-    g_kColorID=Dialog(kID, sPrompt, lColourNames, [UPMENU], 0, iAuth);
+    }*/
+    g_kColorID=Dialog(kID, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth);
 }
 
 FontMenu(key kID, integer iAuth)
@@ -499,11 +498,11 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         }
         else if (sCommand == "labelcolor")
         {
-            string sColour= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
-            integer colourIndex=llListFindList(g_lColours,[sColour]);
-            if (~colourIndex)
+            string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+           // integer colourIndex=llListFindList(g_lColours,[sColour]);
+            if (sColor != "")
             {
-                g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
+                g_vColor=(vector)sColor;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
                 SetLabel();
             }
@@ -540,26 +539,31 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
 
 default
 {
-    on_rez(integer iNum) {
-        llResetScript();
-    }
-
-    state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+    state_entry()
+    { 
+        llSetMemoryLimit(49152);
+          // Initialize the character index.
+        //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
+        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_sScript = "label_";
         g_kWearer = llGetOwner();
 
-        integer ok = LabelsCount();  //first count the label prims.
+        //first count the label prims.
+        integer ok = LabelsCount();
         SetOffsets(NULL_KEY);
-        ResetCharIndex();  // Initialize the character index.
+        ResetCharIndex();
 
         if (g_iCharLimit <= 0) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }        
-
+        //if(ok) SetLabel();
         g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
-        //Debug("Starting");
+    }
+
+    on_rez(integer iNum)
+    {
+        llResetScript();
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -675,18 +679,17 @@ default
         if(g_iSctollPos > llStringLength(g_sScrollText)) g_iSctollPos = 0 ;
     }
 
-    changed(integer change) {
+    changed(integer change)
+    {
         if(change & CHANGED_LINK) // if links changed
         {
             if (LabelsCount()==TRUE) SetLabel();
         }
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
+/*        if (change & CHANGED_REGION) {
+            if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
-*/
+        }*/
     }
 }
