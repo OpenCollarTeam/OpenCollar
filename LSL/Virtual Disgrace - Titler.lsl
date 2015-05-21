@@ -72,7 +72,7 @@ string g_sWearerName;
 string g_sAuthError = "Access denied.";
 
 key g_kDialogID;    //menu handle
-key g_kColourDialogID;    //menu handle
+key g_kColorDialogID;    //menu handle
 key g_kTBoxId;      //text box handle
 key g_kLfmUserBoxId;      //text box handle
 
@@ -202,7 +202,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
               //  while (numColours--){
               //      lColourNames+=llList2String(g_lColours,numColours*2);
                // }
-                g_kColourDialogID = Dialog(kAv, "\nChoose a color!", ["colormenu please"], [UPMENU],0, iAuth);
+                g_kColorDialogID = Dialog(kAv, "\nChoose a color!", ["colormenu please"], [UPMENU],0, iAuth);
                 return;
             }
         } else if (sCommand == "on") {
@@ -482,7 +482,7 @@ default{
                     else if (sMessage == "☒ Evil") UserCommand(iAuth, "title off", kAv);
                     UserCommand(iAuth, "menu titler", kAv);
                 }
-            } else if (kID == g_kColourDialogID) {  //response form the colours menu
+            } else if (kID == g_kColorDialogID) {  //response form the colours menu
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
