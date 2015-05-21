@@ -202,7 +202,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
               //  while (numColours--){
               //      lColourNames+=llList2String(g_lColours,numColours*2);
                // }
-                g_kColourDialogID = Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth);
+                g_kColourDialogID = Dialog(kAv, "\nChoose a color!", ["colormenu please"], [UPMENU],0, iAuth);
                 return;
             }
         } else if (sCommand == "on") {
