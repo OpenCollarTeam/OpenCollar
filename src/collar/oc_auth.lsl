@@ -32,8 +32,8 @@ string g_sPrefix;
 list g_lQueryId; //5 strided list of dataserver/http request: key, uuid, requestType, kAv, remenu.  For AV name/group name  lookups
 integer g_iQueryStride=5;
 
-//added for attachment auth
-integer g_iInterfaceChannel;
+//added for attachment auth, for now taken out as we do not support attachment auth 
+//integer g_iInterfaceChannel;
 
 string g_sAuthError = "Access denied.";
 
@@ -223,7 +223,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         if (sName == sThisName || sName == "remove all") {   //remove name and key
             if (sToken == "owner" || sToken == "trust") {
                 Notify(llList2String(lPeople,numPeople*2),"Your access to " + g_sWearerName + "'s " + g_sDeviceType + " has been revoked.",FALSE);
-                llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+               // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
             lPeople = llDeleteSubList(lPeople, numPeople*2, numPeople*2+1);
             Notify(kCmdr, sThisName + " removed from " + sToken + " list.", TRUE);
@@ -254,13 +254,13 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
     else {
         if (sToken=="owner") {
             lPeople=g_lOwners;
-            if (llGetListLength (lPeople) >=12) {
+            if (llGetListLength (lPeople) >=6) {
                 Notify(kAv, "\n\nSorry, we reached a limit!\n\nSix people at a time can have this role.\n",FALSE);
                 return;
             }
         } else if (sToken=="trust") {
             lPeople=g_lSecOwners;
-            if (llGetListLength (lPeople) >=24) {
+            if (llGetListLength (lPeople) >=30) {
                 Notify(kAv, "\n\nSorry, we reached a limit!\n\nTwelve people at a time can have this role.\n",FALSE);
                 return;
             } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
@@ -308,12 +308,12 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
 
         if (sToken == "owner") {
             Notify(kPerson, "\n\n"+ g_sWearerName + " belongs to you now.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+           // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
         if (sToken == "trust") {
             Notify(kPerson, "\n\n"+ g_sWearerName + " seems to trust you.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",FALSE);
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+           // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         }
         
         string sOldToken=sToken;
@@ -331,6 +331,9 @@ SayOwners() {
     // Give a "you are owned by" message, nicely formatted.
     list ownernames = llList2ListStrided(llDeleteSubList(g_lOwners, 0, 0), 0, -1, 2);
     integer ownercount = llGetListLength(ownernames);
+    integer index = llListFindList(ownernames, [llKey2Name(g_kWearer)]);
+    //replace the wearer's name with "yourself" and put it to the end of the list.
+    if (~index) ownernames = llDeleteSubList(ownernames,index,index) +  ["yourself"];
     if (ownercount) {
         string msg = "You belong to ";
         if (ownercount == 1) 
@@ -361,7 +364,7 @@ SetPrefix(string sValue) {
 integer in_range(key kID) {
     if (g_iLimitRange) {
         if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0)) > 20) { //if the distance between my position and their position  > 20
-            llDialog(kID, "\nNot in range...", [], 298479);
+            llDialog(kID, "\nNot in range...", [], (integer)llFrand(1000000)+99999);
             return FALSE;
         }
     }
@@ -514,7 +517,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "groupname", "");
             g_iGroupEnabled = FALSE;
             Notify(kID, "Group unset.", FALSE);
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+           // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             llMessageLinked(LINK_SET, RLV_CMD, "setgroup=y", "auth");
         } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
@@ -523,7 +526,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "public=" + (string) g_iOpenAccess, "");
             Notify(kID, "Your " + g_sDeviceType + " is open to the public.", FALSE);
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+           // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sCommand == "private") {
@@ -531,7 +534,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             g_iOpenAccess = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "public", "");
             Notify(kID, "Your " + g_sDeviceType + " is closed to the public.", FALSE);
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
+           // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
         } else Notify(kID,g_sAuthError, FALSE);
         if (remenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (~llSubStringIndex(sCommand, "limitrange")) {
@@ -640,18 +643,9 @@ default {
         SetPrefix("auto");
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //added for attachment auth
-        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+       // g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
+       // if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         //Debug("Auth starting: "+(string)llGetFreeMemory());
-        // Request owner list.  Be careful about doing this in all scripts,
-        // because we can easily flood the 64 event limit in LSL's event queue
-        // if all the scripts send a ton of link messages at the same time on
-        // startup.
-        // why request what is sent anyway ???
-       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "owner", "");
-       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "trust", "");
-       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "tempowner", "");
-       // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, g_sScript + "block", "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {  
