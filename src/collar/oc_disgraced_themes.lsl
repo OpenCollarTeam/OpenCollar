@@ -76,42 +76,6 @@ integer ELEMENT_NOSHINY     =  4;
 integer ELEMENT_NOGLOW      =  8;
 //integer ELEMENT_NOHIDE      = 16;
 
-/*
-list g_lColors = [
-"Light Shade",<0.82745, 0.82745, 0.82745>,
-"Gray Shade",<0.70588, 0.70588, 0.70588>,
-"Dark Shade",<0.20784, 0.20784, 0.20784>,
-"Brown Shade",<0.65490, 0.58431, 0.53333>,
-"Red Shade",<0.66275, 0.52549, 0.52549>,
-"Blue Shade",<0.64706, 0.66275, 0.71765>,
-"Green Shade",<0.62353, 0.69412, 0.61569>,
-"Pink Shade",<0.74510, 0.62745, 0.69020>,
-"Gold Shade",<0.69020, 0.61569, 0.43529>,
-
-"Magenta",<1.00000, 0.00000, 0.50196>,
-"Pink",<1.00000, 0.14902, 0.50980>,
-"Hot Pink",<1.00000, 0.05490, 0.72157>,
-"Firefighter",<0.88627, 0.08627, 0.00392>,
-"Sun",<1.00000, 1.00000, 0.18039>,
-"Flame",<0.92941, 0.43529, 0.00000>,
-"Matrix",<0.07843, 1.00000, 0.07843>,
-"Electricity",<0.00000, 0.46667, 0.92941>,
-"Violet Wand",<0.63922, 0.00000, 0.78824>,
-
-"Baby Blue",<0.75686, 0.75686, 1.00000>,
-"Baby Pink",<1.00000, 0.52157, 0.76078>,
-"Rose",<0.93333, 0.64314, 0.72941>,
-"Beige",<0.86667, 0.78039, 0.71765>,
-"Earth",<0.39608, 0.27451, 0.18824>,
-"Ocean",<0.25882, 0.33725, 0.52549>,
-"Yolk",<0.98824, 0.73333, 0.29412>,
-"Wasabi",<0.47059, 1.00000, 0.65098>,
-"Lavender",<0.89020, 0.65882, 0.99608>,
-
-"Black",<0.00000, 0.00000, 0.00000>,
-"White",<1.00000, 1.00000, 1.00000>
-];*/
-
 list g_lShiny = ["none","low","medium","high"];
 list g_lHide = ["Hide","Show"];
 list g_lGlows;
@@ -120,7 +84,6 @@ list g_lGlow = ["none",0.0,"low",0.1,"medium",0.2,"high",0.4,"veryHigh",0.8];
 integer g_iNumHideableElements;
 integer g_iNumElements;
 integer g_iCollarHidden;
-//string g_sStylesCard="Styles";
 string g_sStylesCard=".themes";
 key g_kStylesNotecardRead;
 key g_kStylesCardUUID;
@@ -143,7 +106,6 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
-
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -151,7 +113,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
-
     //Debug("Made "+sName+" menu.");
 } 
 
@@ -170,10 +131,6 @@ LooksMenu(key kID, integer iAuth) {
 
 StyleMenu(key kID, integer iAuth) {
     Dialog(kID, "\nChoose a visual theme for your "+g_sDeviceType+".", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
-}
-
-HideMenu(key kID, integer iAuth, string sElement) {
-    Dialog(kID, "\nSelect an action, Show or Hide.", g_lHide, ["BACK"], 0, iAuth, "HideMenu~"+sElement);
 }
 
 ShinyMenu(key kID, integer iAuth, string sElement) {
@@ -214,29 +171,27 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
 ColorMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
     //Debug("ColorMenu: "+sBreadcrumbs);
     string sCategory = llList2String(llParseString2List(sBreadcrumbs,[" "],[]),-1);
-    //sBreadcrumbs = llDumpList2String(llDeleteSubList(llParseString2List(sBreadcrumbs,[" "],[]),-1,-1)," ");  //remove category name from breadcrumbs, we don't need it once color is selected
-    list lButtons = ["colormenu please"];//llList2ListStrided(g_lColors,0,-1,2);
-    Dialog(kID, "\nSelect a color for "+sCategory+".", lButtons, ["BACK"], iPage, iAuth, "ColorMenu~"+sBreadcrumbs);
+    Dialog(kID, "\nSelect a color for "+sCategory+".", ["colormenu please"], ["BACK"], iPage, iAuth, "ColorMenu~"+sBreadcrumbs);
 }
 
-ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
+ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
     integer iMask;
-    string sType;
-    _sType=llToLower(_sType);
-    if (_sType == "texture") {
+    string sTypeNice;
+    sType=llToLower(sType);
+    if (sType == "texture") {
         iMask=ELEMENT_NOTEXTURE;
-        sType = "Texture";
-    } else if (_sType == "shiny") {
+        sTypeNice = "Texture";
+    } else if (sType == "shiny") {
         iMask=ELEMENT_NOSHINY;
-        sType = "Shininess";
-    } else if (_sType == "glow") {
+        sTypeNice = "Shininess";
+    } else if (sType == "glow") {
         iMask=ELEMENT_NOGLOW;
-        sType = "Glow";        
-    } else if (_sType == "color") {
+        sTypeNice = "Glow";        
+    } else if (sType == "color") {
         iMask=ELEMENT_NOCOLOR;
-        sType = "Color";
+        sTypeNice = "Color";
     }
-    string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's "+sType+" should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
+    string sPrompt = "\nSelect an element of the " + g_sDeviceType + " who's "+sTypeNice+" should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the " + g_sDeviceType + ".";
 
     list lButtons;
     integer numElements = g_iNumElements;
@@ -247,7 +202,7 @@ ElementMenu(key _kAv, integer _iPage, integer _iAuth, string _sType) {
         }
     }
     lButtons = llListSort(lButtons, 1, TRUE);
-    Dialog(_kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], _iPage, _iAuth, "ElementMenu~"+_sType);
+    Dialog(kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -277,7 +232,6 @@ BuildTexturesList(){
     g_lTextures=[];
     g_lTextureKeys=[];
     g_lTextureShortNames=[];
-    
     //first add textures in the collar
     integer numInventoryTextures=llGetInventoryNumber(INVENTORY_TEXTURE);
     while (numInventoryTextures--) {
@@ -292,7 +246,6 @@ BuildTexturesList(){
             }
         }
     }
-
     //after inventory, start reading textures notecard
     g_sTextureCard=".textures";
     if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard="textures";
@@ -354,14 +307,12 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
         if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
-            //sStr=llGetSubString(llStringLength(sCommand),-1);
             string sElement=llList2String(lParams,1);
             integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
             if (sCommand == "themes" || sStrLower == "menu themes" || sCommand == "styles" || sStrLower == "menu styles") {
                 if (~llListFindList(g_lStyles,[sElement])) {
                     g_sStylesNotecardReadType=sElement;
-                    //Notify(kID,"Setting style:"+sElement,TRUE);
                     g_iStylesNotecardLine=0;
                     g_kSetStyleUser=kID;
                     g_iSetStyleAuth=iNum;
@@ -428,7 +379,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             //change "notexture" to "noshiny" if your g_sDeviceType supports it
                         }
                     }
-                    //save to settings DB
+                    //save to settings 
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
                     if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
                 }
@@ -452,26 +403,23 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);  //change "notexture" to "noGlow" if your g_sDeviceType supports it
                         }
                     }
-                    //save to settings DB
+                    //save to settings
                     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
                     if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
                 }
             } else if (sCommand == "color") {
                 //Debug("Color command:"+sStr);
                 string sColor = llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-               // integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sColor]);
-                vector vColorValue=(vector)llDumpList2String(llDeleteSubList(lParams,0,1)," ");
-               // if (~iColorIndex) vColorValue = llList2Vector(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
-                if (vColorValue != ZERO_VECTOR || llToLower(sColor)=="black"){  //we have command, element and valid color name
+                if (sColor != "") { //(vColorValue != ZERO_VECTOR || llToLower(sColor)=="black"){  //we have command, element and valid color name
                     integer iLinkCount = llGetNumberOfPrims()+1;
+                    vector vColorValue=(vector)sColor;
                     while (iLinkCount-- > 2) {
                         string sLinkType=LinkType(iLinkCount, "nocolor");
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
                             llSetLinkColor(iLinkCount, vColorValue, ALL_SIDES);  //set link to new color
                         }
-                    }
-                    //save to settings
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+(string)vColorValue, "");
+                    } //save to settings
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
                     if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {// if (! ~iColorIndex) {  //not category, not a color either. Send category menu
                     ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
@@ -534,16 +482,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
 }
 
 default {
-/*
-    on_rez(integer arg){
-        if (g_iProfiled) {
-            llScriptProfiler(1);
-            Debug("profiling restarted");
-        }
-    }
-*/
+
     state_entry() {
-        //llSetMemoryLimit(65536);  //2015-05-06 (10732 bytes free)
+        //llSetMemoryLimit(65536);  //cant set any lower in this script
         g_kWearer = llGetOwner();
         BuildTexturesList();
         BuildElementsList();
@@ -592,12 +533,11 @@ default {
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                  //remove stride from g_lMenuIDs.  We have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                //Debug("sMenu="+sMenu);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuPath = llParseString2List(sMenu,[" "],[]);
                 //Debug("Got response from menu: "+sMenu);
                 if (llSubStringIndex(sMenu,"ElementMenu~")==0) {  //they just chose an element (or chose to touch to select one) , now choose a texture
-                    if (sMessage == "BACK") LooksMenu(kAv, iAuth);//llMessageLinked(LINK_SET, iAuth, "options", kAv);//llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
+                    if (sMessage == "BACK") LooksMenu(kAv, iAuth);//llMessageLinked(LINK_SET, iAuth, "menu Appearance", kAv);  //main menu
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
                         if (sMessage == "*Touch*") {
@@ -692,15 +632,15 @@ default {
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
                     } else {
                         if (g_sStylesNotecardReadType=="processing"){
-                           // llOwnerSay("[good line]:"+sData);
-                           //llOwnerSay("iLeash="+(string)iLeashParticle);
+                           //Debug("[good line]:"+sData);
+                           //Debug("iLeash="+(string)iLeashParticle);
                             //do what the notecard says
                             list lParams = llParseStringKeepNulls(sData,["~"],[]);
                             string element = llStringTrim(llList2String(lParams,0),STRING_TRIM);
                             if (element != "")
                             {
                                 if (~llSubStringIndex(element,"leashparticle")) {
-                                   // llOwnerSay("[good line]:"+sData);
+                                   // Debug("[good line]:"+sData);
                                     llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
                                     integer i;
                                     for (; i < llGetListLength(lParams); i=i+2) {
@@ -743,9 +683,9 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
-            else g_kTextureCardUUID == "";
+            else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
             if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
-            else g_kStylesCardUUID = "";
+            else if (!llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) g_kStylesCardUUID = "";
         }
 /*
         if (iChange & CHANGED_REGION) {
