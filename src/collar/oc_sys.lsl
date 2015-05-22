@@ -120,7 +120,7 @@ string g_sPrefix;
 string g_sAuthError = "Access denied.";
 
 //Option Menu variables
-string DUMPCACHE = "Print";
+string DUMPSETTINGS = "Print";
 //string PREFUSER = "☐ Personal";
 //string PREFDESI = "☒ Personal"; // yes, I hate cutoff buttons
 string STEALTH_OFF = "☐ Stealth"; // show the whole device
@@ -225,11 +225,11 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 
 OptionsMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n\"" + DUMPCACHE + "\" current settings to chat.";
+    string sPrompt = "\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
-    list lButtons = [DUMPCACHE,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
+    list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
     if (STEALTH) {
         sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
         lButtons += [STEALTH_ON];
@@ -671,7 +671,7 @@ default
                         HelpMenu(kAv,iAuth);
                     }
                 } else if (sMenu == "Options") {
-                     if (sMessage == DUMPCACHE) llMessageLinked(LINK_SET, iAuth,"dump_cache",kAv);
+                     if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SET, iAuth,"settings",kAv);
                      else if (sMessage == LOADCARD) llMessageLinked(LINK_SET, iAuth,sMessage,kAv);
                      else if (sMessage == REFRESH_MENU) llMessageLinked(LINK_SET, iAuth,sMessage,kAv);
                      else if (sMessage == STEALTH_OFF) {

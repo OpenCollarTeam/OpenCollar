@@ -17,18 +17,8 @@
 // do that anymore.  But so long as plugin scripts are still using central
 // storage like this, it's always possible we could bring back an online DB or
 // someone could offer a third party one.
-//
-//  Standardized format for settings - this will facilitate concordant AddOn integrations
-//      ID_Group=Token~Value~Token~Value (etc) in notecard (hard storage)
-//      Group_Token=Value (Setting storage & script usage)
-//  where:
-//      ID_ = collar description's 3rd entry (after the 2nd tilde)
-//              or "User_" for user customizations
-//      Group = what script/AddOn these settings are for
-//      Token = Setting to affect
-//      Value = set Token to this value
-//  EX: oc_texture=Base~steel~Ring~stripes (notecard line)
-//      texture_Base=steel,texture_Ring=stripes (in the scripts)
+
+
 
 string defaultscard = ".settings";
 string split_line; // to parse lines that were split due to lsl constraints
@@ -48,21 +38,17 @@ integer COMMAND_WEARER = 503;
 //integer POPUP_HELP = 1001;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
-//str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
 integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
-integer INTERFACE_CHANNEL;
+//integer INTERFACE_CHANNEL;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
-//string DESIGN_ID;
-//list DESIGN_SETTINGS;
 list SETTINGS;
 list g_lScriptNames;
-//integer USER_PREF = FALSE; // user switch
 
 integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
@@ -115,11 +101,10 @@ integer GroupIndex(list cache, string token)
 integer SettingExists(string token)
 {
     if (~llListFindList(SETTINGS, [token])) return TRUE;
-   // if (~llListFindList(DESIGN_SETTINGS, [token])) return TRUE;
     return FALSE;
 }
-list SetSetting(list cache, string token, string value)
-{
+
+list SetSetting(list cache, string token, string value) {
     integer idx = llListFindList(cache, [token]);
     if (~idx) return llListReplaceList(cache, [value], idx + 1, idx + 1);
     idx = GroupIndex(cache, token);
@@ -128,8 +113,7 @@ list SetSetting(list cache, string token, string value)
 }
 
 // like SetSetting, but only sets the value if there's not one already there.
-list AddSetting(list cache, string token, string value)
-{
+list AddSetting(list cache, string token, string value) {
     integer i = llListFindList(cache, [token]);
     if (~i) return cache;
     i = GroupIndex(cache, token);
@@ -137,17 +121,12 @@ list AddSetting(list cache, string token, string value)
     return cache + [token, value];
 }
 
-string GetSetting(string token)
-{
+string GetSetting(string token) {
     integer i = llListFindList(SETTINGS, [token]);
- //   if (USER_PREF && ~i) return llList2String(SETTINGS, i + 1);
-//    integer d = llListFindList(DESIGN_SETTINGS, [token]);
-//   if (~d) return llList2String(DESIGN_SETTINGS, d + 1);
     return llList2String(SETTINGS, i + 1);
 }
 // per = number of entries to put in each bracket
-list ListCombineEntries(list in, string add, integer per)
-{
+list ListCombineEntries(list in, string add, integer per) {
     list out;
     while (llGetListLength(in))
     {
@@ -160,60 +139,7 @@ list ListCombineEntries(list in, string add, integer per)
     return out;
 }
 
-DumpGroupSettings(string group, key id)
-{
-    list sets;
-    list out;
-    string tok;
-    string val;
-    integer i;
-    integer x;
-/*    if (!USER_PREF) jump user;
-    @designer;
-    for (i = 0; i < llGetListLength(DESIGN_SETTINGS); i += 2)
-    {
-        tok = llList2String(DESIGN_SETTINGS, i);
-        if (SplitToken(tok, 0) == group)
-        {
-            tok = SplitToken(tok, 1);
-            val = llList2String(DESIGN_SETTINGS, i + 1);
-            if (~x=llListFindList(out, [tok])) out = llListReplaceList(out, [val], x + 1, x + 1);
-            else out += [tok, val];
-        }
-    }
-    if (!USER_PREF) jump done;
-    @user;*/
-    for (i = 0; i < llGetListLength(SETTINGS); i += 2)
-    {
-        tok = llList2String(SETTINGS, i);
-        if (SplitToken(tok, 0) == group)
-        {
-            tok = SplitToken(tok, 1);
-            val = llList2String(SETTINGS, i + 1);
-            if (~x=llListFindList(out, [tok])) out = llListReplaceList(out, [val], x + 1, x + 1);
-            else out += [tok, val];
-        }
-    }
- //   if (!USER_PREF) jump designer;
- //  @done;
-    out = ListCombineEntries(out, "=", 2);
-    tok = (string)id + "\\" + group+ " settings\\";
-    while (llGetListLength(out))
-    {
-        val = llList2String(out, 0);
-        if (llStringLength(tok + val) + 2 > SAY_LIMIT)
-        {
-            llRegionSayTo(id, 0, tok);
-            tok = (string)id + "\\" + group + " settings\\" + val;
-        }
-        else tok += ";" + val;
-        out = llDeleteSubList(out, 0, 0);
-    }
-    llRegionSayTo(id, INTERFACE_CHANNEL, tok);
-}
-
-DelSetting(string token) // we'll only ever delete user settings
-{
+DelSetting(string token) { // we'll only ever delete user settings
     integer i = llGetListLength(SETTINGS) - 1;
     if (SplitToken(token, 1) == "all")
     {
@@ -231,16 +157,9 @@ DelSetting(string token) // we'll only ever delete user settings
 }
 
 // run delimiters & add escape-characters for DumpCache
-list Add2OutList(list in)
-{
+list Add2OutList(list in) {
     if (!llGetListLength(in)) return [];
-//    string set = DESIGN_ID;
-//    list out = ["#---Designer Defaults---#"];
-//    if (in == SETTINGS)
-//    {
-//        set = "User_";
     list out = ["#---My Settings---#"];
-//    }
     string buffer;
     string temp;
     string sid;
@@ -250,8 +169,7 @@ list Add2OutList(list in)
     string val;
     integer i;
     
-    for (i=0 ; i < llGetListLength(in); i += 2)
-    {
+    for (i=0 ; i < llGetListLength(in); i += 2) {
         tok = llList2String(in, i);
         val = llList2String(in, i + 1);
         group = SplitToken(tok, 0);
@@ -269,8 +187,7 @@ list Add2OutList(list in)
         }
         else pre = buffer + "~";
         temp = pre + tok + "~" + val;
-        while (llStringLength(temp))
-        {
+        while (llStringLength(temp)) {
             buffer = temp;
             if (llStringLength(temp) > CARD_LIMIT)
             {
@@ -288,34 +205,27 @@ list Add2OutList(list in)
             }
         }
     }
-
     // If there's anything left in the buffer, flush it to output.
     if ( llStringLength(buffer) ) out += [buffer] ;
-    
     // Possibly this line was supposed to reallocate the list to keep it from taking too
     // much space. Logically, this is a 'do nothing' line - replacing the last item in 
     // the 'out' list with the last item in the out list, with no changes.
 //////    out = llListReplaceList(out, [llList2String(out, -1)], -1, -1);
-
     return out;
 }
 
-DumpCache(key id)
-{
+DumpCache(key id) {
     // compile everything into one list, so we can tell the user everything seamlessly
     list out;
     list say = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
-//    say += Add2OutList(DESIGN_SETTINGS) + ["\n"];
     say += Add2OutList(SETTINGS);
     string old;
     string new;
     integer c;
-    while (llGetListLength(say))
-    {
+    while (llGetListLength(say)) {
         new = llList2String(say, 0);
         c = llStringLength(old + new) + 2;
-        if (c > SAY_LIMIT)
-        {
+        if (c > SAY_LIMIT) {
             out += [old];
             old = "";
         }
@@ -323,22 +233,18 @@ DumpCache(key id)
         say = llDeleteSubList(say, 0, 0);
     }
     out += [old];
-    while (llGetListLength(out))
-    {
+    while (llGetListLength(out)) {
         Notify(id, llList2String(out, 0), TRUE);
         out = llDeleteSubList(out, 0, 0);
     }
 }
 
-SendValues()
-{
+SendValues() {
     //Debug("Sending all settings");
     //loop through and send all the settings
     integer n = 0;
     string tok;
     list out;
-//    if (USER_PREF) jump DesignSet;
-//    @UserSet;
     for (; n < llGetListLength(SETTINGS); n += 2)
     {
         tok = llList2String(SETTINGS, n) + "=";
@@ -346,17 +252,6 @@ SendValues()
         if (llListFindList(out, [tok]) == -1) out += [tok];
     }
     n = 0;
-//    if (USER_PREF) jump done;
-/*    @DesignSet;
-    for (; n < llGetListLength(DESIGN_SETTINGS); n += 2)
-    {
-        tok = llList2String(DESIGN_SETTINGS, n) + "=";
-        tok += llList2String(DESIGN_SETTINGS, n + 1);
-        if (llListFindList(out, [tok]) == -1) out += [tok];
-    }
-    n = 0;
-    if (USER_PREF) jump UserSet;
-    @done;*/
     for (; n < llGetListLength(out); n++)
     {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(out, n), "");
@@ -364,22 +259,13 @@ SendValues()
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
  
-integer UserCommand(integer iAuth, string sStr, key kID)
-{
+integer UserCommand(integer iAuth, string sStr, key kID) {
     if (iAuth != COMMAND_OWNER && iAuth != COMMAND_WEARER) return FALSE;
-    if (llToLower(llGetSubString(sStr, 0, 4)) == "dump_")
-    {
-        sStr = llToLower(llGetSubString(sStr, 5, -1));
-        if (sStr == "cache") DumpCache(kID);
-        else DumpGroupSettings(sStr, kID);
-        return TRUE;
-    }
-    if (llToLower(sStr) == "load")
-    {
+    sStr = llToLower(sStr);
+    if (sStr == "settings") DumpCache(kID);
+    else if (sStr == "load") {
         defaultsline = 0;
-        if (llGetInventoryKey(defaultscard)) {
-            defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-        }
+        if (llGetInventoryKey(defaultscard)) defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
     }
     else return FALSE;
     return TRUE;
@@ -397,98 +283,73 @@ GetPossibleSettings() {
 }
 
 
-default
-{
-    state_entry()
-    {
+default {
+    state_entry() {
         GetPossibleSettings();
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
-        llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free)
+        llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free at 64kb)
         g_kWearer = llGetOwner();
-        INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
+/*        INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
         if (INTERFACE_CHANNEL > 0) INTERFACE_CHANNEL *= -1;
-        if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;
+        if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;*/
         defaultsline = 0;
         if (llGetInventoryKey(defaultscard)) {
             defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
             card_key = llGetInventoryKey(defaultscard);
         }
-/*        DESIGN_ID = llGetObjectDesc();
-        integer i = llSubStringIndex(DESIGN_ID, "~");
-        DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);
-        i = llSubStringIndex(DESIGN_ID, "~");
-        DESIGN_ID = llGetSubString(DESIGN_ID, i + 1, -1);*/
     }
 
-    on_rez(integer iParam)
-    {
+    on_rez(integer iParam) {
         // resend settings to plugins, if owner hasn't changed, in which case
         // reset the whole lot.
-        if (g_kWearer == llGetOwner())
-        {
+        if (g_kWearer == llGetOwner()) {
             llSleep(0.5); // brief wait for others to reset
             SendValues();    
         }
         else llResetScript();
     }
 
-    dataserver(key id, string data)
-    {
-        if (id == defaultslineid)
-        {
+    dataserver(key id, string data) {
+        if (id == defaultslineid) {
             string sid;
             string tok;
             string val;
             integer i;
-            if (data == EOF && split_line != "" )
-            {
+            if (data == EOF && split_line != "" ) {
                 data = split_line ;
                 split_line = "" ;
             }
-            if (data != EOF)
-            {
+            if (data != EOF) {
                 // first we can filter out & skip blank lines & remarks
                 data = llStringTrim(data, STRING_TRIM_HEAD);
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
                 // check for "continued" line pieces
-                if ( llStringLength(split_line) ) 
-                { 
+                if ( llStringLength(split_line) ) { 
                     data = split_line + data ;
                     split_line = "" ;
                 }
-                if ( llGetSubString( data, -1, -1) == ESCAPE_CHAR )
-                {
+                if ( llGetSubString( data, -1, -1) == ESCAPE_CHAR ) {
                     split_line = llDeleteSubString( data, -1, -1) ;
                     jump nextline ;
                 }
-                    
                 // Next we wish to peel the special settings for this collar
                 // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
-              //  i = llSubStringIndex(data, "_");
-              //  string id = llGetSubString(data, 0, i);
-             //   if (id != DESIGN_ID && id != "User_") jump nextline;
-             //   data = llGetSubString(data, i + 1, -1); // shave id off
                 i = llSubStringIndex(data, "=");
                 sid = (llGetSubString(data, 0, i - 1));
                 if (~llListFindList(g_lScriptNames, [sid])) sid += "_";
                 else  jump nextline ;
                 data = llGetSubString(data, i + 1, -1);
                 list lData = llParseString2List(data, ["~"], []);
-                for (i = 0; i < llGetListLength(lData); i += 2)
-                {
+                for (i = 0; i < llGetListLength(lData); i += 2) {
                     tok = llList2String(lData, i);
                     val = llList2String(lData, i + 1);
-                //    if (id == DESIGN_ID) DESIGN_SETTINGS = SetSetting(DESIGN_SETTINGS, sid + tok, val);
-                 //   else 
                     SETTINGS = SetSetting(SETTINGS, sid + tok, val);
                 }
                 @nextline;
                 defaultsline++;
                 defaultslineid = llGetNotecardLine(defaultscard, defaultsline);
-            }
-            else
-            {
+            } else {
                 // wait a sec before sending settings, in case other scripts are
                 // still resetting.
                 llSleep(2.0);
@@ -497,40 +358,27 @@ default
         }
     }
 
-    link_message(integer sender, integer iNum, string sStr, key id)
-    {
+    link_message(integer sender, integer iNum, string sStr, key id) {
         if (UserCommand(iNum, sStr, id)) return;
-        if (iNum == LM_SETTING_SAVE)
-        {
+        if (iNum == LM_SETTING_SAVE) {
             //save the token, value
             list params = llParseString2List(sStr, ["="], []);
             string token = llList2String(params, 0);
             string value = llList2String(params, 1);
-            // if it's a revert to a designer setting, wipe it from user list
-            // otherwise, set it to user list
-           // if (~llListFindList(DESIGN_SETTINGS, [token, value])) DelSetting(token);
-           // else 
             SETTINGS = SetSetting(SETTINGS, token, value);
         }
         else if (iNum == LM_SETTING_REQUEST) {  
              //check the cache for the token 
-            if (SettingExists(sStr)) {
-                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
-            } else {
-                llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
-            }
-        } else if (iNum == LM_SETTING_DELETE) {
-            DelSetting(sStr);
+            if (SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
+            else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
         }
+        else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
     }
 
-    changed(integer change)
-    {
+    changed(integer change) {
         if (change & CHANGED_OWNER) llResetScript();
-        if (change & CHANGED_INVENTORY)
-        {
-            if (llGetInventoryKey(defaultscard) != card_key)
-            {
+        if (change & CHANGED_INVENTORY) {
+            if (llGetInventoryKey(defaultscard) != card_key) {
                 GetPossibleSettings();
                 // the .settings card changed.  Re-read it.
                 defaultsline = 0;
