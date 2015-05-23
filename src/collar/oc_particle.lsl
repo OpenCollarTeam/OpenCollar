@@ -120,7 +120,7 @@ string g_sParticleTextureID; //we need the UUID for llLinkParticleSystem
 vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 vector g_vLeashSize = <0.04, 0.04, 1.0>;   
 integer g_iParticleGlow = TRUE;
-float g_fParticleAge = 3.0;
+float g_fParticleAge = 3.5;
 float g_fParticleAlpha = 1.0;
 vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
@@ -618,7 +618,7 @@ default {
             }
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
-            else if (sMessage == "settings=sent") {
+            else if (sMessage == "settings=sent" || sMessage == "theme particle sent") {
                 GetSettings(TRUE);
             }
         }

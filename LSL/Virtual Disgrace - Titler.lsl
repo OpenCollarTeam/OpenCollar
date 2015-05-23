@@ -454,7 +454,7 @@ default{
                     else if(sToken == "color") g_vColor = (vector)sValue;
                     else if(sToken == "height") g_vPrimScale.z = (float)sValue;
                     else if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
-                    renderTitle();
+                   // renderTitle();
                 } else if(sGroup == "Global_") {
                     //Debug("Got setting \""+sGroup+sToken+"="+sValue+"\"");
                     if (sToken == "WearerName") g_sWearerName = sValue;

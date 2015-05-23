@@ -647,7 +647,7 @@ default {
                                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                     }
-                                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent","");
+                                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
                                     jump next ;
                                 }
