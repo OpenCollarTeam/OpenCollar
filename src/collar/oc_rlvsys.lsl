@@ -243,7 +243,7 @@ AddRestriction(key kID, string sBehav) {
                 //Debug(sSrcRestr);
             }
         /*} else {
-            llOwnerSay("OC doesn't currently support global exceptions");*/
+            Debug("OC doesn't currently support global exceptions");*/
         }
     } else {      //add this restriction to the list for this source
         //add new sources to sources list
