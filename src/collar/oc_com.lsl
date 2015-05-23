@@ -15,7 +15,7 @@
 integer g_iListenChan = 1;
 integer g_iListenChan0 = TRUE;
 string g_sPrefix = ".";
-integer g_iPollForNameChange = 60; //seconds to poll for name change
+//integer g_iPollForNameChange = 60; //seconds to poll for name change
 //integer g_iCustomName = FALSE; //this is our bit flag to see if we're using an LM_SETTING custom name
 
 integer g_iLockMeisterChan = -8888;
@@ -31,11 +31,11 @@ integer g_iHUDChan;
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_SECOWNER = 501;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
+//integer COMMAND_EVERYONE = 504;
+//integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;  // new for safeword
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
@@ -44,13 +44,13 @@ integer NOTIFY_OWNERS=1003;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
+//integer MENUNAME_REQUEST = 3000;
+//integer MENUNAME_RESPONSE = 3001;
 
 integer INTERFACE_REQUEST = -9006;
 integer INTERFACE_RESPONSE = -9007;
