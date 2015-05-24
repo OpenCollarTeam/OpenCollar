@@ -30,6 +30,7 @@ integer COMMAND_EVERYONE = 504;
 integer COMMAND_SAFEWORD = 510;
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 //integer UPDATE = 10001;
 
 integer LM_SETTING_SAVE = 2000;
@@ -81,20 +82,6 @@ float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.02,0.02,0.4>; // prim size, initial value (z - text offset height)
 
-/*list g_lColours=[
-    "Magenta",<1.00000, 0.00000, 0.50196>,
-    "Pink",<1.00000, 0.14902, 0.50980>,
-    "Hot Pink",<1.00000, 0.05490, 0.72157>,
-    "Firefighter",<0.88627, 0.08627, 0.00392>,
-    "Sun",<1.00000, 1.00000, 0.18039>,
-    "Flame",<0.92941, 0.43529, 0.00000>,
-    "Matrix",<0.07843, 1.00000, 0.07843>,
-    "Electricity",<0.00000, 0.46667, 0.92941>,
-    "Violet Wand",<0.63922, 0.00000, 0.78824>,
-    "Black",<0.00000, 0.00000, 0.00000>,
-    "White",<1.00000, 1.00000, 1.00000>
-];*/
-
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -114,7 +101,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
@@ -122,7 +109,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 Whisper(string sMessage) {
     string sObjectName = llGetObjectName();
@@ -184,8 +171,9 @@ UserCommand(integer iAuth, string sStr, key kAv){
         lParams=llDeleteSubList(lParams,0,0);
         string sCommand = llToLower(llList2String(lParams, 0));
         
-        if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth             
-            Notify(kAv,g_sAuthError, FALSE);
+        if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth  
+            llMessageLinked(LINK_SET, NOTIFY, "0"+g_sAuthError, kAv);           
+            //Notify(kAv,g_sAuthError, FALSE);
         } else if (sCommand=="color") {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {    //we got a colour, so set the colour
