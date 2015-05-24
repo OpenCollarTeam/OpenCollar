@@ -60,7 +60,6 @@ integer TOUCH_CANCEL = -9501;
 integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 
-
 //5000 block is reserved for IM slaves
 
 //EXTERNAL MESSAGE MAP
@@ -112,6 +111,10 @@ Debug(string sStr) {
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if ((key)kID){
+        if (sMsg == "%NOACCESS%") {
+            sMsg = "Access denied.";
+            jump next ;
+        }
         if (~llSubStringIndex(sMsg, "%PREFIX%")) 
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
         if (~llSubStringIndex(sMsg, "%CHANNEL%")) 
@@ -119,7 +122,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (~llSubStringIndex(sMsg, "%DEVICETYPE%")) 
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
         if (~llSubStringIndex(sMsg, "%WEARERNAME%")) 
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);        
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);             @next;
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) {
             llSetObjectName(g_sDeviceName);
@@ -131,7 +134,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }
         if (llGetObjectName() != sObjectName) llSetObjectName(sObjectName);
-    }
+    }//else Debug("something went wrong in Notify, Msg: \""+sMsg+"\" is missing an ID to be sent to.");
 }
 
 NotifyOwners(string sMsg, string comments) {
