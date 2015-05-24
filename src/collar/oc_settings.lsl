@@ -48,24 +48,10 @@ integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list SETTINGS;
-list g_lScriptNames;
 
 integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
-
-/*
-integer g_iProfiled=1;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled) {
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
 
 /*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
@@ -277,29 +263,11 @@ integer UserCommand(integer iAuth, string sStr, key kID) {
     return TRUE;
 }
 
-GetPossibleSettings() {
-    g_lScriptNames = ["Global"];
-    integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
-    while(i) {
-        i--;
-        string sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
-        integer index = llSubStringIndex(sScriptName, "- ");
-        g_lScriptNames += [llToLower(llGetSubString(sScriptName, index + 2, -1))];
-    }
-}
-
-
 default {
     state_entry() {
-        GetPossibleSettings();
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
-        llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free at 64kb)
         g_kWearer = llGetOwner();
-       // g_sDeviceName = llGetObjectName();
-/*        INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
-        if (INTERFACE_CHANNEL > 0) INTERFACE_CHANNEL *= -1;
-        if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;*/
         g_iDefaultsline = 0;
         if (llGetInventoryKey(g_sDefaultscard)) {
             g_kDefaultslineID = llGetNotecardLine(g_sDefaultscard, g_iDefaultsline);
@@ -340,20 +308,14 @@ default {
                     g_sSplit_line = llDeleteSubString( data, -1, -1) ;
                     jump nextline ;
                 }
-                // Next we wish to peel the special settings for this collar
-                // unique collar id is followed by Script (that settings are for) + "=tok~val~tok~val"
                 i = llSubStringIndex(data, "=");
-                sID = (llGetSubString(data, 0, i - 1));
-                if (~llListFindList(g_lScriptNames, [sID])) sID += "_";
-               // else if (llSubStringIndex(sid, "Global")) jump nextline ;
-                else  jump nextline ;
+                sID = (llGetSubString(data, 0, i - 1)) + "_";
                 data = llGetSubString(data, i + 1, -1);
                 list lData = llParseString2List(data, ["~"], []);
                 for (i = 0; i < llGetListLength(lData); i += 2) {
                     sToken = llList2String(lData, i);
                     sValue = llList2String(lData, i + 1);
                     SETTINGS = SetSetting(SETTINGS, sID + sToken, sValue);
-                   // if (sToken == "DeviceName") g_sDeviceName = sValue;
                 }
                 @nextline;
                 g_iDefaultsline++;
@@ -375,7 +337,6 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             SETTINGS = SetSetting(SETTINGS, sToken, sValue);
-           // if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
         }
         else if (iNum == LM_SETTING_REQUEST) {  
              //check the cache for the token 
@@ -389,7 +350,6 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryKey(g_sDefaultscard) != g_kCardKey) {
-                GetPossibleSettings();
                 // the .settings card changed.  Re-read it.
                 g_iDefaultsline = 0;
                 if (llGetInventoryKey(g_sDefaultscard)) {
@@ -400,13 +360,5 @@ default {
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
             SendValues();
         }
-/*        
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }
