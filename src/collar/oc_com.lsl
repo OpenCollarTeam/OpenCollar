@@ -111,30 +111,26 @@ Debug(string sStr) {
 */
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-//    integer pos;
-//    while (~pos=llSubStringIndex(sMsg, "%g_sWearerName%")) {
-//        if (llStringLength(sMsg) == 12) { sMsg = g_sWearerName; }
-//        else if (pos == 0) { sMsg = g_sWearerName+llGetSubString(sMsg, pos+12, -1); }
-//        else if (pos == llStringLength(sMsg)-12) { sMsg = llGetSubString(sMsg, 0, pos-1)+g_sWearerName; }
-//        else { sMsg = llGetSubString(sMsg, 0, pos-1)+g_sWearerName+llGetSubString(sMsg, pos+12, -1); }
-//    }
     if ((key)kID){
+        if (~llSubStringIndex(sMsg, "%PREFIX%")) 
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
+        if (~llSubStringIndex(sMsg, "%CHANNEL%")) 
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
+        if (~llSubStringIndex(sMsg, "%DEVICETYPE%")) 
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
+        if (~llSubStringIndex(sMsg, "%WEARERNAME%")) 
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);        
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) {
             llSetObjectName(g_sDeviceName);
         }
         if (kID == g_kWearer) llOwnerSay(sMsg);
         else {
-//            if (~llListFindList(g_lHudComms,[kID])){
-//                llRegionSayTo(kID,g_iHUDChan,sMsg);
-//            } else 
             if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }
         if (llGetObjectName() != sObjectName) llSetObjectName(sObjectName);
-    //} else {
-        //Debug("Bad key, can't notify:"+sMsg);
     }
 }
 

@@ -26,7 +26,7 @@ integer g_iDefaultsline = 0;
 key g_kDefaultslineID;
 key g_kCardKey;
 key g_kWearer;
-string g_sDeviceName;
+//string g_sDeviceName;
 // Message Map
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
@@ -36,7 +36,7 @@ integer COMMAND_WEARER = 503;
 //integer COMMAND_EVERYONE = 504;
 
 //integer POPUP_HELP = 1001;
-
+integer NOTIFY=1002;
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
@@ -54,7 +54,7 @@ integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
 string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
 
-
+/*
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -65,9 +65,9 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
+}*/
 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if ((key)kID){
         string sObjectName = llGetObjectName();
@@ -82,7 +82,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         }
         if (llGetObjectName() != sObjectName) llSetObjectName(sObjectName);
     }
-}
+}*/
 
 // Get Group or Token, 0=Group, 1=Token
 string SplitToken(string sIn, integer iSlot)
@@ -239,7 +239,8 @@ DumpCache(key kID) {
     }
     lOut += [sOld];
     while (llGetListLength(lOut)) {
-        Notify(kID, llList2String(lOut, 0), TRUE);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+llList2String(lOut, 0), kID);
+        //Notify(kID, llList2String(lOut, 0), TRUE);
         lOut = llDeleteSubList(lOut, 0, 0);
     }
 }
@@ -295,7 +296,7 @@ default {
         llSleep(0.5);
         llSetMemoryLimit(49152);  //2015-05-06 (33192 bytes free at 64kb)
         g_kWearer = llGetOwner();
-        g_sDeviceName = llGetObjectName();
+       // g_sDeviceName = llGetObjectName();
 /*        INTERFACE_CHANNEL = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
         if (INTERFACE_CHANNEL > 0) INTERFACE_CHANNEL *= -1;
         if (INTERFACE_CHANNEL > -10000) INTERFACE_CHANNEL -= 30000;*/
@@ -352,7 +353,7 @@ default {
                     sToken = llList2String(lData, i);
                     sValue = llList2String(lData, i + 1);
                     SETTINGS = SetSetting(SETTINGS, sID + sToken, sValue);
-                    if (sToken == "DeviceName") g_sDeviceName = sValue;
+                   // if (sToken == "DeviceName") g_sDeviceName = sValue;
                 }
                 @nextline;
                 g_iDefaultsline++;
@@ -374,7 +375,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             SETTINGS = SetSetting(SETTINGS, sToken, sValue);
-            if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
+           // if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
         }
         else if (iNum == LM_SETTING_REQUEST) {  
              //check the cache for the token 
@@ -399,13 +400,13 @@ default {
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
             SendValues();
         }
-        
+/*        
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-
+*/
     }
 }
