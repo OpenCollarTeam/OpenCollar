@@ -53,6 +53,8 @@ integer COMMAND_SAFEWORD = 510;
 //EXTERNAL MESSAGE MAP
 integer EXT_COMMAND_COLLAR = 499;  //added for collar or cuff commands to put ao to pause or standOff
 
+integer NOTIFY = 1002;
+
 integer LM_SETTING_SAVE = 2000;  //scripts send messages on this channel to have settings saved to httpdb
 integer LM_SETTING_RESPONSE = 2002;  //the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;  //delete token from DB
@@ -73,7 +75,7 @@ integer g_iInterfaceChannel = -12587429;
 key g_kWearer;
 string g_sWearerName;
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
@@ -100,7 +102,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];  //we've not already given this user a menu. append to list
     //Debug("Made "+sName+" menu.");
 }
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
@@ -109,7 +111,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
+*/
 AnimMenu(key kID, integer iAuth) {
     string sPrompt = "\n"+g_sWearerName;
     list lButtons;
@@ -195,7 +197,8 @@ integer SetPosture(integer iOn, key kCommander) {
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) {
         if (iOn && !g_iPosture) {
             llStartAnimation("~stiff");
-            if (kCommander) Notify(kCommander,"Posture override active.",TRUE);
+            //if (kCommander) Notify(kCommander,"Posture override active.",TRUE);
+            if (kCommander) llMessageLinked(LINK_SET, NOTIFY, "1"+"Posture override active.", kCommander);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_posture=1","");
         } else if (!iOn) {
             llStopAnimation("~stiff");
@@ -327,16 +330,20 @@ UserCommand(integer iNum, string sStr, key kID) {
                 SetPosture(TRUE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PostureRank="+(string)g_iLastPostureRank,"");
                 llOwnerSay( "Your neck is locked in place.");
-                if (kID != g_kWearer) Notify(kID, g_sWearerName + "'s neck is locked in place.", FALSE);
-            } else Notify(kID,g_sAuthError,FALSE);
+                //if (kID != g_kWearer) Notify(kID, "%WEARERNAME%'s neck is locked in place.", FALSE);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME%'s neck is locked in place.", kID);
+            } //else Notify(kID,"%NOACCESS%",FALSE);
+                else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPostureRank) {
                 g_iLastPostureRank=COMMAND_WEARER;
                 SetPosture(FALSE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PostureRank", "");
                 llOwnerSay( "You can move your neck again.");
-                if (kID != g_kWearer) Notify(kID, g_sWearerName + " is free to move their neck.", FALSE);
-            } else Notify(kID,g_sAuthError,FALSE);
+                //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to move their neck.", FALSE);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to move their neck.", kID);
+            } //else Notify(kID,"%NOACCESS%",FALSE);
+                else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%",kID);
         }
     } else if ( sCommand=="animlock") {  //anim lock
         if ( sValue=="on") {  //anim lock
@@ -346,16 +353,20 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iAnimLock = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_animlock=1", "");
                 llOwnerSay( "Only owners can change or stop your poses now.");
-                if (kID != g_kWearer) Notify(kID, g_sWearerName + " can have their poses changed or stopped only by owners.", FALSE);
-            } else Notify(kID,g_sAuthError,FALSE);
+                //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% can have their poses changed or stopped only by owners.", FALSE);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
+            } //else Notify(kID,"%NOACCESS%",FALSE);
+                else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPoselockRank) {
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock", "");
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PoselockRank", "");
                 llOwnerSay( "You are now free to change or stop poses on your own.");
-                if (kID != g_kWearer) Notify(kID, g_sWearerName + " is free to change or stop poses on their own.", FALSE);
-            } else Notify(kID,g_sAuthError,FALSE);
+                //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to change or stop poses on their own.", FALSE);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to change or stop poses on their own.", kID);
+            } //else Notify(kID,"%NOACCESS%",FALSE);
+                else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         }
     } else if (sCommand == "ao") {  //AO
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
@@ -376,27 +387,32 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iTweakPoseAO = 1;
                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_TweakPoseAO=1" , "");
                 RefreshAnim();
-                Notify(kID, "AntiSlide is now enabled.", TRUE);
+                //Notify(kID, "AntiSlide is now enabled.", TRUE);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
             } else if (sValue == "off") {
                 g_iTweakPoseAO = 0;
                 llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "anim_TweakPoseAO", "");
                 RefreshAnim();
-                Notify(kID, "AntiSlide is now disabled.", TRUE);
+                //Notify(kID, "AntiSlide is now disabled.", TRUE);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide is now disabled.", kID);
             } else if (sValue == "none") {
                 llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "anim_PoseMoveWalk", "");
                 g_sPoseMoveWalk = "";
                 g_sPoseMoveRun = "";
                 RefreshAnim();
-                Notify(kID, "AntiSlide animation is \"none\".", TRUE);
+                //Notify(kID, "AntiSlide animation is \"none\".", TRUE);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide animation is \"none\".", kID);
             } else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower)==INVENTORY_ANIMATION) {
                 g_sPoseMoveWalk = llList2String(g_lPoseMoveAnimationPrefix,0) + sValueNotLower;
                 g_sPoseMoveRun  = llList2String(g_lPoseMoveAnimationPrefix,1) + sValueNotLower;
                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_PoseMoveWalk=" + g_sPoseMoveWalk, "");
                 llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_PoseMoveRun="  + g_sPoseMoveRun,  "");
                 RefreshAnim();
-                Notify(kID, "AntiSlide animation is \""+sValueNotLower+"\".", TRUE);
+                //Notify(kID, "AntiSlide animation is \""+sValueNotLower+"\".", TRUE);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide animation is \""+sValueNotLower+"\".", kID);
             } else if (sValue=="") PoseMoveMenu(kID,0,iNum);
-            else Notify(kID,"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower,FALSE);
+            //else Notify(kID,"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower,FALSE);
+            else llMessageLinked(LINK_SET, NOTIFY, "0"+"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower, kID);
         } else llOwnerSay( "Only owners or the wearer can change antislide settings.");
     } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {  //strike a pose...
         if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
@@ -405,7 +421,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iLastRank = iNum;
             llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
-        } else Notify(kID,g_sAuthError,FALSE);
+        } //else Notify(kID,"%NOACCESS%",FALSE);
+            else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
     }
 }
 
@@ -513,7 +530,8 @@ default {
                     else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);  //This is the Animation menu item, we need to call the PoseMoveMenu item from here...
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
-                        Notify(kAv, "Attempting to trigger the AO menu. This will only work if " + g_sWearerName + " is using a Submissive AO or an AO Link script in their normal AO.", FALSE);
+                        //Notify(kAv, "Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using a Submissive AO or an AO Link script in their normal AO.", FALSE);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using a Submissive AO or an AO Link script in their normal AO.", kAv);
                         AOMenu(kAv, iAuth);
                     } else {
                         if (sMessage== "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
