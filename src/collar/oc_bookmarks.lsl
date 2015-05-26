@@ -33,7 +33,7 @@ string g_tempLoc                      = "";   //This holds a global temp locatio
 key     g_kMenuID;                              // menu handler
 key     g_kWearer;                              // key of the current wearer to reset only on owner changes
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 key     g_kTBoxIdSave = "null";
 key     g_kTBoxIdLocationOnly = "null";
@@ -43,7 +43,7 @@ integer g_iLine = 0;
 string  UPMENU                      = "BACK"; // when your menu hears this, give the parent menu
 key     g_kCommander;
 
-string g_sDeviceType                = "collar";    // designer can set in notecard to appropriate word for their item
+//string g_sDeviceType                = "collar";    // designer can set in notecard to appropriate word for their item
 
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
@@ -51,6 +51,7 @@ list    g_lButtons;
 integer COMMAND_OWNER              = 500;
 integer COMMAND_GROUP              = 502;
 integer COMMAND_WEARER             = 503;
+integer NOTIFY                     = 1002;
 integer LM_SETTING_SAVE            = 2000; // scripts send messages on this channel to have settings saved to settings store
 integer LM_SETTING_RESPONSE        = 2002; // the settings script will send responses on this channel
 integer LM_SETTING_DELETE          = 2003; // delete token from settings store
@@ -83,7 +84,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 }
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if((integer)llStringLength(sMsg) > 1023) {  //Line too long, gotta chop this up!
@@ -103,7 +104,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 DoMenu(key keyID, integer iAuth)
 {
@@ -131,20 +132,21 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
     } else if(sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_COMMAND_ALT) {
         if (iNum==COMMAND_GROUP){
-            Notify(kID,g_sAuthError,FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,,"0"+"%NOACCESS%,FALSE);
             return TRUE;
         }
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " save") - 1) == PLUGIN_CHAT_COMMAND + " save") {           if (iNum==COMMAND_GROUP){
-            Notify(kID,g_sAuthError,FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
 //grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0) {
-                Notify(kID, "This destination name is already taken", FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"This destination name is already taken",kID); 
+                //Notify(kID, "This destination name is already taken", FALSE);
             } else {
                 string slurl = FormatRegionName();
                 addDestination(sAdd, slurl, kID);
@@ -161,33 +163,37 @@ You can enter:
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " remove") - 1) == PLUGIN_CHAT_COMMAND + " remove") { //grab partial string match to capture destination name
         if (iNum==COMMAND_GROUP){
-            Notify(kID,g_sAuthError,FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_COMMAND + " remove"), -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
-                Notify(kID, "Can't find bookmark " + (string)sDel + " to be deleted", FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID); 
+                //Notify(kID, "Can't find bookmark " + (string)sDel + " to be deleted", FALSE);
             } else {
                 integer iIndex;
                 llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + sDel, "");
                 iIndex = llListFindList(g_lVolatile_Destinations, [sDel]);
                 g_lVolatile_Destinations = llDeleteSubList(g_lVolatile_Destinations, iIndex, iIndex);
                 g_lVolatile_Slurls = llDeleteSubList(g_lVolatile_Slurls, iIndex, iIndex);
-                Notify(kID, "Removed destination " + sDel, FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Removed destination " + sDel,kID); 
+                //Notify(kID, "Removed destination " + sDel, FALSE);
             }
         } else {
             g_kRemoveMenu = Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum);
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " print") - 1) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
         if (iNum==COMMAND_GROUP){
-            Notify(kID,g_sAuthError,FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); 
+            //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         PrintDestinations(kID);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND) - 1) == PLUGIN_CHAT_COMMAND) {
         if (iNum==COMMAND_GROUP){
-            Notify(kID,g_sAuthError,FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1), STRING_TRIM);
@@ -227,17 +233,18 @@ You can enter:
             if(found == 0) {
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
                 if (llSubStringIndex(sCmd,"o:") == 0) {}//llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); (enable this to support hud forcetp.  disabled now since rlvtp still does this
-                else Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) + ".", FALSE);
+                else llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID); //
+                //Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) + ".", FALSE);
             } else if(found > 1) {
-                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) +
-                    ".\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
+                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_COMMAND + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
             }
         }
         //Can't find in list, lets try find substring matches
         else {
-            Notify(kID, "I didn't understand your command.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"I didn't understand your command.",kID);
+            //Notify(kID, "I didn't understand your command.", FALSE);
         }
     }
     return TRUE;
@@ -245,10 +252,15 @@ You can enter:
 
 addDestination(string sMessage, string sLoc, key kID)
 {
+    if (llGetListLength(g_lVolatile_Destinations)+llGetListLength(g_lDestinations) >= 45 ) {
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"The maximum number 45 bookmars is already reached.",kID);
+        return;
+    }
     llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sMessage + "=" + sLoc, "");
     g_lVolatile_Destinations += sMessage;
     g_lVolatile_Slurls += sLoc;
-    Notify(kID, "Added destination " + sMessage + " with a location of: " + sLoc, FALSE);
+    llMessageLinked(LINK_SET,NOTIFY,"0"+"Added destination " + sMessage + " with a location of: " + sLoc,kID);
+    //Notify(kID, "Added destination " + sMessage + " with a location of: " + sLoc, FALSE);
 }
 
 string FormatRegionName()
@@ -349,8 +361,9 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth);
 ReadDestinations()   // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks
 {
     key kAv;
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks", 
-        [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+   // webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks", 
+       //[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/workshop/LSL/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards
@@ -384,12 +397,21 @@ PrintDestinations(key kID)   // On inventory change, re-read our ~destinations n
     sMsg += "\n\nThe below can be copied and pasted into the " + g_sCard + " notecard. The format should follow:\n\ndestination name~region name(123,123,123)\n\n";
     for(i = 0; i < length; i++) {
         sMsg += llList2String(g_lDestinations, i) + "~" + llList2String(g_lDestinations_Slurls, i) + "\n";
+        if (llStringLength(sMsg) >1000) {
+             llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg,kID);
+             sMsg = "";
+        }
     }
     length = llGetListLength(g_lVolatile_Destinations);
     for(i = 0; i < length; i++) {
         sMsg += llList2String(g_lVolatile_Destinations, i) + "~" + llList2String(g_lVolatile_Slurls, i) + "\n";
+        if (llStringLength(sMsg) >1000) {
+            llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg,kID);
+            sMsg = "";
+        }
     }
-    Notify(kID, sMsg, i);
+    llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg,kID);
+    //Notify(kID, sMsg, i);
 }
 
 default {
@@ -398,7 +420,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(49152);  //2015-05-06 (7512 bytes free)
+       // llSetMemoryLimit(49152);  //2015-05-06 (7512 bytes free)
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();  // store key of wearer
 
@@ -461,8 +483,11 @@ default {
                 if(llGetSubString(sData, 0, 2) != "") { //Ignore blank lines
                     sData = llStringTrim(sData, STRING_TRIM);
                     split = llParseString2List(sData, ["~"], []);
-                    g_lDestinations += [ llStringTrim(llList2String(split, 0), STRING_TRIM) ];
-                    g_lDestinations_Slurls += [ llStringTrim(llList2String(split, 1), STRING_TRIM) ];
+                    if(! ~llListFindList(g_lDestinations, [llStringTrim(llList2String(split, 0), STRING_TRIM)])){
+                        g_lDestinations += [ llStringTrim(llList2String(split, 0), STRING_TRIM) ];
+                        g_lDestinations_Slurls += [ llStringTrim(llList2String(split, 1), STRING_TRIM) ];
+                        if (llGetListLength(g_lDestinations) == 30) return;
+                    }
                 }
                 g_iLine++;
                 g_kDataID = llGetNotecardLine(g_sCard, g_iLine);
@@ -508,7 +533,7 @@ default {
                     g_lVolatile_Destinations += lDestination;
                     g_lVolatile_Slurls += [sValue];
                 }
-            } else if(sToken == "Global_DeviceType") { g_sDeviceType = sValue; }
+            } //else if(sToken == "Global_DeviceType") { g_sDeviceType = sValue; }
         } else if(UserCommand(iNum, sStr, kID)) {
             // do nothing more if TRUE
         } else if(iNum == DIALOG_RESPONSE) {

@@ -21,7 +21,7 @@
 string g_sSubMenu = "Size/Position";
 string g_sParentMenu = "Options";
 
-string g_sDeviceType = "collar";
+//string g_sDeviceType = "collar";
 
 list g_lMenuIDs;//3-strided list of avkey, dialogid, menuname
 integer g_iMenuStride = 3;
@@ -57,7 +57,7 @@ integer COMMAND_WEARER = 503;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
-
+integer NOTIFY = 1002;
 //integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
 //integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
@@ -78,7 +78,7 @@ string UPMENU = "BACK";
 
 key g_kWearer;
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 /*
 integer g_iProfiled=1;
@@ -101,7 +101,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 } 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -111,7 +111,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 integer MinMaxUnscaled(vector vSize, float fScale)
 {
@@ -186,12 +186,14 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
         vSize = llList2Vector(g_lPrimStartSizes,0);
         if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize)
         {
-            Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
+            //Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
             return;
         }
         else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize)
         {
-            Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
+            //Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
             return;
         }
         else
@@ -211,17 +213,20 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
 
                 if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale))
                 {
-                    Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
+                    //Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
                     return;
                 }
                 else if (MinMaxScaled(fScale * vPrimScale, fScale))
                 {
-                    Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
+                    //Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
                     return;
                 }
             }
         }
-        Notify(kAV, "Scaling started, please wait ...", TRUE);
+        llMessageLinked(LINK_SET,NOTIFY,"1"+"Scaling started, please wait ...",kAV);
+        //Notify(kAV, "Scaling started, please wait ...", TRUE);
         g_iSizedByScript = TRUE;
         for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ )
         {
@@ -239,7 +244,8 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
         }
         g_iScaleFactor = iScale;
         g_iSizedByScript = TRUE;
-        Notify(kAV, "Scaling finished, the "+g_sDeviceType+" is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
+        llMessageLinked(LINK_SET,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
+        //Notify(kAV, "Scaling finished, the "+g_sDeviceType+" is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
     }
 }
 
@@ -300,7 +306,7 @@ AdjustRot(vector vDelta)
 
 RotMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nHere you can tilt and rotate the "+g_sDeviceType+".";
+    string sPrompt = "\nHere you can tilt and rotate the %DEVICETYPE%.";
     list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -317,7 +323,7 @@ RotMenu(key kAv, integer iAuth)
 
 PosMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nHere you can nudge the "+g_sDeviceType+" in place.\n\nCurrent nudge strength is: ";
+    string sPrompt = "\nHere you can nudge the %DEVICETYPE% in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
     if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▁"];
     else sPrompt += "▁";
@@ -341,7 +347,7 @@ PosMenu(key kAv, integer iAuth)
 
 SizeMenu(key kAv, integer iAuth)
 {
-    string sPrompt = "\nNumbers are based on the original size of the "+g_sDeviceType+".\n\nCurrent size: " + (string)g_iScaleFactor + "%";
+    string sPrompt = "\nNumbers are based on the original size of the %DEVICETYPE%.\n\nCurrent size: " + (string)g_iScaleFactor + "%";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
@@ -363,7 +369,7 @@ DoMenu(key kAv, integer iAuth)
    // if (g_iAppLock && iAuth != COMMAND_OWNER) {
     //    sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
    // } else {
-        sPrompt = "\nChange the position, rotation and size of your "+g_sDeviceType+".\n\nwww.opencollar.at/appearance";
+        sPrompt = "\nChange the position, rotation and size of your %DEVICETYPE%.\n\nwww.opencollar.at/appearance";
         lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
    // }
     
@@ -384,7 +390,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         //give this plugin's menu to id
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
         else DoMenu(kID, iNum);
@@ -394,7 +401,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError, FALSE);
         }
         else DoMenu(kID, iNum);
     }
@@ -402,7 +410,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError, FALSE);
         }
        /* else if (g_iAppLock)
         {
@@ -415,7 +424,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError, FALSE);
         }
         /*else if (g_iAppLock)
         {
@@ -428,7 +438,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
         {
-            Notify(kID,g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            //Notify(kID,g_sAuthError, FALSE);
         }
        /* else if (g_iAppLock)
         {
@@ -512,7 +523,7 @@ default {
                         else if (sMessage == "▁ ▂") g_fNudge=g_fMediumNudge;
                         else if (sMessage == "▁ ▂ ▃") g_fNudge=g_fLargeNudge;
                     }
-                    else Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
+                    else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);//Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
                     PosMenu(kAv, iAuth);                    
                 }
                 else if (sMenuType == ROTMENU)
@@ -532,7 +543,7 @@ default {
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
                     }
-                    else Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
+                    else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);//Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
                     RotMenu(kAv, iAuth);                     
                 }
                 else if (sMenuType == SIZEMENU)
@@ -554,7 +565,8 @@ default {
                                 // ResSize requested
                                 if (g_iScaleFactor == 100)
                                 {
-                                    Notify(kAv, "Resizing canceled; the "+g_sDeviceType+" is already at original size.", FALSE); 
+                                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Resizing canceled; the %DEVICETYPE% is already at original size.",kID);
+                                    //Notify(kAv, "Resizing canceled; the "+g_sDeviceType+" is already at original size.", FALSE); 
                                 }
                                 else
                                 {

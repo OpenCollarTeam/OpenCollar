@@ -41,6 +41,7 @@ integer COMMAND_SAFEWORD = 510;  // new for safeword
 integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
 integer NOTIFY_OWNERS=1003;
+integer SAY = 1004;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -95,7 +96,7 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-/*
+
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -107,7 +108,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if ((key)kID){
@@ -122,18 +123,17 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (~llSubStringIndex(sMsg, "%DEVICETYPE%")) 
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
         if (~llSubStringIndex(sMsg, "%WEARERNAME%")) 
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);             @next;
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);      
+        @next;
         string sObjectName = llGetObjectName();
-        if (g_sDeviceName != sObjectName) {
-            llSetObjectName(g_sDeviceName);
-        }
+        if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
         if (kID == g_kWearer) llOwnerSay(sMsg);
         else {
             if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }
-        if (llGetObjectName() != sObjectName) llSetObjectName(sObjectName);
+        llSetObjectName(sObjectName);
     }//else Debug("something went wrong in Notify, Msg: \""+sMsg+"\" is missing an ID to be sent to.");
 }
 
@@ -157,6 +157,22 @@ NotifyOwners(string sMsg, string comments) {
             Notify(kAv, sMsg,FALSE);
         }
     }
+}
+
+Say(string sMsg, integer iWhisper) {
+    if (~llSubStringIndex(sMsg, "%PREFIX%")) 
+        sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
+    if (~llSubStringIndex(sMsg, "%CHANNEL%")) 
+        sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
+    if (~llSubStringIndex(sMsg, "%DEVICETYPE%")) 
+        sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
+    if (~llSubStringIndex(sMsg, "%WEARERNAME%")) 
+        sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);         
+    string sObjectName = llGetObjectName();
+    llSetObjectName("");
+    if (iWhisper) llWhisper(0, "/me " + sMsg);
+    else llSay(0, "/me " + sMsg);
+    llSetObjectName(sObjectName);
 }
 
 //functions from touch script
@@ -229,11 +245,11 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(40960);  //2015-05-06 (6180 bytes free)
+        llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-        //Debug("Default prefix: " + g_sPrefix);
+        Debug("Default prefix: " + g_sPrefix);
 
         //inlined single use getOwnerChannel function
         g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
@@ -483,7 +499,7 @@ default {
                 {
                     integer iNewChan = (integer)sValue;
                     if (sValue=="") {  //they left the param blank, report listener status
-                        string message=g_sDeviceType+" is listening on channel";
+                        string message= "The "+g_sDeviceType+" is listening on channel";
                         if (g_iListenChan0) message += "s 0 and";
                         message += " "+(string)g_iListenChan+".";
                         Notify(kID, message, FALSE);
@@ -587,7 +603,7 @@ default {
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
             else if (sToken == "Global_touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
-            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
             else if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "listener_safeword") g_sSafeWord = sValue;
             else if (sToken == "listener_channel") {
@@ -639,6 +655,8 @@ default {
             }
         } else if (iNum==NOTIFY){
             Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
+        } else if (iNum==SAY){
+            Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         } else if (iNum==NOTIFY_OWNERS){
             NotifyOwners(sStr,(string)kID);
         }
@@ -678,13 +696,13 @@ default {
     changed(integer iChange)
     {
         if (iChange & CHANGED_OWNER) llResetScript();
-/*        
+        
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/        
+        
     }
 }

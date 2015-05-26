@@ -42,12 +42,12 @@ integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for sett
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
-integer LM_SETTING_REQUEST_NOCACHE = 2005;
+//integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
 //integer INTERFACE_CHANNEL;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
-list SETTINGS;
+list g_lSettings;
 
 integer SAY_LIMIT = 1024; // lsl "say" string limit
 integer CARD_LIMIT = 255; // lsl card-line string limit
@@ -91,7 +91,7 @@ integer GroupIndex(list lCache, string sToken)
 }
 integer SettingExists(string sToken)
 {
-    if (~llListFindList(SETTINGS, [sToken])) return TRUE;
+    if (~llListFindList(g_lSettings, [sToken])) return TRUE;
     return FALSE;
 }
 
@@ -113,8 +113,8 @@ list AddSetting(list lCache, string sToken, string sValue) {
 }
 
 string GetSetting(string sToken) {
-    integer i = llListFindList(SETTINGS, [sToken]);
-    return llList2String(SETTINGS, i + 1);
+    integer i = llListFindList(g_lSettings, [sToken]);
+    return llList2String(g_lSettings, i + 1);
 }
 // per = number of entries to put in each bracket
 list ListCombineEntries(list lIn, string sAdd, integer iPer) {
@@ -131,20 +131,20 @@ list ListCombineEntries(list lIn, string sAdd, integer iPer) {
 }
 
 DelSetting(string sToken) { // we'll only ever delete user settings
-    integer i = llGetListLength(SETTINGS) - 1;
+    integer i = llGetListLength(g_lSettings) - 1;
     if (SplitToken(sToken, 1) == "all")
     {
         sToken = SplitToken(sToken, 0);
       //  string sVar;
         for (; ~i; i -= 2)
         {
-            if (SplitToken(llList2String(SETTINGS, i - 1), 0) == sToken)
-                SETTINGS = llDeleteSubList(SETTINGS, i - 1, i);
+            if (SplitToken(llList2String(g_lSettings, i - 1), 0) == sToken)
+                g_lSettings = llDeleteSubList(g_lSettings, i - 1, i);
         }
         return;
     }
-    i = llListFindList(SETTINGS, [sToken]);
-    if (~i) SETTINGS = llDeleteSubList(SETTINGS, i, i + 1);
+    i = llListFindList(g_lSettings, [sToken]);
+    if (~i) g_lSettings = llDeleteSubList(g_lSettings, i, i + 1);
 }
 
 // run delimiters & add escape-characters for DumpCache
@@ -209,7 +209,7 @@ DumpCache(key kID) {
     // compile everything into one list, so we can tell the user everything seamlessly
     list lOut;
     list lSay = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
-    lSay += Add2OutList(SETTINGS);
+    lSay += Add2OutList(g_lSettings);
     string sOld;
     string sNew;
     integer i;
@@ -237,10 +237,10 @@ SendValues() {
     integer n = 0;
     string sToken;
     list lOut;
-    for (; n < llGetListLength(SETTINGS); n += 2)
+    for (; n < llGetListLength(g_lSettings); n += 2)
     {
-        sToken = llList2String(SETTINGS, n) + "=";
-        sToken += llList2String(SETTINGS, n + 1);
+        sToken = llList2String(g_lSettings, n) + "=";
+        sToken += llList2String(g_lSettings, n + 1);
         if (llListFindList(lOut, [sToken]) == -1) lOut += [sToken];
     }
     n = 0;
@@ -315,7 +315,7 @@ default {
                 for (i = 0; i < llGetListLength(lData); i += 2) {
                     sToken = llList2String(lData, i);
                     sValue = llList2String(lData, i + 1);
-                    SETTINGS = SetSetting(SETTINGS, sID + sToken, sValue);
+                    g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
                 }
                 @nextline;
                 g_iDefaultsline++;
@@ -336,7 +336,7 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            SETTINGS = SetSetting(SETTINGS, sToken, sValue);
+            g_lSettings = SetSetting(g_lSettings, sToken, sValue);
         }
         else if (iNum == LM_SETTING_REQUEST) {  
              //check the cache for the token 

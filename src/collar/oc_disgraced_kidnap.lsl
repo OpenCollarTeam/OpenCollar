@@ -18,9 +18,9 @@
 // and/or minimum Disgraced Version 1.3.2
 
 key     g_kWearer;                       // key of the current wearer to reset only on owner changes
-string  g_sWearerName;
+//string  g_sWearerName;
 list    g_lMenuIDs;                      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
-string  g_sAuthError        = "Access denied.";
+//string  g_sAuthError        = "Access denied.";
 
 integer COMAND_NOAUTH       =     0;
 integer COMMAND_OWNER       =   500;
@@ -30,7 +30,9 @@ integer COMMAND_WEARER      =   503;
 integer COMMAND_EVERYONE    =   504;
 integer COMMAND_SAFEWORD    =   510;
 
-integer POPUP_HELP          =   1001;
+//integer POPUP_HELP          =  1001;
+integer NOTIFY              =  1002;
+integer SAY                 =  1004;
 
 integer LM_SETTING_SAVE     =  2000;
 integer LM_SETTING_REQUEST  =  2001;
@@ -62,7 +64,7 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }
 */
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
@@ -70,7 +72,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName, key kKidnapper, string sKidnapper) {
     key kMenuID = llGenerateKey();
@@ -113,7 +115,7 @@ saveTempOwners() {
 
 doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
     if (llGetListLength(g_lTempOwners)) {
-        Notify(kKidnapper, g_sWearerName + " is already kidnapped, try another time.", FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% is already kidnapped, try another time.",kKidnapper);//Notify(kKidnapper, g_sWearerName + " is already kidnapped, try another time.", FALSE);
         return;
     }
     if (!iIsConfirmed) {
@@ -123,8 +125,9 @@ doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
         //added a follow and yank
         llMessageLinked(LINK_SET, COMMAND_OWNER, "follow " + (string)kKidnapper, kKidnapper);
         llMessageLinked(LINK_SET, COMMAND_OWNER, "yank", kKidnapper);
-        Notify(g_kWearer,"You are at secondlife:///app/agent/"+(string)kKidnapper+"/about's whim.",FALSE);
-        llMessageLinked(LINK_SET, POPUP_HELP, g_sWearerName+" is at your mercy.\n\n/_CHANNEL__PREFIX_menu\n/_CHANNEL__PREFIX_pose\n/_CHANNEL__PREFIX_restrictions\n/_CHANNEL__PREFIX_sit\n/_CHANNEL__PREFIX_help\n\nNOTE: During kidnap RP "+g_sWearerName+" cannot refuse your teleport offers and you will keep full control. To end the kidnapping, please type: /_CHANNEL__PREFIX_kidnap release\n\nHave fun! www.virtualdisgrace.com\n", kKidnapper);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"You are at secondlife:///app/agent/"+(string)kKidnapper+"/about's whim.",g_kWearer);
+        //Notify(g_kWearer,"You are at secondlife:///app/agent/"+(string)kKidnapper+"/about's whim.",FALSE);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX_restrictions\n/%CHANNEL%%PREFIX_sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During kidnap RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the kidnapping, please type: /%CHANNEL%%PREFIX%kidnap release\n\nHave fun! www.virtualdisgrace.com\n", kKidnapper);
         g_lTempOwners+=[kKidnapper,sKidnapper];
         saveTempOwners();
         llSetTimerEvent(0.0);
@@ -140,12 +143,12 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         string sKidnapper=llList2String(lSplit,1);
         if (iNum==COMMAND_OWNER || iNum==COMMAND_SECOWNER || iNum==COMMAND_GROUP) { //do nothing, owners get their own menu but cannot kidnap
         } 
-        else Dialog(kID, "\nYou can try to kidnap "+g_sWearerName+".\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kKidnapper, sKidnapper);
+        else Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kKidnapper, sKidnapper);
     } 
     else if (sStrLower == "kidnap" || sStrLower == "menu kidnap") {
         if  (iNum!=COMMAND_OWNER && iNum != COMMAND_WEARER) {
-            if (g_iCaptureOn) Dialog(kID, "\nYou can try to kidnap "+g_sWearerName+".\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kID, llKey2Name(kID));
-            else Notify(kID,g_sAuthError, FALSE);
+            if (g_iCaptureOn) Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kID, llKey2Name(kID));
+            else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID,g_sAuthError, FALSE);
         } else KidnapMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
     else if (iNum!=COMMAND_OWNER && iNum != COMMAND_WEARER){
@@ -153,18 +156,19 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     } 
     else if (llSubStringIndex(sStrLower,"kidnap")==0) {
         if (llGetListLength(g_lTempOwners)>0 && kID==g_kWearer) {
-            Notify(g_kWearer, "You are no longer in charge here.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//Notify(g_kWearer, "You are no longer in charge here.", FALSE);
             return(TRUE);
         } else if (sStrLower == "kidnap on") {
-            Notify(kID,"Kidnap Mode activated.",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode activated",kID);//Notify(kID,"Kidnap Mode activated.",TRUE);
             if (g_iVulnerableOn) {
-                WhisperVulnerable();
+                llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
+                //WhisperVulnerable();
                 llSetTimerEvent(900.0);
             }
             g_iCaptureOn=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE,"kidnap_kidnap=1", "");
         } else if (sStrLower == "kidnap off") {
-            if(g_iCaptureOn) Notify(kID,"Kidnap Mode deactivated.",TRUE);
+            if(g_iCaptureOn) llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode deactivated",kID);//Notify(kID,"Kidnap Mode deactivated.",TRUE);
             g_iCaptureOn=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_kidnap", "");
             g_lTempOwners=[];
@@ -172,8 +176,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             llSetTimerEvent(0.0);
         } else if (sStrLower == "kidnap release") {
             llMessageLinked(LINK_SET, COMMAND_OWNER, "unfollow", kID);
-            Notify(g_kWearer,llGetDisplayName(kID)+" has released you.",FALSE);
-            Notify(kID,"You have released "+g_sWearerName+".",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about has released you.",g_kWearer);
+            //Notify(g_kWearer,llGetDisplayName(kID)+" has released you.",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
+            //Notify(kID,"You have released "+g_sWearerName+".",FALSE);
             g_lTempOwners=[];
             saveTempOwners();
             llSetTimerEvent(0.0);
@@ -181,36 +187,41 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         } else if (sStrLower == "kidnap vulnerable on") {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "kidnap_vulnerable=1", "");
             g_iVulnerableOn = TRUE;
-            llOwnerSay("You are vulnerable now...");
-            Notify(kID,g_sWearerName+" is vulnerable now...",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
+            //llOwnerSay("You are vulnerable now...");
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% is vulnerable now...",kID);
+            //Notify(kID,g_sWearerName+" is vulnerable now...",FALSE);
             if (g_iCaptureOn){
                  llSetTimerEvent(900.0);
-                 WhisperVulnerable();
+                 llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
+                 //WhisperVulnerable();
                 }
         } else if (sStrLower == "kidnap vulnerable off") {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "kidnap_vulnerable", "");
             g_iVulnerableOn = FALSE;
-            Notify(kID,"Kidnappings will require consent first.",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnappings will require consent first.",kID);
+            //Notify(kID,"Kidnappings will require consent first.",TRUE);
             llSetTimerEvent(0.0);
         }
         if (remenu) KidnapMenu(kID, iNum);
     }
     return TRUE;
 }
-
+/*
 WhisperVulnerable() {
     string sDeviceName = llGetObjectName();
     llSetObjectName("");
-    llSay(0, "secondlife:///app/agent/"+(string)g_kWearer+"/about: You can kidnap me if you touch my neck...");
+    llSay(0, g_sWearerName+": You can kidnap me if you touch my neck...");
     llSetObjectName(sDeviceName);
-}
+}*/
+
 
 default{
     
     state_entry() {
         llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+       // g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         //Debug("Starting");
     }
     
@@ -224,14 +235,14 @@ default{
         if (~llListFindList(g_lTempOwners,[(string)kToucher])) return;  //temp owners can't capture
         if (llGetListLength(g_lTempOwners)) return;  //no one can capture if already captured
         if (!g_iCaptureOn) return;  //no one can capture if disabled
-        if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) Notify(kToucher,"You could kidnap "+g_sWearerName+" if you get a bit closer.",FALSE);
+        if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could kidnap %WEARERNAME% if you get a bit closer.",kToucher);//Notify(kToucher,"You could kidnap "+g_sWearerName+" if you get a bit closer.",FALSE);
         else llMessageLinked(LINK_SET,0,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Kidnap", "");
         else if (iNum == COMMAND_SAFEWORD || (sStr == "runaway" && iNum == COMMAND_OWNER)) {
-            if (iNum == COMMAND_SAFEWORD) Notify(g_kWearer,"Kidnap Mode deactivated.",TRUE);
+            if (iNum == COMMAND_SAFEWORD) llMessageLinked(LINK_SET,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);//Notify(g_kWearer,"Kidnap Mode deactivated.",TRUE);
             g_iCaptureOn=FALSE;
             g_iVulnerableOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_kidnap", "");
@@ -239,12 +250,12 @@ default{
             g_lTempOwners=[];
             saveTempOwners();
             llSetTimerEvent(0.0);
-        } else if (iNum == LM_SETTING_DELETE) {
+        /*} else if (iNum == LM_SETTING_DELETE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             if (sToken == "Global_WearerName") {
                 g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-            }
+            }*/
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -252,7 +263,7 @@ default{
             if (sToken == "kidnap_kidnap") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
             else if (sToken == "kidnap_vulnerable") g_iVulnerableOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
-            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+           // else if (sToken == "Global_WearerName") g_sWearerName = sValue;
         } else if (UserCommand(iNum, sStr, kID, FALSE)) {  // do nothing more if TRUE
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -275,15 +286,15 @@ default{
                     if (sMessage == "BACK") llMessageLinked(LINK_THIS, iAuth, "menu kidnap", kAv);
                     else if (sMessage == "Allow") doCapture(kKidnapper, sKidnapper, TRUE);
                     else if (sMessage == "Reject") { 
-                        Notify(kAv,"secondlife:///app/agent/"+(string)kKidnapper+"/about didn't pass your face control. Sucks for them!",FALSE);
-                        Notify(kKidnapper,"Looks like "+g_sWearerName+" didn't want to be kidnapped after all. C'est la vie!",FALSE);
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kKidnapper+"/about didn't pass your face control. Sucks for them!",kAv);//Notify(kAv,"secondlife:///app/agent/"+(string)kKidnapper+"/about didn't pass your face control. Sucks for them!",FALSE);
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Looks like %WEARERNAME% didn't want to be kidnapped after all. C'est la vie!",kKidnapper);//Notify(kKidnapper,"Looks like "+g_sWearerName+" didn't want to be kidnapped after all. C'est la vie!",FALSE);
                     }
                 } else if (sMenu=="ConfirmKidnapMenu") {  //kidnapper must confirm when forced is on
                     if (sMessage == "BACK") llMessageLinked(LINK_THIS, iAuth, "menu kidnap", kAv);
                     else if (g_iCaptureOn) {  //in case app was switched off in the mean time
                         if (sMessage == "Yes") doCapture(kKidnapper, sKidnapper, g_iVulnerableOn);
-                        else if (sMessage == "No") Notify(kAv,"You let "+g_sWearerName+" be.",FALSE);
-                    } else Notify(kAv,g_sWearerName+" can no longer be kidnapped.",FALSE);
+                        else if (sMessage == "No") llMessageLinked(LINK_SET,NOTIFY,"0"+"You let %WEARERNAME% be.",kAv);//Notify(kAv,"You let "+g_sWearerName+" be.",FALSE);
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% can no longer be kidnapped",kAv); //Notify(kAv,g_sWearerName+" can no longer be kidnapped.",FALSE);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
@@ -293,14 +304,16 @@ default{
     }
     
     timer() {
-        WhisperVulnerable();
+       //WhisperVulnerable();
+        llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
     }
     
     changed(integer iChange) {
         if (iChange & CHANGED_TELEPORT) {
             if (llGetListLength(g_lTempOwners) == 0) {
                 if (g_iVulnerableOn && g_iCaptureOn) {
-                    WhisperVulnerable();
+                    //WhisperVulnerable();
+                    llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
                     llSetTimerEvent(900.0);
                 }
             }

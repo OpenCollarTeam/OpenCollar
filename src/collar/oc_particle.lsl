@@ -25,6 +25,7 @@ integer COMMAND_WEARER      = 503;
 //integer COMMAND_EVERYONE    = 504;
 //integer COMMAND_SAFEWORD    = 510;
 //integer POPUP_HELP          = 1001;
+integer NOTIFY                = 1002;
 // -- SETTINGS
 // - Setting strings must be in the format: "token=value"
 integer LM_SETTING_SAVE             = 2000; // to have settings saved to settings store
@@ -48,18 +49,7 @@ integer g_iLMListernerDetach;
 
 integer COMMAND_PARTICLE = 20000;
 integer COMMAND_LEASH_SENSOR = 20001;
-/*
-list g_lColors = [
-"Magenta",<1.00000, 0.00000, 0.50196>, "Pink",<1.00000, 0.14902, 0.50980>, "Hot Pink",<1.00000, 0.05490, 0.72157>,
-"Firefighter",<0.88627, 0.08627, 0.00392>, "Sun",<1.00000, 1.00000, 0.18039>, "Flame",<0.92941, 0.43529, 0.00000>,
-"Matrix",<0.07843, 1.00000, 0.07843>, "Electricity",<0.00000, 0.46667, 0.92941>, "Violet Wand",<0.63922, 0.00000, 0.78824>,
 
-"Baby Blue",<0.75686, 0.75686, 1.00000>, "Wasabi",<0.47059, 1.00000, 0.65098>, "Lavender",<0.89020, 0.65882, 0.99608>,
-"Baby Pink",<1.00000, 0.52157, 0.76078>, "Rose",<0.93333, 0.64314, 0.72941>, "Beige",<0.86667, 0.78039, 0.71765>,
-"Earth",<0.39608, 0.27451, 0.18824>, "Ocean",<0.25882, 0.33725, 0.52549>, "Yolk",<0.98824, 0.73333, 0.29412>,
-
-"Black",<0.00000, 0.00000, 0.00000>, "White",<1.00000, 1.00000, 1.00000>
-];*/
 // ----- collar -----
 //string g_sWearerName;
 
@@ -87,10 +77,10 @@ list g_lSettings=g_lDefaultSettings;
 
 string g_sCurrentMenu = "";
 key g_kDialogID;
-string g_sDeviceType = "collar";
+//string g_sDeviceType = "collar";
 key g_kWearer;
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 key NULLKEY = "";
 key g_kLeashedTo = ""; //NULLKEY;
@@ -147,7 +137,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 }
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
@@ -155,7 +145,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 FindLinkedPrims() {
     integer linkcount = llGetNumberOfPrims();
@@ -333,14 +323,14 @@ SetTexture(string sIn, key kIn) {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
         if (GetSetting("R_TextureID")) g_sParticleTextureID = GetSetting("R_TextureID");
-        if (kIn) Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
+        if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);//Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
     }
     else if (g_sParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
         else L_CLASSIC_TEX = sIn;
         if (GetSetting("C_TextureID")) g_sParticleTextureID = GetSetting("C_TextureID");
-        if (kIn) Notify(kIn, "Leash texture set to " + L_CLASSIC_TEX, FALSE);
-    } else  if (kIn) Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
+        if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_CLASSIC_TEX,kIn);//Notify(kIn, "Leash texture set to " + L_CLASSIC_TEX, FALSE);
+    } else  if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + g_sParticleTexture,kIn);//Notify(kIn, "Leash texture set to " + g_sParticleTexture, FALSE);
     //Debug("particleTextureID= " + (string)g_sParticleTextureID);
     //Debug("activeleashpoints= " + (string)g_iLeashActive);
     if (g_iLeashActive) {
@@ -440,18 +430,18 @@ default {
         else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
             if (llToLower(sMessage) == llToLower(SUBMENU)) {
                 if(iNum <= COMMAND_SECOWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
-                else Notify(kMessageID,g_sAuthError, FALSE);
+                else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID); //Notify(kMessageID,g_sAuthError, FALSE);
             }
             else if (sMessage == "menu "+SUBMENU) {
                 if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
-                    Notify(kMessageID,g_sAuthError, FALSE);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID); //Notify(kMessageID,g_sAuthError, FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
             else if (llToLower(sMessage) == "leashparticle reset") {
                 g_lSettings = []; // clear current settings
-                if (kMessageID) Notify(kMessageID, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
+                if (kMessageID) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID); //Notify(kMessageID, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
                 GetSettings(TRUE); 
             }
@@ -554,21 +544,24 @@ default {
                         if (g_vLeashSize.x < 0.04 && g_vLeashSize.y < 0.04) {
                             g_vLeashSize.x = 0.04 ;
                             g_vLeashSize.y = 0.04 ;
-                            Notify(kAv, "The leash won't get much smaller.", FALSE);
+                            llMessageLinked(LINK_SET,NOTIFY,"0"+"The leash won't get much smaller.",kAv);
+                            //Notify(kAv, "The leash won't get much smaller.", FALSE);
                         }
                     }
                     else if (sButton == "Heavier") {
                         g_vLeashGravity.z -= 0.1;
                         if (g_vLeashGravity.z < -3.0) {
                             g_vLeashGravity.z = -3.0;
-                            Notify(kAv, "That's the heaviest it can be.", FALSE);
+                            llMessageLinked(LINK_SET,NOTIFY,"0"+"That's the heaviest it can be.",kAv);
+                            //Notify(kAv, "That's the heaviest it can be.", FALSE);
                         } 
                     }
                     else if (sButton == "Lighter") {
                         g_vLeashGravity.z += 0.1;
                         if (g_vLeashGravity.z > 0.0) {
                             g_vLeashGravity.z = 0.0 ;
-                            Notify(kAv, "It can't get any lighter now.", FALSE);
+                            llMessageLinked(LINK_SET,NOTIFY,"0"+"It can't get any lighter now.",kAv);
+                            //Notify(kAv, "It can't get any lighter now.", FALSE);
                         }
                     }
                     SaveSettings(L_GRAVITY, Float2String(g_vLeashGravity.z), TRUE,0,"");
@@ -616,7 +609,7 @@ default {
                 g_iStrictMode = TRUE;
                 ConfigureMenu(kMessageID, (integer)sValue);
             }
-            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent") {
                 GetSettings(TRUE);

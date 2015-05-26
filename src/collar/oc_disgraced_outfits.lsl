@@ -29,7 +29,7 @@ key     g_kMenuClicker;
 
 integer g_iListener;
 string  g_sScript                   ="Outfits_";
-string CTYPE                        = "collar";
+//string CTYPE                        = "collar";
    
 integer g_iFolderRLV = 98745923;
 integer g_iFolderRLVSearch = 98745925;
@@ -42,6 +42,8 @@ string g_sPathPrefix = ".outfits"; //we look for outfits in here
 integer COMMAND_OWNER              = 500;
 integer COMMAND_WEARER             = 503;
 integer COMMAND_SAFEWORD           = 510;
+
+integer NOTIFY                     = 1002;
 
 integer LM_SETTING_SAVE            = 2000;
 integer LM_SETTING_REQUEST         = 2001;
@@ -63,14 +65,14 @@ string  BACKMENU                   = "⏎";
 
 
 //Debug(string sMsg) { llOwnerSay(llGetScriptName() + " [DEBUG]: " + sMsg);}
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else {
         llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
@@ -165,8 +167,8 @@ default {
 
     state_entry()
     {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         llSetMemoryLimit(32768); //2015-05-06 (10952 bytes free)
+        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
     }
     timer()
@@ -186,13 +188,15 @@ default {
         }
         else if (iChan == g_iFolderRLVSearch) {
             if (sMsg == "") {
-                Notify(kID,"That outfit couldn't be found in #RLV/"+g_sPathPrefix,FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"That outfit couldn't be found in #RLV/"+g_sPathPrefix,kID);
+                //Notify(kID,"That outfit couldn't be found in #RLV/"+g_sPathPrefix,FALSE);
             } else { // we got a match
                 if (llSubStringIndex(sMsg,",") < 0) {
                     llOwnerSay(WearFolder(sMsg));
                     g_sCurrentPath = sMsg;
                     //llOwnerSay("@attachallover:"+g_sPathPrefix+"/.core/=force");
-                    Notify(kID,"Loading outfit #RLV/"+sMsg,FALSE);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Loading outfit #RLV/"+sMsg,kID);
+                    //Notify(kID,"Loading outfit #RLV/"+sMsg,FALSE);
                 } else {
                     string sPrompt = "\nPick one!";
                     list lFolderMatches = llParseString2List(sMsg,[","],[]);

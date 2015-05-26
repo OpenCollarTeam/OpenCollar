@@ -27,6 +27,7 @@ integer COMMAND_WEARER = 503;
 
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -81,6 +82,11 @@ string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
 string g_sScript;
+integer g_iListenChan=1;
+string g_sPrefix;
+string g_sDeviceType = "collar";
+string g_sDeviceName;
+string g_sWearerName;
 
 list g_lSensorDetails;
 integer g_bSensorLock;
@@ -116,7 +122,7 @@ Debug(string sStr) {
 }
 */
 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -126,7 +132,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
@@ -204,7 +210,19 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         lButtons = lMenuItems;
     }
     //Debug("buttons:"+llDumpList2String(lButtons,","));
-    
+    if (sPrompt == "%NOACCESS%") {
+        sPrompt = "Access denied.";
+        jump next ;
+    }
+    if (~llSubStringIndex(sPrompt, "%PREFIX%")) 
+        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%PREFIX%"], []), g_sPrefix);
+    if (~llSubStringIndex(sPrompt, "%CHANNEL%")) 
+        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%CHANNEL%"], []), (string)g_iListenChan);
+    if (~llSubStringIndex(sPrompt, "%DEVICETYPE%")) 
+        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%DEVICETYPE%"], []), g_sDeviceType);
+    if (~llSubStringIndex(sPrompt, "%WEARERNAME%")) 
+        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%WEARERNAME%"], []), g_sWearerName);            
+    @next;
     //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
     if (~llListFindList(g_lGenuine, [llGetCreator()]))sPrompt+="\n\nTHIS IS NOT A GENUINE OpenCollar!";
     integer iPromptlen=GetStringBytes(sPrompt);
@@ -226,11 +244,13 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         integer iRemainingChatLen;
         while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
             if(iRemainingChatLen<1015) {
-                Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
+                llMessageLinked(LINK_SET,NOTIFY,"0"+sThisChat,kRecipient);
+                //Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
                 sThisChat="";
             } else {
                 string sMessageChunk=TruncateString(sPrompt,1015);
-                Notify(kRecipient,sMessageChunk,FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+sMessageChunk,kRecipient);
+                //Notify(kRecipient,sMessageChunk,FALSE);
                 sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
             }
         }
@@ -413,12 +433,14 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             if (~i) return TRUE; // already in list
             MRSBUN += [kID];
-            Notify(kID, "Verbose Feature activated for you.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature activated for you.",kID);
+            //Notify(kID, "Verbose Feature activated for you.", FALSE);
         }
         else if (~i)
         {
             MRSBUN = llDeleteSubList(MRSBUN, i, i);
-            Notify(kID, "Verbose Feature de-activated for you.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature de-activated for you.",kID);
+            //Notify(kID, "Verbose Feature de-activated for you.", FALSE);
         }
         else return TRUE; // not in list to start with
         if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + SPAMSWITCH, "");
@@ -454,9 +476,12 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(49152);  //2015-05-06 (9926 bytes free)
+       // llSetMemoryLimit(57344);  //2015-05-06 (9926 bytes free)
         g_sScript = "dialog_";
         g_kWearer=llGetOwner();
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        g_sDeviceName = llGetObjectName();
         //Debug("Starting");
     }
 
@@ -664,6 +689,17 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sScript + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
+            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            else if (sToken == "Global_prefix"){
+                if (sValue != "") g_sPrefix=sValue;
+            } else if (sToken == "listener_channel") g_iListenChan = (integer)sValue;
+        } else if (iNum == LM_SETTING_SAVE) {
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
         }
     }
     

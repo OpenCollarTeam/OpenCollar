@@ -21,21 +21,21 @@ key g_kWearer;
 //string g_sAppLockToken = "Appearance_Lock";
 
 //opencollar MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
+//integer COMMAND_EVERYONE = 504;
 
 //integer POPUP_HELP = 1001;
-
+integer NOTIFY=1002;
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -48,7 +48,7 @@ integer DIALOG_TIMEOUT = -9002;
 integer g_iCharLimit = -1;
 
 string UPMENU = "BACK";
-string CTYPE = "collar";
+//string CTYPE = "collar";
 
 string g_sTextMenu = "Set Label";
 string g_sFontMenu = "Font";
@@ -229,7 +229,7 @@ SetLabel()
 }
 
 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -240,7 +240,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
+*/
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -258,7 +258,7 @@ MainMenu(key kID, integer iAuth)
     if (g_iScroll) lButtons += ["☒ Scroll"];
     else lButtons += ["☐ Scroll"];    
         
-    string sPrompt = "\nCustomize the " + CTYPE + "'s label!\n\nwww.opencollar.at/label";
+    string sPrompt = "\nCustomize the %DEVICETYPE%'s label!\n\nwww.opencollar.at/label";
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
@@ -283,7 +283,7 @@ ColorMenu(key kID, integer iAuth)
 FontMenu(key kID, integer iAuth)
 {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
-    string sPrompt = "\nSelect the font for the " + CTYPE + "'s label.\n\nNOTE: This feature requires a design with label prims. If the worn design doesn't have any of those, it is recommended to uninstall Label with the updater.\n\nwww.opencollar.at/label";
+    string sPrompt = "\nSelect the font for the %DEVICETYPE%'s label.\n\nNOTE: This feature requires a design with label prims. If the worn design doesn't have any of those, it is recommended to uninstall Label with the updater.\n\nwww.opencollar.at/label";
 
     g_kFontID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -315,6 +315,11 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);            
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "text=" + g_sLabelText, "");
+            if (llStringLength(g_sLabelText) > g_iCharLimit) {
+                string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
+               // Notify(kAv, "Unless your set your label to scroll it will be truncted at "+sDisplayText+".", FALSE);
+            }
             SetLabel();          
         }
         else if (sCommand == "labelfont")
@@ -362,11 +367,13 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         if (sStr=="menu "+g_sSubMenu)
         {
             llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-            Notify(kAv,"Only owners can change the label!", FALSE);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change the label!", kAv);
+            //Notify(kAv,"Only owners can change the label!", FALSE);
         }
         else if (sCommand=="labeltext" || sCommand == "labelfont" || sCommand == "labelcolor" || sCommand == "labelshow")
         {
-            Notify(kAv,"Only owners can change the label!", FALSE);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change the label!", kAv);
+           // Notify(kAv,"Only owners can change the label!", FALSE);
         }
     }
         
@@ -415,7 +422,7 @@ default
                 else if (sToken == "scroll") g_iScroll = (integer)sValue;                
             }
             //else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
-            else if (sToken == "Global_CType") CTYPE = sValue;
+           // else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "settings" && sValue == "sent")
             {
                 SetColor();

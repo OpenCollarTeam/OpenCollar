@@ -37,7 +37,7 @@ integer card1line1;
 integer card1line2;
 integer iCardComplete;
 
-string g_sWearerName;
+//string g_sWearerName;
 
 list g_lAnimCmds;//1-strided list of strings that will trigger
 list g_lAnimSettings;//4-strided list of subAnim|domAnim|offset|text, running parallel to g_lAnimCmds,
@@ -73,7 +73,9 @@ integer COMMAND_WEARER = 503;
 //integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
+integer SAY = 1004;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -128,7 +130,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 } 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -138,7 +140,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 refreshTimer(){
     integer timeNow=llGetUnixTime();
@@ -235,7 +237,7 @@ default {
         llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
+        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
             g_iLine1 = 0;
@@ -290,7 +292,7 @@ default {
                 {
                     if (kID == g_kWearer)                    //if commander is not sub, then treat commander as partner
                     {
-                        llMessageLinked(LINK_SET, POPUP_HELP, "\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /_CHANNEL__PREFIX_" + sCommand + " wen\n", g_kWearer);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
                     }
                     else                //else set partner to commander
                     {
@@ -326,7 +328,7 @@ default {
             if(sToken == g_sScript + "timeout")
             {
                 g_fTimeOut = (float)sValue;
-            } else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+            } //else if (sToken=="Global_WearerName") g_sWearerName=sValue;
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -388,8 +390,10 @@ default {
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                    llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName + ".");
-                    Notify(g_kPartner,  g_sWearerName + " would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
+                    //llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName + ".");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
+                    //Notify(g_kPartner,  "%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
             }
             else if (kID == g_kTimerMenu)
@@ -408,14 +412,16 @@ default {
                 {
                     g_fTimeOut = (float)((integer)sMessage);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + (string)g_fTimeOut, "");
-                    Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
+                    //Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
                 else if (sMessage == "ENDLESS")
                 {
                     g_fTimeOut = 0.0;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=0.0", "");
-                    Notify (kAv, "Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",TRUE);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",kAv);
+                    //Notify (kAv, "Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
             }
@@ -454,20 +460,21 @@ default {
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llStartAnimation(g_sDomAnim);//note that we don't double check for permissions here, so if the coupleanim1 script sends its messages out of order, this might fail
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
-        //llInstantMessage(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.");
-        Notify(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.", FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
+        //Notify(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.", FALSE);
     
         
-        string text = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
-        if (text != "")
+        string sText = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
+        if (sText != "")
         {    
-            string sName = llGetObjectName();
-            string sObjectName;
-            text = StrReplace(text,"_PARTNER_",g_sPartnerName);
-            text = StrReplace(text,"_SELF_",g_sWearerName);
-            llSetObjectName("");
-            llSay(0, text);
-            llSetObjectName(sName);           
+           // string sName = llGetObjectName();
+           // string sObjectName;
+            sText = StrReplace(sText,"_PARTNER_",g_sPartnerName);
+            sText = StrReplace(sText,"_SELF_","%WEARERNAME%");
+            llMessageLinked(LINK_SET,SAY,"0"+sText,"");
+           // llSetObjectName("");
+           // llSay(0, sText);
+           // llSetObjectName(sName);           
         }
         if (g_fTimeOut > 0.0){
             g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
@@ -535,7 +542,8 @@ default {
             }
             else
             {
-                Notify(kID, "Sorry, but the request timed out.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"Sorry, but the request timed out.",kID);
+                //Notify(kID, "Sorry, but the request timed out.",TRUE);
             }
         }
     }

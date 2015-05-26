@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 key g_kLMID;//store the request id here when we look up a LM
-string g_sDeviceType = "collar";
+//string g_sDeviceType = "collar";
 key g_kMenuID;
 key g_kSensorMenuID;
 key g_kPersonMenuID;
@@ -24,7 +24,7 @@ key g_kDialoger;
 integer g_iDialogerAuth;
 list g_lScan;
 integer g_iRlvUnknown=TRUE;
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 list g_lOwners;
 list g_lSecOwners;
@@ -118,6 +118,7 @@ integer COMMAND_RLV_RELAY = 507;
 
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave descripts
 //integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //sStr must be in form of "token=value"
@@ -176,7 +177,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 }
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -186,13 +187,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 Menu(key kID, string sWho, integer iAuth)
 {
     if (!g_iRLVOn)
     {
-        Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
+        //Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -233,7 +235,8 @@ ExMenu(key kID, string sWho, integer iAuth)
     //Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn)
     { 
-        Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
+        //Notify(kID, "RLV features are now disabled in this " + g_sDeviceType + ". You can enable those in RLV submenu. Opening it now.", FALSE);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
@@ -467,7 +470,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
     if ((iNum >= COMMAND_OWNER) && (iNum <= COMMAND_EVERYONE)) {
         if (iNum != COMMAND_OWNER) {
             if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
-                Notify(kID,g_sAuthError,FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,g_sAuthError,FALSE);
                 llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
             } return TRUE;
         }
@@ -530,10 +534,12 @@ integer UserCommand(integer iNum, string sStr, key kID)
         sLower = llToLower(sWho);
         // preventing from getting owners and trusted messed up in the "other" list
         if (~llListFindList(g_lOwners, [sWho])){
-            Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.",kID);
+            //Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.", FALSE);
             jump nextwho;
         } else if (~llListFindList(g_lSecOwners, [sWho])) {
-            Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.",kID);
+            //Notify(kID, "You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.", FALSE);
             jump nextwho;            
         }
         //iNames = -1; //llListFindList(g_lNames, [sWho]);
@@ -682,7 +688,7 @@ default {
                     MakeNamesList();
                 }*/
             }
-            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []);

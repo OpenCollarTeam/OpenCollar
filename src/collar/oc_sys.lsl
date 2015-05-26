@@ -17,10 +17,10 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="20150524.2";
+string g_sCollarVersion="20150525.1";
 integer g_iLatestVersion=TRUE;
 
-list g_lOwners;
+//list g_lOwners;
 key g_kWearer;
 //string g_sOldRegionName;
 //list g_lMenuPrompts;
@@ -40,6 +40,8 @@ integer COMMAND_EVERYONE = 504;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
+integer NOTIFY_OWNERS = 1003;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
                             //str must be in form of "token=value"
@@ -63,8 +65,8 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
-string g_sDeviceType="collar";
-string g_sWearerName;
+//string g_sDeviceType="collar";
+//string g_sWearerName;
 
 string GIVECARD = "Help";
 string HELPCARD = ".help";
@@ -113,10 +115,10 @@ integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
 integer g_iWillingVDUpdaters = 0;
 
-integer g_iListenChan=1;
+//integer g_iListenChan=1;
 string g_sSafeWord="RED";
-string g_sPrefix;
-string g_sAuthError = "Access denied.";
+//string g_sPrefix;
+//string g_sAuthError = "Access denied.";
 
 //Option Menu variables
 string DUMPSETTINGS = "Print";
@@ -143,10 +145,10 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
 }*/
 
-string AutoPrefix()
+/*string AutoPrefix()
 {
     return llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-}
+}*/
 
 integer compareVersions(string v1, string v2){ //compares two symantic version strings, true if v1 >= v2
     //Debug("compare "+v1+" with "+v2);
@@ -200,16 +202,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs += [kID, kMenuID, sName];
     }
 } 
-
-/*Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}*/
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     string sDeviceName = llGetObjectName();
     llSetObjectName("");
@@ -220,7 +213,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
     llSetObjectName(sDeviceName);
-}
+}*/
 
 OptionsMenu(key kID, integer iAuth)
 {
@@ -247,16 +240,16 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your "+g_sDeviceType+" and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, COMMAND_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your %DEVICETYPE% and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, COMMAND_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 3.9\n";
     sPrompt+="Disgraced Version "+g_sCollarVersion;
-    sPrompt+="\n\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iListenChan+"\nSafeword: "+g_sSafeWord;
+    sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
     //sPrompt+="\n\nwww.virtualdisgrace.com/collar";
-    if (~llListFindList(g_lGenuine, [llGetCreator()])) Notify(kID, "\n\nTHIS IS NOT A GENUINE OpenCollar!\nPlease contact secondlife:///app/agent/"+(string)llGetCreator()+"/about to fix this!\n",TRUE);
+    if (~llListFindList(g_lGenuine, [llGetCreator()])) llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nTHIS IS NOT A GENUINE OpenCollar!\nPlease contact secondlife:///app/agent/"+(string)llGetCreator()+"/about to fix this!\n",kID);//Notify(kID, "\n\nTHIS IS NOT A GENUINE OpenCollar!\nPlease contact secondlife:///app/agent/"+(string)llGetCreator()+"/about to fix this!\n",TRUE);
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     
@@ -312,13 +305,13 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
         else if (sSubmenu == "options") {
             if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) {
-                Notify(kID, g_sAuthError, FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
                 MainMenu(kID, iNum);
             } else OptionsMenu(kID, iNum);
         }
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
+        else llMessageLinked(LINK_SET,NOTIFY,"0"+"License notecard missing from collar, sorry.",kID);//Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
         llGiveInventory(kID, HELPCARD);
@@ -346,9 +339,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
 
-            Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been locked.",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been locked.",kID);
+            //Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been locked.",TRUE);
         }
-        else Notify(kID, g_sAuthError, FALSE);
+        else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
         if (iNum == COMMAND_OWNER)  {  //primary owners can lock and unlock. no one else
@@ -359,15 +353,16 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llPlaySound(g_sUnlockSound, 1.0);
             SetLockElementAlpha(); //EB
 
-            Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been unlocked.",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been unlocked.",kID);
+            //Notify(kID,g_sWearerName+"'s "+ g_sDeviceType + " has been unlocked.",TRUE);
         }
-        else Notify(kID, g_sAuthError, FALSE);
+        else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fix") {
         if (kID == g_kWearer){
             RebuildMenu();
-            Notify(kID, "Menus fixed!", FALSE);
-        } else Notify(kID, g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Menus fixed!",kID);//Notify(kID, "Menus fixed!", FALSE);
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
     } else if (sCmd == "jailbreak") {
         if (kID == g_kWearer){
             if (llGetInventoryType(".tamago")==INVENTORY_NONE) {
@@ -386,18 +381,20 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if (sStr=="news off"){
                 g_iNews=FALSE;
                 //notify news off
-                Notify(kID,"\n\nOk! No more news from now on.\n\n*pout*\n",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nOk! No more news from now on.\n\n*pout*\n",kID);
+                //Notify(kID,"\n\nOk! No more news from now on.\n\n*pout*\n",TRUE);
             } else if (sStr=="news on"){
                 g_iNews=TRUE;
                 //notify news on
-                Notify(kID,"\n\nThanks!\n\nWe won't spam you, promise! <3\n",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nThanks!\n\nWe won't spam you, promise! <3\n",kID);
+                //Notify(kID,"\n\nThanks!\n\nWe won't spam you, promise! <3\n",TRUE);
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
-        } else Notify(kID,g_sAuthError,FALSE);
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID,g_sAuthError,FALSE);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
 //        if (llGetOwnerKey(kID) == g_kWearer) {
@@ -407,17 +404,20 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             g_iWillingVDUpdaters = 0;
             g_kCurrentUser = kID;
             g_iUpdateAuth = iNum;
-            Notify(kID,"Searching for nearby updater",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Searching for nearby updater",kID);
+            //Notify(kID,"Searching for nearby updater",FALSE);
             g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
             g_iUpdateFromMenu=fromMenu;
             llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
-            Notify(kID,"Only the wearer can update the " + g_sDeviceType + ".",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
+            //Notify(kID,"Only the wearer can update the " + g_sDeviceType + ".",FALSE);
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (sCmd == "version") {
-        Notify(kID, "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n", FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n",kID);
+        //Notify(kID, "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n", FALSE);
     } else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
         
@@ -435,14 +435,14 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     }    
     return TRUE;
 }
-
+/*
 NotifyOwners(string sMsg) {
     integer n;
     integer stop = llGetListLength(g_lOwners);
     for (n = 0; n < stop; n += 2) {
         Notify((key)llList2String(g_lOwners, n), sMsg, FALSE);
     }
-}
+}*/
 
 string GetTimestamp() { // Return a string of the date and time
     string out;
@@ -562,7 +562,7 @@ default
     state_entry() {
         //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         
@@ -571,7 +571,7 @@ default
         
         init(); //do stuf needed on_rez AND on script start
         
-        g_sPrefix=AutoPrefix();
+       // g_sPrefix=AutoPrefix();
         
         //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
@@ -665,7 +665,8 @@ default
                     } else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
                         if (sMessage=="Cancel"){
-                        Notify(kAv,"Override cancelled.",FALSE);
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Override cancelled.",kAv);
+                        //Notify(kAv,"Override cancelled.",FALSE);
                         return;
                     } else if (sMessage=="Yes") StartUpdate();
                     else if (sMessage=="BACK"){
@@ -690,7 +691,8 @@ default
                     } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
                         if (g_iResizer) llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
                         else {
-                            Notify(kAv,"You do not have the Resizer in your "+g_sDeviceType+" installed, please use an Updater to install it. If you think the script is already there, hit the \"Fix\" Button.", FALSE);
+                            llMessageLinked(LINK_SET,NOTIFY,"0"+"You do not have the Resizer in your %DEVICETYPE% installed, please use an Updater to install it. If you think the script is already there, hit the \"Fix\" Button.",kAv);
+                            //Notify(kAv,"You do not have the Resizer in your "+g_sDeviceType+" installed, please use an Updater to install it. If you think the script is already there, hit the \"Fix\" Button.", FALSE);
                             OptionsMenu(kAv,iAuth);
                         }
                         return;
@@ -700,17 +702,17 @@ default
             }
         }
         else if (UserCommand(iNum, sStr, kID, FALSE)) return;
-        else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-                && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
+       // else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
+         //       && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
+         //   integer iInd = llSubStringIndex(sStr, "=");
+         //   string sValue = llGetSubString(sStr, iInd + 1, -1);
             //We have a broadcasted change to g_sWearerName to work with
-            if (iNum == LM_SETTING_RESPONSE) g_sWearerName = sValue;
-            else {
-                g_kWearer = llGetOwner();
-                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-            }
-        }
+           // if (iNum == LM_SETTING_RESPONSE) g_sWearerName = sValue;
+           // else {
+           //     g_kWearer = llGetOwner();
+           //     g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+            //}
+        //}
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -719,12 +721,12 @@ default
             if (sToken == "Global_locked") {
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
-            } else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
-            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
-            else if (sToken == "auth_owner")
+            }// else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+           // else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+          /*  else if (sToken == "auth_owner")
             {
                 g_lOwners = llParseString2List(sValue, [","], []);
-            }
+            }*/
             else if(sToken =="lock_locksound")
             {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
@@ -735,9 +737,9 @@ default
                 if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
             }
-            else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
+           // else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
             else if (sToken == "listener_safeword") g_sSafeWord = sValue;
-            else if (sToken == "Global_prefix") g_sPrefix = sValue;
+           // else if (sToken == "Global_prefix") g_sPrefix = sValue;
             else if (sToken == "Global_news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
@@ -755,10 +757,12 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
-            else if (sToken == "listener_safeword") g_sSafeWord = sValue;
-            else if (sToken == "Global_prefix") g_sPrefix = sValue;
+           // if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
+            //else
+           // if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
+            //else 
+            if (sToken == "listener_safeword") g_sSafeWord = sValue;
+           // else if (sToken == "Global_prefix") g_sPrefix = sValue;
         }
         else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR)
         {
@@ -808,11 +812,13 @@ default
             if(kID == NULL_KEY)
             {
                 g_bDetached = TRUE;
-                NotifyOwners(g_sWearerName + " has detached me while locked at " + GetTimestamp() + "!");
+                llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has attached me while locked at "+GetTimestamp()+"!",kID);
+                //NotifyOwners(g_sWearerName + " has detached me while locked at " + GetTimestamp() + "!");
             }
             else if(g_bDetached)
             {
-                NotifyOwners(g_sWearerName + " has re-atached me at " + GetTimestamp() + "!");
+                llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has re-attached me at "+GetTimestamp()+"!",kID);
+                //NotifyOwners(g_sWearerName + " has re-atached me at " + GetTimestamp() + "!");
                 g_bDetached = FALSE;
             }
         }
@@ -820,7 +826,8 @@ default
     http_response(key id, integer status, list meta, string body){
         if (status == 200) { // be silent on failures.
             if (id == g_kWebLookup){
-                Notify(g_kCurrentUser,body,FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+body,g_kCurrentUser);
+                //Notify(g_kCurrentUser,body,FALSE);
             } else if (id == github_version_request) {  // strip the newline off the end of the text
                 if (compareVersions(llStringTrim(body, STRING_TRIM),g_sCollarVersion)) g_iLatestVersion=FALSE;
                 else g_iLatestVersion=TRUE;
@@ -832,7 +839,8 @@ default
 
                 if (compareVersions(this_news_time,g_sLastNewsTime)) {
                     string news = "Beep: " + body;
-                    Notify(llGetOwner(), news, FALSE);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+news,g_kWearer);
+                    //Notify(llGetOwner(), news, FALSE);
                     g_sLastNewsTime = this_news_time;
                 } 
             }
@@ -861,7 +869,8 @@ default
             g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
         } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
-            Notify(g_kCurrentUser,"Multiple updaters were found nearby. Please remove all but one and try again.",FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
+            //Notify(g_kCurrentUser,"Multiple updaters were found nearby. Please remove all but one and try again.",FALSE);
         } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
         else UpdateConfirmMenu();  //perform update
     }

@@ -16,7 +16,7 @@ integer g_iRLVOn = TRUE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 //integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
@@ -44,7 +44,8 @@ integer COMMAND_RLV_RELAY = 507;
 integer COMMAND_SAFEWORD = 510;
 integer COMMAND_RELAY_SAFEWORD = 511;
 
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -76,8 +77,8 @@ string UPMENU = "BACK";
 string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
-string g_sDeviceType = "collar";
-string g_sWearerName;
+//string g_sDeviceType = "collar";
+//string g_sWearerName;
 key g_kWearer;
 string g_sScript="rlvmain_";
 string g_sRlvVersionString="(unknown)";
@@ -106,7 +107,7 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
     if (kID == g_kWearer) llOwnerSay(sMsg);
     else{
@@ -114,7 +115,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 DoMenu(key kID, integer iAuth){
     list lButtons;
@@ -423,10 +424,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
-            llOwnerSay("RLV disabled.");
-        } else Notify(kID, g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) llOwnerSay(g_sAuthError);
+        if (iNum == COMMAND_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
         else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -436,10 +437,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             if ((key)kSource) 
                 sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             else 
-                sOut+="\nThis " + g_sDeviceType + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             numRestrictions -= 2;
         }
-        Notify(kID,sOut,FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
     }
 }
 
@@ -463,7 +464,7 @@ default {
         setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
+       // g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         //Debug("Starting");
     }
 
@@ -544,7 +545,7 @@ default {
             lParams=[];
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
+           // else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -552,8 +553,8 @@ default {
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
-            else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+           // else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
+           // else if (sToken=="Global_WearerName") g_sWearerName=sValue;
 //            else if (sToken=="rlvmain_notify") g_iRLVNotify = (integer)sValue;
             else if (sToken=="rlvmain_on") {
                 g_iRLVOn=(integer)sValue;
@@ -634,12 +635,12 @@ default {
                         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
                         if (llSubStringIndex(sCom,"tpto")==0) {  //looks like a tpto command, lets check to see if we should honour it or not, and message back if we can if it fails
                             if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);//Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
                                 return;
                             }
                         } else if (sStr=="unsit=force") {
                             if (~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) Notify(kID,"Can't force stand due to RLV restrictions",TRUE);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);//Notify(kID,"Can't force stand due to RLV restrictions",TRUE);
                                 return;
                             }
                         }
@@ -668,7 +669,7 @@ default {
     timer() {
         if (g_iCheckCount++ <= g_iMaxViewerChecks) {   //no response in timeout period, try again
             llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, POPUP_HELP, "\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your "+g_sDeviceType+"'s RLV menu or by typing: _PREFIX_rlvoff\n", g_kWearer);
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
         } else {    //we've waited long enough, and are out of retries
             llSetTimerEvent(0.0);
             llListenRemove(g_iListener);  

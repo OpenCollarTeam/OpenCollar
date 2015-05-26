@@ -69,6 +69,8 @@ integer COMMAND_EVERYONE = 504;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
+integer SAY = 1004;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -87,8 +89,8 @@ integer DIALOG_RESPONSE = -9001;
 
 string UPMENU = "BACK";//when your menu hears this, give the parent menu
 string g_sScript;
-string g_sDeviceType="collar";
-string g_sWearerName;
+//string g_sDeviceType="collar";
+//string g_sWearerName;
 
 /*
 integer g_iProfiled;
@@ -111,7 +113,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 } 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -122,7 +124,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
 }
-
+*/
 
 DoMenu(key kID, integer iAuth)
 {
@@ -281,7 +283,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if (n>10) n=10;
             g_fVolume=(float)n/10;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
-            Notify(kID,"Bell volume set to "+(string)n, TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell volume set to "+(string)n,kID);
+            //Notify(kID,"Bell volume set to "+(string)n, TRUE);
         }
         else if (sToken=="delay")
         {
@@ -289,19 +292,22 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
             if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
-            Notify(kID,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.", TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.",kID);
+            //Notify(kID,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.", TRUE);
         }
         else if (sToken=="show" || sToken=="hide")
         {
             if (sToken=="show")
             {
                 g_iBellShow=TRUE;
-                Notify(kID,"The bell is now visible.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell is now visible.",kID);
+                //Notify(kID,"The bell is now visible.",TRUE);
             }
             else
             {
                 g_iBellShow=FALSE;
-                Notify(kID,"The bell is now invisible.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell is now invisible.",kID);
+                //Notify(kID,"The bell is now invisible.",TRUE);
             }
             SetBellElementAlpha();
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
@@ -315,12 +321,14 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     g_iBellOn=iNum;
                     if (!g_iHasControl) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
-                    Notify(kID,"The bell rings now.",TRUE);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell rings now.",kID);
+                    //Notify(kID,"The bell rings now.",TRUE);
                 }
             }
             else
             {
-                Notify(kID,"Group users or Open Acces users cannot change the ring status of the bell.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Group users or Open Acces users cannot change the ring status of the bell.",TRUE);
             }
         }
         else if (sToken=="off")
@@ -335,11 +343,13 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                     g_iHasControl=FALSE;
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=" + (string)g_iBellOn, "");
-                Notify(kID,"The bell is now quiet.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"The bell is now quiet.",kID);
+                //Notify(kID,"The bell is now quiet.",TRUE);
             }
             else
             {
-                Notify(kID,"Group users or Open Access users cannot change the ring status of the bell.",TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Group users or Open Access users cannot change the ring status of the bell.",TRUE);
             }
         }
         else if (sToken=="nextsound")
@@ -351,7 +361,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             }
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
-            Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
+            //Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
         }
         // let the bell ring one time
         else if (sToken=="ring")
@@ -376,7 +387,7 @@ default {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();  // key of the wearer
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
+        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
 
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();  //build up list of prims with bell elements
@@ -455,8 +466,8 @@ default {
                 }
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
                 else if (sToken == "speed") g_fSpeed=(float)sValue/10;
-            } else if (sToken=="Global_WearerName") g_sWearerName=sValue;
-            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            }// else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+           // else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum==DIALOG_RESPONSE)
@@ -596,7 +607,8 @@ default {
             {
                 g_fNextTouch=llGetTime()+g_fTouch;
                 g_kLastToucher = toucher;
-                llSay(0, "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on " + g_sWearerName + "'s "+g_sDeviceType+"." );
+                llMessageLinked(LINK_SET,SAY,"1"+ "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on %WEARERNAME's %DEVICETYPE%.","");
+               // llSay(0, "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on " + g_sWearerName + "'s "+g_sDeviceType+"." );
             }
         }
     }

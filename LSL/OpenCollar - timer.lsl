@@ -32,7 +32,7 @@ integer REAL_TIME_EXACT=5;
 integer ON_TIME=3;
 integer ON_TIME_EXACT=7;
 
-string CTYPE = "collar";
+//string CTYPE = "collar";
 
 integer g_iInterfaceChannel;
 // end time keeper
@@ -74,6 +74,8 @@ integer COMMAND_EVERYONE = 504;
 
 integer COMMAND_WEARERLOCKEDOUT = 521;
 
+integer NOTIFY = 1002;
+
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
@@ -113,7 +115,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     //Debug("Made menu.");
     return kID;
 } 
-
+/*
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
     if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -123,7 +125,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}
+}*/
 
 DoMenu(key keyID, integer iAuth)
 {
@@ -370,7 +372,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if (iNum == COMMAND_OWNER) g_iUnlockCollar=0;
             else
             {
-                Notify(kID,"Only the owner can change if the " + CTYPE + " unlocks when the timer runs out.",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Only the owner can change if the " + CTYPE + " unlocks when the timer runs out.",FALSE);
             }
             DoMenu(kID, iNum);
         }
@@ -379,7 +382,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if(iNum == COMMAND_OWNER) g_iUnlockCollar=1;
             else
             {
-                Notify(kID,"Only the owner can change if the " + CTYPE + " unlocks when the timer runs out.",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Only the owner can change if the " + CTYPE + " unlocks when the timer runs out.",FALSE);
             }
             DoMenu(kID, iNum);
          }
@@ -387,7 +391,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             if(iNum == COMMAND_WEARER)
             {
-                Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
             }
             else g_iClearRLVRestions=0;
             DoMenu(kID, iNum);
@@ -396,7 +401,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
         {
             if(iNum == COMMAND_WEARER)
             {
-                Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
             }
             else g_iClearRLVRestions=1;
             DoMenu(kID, iNum);
@@ -406,7 +412,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if(iNum <= g_iWhoCanChangeLeash) g_iUnleash=0;
             else
             {
-                Notify(kID,"Only the someone who can leash the sub can change if the " + CTYPE + " unleashes when the timer runs out.",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Only the someone who can leash the sub can change if the " + CTYPE + " unleashes when the timer runs out.",FALSE);
             }
             DoMenu(kID, iNum);
         }
@@ -415,7 +422,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             if(iNum <= g_iWhoCanChangeLeash) g_iUnleash=1;
             else
             {
-                Notify(kID,"Only the someone who can leash the sub can change if the " + CTYPE + " unleashes when the timer runs out.",FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+                //Notify(kID,"Only the someone who can leash the sub can change if the " + CTYPE + " unleashes when the timer runs out.",FALSE);
             }
             DoMenu(kID, iNum);
         }
@@ -658,7 +666,7 @@ default {
         else if(iNum == COMMAND_WEARERLOCKEDOUT && sStr == "menu")
         {
             if (g_iOnRunning || g_iRealRunning)
-                Notify(kID , "You are locked out of the " + CTYPE + " until the timer expires", FALSE);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+ "You are locked out of the %DEVICETYPE% until the timer expires",kID);//Notify(kID , "You are locked out of the " + CTYPE + " until the timer expires", FALSE);
         }
         else if (iNum == LM_SETTING_DELETE)
         {

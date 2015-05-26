@@ -44,7 +44,7 @@ integer g_iAnimLock = FALSE;  //animlock on/off
 integer g_iPosture;  //posture lock on/off
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
+//integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
@@ -73,7 +73,7 @@ integer g_iAOChannel = -782690;
 integer g_iInterfaceChannel = -12587429;
 
 key g_kWearer;
-string g_sWearerName;
+//string g_sWearerName;
 
 //string g_sAuthError = "Access denied.";
 
@@ -113,7 +113,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 }
 */
 AnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\n"+g_sWearerName;
+    string sPrompt = "\n%WEARERNAME%";
     list lButtons;
     
     if (g_iAnimLock) {
@@ -435,7 +435,7 @@ default {
     state_entry() {
         llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
+       // g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
 
@@ -510,7 +510,7 @@ default {
                 else if (sToken == "PostureRank") g_iLastPostureRank= (integer)sValue;
                 else if (sToken == "PoselockRank") g_iLastPoselockRank= (integer)sValue;
                 else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
-            } else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            }// else if (sToken == "Global_WearerName") g_sWearerName = sValue;
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {  //got a menu response meant for us.  pull out values

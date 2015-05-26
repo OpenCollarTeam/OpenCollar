@@ -23,18 +23,19 @@ string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  N
 //MESSAGE MAP
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
+//integer COMMAND_SECOWNER = 501;
+//integer COMMAND_GROUP = 502;
 integer COMMAND_WEARER = 503;
 integer COMMAND_EVERYONE = 504;
 integer COMMAND_SAFEWORD = 510;
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
+integer SAY = 1004;
 //integer UPDATE = 10001;
 
 integer LM_SETTING_SAVE = 2000;
-integer LM_SETTING_REQUEST = 2001;
+//integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 
@@ -68,9 +69,9 @@ float g_sEvilTimeout=60;
 float g_sEvilDuration=1800;
 
 key g_kWearer;
-string g_sWearerName;
+//string g_sWearerName;
 
-string g_sAuthError = "Access denied.";
+//string g_sAuthError = "Access denied.";
 
 key g_kDialogID;    //menu handle
 key g_kColorDialogID;    //menu handle
@@ -109,14 +110,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
-}*/
+}
 
 Whisper(string sMessage) {
     string sObjectName = llGetObjectName();
     llSetObjectName("");
     llWhisper(0, "/me " + sMessage);
     llSetObjectName(sObjectName);
-}
+}*/
 
 httpRequest() {
     if (g_sLfmUser != "" && g_sType=="lastfm"){
@@ -172,7 +173,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
         string sCommand = llToLower(llList2String(lParams, 0));
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth  
-            llMessageLinked(LINK_SET, NOTIFY, "0"+g_sAuthError, kAv);           
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS", kAv);           
             //Notify(kAv,g_sAuthError, FALSE);
         } else if (sCommand=="color") {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
@@ -338,7 +339,7 @@ default{
             }
         }
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
+        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         
         if (g_iTextPrim < 0) {    //remove script if there is no title prim
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + "Titler", "");
@@ -379,11 +380,13 @@ default{
             if (g_iEvilListenHandle){    //listener is already set, so we cancel it, and start a 5 minute timer until it opens again
                 llListenRemove(g_iEvilListenHandle);
                 g_iEvilListenHandle=0;
-                Whisper("Awww, no one gave "+g_sWearerName+" a new title.  You'll have another chance later");
+                llMessageLinked(LINK_SET,SAY,"1"+"Awww, no one gave %WEARERNAME% a new title.  You'll have another chance later","");
+                //Whisper("Awww, no one gave "+g_sWearerName+" a new title.  You'll have another chance later");
                 llSetTimerEvent(g_sEvilDuration);
             } else {    //no listener, so set one up with a timer for 1 minute listening for a new title
                 g_iEvilListenChannel=10+(integer)llFrand(89);
-                Whisper("Now is YOUR chance to give "+g_sWearerName+" a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!");
+                llMessageLinked(LINK_SET,SAY,"1"+"Now is YOUR chance to give %WEARERNAME% a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!","");
+                //Whisper("Now is YOUR chance to give "+g_sWearerName+" a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!");
                 g_iEvilListenHandle=llListen(g_iEvilListenChannel, "", "", "");
                 llSetTimerEvent(g_sEvilTimeout);
             }
@@ -394,14 +397,16 @@ default{
         if (g_sType=="evil"){
             //assume any text on our channel is a new title
             if (id == g_kWearer) {
-                string sObjectName = llGetObjectName();
+                llMessageLinked(LINK_SET,SAY,"1"+"Oh really? %WEARERNAME% tried to change their own title, how silly is that?","");
+               /* string sObjectName = llGetObjectName();
                 llSetObjectName("");
                 Whisper("Oh really? "+ g_sWearerName + " tried to change their own title, how silly is that?");
-                llSetObjectName(sObjectName);
+                llSetObjectName(sObjectName);*/
                 return;
             } else {
                 string sTitleGiver = "secondlife:///app/agent/" + (string)id + "/about";
-                Whisper(g_sWearerName +" has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.");
+                llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME% has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.","");
+               //Whisper(g_sWearerName +" has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.");
             
                 g_sNormalTitleText=message;
                 g_sCurrentTitleText=message;
@@ -443,10 +448,10 @@ default{
                     else if(sToken == "height") g_vPrimScale.z = (float)sValue;
                     else if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
                    // renderTitle();
-                } else if(sGroup == "Global_") {
+                }// else if(sGroup == "Global_") {
                     //Debug("Got setting \""+sGroup+sToken+"="+sValue+"\"");
-                    if (sToken == "WearerName") g_sWearerName = sValue;
-                }
+                   // if (sToken == "WearerName") g_sWearerName = sValue;
+                //}
             }
         } else if (iNum == DIALOG_RESPONSE) {
             if (kID == g_kDialogID) {   //response from our main menu
