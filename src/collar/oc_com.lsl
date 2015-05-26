@@ -96,7 +96,7 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -107,7 +107,7 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
+}*/
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
@@ -249,7 +249,7 @@ default {
         g_kWearer = llGetOwner();
         
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-        Debug("Default prefix: " + g_sPrefix);
+        //Debug("Default prefix: " + g_sPrefix);
 
         //inlined single use getOwnerChannel function
         g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
@@ -476,7 +476,7 @@ default {
                         Notify(kID, message, FALSE);
                     }
                     else if(sValue=="reset") { //unset Global_WearerName
-                        message=g_sWearerName+"'s new name is reset to ";
+                        message=g_sWearerName+"'s name is reset to ";
                         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
                         if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_WearerName", "");  
@@ -486,13 +486,13 @@ default {
                         Notify(kID, message, FALSE);
                     }
                     else {
+                        string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
                         message=g_sWearerName+"'s new name is ";
-                        g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";// llDumpList2String(llList2List(lParams, 1,-1)," ") + "]";
+                        g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about "+sNewName+"]";
                         message += g_sWearerName;
-                        //g_iCustomName = TRUE;
                         Notify(kID, message, FALSE);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + g_sWearerName, ""); //store            
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+g_sWearerName, "");  
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_WearerName=" + sNewName, ""); //store           
+                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_WearerName="+sNewName, "");  
                     }               
                 }
                 else if (sCommand == "channel")
@@ -696,13 +696,13 @@ default {
     changed(integer iChange)
     {
         if (iChange & CHANGED_OWNER) llResetScript();
-        
+/*        
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-        
+        */
     }
 }
