@@ -73,7 +73,6 @@ list g_lMenus;//11-strided list in form listenChan, dialogid, listener, starttim
 //and "currentpage" is an integer meaning which page of the menu the user is currently viewing
 
 list g_lRemoteMenus;
-list g_lGenuine = ["a6d249c9-0aa4-440b-98a6-c92d4bafafac"];
 integer g_iStrideLength = 12;
 
 // List of user keys who opt-out of chat-spammage, ie chose "off"
@@ -224,7 +223,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%WEARERNAME%"], []), g_sWearerName);            
     @next;
     //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
-    if (~llListFindList(g_lGenuine, [llGetCreator()]))sPrompt+="\n\nTHIS IS NOT A GENUINE OpenCollar!";
     integer iPromptlen=GetStringBytes(sPrompt);
     string sThisPrompt;
     string sThisChat;

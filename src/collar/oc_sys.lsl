@@ -106,7 +106,6 @@ integer g_iUpdateFromMenu;
 
 string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~version";
 key github_version_request;
-list g_lGenuine = ["a6d249c9-0aa4-440b-98a6-c92d4bafafac"];
 string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~news";
 key news_request;
 string g_sLastNewsTime = "0";
@@ -249,7 +248,6 @@ HelpMenu(key kID, integer iAuth) {
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
     //sPrompt+="\n\nwww.virtualdisgrace.com/collar";
-    if (~llListFindList(g_lGenuine, [llGetCreator()])) llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nTHIS IS NOT A GENUINE OpenCollar!\nPlease contact secondlife:///app/agent/"+(string)llGetCreator()+"/about to fix this!\n",kID);//Notify(kID, "\n\nTHIS IS NOT A GENUINE OpenCollar!\nPlease contact secondlife:///app/agent/"+(string)llGetCreator()+"/about to fix this!\n",TRUE);
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     
@@ -265,8 +263,6 @@ MainMenu(key kID, integer iAuth) {
     //string sPrompt="\nOpenCollar Version "+g_sCollarVersion;
     //if(!g_iLatestVersion) sPrompt+="\nUpdate available!";
     string sPrompt = "\n Welcome to the main menu!\n Touch the heart for help:  [http://www.virtualdisgrace.com/collar ❤]";
-    //if (llGetCreator() != "a6d249c9-0aa4-440b-98a6-c92d4bafafac") 
-    //sPrompt += "\nTHIS IS NO OFFICIAL OpenCollar!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu){
