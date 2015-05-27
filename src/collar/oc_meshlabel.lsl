@@ -367,12 +367,12 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         if (sStr=="menu "+g_sSubMenu)
         {
             llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change the label!", kAv);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
             //Notify(kAv,"Only owners can change the label!", FALSE);
         }
         else if (sCommand=="labeltext" || sCommand == "labelfont" || sCommand == "labelcolor" || sCommand == "labelshow")
         {
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change the label!", kAv);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
            // Notify(kAv,"Only owners can change the label!", FALSE);
         }
     }
