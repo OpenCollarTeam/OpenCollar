@@ -111,6 +111,7 @@ key news_request;
 string g_sLastNewsTime = "0";
 
 integer g_iUpdateAuth;
+integer g_iJB;
 integer g_iWillingUpdaters = 0;
 integer g_iWillingVDUpdaters = 0;
 
@@ -244,6 +245,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 3.9\n";
+    if (g_iJB) sPrompt = "\nOpenCollar API: 3.9 (jailbroken)\n";
     sPrompt+="Disgraced Version "+g_sCollarVersion;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
@@ -479,6 +481,22 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
+CheckJB() {
+    integer iNumber = llGetInventoryNumber(INVENTORY_OBJECT);
+    if (iNumber) {
+        integer i;
+        string sName = llGetInventoryName(INVENTORY_OBJECT,i);
+        do {
+            if (llGetInventoryCreator(sName)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") {
+                g_iJB = FALSE;
+                return;
+            } else g_iJB = TRUE;
+            i++;
+            sName = llGetInventoryName(INVENTORY_OBJECT,i);
+        } while (i<iNumber);
+    } else g_iJB = TRUE;
+}
+            
 BuildLockElementList()//EB
 {
     integer n;
@@ -543,7 +561,7 @@ RebuildMenu()
 
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    
+    CheckJB();
     llSleep(1.0);//delay menu rebuild until other scripts are ready
     RebuildMenu();
 }
@@ -561,7 +579,6 @@ default
         //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
-        
        // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
        // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "auth_owner", ""); //settings will send these on_rez, so no need to ask every rez
         
@@ -780,6 +797,7 @@ default
                 llSleep(0.5); //wait for new scripts to start up
                 RebuildMenu(); //llResetScript();
             }
+            CheckJB();
             g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
