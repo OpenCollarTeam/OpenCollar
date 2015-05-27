@@ -27,11 +27,12 @@ default
 {
     state_entry()
     {
+        llSetMemoryLimit(10240);
         g_sListenfor = (string)llGetOwner() + "handle";
         g_sResponse = (string)llGetOwner() + "handle ok";
         llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
         AnnounceLeashHolder();
-        llSetTimerEvent(2.0);              
+        llSetTimerEvent(2.0);         
     }
     
     listen(integer channel, string name, key id, string message)
