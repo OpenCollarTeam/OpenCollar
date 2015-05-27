@@ -168,10 +168,19 @@ string g_sScript;
 
 /////////// END GLOBAL VARIABLES ////////////
 
-Debug(string in)
-{
-    //llOwnerSay(in);
+/*
+integer g_iProfiled=1;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
+    }
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
+*/
 
 ResetCharIndex() {
 
@@ -348,6 +357,7 @@ SetLabel()
             RenderString(llList2Integer(g_lLabelLinks, iCharPosition), llGetSubString(sText, iCharPosition, iCharPosition));
         }
     }
+    //Debug("Label set.");
 }
 
 SetOffsets(key font)
@@ -384,7 +394,7 @@ SetOffsets(key font)
             if (n < 8 && o == 9) g_vOffset.y += 0.0015;
             else if (o < 8 && n == 9) g_vOffset.y -= 0.0015;
         }
-        Debug("Offset = " + (string)g_vOffset);
+        //Debug("Offset = " + (string)g_vOffset);
     }
     g_kFontTexture = font;
 }
@@ -473,6 +483,11 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llDumpList2String(lParams, " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "text=" + g_sLabelText, "");
+            if (llStringLength(g_sLabelText) > g_iCharLimit) {
+                string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
+               // Notify(kAv, "Unless your set your label to scroll it will be truncted at "+sDisplayText+".", FALSE);
+            }
             SetLabel();          
         }
         else if (sCommand == "labelfont")
@@ -534,7 +549,9 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
 default
 {
     state_entry()
-    {   // Initialize the character index.
+    {   
+        //llSetMemoryLimit(45056);
+        // Initialize the character index.
         //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
         //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_sScript = "label_";
@@ -677,5 +694,11 @@ default
         {
             if (LabelsCount()==TRUE) SetLabel();
         }
+/*        if (change & CHANGED_REGION) {
+            if (g_iProfiled){
+                llScriptProfiler(1);
+                Debug("profiling restarted");
+            }
+        }*/
     }
 }

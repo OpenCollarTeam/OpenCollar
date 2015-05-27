@@ -384,7 +384,7 @@ default
 {
     state_entry()
     {
-        llSetMemoryLimit(45056);
+        //llSetMemoryLimit(45056);
         g_sScript = "label_";
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
