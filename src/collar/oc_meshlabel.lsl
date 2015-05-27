@@ -226,6 +226,7 @@ SetLabel()
             RenderString(iCharPosition, llGetSubString(sText, iCharPosition, iCharPosition));
         }
     }
+    //Debug("Label Set");
 }
 
 
@@ -320,7 +321,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
                // Notify(kAv, "Unless your set your label to scroll it will be truncted at "+sDisplayText+".", FALSE);
             }
-            SetLabel();          
+            //SetLabel();          
         }
         else if (sCommand == "labelfont")
         {
@@ -384,7 +385,7 @@ default
 {
     state_entry()
     {
-        //llSetMemoryLimit(45056);
+        llSetMemoryLimit(45056);
         g_sScript = "label_";
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;

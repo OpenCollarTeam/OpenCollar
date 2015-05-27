@@ -179,8 +179,8 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+}*/
+
 
 ResetCharIndex() {
 
@@ -550,7 +550,7 @@ default
 {
     state_entry()
     {   
-        //llSetMemoryLimit(45056);
+        llSetMemoryLimit(52224);
         // Initialize the character index.
         //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
         //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
