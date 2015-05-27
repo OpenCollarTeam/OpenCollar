@@ -191,7 +191,8 @@ setRlvState(){
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-            llOwnerSay("RLV ready!");
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+            //llOwnerSay("RLV ready!");
             
             DoLock();
         }
