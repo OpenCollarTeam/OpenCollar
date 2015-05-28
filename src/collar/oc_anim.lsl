@@ -207,7 +207,8 @@ integer SetPosture(integer iOn, key kCommander) {
         g_iPosture=iOn;
         return TRUE;
     } else {
-        llOwnerSay("Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.");
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
+       // llOwnerSay("Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.");
         return FALSE;
     }
 }
@@ -219,7 +220,7 @@ RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and
             llResetAnimationOverride("ALL");
             string sAnim = llList2String(g_lAnims, 0);
             if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) StartAnim(sAnim);  //get and stop currently playing anim
-        } else llOwnerSay( "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.");
+        } else  llMessageLinked(LINK_SET, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);//llOwnerSay( "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.");
     }
 }
 
@@ -239,7 +240,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
             llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|ZHAO_STANDOFF");
             llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDOFF");
         }
-    } else llOwnerSay( "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
+    } else  llMessageLinked(LINK_SET, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);//llOwnerSay( "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
 }
 
 PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods configured for each
@@ -273,7 +274,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
                 llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
             }
         }
-    } else llOwnerSay( "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
+    } else  llMessageLinked(LINK_SET, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);//llOwnerSay( "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
 }
 
 UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods configured for each
@@ -329,7 +330,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iLastPostureRank=iNum;
                 SetPosture(TRUE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PostureRank="+(string)g_iLastPostureRank,"");
-                llOwnerSay( "Your neck is locked in place.");
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Your neck is locked in place.",g_kWearer);
+                //llOwnerSay( "Your neck is locked in place.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME%'s neck is locked in place.", FALSE);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME%'s neck is locked in place.", kID);
             } //else Notify(kID,"%NOACCESS%",FALSE);
@@ -339,7 +341,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iLastPostureRank=COMMAND_WEARER;
                 SetPosture(FALSE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PostureRank", "");
-                llOwnerSay( "You can move your neck again.");
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"You can move your neck again.",g_kWearer);
+                //llOwnerSay( "You can move your neck again.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to move their neck.", FALSE);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to move their neck.", kID);
             } //else Notify(kID,"%NOACCESS%",FALSE);
@@ -352,7 +355,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PoselockRank="+(string)g_iLastPoselockRank,"");
                 g_iAnimLock = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_animlock=1", "");
-                llOwnerSay( "Only owners can change or stop your poses now.");
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change or stop your poses now.",g_kWearer);
+                //llOwnerSay( "Only owners can change or stop your poses now.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% can have their poses changed or stopped only by owners.", FALSE);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
             } //else Notify(kID,"%NOACCESS%",FALSE);
@@ -362,7 +366,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock", "");
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PoselockRank", "");
-                llOwnerSay( "You are now free to change or stop poses on your own.");
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"You are now free to change or stop poses on your own.",g_kWearer);
+                //llOwnerSay( "You are now free to change or stop poses on your own.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to change or stop poses on their own.", FALSE);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to change or stop poses on their own.", kID);
             } //else Notify(kID,"%NOACCESS%",FALSE);
@@ -413,7 +418,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else if (sValue=="") PoseMoveMenu(kID,0,iNum);
             //else Notify(kID,"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower,FALSE);
             else llMessageLinked(LINK_SET, NOTIFY, "0"+"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower, kID);
-        } else llOwnerSay( "Only owners or the wearer can change antislide settings.");
+        } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners or the wearer can change antislide settings.",g_kWearer); //llOwnerSay( "Only owners or the wearer can change antislide settings.");
     } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {  //strike a pose...
         if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
             if (g_sCurrentPose != "") llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
