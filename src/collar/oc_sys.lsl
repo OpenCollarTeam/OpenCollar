@@ -482,19 +482,19 @@ string GetTimestamp() { // Return a string of the date and time
 }
 
 CheckJB() {
-    integer iNumber = llGetInventoryNumber(INVENTORY_OBJECT);
-    if (iNumber) {
-        integer i;
-        string sName = llGetInventoryName(INVENTORY_OBJECT,i);
+    integer i = llGetInventoryNumber(INVENTORY_OBJECT);
+    if (i) {
+        i--;
+        string s = llGetInventoryName(INVENTORY_OBJECT,i);
         do {
-            if (llGetInventoryCreator(sName)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") {
-                g_iJB = FALSE;
+            if (llGetInventoryCreator(s)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") {
+                g_iJB = 0;
                 return;
-            } else g_iJB = TRUE;
-            i++;
-            sName = llGetInventoryName(INVENTORY_OBJECT,i);
-        } while (i<iNumber);
-    } else g_iJB = TRUE;
+            } else g_iJB = 1;
+            i--;
+            s = llGetInventoryName(INVENTORY_OBJECT,i);
+        } while (i+1);
+    } else g_iJB = 1;
 }
             
 BuildLockElementList()//EB
