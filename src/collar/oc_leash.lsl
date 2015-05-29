@@ -701,7 +701,7 @@ default {
     }
     
     state_entry() {
-        llSetMemoryLimit(57344);  //2015-05-06 (5848 bytes free)
+        //llSetMemoryLimit(57344);//got a Stack-Heap Collision while long text was entered for titler script when limited
         g_kWearer = llGetOwner();
         //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about"; //quick and dirty default, will get replaced by value from settings
         llMinEventDelay(0.44);
