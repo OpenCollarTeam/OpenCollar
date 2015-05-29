@@ -601,15 +601,15 @@ default {
                     key kTextureKey=(key)llStringTrim(llList2String(lThisLine,1),STRING_TRIM);
                     string sTextureName=llStringTrim(llList2String(lThisLine,0),STRING_TRIM);
                     string sShortName=llList2String(llParseString2List(sTextureName, ["~"], []), -1);
-                    if ( ~llListFindList(g_lTextures,[sTextureName])) llOwnerSay("Texture "+sTextureName+" is in the collar AND the notecard.  Collar texture takes priority.");
+                    if ( ~llListFindList(g_lTextures,[sTextureName])) llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture "+sTextureName+" is in the collar AND the notecard.  Collar texture takes priority.",g_kWearer);
                     else if((key)kTextureKey) {  //if the notecard has valid key, and texture is not already in collar
-                        if(llStringLength(sShortName)>23) llOwnerSay("Texture "+sTextureName+" in textures notecard too long, dropping.");
+                        if(llStringLength(sShortName)>23) llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture "+sTextureName+" in textures notecard too long, dropping.",g_kWearer);
                         else {
                             g_lTextures+=sTextureName;
                             g_lTextureKeys+=kTextureKey;
                             g_lTextureShortNames+=sShortName;
                         }
-                    } else llOwnerSay("Texture key for "+sTextureName+" in textures notecard not recognised, dropping.");
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture key for "+sTextureName+" in textures notecard not recognised, dropping.",g_kWearer);
                 }
                 g_kTexturesNotecardRead=llGetNotecardLine(g_sTextureCard,++g_iTexturesNotecardLine);
             }
