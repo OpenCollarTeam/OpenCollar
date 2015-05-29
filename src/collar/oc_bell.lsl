@@ -20,15 +20,15 @@ string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 key g_kDialogID;
 
-list g_lLocalButtons = ["Next Sound","Vol +","Delay +","Ring it!","Vol -","Delay -"];
+//list g_lLocalButtons = ["Next Sound","Vol +","Delay +","Ring it!","Vol -","Delay -"];
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
-
+/*
 float g_fSpeed=1.0; // Speed of the bell
 float g_fSpeedStep=0.5; // stepping for Speed adjusting
 float g_fSpeedMin=0.5; // stepping for Speed adjusting
 float g_fSpeedMax=5.0; // stepping for Speed adjusting
-
+*/
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sBellOn="ON"; // menu text of bell on
 string g_sBellOff="OFF"; // menu text of bell off
@@ -46,18 +46,18 @@ integer g_iBellSoundCount; // number of avail bell sounds
 
 key g_kLastToucher ; // store toucher key 
 float g_fNextTouch ;  // store time for the next touch
-float g_fTouch = 10.0 ; // timeout for touch chat notify
+//float g_fTouch = 10.0 ; // timeout for touch chat notify
 
 list g_lBellElements; // list with number of prims related to the bell
 list g_lGlows; // 2-strided list [integer link_num, float glow]
 
-float g_fNextRing; // store time for the next ringing here;
+//float g_fNextRing; // store time for the next ringing here;
 
 key g_kWearer; // key of the current wearer to reset only on owner changes
 
 integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 
-list g_lButtons;
+//list g_lButtons;
 integer g_iHide ; // global hide
 
 //MESSAGE MAP
@@ -95,7 +95,7 @@ string g_sScript;
 //string g_sWearerName;
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -162,11 +162,12 @@ DoMenu(key kID, integer iAuth)
 
     // and show the volume and timing of the bell sound
     sPrompt += "The volume of the bell is now: "+(string)((integer)(g_fVolume*10))+"/10.\n";
-    sPrompt += "The bell rings every "+llGetSubString((string)g_fSpeed,0,2)+" seconds when moving.\n";
+  //  sPrompt += "The bell rings every "+llGetSubString((string)g_fSpeed,0,2)+" seconds when moving.\n";
     sPrompt += "Currently used sound: "+(string)(g_iCurrentBellSound+1)+"/"+(string)g_iBellSoundCount+"\n";
     sPrompt +="\nwww.opencollar.at/bell";
 
-    lMyButtons += g_lLocalButtons + g_lButtons;
+   // lMyButtons += g_lLocalButtons + g_lButtons;
+    lMyButtons +=["Next Sound","Vol +","Vol -"]; // ["Next Sound","Vol +","Delay +","Ring it!","Vol -","Delay -"];
 
     g_kDialogID=Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
@@ -263,6 +264,7 @@ PrepareSounds()
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
 {
+   // Debug("command: "+sStr);
     if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
     string test=llToLower(sStr);
     if (sStr == "menu " + g_sSubMenu || sStr == "bell")
@@ -284,11 +286,12 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             if (n<1) n=1;
             if (n>10) n=10;
             g_fVolume=(float)n/10;
+            llPlaySound(g_kCurrentBellSound,g_fVolume);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell volume set to "+(string)n,kID);
             //Notify(kID,"Bell volume set to "+(string)n, TRUE);
         }
-        else if (sToken=="delay")
+       /* else if (sToken=="delay")
         {
             g_fSpeed=(float)sValue;
             if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
@@ -296,7 +299,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.",kID);
             //Notify(kID,"Bell delay set to "+llGetSubString((string)g_fSpeed,0,2)+" seconds.", TRUE);
-        }
+        }*/
         else if (sToken=="show" || sToken=="hide")
         {
             if (sToken=="show")
@@ -362,6 +365,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 g_iCurrentBellSound=0;
             }
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
+            llPlaySound(g_kCurrentBellSound,g_fVolume);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
             //Notify(kID,"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",TRUE);
@@ -370,7 +374,7 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         else if (sToken=="ring")
         {
             // update variable for time check
-            g_fNextRing=llGetTime()+g_fSpeed;
+           // g_fNextRing=llGetTime()+g_fSpeed;
             // and play the sound
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         }
@@ -386,7 +390,7 @@ default {
     }
     
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        llSetMemoryLimit(36864);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();  // key of the wearer
         //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
@@ -401,14 +405,14 @@ default {
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+       if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             // the menu structure is to be build again, so make sure we get recognized
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-            g_lButtons = [] ; // flush submenu buttons
+            //g_lButtons = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
-        else if (iNum == MENUNAME_RESPONSE)
+       /* else if (iNum == MENUNAME_RESPONSE)
         {
             list lParts = llParseString2List(sStr, ["|"], []);
             if (llList2String(lParts, 0) == g_sSubMenu)
@@ -432,7 +436,7 @@ default {
                     g_lButtons = llDeleteSubList(g_lButtons , iIndex, iIndex);
                 }
             }
-        }
+        }*/
         else if (iNum == LM_SETTING_RESPONSE)
         {
             // some responses from the DB are coming in, check if it is about bell values
@@ -467,7 +471,7 @@ default {
                     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
                 }
                 else if (sToken == "vol") g_fVolume=(float)sValue/10;
-                else if (sToken == "speed") g_fSpeed=(float)sValue/10;
+               // else if (sToken == "speed") g_fSpeed=(float)sValue/10;
             }// else if (sToken=="Global_WearerName") g_sWearerName=sValue;
            // else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
         }
@@ -489,50 +493,53 @@ default {
                     llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAV);
                     return; // no "remenu"
                 }
-                else if (~llListFindList(g_lLocalButtons, [sMessage]))
+                //else if (~llListFindList(g_lLocalButtons, [sMessage]))
+                //{
+                //we got a response for something we handle locally
+                if (sMessage == "Vol +") // pump up the volume and store the value
                 {
-                    //we got a response for something we handle locally
-                    if (sMessage == "Vol +") // pump up the volume and store the value
-                    {
-                        g_fVolume+=g_fVolumeStep;
-                        if (g_fVolume>1.0) g_fVolume=1.0;                        
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
-                    }
-                    else if (sMessage == "Vol -") // be more quiet, and store the value
-                    {
-                        g_fVolume-=g_fVolumeStep;
-                        if (g_fVolume<0.1) g_fVolume=0.1;                        
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
-                    }
-                    else if (sMessage == "Delay +") // dont annoy people and ring slower
-                    {
-                        g_fSpeed+=g_fSpeedStep;
-                        if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
-                    }
-                    else if (sMessage == "Delay -") // annoy the hell out of the, ring plenty, ring often
-                    {
-                        g_fSpeed-=g_fSpeedStep;
-                        if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
-                    }
-                    else if (sMessage == "Next Sound") // choose another sound for the bell
-                    {
-                        g_iCurrentBellSound++;
-                        if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
-                        g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
-                    }
-                    //added a button to ring the bell. same call as when walking.
-                    else if (sMessage == "Ring it!")
-                    {
-                        // update variable for time check
-                        g_fNextRing=llGetTime()+g_fSpeed;
-                        // and play the sound
-                        llPlaySound(g_kCurrentBellSound,g_fVolume);
-                        //Debug("Bing");
-                    }
+                    g_fVolume+=g_fVolumeStep;
+                    if (g_fVolume>1.0) g_fVolume=1.0;
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
                 }
+                else if (sMessage == "Vol -") // be more quiet, and store the value
+                {
+                    g_fVolume-=g_fVolumeStep;
+                    if (g_fVolume<0.1) g_fVolume=0.1;
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "vol=" + (string)llFloor(g_fVolume*10), "");
+                }
+              /*  else if (sMessage == "Delay +") // dont annoy people and ring slower
+                {
+                    g_fSpeed+=g_fSpeedStep;
+                    if (g_fSpeed>g_fSpeedMax) g_fSpeed=g_fSpeedMax;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
+                }
+                else if (sMessage == "Delay -") // annoy the hell out of the, ring plenty, ring often
+                {
+                    g_fSpeed-=g_fSpeedStep;
+                    if (g_fSpeed<g_fSpeedMin) g_fSpeed=g_fSpeedMin;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "speed=" + (string)llFloor(g_fSpeed*10), "");
+                }*/
+                else if (sMessage == "Next Sound") // choose another sound for the bell
+                {
+                    g_iCurrentBellSound++;
+                    if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
+                    g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
+                }
+                //added a button to ring the bell. same call as when walking.
+           /*     else if (sMessage == "Ring it!")
+                {
+                    // update variable for time check
+                    g_fNextRing=llGetTime()+g_fSpeed;
+                    // and play the sound
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);
+                    //Debug("Bing");*/
+//                }
+  //              }
                 else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
                     // someone wants to change if the bell rings or not
                 {
@@ -548,13 +555,13 @@ default {
                     SetBellElementAlpha();
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
                 }
-                else if (~llListFindList(g_lButtons, [sMessage]))
+              /*  else if (~llListFindList(g_lButtons, [sMessage]))
                 {
                     //we got a submenu selection
                     //UserCommand(iAuth, "menu "+sMessage, kAV);
                     llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAV);
                     return; // no main menu
-                }
+                }*/
                 // do we want to see the menu again?
                 DoMenu(kAV, iAuth);
             }
@@ -588,14 +595,14 @@ default {
         }
         if ( (nHeld & (CONTROL_FWD|CONTROL_BACK)) && (llGetAgentInfo(g_kWearer) & AGENT_ALWAYS_RUN))
         {
-            if (llGetTime()>g_fNextRing)
-            {
+           // if (llGetTime()>g_fNextRing)
+           // {
                 // update variable for time check
-                g_fNextRing=llGetTime()+g_fSpeed;
+               // g_fNextRing=llGetTime()+g_fSpeed;
                 // and play the sound
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
                 //Debug("Bing");
-            }
+           // }
         }
     }
     collision_start(integer iNum) {
@@ -616,15 +623,15 @@ default {
 
     touch_start(integer n)
     {
-        if (g_iBellShow && !g_iHide && llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]) != -1)
+        if (g_iBellShow && !g_iHide && ~llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]))
         {
             key toucher = llDetectedKey(0);
-            g_fNextRing=llGetTime()+g_fSpeed;
-            llPlaySound(g_kCurrentBellSound,g_fVolume);
+            //g_fNextRing=llGetTime()+g_fSpeed;
             if (toucher != g_kLastToucher || llGetTime() > g_fNextTouch)
             {
-                g_fNextTouch=llGetTime()+g_fTouch;
+                g_fNextTouch=llGetTime()+10.0;
                 g_kLastToucher = toucher;
+                llPlaySound(g_kCurrentBellSound,g_fVolume);
                 llMessageLinked(LINK_SET,SAY,"1"+ "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on %WEARERNAME%'s %DEVICETYPE%.","");
                // llSay(0, "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on " + g_sWearerName + "'s "+g_sDeviceType+"." );
             }
