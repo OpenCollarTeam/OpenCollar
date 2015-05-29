@@ -312,7 +312,8 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
             llMessageLinked(LINK_SET,NOTIFY,"0"+sCmdMess,kCmdGiver);
             //Notify(kCmdGiver, sCmdMess, FALSE);
         }
-        llOwnerSay(sWearMess);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sWearMess,g_kWearer);
+       //llOwnerSay(sWearMess);
     }
 
     g_bFollowMode = iFollowMode; // leashing, or following
@@ -514,8 +515,9 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 g_kFollowTargetDialogID=llGenerateKey();
                 llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall be followed?\n|0|``"+(string)AGENT+"`10`"+(string)PI + "|BACK|" + (string)iAuth, g_kFollowTargetDialogID);
             } else if (sVal == "me") {
+                g_iPassConfirmed = TRUE;
                 LeashTo(kMessageID, kMessageID, iAuth, [], TRUE);
-            }   else if ((key)sVal) {
+            } else if ((key)sVal) {
                 g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, [], TRUE);
                 //no remenu to leash menu

@@ -519,7 +519,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
         SetAsyncMenu(kID, iNum);
         g_sFolderType = "searchbrowse";
         string sPattern = llDeleteSubString(sStr,0, 4);
-        llOwnerSay("Searching folder containing string \"" + sPattern + "\" for browsing.");
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"Searching folder containing string \"" + sPattern + "\" for browsing.",g_kWearer);
+        //llOwnerSay("Searching folder containing string \"" + sPattern + "\" for browsing.");
         searchSingle(sPattern);
     }
     else if (sStr=="save")

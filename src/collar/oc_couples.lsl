@@ -138,7 +138,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
     {
         if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
         else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+        if (iAlsoNotifyWearer) (sMsg);
     }
 }*/
 
@@ -303,7 +303,8 @@ default {
                         StopAnims();
                         //llMessageLinked(LINK_SET, CPLANIM_PERMREQUEST, sCommand, g_kPartner);
                         llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
-                        llOwnerSay("Offering to " + sCommand + " " + g_sPartnerName + ".");
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
+                       // llOwnerSay("Offering to " + sCommand + " " + g_sPartnerName + ".");
                     }
                 }
             }
@@ -328,7 +329,7 @@ default {
             if(sToken == g_sScript + "timeout")
             {
                 g_fTimeOut = (float)sValue;
-            } //else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+            } 
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -498,9 +499,9 @@ default {
             integer iLength = llGetListLength(lParams);
             if (iLength == 4 || iLength == 5){
                 if (!llGetInventoryType(llList2String(lParams, 1)) == INVENTORY_ANIMATION){
-                    llOwnerSay(CARD1 + " line " + (string)g_iLine1 + ": animation '" + llList2String(lParams, 1) + "' is not present.  Skipping.");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine1 + ": animation '" + llList2String(lParams, 1) + "' is not present.  Skipping.",g_kWearer);
                 } else if (!llGetInventoryType(llList2String(lParams, 2)) == INVENTORY_ANIMATION){
-                    llOwnerSay(CARD1 + " line " + (string)g_iLine2 + ": animation '" + llList2String(lParams, 2) + "' is not present.  Skipping.");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine2 + ": animation '" + llList2String(lParams, 2) + "' is not present.  Skipping.",g_kWearer);
                 } else {
                     integer iIndex = llListFindList(g_lAnimCmds, llList2List(lParams, 0, 0));
                     if (iIndex != -1){

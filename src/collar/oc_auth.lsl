@@ -682,7 +682,8 @@ default {
             integer iAuth = Auth((string)kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable){
-                    llOwnerSay("Runaway is currently disabled.");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Runaway is currently disabled.",g_kWearer);
+                    //llOwnerSay("Runaway is currently disabled.");
                 } else {
                     UserCommand(iAuth,"runaway",kID, FALSE);
                 }
