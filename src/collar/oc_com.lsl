@@ -96,7 +96,7 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-/*
+
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -107,7 +107,7 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
+}
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
@@ -127,7 +127,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         @next;
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
-        if (kID == g_kWearer) (sMsg);
+        if (kID == g_kWearer) llOwnerSay(sMsg);
         else {
             if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
