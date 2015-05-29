@@ -127,7 +127,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         @next;
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
-        if (kID == g_kWearer) llOwnerSay(sMsg);
+        if (kID == g_kWearer) (sMsg);
         else {
             if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
@@ -234,7 +234,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
 
     if (sType == "touchstart") {
         llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer) llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n");
+        if (g_iTouchNotify && kToucher!=g_kWearer) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n",FALSE); //llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n");
     }
 }
 
@@ -370,8 +370,8 @@ default {
             if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
-                
-                llOwnerSay("You used your safeword, your owners will be notified you did.");
+                Notify(g_kWearer,"You used your safeword, your owners will be notified you did.",FALSE);
+               // llOwnerSay("You used your safeword, your owners will be notified you did.");
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
                 llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
@@ -543,12 +543,14 @@ default {
                     if(llStringTrim(sValue, STRING_TRIM) != "")
                     {
                         g_sSafeWord = sValue; // llList2String(lParams, 1);
-                        llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
+                        Notify(g_kWearer,"You set a new safeword: " + g_sSafeWord + ".",FALSE);
+                        //llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "safeword=" + g_sSafeWord, "");
                     }
                     else
                     {
-                        llOwnerSay("Your safeword is: " + g_sSafeWord + ".");
+                        Notify(g_kWearer,"Your safeword is: " + g_sSafeWord + ".",FALSE);
+                       // llOwnerSay("Your safeword is: " + g_sSafeWord + ".");
                     }
                 }                
                 else if (sCommand == "busted")
@@ -557,23 +559,27 @@ default {
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                         g_iTouchNotify=TRUE;
-                        llOwnerSay("Touch notification is now enabled.");
+                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                        //llOwnerSay("Touch notification is now enabled.");
                     }                    
                     else if (sValue == "off")
                     {
                         llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                         g_iTouchNotify=FALSE;
-                        llOwnerSay("Touch notification is now disabled.");
+                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                       // llOwnerSay("Touch notification is now disabled.");
                     }
                     else if (sValue == "") 
                     {
                         if (g_iTouchNotify) {
-                            llOwnerSay("Touch notification is now disabled.");
+                            Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                            //llOwnerSay("Touch notification is now disabled.");
                             llMessageLinked(LINK_THIS,LM_SETTING_DELETE,"Global_touchNotify","");
                             g_iTouchNotify = FALSE;
                         }
                         else {
-                            llOwnerSay("Touch notification is now enabled.");                           
+                            Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                           // llOwnerSay("Touch notification is now enabled.");                           
                             llMessageLinked(LINK_THIS,LM_SETTING_SAVE,"Global_touchNotify=1","");
                             g_iTouchNotify = TRUE;
                         }
