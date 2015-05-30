@@ -111,7 +111,6 @@ key news_request;
 string g_sLastNewsTime = "0";
 
 integer g_iUpdateAuth;
-integer g_iJB;
 integer g_iWillingUpdaters = 0;
 integer g_iWillingVDUpdaters = 0;
 
@@ -152,16 +151,12 @@ Debug(string sStr) {
 
 integer compareVersions(string v1, string v2){ //compares two symantic version strings, true if v1 >= v2
     //Debug("compare "+v1+" with "+v2);
-        
     integer v1Index=llSubStringIndex(v1,".");
     integer v2Index=llSubStringIndex(v2,".");
-    
     //Debug("v1Index: "+(string)v1Index);
     //Debug("v2Index: "+(string)v2Index);
-    
     integer v1a=(integer)llGetSubString(v1,0,v1Index);
     integer v2a=(integer)llGetSubString(v2,0,v2Index);
-    
     if (v1a == v2a) {
         //Debug((string)v1a+" == "+(string)v2a);
         if (~v1Index || ~v2Index){
@@ -172,7 +167,6 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
             } else {
                 v1b=llGetSubString(v1,v1Index+1,-1);
             }
-
             string v2b;
             if (v2Index == -1 || v2Index==llStringLength(v2)) {
                 //Debug("v2b empty");
@@ -180,7 +174,6 @@ integer compareVersions(string v1, string v2){ //compares two symantic version s
             } else {
                 v2b=llGetSubString(v2,v2Index+1,-1);
             }
-
             return compareVersions(v1b,v2b);
         } else {
             //Debug("0 as nothing to compare");
@@ -202,18 +195,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs += [kID, kMenuID, sName];
     }
 } 
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    string sDeviceName = llGetObjectName();
-    llSetObjectName("");
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-    llSetObjectName(sDeviceName);
-}*/
 
 OptionsMenu(key kID, integer iAuth)
 {
@@ -245,7 +226,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 3.9\n";
-    if (g_iJB) sPrompt = "\nOpenCollar API: 3.9 (jailbroken)\n";
+    if (CheckJB()=="") sPrompt = "\nOpenCollar API: 3.9 (jailbroken)\n";
     sPrompt+="Disgraced Version "+g_sCollarVersion;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
@@ -267,22 +248,16 @@ MainMenu(key kID, integer iAuth) {
     string sPrompt = "\n Welcome to the main menu!\n Touch the heart for help:  [http://www.virtualdisgrace.com/collar ❤]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
-    if (g_iAnimsMenu){
-        lStaticButtons+="Animations";
-    } else {
-        lStaticButtons+=" ";
-    }
-    if (g_iKidnapMenu){
-        lStaticButtons+="Kidnap";
-    } else {
-        lStaticButtons+=" ";
-    }
+    if (g_iAnimsMenu) lStaticButtons+="Animations";
+    else lStaticButtons+=" ";
+    
+    if (g_iKidnapMenu) lStaticButtons+="Kidnap";
+    else lStaticButtons+=" ";
+    
     lStaticButtons+=["Leash"];
-    if (g_iRlvMenu){
-        lStaticButtons+="RLV";
-    } else {
-        lStaticButtons+=" ";
-    }
+    
+    if (g_iRlvMenu) lStaticButtons+="RLV";
+    else lStaticButtons+=" ";
     lStaticButtons+=["Access","Options","Help/About"];
     
     if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
@@ -361,19 +336,11 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             RebuildMenu();
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Menus fixed!",kID);//Notify(kID, "Menus fixed!", FALSE);
         } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
-    } else if (sCmd == "jailbreak") {
-        if (kID == g_kWearer){
-            if (llGetInventoryType(".tamago")==INVENTORY_NONE) {
-                llOwnerSay("\n\nThe jailbreak sequence has already been performed on this collar.\n");
-            } else if (llGetInventoryType(".tamago")==INVENTORY_OBJECT) {
-                if (llGetAttached() == 0){
-                    llRezObject(".tamago", llGetPos() + (<0.1, 0.0, -0.73> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 270> * DEG_TO_RAD), 0);
-                    llOwnerSay("\n\nYour collar is now jailbroken.\n");
-                } else {
-                    llOwnerSay("\n\nFor this to work you have to rez your collar on the ground.\n");
-                }
-            }
-        }
+    } else if (sCmd == "jailbreak" && kID == g_kWearer) {
+        if (CheckJB())
+            Dialog(kID,"Jailbreaking will make your item transferable but voids all warranty and is irreversible. How would you like to proceed?", ["Do it!","NO!", "DON'T!"],[],0,iNum,"JB");
+        else 
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nThe jailbreak sequence has already been performed on this collar.\n",kID);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==COMMAND_OWNER){
             if (sStr=="news off"){
@@ -433,14 +400,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     }    
     return TRUE;
 }
-/*
-NotifyOwners(string sMsg) {
-    integer n;
-    integer stop = llGetListLength(g_lOwners);
-    for (n = 0; n < stop; n += 2) {
-        Notify((key)llList2String(g_lOwners, n), sMsg, FALSE);
-    }
-}*/
 
 string GetTimestamp() { // Return a string of the date and time
     string out;
@@ -481,20 +440,18 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-CheckJB() {
-    integer i = llGetInventoryNumber(INVENTORY_OBJECT);
+string CheckJB() {
+    integer i = llGetInventoryNumber(INVENTORY_BODYPART);
     if (i) {
         i--;
-        string s = llGetInventoryName(INVENTORY_OBJECT,i);
-        do {
-            if (llGetInventoryCreator(s)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") {
-                g_iJB = 0;
-                return;
-            } else g_iJB = 1;
+        string s = llGetInventoryName(INVENTORY_BODYPART,i);
+        do {       
+            if (llGetInventoryCreator(s)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") return s;
             i--;
-            s = llGetInventoryName(INVENTORY_OBJECT,i);
+            s = llGetInventoryName(INVENTORY_BODYPART,i);
         } while (i+1);
-    } else g_iJB = 1;
+    }
+    return "";
 }
             
 BuildLockElementList()//EB
@@ -711,6 +668,13 @@ default
                         return;
                     }
                     OptionsMenu(kAv,iAuth);
+                } else if (sMenu =="JB") {
+                    if (sMessage == "Do it!") {
+                        if (llGetInventoryType(CheckJB()) == INVENTORY_BODYPART) llRemoveInventory(CheckJB());
+                        if (llGetInventoryType(CheckJB()) == INVENTORY_NONE) 
+                            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% successful finished.\n",kAv);
+                    } else 
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% aborted.\n",kAv);
                 }
             }
         }
