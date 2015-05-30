@@ -60,6 +60,10 @@ string g_sCurrentTitleText;
 string g_sNormalTitleText;
 integer g_iLastHttpRequest;
 string g_sLastFmTitle;
+integer g_iScrollOn;
+string g_sScrollTitle;
+vector g_vCurrentColor;
+integer g_iRainbow;
 
 vector g_vColor = <1.000, 1.000, 0.000>; // default white 
 
@@ -69,9 +73,6 @@ float g_sEvilTimeout=60;
 float g_sEvilDuration=1800;
 
 key g_kWearer;
-//string g_sWearerName;
-
-//string g_sAuthError = "Access denied.";
 
 key g_kDialogID;    //menu handle
 key g_kColorDialogID;    //menu handle
@@ -102,22 +103,6 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
-
-Whisper(string sMessage) {
-    string sObjectName = llGetObjectName();
-    llSetObjectName("");
-    llWhisper(0, "/me " + sMessage);
-    llSetObjectName(sObjectName);
-}*/
 
 httpRequest() {
     if (g_sLfmUser != "" && g_sType=="lastfm"){
@@ -132,20 +117,25 @@ httpRequest() {
 renderTitle(){
     if (g_sType=="lastfm") {
         if (llGetUnixTime()-10 > g_iLastHttpRequest) httpRequest();
-
         g_sLastFmTitle+=llGetSubString(g_sLastFmTitle,0,0);
         g_sLastFmTitle=llGetSubString(g_sLastFmTitle,1,-1);
-
         g_sCurrentTitleText="♬ " + llGetSubString(g_sLastFmTitle,0,22);
     } else if (g_sType=="off") {
         g_sCurrentTitleText="";
     } else if (g_sType=="normal") {
         g_sCurrentTitleText=g_sNormalTitleText;
-    }
-
+        if (g_iScrollOn) {
+            g_sScrollTitle += llGetSubString(g_sScrollTitle,0,0);
+            g_sScrollTitle = llGetSubString(g_sScrollTitle,1,-1);
+            g_sCurrentTitleText = llGetSubString(g_sScrollTitle,0,24);
+        }
+    } 
+    if (g_sType!="evil" && g_iRainbow) {
+        g_vCurrentColor = <llFrand(1.0),llFrand(1.0),llFrand(1.0)>;
+    } else g_vCurrentColor = g_vColor;
     //Debug("Rendering title:\""+g_sCurrentTitleText+"\"");
     //Debug("Rendering title ("+(string)g_iTextPrim+"):"+g_sCurrentTitleText);
-    llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sCurrentTitleText,g_vColor,1.0, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
+    llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sCurrentTitleText,g_vCurrentColor,1.0, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
 }
 
 UserCommand(integer iAuth, string sStr, key kAv){
@@ -157,7 +147,6 @@ UserCommand(integer iAuth, string sStr, key kAv){
     else if (sStr == "runaway" && (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER)) {
         g_sType = "off";
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
-        
         renderTitle();
         llResetScript();
     }
@@ -170,7 +159,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
         //Debug("Got command "+sStr);
         //this is a command for this script.  Drop the prefix, and grab the next word as the command
         lParams=llDeleteSubList(lParams,0,0);
-        string sCommand = llToLower(llList2String(lParams, 0));
+        sCommand = llToLower(llList2String(lParams, 0));
         
         if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth  
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS", kAv);           
@@ -178,19 +167,10 @@ UserCommand(integer iAuth, string sStr, key kAv){
         } else if (sCommand=="color") {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {    //we got a colour, so set the colour
-               // integer colourIndex=llListFindList(g_lColours,[sColour]);
-               // if (~colourIndex){
-                   //g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
-                   g_vColor=(vector)sColor;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
-                //}
+               g_vColor=(vector)sColor;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
                 renderTitle();
             } else {    //no colour given, so pop the dialog.
-              //  list lColourNames;
-              //  integer numColours=llGetListLength(g_lColours)/2;
-              //  while (numColours--){
-              //      lColourNames+=llList2String(g_lColours,numColours*2);
-               // }
                 g_kColorDialogID = Dialog(kAv, "\nChoose a color!", ["colormenu please"], [UPMENU],0, iAuth);
                 return;
             }
@@ -210,6 +190,39 @@ UserCommand(integer iAuth, string sStr, key kAv){
             llSetTimerEvent(0.0);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"auth", ""); // del lastrank from DB
+        } else if (sCommand == "scroll") {
+            if (llToLower(llList2String(lParams, 1)) == "on") {
+                if (g_sType == "evil") {
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Titler scroll is in evil mode not supported.",kAv);
+                    return;
+                }
+                g_iScrollOn = TRUE;
+                g_sScrollTitle = g_sNormalTitleText;
+                renderTitle();
+                llSetTimerEvent(0.2);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"scroll="+(string)g_iScrollOn, "");
+            } else if (llToLower(llList2String(lParams, 1)) == "off") {
+                g_iScrollOn = FALSE;
+                renderTitle();
+                if (g_sType == "normal" && !g_iRainbow) llSetTimerEvent(0.0);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"scroll", "");
+            }
+        } else if (sCommand == "rainbow") {
+            if (g_sType == "evil") {
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Rainbow is in evil mode not supported.",kAv);
+                return;
+            }
+            if (llToLower(llList2String(lParams, 1)) == "on") {
+                g_iRainbow = TRUE;
+                renderTitle();
+                llSetTimerEvent(0.2);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"rainbow="+(string)g_iRainbow, "");
+            } else if (llToLower(llList2String(lParams, 1)) == "off") {
+                g_iRainbow = FALSE;
+                renderTitle();
+                if (g_sType == "normal" && !g_iScrollOn) llSetTimerEvent(0.0);
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"rainbow", "");
+            }
         } else if (sCommand == "lastfm") {
             string sAction= llList2String(lParams,1);
             if (sAction == "") {    //set lastfm mode on
@@ -247,6 +260,14 @@ UserCommand(integer iAuth, string sStr, key kAv){
             }
         } else if (sCommand == "evil") {
             //Debug("doing "+sCommand);
+            if (g_iScrollOn) {
+                g_iScrollOn = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"scroll", "");
+            }
+            if (g_iRainbow) {
+                g_iRainbow = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"rainbow", "");
+            }
             llSetTimerEvent(0.2);
             g_sType = "evil";
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
@@ -266,7 +287,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 string sPrompt = "\n[http://www.virtualdisgrace.com/titler Virtual Disgrace - Titler]\n\nCurrent Title: " + g_sNormalTitleText;
                     
                 string normalButton ;
-                if(g_sType == "normal") normalButton = "☒ Normal" ;
+                if(g_sType == "normal" || g_sType == "scroll") normalButton = "☒ Normal" ;
                 else normalButton = "☐ Normal" ;
                 
                 string lastFmButton ;
@@ -289,7 +310,6 @@ UserCommand(integer iAuth, string sStr, key kAv){
                         lParams=llDeleteSubList(lParams,0,0);
                     }
                 }
-                
                 //set standard title
                 string sNewText= llDumpList2String(lParams, " ");
                 //Debug("Setting title to "+sNewText);
@@ -347,14 +367,6 @@ default{
         }
         g_sCurrentTitleText="";
         renderTitle();
-       /*
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_title", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_on", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_lfmuser", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_color", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_height", "");
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "titler_auth", "");
-*/
         //Debug("Starting");
     } 
 
@@ -381,16 +393,14 @@ default{
                 llListenRemove(g_iEvilListenHandle);
                 g_iEvilListenHandle=0;
                 llMessageLinked(LINK_SET,SAY,"1"+"Awww, no one gave %WEARERNAME% a new title.  You'll have another chance later","");
-                //Whisper("Awww, no one gave "+g_sWearerName+" a new title.  You'll have another chance later");
                 llSetTimerEvent(g_sEvilDuration);
             } else {    //no listener, so set one up with a timer for 1 minute listening for a new title
                 g_iEvilListenChannel=10+(integer)llFrand(89);
                 llMessageLinked(LINK_SET,SAY,"1"+"Now is YOUR chance to give %WEARERNAME% a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!","");
-                //Whisper("Now is YOUR chance to give "+g_sWearerName+" a goofy title.  Type it on channel "+(string)g_iEvilListenChannel+"!");
                 g_iEvilListenHandle=llListen(g_iEvilListenChannel, "", "", "");
                 llSetTimerEvent(g_sEvilTimeout);
             }
-        } else if (g_sType=="lastfm") renderTitle();
+        } else if (g_sType=="lastfm" || g_iScrollOn || g_iRainbow) renderTitle();
     }
     
     listen(integer channel, string name, key id, string message){
@@ -398,16 +408,10 @@ default{
             //assume any text on our channel is a new title
             if (id == g_kWearer) {
                 llMessageLinked(LINK_SET,SAY,"1"+"Oh really? %WEARERNAME% tried to change their own title, how silly is that?","");
-               /* string sObjectName = llGetObjectName();
-                llSetObjectName("");
-                Whisper("Oh really? "+ g_sWearerName + " tried to change their own title, how silly is that?");
-                llSetObjectName(sObjectName);*/
                 return;
             } else {
                 string sTitleGiver = "secondlife:///app/agent/" + (string)id + "/about";
                 llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME% has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.","");
-               //Whisper(g_sWearerName +" has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.");
-            
                 g_sNormalTitleText=message;
                 g_sCurrentTitleText=message;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sCurrentTitleText, "");
@@ -446,7 +450,8 @@ default{
                     } else if(sToken == "lfmuser") g_sLfmUser = sValue;
                     else if(sToken == "color") g_vColor = (vector)sValue;
                     else if(sToken == "height") g_vPrimScale.z = (float)sValue;
-                    else if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
+                    else if(sToken == "auth") g_iLastRank = (integer)sValue;
+                    else if(sToken == "scroll") g_iScrollOn = (integer)sValue; // restore lastrank from DB
                    // renderTitle();
                 }// else if(sGroup == "Global_") {
                     //Debug("Got setting \""+sGroup+sToken+"="+sValue+"\"");
