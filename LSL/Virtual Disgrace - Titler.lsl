@@ -187,7 +187,8 @@ UserCommand(integer iAuth, string sStr, key kAv){
             g_iLastRank = iAuth;
             g_sCurrentTitleText = g_sNormalTitleText;
             evilListenerOff();
-            llSetTimerEvent(0.0);
+            if (g_iRainbow || g_iScrollOn) llSetTimerEvent(0.2);
+            else llSetTimerEvent(0.0);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sCommand == "off") {
@@ -252,8 +253,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
                     } else {    //set ...        convert to .., and handle below.
                         lParams=llDeleteSubList(lParams,1,1);
                     }
-                }
-                        
+                } 
                 //we got a name, use it
                 g_sLfmUser = llList2String(lParams, 1);
                 //Debug("setting lastfm username to "+g_sLfmUser);
@@ -325,7 +325,8 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 g_sCurrentTitleText = g_sNormalTitleText;
                 g_iLastRank = iAuth;
                 g_sType = "normal";
-                llSetTimerEvent(0.0);
+                if (g_iScrollOn || g_iRainbow) llSetTimerEvent(0.2);
+                else llSetTimerEvent(0.0);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sCurrentTitleText, "");
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
@@ -350,7 +351,7 @@ default{
     }
     
     state_entry(){
-        llSetMemoryLimit(40960);  //2015-05-06 (5538 bytes free)
+        llSetMemoryLimit(45056);  
         g_sEvilDuration = 990 + (integer)llFrand(900);
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
@@ -504,7 +505,6 @@ default{
                     UserCommand(iAuth, "title color "+sMessage, kAv);
                     UserCommand(iAuth, "title color", kAv);
                 }
-                
             } else if (kID == g_kTBoxId) {  //response from text box
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
@@ -530,15 +530,13 @@ default{
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
         if (iChange & CHANGED_INVENTORY) 
-            if (llGetInventoryType("OpenCollar - titler") == INVENTORY_SCRIPT) llRemoveInventory("OpenCollar - titler"); //gives error if not there
+            if (llGetInventoryType("OpenCollar - titler") == INVENTORY_SCRIPT) llRemoveInventory("OpenCollar - titler"); 
         if (iChange & CHANGED_REGION) {
             httpRequest();
-/*
-            if (g_iProfiled){
+/*      if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
-            }
-*/
+            }*/
         }
         if ((iChange & CHANGED_TELEPORT) && g_sType=="evil") {
             if (g_iEvilListenHandle) {
