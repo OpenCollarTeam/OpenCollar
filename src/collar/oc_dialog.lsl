@@ -689,7 +689,7 @@ default {
             if (sToken == g_sScript + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
             else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
-            else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
             else if (sToken == "Global_prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == "listener_channel") g_iListenChan = (integer)sValue;
