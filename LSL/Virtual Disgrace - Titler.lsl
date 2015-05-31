@@ -61,9 +61,10 @@ string g_sNormalTitleText;
 integer g_iLastHttpRequest;
 string g_sLastFmTitle;
 integer g_iScrollOn;
-string g_sScrollTitle;
+string g_sScrollTitleText;
 vector g_vCurrentColor;
 integer g_iRainbow;
+integer g_iCount;
 
 vector g_vColor = <1.000, 1.000, 0.000>; // default white 
 
@@ -125,13 +126,19 @@ renderTitle(){
     } else if (g_sType=="normal") {
         g_sCurrentTitleText=g_sNormalTitleText;
         if (g_iScrollOn) {
-            g_sScrollTitle += llGetSubString(g_sScrollTitle,0,0);
-            g_sScrollTitle = llGetSubString(g_sScrollTitle,1,-1);
-            g_sCurrentTitleText = llGetSubString(g_sScrollTitle,0,24);
+            g_sScrollTitleText += llGetSubString(g_sScrollTitleText,0,0);
+            g_sScrollTitleText = llGetSubString(g_sScrollTitleText,1,-1);
+            g_sCurrentTitleText = llGetSubString(g_sScrollTitleText,0,24);
         }
     } 
     if (g_sType!="evil" && g_iRainbow) {
-        g_vCurrentColor = <llFrand(1.0),llFrand(1.0),llFrand(1.0)>;
+        if (g_iCount > 3) {
+            g_vCurrentColor = <llFrand(1.0),llFrand(1.0),llFrand(1.0)>;
+            g_iCount = 0;
+            llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sCurrentTitleText,g_vCurrentColor,1.0, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
+            return;
+        }
+        g_iCount++;
     } else g_vCurrentColor = g_vColor;
     //Debug("Rendering title:\""+g_sCurrentTitleText+"\"");
     //Debug("Rendering title ("+(string)g_iTextPrim+"):"+g_sCurrentTitleText);
@@ -197,7 +204,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
                     return;
                 }
                 g_iScrollOn = TRUE;
-                g_sScrollTitle = g_sNormalTitleText;
+                g_sScrollTitleText = g_sNormalTitleText+" ";
                 renderTitle();
                 llSetTimerEvent(0.2);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"scroll="+(string)g_iScrollOn, "");
@@ -343,7 +350,7 @@ default{
     
     state_entry(){
         llSetMemoryLimit(40960);  //2015-05-06 (5538 bytes free)
-        g_sEvilDuration = 900 + (integer)llFrand(900);
+        g_sEvilDuration = 990 + (integer)llFrand(900);
         // find the text prim
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
@@ -443,6 +450,7 @@ default{
                     if(sToken == "title") {
                         g_sCurrentTitleText = sValue;
                         g_sNormalTitleText = sValue;
+                        g_sScrollTitleText = sValue;
                     } else if(sToken == "on") {
                         g_sType = sValue;
                         if (g_sType=="evil") llSetTimerEvent(0.2);
@@ -450,13 +458,16 @@ default{
                     } else if(sToken == "lfmuser") g_sLfmUser = sValue;
                     else if(sToken == "color") g_vColor = (vector)sValue;
                     else if(sToken == "height") g_vPrimScale.z = (float)sValue;
-                    else if(sToken == "auth") g_iLastRank = (integer)sValue;
-                    else if(sToken == "scroll") g_iScrollOn = (integer)sValue; // restore lastrank from DB
+                    else if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
+                    else if(sToken == "scroll") {
+                        g_iScrollOn = (integer)sValue;
+                        llSetTimerEvent(0.2);
+                    } else if(sToken == "rainbow") {
+                        g_iRainbow = (integer)sValue;
+                        llSetTimerEvent(0.2);
+                    }
                    // renderTitle();
-                }// else if(sGroup == "Global_") {
-                    //Debug("Got setting \""+sGroup+sToken+"="+sValue+"\"");
-                   // if (sToken == "WearerName") g_sWearerName = sValue;
-                //}
+                }
             }
         } else if (iNum == DIALOG_RESPONSE) {
             if (kID == g_kDialogID) {   //response from our main menu
