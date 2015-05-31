@@ -28,7 +28,7 @@ integer g_iNotifyEnabled=FALSE;
 //integer COMMAND_NOAUTH = 0;
 integer COMMAND_OWNER = 500;
 integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
+//integer COMMAND_EVERYONE = 504;
 
 //integer NOTIFY=1002;
 //integer NOTIFY_OWNERS=1003;
@@ -55,6 +55,7 @@ list g_lOwners;
 list g_lTempOwners;
 string g_sWearerName;
 key g_kWearer;
+string g_sDeviceName;
 
 key g_kDialogSpyID;
 integer serial;
@@ -173,7 +174,8 @@ DialogSpy(key kID, integer iAuth) {
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
-//    llMessageLinked(LINK_SET,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    string sObjectName = llGetObjectName();
+    if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
     if (kID == g_kWearer) {
         while (llStringLength(sMsg)>1000){
             string sSendString=llGetSubString(sMsg,0,1000);
@@ -183,9 +185,11 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
         llOwnerSay(sMsg);
     } else {
         //Debug("Notifying "+(string)kID);
-        llInstantMessage(kID, sMsg);
+        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+        else llInstantMessage(kID, sMsg);
         if (iAlsoNotifyWearer) llOwnerSay(sMsg);
     }
+    llSetObjectName(sObjectName);
 }
 
 NotifyOwners(string sMsg) {
@@ -298,8 +302,9 @@ default {
     state_entry() {
         llSetMemoryLimit(32768);  //2015-05-06 (6622 bytes free)
         g_kWearer = llGetOwner();
+        g_sDeviceName = llGetObjectName();
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-        g_lOwners = [g_kWearer, g_sWearerName];  // initially self-owned until we hear a db message otherwise
+        g_lOwners = [g_kWearer, llKey2Name(g_kWearer)];  // initially self-owned until we hear a db message otherwise
         llSetTimerEvent(300);
         //Debug("Starting");
     }
@@ -353,7 +358,9 @@ default {
                         g_iListener = llListen(0, "", g_kWearer, "");
                     }
                 }
-            } else if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []); //owners list
+            } else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
+            else if (sToken == "Global_WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            else if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []); //owners list
             else if(sToken == "auth_tempowner" && llStringLength(sValue) > 0) g_lTempOwners = llParseString2List(sValue, [","], []); //tempowners list
         } else if (iNum == MENUNAME_REQUEST && sStr == "Apps") {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Apps|Spy", "");
