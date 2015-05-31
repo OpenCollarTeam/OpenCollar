@@ -62,6 +62,7 @@ float g_fTimeOut = 20.0;//duration of anim
 integer g_iTargetID; // remember the walk target to delete; target handle
 string g_sSubAnim;
 string g_sDomAnim;
+integer g_iVerbose;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -166,10 +167,12 @@ CoupleAnimMenu(key kID, integer iAuth)
 {
     string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;    
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
-    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";    
+    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     //sPrompt += "\n\nwww.opencollar.at/animations\n\n";
     list lButtons = g_lAnimCmds;//we're limiting this to 9 couple anims then
     lButtons += [TIME_COUPLES, STOP_COUPLES];
+    if (g_iVerbose) lButtons += ["Verbose Off"];
+    else lButtons += ["Verbose On"];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
@@ -316,6 +319,16 @@ default {
             {
                 CoupleAnimMenu(kID, iNum);
             }
+            else if (sCommand == "verbose") {
+                if (sValue == "off"){
+                    g_iVerbose = FALSE;
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                } else if (sValue == "on") {
+                    g_iVerbose = TRUE;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                }
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose for couple animations is now "+sValue+".",kID);
+            }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
@@ -329,6 +342,10 @@ default {
             if(sToken == g_sScript + "timeout")
             {
                 g_fTimeOut = (float)sValue;
+            }
+            if(sToken == g_sScript + "verbose")
+            {
+                g_iVerbose = (integer)sValue;
             } 
         }
         else if (iNum == DIALOG_RESPONSE)
@@ -355,6 +372,16 @@ default {
                     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
                     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
                     g_kTimerMenu=Dialog(kAv, sPrompt, ["10", "20", "30","40", "50", "60","90", "120", "ENDLESS"], [UPMENU],0, iAuth);
+                }
+                else if (llGetSubString(sMessage,0,6) == "Verbose") {
+                    if (llGetSubString(sMessage,8,-1) == "Off") {
+                        g_iVerbose = FALSE;
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                    } else {
+                        g_iVerbose = TRUE;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                    }
+                    CoupleAnimMenu(kAv, iAuth);
                 }
                 else
                 {
@@ -466,7 +493,7 @@ default {
     
         
         string sText = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
-        if (sText != "")
+        if (sText != "" && g_iVerbose)
         {    
            // string sName = llGetObjectName();
            // string sObjectName;
