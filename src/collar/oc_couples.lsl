@@ -62,7 +62,7 @@ float g_fTimeOut = 20.0;//duration of anim
 integer g_iTargetID; // remember the walk target to delete; target handle
 string g_sSubAnim;
 string g_sDomAnim;
-integer g_iVerbose;
+integer g_iVerbose = TRUE;
 
 //MESSAGE MAP
 integer COMMAND_NOAUTH = 0;
@@ -124,24 +124,12 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
 } 
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) (sMsg);
-    }
-}*/
 
 refreshTimer(){
     integer timeNow=llGetUnixTime();
@@ -153,7 +141,6 @@ refreshTimer(){
         //Debug("Perm timeout="+(string)g_iPermissionTimeout+"\ntime now="+(string)timeNow);
         g_iPermissionTimeout=0;
         llListenRemove(g_iListener);
-        //llMessageLinked(LINK_SET, CPLANIM_PERMRESPONSE, "0", g_kPartner);
         g_kPartner = NULL_KEY;
     }
     integer nextTimeout=g_iAnimTimeout;
@@ -163,8 +150,7 @@ refreshTimer(){
     llSetTimerEvent(nextTimeout-timeNow);
 }
 
-CoupleAnimMenu(key kID, integer iAuth)
-{
+CoupleAnimMenu(key kID, integer iAuth) {
     string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;    
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
@@ -176,18 +162,16 @@ CoupleAnimMenu(key kID, integer iAuth)
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
-string StrReplace(string sSrc, string from, string to)
-{//replaces all occurrences of 'from' with 'to' in 'sSrc'.
+string StrReplace(string sSrc, string from, string to) {
+//replaces all occurrences of 'from' with 'to' in 'sSrc'.
     integer len = (~-(llStringLength(from)));
-    if(~len)
-    {
+    if(~len)  {
         string  buffer = sSrc;
         integer b_pos = -1;
         integer to_len = (~-(llStringLength(to)));
         @loop;//instead of a while loop, saves 5 bytes (and run faster).
         integer to_pos = ~llSubStringIndex(buffer, from);
-        if(to_pos)
-        {
+        if(to_pos) {
             b_pos -= to_pos;
             sSrc = llInsertString(llDeleteSubString(sSrc, b_pos, b_pos + len), b_pos, to);
             b_pos += to_len;
@@ -200,14 +184,11 @@ string StrReplace(string sSrc, string from, string to)
 }
 
 //added to stop eventual still going animations
-StopAnims()
-{
+StopAnims() {
     if (llGetInventoryType(g_sSubAnim) == INVENTORY_ANIMATION) llMessageLinked(LINK_SET, ANIM_STOP, g_sSubAnim, "");
-    if (llGetInventoryType(g_sDomAnim) == INVENTORY_ANIMATION)
-    {
+    if (llGetInventoryType(g_sDomAnim) == INVENTORY_ANIMATION) {
         if (llKey2Name(g_kPartner) != "") llStopAnimation(g_sDomAnim);
     }
-
     g_sSubAnim = "";
     g_sDomAnim = "";
 }
@@ -218,7 +199,6 @@ MoveToPartner() {
     vector partnerPos = llList2Vector(partnerDetails, 0);
     rotation partnerRot = llList2Rot(partnerDetails, 1);
     vector partnerEuler = llRot2Euler(partnerRot);
-    
     // turn to face the partner
     llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
     
@@ -240,7 +220,6 @@ default {
         llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
-        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
             g_iLine1 = 0;
@@ -253,7 +232,6 @@ default {
             g_iLine2 = 0;
             g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
         }
-        
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
@@ -271,123 +249,87 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
-        {
+        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
             //the command was given by either owner, secowner, group member, or wearer
             list lParams = llParseString2List(sStr, [" "], []);
             g_kCmdGiver = kID; g_iCmdAuth = iNum;
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llToLower(llList2String(lParams, 1));
             integer tmpiIndex = llListFindList(g_lAnimCmds, [sCommand]);
-            if (tmpiIndex != -1)    //if the couple anim exists
-            {
+            if (tmpiIndex != -1) {   //if the couple anim exists
                 g_iCmdIndex = tmpiIndex;
                 //Debug(sCommand);
                 //we got an anim command.
-                if (llGetListLength(lParams) > 1)//we've been given a name of someone to kiss.  scan for it
-                {
+                if (llGetListLength(lParams) > 1) {//we've been given a name of someone to kiss.  scan for it
                     string sTmpName = llDumpList2String(llList2List(lParams, 1, -1), " ");//this makes it so we support even full names in the command
-                    //llSensor("", NULL_KEY, AGENT, g_fRange, PI);  //replaced with call to sensor dialog
                     g_kPart=llGenerateKey();
                     llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI +"`"+sTmpName+"`1"+ "|BACK|" + (string)iNum, g_kPart);
-                }
-                else        //no name given.  
-                {
-                    if (kID == g_kWearer)                    //if commander is not sub, then treat commander as partner
-                    {
+                } else {       //no name given.  
+                    if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
-                    }
-                    else                //else set partner to commander
-                    {
+                    } else {               //else set partner to commander
                         g_kPartner = g_kCmdGiver;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
-                        if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kWearer); //sanity check, fallback if necessary
                         //added to stop eventual still going animations
                         StopAnims();
-                        //llMessageLinked(LINK_SET, CPLANIM_PERMREQUEST, sCommand, g_kPartner);
                         llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
-                       // llOwnerSay("Offering to " + sCommand + " " + g_sPartnerName + ".");
                     }
                 }
-            }
-            else if (sStr == "stopcouples")
-            {
+            } else if (sStr == "stopcouples") {
                 StopAnims();
-            }
-            else if (sStr == "menu "+g_sSubMenu || sStr == "couples")
-            {
+            } else if (sStr == "menu "+g_sSubMenu || sStr == "couples") {
                 CoupleAnimMenu(kID, iNum);
-            }
-            else if (sCommand == "verbose") {
+            } else if (sCommand == "couples" && sValue == "verbose") {
+                sValue = llToLower(llList2String(lParams, 2));
                 if (sValue == "off"){
                     g_iVerbose = FALSE;
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
                 } else if (sValue == "on") {
                     g_iVerbose = TRUE;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
                 }
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose for couple animations is now "+sValue+".",kID);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
             }
-        }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
+        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        }
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
+        } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if(sToken == g_sScript + "timeout")
-            {
                 g_fTimeOut = (float)sValue;
-            }
-            if(sToken == g_sScript + "verbose")
-            {
+            else if (sToken == g_sScript + "verbose")
                 g_iVerbose = (integer)sValue;
-            } 
-        }
-        else if (iNum == DIALOG_RESPONSE)
-        {
-            if (kID == g_kAnimmenu)
-            {
+        } else if (iNum == DIALOG_RESPONSE) {
+            if (kID == g_kAnimmenu) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU)
-                {
+                if (sMessage == UPMENU) {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                }
-                else if (sMessage == STOP_COUPLES)
-                {
+                } else if (sMessage == STOP_COUPLES) {
                     StopAnims();
                     CoupleAnimMenu(kAv, iAuth);
-                }
-                else if (sMessage == TIME_COUPLES)
-                {
+                } else if (sMessage == TIME_COUPLES) {
                     string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
                     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
                     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
                     g_kTimerMenu=Dialog(kAv, sPrompt, ["10", "20", "30","40", "50", "60","90", "120", "ENDLESS"], [UPMENU],0, iAuth);
-                }
-                else if (llGetSubString(sMessage,0,6) == "Verbose") {
+                } else if (llGetSubString(sMessage,0,6) == "Verbose") {
                     if (llGetSubString(sMessage,8,-1) == "Off") {
                         g_iVerbose = FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
                     } else {
                         g_iVerbose = TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
                     }
                     CoupleAnimMenu(kAv, iAuth);
-                }
-                else
-                {
+                } else {
                     integer iIndex = llListFindList(g_lAnimCmds, [sMessage]);
-                    if (iIndex != -1)
-                    {
+                    if (iIndex != -1) {
                         g_kCmdGiver = kAv;
                         g_iCmdAuth = iAuth;
                         g_iCmdIndex = iIndex;
@@ -396,73 +338,54 @@ default {
                         llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI + "|BACK|" + (string)iAuth, g_kPart);
                     }
                 }
-            }
-            else if (kID == g_kPart)
-            {
+            } else if (kID == g_kPart) {
                 //Debug("Response from partner"+sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU)
-                {
+                if (sMessage == UPMENU) {
                     CoupleAnimMenu(kAv, iAuth);
-                }
-                else
-                {
+                } else {
                     //process return from sensordialog
                     g_kPartner = (key)sMessage;
                     g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
-                    if (g_sPartnerName == "???" || g_sPartnerName == "") g_sPartnerName = llKey2Name(g_kPartner); //sanity check, fallback if necessary
                     StopAnims();
                     string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
-                    //llOwnerSay("Offering to "+ sCommand +" "+ g_sPartnerName + ".");
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
-                    //Notify(g_kPartner,  "%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.", FALSE );
                 }   
-            }
-            else if (kID == g_kTimerMenu)
-            {
+            } else if (kID == g_kTimerMenu) {
                 //Debug("Response from timer menu"+sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU)
-                {
+                if (sMessage == UPMENU) {
                     CoupleAnimMenu(kAv, iAuth);
-                }
-                else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage))
-                {
+                } else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                     g_fTimeOut = (float)((integer)sMessage);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + (string)g_fTimeOut, "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
-                    //Notify (kAv, "Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
-                }
-                else if (sMessage == "ENDLESS")
-                {
+                } else if (sMessage == "ENDLESS") {
                     g_fTimeOut = 0.0;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=0.0", "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",kAv);
-                    //Notify (kAv, "Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",TRUE);
                     CoupleAnimMenu(kAv, iAuth);
                 }
             }
         }
     }
-    not_at_target()
-    {
+    not_at_target() {
         //this might make us chase the partner.  we'll see.  that might not be bad
         llTargetRemove(g_iTargetID);
         MoveToPartner();
     }
-    at_target(integer tiNum, vector targetpos, vector ourpos)
-    {
+    at_target(integer tiNum, vector targetpos, vector ourpos) {
         llTargetRemove(tiNum);
         llStopMoveToTarget();
         
@@ -484,25 +407,16 @@ default {
         g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
         g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
         
-        
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llStartAnimation(g_sDomAnim);//note that we don't double check for permissions here, so if the coupleanim1 script sends its messages out of order, this might fail
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
         llMessageLinked(LINK_SET,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
-        //Notify(g_kPartner, "If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.", FALSE);
-    
         
         string sText = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
-        if (sText != "" && g_iVerbose)
-        {    
-           // string sName = llGetObjectName();
-           // string sObjectName;
+        if (sText != "" && g_iVerbose) {    
             sText = StrReplace(sText,"_PARTNER_",g_sPartnerName);
             sText = StrReplace(sText,"_SELF_","%WEARERNAME%");
             llMessageLinked(LINK_SET,SAY,"0"+sText,"");
-           // llSetObjectName("");
-           // llSay(0, sText);
-           // llSetObjectName(sName);           
         }
         if (g_fTimeOut > 0.0){
             g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
@@ -511,20 +425,18 @@ default {
         }
         refreshTimer();
     }
-    timer()
-    {
+    timer() {
         refreshTimer();
     }
-    dataserver(key kID, string sData)
-    {
-        if (sData == EOF){
+    dataserver(key kID, string sData) {
+        if (sData == EOF) {
             iCardComplete++;
         } else {
             list lParams = llParseString2List(sData, ["|"], []);
             //don't try to add empty or misformatted lines
             //valid if length = 4 or 5 (since text is optional) and anims exist
             integer iLength = llGetListLength(lParams);
-            if (iLength == 4 || iLength == 5){
+            if (iLength == 4 || iLength == 5) {
                 if (!llGetInventoryType(llList2String(lParams, 1)) == INVENTORY_ANIMATION){
                     llMessageLinked(LINK_SET,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine1 + ": animation '" + llList2String(lParams, 1) + "' is not present.  Skipping.",g_kWearer);
                 } else if (!llGetInventoryType(llList2String(lParams, 2)) == INVENTORY_ANIMATION){
@@ -545,11 +457,11 @@ default {
                     //Debug(llDumpList2String(g_lAnimSettings, ","));
                 }
             }
-            if ( iCardComplete <2){
-                if (kID == g_kDataID1){
+            if ( iCardComplete <2) {
+                if (kID == g_kDataID1) {
                     g_iLine1++;
                     g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
-                } else if (kID == g_kDataID2){
+                } else if (kID == g_kDataID2) {
                     g_iLine2++;
                     g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
                 }
@@ -557,41 +469,30 @@ default {
         }
     }
 
-    run_time_permissions(integer perm)
-    {
-        if (perm & PERMISSION_TRIGGER_ANIMATION)
-        {
+    run_time_permissions(integer perm) {
+        if (perm & PERMISSION_TRIGGER_ANIMATION) {
             key kID = llGetPermissionsKey();
             //Debug("changed anim permissions\nPerm ID="+(string)kID+"g_kPartner="+(string)g_kPartner);
-            if (kID == g_kPartner)
-            {
+            if (kID == g_kPartner) {
                 g_iPermissionTimeout=0;
                 MoveToPartner();
-            }
-            else
-            {
+            } else {
                 llMessageLinked(LINK_SET,NOTIFY,"1"+"Sorry, but the request timed out.",kID);
-                //Notify(kID, "Sorry, but the request timed out.",TRUE);
             }
         }
     }
 
-    changed(integer iChange)
-    {
-        if (iChange & CHANGED_INVENTORY)
-        {
-            if (llGetInventoryKey(CARD1) != g_kCardID1)
-            {
+    changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) {
+            if (llGetInventoryKey(CARD1) != g_kCardID1) {
                 //because notecards get new uuids on each save, we can detect if the notecard has changed by seeing if the current uuid is the same as the one we started with
                 //just switch states instead of restarting, so we can preserve any settings we may have gotten from db
                 state default;
             }
-            if (llGetInventoryKey(CARD2) != g_kCardID1)
-            {
+            if (llGetInventoryKey(CARD2) != g_kCardID1) {
                 state default;
             }
         }
-
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
