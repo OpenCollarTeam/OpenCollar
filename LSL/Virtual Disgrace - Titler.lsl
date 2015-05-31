@@ -139,6 +139,7 @@ renderTitle(){
             return;
         }
         g_iCount++;
+        if (!g_iScrollOn && g_sType!="lastfm") return;
     } else g_vCurrentColor = g_vColor;
     //Debug("Rendering title:\""+g_sCurrentTitleText+"\"");
     //Debug("Rendering title ("+(string)g_iTextPrim+"):"+g_sCurrentTitleText);
