@@ -70,7 +70,7 @@ string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle st
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
 string L_COSTUM_TEX_ID;
 // Defalut leash particle, can read from defaultsettings:
-// User_leashParticle=Shine~1~Turn~1~Strict~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
+// leashParticle=Shine~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
 list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"]; 
 
 list g_lSettings=g_lDefaultSettings;
@@ -323,7 +323,11 @@ SetTexture(string sIn, key kIn) {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
         if (GetSetting("R_TextureID")) g_sParticleTextureID = GetSetting("R_TextureID");
-        if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);//Notify(kIn, "Leash texture set to " + L_RIBBON_TEX, FALSE);
+        if (kIn) {
+            string sMessage = "Leash texture set to " + L_RIBBON_TEX;
+            if (llGetListLength(g_lLeashPrims) <= 3)  "\nThis %DEVICETYPE% has only one particle prim defined, this does not match OpenCollar 4.0 specifications and this mode will not have the desired effect.";
+            llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kIn);
+        }
     }
     else if (g_sParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
@@ -389,7 +393,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(57344);  //2015-05-06 (7884 bytes free)
+        //llSetMemoryLimit(57344);  
         g_sScript = "leashparticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();
