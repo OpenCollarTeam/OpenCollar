@@ -256,14 +256,14 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         if (sToken=="owner") {
             lPeople=g_lOwners;
             if (llGetListLength (lPeople) >=6) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nSix people at a time can have this role.\n",kAv);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nThree people at a time can have this role.\n",kAv);
                 //Notify(kAv, "\n\nSorry, we reached a limit!\n\nSix people at a time can have this role.\n",FALSE);
                 return;
             }
         } else if (sToken=="trust") {
             lPeople=g_lTrusted;
             if (llGetListLength (lPeople) >=30) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nTwelve people at a time can have this role.\n",kAv);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\n15 people at a time can have this role.\n",kAv);
                 //Notify(kAv, "\n\nSorry, we reached a limit!\n\nTwelve people at a time can have this role.\n",FALSE);
                 return;
             } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
