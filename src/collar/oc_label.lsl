@@ -20,13 +20,17 @@ key g_kWearer;
 integer g_iAppLock = FALSE;
 string g_sAppLockToken = "Appearance_Lock";
 
-//opencollar MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER            = 500;
+integer CMD_TRUSTED        = 501;
+//integer CMD_GROUP          = 502;
+integer CMD_WEARER           = 503;
+//integer CMD_EVERYONE         = 504;
+//integer CMD_RLV_RELAY      = 507;
+//integer CMD_SAFEWORD       = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
@@ -49,7 +53,6 @@ integer DIALOG_TIMEOUT = -9002;
 integer g_iCharLimit = -1;
 
 string UPMENU = "BACK";
-//string CTYPE = "collar";
 
 string g_sTextMenu = "Set Label";
 string g_sFontMenu = "Font";
@@ -59,20 +62,6 @@ key g_kDialogID;
 key g_kTBoxID;
 key g_kFontID;
 key g_kColorID;
-/*
-list g_lColours=[
-    "Gray Shade",<0.70588, 0.70588, 0.70588>,
-    "Gold Shade",<0.69020, 0.61569, 0.43529>,
-    "Baby Pink",<1.00000, 0.52157, 0.76078>,
-    "Hot Pink",<1.00000, 0.05490, 0.72157>,
-    "Firefighter",<0.88627, 0.08627, 0.00392>,
-    "Flame",<0.92941, 0.43529, 0.00000>,
-    "Matrix",<0.07843, 1.00000, 0.07843>,
-    "Electricity",<0.00000, 0.46667, 0.92941>,
-    "Violet Wand",<0.63922, 0.00000, 0.78824>,
-    "Black",<0.00000, 0.00000, 0.00000>,
-    "White",<1.00000, 1.00000, 1.00000>
-];*/
 
 integer g_iScroll = FALSE;
 integer g_iShow = TRUE;
@@ -180,7 +169,6 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
-
 
 ResetCharIndex() {
 
@@ -398,17 +386,6 @@ SetOffsets(key font)
     }
     g_kFontTexture = font;
 }
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}*/
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
@@ -440,12 +417,6 @@ TextMenu(key kID, integer iAuth)
 ColorMenu(key kID, integer iAuth)
 {
     string sPrompt = "\n\nSelect a colour from the list";
-  /*  list lColourNames;
-    integer numColours=llGetListLength(g_lColours)/2;
-    while (numColours--)
-    {
-        lColourNames+=llList2String(g_lColours,numColours*2);
-    }*/
     g_kColorID=Dialog(kID, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth);
 }
 
@@ -460,9 +431,9 @@ FontMenu(key kID, integer iAuth)
 
 integer UserCommand(integer iAuth, string sStr, key kAv)
 {
-    if (iAuth > COMMAND_WEARER || iAuth < COMMAND_OWNER) return FALSE; // sanity check
+    if (iAuth > CMD_WEARER || iAuth < CMD_OWNER) return FALSE; // sanity check
     
-    if (iAuth == COMMAND_OWNER || !g_iAppLock)
+    if (iAuth == CMD_OWNER || !g_iAppLock)
     {
         if (sStr == "menu " + g_sSubMenu || llToLower(sStr)=="label") 
         {
@@ -473,7 +444,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
 
-        if (sCommand == "lockappearance" && iAuth == COMMAND_OWNER)
+        if (sCommand == "lockappearance" && iAuth == CMD_OWNER)
         {
             if (llToLower(llList2String(lParams, 1)) == "0") g_iAppLock = FALSE;
             else g_iAppLock = TRUE;
@@ -483,11 +454,6 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llDumpList2String(lParams, " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "text=" + g_sLabelText, "");
-            if (llStringLength(g_sLabelText) > g_iCharLimit) {
-                string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
-                llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
-               // Notify(kAv, "Unless your set your label to scroll it will be truncted at "+sDisplayText+".", FALSE);
-            }
             SetLabel();          
         }
         else if (sCommand == "labelfont")
@@ -505,11 +471,8 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         else if (sCommand == "labelcolor")
         {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
-          //  integer colourIndex=llListFindList(g_lColours,[sColour]);
-           // if (~colourIndex)
             if (sColor != "") {
                 g_vColor=(vector)sColor;
-              //  g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
                 SetLabel();
             }
@@ -527,7 +490,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             SetLabel();            
         }        
     }
-    else if ((iAuth >= COMMAND_SECOWNER && iAuth <= COMMAND_WEARER) && g_iAppLock)
+    else if ((iAuth >= CMD_TRUSTED && iAuth <= CMD_WEARER) && g_iAppLock)
     {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));        
         if (sStr=="menu "+g_sSubMenu)
@@ -548,12 +511,8 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
 
 default
 {
-    state_entry()
-    {   
-        llSetMemoryLimit(52224);
+    state_entry() {
         // Initialize the character index.
-        //llWhisper(0,"["+(string)llGetFreeMemory()+"]");
-        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_sScript = "label_";
         g_kWearer = llGetOwner();
 
