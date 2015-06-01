@@ -101,9 +101,13 @@ integer SettingExists(string sToken)
 
 list SetSetting(list lCache, string sToken, string sValue) {
     integer idx = llListFindList(lCache, [sToken]);
+    if (! ~llListFindList(["auth_block","auth_trust","auth_owner"],[llToLower(sToken)])) {
+        if (~llListFindList(lCache, [sValue])) return lCache;
+    } //we check the above to avoid same IDs in different auth lists
     if (~idx) return llListReplaceList(lCache, [sValue], idx + 1, idx + 1);
     idx = GroupIndex(lCache, sToken);
     if (~idx) return llListInsertList(lCache, [sToken, sValue], idx);
+    
     return lCache + [sToken, sValue];
 }
 
@@ -319,7 +323,20 @@ default {
                 for (i = 0; i < llGetListLength(lData); i += 2) {
                     sToken = llList2String(lData, i);
                     sValue = llList2String(lData, i + 1);
-                    g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
+                    if (sValue != "") { //no value, nothing to do
+                        if (sID == "auth_") { //if we have auth, can only be the below, else we dont care
+                            if (! ~llListFindList(["block","trust","owner"],[llToLower(sToken)])) jump nextline ;
+                            list lTest = llParseString2List(sValue,[","],[]);
+                            list lOut;
+                            integer n;
+                            for(;n<llGetListLength(lTest);n = n+2) {
+                                if (llList2Key(lTest,n)) //if this is not a valid key, it's useless we dont save that
+                                    lOut += llList2List(lTest,n,n+1);
+                            }
+                            sValue = llList2CSV(lOut);
+                        }
+                        g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
+                    }
                 }
                 @nextline;
                 g_iDefaultsline++;
