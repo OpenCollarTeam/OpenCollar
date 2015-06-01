@@ -21,13 +21,17 @@ string g_sParentMenu = "Apps";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
 
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_SAFEWORD = 510;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER          = 500;
+//integer CMD_TRUSTED       = 501;
+//integer CMD_GROUP       = 502;
+integer CMD_WEARER          = 503;
+integer CMD_EVERYONE        = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD        = 510; 
+//integer CMD_RELAY_SAFEWORD= 511;
+//integer CMD_BLOCKED = 520;
+
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
@@ -48,7 +52,7 @@ integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
 
 
-integer g_iLastRank = COMMAND_EVERYONE ;
+integer g_iLastRank = CMD_EVERYONE ;
 string g_sType = "off";
 string g_sLfmUser;//="virtualdisgrace";
 integer g_iEvilListenHandle;
@@ -147,12 +151,12 @@ renderTitle(){
 }
 
 UserCommand(integer iAuth, string sStr, key kAv){
-    if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return;
+    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return;
     
     //first, jongle commands into a sane format
     if (llToLower(sStr) == "menu titler") sStr="title";
     else if (llToLower(sStr) == "menu titlercolor") sStr="title color";
-    else if (sStr == "runaway" && (iAuth == COMMAND_OWNER || iAuth == COMMAND_WEARER)) {
+    else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         g_sType = "off";
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
         renderTitle();
@@ -193,7 +197,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sCommand == "off") {
             g_sType = "off";
-            g_iLastRank = COMMAND_EVERYONE;
+            g_iLastRank = CMD_EVERYONE;
             g_sCurrentTitleText="";
             evilListenerOff();
             llSetTimerEvent(0.0);
@@ -434,8 +438,8 @@ default{
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //Debug("Link Message Event");
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) UserCommand(iNum, sStr, kID);
-        else if (iNum == COMMAND_SAFEWORD){
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_SAFEWORD){
             UserCommand(500, "title off", "");
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + "Titler", "");

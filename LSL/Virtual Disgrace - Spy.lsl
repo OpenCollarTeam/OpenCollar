@@ -24,13 +24,19 @@ integer g_iTraceEnabled=FALSE;
 integer g_iListenEnabled=FALSE;
 integer g_iNotifyEnabled=FALSE;
 
-//OC MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER                   = 500;
+//integer CMD_TRUSTED                 = 501;
+//integer CMD_GROUP                 = 502;
+integer CMD_WEARER                  = 503;
+//integer CMD_EVERYONE                = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD                = 510; 
+//integer CMD_RELAY_SAFEWORD          = 511;
+//integer CMD_BLOCKED = 520;
 
-//integer NOTIFY=1002;
+//integer NOTIFY=1002; 
 //integer NOTIFY_OWNERS=1003;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
@@ -207,7 +213,7 @@ NotifyOwners(string sMsg) {
 }
 
 integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
-    if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return FALSE;
+    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return FALSE;
 
     sStr = llToLower(sStr);
         if (sStr == "☐ trace" || sStr == "trace on") {
@@ -222,7 +228,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if(sStr == "☒ trace" || sStr == "trace off") {
-            if (iAuth == COMMAND_OWNER) {
+            if (iAuth == CMD_OWNER) {
                 if (g_iTraceEnabled){
                     g_iTraceEnabled=FALSE;
                     Notify(kID,"\n\nTrace disabled.\n",TRUE);
@@ -246,7 +252,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             }
             if (remenu) DialogSpy(kID,iAuth);
         } else if(sStr == "☒ listen" || sStr == "listen off") {
-            if (iAuth == COMMAND_OWNER) {
+            if (iAuth == CMD_OWNER) {
                 if (g_iListenEnabled) {
                     g_iListenEnabled=FALSE;
                     Notify(kID,"\n\nChat Spy disabled.\n",TRUE);

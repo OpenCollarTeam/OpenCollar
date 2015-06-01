@@ -34,15 +34,16 @@ key kMenuID;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
-integer COMMAND_SAFEWORD = 510;
-integer COMMAND_RELAY_SAFEWORD = 511;
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
@@ -397,7 +398,7 @@ SafeWord() {
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum == COMMAND_EVERYONE) return;  // No command for people with no privilege in this plugin.
+    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
     
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llList2String(lParams, 0);
@@ -421,14 +422,14 @@ UserCommand(integer iNum, string sStr, key kID) {
         g_iRLVOn = TRUE;
         setRlvState();
     } else if (sStr == "rlvoff") {
-        if (iNum == COMMAND_OWNER) {
+        if (iNum == CMD_OWNER) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
             llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
         } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
+        if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
         else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -513,8 +514,8 @@ default {
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         } 
-        else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
-        else if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_ZERO) return; // SA: TODO remove later
+        else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             if (kID == kMenuID) {
@@ -561,8 +562,8 @@ default {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
             }
-        } else if (iNum == COMMAND_SAFEWORD) SafeWord();
-        else if (iNum==COMMAND_RELAY_SAFEWORD) SafeWord();
+        } else if (iNum == CMD_SAFEWORD) SafeWord();
+        else if (iNum==CMD_RELAY_SAFEWORD) SafeWord();
         else if (iNum==RLV_QUERY){
             if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
@@ -657,7 +658,7 @@ default {
                     lCommands=llDeleteSubList(lCommands,0,0);
                     //Debug("Command list now "+llDumpList2String(lCommands,"|"));
                 }
-            } else if (iNum == COMMAND_RLV_RELAY) {
+            } else if (iNum == CMD_RLV_RELAY) {
                 if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
                     //Debug("Received pong:"+sStr+" from "+(string)kID);
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it

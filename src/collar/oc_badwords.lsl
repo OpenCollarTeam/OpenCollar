@@ -13,9 +13,15 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 //MESSAGE MAP
-integer COMMAND_OWNER = 500;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_SAFEWORD = 510;  // new for safeword
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+//integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+//integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
 integer SAY = 1004;
@@ -128,7 +134,7 @@ MenuBadwords(key kID, integer iNum){
 
 // returns TRUE if eligible (AUTHED link message number)
 UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id 
-    if (iNum != COMMAND_OWNER && kID != g_kWearer) return;
+    if (iNum != CMD_OWNER && kID != g_kWearer) return;
     //Debug("Got command:"+sStr);
     sStr=llStringTrim(sStr,STRING_TRIM);
     list lParams = llParseString2List(sStr, [" "], []);
@@ -136,7 +142,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
     if (llToLower(sStr) == "badwords" || llToLower(sStr) == "menu badwords") {
         MenuBadwords(kID, iNum);
     } else if (llToLower(sCommand)=="badwords"){
-        if (iNum != COMMAND_OWNER) return;
+        if (iNum != CMD_OWNER) return;
         sCommand = llToLower(llList2String(lParams, 1));
         if (sCommand == "add") {  //support owner adding words
             list lNewBadWords = llDeleteSubList(lParams, 0, 1);
@@ -317,9 +323,9 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //Debug("Got message:"+(string)iNum+" "+sStr);
-        if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == MENUNAME_REQUEST && sStr == "Apps") llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Apps|Badwords", "");
-        else if (iNum == COMMAND_SAFEWORD)
+        else if (iNum == CMD_SAFEWORD)
         {
             //stop sound and animation
             if(g_sBadWordSound != g_sNoSound) llStopSound();

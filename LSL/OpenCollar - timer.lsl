@@ -68,11 +68,17 @@ integer g_iTimeChange;
 
 list lButtons;
 
-integer COMMAND_OWNER = 500;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-
-integer COMMAND_WEARERLOCKEDOUT = 521;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
 
@@ -270,20 +276,20 @@ TimerFinish()
     llMessageLinked(LINK_THIS, WEARERLOCKOUT, "off", "");
     if(g_iUnlockCollar)
     {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "unlock", g_kWearer);
+        llMessageLinked(LINK_THIS, CMD_OWNER, "unlock", g_kWearer);
     }
     if(g_iClearRLVRestions)
     {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "clear", g_kWearer);
+        llMessageLinked(LINK_THIS, CMD_OWNER, "clear", g_kWearer);
         if(!g_iUnlockCollar && g_iCollarLocked)
         {
             llSleep(2);
-            llMessageLinked(LINK_THIS, COMMAND_OWNER, "lock", g_kWearer);
+            llMessageLinked(LINK_THIS, CMD_OWNER, "lock", g_kWearer);
         }
     }
     if(g_iUnleash && g_iWhoCanChangeTime <= g_iWhoCanChangeLeash)
     {
-        llMessageLinked(LINK_THIS, COMMAND_OWNER, "unleash", g_kWearer);
+        llMessageLinked(LINK_THIS, CMD_OWNER, "unleash", g_kWearer);
     }
     g_iUnlockCollar=g_iClearRLVRestions=g_iUnleash=0;
     g_iOnSetTime=g_iRealSetTime=0;
@@ -327,8 +333,8 @@ TimerStart(integer perm)
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum == COMMAND_EVERYONE) return TRUE;
-    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE;
+    if (iNum == CMD_EVERYONE) return TRUE;
+    else if (iNum > CMD_EVERYONE || iNum < CMD_OWNER) return FALSE;
     if (llToLower(sStr) == "timer" || sStr == "menu "+g_sSubMenu) DoMenu(kID, iNum);
     else if(llGetSubString(sStr, 0, 5) == "timer ")
     {
@@ -370,7 +376,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if(sMsg=="☒ unlock")
         {
-            if (iNum == COMMAND_OWNER) g_iUnlockCollar=0;
+            if (iNum == CMD_OWNER) g_iUnlockCollar=0;
             else
             {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -380,7 +386,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if(sMsg=="☐ unlock")
         {
-            if(iNum == COMMAND_OWNER) g_iUnlockCollar=1;
+            if(iNum == CMD_OWNER) g_iUnlockCollar=1;
             else
             {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -390,7 +396,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
          }
         else if(sMsg=="☒ clear RLV")
         {
-            if(iNum == COMMAND_WEARER)
+            if(iNum == CMD_WEARER)
             {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
                 //Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
@@ -400,7 +406,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         else if(sMsg=="☐ clear RLV")
         {
-            if(iNum == COMMAND_WEARER)
+            if(iNum == CMD_WEARER)
             {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
                 //Notify(kID,"You cannot change if the RLV settings are cleared",FALSE);
@@ -664,7 +670,7 @@ default {
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, g_sMessage);
             }
         }
-        else if(iNum == COMMAND_WEARERLOCKEDOUT && sStr == "menu")
+        else if(iNum == CMD_WEARER && sStr == "menu")
         {
             if (g_iOnRunning || g_iRealRunning)
                 llMessageLinked(LINK_SET,NOTIFY,"0"+ "You are locked out of the %DEVICETYPE% until the timer expires",kID);//Notify(kID , "You are locked out of the " + CTYPE + " until the timer expires", FALSE);

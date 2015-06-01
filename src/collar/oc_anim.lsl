@@ -44,14 +44,18 @@ integer g_iAnimLock = FALSE;  //animlock on/off
 integer g_iPosture;  //posture lock on/off
 
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_SAFEWORD = 510;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510;  // new for safeword
+//integer CMD_BLOCKED = 520;
 
 //EXTERNAL MESSAGE MAP
-integer EXT_COMMAND_COLLAR = 499;  //added for collar or cuff commands to put ao to pause or standOff
+integer EXT_CMD_COLLAR = 499;  //added for collar or cuff commands to put ao to pause or standOff
 
 integer NOTIFY = 1002;
 
@@ -237,7 +241,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
             PlayAnim(sAnim);
 
             //switch off AO
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|ZHAO_STANDOFF");
+            llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDOFF");
             llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDOFF");
         }
     } else  llMessageLinked(LINK_SET, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);//llOwnerSay( "Error: Somehow I lost permission to animate you.  Try taking me off and re-attaching me.");
@@ -270,7 +274,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
             else {
-                llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_COMMAND_COLLAR + "|ZHAO_STANDON");
+                llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDON");
                 llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
             }
         }
@@ -300,7 +304,7 @@ CreateAnimList() {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum == COMMAND_EVERYONE) return;  // No command for people with no privilege in this plugin.
+    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
 
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
@@ -320,13 +324,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sStr == "animations") AnimMenu(kID, iNum);  //give menu
     else if (sStr == "pose") PoseMenu(kID, 0, iNum);  //pose menu
-    else if (sStr == "runaway" && (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER)) {  //stop pose on runaway
+    else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {  //stop pose on runaway
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_currentpose", "");
         llResetScript();
     } else if ( sCommand=="posture") {  //posture
         if ( sValue=="on") {  //posture
-            if (iNum<=COMMAND_WEARER) {
+            if (iNum<=CMD_WEARER) {
                 g_iLastPostureRank=iNum;
                 SetPosture(TRUE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PostureRank="+(string)g_iLastPostureRank,"");
@@ -338,7 +342,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPostureRank) {
-                g_iLastPostureRank=COMMAND_WEARER;
+                g_iLastPostureRank=CMD_WEARER;
                 SetPosture(FALSE,kID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PostureRank", "");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"You can move your neck again.",g_kWearer);
@@ -350,7 +354,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if ( sCommand=="animlock") {  //anim lock
         if ( sValue=="on") {  //anim lock
-            if (iNum<=COMMAND_WEARER) {
+            if (iNum<=CMD_WEARER) {
                 g_iLastPoselockRank=iNum;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PoselockRank="+(string)g_iLastPoselockRank,"");
                 g_iAnimLock = TRUE;
@@ -386,7 +390,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         else if (sValue == "hide") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOHIDE|" + (string)kID);
         else if (sValue == "show") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW|" + (string)kID);
     } else if (sCommand == "antislide") {  //check for text command of PoseMoveMenu's string
-        if ((iNum == COMMAND_OWNER)||(kID == g_kWearer)) {
+        if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
             if (sValue == "on") {
                 g_iTweakPoseAO = 1;
@@ -468,7 +472,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) {  //we were just detached.  clear the anim list and tell the ao to play stands again.
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, (string)EXT_COMMAND_COLLAR + "|ZHAO_STANDON");
+            llRegionSayTo(g_kWearer,g_iInterfaceChannel, (string)EXT_CMD_COLLAR + "|ZHAO_STANDON");
             llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
             g_lAnims = [];
         }
@@ -476,7 +480,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID);
+        if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == ANIM_START) StartAnim(sStr);
         else if (iNum == ANIM_STOP) StopAnim(sStr);
         else if (iNum == MENUNAME_REQUEST && sStr == "Main") {
@@ -487,7 +491,7 @@ default {
                 string child = llList2String(llParseString2List(sStr, ["|"], []), 1);
                 if (llListFindList(g_lAnimButtons, [child]) == -1) g_lAnimButtons += [child];
             }
-        } else if (iNum == COMMAND_SAFEWORD) {  // saefword command recieved, release animation
+        } else if (iNum == CMD_SAFEWORD) {  // saefword command recieved, release animation
             if (llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION) {
                 g_iLastRank = 0;
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");

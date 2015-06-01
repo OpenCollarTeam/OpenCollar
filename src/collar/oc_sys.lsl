@@ -31,12 +31,16 @@ integer g_iMenuStride = 3;
 integer g_iScriptCount;//when the scriptcount changes, rebuild menus
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -221,7 +225,7 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your %DEVICETYPE% and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, COMMAND_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your %DEVICETYPE% and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, CMD_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
@@ -265,8 +269,8 @@ MainMenu(key kID, integer iAuth) {
 }
 
 integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
-    if (iNum == COMMAND_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
-    else if (iNum > COMMAND_EVERYONE || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    if (iNum == CMD_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
+    else if (iNum > CMD_EVERYONE || iNum < CMD_OWNER) return FALSE; // sanity check
 
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llToLower(llList2String(lParams, 0));
@@ -277,7 +281,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else if (sSubmenu == "apps" || sSubmenu=="addons") AppsMenu(kID, iNum);
         else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
         else if (sSubmenu == "options") {
-            if (iNum != COMMAND_OWNER && iNum != COMMAND_WEARER) {
+            if (iNum != CMD_OWNER && iNum != CMD_WEARER) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
                 MainMenu(kID, iNum);
             } else OptionsMenu(kID, iNum);
@@ -292,19 +296,19 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);               
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
     else if (sStr == "options") {
-        if (iNum == COMMAND_OWNER || iNum == COMMAND_WEARER) OptionsMenu(kID, iNum);
+        if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
         return TRUE;
     } else if (sCmd == "menuto") {
         key kAv = (key)llList2String(lParams, 1);
         if (llGetAgentSize(kAv) != ZERO_VECTOR) //if kAv is an avatar in this region
         {
             if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
-            else  llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kAv);   //else send an auth request for the menu
+            else  llMessageLinked(LINK_SET, CMD_ZERO, "menu", kAv);   //else send an auth request for the menu
         }
     } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {    //does anything use togglelock?  If not, it'd be nice to get rid of it
         //Debug("User command:"+sCmd);
 
-        if (iNum == COMMAND_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
+        if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function        
             g_iLocked = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
@@ -318,7 +322,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
-        if (iNum == COMMAND_OWNER)  {  //primary owners can lock and unlock. no one else
+        if (iNum == CMD_OWNER)  {  //primary owners can lock and unlock. no one else
             //inlined old "Unlock()" function
             g_iLocked = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", "");
@@ -342,7 +346,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else 
             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nThe jailbreak sequence has already been performed on this collar.\n",kID);
     } else if (sCmd == "news"){
-        if (kID == g_kWearer || iNum==COMMAND_OWNER){
+        if (kID == g_kWearer || iNum==CMD_OWNER){
             if (sStr=="news off"){
                 g_iNews=FALSE;
                 //notify news off
@@ -550,7 +554,7 @@ default
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         // SA: delete this after transition is finished
-        if (iNum == COMMAND_NOAUTH) return;
+        if (iNum == CMD_ZERO) return;
         // /SA
         else if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"

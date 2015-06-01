@@ -65,13 +65,15 @@ string g_sDomAnim;
 integer g_iVerbose = TRUE;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
-//integer COMMAND_RLV_RELAY = 507;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -242,14 +244,14 @@ default {
         if (channel == g_iStopChan)
         {//this abuses the GROUP auth a bit but i think it's ok.
             //Debug("message on stop channel");
-            llMessageLinked(LINK_SET, COMMAND_GROUP, "stopcouples", kID);
+            llMessageLinked(LINK_SET, CMD_GROUP, "stopcouples", kID);
         }
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
             //the command was given by either owner, secowner, group member, or wearer
             list lParams = llParseString2List(sStr, [" "], []);
             g_kCmdGiver = kID; g_iCmdAuth = iNum;

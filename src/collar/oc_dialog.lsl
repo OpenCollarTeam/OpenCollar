@@ -15,15 +15,17 @@
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
-//integer COMMAND_RLV_RELAY = 507;
-//integer COMMAND_SAFEWORD = 510;
-//integer COMMAND_RELAY_SAFEWORD = 511;
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
+
 
 //integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -419,8 +421,8 @@ ClearUser(key kRCPT)
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
-    if (iNum == COMMAND_GROUP) return FALSE;
+    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return FALSE;
+    if (iNum == CMD_GROUP) return FALSE;
     list lParams = llParseString2List(llToLower(sStr), ["="], []);
     string sToken = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
@@ -635,7 +637,7 @@ default {
             }
             integer iDigits=-1;   //iDigits==-1 means Dialog should run idigits on the buttons
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
-            integer iAuth = COMMAND_NOAUTH;
+            integer iAuth = CMD_ZERO;
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
@@ -643,7 +645,7 @@ default {
         }
         else if (llGetSubString(sStr, 0, 10) == "remotemenu:")
         {
-            if (iNum == COMMAND_OWNER || iNum == COMMAND_SECOWNER)
+            if (iNum == CMD_OWNER || iNum == CMD_TRUSTED)
             {
                 string sCmd = llGetSubString(sStr, 11, -1);
                 //Debug("dialog cmd:" + sCmd);

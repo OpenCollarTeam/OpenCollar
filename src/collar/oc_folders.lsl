@@ -17,12 +17,16 @@ string g_sParentMenu = "RLV";
 list g_lChildren = ["# Folders"];
 
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
@@ -179,7 +183,7 @@ string lockFolderButton(integer iLockState, integer iLockNum, integer iAuth)
     else if (iLockNum == 1) sOut += LOCK_DETACH;
     else if (iLockNum == 2) sOut += LOCK_ATTACH_ALL;
     else if (iLockNum == 3) sOut += LOCK_DETACH_ALL;
-    if (iAuth > COMMAND_GROUP) sOut = "("+sOut+")";
+    if (iAuth > CMD_GROUP) sOut = "("+sOut+")";
     return sOut;
 }
 
@@ -190,7 +194,7 @@ string lockUnsharedButton(integer iLockNum, integer iAuth)
     else sOut = "✘";
     if (iLockNum == 1) sOut += "Lk Unsh Wear";
     else if  (iLockNum == 0) sOut += "Lk Unsh Remove";
-    if (iAuth > COMMAND_GROUP) sOut = "("+sOut+")";
+    if (iAuth > CMD_GROUP) sOut = "("+sOut+")";
     return sOut;
 }
 
@@ -500,7 +504,7 @@ SetAsyncMenu(key kAv, integer iAuth)
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum < COMMAND_OWNER || iNum > COMMAND_WEARER) return FALSE;
+    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return FALSE;
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llToLower(llList2String(lParams, 1));
@@ -547,7 +551,7 @@ integer UserCommand(integer iNum, string sStr, key kID)
         g_lSearchList=llParseString2List(sStr,[","],[]);
         handleMultiSearch();
     }
-    else if (iNum <= COMMAND_GROUP)
+    else if (iNum <= CMD_GROUP)
     {
         list lArgs = llParseStringKeepNulls(sStr, ["="], []);
         integer val;

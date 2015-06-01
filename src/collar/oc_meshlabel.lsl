@@ -20,13 +20,17 @@ key g_kWearer;
 //integer g_iAppLock = FALSE;
 //string g_sAppLockToken = "Appearance_Lock";
 
-//opencollar MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
@@ -292,9 +296,9 @@ FontMenu(key kID, integer iAuth)
 
 integer UserCommand(integer iAuth, string sStr, key kAv)
 {
-    if (iAuth > COMMAND_WEARER || iAuth < COMMAND_OWNER) return FALSE; // sanity check
+    if (iAuth > CMD_WEARER || iAuth < CMD_OWNER) return FALSE; // sanity check
     //Debug("Command: "+sStr);
-    if (iAuth == COMMAND_OWNER)
+    if (iAuth == CMD_OWNER)
     {
         if (sStr == "menu " + g_sSubMenu || llToLower(sStr)=="label") 
         {
@@ -305,7 +309,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
 
-/*        if (sCommand == "lockappearance" && iAuth == COMMAND_OWNER)
+/*        if (sCommand == "lockappearance" && iAuth == CMD_OWNER)
         {
             if (llToLower(llList2String(lParams, 1)) == "0") g_iAppLock = FALSE;
             else g_iAppLock = TRUE;
@@ -362,7 +366,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             SetLabel();            
         }        
     }
-    else if (iAuth >= COMMAND_SECOWNER && iAuth <= COMMAND_WEARER) 
+    else if (iAuth >= CMD_TRUSTED && iAuth <= CMD_WEARER) 
     {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));        
         if (sStr=="menu "+g_sSubMenu)

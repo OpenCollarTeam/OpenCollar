@@ -44,16 +44,17 @@ list g_lPrimStartSizes; // area for initial prim sizes (stored on rez)
 integer g_iScaleFactor = 100; // the size on rez is always regarded as 100% to preven problem when scaling an item +10% and than - 10 %, which would actuall lead to 99% of the original size
 integer g_iSizedByScript = FALSE; // prevent reseting of the script when the item has been chnged by the script
 
-//integer g_iAppLock = FALSE;
-
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
-//integer COMMAND_RLV_RELAY = 507;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -73,12 +74,9 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-//string UPMENU = "â†‘";//when your menu hears this, give the parent menu
 string UPMENU = "BACK";
 
 key g_kWearer;
-
-//string g_sAuthError = "Access denied.";
 
 /*
 integer g_iProfiled=1;
@@ -366,7 +364,7 @@ DoMenu(key kAv, integer iAuth)
 {
     list lMyButtons ;
     string sPrompt;
-   // if (g_iAppLock && iAuth != COMMAND_OWNER) {
+   // if (g_iAppLock && iAuth != CMD_OWNER) {
     //    sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
    // } else {
         sPrompt = "\nChange the position, rotation and size of your %DEVICETYPE%.\n\nwww.opencollar.at/appearance";
@@ -388,7 +386,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     {
         //someone asked for our menu
         //give this plugin's menu to id
-        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iNum!=CMD_OWNER)
         {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError, FALSE);
@@ -399,7 +397,7 @@ UserCommand(integer iNum, string sStr, key kID) {
    //     g_iAppLock=(integer)sValue;
     } else if (sStr == "appearance")
     {
-        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iNum!=CMD_OWNER)
         {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError, FALSE);
@@ -408,7 +406,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     else if (sStr == "rotation")
     {
-        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iNum!=CMD_OWNER)
         {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError, FALSE);
@@ -422,7 +420,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     else if (sStr == "position")
     {
-        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iNum!=CMD_OWNER)
         {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError, FALSE);
@@ -436,7 +434,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     else if (sStr == "size")
     {
-        if (kID!=g_kWearer && iNum!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iNum!=CMD_OWNER)
         {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError, FALSE);
@@ -470,7 +468,7 @@ default {
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
         {
             UserCommand( iNum, sStr, kID);
         }

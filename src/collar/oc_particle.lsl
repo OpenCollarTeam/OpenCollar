@@ -16,14 +16,18 @@
 //Nandana Singh, Lulu Pink, Joy Stipe, Wendy Starfall
 //Medea Destiny, Jean Severine, littlemousy, Romka Swallowtail
 
-// - MESSAGE MAP
-//integer COMMAND_NOAUTH      = 0;
-integer COMMAND_OWNER       = 500;
-integer COMMAND_SECOWNER    = 501;
-//integer COMMAND_GROUP       = 502;
-integer COMMAND_WEARER      = 503;
-//integer COMMAND_EVERYONE    = 504;
-//integer COMMAND_SAFEWORD    = 510;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
+
 //integer POPUP_HELP          = 1001;
 integer NOTIFY                = 1002;
 // -- SETTINGS
@@ -47,8 +51,8 @@ integer LOCKMEISTER         = -8888;
 integer g_iLMListener;
 integer g_iLMListernerDetach;
 
-integer COMMAND_PARTICLE = 20000;
-integer COMMAND_LEASH_SENSOR = 20001;
+integer CMD_PARTICLE = 20000;
+integer CMD_LEASH_SENSOR = 20001;
 
 // ----- collar -----
 //string g_sWearerName;
@@ -399,12 +403,12 @@ default {
         FindLinkedPrims();
         StopParticles(TRUE);
         GetSettings(FALSE);    
-        llListen(COMMAND_PARTICLE,"","","");    // ADDED FOR BETA 0.1
+        llListen(CMD_PARTICLE,"","","");    // ADDED FOR BETA 0.1
         //Debug("Starting");
     }
     
     link_message(integer iSenderPrim, integer iNum, string sMessage, key kMessageID) {
-        if (iNum == COMMAND_PARTICLE) {
+        if (iNum == CMD_PARTICLE) {
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash") {
                 StopParticles(TRUE);
@@ -431,13 +435,13 @@ default {
                 }
             }
         }
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER) {
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
             if (llToLower(sMessage) == llToLower(SUBMENU)) {
-                if(iNum <= COMMAND_SECOWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
+                if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID); //Notify(kMessageID,g_sAuthError, FALSE);
             }
             else if (sMessage == "menu "+SUBMENU) {
-                if(iNum == COMMAND_OWNER || iNum==COMMAND_WEARER) ConfigureMenu(kMessageID, iNum);
+                if(iNum == CMD_OWNER || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID); //Notify(kMessageID,g_sAuthError, FALSE);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
@@ -645,7 +649,7 @@ default {
             }
         }
         // ADDED BELOW FOR BETA 0.1  TOGGLES LEASH PARTICLES OFF IF COFFLES BEING USED.        
-        else if(iChannel == COMMAND_PARTICLE) {
+        else if(iChannel == CMD_PARTICLE) {
             if(llGetOwnerKey(kID) == g_kWearer) {
                 integer currentglow;
                 if(sMessage == "noLeash") {

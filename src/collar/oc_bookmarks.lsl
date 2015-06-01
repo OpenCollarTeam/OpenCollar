@@ -14,8 +14,8 @@
 
 string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
 string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
-string  PLUGIN_CHAT_COMMAND         = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
-string  PLUGIN_CHAT_COMMAND_ALT     = "bookmarks"; //taking control over some map/tp commands from rlvtp
+string  PLUGIN_CHAT_CMD         = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
+string  PLUGIN_CHAT_CMD_ALT     = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 key webLookup;
@@ -48,9 +48,17 @@ key     g_kCommander;
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 list    g_lButtons;
 
-integer COMMAND_OWNER              = 500;
-integer COMMAND_GROUP              = 502;
-integer COMMAND_WEARER             = 503;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_BLOCKED = 520;
+
 integer NOTIFY                     = 1002;
 integer LM_SETTING_SAVE            = 2000; // scripts send messages on this channel to have settings saved to settings store
 integer LM_SETTING_RESPONSE        = 2002; // the settings script will send responses on this channel
@@ -115,7 +123,7 @@ DoMenu(key keyID, integer iAuth)
 
 integer UserCommand(integer iNum, string sStr, key kID)
 {
-    if(!(iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
+    if(!(iNum >= CMD_OWNER && iNum <= CMD_WEARER)) {
         return FALSE;
     }
 
@@ -126,24 +134,24 @@ integer UserCommand(integer iNum, string sStr, key kID)
     // So commands can accept a value
     if(sStr == "reset") {
         // it is a request for a reset
-        if(iNum == COMMAND_WEARER || iNum == COMMAND_OWNER) {
+        if(iNum == CMD_WEARER || iNum == CMD_OWNER) {
             //only owner and wearer may reset
             llResetScript();
         }
-    } else if(sStr == PLUGIN_CHAT_COMMAND || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_COMMAND_ALT) {
-        if (iNum==COMMAND_GROUP){
+    } else if(sStr == PLUGIN_CHAT_CMD || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_CMD_ALT) {
+        if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,,"0"+"%NOACCESS%,FALSE);
             return TRUE;
         }
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " save") - 1) == PLUGIN_CHAT_COMMAND + " save") {           if (iNum==COMMAND_GROUP){
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {           if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
 //grab partial string match to capture destination name
-        if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " save")) {
-            string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND + " save") + 1, -1), STRING_TRIM);
+        if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
+            string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"This destination name is already taken",kID); 
                 //Notify(kID, "This destination name is already taken", FALSE);
@@ -161,14 +169,14 @@ You can enter:
 2) A new location or SLurl", [], [], 0, iNum);
 
         }
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " remove") - 1) == PLUGIN_CHAT_COMMAND + " remove") { //grab partial string match to capture destination name
-        if (iNum==COMMAND_GROUP){
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " remove") - 1) == PLUGIN_CHAT_CMD + " remove") { //grab partial string match to capture destination name
+        if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
-        if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_COMMAND + " remove")) {
-            string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_COMMAND + " remove"), -1), STRING_TRIM);
+        if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
+            string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_CMD + " remove"), -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID); 
                 //Notify(kID, "Can't find bookmark " + (string)sDel + " to be deleted", FALSE);
@@ -184,19 +192,19 @@ You can enter:
         } else {
             g_kRemoveMenu = Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum);
         }
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND + " print") - 1) == PLUGIN_CHAT_COMMAND + " print") { //grab partial string match to capture destination name
-        if (iNum==COMMAND_GROUP){
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
+        if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); 
             //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
         PrintDestinations(kID);
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_COMMAND) - 1) == PLUGIN_CHAT_COMMAND) {
-        if (iNum==COMMAND_GROUP){
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD) - 1) == PLUGIN_CHAT_CMD) {
+        if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
             return TRUE;
         }
-        string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_COMMAND) + 1, -1), STRING_TRIM);
+        string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
         if(llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
             integer iIndex = llListFindList(g_lVolatile_Destinations, [sCmd]);
@@ -238,7 +246,7 @@ You can enter:
             } else if(found > 1) {
                 g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
-                UserCommand(iNum, PLUGIN_CHAT_COMMAND + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
+                UserCommand(iNum, PLUGIN_CHAT_CMD + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command for processing
             }
         }
         //Can't find in list, lets try find substring matches
@@ -325,8 +333,8 @@ integer validatePlace(string sStr, key kAv, integer iAuth)
         sRegionName = llStringTrim(llList2String(lPieces, 0), STRING_TRIM); //trim off whitespace from region name
     } else if(llGetListLength(lPieces) > MAX_CHAR_TYPE) {return 3; } //this location looks wrong, retreat
     else  { //there's no location here, kick out new menu
-        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " save " + sStr, kAv);
-        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_CMD + " save " + sStr, kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
         return 0;
     }
     //we're left with sFriendlyname,sRegionName,["blah","123,123)"] - so lets validate the last list item
@@ -353,7 +361,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth);
 
     } else {
         addDestination(sFriendlyName, sRegionName, kAv);
-        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+        UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
     }
     return 0;
 }
@@ -550,7 +558,7 @@ default {
                     if(sMessage != "") {
                         addDestination(sMessage, g_tempLoc, kID);
                     }
-                    UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+                    UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                 } else if(kID == g_kTBoxIdSave) {
                     //got a menu response meant for us. pull out values
                     //                if(sMessage != "") UserCommand(iAuth, "bookmarks save " + sMessage, kAv);
@@ -558,32 +566,32 @@ default {
                     if(sMessage != "") {
                         validatePlace(convertSlurl(sMessage, kAv, iAuth), kAv, iAuth);
                     } else {
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                     }
                 } else if(kID == g_kRemoveMenu) {
                     //       Debug("|"+sMessage+"|");
                     if(sMessage == UPMENU) {
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                         return;
                     }
                     if(sMessage != "") {
                         //got a menu response meant for us. pull out values
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " remove " + sMessage, kAv);
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " remove", kAv);
-                    } else { UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv); }
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD + " remove " + sMessage, kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD + " remove", kAv);
+                    } else { UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv); }
                 } else if(sMessage == UPMENU) {
                     llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
                 } else if(~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
                     if(sMessage == "SAVE") {
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " save", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD + " save", kAv);
                     } else if(sMessage == "REMOVE") {
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " remove", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD + " remove", kAv);
                     } else if(sMessage == "PRINT") {
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " print", kAv);
-                        UserCommand(iAuth, PLUGIN_CHAT_COMMAND, kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD + " print", kAv);
+                        UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                     }
                 } else if(~llListFindList(g_lDestinations + g_lVolatile_Destinations, [sMessage])) {
-                    UserCommand(iAuth, PLUGIN_CHAT_COMMAND + " " + sMessage, kAv);
+                    UserCommand(iAuth, PLUGIN_CHAT_CMD + " " + sMessage, kAv);
                 } else if(~llListFindList(g_lButtons, [sMessage])) {
                     llMessageLinked(LINK_THIS, iAuth, "menu " + sMessage, kAv);
                 }

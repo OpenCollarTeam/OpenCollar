@@ -29,14 +29,17 @@ integer g_iHUDChan;
 //list g_lHudComms;  //2 strided list of uuid and unixtime of something that communicated on the hud channel
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
-//integer COMMAND_RLV_RELAY = 507;
-integer COMMAND_SAFEWORD = 510;  // new for safeword
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
+
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
@@ -64,7 +67,7 @@ integer TOUCH_EXPIRE = -9503;
 //5000 block is reserved for IM slaves
 
 //EXTERNAL MESSAGE MAP
-integer EXT_COMMAND_COLLAR = 499;
+integer EXT_CMD_COLLAR = 499;
 
 // new g_sSafeWord
 string g_sSafeWord = "RED";
@@ -227,13 +230,13 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
         if (sDescToken == sType || sDescToken == sType+":" || sDescToken == sType+":none") return;
         else if (!llSubStringIndex(sDescToken, sType+":")) {                
             string sCommand = llGetSubString(sDescToken, llStringLength(sType)+1, -1);
-            if (sCommand != "") llMessageLinked(LINK_SET, COMMAND_NOAUTH, sCommand, kToucher);
+            if (sCommand != "") llMessageLinked(LINK_SET, CMD_ZERO, sCommand, kToucher);
             return;
         }
     }
 
     if (sType == "touchstart") {
-        llMessageLinked(LINK_SET, COMMAND_NOAUTH, "menu", kToucher);
+        llMessageLinked(LINK_SET, CMD_ZERO, "menu", kToucher);
         if (g_iTouchNotify && kToucher!=g_kWearer) Notify(g_kWearer,"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n",FALSE); //llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your "+g_sDeviceType+".\n");
     }
 }
@@ -322,21 +325,21 @@ default {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
             {
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "ping", llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, CMD_ZERO, "ping", kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, "ping", llGetOwnerKey(kID));
             }
             // an object wants to know the version, we check if it is allowed to
             else if (sMsg==(string)g_kWearer + ":version")
             {
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, "objectversion", llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", llGetOwnerKey(kID));
             }
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":"))
             {
                 sMsg = llGetSubString(sMsg, 37, -1);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             }
             else
             {
@@ -350,8 +353,8 @@ default {
 //                    }
 //                }
                 //Debug("command: "+sMsg+" from "+(string)kID);
-                //llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
-                llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, llGetOwnerKey(kID));
+                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             }
             return;
         }
@@ -369,7 +372,7 @@ default {
             if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 2, -3);
             if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord) {
-                llMessageLinked(LINK_SET, COMMAND_SAFEWORD, "", "");
+                llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 Notify(g_kWearer,"You used your safeword, your owners will be notified you did.",FALSE);
                // llOwnerSay("You used your safeword, your owners will be notified you did.");
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
@@ -385,7 +388,7 @@ default {
             if (llGetOwnerKey(kID) != g_kWearer) return;
             //if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else if (sMsg == "version") llMessageLinked(LINK_SET, COMMAND_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
+            else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
             else {
                 list lParams = llParseString2List(sMsg, ["|"], []);
                 integer iAuth = llList2Integer(lParams, 0);
@@ -400,7 +403,7 @@ default {
                     //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
                     llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, sCmd+"|"+sUserId+"|"+sObjectId, (key)sUserId);
                 }
-                else if (iAuth == EXT_COMMAND_COLLAR) //command from attachment to AO
+                else if (iAuth == EXT_CMD_COLLAR) //command from attachment to AO
                 {
                     llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
                 }
@@ -417,7 +420,7 @@ default {
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
             //Debug("Got comand "+sMsg);
-            llMessageLinked(LINK_SET, COMMAND_NOAUTH, sMsg, kID);
+            llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
         }
     }
 
@@ -427,7 +430,7 @@ default {
         {
             if (sStr == "safeword") llRegionSay(g_iHUDChan, "safeword");
         }
-        else if (iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
         {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
@@ -435,7 +438,7 @@ default {
             
             if (sStr == "ping") {  // ping from an object, we answer to it on the object channel
                 llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
-            } else if (iNum == COMMAND_OWNER) {  //handle changing prefix and channel from owner
+            } else if (iNum == CMD_OWNER) {  //handle changing prefix and channel from owner
                 if (sCommand == "prefix")
                 {
                     string value = llList2String(lParams, 1);
@@ -637,8 +640,8 @@ default {
             //Debug(sStr);
             //here the response from auth has to be:
             // llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "auth", UUID);
-            //where "auth" has to be (string)COMMAND_XY
-            //reason for this is: i dont want to have all other scripts recieve a COMMAND+xy and check further for the command
+            //where "auth" has to be (string)CMD_XY
+            //reason for this is: i dont want to have all other scripts recieve a CMD+xy and check further for the command
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "RequestReply|" + sStr);
         }
         else if (iNum == TOUCH_REQUEST)

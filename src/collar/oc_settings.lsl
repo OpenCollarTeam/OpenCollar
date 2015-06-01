@@ -26,14 +26,18 @@ integer g_iDefaultsline = 0;
 key g_kDefaultslineID;
 key g_kCardKey;
 key g_kWearer;
-//string g_sDeviceName;
-// Message Map
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
+
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
@@ -252,7 +256,7 @@ SendValues() {
 }
  
 integer UserCommand(integer iAuth, string sStr, key kID) {
-    if (iAuth != COMMAND_OWNER && iAuth != COMMAND_WEARER) return FALSE;
+    if (iAuth != CMD_OWNER && iAuth != CMD_WEARER) return FALSE;
     sStr = llToLower(sStr);
     if (sStr == "settings") DumpCache(kID);
     else if (sStr == "load") {

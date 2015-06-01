@@ -46,9 +46,16 @@ key g_kTouchID;  //touch request handle
 //integer g_iAppLock = FALSE;  //stores whether appearance has been locked, set by monitoring LM_SETTING_SAVE and LM_SETTING_DELETE
 
 //MESSAGE MAP
-integer COMMAND_OWNER       =   500;
-integer COMMAND_WEARER      =   503;
-integer COMMAND_EVERYONE    =   504;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER           =   500;
+//integer CMD_TRUSTED         =   501;
+//integer CMD_GROUP         =   502;
+integer CMD_WEARER          =   503;
+integer CMD_EVERYONE        =   504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD        =   510; 
+//integer CMD_RELAY_SAFEWORD=   511;
+//integer CMD_BLOCKED = 520;
 
 integer LM_SETTING_SAVE     =  2000;  //scripts send messages on this channel to have settings saved to httpdb
 integer LM_SETTING_RESPONSE =  2002;  //the httpdb script will send responses on this channel
@@ -304,7 +311,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
    if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
 
-        if (kID == g_kWearer || iNum == COMMAND_OWNER) {  //only allowed users can...
+        if (kID == g_kWearer || iNum == CMD_OWNER) {  //only allowed users can...
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
             string sElement=llList2String(lParams,1);
@@ -495,7 +502,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sID = llList2String(lParams, 0);
@@ -627,7 +634,7 @@ default {
                             g_sStylesNotecardReadType="processing";
                             g_sCurrentTheme = sData;
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
-                            if (!g_iLeashParticle) llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                            if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "leashparticle reset", "");
                             else g_iLeashParticle = FALSE;
                             llMessageLinked(LINK_SET, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                             //Notify(g_kSetStyleUser, "Theme \""+g_sCurrentTheme+"\" applied!", FALSE);
@@ -646,7 +653,7 @@ default {
                             {
                                 if (~llSubStringIndex(element,"leashparticle")) {
                                    // Debug("[good line]:"+sData);
-                                    llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                                    llMessageLinked(LINK_SET, CMD_WEARER, "leashparticle reset", "");
                                     integer i;
                                     for (; i < llGetListLength(lParams); i=i+2) {
                                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leashparticle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
@@ -672,7 +679,7 @@ default {
                 } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
             } else {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
-                    if (!g_iLeashParticle) llMessageLinked(LINK_SET, COMMAND_WEARER, "leashparticle reset", "");
+                    if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "leashparticle reset", "");
                     else g_iLeashParticle = FALSE;
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                     //Notify(g_kSetStyleUser, "Theme \""+g_sCurrentTheme+"\" applied!", FALSE);

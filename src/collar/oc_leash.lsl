@@ -22,14 +22,19 @@
 string TOK_LENGTH   = "leashlength";
 string TOK_DEST     = "leashedto"; // format: uuid,rank
 // --- channel tokens ---
-// - MESSAGE MAP
-//integer COMMAND_NOAUTH      = 0;
-integer COMMAND_OWNER       = 500;
-//integer COMMAND_SECOWNER    = 501;
-integer COMMAND_GROUP       = 502;
-integer COMMAND_WEARER      = 503;
-integer COMMAND_EVERYONE    = 504;
-integer COMMAND_SAFEWORD    = 510;
+
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
+
 //integer POPUP_HELP          = 1001;
 integer NOTIFY                = 1002;
 // -- SETTINGS (whatever the actual backend)
@@ -51,8 +56,8 @@ integer DIALOG_RESPONSE     = -9001;
 //integer DIALOG_TIMEOUT      = -9002;
 integer SENSORDIALOG = -9003;
 
-integer COMMAND_PARTICLE     = 20000;
-integer COMMAND_LEASH_SENSOR = 20001;
+integer CMD_PARTICLE     = 20000;
+integer CMD_LEASH_SENSOR = 20001;
 
 // --- menu button tokens ---
 string BUTTON_UPMENU       = "BACK";
@@ -191,7 +196,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 
 integer CheckCommandAuth(key kCmdGiver, integer iAuth){
     // Check for invalid auth
-    if (iAuth < COMMAND_OWNER || iAuth > COMMAND_WEARER) return FALSE;
+    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return FALSE;
     
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
@@ -318,7 +323,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
 
     g_bFollowMode = iFollowMode; // leashing, or following
     if (bTargetIsAvi) g_bLeashedToAvi = TRUE;
-    if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=COMMAND_WEARER;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
+    if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=CMD_WEARER;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
     DoLeash(kTarget, iAuth, lPoints);
     g_iPassConfirmed = FALSE;
     // Notify Target how to unleash, only if:
@@ -340,7 +345,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
     g_kLeashedTo = kTarget;
 
     if (g_bFollowMode) {
-        llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
+        llMessageLinked(LINK_THIS, CMD_PARTICLE, "unleash", g_kLeashedTo);
     } else {
         integer iPointCount = llGetListLength(lPoints);
         g_sCheck = "";  
@@ -349,7 +354,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
         }
         //Send link message to the particle script
         //Debug("leashing with "+g_sCheck);
-        llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+        llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
         llSetTimerEvent(3.0);   //check for leasher out of range
     }
 
@@ -433,9 +438,9 @@ Unleash(key kCmdGiver)
 DoUnleash(){
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
-    llMessageLinked(LINK_SET, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
+    llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
-    g_iLastRank = COMMAND_EVERYONE;
+    g_iLastRank = CMD_EVERYONE;
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
@@ -451,7 +456,7 @@ YankTo(key kIn){
 
 integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu){
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
-    if (iAuth >= COMMAND_OWNER && iAuth <= COMMAND_WEARER) {
+    if (iAuth >= CMD_OWNER && iAuth <= CMD_WEARER) {
         g_kCmdGiver = kMessageID;
         list lParam = llParseString2List(sMessage, [" "], []);
         string sComm = llToLower(llList2String(lParam, 0));
@@ -527,7 +532,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                 llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall be followed?\n|0|``"+(string)AGENT+"`10`"+(string)PI +"`"+sVal+"`1|BACK|" + (string)iAuth, g_kFollowTargetDialogID);
             }
             
-        } else if (sMessage == "runaway" && iAuth == COMMAND_OWNER) Unleash(kMessageID);
+        } else if (sMessage == "runaway" && iAuth == CMD_OWNER) Unleash(kMessageID);
         
         else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
@@ -551,12 +556,12 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             if(llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "realleash");
             YankTo(kMessageID);
             
-        } else if (sMessage == "beckon" && iAuth == COMMAND_OWNER) {
+        } else if (sMessage == "beckon" && iAuth == CMD_OWNER) {
             //Owner can beckon
             YankTo(kMessageID);
             
         } else if (sMessage == "stay") {
-            if (iAuth <= COMMAND_GROUP) {
+            if (iAuth <= CMD_GROUP) {
                 g_iStayRank = iAuth;
                 g_iStay = TRUE;
                 string sCmdGiver = "secondlife:///app/agent/"+(string)kMessageID+"/about";
@@ -684,7 +689,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             }
             
         }
-    } else if (iAuth == COMMAND_EVERYONE) {
+    } else if (iAuth == CMD_EVERYONE) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
             if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) Unleash(kMessageID);
@@ -729,7 +734,7 @@ default {
                     llSetTimerEvent(3.0);
                 }
                 //Debug("leashing with "+g_sCheck);
-                llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+                llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
                 g_iLeasherInRange = TRUE;
                 
                 llTargetRemove(g_iTargetHandle);
@@ -748,7 +753,7 @@ default {
                 {
                     llTargetRemove(g_iTargetHandle);
                     llStopMoveToTarget();
-                    llMessageLinked(LINK_THIS, COMMAND_PARTICLE, "unleash", g_kLeashedTo);
+                    llMessageLinked(LINK_THIS, CMD_PARTICLE, "unleash", g_kLeashedTo);
                     g_iLeasherInRange=FALSE;
                     ApplyRestrictions();
                 }
@@ -776,7 +781,7 @@ default {
                     g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
                 }
             }
-        } else if (iNum == COMMAND_SAFEWORD) {
+        } else if (iNum == CMD_SAFEWORD) {
             g_iStay = FALSE;
             llReleaseControls();
             DoUnleash();
@@ -839,7 +844,7 @@ default {
             } else if (kMessageID == g_kLeashTargetConfirmDialogID) {
                 if (sButton == "Yes") {
                     g_iPassConfirmed = TRUE;
-                    if (g_kLeashCmderID == g_kWearer) iAuth = COMMAND_WEARER;
+                    if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
                     UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
                 } else {
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kAV+"/about did not accept %WEARERNAME%'s leash.",g_kLeashCmderID);
@@ -856,7 +861,7 @@ default {
             } else if (kMessageID == g_kFollowTargetConfirmDialogID) {
                 if (sButton == "Yes") {
                     g_iPassConfirmed = TRUE;
-                    if (g_kLeashCmderID == g_kWearer) iAuth = COMMAND_WEARER;
+                    if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
                     UserCommand(iAuth, "follow " + (string)kAV, g_kLeashCmderID, TRUE);
             } else {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kAV+"/about denied %WEARERNAME% to follow them.",g_kLeashCmderID);

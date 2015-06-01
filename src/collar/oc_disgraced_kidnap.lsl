@@ -22,13 +22,17 @@ key     g_kWearer;                       // key of the current wearer to reset o
 list    g_lMenuIDs;                      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
 //string  g_sAuthError        = "Access denied.";
 
-integer COMAND_NOAUTH       =     0;
-integer COMMAND_OWNER       =   500;
-integer COMMAND_SECOWNER    =   501;
-integer COMMAND_GROUP       =   502;
-integer COMMAND_WEARER      =   503;
-integer COMMAND_EVERYONE    =   504;
-integer COMMAND_SAFEWORD    =   510;
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP          =  1001;
 integer NOTIFY              =  1002;
@@ -119,12 +123,12 @@ doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
         return;
     }
     if (!iIsConfirmed) {
-        Dialog(g_kWearer, "\nsecondlife:///app/agent/"+(string)kKidnapper+"/about wants to kidnap you...", ["Allow","Reject"], ["BACK"], 0, COMMAND_WEARER, "AllowKidnapMenu", kKidnapper, sKidnapper);
+        Dialog(g_kWearer, "\nsecondlife:///app/agent/"+(string)kKidnapper+"/about wants to kidnap you...", ["Allow","Reject"], ["BACK"], 0, CMD_WEARER, "AllowKidnapMenu", kKidnapper, sKidnapper);
     }
     else {
         //added a follow and yank
-        llMessageLinked(LINK_SET, COMMAND_OWNER, "follow " + (string)kKidnapper, kKidnapper);
-        llMessageLinked(LINK_SET, COMMAND_OWNER, "yank", kKidnapper);
+        llMessageLinked(LINK_SET, CMD_OWNER, "follow " + (string)kKidnapper, kKidnapper);
+        llMessageLinked(LINK_SET, CMD_OWNER, "yank", kKidnapper);
         llMessageLinked(LINK_SET, NOTIFY, "0"+"You are at secondlife:///app/agent/"+(string)kKidnapper+"/about's whim.",g_kWearer);
         //Notify(g_kWearer,"You are at secondlife:///app/agent/"+(string)kKidnapper+"/about's whim.",FALSE);
         llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX_restrictions\n/%CHANNEL%%PREFIX_sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During kidnap RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the kidnapping, please type: /%CHANNEL%%PREFIX%kidnap release\n\nHave fun! www.virtualdisgrace.com\n", kKidnapper);
@@ -135,23 +139,23 @@ doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
 }
 
 integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
-    if (!(iNum >= COMMAND_OWNER && iNum <= COMMAND_EVERYONE)) return FALSE;
+    if (!(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)) return FALSE;
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"kidnap TempOwner") == 0){
         list lSplit = llParseString2List(sStr, ["~"], []);
         key kKidnapper=(key)llList2String(lSplit,2);
         string sKidnapper=llList2String(lSplit,1);
-        if (iNum==COMMAND_OWNER || iNum==COMMAND_SECOWNER || iNum==COMMAND_GROUP) { //do nothing, owners get their own menu but cannot kidnap
+        if (iNum==CMD_OWNER || iNum==CMD_TRUSTED || iNum==CMD_GROUP) { //do nothing, owners get their own menu but cannot kidnap
         } 
         else Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kKidnapper, sKidnapper);
     } 
     else if (sStrLower == "kidnap" || sStrLower == "menu kidnap") {
-        if  (iNum!=COMMAND_OWNER && iNum != COMMAND_WEARER) {
+        if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
             if (g_iCaptureOn) Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kID, llKey2Name(kID));
             else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID,g_sAuthError, FALSE);
         } else KidnapMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
-    else if (iNum!=COMMAND_OWNER && iNum != COMMAND_WEARER){
+    else if (iNum!=CMD_OWNER && iNum != CMD_WEARER){
         //silent fail, no need to do anything more in this case
     } 
     else if (llSubStringIndex(sStrLower,"kidnap")==0) {
@@ -175,7 +179,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             saveTempOwners();
             llSetTimerEvent(0.0);
         } else if (sStrLower == "kidnap release") {
-            llMessageLinked(LINK_SET, COMMAND_OWNER, "unfollow", kID);
+            llMessageLinked(LINK_SET, CMD_OWNER, "unfollow", kID);
             llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about has released you.",g_kWearer);
             //Notify(g_kWearer,llGetDisplayName(kID)+" has released you.",FALSE);
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
@@ -241,8 +245,8 @@ default{
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Kidnap", "");
-        else if (iNum == COMMAND_SAFEWORD || (sStr == "runaway" && iNum == COMMAND_OWNER)) {
-            if (iNum == COMMAND_SAFEWORD) llMessageLinked(LINK_SET,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);//Notify(g_kWearer,"Kidnap Mode deactivated.",TRUE);
+        else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
+            if (iNum == CMD_SAFEWORD) llMessageLinked(LINK_SET,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);//Notify(g_kWearer,"Kidnap Mode deactivated.",TRUE);
             g_iCaptureOn=FALSE;
             g_iVulnerableOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_kidnap", "");

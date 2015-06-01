@@ -52,13 +52,15 @@ integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 integer g_iHide ; // global hide
 
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-//integer COMMAND_RLV_RELAY = 507;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510; 
+//integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
 //integer POPUP_HELP = 1001;
@@ -202,7 +204,7 @@ PrepareSounds() {
 // returns TRUE if eligible (AUTHED link message number)
 integer UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
-    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+    if (iNum > CMD_WEARER || iNum < CMD_OWNER) return FALSE; // sanity check
     string test=llToLower(sStr);
     if (sStr == "menu " + g_sSubMenu || sStr == "bell") {
         BellMenu(kID, iNum);
@@ -231,7 +233,7 @@ integer UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth val
             SetBellElementAlpha();
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "show=" + (string)g_iBellShow, "");
         } else if (sToken=="on") {
-            if (iNum!=COMMAND_GROUP) {
+            if (iNum!=CMD_GROUP) {
                 if (g_iBellOn==0) {
                     g_iBellOn=iNum;
                     if (!g_iHasControl) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
@@ -240,7 +242,7 @@ integer UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth val
                 }
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sToken=="off") {
-            if ((g_iBellOn>0)&&(iNum!=COMMAND_GROUP)) {
+            if ((g_iBellOn>0)&&(iNum!=CMD_GROUP)) {
                 g_iBellOn=0;
                 if (g_iHasControl) {
                     llReleaseControls();
@@ -343,7 +345,7 @@ default {
                     g_kCurrentBellSound = llList2Key(g_listBellSounds,g_iCurrentBellSound);
                 } else if (sToken == "vol") g_fVolume = (float)sValue/10;
             }
-        } else if(iNum == COMMAND_OWNER && sStr == "runaway") {
+        } else if(iNum == CMD_OWNER && sStr == "runaway") {
             llSleep(4);
             SetBellElementAlpha();
         }
