@@ -441,15 +441,18 @@ default {
             } else if (iNum == CMD_OWNER) {  //handle changing prefix and channel from owner
                 if (sCommand == "prefix")
                 {
-                    string value = llList2String(lParams, 1);
-                    if (value == "")
-                    {
-                        Notify(kID,"prefix: " + g_sPrefix, FALSE);
+                    if (sValue == "") {
+                        Notify(kID,"\n"+g_sWearerName+"'s prefix is \"" + g_sPrefix+"\"", FALSE);
                         return;
+                    } else if (sValue == "reset") {
+                        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_prefix", "");
+                    } else {
+                        g_sPrefix = sValue;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
                     }
-                    g_sPrefix=value;
                     Notify(kID, "\n" + g_sWearerName + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + g_sDeviceType + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_prefix=" + g_sPrefix, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "Global_prefix=" + g_sPrefix, "");
                 }
                 else if (sCommand == "devicename") {
                     string sMessage;
