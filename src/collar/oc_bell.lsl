@@ -315,7 +315,7 @@ default {
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "sound=" + (string)g_iCurrentBellSound, "");
             } else if (sMessage == g_sBellOff || sMessage == g_sBellOn) {
-                UserCommand(iAuth,"bell"+llToLower(sMessage),kAV);
+                UserCommand(iAuth,"bell "+llToLower(sMessage),kAV);
             } else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
                 g_iBellShow = !g_iBellShow;
                 SetBellElementAlpha();

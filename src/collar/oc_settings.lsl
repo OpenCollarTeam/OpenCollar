@@ -319,7 +319,7 @@ default {
                 i = llSubStringIndex(data, "=");
                 sID = llGetSubString(data, 0, i - 1);
                 data = llGetSubString(data, i + 1, -1);
-                if (! ~llSubStringIndex(llToLower(sID), "_")) jump nextline ;
+                if (~llSubStringIndex(llToLower(sID), "_")) jump nextline ;
                 sID += "_";
                 list lData = llParseString2List(data, ["~"], []);
                 for (i = 0; i < llGetListLength(lData); i += 2) {
