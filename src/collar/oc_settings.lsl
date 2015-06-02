@@ -101,7 +101,7 @@ integer SettingExists(string sToken)
 
 list SetSetting(list lCache, string sToken, string sValue) {
     integer idx = llListFindList(lCache, [sToken]);
-    if (! ~llListFindList(["AUTH_block","AUTH_trust","AUTH_owner"],[llToLower(sToken)])) {
+    if (! ~llListFindList(["auth_block","auth_trust","auth_owner"],[llToLower(sToken)])) {
         if (~llListFindList(lCache, [sValue])) return lCache;
     } //we check the above to avoid same IDs in different auth lists
     if (~idx) return llListReplaceList(lCache, [sValue], idx + 1, idx + 1);
@@ -317,23 +317,28 @@ default {
                     jump nextline ;
                 }
                 i = llSubStringIndex(data, "=");
-                sID = (llToUpper(llGetSubString(data, 0, i - 1))) + "_";
+                sID = llGetSubString(data, 0, i - 1);
                 data = llGetSubString(data, i + 1, -1);
+                if (! ~llSubStringIndex(llToLower(sID), "_")) jump nextline ;
+                sID += "_";
                 list lData = llParseString2List(data, ["~"], []);
                 for (i = 0; i < llGetListLength(lData); i += 2) {
                     sToken = llList2String(lData, i);
                     sValue = llList2String(lData, i + 1);
                     if (sValue != "") { //if no value, nothing to do
-                        if (sID == "AUTH_") { //if we have auth, can only be the below, else we dont care
-                            if (! ~llListFindList(["block","trust","owner"],[llToLower(sToken)])) jump nextline ;
+                        if (sID == "auth_") { //if we have auth, can only be the below, else we dont care
+                            sToken = llToLower(sToken);
+                            if (! ~llListFindList(["block","trust","owner"],[sToken])) jump nextline ;
                             list lTest = llParseString2List(sValue,[","],[]);
                             list lOut;
                             integer n;
-                            for(;n<llGetListLength(lTest);n = n+2) {
-                                if (llList2Key(lTest,n)) //if this is not a valid key, it's useless we dont save that
+                            do {//sanity check for valid entries
+                                if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless 
                                     lOut += llList2List(lTest,n,n+1);
-                            }
-                            sValue = llList2CSV(lOut);
+                                }
+                                n = n+2;
+                            } while (n < llGetListLength(lTest));
+                            sValue = llDumpList2String(lOut,",");
                         }
                         g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
                     }
@@ -349,7 +354,6 @@ default {
             }
         }
     }
-
     link_message(integer sender, integer iNum, string sStr, key kID) {
         if (UserCommand(iNum, sStr, kID)) return;
         if (iNum == LM_SETTING_SAVE) {
