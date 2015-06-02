@@ -101,13 +101,9 @@ integer SettingExists(string sToken)
 
 list SetSetting(list lCache, string sToken, string sValue) {
     integer idx = llListFindList(lCache, [sToken]);
-    if (! ~llListFindList(["auth_block","auth_trust","auth_owner"],[llToLower(sToken)])) {
-        if (~llListFindList(lCache, [sValue])) return lCache;
-    } //we check the above to avoid same IDs in different auth lists
     if (~idx) return llListReplaceList(lCache, [sValue], idx + 1, idx + 1);
     idx = GroupIndex(lCache, sToken);
     if (~idx) return llListInsertList(lCache, [sToken, sValue], idx);
-    
     return lCache + [sToken, sValue];
 }
 
