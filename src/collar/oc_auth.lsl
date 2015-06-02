@@ -628,22 +628,15 @@ RunAway() {
     integer n;
     integer stop = llGetListLength(g_lOwners+g_lTempOwners);
     llMessageLinked(LINK_SET,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
-   /* for (n = 0; n < stop; n += 2) {
-        key kOwner = (key)llList2String(g_lOwners+g_lTempOwners, n);
-        if (kOwner != g_kWearer) Notify(kOwner, g_sWearerName + " ran away!",FALSE);
-    }*/
-    //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "owner=", "");
-    //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "tempowner=", "");
+
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "owner", "");
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "tempowner", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "trust=", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
-    //llOwnerSay("Reset finished, the " + g_sDeviceType + " will now release locks!");
     // moved reset request from settings to here to allow noticifation of owners.
     llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer); // clear RLV restrictions
     llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer); // this is not a LM loop, since it is now really authed
     llMessageLinked(LINK_SET,NOTIFY,"0"+"Runaway finished.",g_kWearer);
-    //llOwnerSay("Runaway finished.");
     llResetScript();
 }
 
@@ -695,13 +688,13 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     // temporarily stash owner list so we can see if it's changing.
-                    list tmpowners = g_lOwners;
+                   // list tmpowners = g_lOwners;
                     g_lOwners = llParseString2List(sValue, [","], []);
                     // only say the owner list if it has changed (including on_rez)
-                    if (llGetListLength(g_lOwners) && tmpowners != g_lOwners) SayOwners();
+                   // if (llGetListLength(g_lOwners) && tmpowners != g_lOwners) SayOwners();
                 } else if (sToken == "tempowner") {
                     // temporarily stash owner list so we can see if it's changing.
-                    list tmpowners = g_lTempOwners;
+                  //  list tmpowners = g_lTempOwners;
                     g_lTempOwners = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwners,","));
                     // only say the owner list if it has changed (including on_rez)
@@ -721,8 +714,10 @@ default {
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
                 else if (sToken == "trust") g_lTrusted = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlockList = llParseString2List(sValue, [","], [""]);
+            } else if (llToLower(sStr) == "settings=sent") {
+                if (llGetListLength(g_lOwners)) SayOwners();
             }
-        } else if (iNum == LM_SETTING_EMPTY) {
+        }/* else if (iNum == LM_SETTING_EMPTY) {
             //Debug("Got setting empty: "+sStr);
             integer i = llSubStringIndex(sStr, "_");
             if (llGetSubString(sStr, 0, i) == g_sScript) {
@@ -744,7 +739,7 @@ default {
                 else if (sStr == "trust") g_lTrusted = [];
                 else if (sStr == "block") g_lBlockList = [];
             }
-        }
+        }*/
     // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
         //added for attachment auth (Garvin)
         else if (iNum == ATTACHMENT_REQUEST) {
