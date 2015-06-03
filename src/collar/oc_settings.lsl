@@ -359,9 +359,10 @@ default {
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                     g_kCardID = llGetInventoryKey(g_sCard);
                 }
+            } else {
+                llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
+                SendValues();
             }
-            llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
-            SendValues();
         }
     }
 }
