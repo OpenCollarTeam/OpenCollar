@@ -114,10 +114,10 @@ key g_kCmdGiver;
 key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
-string g_sScript="leash_";
-//string g_sDeviceType = "collar";
-//string g_sWearerName;
-//string g_sAuthError = "Access denied.";
+//string g_sScript="leash_";
+string g_sSettingToken = "leash_";
+//string g_sGlobalToken = "global_";
+
 integer g_iPassConfirmed;
 integer g_iRezAuth;
 
@@ -368,7 +368,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints){
        // llMoveToTarget(g_vPos, 1.0);
         llMoveToTarget(g_vPos, 0.7);
     }
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
     
 
     g_iLeasherInRange=TRUE;
@@ -441,7 +441,7 @@ DoUnleash(){
     llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = CMD_EVERYONE;
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + TOK_DEST, "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
 
@@ -590,8 +590,8 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             else {
                 g_iStrictRank = iAuth;
                 g_iStrictModeOn=TRUE;
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "strict=1,"+ (string)iAuth, "");
-                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "strict=1,"+ (string)iAuth, kMessageID);
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "strict=1,"+ (string)iAuth, "");
+                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sSettingToken + "strict=1,"+ (string)iAuth, kMessageID);
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, TOK_DEST, "");  //query current leasher, the response will trigger ApplyRestrictions
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing enabled.",kMessageID);
                 //Notify(kMessageID,"Strict leashing enabled.",TRUE);
@@ -601,8 +601,8 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
         } else if (sMessage == "strict off") {
             if (iAuth <= g_iStrictRank) {
                 g_iStrictModeOn=FALSE;
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "strict", "");
-                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "strict=0,"+ (string)iAuth,kMessageID);
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "strict", "");
+                llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sSettingToken + "strict=0,"+ (string)iAuth,kMessageID);
                 ApplyRestrictions();
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Strict leashing disabled.",kMessageID);
                 //Notify(kMessageID,"Strict leashing disabled.",TRUE);
@@ -613,13 +613,13 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
             }
         } else if (sMessage == "turn on") {
             g_iTurnModeOn=TRUE;
-            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "turn=1", "");
-            llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sScript + "turn=1", "");
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "turn=1", "");
+            llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, g_sSettingToken + "turn=1", "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Turning towards leasher enabled.",kMessageID);
             //Notify(kMessageID,"Turning towards leasher enabled.",TRUE);
         } else if (sMessage == "turn off") {
             g_iTurnModeOn=FALSE;
-            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "turn", "");
+            llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "turn", "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
             //Notify(kMessageID,"Turning towards leasher disabled.",FALSE);        
         } else if (sComm == "leashto" || sComm == "pass") {
@@ -654,7 +654,7 @@ integer UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFro
                     //tell wearer  
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Leash length set to " + (string)g_iLength+"m.",kMessageID);
                     //Notify(kMessageID, "Leash length set to " + (string)g_iLength+"m.", TRUE);        
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + TOK_LENGTH + "=" + sVal, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + TOK_LENGTH + "=" + sVal, "");
                 }
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             } else { //no value, or value out of bounds
@@ -790,7 +790,7 @@ default {
             string sToken = llGetSubString(sMessage, 0, iInd -1);
             string sValue = llGetSubString(sMessage, iInd + 1, -1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript) {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 //Debug("got Leash settings:"+sMessage);
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == TOK_DEST) {
@@ -817,9 +817,7 @@ default {
                 //Debug("SetRLV:"+sValue);
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
-            } //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
-              //else if (sToken=="Global_WearerName") g_sWearerName=sValue;
-            //else //Debug("setting response:"+sToken);
+            }//else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);
             key kAV = (key)llList2String(lMenuParams, 0);          

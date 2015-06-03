@@ -28,9 +28,10 @@ key     g_kWearer;
 key     g_kMenuClicker;
 
 integer g_iListener;
-string  g_sScript                   ="Outfits_";
-//string CTYPE                        = "collar";
-   
+
+//string  g_sSettingToken             ="outfits_";
+//string  g_sGlobalToken              ="global_";
+
 integer g_iFolderRLV = 98745923;
 integer g_iFolderRLVSearch = 98745925;
 integer g_iTimeOut = 30; //timeout on viewer response commands
@@ -39,15 +40,24 @@ integer g_iRlvaOn = FALSE;
 string g_sCurrentPath;
 string g_sPathPrefix = ".outfits"; //we look for outfits in here
 
-integer COMMAND_OWNER              = 500;
-integer COMMAND_WEARER             = 503;
-integer COMMAND_SAFEWORD           = 510;
+
+//MESSAGE MAP
+//integer CMD_ZERO = 0;
+integer CMD_OWNER                   = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER                  = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD                = 510; 
+//integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
 integer NOTIFY                     = 1002;
 
-integer LM_SETTING_SAVE            = 2000;
-integer LM_SETTING_REQUEST         = 2001;
-integer LM_SETTING_RESPONSE        = 2002;
+//integer LM_SETTING_SAVE            = 2000;
+//integer LM_SETTING_REQUEST         = 2001;
+//integer LM_SETTING_RESPONSE        = 2002;
 
 integer MENUNAME_REQUEST           = 3000;
 integer MENUNAME_RESPONSE          = 3001;
@@ -121,7 +131,7 @@ RemAttached(key keyID, integer iAuth,string sFolders) {
 
 integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     sStr=llToLower(sStr);
-    if (!(iNum >= COMMAND_OWNER && iNum <= COMMAND_WEARER)) {
+    if (!(iNum >= CMD_OWNER && iNum <= CMD_WEARER)) {
         return FALSE;
     } else if (sStr == "outfits" || sStr == "menu outfits") {
         // an authorized user requested the plugin menu by typing the menus chat command
@@ -168,7 +178,7 @@ default {
     state_entry()
     {
         llSetMemoryLimit(32768); //2015-05-06 (10952 bytes free)
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
     }
     timer()
@@ -184,7 +194,7 @@ default {
         llSetTimerEvent(0.0);
         //llOwnerSay((string)iChan+"|"+sName+"|"+(string)kID+"|"+sMsg);
         if (iChan == g_iFolderRLV) { //We got some folders to process
-            FolderMenu(g_kMenuClicker,COMMAND_OWNER,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
+            FolderMenu(g_kMenuClicker,CMD_OWNER,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
         }
         else if (iChan == g_iFolderRLVSearch) {
             if (sMsg == "") {
@@ -200,7 +210,7 @@ default {
                 } else {
                     string sPrompt = "\nPick one!";
                     list lFolderMatches = llParseString2List(sMsg,[","],[]);
-                    g_kMultipleMatchMenuID = Dialog(g_kMenuClicker, sPrompt, lFolderMatches, [UPMENU], 0, COMMAND_OWNER);
+                    g_kMultipleMatchMenuID = Dialog(g_kMenuClicker, sPrompt, lFolderMatches, [UPMENU], 0, CMD_OWNER);
                 }
             }
         }
@@ -218,7 +228,7 @@ default {
         else if (iNum == RLVA_VERSION) { 
             g_iRlvaOn = TRUE;
          }
-        else if (iNum == COMMAND_SAFEWORD) { 
+        else if (iNum == CMD_SAFEWORD) { 
             // Safeword has been received, release any restricitions that should be released
          }
         else if (UserCommand(iNum, sStr, kID, FALSE)) {

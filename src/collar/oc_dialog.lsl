@@ -82,7 +82,9 @@ list MRSBUN = []; // blatant monty python reference - list of those who do not l
 string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
-string g_sScript;
+//string g_sScript;
+string g_sSettingToken = "dialog_";
+string g_sGlobalToken = "global_";
 integer g_iListenChan=1;
 string g_sPrefix;
 string g_sDeviceType = "collar";
@@ -443,8 +445,8 @@ integer UserCommand(integer iNum, string sStr, key kID)
             //Notify(kID, "Verbose Feature de-activated for you.", FALSE);
         }
         else return TRUE; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + SPAMSWITCH, "");
-        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
+        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
+        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
         return TRUE;
     }
     return FALSE;
@@ -477,7 +479,7 @@ default {
 
     state_entry() {
        // llSetMemoryLimit(57344);  //2015-05-06 (9926 bytes free)
-        g_sScript = "dialog_";
+        //g_sScript = "dialog_";
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
@@ -688,11 +690,11 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sScript + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
-            else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
-            else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
-            else if (sToken == "Global_WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
-            else if (sToken == "Global_prefix"){
+            if (sToken == g_sSettingToken + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
+            else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
+            else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
+            else if (sToken == g_sGlobalToken+"WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == "listener_channel") g_iListenChan = (integer)sValue;
         } else if (iNum == LM_SETTING_SAVE) {

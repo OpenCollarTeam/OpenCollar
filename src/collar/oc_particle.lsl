@@ -105,8 +105,9 @@ list g_lLeashPrims;
 
 //global integer used for loops
 integer g_iLoop;
-string g_sScript;
-
+//string g_sScript;
+string g_sSettingToken = "leashparticle_";
+//string g_sGlobalToken = "global_";
 //Particle system and variables
 
 string g_sParticleTexture = "Silk";
@@ -268,7 +269,7 @@ SaveSettings(string sToken, string sValue, integer iSaveToLocal, integer iAuth, 
     }
     else if (sToken == "R_Texture") L_RIBBON_TEX == sValue;
     else if (sToken == "C_Texture") L_CLASSIC_TEX == sValue;    
-    if (iSaveToLocal) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sToken + "=" + sValue, "");
+    if (iSaveToLocal) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + sValue, "");
 }
 
 SaveDefaultSettings(string sToken, string sValue) {
@@ -398,7 +399,7 @@ default {
 
     state_entry() {
         //llSetMemoryLimit(57344);  
-        g_sScript = "leashparticle_";
+        //g_sScript = "leashparticle_";
         g_kWearer = llGetOwner();
         FindLinkedPrims();
         StopParticles(TRUE);
@@ -450,7 +451,7 @@ default {
             else if (llToLower(sMessage) == "leashparticle reset") {
                 g_lSettings = []; // clear current settings
                 if (kMessageID) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID); //Notify(kMessageID, "Leash-settings restored to " + g_sDeviceType + " defaults.", FALSE);
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "all", "");
                 GetSettings(TRUE); 
             }
         }
@@ -589,7 +590,7 @@ default {
             string sValue = llGetSubString(sMessage, i + 1, -1);
             i = llSubStringIndex(sToken, "_");
             if (sToken == "leash_leashedto") g_kLeashedTo = (key)llList2String(llParseString2List(sValue, [","], []), 0);
-            else if (llGetSubString(sToken, 0, i) == g_sScript) {
+            else if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 // load current settings
                 //Debug("Setting Response. "+sToken+sValue);
                 sToken = llGetSubString(sToken, i + 1, -1);
@@ -617,7 +618,6 @@ default {
                 g_iStrictMode = TRUE;
                 ConfigureMenu(kMessageID, (integer)sValue);
             }
-            //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent") {
                 GetSettings(TRUE);

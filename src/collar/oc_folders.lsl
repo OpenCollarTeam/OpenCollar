@@ -29,7 +29,7 @@ integer CMD_WEARER = 503;
 //integer CMD_BLOCKED = 520;
 
 //integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
@@ -109,8 +109,9 @@ integer g_iLastFolderState;
 
 key g_kWearer;
 string g_sScript;
+string g_sSettingToken = "rlvfolders_";
+//string g_sGlobalToken = "global_";
 
-//string g_sAuthError = "Access denied.";
 
 list g_lHistory;
 
@@ -312,8 +313,8 @@ updateFolderLocks(string sFolder, integer iAdd, integer iRem)
         iIndex = llGetListLength(g_lFolderLocks)-2;
         doLockFolder(iIndex);
     }
-    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sScript + "Locks=" + llDumpList2String(g_lFolderLocks, ","), "");
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", "");
+    if ([] != g_lFolderLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE,  g_sSettingToken + "Locks=" + llDumpList2String(g_lFolderLocks, ","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sSettingToken + "Locks", "");
 }
 
 doLockFolder(integer iIndex)
@@ -345,8 +346,8 @@ updateUnsharedLocks(integer iAdd, integer iRem)
 { // adds and removes locks for unshared items, which implies saving to central settings and triggering a RLV command (dolockUnshared)
     g_iUnsharedLocks = ((g_iUnsharedLocks | iAdd) & ~iRem);
     doLockUnshared();
-    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "Unshared=" + (string) g_iUnsharedLocks, "");
-    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "Unshared", "");
+    if (g_iUnsharedLocks) llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "Unshared=" + (string) g_iUnsharedLocks, "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "Unshared", "");
 }
 
 doLockUnshared()
@@ -572,7 +573,7 @@ default {
     
     state_entry() {
         //llSetMemoryLimit(65536);  ////2015-05-06 (10602 bytes free)
-        g_sScript = "rlvfolders_";
+        //g_sScript = "rlvfolders_";
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }
@@ -590,7 +591,7 @@ default {
         else if (iNum == RLV_CLEAR) //this triggers for safeword as well
         {
             g_lFolderLocks = [];
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sScript + "Locks", NULL_KEY);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sSettingToken + "Locks", NULL_KEY);
         }
         else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
@@ -832,7 +833,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "Locks")

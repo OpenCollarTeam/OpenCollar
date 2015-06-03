@@ -37,7 +37,9 @@ key     g_kWearer;                              // key of the current wearer to 
 
 key     g_kTBoxIdSave = "null";
 key     g_kTBoxIdLocationOnly = "null";
-string  g_sScript;                              // part of script name used for settings
+//string  g_sScript;                              // part of script name used for settings
+string  g_sSettingToken = "bookmarks_";
+//string g_sGlobalToken = "global_";
 key     g_kDataID;
 integer g_iLine = 0;
 string  UPMENU                      = "BACK"; // when your menu hears this, give the parent menu
@@ -182,7 +184,7 @@ You can enter:
                 //Notify(kID, "Can't find bookmark " + (string)sDel + " to be deleted", FALSE);
             } else {
                 integer iIndex;
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + sDel, "");
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + sDel, "");
                 iIndex = llListFindList(g_lVolatile_Destinations, [sDel]);
                 g_lVolatile_Destinations = llDeleteSubList(g_lVolatile_Destinations, iIndex, iIndex);
                 g_lVolatile_Slurls = llDeleteSubList(g_lVolatile_Slurls, iIndex, iIndex);
@@ -264,7 +266,7 @@ addDestination(string sMessage, string sLoc, key kID)
         llMessageLinked(LINK_SET,NOTIFY,"0"+"The maximum number 45 bookmars is already reached.",kID);
         return;
     }
-    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + sMessage + "=" + sLoc, "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + sMessage + "=" + sLoc, "");
     g_lVolatile_Destinations += sMessage;
     g_lVolatile_Slurls += sLoc;
     llMessageLinked(LINK_SET,NOTIFY,"0"+"Added destination " + sMessage + " with a location of: " + sLoc,kID);
@@ -429,7 +431,7 @@ default {
 
     state_entry() {
        // llSetMemoryLimit(49152);  //2015-05-06 (7512 bytes free)
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();  // store key of wearer
 
         ReadDestinations(); //Grab our presets
@@ -535,13 +537,13 @@ default {
             // and check if any values for use are received
             // replace "value1" by your own token
             integer i = llSubStringIndex(sToken, "_");
-            if(llGetSubString(sToken, 0, i) == g_sScript) {
+            if(llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 list lDestination = [llGetSubString(sToken, llSubStringIndex(sToken, "_") + 1, llSubStringIndex(sToken, "="))];
                 if(llListFindList(g_lVolatile_Destinations, lDestination) < 0) {
                     g_lVolatile_Destinations += lDestination;
                     g_lVolatile_Slurls += [sValue];
                 }
-            } //else if(sToken == "Global_DeviceType") { g_sDeviceType = sValue; }
+            } 
         } else if(UserCommand(iNum, sStr, kID)) {
             // do nothing more if TRUE
         } else if(iNum == DIALOG_RESPONSE) {

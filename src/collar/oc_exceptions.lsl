@@ -33,11 +33,11 @@ string g_sSubMenu = "Exceptions";
 
 //statics to compare
 integer OWNER_DEFAULT = 127;//1+2+4+8+16+32;//all on
-integer SECOWNER_DEFAULT = 110;//all off
+integer TRUSTED_DEFAULT = 110;//all off
 
 
 integer g_iOwnerDefault = 127;//1+2+4+8+16+32;//all on
-integer g_iSecOwnerDefault = 110;//all off
+integer g_iTrustedDefault = 110;//all off
 
 string g_sLatestRLVersionSupport = "1.15.1"; //the version which brings the latest used feature to check against
 string g_sDetectedRLVersion;
@@ -154,7 +154,9 @@ integer FIND_AGENT = -9005;
 string UPMENU = "BACK";
 
 key REQUEST_KEY;
-string g_sScript;
+//string g_sScript;
+string g_sSettingToken = "rlvex_";
+//string g_sGlobalToken = "global_";
 
 /*
 integer g_iProfiled=1;
@@ -203,7 +205,7 @@ ExMenu(key kID, string sWho, integer iAuth) {
     if (sWho == "owner" || ~llListFindList(g_lOwners, [sWho])) 
         iExSettings = g_iOwnerDefault;
     else if (sWho == "trusted" || ~llListFindList(g_lSecOwners, [sWho]))
-        iExSettings = g_iSecOwnerDefault;
+        iExSettings = g_iTrustedDefault;
     if (~iInd = llListFindList(g_lSettings, [sWho])) // replace deefault with custom
         iExSettings = llList2Integer(g_lSettings, iInd + 1);
 
@@ -238,22 +240,22 @@ UpdateSettings() {
 SaveDefaults() {
     // these are lists of rlv exceptions, not to be confused with auth_owner listings
     //save to DB
-    if (OWNER_DEFAULT == g_iOwnerDefault && SECOWNER_DEFAULT == g_iSecOwnerDefault) {
+    if (OWNER_DEFAULT == g_iOwnerDefault && TRUSTED_DEFAULT == g_iTrustedDefault) {
         //Debug("Defaults");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "owner", "");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "trusted", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "trusted", "");
         return;
     }
-    //Debug("ownerdef: " + (string)g_iOwnerDefault + "\nsecdef: " + (string)g_iSecOwnerDefault);
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "owner=" + (string)g_iOwnerDefault, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "trusted=" + (string)g_iSecOwnerDefault, "");
+    //Debug("ownerdef: " + (string)g_iOwnerDefault + "\nsecdef: " + (string)g_iTrustedDefault);
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "owner=" + (string)g_iOwnerDefault, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "trusted=" + (string)g_iTrustedDefault, "");
 }
 SaveSettings() {
     //save to local settings
     if (llGetListLength(g_lSettings))
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "List=" + llDumpList2String(g_lSettings, ","), "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "List=" + llDumpList2String(g_lSettings, ","), "");
     else
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "List", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "List", "");
 }
 
 SetAllExs(string sVal) {
@@ -269,7 +271,7 @@ SetAllExs(string sVal) {
         string sTmpOwner = llList2String(g_lSecOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
             for (i = 0; i<iStop; i++) {
-                if (g_iSecOwnerDefault & llList2Integer(g_lBinCmds, i) ) sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
+                if (g_iTrustedDefault & llList2Integer(g_lBinCmds, i) ) sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
                 else sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
             }
             string sStr = llDumpList2String(sCmd, ",");
@@ -402,9 +404,9 @@ integer UserCommand(integer iNum, string sStr, key kID) {
                 jump nextcom;
             }
             else if (sWho == "trusted") {
-                if (sCom == "defaults") g_iSecOwnerDefault = SECOWNER_DEFAULT;
-                else if (sVal == "n") g_iSecOwnerDefault = g_iSecOwnerDefault | iBin;
-                else if (sVal == "y") g_iSecOwnerDefault = g_iSecOwnerDefault & ~iBin;
+                if (sCom == "defaults") g_iTrustedDefault = TRUSTED_DEFAULT;
+                else if (sVal == "n") g_iTrustedDefault = g_iTrustedDefault | iBin;
+                else if (sVal == "y") g_iTrustedDefault = g_iTrustedDefault & ~iBin;
                 bChange = bChange | 1;
                 jump nextcom;
             }
@@ -417,7 +419,7 @@ integer UserCommand(integer iNum, string sStr, key kID) {
             }
             if (~iNames) iSet = llList2Integer(g_lSettings, iNames + 1);
             else if (~llListFindList(g_lOwners, [sWho])) iSet = g_iOwnerDefault;
-            else if (~llListFindList(g_lSecOwners, [sWho])) iSet = g_iSecOwnerDefault;
+            else if (~llListFindList(g_lSecOwners, [sWho])) iSet = g_iTrustedDefault;
             else iSet = 0;
             if (sVal == "n") iSet = iSet | iBin;
             else if (sVal == "y") iSet = iSet & ~iBin;
@@ -446,7 +448,7 @@ default {
 
     state_entry() {
         llSetMemoryLimit(49152); 
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
@@ -467,10 +469,10 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript) {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") g_iOwnerDefault = (integer)sValue;
-                else if (sToken == "trusted") g_iSecOwnerDefault = (integer)sValue;
+                else if (sToken == "trusted") g_iTrustedDefault = (integer)sValue;
             }
             else if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);

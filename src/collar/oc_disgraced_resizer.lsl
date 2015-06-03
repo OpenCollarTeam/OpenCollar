@@ -78,6 +78,9 @@ string UPMENU = "BACK";
 
 key g_kWearer;
 
+//string g_sSettingToken = "resizer_";
+//string g_sGlobalToken = "global_";
+
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -472,13 +475,13 @@ default {
         {
             UserCommand( iNum, sStr, kID);
         }
-        else if (iNum == LM_SETTING_RESPONSE)
+   /*     else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
            // if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
-        }
+        }*/
         else if (iNum == DIALOG_RESPONSE)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

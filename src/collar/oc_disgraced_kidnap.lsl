@@ -54,7 +54,8 @@ integer DIALOG_TIMEOUT      = -9002;
 list    g_lTempOwners;                   // locally stored list of temp owners
 integer g_iVulnerableOn     = FALSE;     // true means kidnapper confirms, false means wearer confirms
 integer g_iCaptureOn        = FALSE;     // on/off toggle for the app.  Switching off clears tempowner list
-
+string  g_sSettingToken     = "kidnap_";
+//string  g_sGlobalToken      = "global_";
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -170,11 +171,11 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
                 llSetTimerEvent(900.0);
             }
             g_iCaptureOn=TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE,"kidnap_kidnap=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE,g_sSettingToken+"kidnap=1", "");
         } else if (sStrLower == "kidnap off") {
             if(g_iCaptureOn) llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode deactivated",kID);//Notify(kID,"Kidnap Mode deactivated.",TRUE);
             g_iCaptureOn=FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_kidnap", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE,g_sSettingToken+"kidnap", "");
             g_lTempOwners=[];
             saveTempOwners();
             llSetTimerEvent(0.0);
@@ -189,7 +190,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             llSetTimerEvent(0.0);
             return TRUE;  //no remenuin case of release
         } else if (sStrLower == "kidnap vulnerable on") {
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "kidnap_vulnerable=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"vulnerable=1", "");
             g_iVulnerableOn = TRUE;
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
             //llOwnerSay("You are vulnerable now...");
@@ -201,7 +202,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
                  //WhisperVulnerable();
                 }
         } else if (sStrLower == "kidnap vulnerable off") {
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "kidnap_vulnerable", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"vulnerable", "");
             g_iVulnerableOn = FALSE;
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnappings will require consent first.",kID);
             //Notify(kID,"Kidnappings will require consent first.",TRUE);
@@ -249,25 +250,18 @@ default{
             if (iNum == CMD_SAFEWORD) llMessageLinked(LINK_SET,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);//Notify(g_kWearer,"Kidnap Mode deactivated.",TRUE);
             g_iCaptureOn=FALSE;
             g_iVulnerableOn = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_kidnap", "");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE,"kidnap_vulnerable", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE,g_sSettingToken+"kidnap", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE,g_sSettingToken+"vulnerable", "");
             g_lTempOwners=[];
             saveTempOwners();
             llSetTimerEvent(0.0);
-        /*} else if (iNum == LM_SETTING_DELETE) {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            if (sToken == "Global_WearerName") {
-                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-            }*/
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "kidnap_kidnap") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
-            else if (sToken == "kidnap_vulnerable") g_iVulnerableOn = (integer)sValue;
+            if (sToken == g_sSettingToken+"kidnap") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
+            else if (sToken == g_sSettingToken+"vulnerable") g_iVulnerableOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
-           // else if (sToken == "Global_WearerName") g_sWearerName = sValue;
         } else if (UserCommand(iNum, sStr, kID, FALSE)) {  // do nothing more if TRUE
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

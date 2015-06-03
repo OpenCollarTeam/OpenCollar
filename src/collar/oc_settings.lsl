@@ -27,6 +27,9 @@ key g_kDefaultslineID;
 key g_kCardKey;
 key g_kWearer;
 
+//string g_sSettingToken = "settings_";
+//string g_sGlobalToken = "global_";
+
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -167,7 +170,8 @@ list Add2OutList(list lIn) {
     for (i=0 ; i < llGetListLength(lIn); i += 2) {
         sToken = llList2String(lIn, i);
         sValue = llList2String(lIn, i + 1);
-        sGroup = SplitToken(sToken, 0);
+        //sGroup = SplitToken(sToken, 0);
+        sGroup = llToUpper(SplitToken(sToken, 0));
         sToken = SplitToken(sToken, 1);
         integer bIsSplit = FALSE ;
         integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue) 
@@ -316,7 +320,8 @@ default {
                 sID = llGetSubString(data, 0, i - 1);
                 data = llGetSubString(data, i + 1, -1);
                 if (~llSubStringIndex(llToLower(sID), "_")) jump nextline ;
-                sID += "_";
+                //sID += "-";
+                sID = llToLower(sID)+"_";
                 list lData = llParseString2List(data, ["~"], []);
                 for (i = 0; i < llGetListLength(lData); i += 2) {
                     sToken = llList2String(lData, i);

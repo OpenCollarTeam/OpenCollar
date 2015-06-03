@@ -52,7 +52,6 @@ integer DIALOG_TIMEOUT = -9002;
 integer g_iCharLimit = -1;
 
 string UPMENU = "BACK";
-//string CTYPE = "collar";
 
 string g_sTextMenu = "Set Label";
 string g_sFontMenu = "Font";
@@ -103,7 +102,9 @@ integer g_iShow = TRUE;
 vector g_vColor = <1,1,1>;
 
 string g_sLabelText = "";
-string g_sScript;
+//string g_sScript;
+string g_sSettingToken = "label_";
+//string g_sGlobalToken = "global_";
 
 float Ureps;
 float Vreps;
@@ -319,7 +320,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         {
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);            
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "text=" + g_sLabelText, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
             if (llStringLength(g_sLabelText) > g_iCharLimit) {
                 string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
@@ -336,7 +337,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             {                
                 g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
                 SetLabel();
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "font=" + (string)g_kFontTexture, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
             }
             else FontMenu(kAv, iAuth);            
         }
@@ -349,20 +350,20 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
                // g_vColor=(vector)llList2String(g_lColours,colourIndex+1);
             if (sColor != "") {
                 g_vColor=(vector)sColor;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
                 SetColor();
             } 
         }
         else if (sCommand == "labelshow")
         {
             g_iShow = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"show="+(string)g_iShow, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
             SetLabel();            
         }
         else if (sCommand == "labelscroll")
         {
             g_iScroll = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"scroll="+(string)g_iScroll, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
             SetLabel();            
         }        
     }
@@ -390,7 +391,7 @@ default
     state_entry()
     {
         llSetMemoryLimit(45056);
-        g_sScript = "label_";
+        //g_sScript = "label_";
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;
@@ -417,7 +418,7 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "text") g_sLabelText = sValue;
@@ -426,8 +427,6 @@ default
                 else if (sToken == "show") g_iShow = (integer)sValue;
                 else if (sToken == "scroll") g_iScroll = (integer)sValue;                
             }
-            //else if (sToken == g_sAppLockToken) g_iAppLock = (integer)sValue;
-           // else if (sToken == "Global_CType") CTYPE = sValue;
             else if (sToken == "settings" && sValue == "sent")
             {
                 SetColor();

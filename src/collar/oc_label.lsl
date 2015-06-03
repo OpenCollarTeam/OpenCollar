@@ -16,6 +16,8 @@ string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
 
 key g_kWearer;
+string g_sSettingToken = "label_";
+//string g_sGlobalToken = "global_";
 
 integer g_iAppLock = FALSE;
 string g_sAppLockToken = "Appearance_Lock";
@@ -153,7 +155,7 @@ list g_lFonts = [
 // All displayable characters.  Default to ASCII order.
 string g_sCharIndex;
 list g_lDecode=[]; // to handle special characters from CP850 page for european countries // SALAHZAR
-string g_sScript;
+//string g_sScript;
 
 /////////// END GLOBAL VARIABLES ////////////
 
@@ -453,7 +455,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
         {
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llDumpList2String(lParams, " ");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "text=" + g_sLabelText, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
             SetLabel();          
         }
         else if (sCommand == "labelfont")
@@ -464,7 +466,7 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             if (iIndex != -1) {
                 SetOffsets((key)llList2String(g_lFonts, iIndex + 1));
                 SetLabel();
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "font=" + (string)g_kFontTexture, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
             }
             else FontMenu(kAv, iAuth);            
         }
@@ -473,20 +475,20 @@ integer UserCommand(integer iAuth, string sStr, key kAv)
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {
                 g_vColor=(vector)sColor;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
                 SetLabel();
             }
         }
         else if (sCommand == "labelshow")
         {
             g_iShow = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"show="+(string)g_iShow, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
             SetLabel();            
         }
         else if (sCommand == "labelscroll")
         {
             g_iScroll = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"scroll="+(string)g_iScroll, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
             SetLabel();            
         }        
     }
@@ -513,7 +515,7 @@ default
 {
     state_entry() {
         // Initialize the character index.
-        g_sScript = "label_";
+        //g_sScript = "label_";
         g_kWearer = llGetOwner();
 
         //first count the label prims.
@@ -543,7 +545,7 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken)
             {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "text") g_sLabelText = sValue;

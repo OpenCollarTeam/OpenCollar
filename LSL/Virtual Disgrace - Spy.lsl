@@ -53,7 +53,9 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string g_sScript = "subspy_";
+//string g_sScript = "subspy_";
+string g_sSettingToken = "spy_";
+string g_sGlobalToken = "global_";
 
 string UPMENU = "BACK";
 
@@ -221,7 +223,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (!g_iTraceEnabled) {
                     g_iTraceEnabled=TRUE;
                     Notify(kID,"\n\nTrace enabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_trace=1", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"trace=1", "");
                 }
             } else {
                 Notify(kID,"\n\nOnly the wearer may enable spy functions.\n",TRUE);
@@ -232,7 +234,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (g_iTraceEnabled){
                     g_iTraceEnabled=FALSE;
                     Notify(kID,"\n\nTrace disabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"trace", "");
                 }
             } else {
                 Notify(kID,"\n\nOnly an owner may disable spy functions.\n",TRUE);
@@ -243,7 +245,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (!g_iListenEnabled) {
                     g_iListenEnabled=TRUE;
                     Notify(kID,"\n\nChat Spy enabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_listen=1", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"listen=1", "");
                     llListenRemove(g_iListener);
                     g_iListener = llListen(0, "", g_kWearer, "");
                 }
@@ -256,7 +258,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (g_iListenEnabled) {
                     g_iListenEnabled=FALSE;
                     Notify(kID,"\n\nChat Spy disabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_listen", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"listen", "");
                     llListenRemove(g_iListener);
                     g_iListener = 0;
                 }
@@ -269,7 +271,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (!g_iNotifyEnabled) {
                     g_iNotifyEnabled=TRUE;
                     Notify(kID,"\n\nSpy notifications enabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "subspy_notify=1", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"notify=1", "");
                 }
             } else {
                 Notify(kID,"\n\nOnly the wearer may enable spy notifications.\n",TRUE);
@@ -280,7 +282,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
                 if (g_iNotifyEnabled){
                     g_iNotifyEnabled=FALSE;
                     Notify(kID,"\n\nSpy notifications disabled.\n",TRUE);
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_notify", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"notify", "");
                 }
             } else {
                 Notify(kID,"\n\nOnly the wearer may enable spy notifications.\n",TRUE);
@@ -288,7 +290,7 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             if (remenu) DialogSpy(kID,iAuth);
         } else if ("runaway" == sStr) {
             g_iListenEnabled=FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_listen", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"listen", "");
             llListenRemove(g_iListener);
             g_iListener = 0;
 
@@ -296,10 +298,10 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             g_lTempOwners = [];
             
             g_iTraceEnabled=FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_trace", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"trace", "");
             
             g_iNotifyEnabled=FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "subspy_notify", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"notify", "");
         } else if (sStr == "spy" || sStr == "menu spy") DialogSpy(kID, iAuth);
     return TRUE;
 }
@@ -345,18 +347,18 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
 
-            if (llSubStringIndex(sToken, "subspy_")==0) { //spy data
-                if (sToken == "subspy_trace") {
+            if (llSubStringIndex(sToken, g_sSettingToken+"")==0) { //spy data
+                if (sToken == g_sSettingToken+"trace") {
                     if (!g_iTraceEnabled) {
                         g_iTraceEnabled=TRUE;
                         Notify(g_kWearer,"\n\nTrace enabled.\n",FALSE);
                     }
-                } else if (sToken == "subspy_notify") {
+                } else if (sToken == g_sSettingToken+"notify") {
                     if (!g_iNotifyEnabled) {
                         g_iNotifyEnabled=TRUE;
                         Notify(g_kWearer,"\n\nNotifications enabled.\n",FALSE);
                     }
-                } else if (sToken == "subspy_listen") {
+                } else if (sToken == g_sSettingToken+"listen") {
                     if (!g_iListenEnabled) {
                         g_iListenEnabled=TRUE;
                         Notify(g_kWearer,"\n\nChat Spy enabled.\n",FALSE);
@@ -364,8 +366,8 @@ default {
                         g_iListener = llListen(0, "", g_kWearer, "");
                     }
                 }
-            } else if (sToken == "Global_DeviceName") g_sDeviceName = sValue;
-            else if (sToken == "Global_WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            } else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
+            else if (sToken == g_sGlobalToken+"WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
             else if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []); //owners list
             else if(sToken == "auth_tempowner" && llStringLength(sValue) > 0) g_lTempOwners = llParseString2List(sValue, [","], []); //tempowners list
         } else if (iNum == MENUNAME_REQUEST && sStr == "Apps") {

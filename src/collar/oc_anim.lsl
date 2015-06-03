@@ -76,10 +76,10 @@ integer DIALOG_TIMEOUT = -9002;
 integer g_iAOChannel = -782690;
 integer g_iInterfaceChannel = -12587429;
 
+string g_sSettingToken = "anim_";
+//string g_sGlobalToken = "global_";
 key g_kWearer;
-//string g_sWearerName;
 
-//string g_sAuthError = "Access denied.";
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
@@ -203,10 +203,10 @@ integer SetPosture(integer iOn, key kCommander) {
             llStartAnimation("~stiff");
             //if (kCommander) Notify(kCommander,"Posture override active.",TRUE);
             if (kCommander) llMessageLinked(LINK_SET, NOTIFY, "1"+"Posture override active.", kCommander);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_posture=1","");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"posture=1","");
         } else if (!iOn) {
             llStopAnimation("~stiff");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_posture", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"posture", "");
         }
         g_iPosture=iOn;
         return TRUE;
@@ -320,20 +320,20 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iLastRank = 0;
             llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
             g_sCurrentPose = "";
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_currentpose", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         }
     } else if (sStr == "animations") AnimMenu(kID, iNum);  //give menu
     else if (sStr == "pose") PoseMenu(kID, 0, iNum);  //pose menu
     else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {  //stop pose on runaway
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_currentpose", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         llResetScript();
     } else if ( sCommand=="posture") {  //posture
         if ( sValue=="on") {  //posture
             if (iNum<=CMD_WEARER) {
                 g_iLastPostureRank=iNum;
                 SetPosture(TRUE,kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PostureRank="+(string)g_iLastPostureRank,"");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"PostureRank="+(string)g_iLastPostureRank,"");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Your neck is locked in place.",g_kWearer);
                 //llOwnerSay( "Your neck is locked in place.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME%'s neck is locked in place.", FALSE);
@@ -344,7 +344,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (iNum<=g_iLastPostureRank) {
                 g_iLastPostureRank=CMD_WEARER;
                 SetPosture(FALSE,kID);
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PostureRank", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"PostureRank", "");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"You can move your neck again.",g_kWearer);
                 //llOwnerSay( "You can move your neck again.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to move their neck.", FALSE);
@@ -356,9 +356,9 @@ UserCommand(integer iNum, string sStr, key kID) {
         if ( sValue=="on") {  //anim lock
             if (iNum<=CMD_WEARER) {
                 g_iLastPoselockRank=iNum;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_PoselockRank="+(string)g_iLastPoselockRank,"");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"PoselockRank="+(string)g_iLastPoselockRank,"");
                 g_iAnimLock = TRUE;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_animlock=1", "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"animlock=1", "");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change or stop your poses now.",g_kWearer);
                 //llOwnerSay( "Only owners can change or stop your poses now.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% can have their poses changed or stopped only by owners.", FALSE);
@@ -368,8 +368,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else if ( sValue=="off") {
             if (iNum<=g_iLastPoselockRank) {
                 g_iAnimLock = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock", "");
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_PoselockRank", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"PoselockRank", "");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"You are now free to change or stop poses on your own.",g_kWearer);
                 //llOwnerSay( "You are now free to change or stop poses on your own.");
                 //if (kID != g_kWearer) Notify(kID, "%WEARERNAME% is free to change or stop poses on their own.", FALSE);
@@ -394,18 +394,18 @@ UserCommand(integer iNum, string sStr, key kID) {
             string sValueNotLower = llList2String(lParams, 1);
             if (sValue == "on") {
                 g_iTweakPoseAO = 1;
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_TweakPoseAO=1" , "");
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken+"TweakPoseAO=1" , "");
                 RefreshAnim();
                 //Notify(kID, "AntiSlide is now enabled.", TRUE);
                 llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
             } else if (sValue == "off") {
                 g_iTweakPoseAO = 0;
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "anim_TweakPoseAO", "");
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken+"TweakPoseAO", "");
                 RefreshAnim();
                 //Notify(kID, "AntiSlide is now disabled.", TRUE);
                 llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide is now disabled.", kID);
             } else if (sValue == "none") {
-                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "anim_PoseMoveWalk", "");
+                llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken+"PoseMoveWalk", "");
                 g_sPoseMoveWalk = "";
                 g_sPoseMoveRun = "";
                 RefreshAnim();
@@ -414,8 +414,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower)==INVENTORY_ANIMATION) {
                 g_sPoseMoveWalk = llList2String(g_lPoseMoveAnimationPrefix,0) + sValueNotLower;
                 g_sPoseMoveRun  = llList2String(g_lPoseMoveAnimationPrefix,1) + sValueNotLower;
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_PoseMoveWalk=" + g_sPoseMoveWalk, "");
-                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "anim_PoseMoveRun="  + g_sPoseMoveRun,  "");
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken+"PoseMoveWalk=" + g_sPoseMoveWalk, "");
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken+"PoseMoveRun="  + g_sPoseMoveRun,  "");
                 RefreshAnim();
                 //Notify(kID, "AntiSlide animation is \""+sValueNotLower+"\".", TRUE);
                 llMessageLinked(LINK_SET, NOTIFY, "1"+"AntiSlide animation is \""+sValueNotLower+"\".", kID);
@@ -429,7 +429,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_sCurrentPose = sStr;
             g_iLastRank = iNum;
             llMessageLinked(LINK_SET, ANIM_START, g_sCurrentPose, "");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
         } //else Notify(kID,"%NOACCESS%",FALSE);
             else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
     }
@@ -496,7 +496,7 @@ default {
                 g_iLastRank = 0;
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
                 g_iAnimLock = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_animlock", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
                 g_sCurrentPose = "";
             }
         } else if (iNum == LM_SETTING_RESPONSE) {
@@ -504,7 +504,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == "anim_") {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken+"") {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "currentpose") {
                     list lAnimParams = llParseString2List(sValue, [","], []);
@@ -519,7 +519,7 @@ default {
                 else if (sToken == "PostureRank") g_iLastPostureRank= (integer)sValue;
                 else if (sToken == "PoselockRank") g_iLastPoselockRank= (integer)sValue;
                 else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
-            }// else if (sToken == "Global_WearerName") g_sWearerName = sValue;
+            }// else if (sToken == "global_WearerName") g_sWearerName = sValue;
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {  //got a menu response meant for us.  pull out values

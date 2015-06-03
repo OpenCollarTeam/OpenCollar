@@ -73,11 +73,13 @@ integer g_iCount;
 vector g_vColor = <1.000, 1.000, 0.000>; // default white 
 
 integer g_iTextPrim=-1;
-string g_sScript= "titler_";
+//string g_sScript= "titler_";
 float g_sEvilTimeout=60;
 float g_sEvilDuration=1800;
 
 key g_kWearer;
+string g_sSettingToken = "titler_";
+//string g_sGlobalToken = "global_";
 
 key g_kDialogID;    //menu handle
 key g_kColorDialogID;    //menu handle
@@ -158,7 +160,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
     else if (llToLower(sStr) == "menu titlercolor") sStr="title color";
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         g_sType = "off";
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
         renderTitle();
         llResetScript();
     }
@@ -180,7 +182,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {    //we got a colour, so set the colour
                g_vColor=(vector)sColor;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"color="+(string)g_vColor, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
                 renderTitle();
             } else {    //no colour given, so pop the dialog.
                 g_kColorDialogID = Dialog(kAv, "\nChoose a color!", ["colormenu please"], [UPMENU],0, iAuth);
@@ -193,16 +195,16 @@ UserCommand(integer iAuth, string sStr, key kAv){
             evilListenerOff();
             if (g_iRainbow || g_iScrollOn) llSetTimerEvent(0.2);
             else llSetTimerEvent(0.0);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sCommand == "off") {
             g_sType = "off";
             g_iLastRank = CMD_EVERYONE;
             g_sCurrentTitleText="";
             evilListenerOff();
             llSetTimerEvent(0.0);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"auth", ""); // del lastrank from DB
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
         } else if (sCommand == "scroll") {
             if (llToLower(llList2String(lParams, 1)) == "on") {
                 if (g_sType == "evil") {
@@ -213,12 +215,12 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 g_sScrollTitleText = g_sNormalTitleText+" ";
                 renderTitle();
                 llSetTimerEvent(0.2);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"scroll="+(string)g_iScrollOn, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScrollOn, "");
             } else if (llToLower(llList2String(lParams, 1)) == "off") {
                 g_iScrollOn = FALSE;
                 renderTitle();
                 if (g_sType == "normal" && !g_iRainbow) llSetTimerEvent(0.0);
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"scroll", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"scroll", "");
             }
         } else if (sCommand == "rainbow") {
             if (g_sType == "evil") {
@@ -229,12 +231,12 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 g_iRainbow = TRUE;
                 renderTitle();
                 llSetTimerEvent(0.2);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"rainbow="+(string)g_iRainbow, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"rainbow="+(string)g_iRainbow, "");
             } else if (llToLower(llList2String(lParams, 1)) == "off") {
                 g_iRainbow = FALSE;
                 renderTitle();
                 if (g_sType == "normal" && !g_iScrollOn) llSetTimerEvent(0.0);
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"rainbow", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"rainbow", "");
             }
         } else if (sCommand == "lastfm") {
             string sAction= llList2String(lParams,1);
@@ -242,11 +244,11 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 evilListenerOff();
                 //Debug("doing "+sCommand);
                 g_sType = "lastfm";
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
                 g_sCurrentTitleText="";
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"title", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"title", "");
                 g_iLastRank = iAuth;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
                 renderTitle();
                 llSetTimerEvent(0.2);
             } else {
@@ -261,12 +263,12 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 //we got a name, use it
                 g_sLfmUser = llList2String(lParams, 1);
                 //Debug("setting lastfm username to "+g_sLfmUser);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"lfmuser="+g_sLfmUser, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"lfmuser="+g_sLfmUser, "");
                 g_iLastRank = iAuth;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
                 if (g_sType=="lastfm"){
                     g_sCurrentTitleText="";
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"title", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"title", "");
                     httpRequest();
                 }
             }
@@ -274,26 +276,26 @@ UserCommand(integer iAuth, string sStr, key kAv){
             //Debug("doing "+sCommand);
             if (g_iScrollOn) {
                 g_iScrollOn = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"scroll", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"scroll", "");
             }
             if (g_iRainbow) {
                 g_iRainbow = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"rainbow", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"rainbow", "");
             }
             llSetTimerEvent(0.2);
             g_sType = "evil";
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
             g_iLastRank = iAuth;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
             g_sCurrentTitleText="";
         } else if (sCommand == "up") {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
         } else if (sCommand == "down") {
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"height="+(string)g_vPrimScale.z, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
         } else {    //looks like we're setting the title, or popping a text box to ask for one
             if (sCommand=="") {    //<nothing>            pop main titler menu
                 string sPrompt = "\n[http://www.virtualdisgrace.com/titler Virtual Disgrace - Titler]\n\nCurrent Title: " + g_sNormalTitleText;
@@ -331,9 +333,9 @@ UserCommand(integer iAuth, string sStr, key kAv){
                 g_sType = "normal";
                 if (g_iScrollOn || g_iRainbow) llSetTimerEvent(0.2);
                 else llSetTimerEvent(0.0);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sCurrentTitleText, "");
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"on="+g_sType, "");
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"title="+g_sCurrentTitleText, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+g_sType, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
             }
         }
         renderTitle();
@@ -427,7 +429,7 @@ default{
                 llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME% has been blessed with the title \""+message+"\" they should thank " + sTitleGiver + " thouroughly.","");
                 g_sNormalTitleText=message;
                 g_sCurrentTitleText=message;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"title="+g_sCurrentTitleText, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"title="+g_sCurrentTitleText, "");
                 renderTitle();
             }
         }
@@ -452,7 +454,7 @@ default{
                 string sToken = llGetSubString(sStr, 0, llSubStringIndex(sStr, "=")-1 );
                 string sValue=llDeleteSubString(sStr, 0, llSubStringIndex(sStr, "=") );
                 //Debug("Got my setting \""+sToken+"\"=\""+sValue+"\"");
-                if (sGroup == g_sScript) {
+                if (sGroup == g_sSettingToken) {
                     if(sToken == "title") {
                         g_sCurrentTitleText = sValue;
                         g_sNormalTitleText = sValue;

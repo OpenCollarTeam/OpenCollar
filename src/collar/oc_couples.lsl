@@ -107,7 +107,9 @@ integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
 
-string g_sScript;
+//string g_sScript;
+string g_sSettingToken = "coupleanim_";
+//string g_sGlobalToken = "global_";
 string g_sStopString = "stop";
 integer g_iStopChan = 99;
 integer g_iListener;    //stop listener handle
@@ -220,7 +222,7 @@ default {
     
     state_entry() {
         llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
-        g_sScript = "coupleanim_";
+        //g_sScript = "coupleanim_";
         g_kWearer = llGetOwner();
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);
@@ -286,10 +288,10 @@ default {
                 sValue = llToLower(llList2String(lParams, 2));
                 if (sValue == "off"){
                     g_iVerbose = FALSE;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "verbose=" + (string)g_iVerbose, "");
                 } else if (sValue == "on") {
                     g_iVerbose = TRUE;
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "verbose", "");
                 }
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
             }
@@ -299,9 +301,9 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if(sToken == g_sScript + "timeout")
+            if(sToken == g_sSettingToken + "timeout")
                 g_fTimeOut = (float)sValue;
-            else if (sToken == g_sScript + "verbose")
+            else if (sToken == g_sSettingToken + "verbose")
                 g_iVerbose = (integer)sValue;
         } else if (iNum == DIALOG_RESPONSE) {
             if (kID == g_kAnimmenu) {
@@ -323,10 +325,10 @@ default {
                 } else if (llGetSubString(sMessage,0,6) == "Verbose") {
                     if (llGetSubString(sMessage,8,-1) == "Off") {
                         g_iVerbose = FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "verbose=" + (string)g_iVerbose, "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "verbose=" + (string)g_iVerbose, "");
                     } else {
                         g_iVerbose = TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "verbose", "");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "verbose", "");
                     }
                     CoupleAnimMenu(kAv, iAuth);
                 } else {
@@ -370,12 +372,12 @@ default {
                     CoupleAnimMenu(kAv, iAuth);
                 } else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                     g_fTimeOut = (float)((integer)sMessage);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=" + (string)g_fTimeOut, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "timeout=" + (string)g_fTimeOut, "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
                     CoupleAnimMenu(kAv, iAuth);
                 } else if (sMessage == "ENDLESS") {
                     g_fTimeOut = 0.0;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "timeout=0.0", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "timeout=0.0", "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",kAv);
                     CoupleAnimMenu(kAv, iAuth);
                 }

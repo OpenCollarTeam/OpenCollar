@@ -28,8 +28,6 @@ list g_lColorDefaults;
 
 string g_sDeviceType = "collar";
 
-//string g_sAuthError = "Access denied.";
-
 list g_lTextures;  //stores names of all textures in collar and notecard
 list g_lTextureShortNames;  //stores names of all textures in collar and notecard
 list g_lTextureKeys;  //stores keys of notecard textures, and names of textures in collar, indexed by the names in g_lTextures
@@ -43,7 +41,6 @@ list g_lMenuIDs;  //menu information
 integer g_iMenuStride=3;
 key g_kTouchID;  //touch request handle
 
-//integer g_iAppLock = FALSE;  //stores whether appearance has been locked, set by monitoring LM_SETTING_SAVE and LM_SETTING_DELETE
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -100,6 +97,9 @@ string g_sStylesNotecardReadType;
 list g_lStyles;
 integer g_iStylesNotecardLine;
 integer g_iLeashParticle;
+
+//string g_sSettingToken = "themes_";
+string g_sGlobalToken = "global_";
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -510,7 +510,7 @@ default {
             integer i = llSubStringIndex(sID, "_");
             string sCategory=llGetSubString(sID, 0, i);
             string sToken = llGetSubString(sID, i + 1, -1);
-            if (sID == "Global_DeviceType") g_sDeviceType = sValue;
+            if (sID == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sCategory == "texture_") {  //add any recieved textures as defaults. Default here means whatever was current last time settings spoke.
                 i = llListFindList(g_lTextureDefaults, [sToken]);
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);

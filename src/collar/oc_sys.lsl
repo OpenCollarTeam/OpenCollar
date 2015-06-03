@@ -132,7 +132,9 @@ string STEALTH_ON = "☒ Stealth"; // hide the whole device
 string LOADCARD="Load";
 string REFRESH_MENU = "Fix";
 
-string g_sScript;
+//string g_sScript;
+//string g_sSettingToken = "main_";
+string g_sGlobalToken = "global_";
 integer STEALTH;
 
 /*
@@ -311,7 +313,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function        
             g_iLocked = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "Global_locked=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"locked=1", "");
             llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
@@ -325,7 +327,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (iNum == CMD_OWNER)  {  //primary owners can lock and unlock. no one else
             //inlined old "Unlock()" function
             g_iLocked = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "Global_locked", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");
             llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
             llPlaySound(g_sUnlockSound, 1.0);
             SetLockElementAlpha(); //EB
@@ -699,7 +701,7 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "Global_locked") {
+            if (sToken == g_sGlobalToken+"locked") {
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
             }// else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
@@ -721,7 +723,7 @@ default
            // else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
             else if (sToken == "listener_safeword") g_sSafeWord = sValue;
            // else if (sToken == "Global_prefix") g_sPrefix = sValue;
-            else if (sToken == "Global_news") g_iNews = (integer)sValue;
+            else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }

@@ -16,8 +16,6 @@ integer g_iRLVOn = TRUE;//set to TRUE if DB says user has turned RLV features on
 integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
 integer g_iRlvActive = FALSE;
 
-//string g_sAuthError = "Access denied.";
-
 //integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
 float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
@@ -78,10 +76,11 @@ string UPMENU = "BACK";
 string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
-//string g_sDeviceType = "collar";
-//string g_sWearerName;
+
 key g_kWearer;
-string g_sScript="rlvmain_";
+//string g_sScript="rlvmain_";
+string g_sSettingToken = "rlvmain_";
+string g_sGlobalToken = "global_";
 string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
@@ -407,23 +406,23 @@ UserCommand(integer iNum, string sStr, key kID) {
 
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on="+(string)g_iRLVOn, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
     } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
 //    } else if (sStr == "rlvnotify on") {
 //        g_iRLVNotify = TRUE;
-//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=1", "");
+//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "notify=1", "");
 //    } else if (sStr == "rlvnotify off") {
 //        g_iRLVNotify = FALSE;
-//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=0", "");
+//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "notify=0", "");
     } else if (sStr == "rlvon") {
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=1", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
         setRlvState();
     } else if (sStr == "rlvoff") {
         if (iNum == CMD_OWNER) {
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
             llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
@@ -546,17 +545,14 @@ default {
             string sValue = llList2String(lParams, 1);
             lParams=[];
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-           // else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-           // else if (sToken=="Global_DeviceType") g_sDeviceType=sValue;
-           // else if (sToken=="Global_WearerName") g_sWearerName=sValue;
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
 //            else if (sToken=="rlvmain_notify") g_iRLVNotify = (integer)sValue;
             else if (sToken=="rlvmain_on") {
                 g_iRLVOn=(integer)sValue;

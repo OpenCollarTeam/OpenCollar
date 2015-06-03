@@ -60,6 +60,9 @@ integer g_iIsEnabled=0;
 
 integer g_iHasSworn = FALSE;
 
+string g_sSettingToken = "badwords_";
+//string g_sGlobalToken = "global_";
+
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -165,7 +168,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     lNewBadWords=llDeleteSubList(lNewBadWords,-1,-1);
                 }
                 if (llGetListLength(g_lBadWords)) {
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"words=" + llDumpList2String(g_lBadWords, ","), "");
                     llMessageLinked(LINK_SET,NOTIFY,"1"+WordPrompt(),kID);
                     //Notify(kID, WordPrompt(),TRUE);
                 }
@@ -181,7 +184,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                 if(sName == "Default") sName = "~shock";
                 if (llGetInventoryType(sName) == INVENTORY_ANIMATION) {
                     g_sBadWordAnim = sName;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_animation=" + g_sBadWordAnim, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"animation=" + g_sBadWordAnim, "");
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Punishment animation for bad words is now '" + g_sBadWordAnim + "'.",kID);
                     //Notify(kID, "Punishment animation for bad words is now '" + g_sBadWordAnim + "'.",FALSE);
                 } else llMessageLinked(LINK_SET,NOTIFY,"0"+" is not a valid animation name.",kID);
@@ -216,7 +219,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     sName = "Default" ;
                 }
                 g_sBadWordSound = sName;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_sound=" + g_sBadWordSound, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"sound=" + g_sBadWordSound, "");
                 if (remenu) MenuBadwords(kID,iNum);
             } else {
                 list lSoundList = ["Default","silent"];
@@ -251,7 +254,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     //Notify(kID, "You cannot have badwords in your Penance phrase, please try again without these word(s):\n"+llList2CSV(lTemp),FALSE);
                 } else { 
                     g_sPenance = sPenance;
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_penance=" + g_sPenance, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"penance=" + g_sPenance, "");
                     llMessageLinked(LINK_SET,NOTIFY,"0"+WordPrompt() ,kID);
                     //Notify(kID, WordPrompt() ,TRUE);
                     if (remenu) MenuBadwords(kID,iNum);
@@ -270,7 +273,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     if (~iIndex) g_lBadWords = llDeleteSubList(g_lBadWords,iIndex,iIndex);
                     lNewBadWords=llDeleteSubList(lNewBadWords,-1,-1);
                 }
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_words=" + llDumpList2String(g_lBadWords, ","), "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"words=" + llDumpList2String(g_lBadWords, ","), "");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+WordPrompt() ,kID);
                 //Notify(kID, WordPrompt(),TRUE);
                 if (remenu) MenuBadwords(kID,iNum);
@@ -284,19 +287,19 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
             }
         } else if (sCommand == "on") {
             g_iIsEnabled = 1;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "badwords_on=1", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on=1", "");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Use of bad words will now be punished.",kID);
             //Notify(kID, "Use of bad words will now be punished.",FALSE);
             if (remenu) MenuBadwords(kID,iNum);
         } else if(sCommand == "off") {
             g_iIsEnabled = 0;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_on","");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"on","");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Use of bad words will not be punished.",kID);
             //Notify(kID, "Use of bad words will not be punished.",FALSE);
             if (remenu) MenuBadwords(kID,iNum);
         } else if(sCommand == "clear") {
             g_lBadWords = [];
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "badwords_words","");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"words","");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"The list of bad words has been cleared.",kID);
             //Notify(kID, "The list of bad words has been cleared.",FALSE);
             if (remenu) MenuBadwords(kID,iNum);
@@ -337,7 +340,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == "badwords_") {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "on") g_iIsEnabled = (integer)sValue;
                 else if (sToken == "animation") g_sBadWordAnim = sValue;
@@ -345,8 +348,7 @@ default {
                 else if (sToken == "words") g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                 else if (sToken == "penance") g_sPenance = sValue;
                 ListenControl();
-            }// else if (sToken == "Global_WearerName") g_sWearerName = sValue;
-            //else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
+            }
         } 
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

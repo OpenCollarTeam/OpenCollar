@@ -99,6 +99,8 @@ integer TIMER_EVENT = -10000; // str = "start" or "end". For start, either "onli
 integer WEARERLOCKOUT = 620;
 
 string UPMENU = "BACK";
+//string g_sSettingToken = "timer_";
+string g_sGlobalToken = "global_";
 
 /*
 integer g_iProfiled;
@@ -678,14 +680,14 @@ default {
         else if (iNum == LM_SETTING_DELETE)
         {
             if (sStr == "leash_leashedto") g_iWhoCanChangeLeash=504;
-            else if (sStr == "Global_locked") g_iCollarLocked=0;
+            else if (sStr == g_sGlobalToken+"locked") g_iCollarLocked=0;
         }
         else if (iNum == LM_SETTING_SAVE)
         {
             list lParams = llParseString2List(sStr, ["="], []);
             string token = llList2String(lParams, 0);
             string value = llList2String(lParams, 1);
-            if (token == "Global_locked" && (integer)value == 1) g_iCollarLocked = 1;
+            if (token == g_sGlobalToken+"locked" && (integer)value == 1) g_iCollarLocked = 1;
             else if (token == "leash_leashedto")
             {
                 integer auth = (integer)llList2String(llParseString2List(value, [","], []), 1);
@@ -700,7 +702,7 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "Global_locked") g_iCollarLocked=(integer)sValue;
+            if (sToken == g_sGlobalToken+"locked") g_iCollarLocked=(integer)sValue;
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)           
         { // our parent menu requested to receive buttons, so send ours

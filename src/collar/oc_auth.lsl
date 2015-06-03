@@ -96,8 +96,8 @@ integer g_iMenuStride = 3;
 
 key REQUEST_KEY;
 
-string g_sScript;
-
+string g_sSettingToken = "auth_";
+//string g_sGlobalToken = "global_";
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -135,7 +135,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 
 FetchAvi(integer iAuth, string type, string name, key kAv) {
     if (name == "") name = " ";
-    string out = llDumpList2String(["getavi_", g_sScript, kAv, iAuth, type, name], "|");
+    string out = llDumpList2String(["getavi_", g_sSettingToken, kAv, iAuth, type, name], "|");
     integer i = 0;
     list src = g_lOwners;
     if (type == "tempowner") src += g_lTempOwners;
@@ -234,9 +234,9 @@ RemovePerson(string sName, string sToken, key kCmdr) {
          string sOldToken=sToken;
          if (sToken == "secowner") sOldToken+="s";
             if (llGetListLength(lPeople)>0)
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
             else
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + sOldToken, "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + sOldToken, "");
         //store temp list
         if (sToken=="owner") g_lOwners = lPeople;
         else if (sToken=="tempowner") g_lTempOwners = lPeople;
@@ -331,7 +331,7 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         
         string sOldToken=sToken;
         if (sToken == "secowner") sOldToken+="s";
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
         
         if (sToken=="owner") g_lOwners = lPeople;
         else if (sToken=="trust") g_lTrusted = lPeople;
@@ -508,7 +508,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             else g_kGroup = (key)llList2String(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]), 0); //record current group key
 
             if (g_kGroup != "") {
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "group=" + (string)g_kGroup, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "group=" + (string)g_kGroup, "");
                 g_iGroupEnabled = TRUE;
              
                 key kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");   //get group name from world api
@@ -520,14 +520,14 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     } else if (sCommand == "setgroupname") {
         if (iNum==CMD_OWNER){
             g_sGroupName = llDumpList2String(llList2List(lParams, 1, -1), " ");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
         } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError, FALSE);
     } else if (sCommand == "unsetgroup") {
         if (iNum==CMD_OWNER){
             g_kGroup = "";
             g_sGroupName = "";
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "group", "");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "groupname", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "group", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "groupname", "");
             g_iGroupEnabled = FALSE;
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Group unset.",kID); //Notify(kID, "Group unset.", FALSE);
            // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
@@ -537,7 +537,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     } else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
             g_iOpenAccess = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "public=" + (string) g_iOpenAccess, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "public=" + (string) g_iOpenAccess, "");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Your %DEVICETYPE% is open to the public.",kID); 
             //Notify(kID, "Your " + g_sDeviceType + " is open to the public.", FALSE);
            // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
@@ -546,7 +546,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
     } else if (sCommand == "private") {
         if (iNum==CMD_OWNER){
             g_iOpenAccess = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "public", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "public", "");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Your %DEVICETYPE% is closed to the public.",kID); 
             //Notify(kID, "Your " + g_sDeviceType + " is closed to the public.", FALSE);
            // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
@@ -557,7 +557,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             if (iNum==CMD_OWNER){
                 g_iLimitRange = TRUE;
                 // as the default is range limit on, we do not need to store anything for this
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "limitrange", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "limitrange", "");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Public access range is limited.",kID);
                 //Notify(kID, "Public access range is limited.", FALSE);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError, FALSE);
@@ -566,7 +566,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
             if (iNum==CMD_OWNER){
                 g_iLimitRange = FALSE;
                 // save off state for limited range (default is on)
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "limitrange=" + (string) g_iLimitRange, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "limitrange=" + (string) g_iLimitRange, "");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Public access range is simwide.",kID);
                 //Notify(kID, "Public access range is simwide.", FALSE);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError, FALSE);
@@ -607,14 +607,14 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) { // her
         if (sCommand == "enable") {
             if (iNum == CMD_OWNER) {
                 g_iRunawayDisable = FALSE;
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript+"norun","");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"norun","");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The ability to runaway is enabled.",kID);
                 //Notify(kID, "The ability to runaway is enabled.", TRUE);                
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
         } else if (sCommand == "disable") {
             if (iNum == CMD_OWNER || iNum == CMD_WEARER) {
                 g_iRunawayDisable = TRUE;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript+"norun=1","");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"norun=1","");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The ability to runaway is disabled.",kID);
                 //Notify(kID, "The ability to runaway is disabled.", TRUE);                
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
@@ -629,10 +629,10 @@ RunAway() {
     integer stop = llGetListLength(g_lOwners+g_lTempOwners);
     llMessageLinked(LINK_SET,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
 
-    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "owner", "");
-    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "tempowner", "");
-    //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sScript + "trust=", "");
-    //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sScript + "all", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "tempowner", "");
+    //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "trust=", "");
+    //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "all", "");
     // moved reset request from settings to here to allow noticifation of owners.
     llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer); // clear RLV restrictions
     llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer); // this is not a LM loop, since it is now really authed
@@ -652,7 +652,7 @@ default {
            // Debug("profiling restarted");
         }*/
         //llSetMemoryLimit(65536);  
-        g_sScript = "auth_";
+        //g_sScript = "auth_";
         g_kWearer = llGetOwner();  //until set otherwise, wearer is owner
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
@@ -684,7 +684,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript) {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     // temporarily stash owner list so we can see if it's changing.
@@ -845,7 +845,7 @@ default {
         } else if (iNum == FIND_AGENT) { //reply from add-by-name or add-from-menu (via FetchAvi dialog)
             if (kID == REQUEST_KEY) {
                 list params = llParseString2List(sStr, ["|"], []);
-                if (llList2String(params, 0) == g_sScript) {
+                if (llList2String(params, 0) == g_sSettingToken) {
                     string sRequestType = llList2String(params, 4);
                     key kAv = llList2Key(params, 2);
                     integer iAuth = llList2Integer(params, 3);
@@ -893,7 +893,7 @@ default {
             }
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Group set to " + g_sGroupName + ".",g_kDialoger);
             //Notify(g_kDialoger, "Group set to " + g_sGroupName + ".", FALSE);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "groupname=" + g_sGroupName, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
         }
     }
     
