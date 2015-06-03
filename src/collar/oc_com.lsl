@@ -470,8 +470,7 @@ default {
                         message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + g_sWearerName;
                         message += "\nName command help: <prefix>name [newname|reset]\n";
                         Notify(kID, message, FALSE);
-                    }
-                    else if(sValue=="reset") { //unset Global_WearerName
+                    } else if(sValue=="reset") { //unset Global_WearerName
                         message=g_sWearerName+"'s name is reset to ";
                         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");  
@@ -479,8 +478,7 @@ default {
                         message += g_sWearerName;
                        // g_iCustomName = FALSE;
                         Notify(kID, message, FALSE);
-                    }
-                    else {
+                    } else {
                         string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
                         message=g_sWearerName+"'s new name is ";
                         g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about "+sNewName+"]";
@@ -599,7 +597,7 @@ default {
             else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
             else if (sToken == g_sGlobalToken+"touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
             else if (sToken == g_sGlobalToken+"WearerName") {
-                 if (llSubStringIndex(sValue, "secondlife///app/agent") != 0)
+                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
             }
             else if (sToken == "auth_owner" && llStringLength(sValue) > 0) 
