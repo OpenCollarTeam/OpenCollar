@@ -12,19 +12,13 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-// This script stores settings for other scripts in the collar.  In bygone days
-// it was responsible for storing them to an online database too.  It doesn't
-// do that anymore.  But so long as plugin scripts are still using central
-// storage like this, it's always possible we could bring back an online DB or
-// someone could offer a third party one.
+// Central storage for settings of other plugins in the device.
 
-
-
-string g_sDefaultscard = ".settings";
-string g_sSplit_line; // to parse lines that were split due to lsl constraints
-integer g_iDefaultsline = 0;
-key g_kDefaultslineID;
-key g_kCardKey;
+string g_sCard = ".settings";
+string g_sSplitLine; // to parse lines that were split due to lsl constraints
+integer g_iLineNr = 0;
+key g_kLineID;
+key g_kCardID;
 key g_kWearer;
 
 //string g_sSettingToken = "settings_";
@@ -56,26 +50,9 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
 
-integer SAY_LIMIT = 1024; // lsl "say" string limit
-integer CARD_LIMIT = 255; // lsl card-line string limit
-string ESCAPE_CHAR = "\\"; // end of card line, more value left for token
-
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    if ((key)kID){
-        string sObjectName = llGetObjectName();
-        if (g_sDeviceName != sObjectName) {
-            llSetObjectName(g_sDeviceName);
-        }
-        if (kID == g_kWearer) llOwnerSay(sMsg);
-        else {
-            if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-            else llInstantMessage(kID, sMsg);
-            if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-        }
-        if (llGetObjectName() != sObjectName) llSetObjectName(sObjectName);
-    }
-}*/
+integer g_iSayLimit = 1024; // lsl "say" string limit
+integer g_iCardLimit = 255; // lsl card-line string limit
+string g_sDelimiter = "\\"; // end of card line, more value left for token
 
 // Get Group or Token, 0=Group, 1=Token
 string SplitToken(string sIn, integer iSlot)
@@ -154,7 +131,7 @@ DelSetting(string sToken) { // we'll only ever delete user settings
     if (~i) g_lSettings = llDeleteSubList(g_lSettings, i, i + 1);
 }
 
-// run delimiters & add escape-characters for DumpCache
+// run delimiters & add escape-characters for settings print
 list Add2OutList(list lIn) {
     if (!llGetListLength(lIn)) return [];
     list lOut;// = ["#---My Settings---#"];
@@ -176,7 +153,7 @@ list Add2OutList(list lIn) {
         integer bIsSplit = FALSE ;
         integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue) 
             + llStringLength(sID) +2; //+llStringLength(set);
-        if (sGroup != sID || llStringLength(sBuffer) == 0 || iAddedLength >= CARD_LIMIT ) // new group
+        if (sGroup != sID || llStringLength(sBuffer) == 0 || iAddedLength >= g_iCardLimit ) // new group
         {
             // Starting a new group.. flush the buffer to the output.
             if ( llStringLength(sBuffer) ) lOut += [sBuffer] ;
@@ -188,11 +165,11 @@ list Add2OutList(list lIn) {
         sTemp = sPre + sToken + "~" + sValue;
         while (llStringLength(sTemp)) {
             sBuffer = sTemp;
-            if (llStringLength(sTemp) > CARD_LIMIT)
+            if (llStringLength(sTemp) > g_iCardLimit)
             {
                 bIsSplit = TRUE ;
-                sBuffer = llGetSubString(sTemp, 0, CARD_LIMIT - 2) + ESCAPE_CHAR;
-                sTemp = "\n" + llDeleteSubString(sTemp, 0, CARD_LIMIT - 2);
+                sBuffer = llGetSubString(sTemp, 0, g_iCardLimit - 2) + g_sDelimiter;
+                sTemp = "\n" + llDeleteSubString(sTemp, 0, g_iCardLimit - 2);
             }
             else sTemp = "";
             if ( bIsSplit ) 
@@ -213,7 +190,7 @@ list Add2OutList(list lIn) {
     return lOut;
 }
 
-DumpCache(key kID) {
+PrintSettings(key kID) {
     // compile everything into one list, so we can tell the user everything seamlessly
     list lOut;
     list lSay = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
@@ -224,7 +201,7 @@ DumpCache(key kID) {
     while (llGetListLength(lSay)) {
         sNew = llList2String(lSay, 0);
         i = llStringLength(sOld + sNew) + 2;
-        if (i > SAY_LIMIT) {
+        if (i > g_iSayLimit) {
             lOut += [sOld];
             sOld = "";
         }
@@ -262,10 +239,10 @@ SendValues() {
 integer UserCommand(integer iAuth, string sStr, key kID) {
     if (iAuth != CMD_OWNER && iAuth != CMD_WEARER) return FALSE;
     sStr = llToLower(sStr);
-    if (sStr == "settings") DumpCache(kID);
+    if (sStr == "settings") PrintSettings(kID);
     else if (sStr == "load") {
-        g_iDefaultsline = 0;
-        if (llGetInventoryKey(g_sDefaultscard)) g_kDefaultslineID = llGetNotecardLine(g_sDefaultscard, g_iDefaultsline);
+        g_iLineNr = 0;
+        if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
     }
     else return FALSE;
     return TRUE;
@@ -276,10 +253,10 @@ default {
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
-        g_iDefaultsline = 0;
-        if (llGetInventoryKey(g_sDefaultscard)) {
-            g_kDefaultslineID = llGetNotecardLine(g_sDefaultscard, g_iDefaultsline);
-            g_kCardKey = llGetInventoryKey(g_sDefaultscard);
+        g_iLineNr = 0;
+        if (llGetInventoryKey(g_sCard)) {
+            g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
+            g_kCardID = llGetInventoryKey(g_sCard);
         }
     }
 
@@ -294,26 +271,26 @@ default {
     }
 
     dataserver(key id, string data) {
-        if (id == g_kDefaultslineID) {
+        if (id == g_kLineID) {
             string sID;
             string sToken;
             string sValue;
             integer i;
-            if (data == EOF && g_sSplit_line != "" ) {
-                data = g_sSplit_line ;
-                g_sSplit_line = "" ;
+            if (data == EOF && g_sSplitLine != "" ) {
+                data = g_sSplitLine ;
+                g_sSplitLine = "" ;
             }
             if (data != EOF) {
                 // first we can filter out & skip blank lines & remarks
                 data = llStringTrim(data, STRING_TRIM_HEAD);
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
                 // check for "continued" line pieces
-                if ( llStringLength(g_sSplit_line) ) { 
-                    data = g_sSplit_line + data ;
-                    g_sSplit_line = "" ;
+                if ( llStringLength(g_sSplitLine) ) { 
+                    data = g_sSplitLine + data ;
+                    g_sSplitLine = "" ;
                 }
-                if ( llGetSubString( data, -1, -1) == ESCAPE_CHAR ) {
-                    g_sSplit_line = llDeleteSubString( data, -1, -1) ;
+                if ( llGetSubString( data, -1, -1) == g_sDelimiter ) {
+                    g_sSplitLine = llDeleteSubString( data, -1, -1) ;
                     jump nextline ;
                 }
                 i = llSubStringIndex(data, "=");
@@ -345,8 +322,8 @@ default {
                     }
                 }
                 @nextline;
-                g_iDefaultsline++;
-                g_kDefaultslineID = llGetNotecardLine(g_sDefaultscard, g_iDefaultsline);
+                g_iLineNr++;
+                g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
             } else {
                 // wait a sec before sending settings, in case other scripts are
                 // still resetting.
@@ -375,12 +352,12 @@ default {
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
-            if (llGetInventoryKey(g_sDefaultscard) != g_kCardKey) {
+            if (llGetInventoryKey(g_sCard) != g_kCardID) {
                 // the .settings card changed.  Re-read it.
-                g_iDefaultsline = 0;
-                if (llGetInventoryKey(g_sDefaultscard)) {
-                    g_kDefaultslineID = llGetNotecardLine(g_sDefaultscard, g_iDefaultsline);
-                    g_kCardKey = llGetInventoryKey(g_sDefaultscard);
+                g_iLineNr = 0;
+                if (llGetInventoryKey(g_sCard)) {
+                    g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
+                    g_kCardID = llGetInventoryKey(g_sCard);
                 }
             }
             llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
