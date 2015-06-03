@@ -1,16 +1,2 @@
-ITEM|OpenCollar Guide
-ITEM|OpenCollar License
-ITEM|Leash Holder
-ITEM|Grabby Post
-SCRIPT|OpenCollar - cleanup
-SCRIPT|OpenCollar - main
-SCRIPT|OpenCollar - auth
-SCRIPT|OpenCollar - listener
-SCRIPT|OpenCollar - dialog
-SCRIPT|OpenCollar - settings
-SCRIPT|OpenCollar - leash
-SCRIPT|OpenCollar - leashParticle
-SCRIPT|OpenCollar - hide
-SCRIPT|OpenCollar - label
-SCRIPT|OpenCollar - bell
-SCRIPT|OpenCollar - titler
+ITEM|OpenCollar Item
+SCRIPT|OpenCollar - script
