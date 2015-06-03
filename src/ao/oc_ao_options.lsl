@@ -27,17 +27,17 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 //Added for the collar auth system:
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_AUTH = 42; //used to send authenticated commands to be executed in the core script
-integer COMMAND_COLLAR = 499; //added for collar or cuff commands to put ao to pause or standOff and SAFEWORD
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COLLAR_INT_REQ = 610;
-integer COLLAR_INT_REP = 611;
-integer COMMAND_UPDATE = 10001;
+integer CMD_NOAUTH = 0;
+integer CMD_AUTH = 42; //used to send authenticated commands to be executed in the core script
+//integer CMD_COLLAR = 499; //added for collar or cuff commands to put ao to pause or standOff and SAFEWORD
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+//integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer COLLAR_INT_REQ = 610;
+//integer COLLAR_INT_REP = 611;
+//integer CMD_UPDATE = 10001;
 integer OPTIONS = 69; // Hud Options LM
 integer AOLock;
 integer AOPower = TRUE; // -- Power will always be on when scripts are reset as that is the default state of the AO
@@ -398,7 +398,7 @@ default
             menuid = Dialog(llGetOwner(), text, buttons, utility, 0);
         }
         
-        else if (num == COMMAND_AUTH && str == "ZHAO_RESET")
+        else if (num == CMD_AUTH && str == "ZHAO_RESET")
         {
             DoReset();
         }    
@@ -519,7 +519,7 @@ default
                 {   // -- Inside the 'Options' menu, or 'submenu'
                     if(response == UPMENU)
                     {   // If we press the '^' and we are inside the Options menu, go back to OwnerHUD menu
-                        llMessageLinked(LINK_THIS, COMMAND_OWNER, "ZHAO_MENU", id);
+                        llMessageLinked(LINK_THIS, CMD_OWNER, "ZHAO_MENU", id);
                     }
                     else if(response == "Horizontal")
                     {
@@ -634,7 +634,7 @@ default
                 {    // -- Inside the 'Order' menu, or 'submenu2'
                     if(response == UPMENU)
                     {   // -- If we press the '^' and we are inside the Order menu, go back to Options menu
-                        llMessageLinked(LINK_THIS, COMMAND_OWNER, "ZHAO_MENU", id);
+                        llMessageLinked(LINK_THIS, CMD_OWNER, "ZHAO_MENU", id);
                     }
                     else if(response == "Power")
                     {
