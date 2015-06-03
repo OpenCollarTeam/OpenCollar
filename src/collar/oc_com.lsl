@@ -252,34 +252,29 @@ default {
     state_entry() {
         llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
-        
-        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
+        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        g_sDeviceName = llGetObjectName();
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
-
         //inlined single use getOwnerChannel function
         g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
         if (g_iHUDChan > -10000) g_iHUDChan -= 30000;
 
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
-    
         //set up listeners... inlined existing function
         //public listener
         llListenRemove(g_iListener1);
         if (g_iListenChan0 == TRUE) g_iListener1 = llListen(0, "", NULL_KEY, "");
-
         //private listener
         llListenRemove(g_iListener2);
         g_iListener2 = llListen(g_iListenChan, "", NULL_KEY, "");
-
         //lockmeister listener
         llListenRemove(g_iLockMeisterListener);
         g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
-
         //garvin attachments listener
         llListenRemove(g_iListenHandleAtt);
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
-
         //owner hud listener
         llListenRemove(g_iHUDListener);
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,""); //reinstated
@@ -287,13 +282,6 @@ default {
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
-        
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-        g_sDeviceName = llGetObjectName();
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_WearerName", "");
-
-        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "channel", "");
-        //llSetTimerEvent(60.0);  //set timer event to catch changes in display name
         //Debug("Starting");
     }
 
@@ -486,7 +474,6 @@ default {
                     else if(sValue=="reset") { //unset Global_WearerName
                         message=g_sWearerName+"'s name is reset to ";
                         g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-                        if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");  
                         message += g_sWearerName;
@@ -599,12 +586,6 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-        /*} else if (iNum == LM_SETTING_EMPTY) {
-            if (sStr=="Global_WearerName"){
-                g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-                if (g_sWearerName == "???" || g_sWearerName == "") g_sWearerName = llKey2Name(g_kWearer);
-                llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,"Global_WearerName="+g_sWearerName,"");
-            }*/
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -617,8 +598,12 @@ default {
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
             else if (sToken == g_sGlobalToken+"touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
-            else if (sToken == g_sGlobalToken+"WearerName") g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
-            else if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken == g_sGlobalToken+"WearerName") {
+                 if (llSubStringIndex(sValue, "secondlife///app/agent") != 0)
+                    g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            }
+            else if (sToken == "auth_owner" && llStringLength(sValue) > 0) 
+                g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken == g_sSettingToken+"safeword") g_sSafeWord = sValue;
             else if (sToken == g_sSettingToken+"channel") {
                 g_iListenChan = (integer)sValue;
