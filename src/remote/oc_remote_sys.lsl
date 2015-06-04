@@ -10,10 +10,6 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
-//  no gridwide TP, probably because of llRegionSayTo in SendCmd()
-//  to enhance: check if command is a forced tp - then use llInstantMessage if sub is not in same SIM - but this is probably slow, laggy and error prone
-//  and do not forget to check if avi is online, before sending out a gridwide tp...
-
 string g_sDialogUrl;
 
 //  strided list in the form key,name
