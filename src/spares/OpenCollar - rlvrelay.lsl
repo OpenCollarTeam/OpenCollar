@@ -46,7 +46,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string g_sParentMenu = "RLV";
+string g_sParentMenu = "Apps";
 string g_sSubMenu = "Relay";
 
 string UPMENU = "BACK";
