@@ -31,7 +31,7 @@ integer g_iHUDChan;
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
+//integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
@@ -264,20 +264,19 @@ default {
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         //set up listeners... inlined existing function
         //public listener
-       // llListenRemove(g_iListener1);
-       // if (g_iListenChan0 == TRUE) 
-        g_iListener1 = llListen(0, "", NULL_KEY, "");
+        llListenRemove(g_iListener1);
+        if (g_iListenChan0 == TRUE) g_iListener1 = llListen(0, "", NULL_KEY, "");
         //private listener
-       // llListenRemove(g_iListener2);
+        llListenRemove(g_iListener2);
         g_iListener2 = llListen(g_iListenChan, "", NULL_KEY, "");
         //lockmeister listener
-       // llListenRemove(g_iLockMeisterListener);
+        llListenRemove(g_iLockMeisterListener);
         g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
         //garvin attachments listener
-       // llListenRemove(g_iListenHandleAtt);
+        llListenRemove(g_iListenHandleAtt);
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         //owner hud listener
-       // llListenRemove(g_iHUDListener);
+        llListenRemove(g_iHUDListener);
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,""); //reinstated
     
         integer iAttachPt = llGetAttached();
@@ -287,11 +286,16 @@ default {
     }
 
     attach(key kID)
-    {  
+    {
+        //g_kWearer = llGetOwner();
         if (kID == NULL_KEY)
+        {
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
+        }
         else
+        {
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+        }
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
@@ -299,50 +303,58 @@ default {
 
     listen(integer iChan, string sName, key kID, string sMsg)
     {
-        if (iChan == g_iHUDChan) {
+        if (iChan == g_iHUDChan)
+        {
+//            //track hud channel users
+//            integer hudIndex;
+//            if (~hudIndex=llListFindList(g_lHudComms,[kID])){
+//                g_lHudComms=llDeleteSubList(g_lHudComms,hudIndex,hudIndex+1);
+//            }
+//            g_lHudComms += [kID,llGetUnixTime()];
+            
             //check for a ping, if we find one we request auth and answer in LMs with a pong
-            if (sMsg==(string)g_kWearer + ":ping") {
+            if (sMsg==(string)g_kWearer + ":ping")
+            {
+                //llMessageLinked(LINK_SET, CMD_ZERO, "ping", kID);
                 llMessageLinked(LINK_SET, CMD_ZERO, "ping", llGetOwnerKey(kID));
             }
             // an object wants to know the version, we check if it is allowed to
-          //  else if (sMsg==(string)g_kWearer + ":version") {
+            else if (sMsg==(string)g_kWearer + ":version")
+            {
                 //llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", kID);
-        //        llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", llGetOwnerKey(kID));
-       //     }
-          // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
-            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")) {
-                sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            }// else {
-//                //Debug("command: "+sMsg+" from "+(string)kID);
-               // llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-           // }
-        } else if (iChan == g_iLockMeisterChan) {
-            llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
-        } else if (iChan == g_iInterfaceChannel) {  //added for attachment auth (garvin)
-            //Debug(sMsg);
-            //do nothing if wearer isnt owner of the object
-            if (llGetOwnerKey(kID) != g_kWearer) return;
-            //if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
-            if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
-            else {
-                list lParams = llParseString2List(sMsg, ["|"], []);
-                integer iAuth = llList2Integer(lParams, 0);
-                
-                if (iAuth == 0) { //auth request
-                    string sCmd = llList2String(lParams, 1);
-                    string sUserId= llGetSubString(llList2String(lParams, 2),0,35);
-                    string sObjectId= llGetSubString(llList2String(lParams, 2),36,-1);
-                    //Debug("garvin auth for key"+sUserId);
-                    //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
-                    llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, sCmd+"|"+sUserId+"|"+sObjectId, (key)sUserId);
-                } else if (iAuth == EXT_CMD_COLLAR) //command from attachment to AO
-                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
-                else  // we received a unkown command, so we just forward it via LM into the cuffs
-                    llMessageLinked(LINK_SET, ATTACHMENT_FORWARD, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", llGetOwnerKey(kID));
             }
-        } else if (llGetOwnerKey(kID) == g_kWearer) {// also works for attachments
+            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
+            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":"))
+            {
+                sMsg = llGetSubString(sMsg, 37, -1);
+                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+            }
+            else
+            {
+//                //Debug("command: "+sMsg+" from "+(string)kID);
+//                if (llGetOwnerKey(kID)==llGetOwner()){  //if the wearer's attachment requests it, then the command can be proxied for another user
+//                    key sDestAv = llGetSubString(sMsg, 0, 35);
+//                    if ((key)sDestAv){
+//                        sMsg = llGetSubString(sMsg, 36, -1);
+//                        kID=sDestAv;
+//                        //Debug("command for foreign user");
+//                    }
+//                }
+                //Debug("command: "+sMsg+" from "+(string)kID);
+                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+            }
+            return;
+        }
+        if (iChan == g_iLockMeisterChan)
+        {
+            llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
+            return;
+        }
+        if(llGetOwnerKey(kID) == g_kWearer) // also works for attachments
+        {
             string sw = sMsg; // we'll have to shave pieces off as we go to test
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
@@ -356,28 +368,65 @@ default {
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
                 llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
-            } else { //check for our prefix, or *
-                if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
-                else if (!llSubStringIndex(sMsg, "/"+g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
-                else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
-                else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
-                else return;
-                //Debug("Got comand "+sMsg);
-                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
             }
+        }
+        //added for attachment auth (garvin)
+        if (iChan == g_iInterfaceChannel)
+        {
+            //Debug(sMsg);
+            //do nothing if wearer isnt owner of the object
+            if (llGetOwnerKey(kID) != g_kWearer) return;
+            //if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
+            if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+            else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
+            else {
+                list lParams = llParseString2List(sMsg, ["|"], []);
+                integer iAuth = llList2Integer(lParams, 0);
+                
+                if (iAuth == 0) //auth request
+                {
+                    string sCmd = llList2String(lParams, 1);
+                    string sUserId= llGetSubString(llList2String(lParams, 2),0,35);
+                    string sObjectId= llGetSubString(llList2String(lParams, 2),36,-1);
+                    
+                    //Debug("garvin auth for key"+sUserId);
+                    //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
+                    llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, sCmd+"|"+sUserId+"|"+sObjectId, (key)sUserId);
+                }
+                else if (iAuth == EXT_CMD_COLLAR) //command from attachment to AO
+                {
+                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
+                }
+                else
+                {
+                    // we received a unkown command, so we just forward it via LM into the cuffs
+                    llMessageLinked(LINK_SET, ATTACHMENT_FORWARD, sMsg, kID);
+                }
+            }
+        } else { //check for our prefix, or *
+            if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
+            else if (!llSubStringIndex(sMsg, "/"+g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
+            else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
+            else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
+            else return;
+            //Debug("Got comand "+sMsg);
+            llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
         }
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum==INTERFACE_RESPONSE)
+        {
             if (sStr == "safeword") llRegionSay(g_iHUDChan, "safeword");
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
+        }
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
+        {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
             string sValue = llList2String(lParams, 1); //llToLower(llList2String(lParams, 1));
             
-            if (sStr == "ping" && (iNum==CMD_OWNER || iNum==CMD_TRUSTED)) {//ping from an object, we answer to it on the object channel
+            if (sStr == "ping") {  // ping from an object, we answer to it on the object channel
                 llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
             } else if (iNum == CMD_OWNER) {  //handle changing prefix and channel from owner
                 if (sCommand == "prefix")
