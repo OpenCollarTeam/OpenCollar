@@ -16,6 +16,7 @@ string g_sDialogUrl;
 
 //  strided list in the form key,name
 list g_lSubs = [];
+list g_lNewSubIDs;
 
 //  list of hud channel handles we are listening for, for building lists
 list g_lListeners;
@@ -79,7 +80,7 @@ key    g_kRemovedSubID;
 key    g_kWearer;
 
 //  three strided list of avkey, dialogid, and menuname
-list g_lMenuIDs;
+list    g_lMenuIDs;
 integer g_iMenuStride = 3;
 
 //  Use these to keep track of your current menu
@@ -91,8 +92,8 @@ string REMOVEMENU = "RemoveSub";
 
 integer g_iRLVRelayChannel  = -1812221819;
 integer g_iCageChannel      = -987654321;
-list g_lCageVictims;
-key g_kVictimID;
+list    g_lCageVictims;
+key     g_kVictimID;
 
 /*integer g_iProfiled=1;
 Debug(string sStr) {
@@ -289,9 +290,9 @@ SendCommand(key kID) {
     if (llGetListLength(g_lListeners) >= 60)
         return;  // lets not cause "too many listen" error
     integer iChannel = getPersonalChannel(kID, 1111);
+    g_lListeners += [ llListen(iChannel, "", "", "" )] ;
     llRegionSayTo(kID, iChannel, (string)kID+ ":ping");
-    g_lListeners += [ llListen(iChannel, "", "", "" )] ;// if we have a reply on the channel lets see what it is.
-    llSetTimerEvent(5);// no reply by now, lets kick off the timer
+    llSetTimerEvent(2.0);
 }
 
 PickSubCmd(string sCmd) {
@@ -305,6 +306,28 @@ PickSubCmd(string sCmd) {
     } else {// you have 0 subs in list (empty)
         llOwnerSay("\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/ownerhud\n");
     }
+}
+
+AddSubMenu() {
+    string sPrompt = "\nChoose who you want to manage with your Owner HUD:";
+    list lButtons;
+    integer index;
+    integer iSpaceIndex;
+    string sName;
+    do {
+        sName = llKey2Name(llList2Key(g_lNewSubIDs,index));
+        iSpaceIndex = llSubStringIndex(sName," ");
+        if (llGetSubString(sName,iSpaceIndex+1,-1) == "Resident")
+            sName = llGetSubString(sName,0,iSpaceIndex-1);
+        lButtons += [sName];
+    } while (index++ < llGetListLength(g_lNewSubIDs));
+    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], 0);
+    list lNewStride = [g_kWearer, kMenuID, "AddSubMenu"];
+    index = llListFindList(g_lMenuIDs, [g_kWearer]);
+    if (~index)
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
+    else
+        g_lMenuIDs += lNewStride;    
 }
 
 CageMenu() {
@@ -328,7 +351,6 @@ CageMenu() {
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
     else
         g_lMenuIDs += lNewStride;
-    //g_lCageVictims = [];
 }
 
 default
@@ -341,7 +363,6 @@ default
         llSleep(1.0);//giving time for others to reset before populating menu
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         //Debug("started.");
-
     }
 
     on_rez(integer iStart) {
@@ -369,11 +390,8 @@ default
                 PickSubCmd("couples");
             else if (sButton == "Leash")
                 QuickLeashMenu(kID);
-            else if (llSubStringIndex(sButton,"Owner")>=0) {
+            else if (llSubStringIndex(sButton,"Owner")>=0) 
                 llMessageLinked(LINK_SET, CMD_OWNER,"hide","");
-                llSleep(1);
-            } else
-                llMessageLinked(LINK_SET, CMD_OWNER,sButton, kID);
         }
     }
     
@@ -395,12 +413,10 @@ default
                 llOwnerSay("\n\n\t[http://www.opencollar.at/ownerhud.html Owner HUD Manual]\n");
             else if (sMessage == "reset") llResetScript();
         } else if (llGetSubString(sMessage, 36, 40)==":pong") {
-            key    kSubID   = llGetOwnerKey(kID);
-            string sSubName = llKey2Name(kSubID);
-            AddSub(kSubID,sSubName);
+            if (! ~llListFindList(g_lNewSubIDs, [llGetOwnerKey(kID)]) && ! ~llListFindList(g_lSubs, [llGetOwnerKey(kID)]))
+                g_lNewSubIDs += [llGetOwnerKey(kID)];
         } else if (iChannel == g_iRLVRelayChannel && llGetSubString(sMessage,0,6) == "locator")
             g_lCageVictims += [llKey2Name(llGetOwnerKey(kID)), llGetOwnerKey(kID)];
-
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -457,8 +473,9 @@ default
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                     SubMenu(kID); 
                 } else if (sMessage == g_sScanSubs) {
-                     // Ping for auth OpenCollars in the region
-                     g_lAgents = llGetAgentList(AGENT_LIST_REGION, []); //scan for who is in the region.
+                     // Ping for auth OpenCollars in the parcel
+                     g_lAgents = llGetAgentList(AGENT_LIST_PARCEL, []); //scan for who is in the parcel
+                     llOwnerSay("Scanning for collars where you have access to.");
                      integer i;
                      for (; i < llGetListLength(g_lAgents); i++) {//build a list of who to scan
                         // Lets not ping oursevles
@@ -466,7 +483,7 @@ default
                         if (llList2Key(g_lAgents,i) != g_kWearer)
                             SendCommand(llList2Key(g_lAgents, i)); //kick off "sendCommand" for each uuid
                      }
-                     SubMenu(kID); 
+                     //SubMenu(kID); 
                 } else if (sMessage == g_sPrintSubs) {
                     string sPrompt = "\n#copy and paste this into your Subs notecard.\n# You need to add the name and Key of each person you wish to add to the hud.\n";
                     sPrompt+= "# The subname can be shortened to a name you like\n# The subid is their Key which can be obtained from their profile";
@@ -540,7 +557,38 @@ default
                 g_kVictimID = llList2Key(g_lCageVictims,llListFindList(g_lCageVictims,[sMessage])+1);
                 llRezObject("Cage",llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
                 g_lCageVictims = [];
-            }
+            } else if (sMenuType == "AddSubMenu") {
+                if (sMessage == UPMENU) {
+                    SubMenu(kID);
+                    g_lNewSubIDs = [];
+                    return;
+                } else if (sMessage == "ALL") {
+                    integer i;
+                    key kNewSubID;
+                    do {
+                        kNewSubID = llList2Key(g_lNewSubIDs,i);
+                        if (kNewSubID) 
+                            AddSub(kNewSubID,llKey2Name(kNewSubID));
+                    } while (i++ < llGetListLength(g_lNewSubIDs));
+                    g_lNewSubIDs = [];
+                    SubMenu(kID);
+                } else {
+                    integer i;
+                    key kNewSubID;
+                    if (! ~llSubStringIndex(sMessage, " ")) sMessage += " Resident";
+                    do {
+                        kNewSubID = llList2Key(g_lNewSubIDs,i);
+                        if (llKey2Name(kNewSubID) == sMessage) {
+                            AddSub(kNewSubID,llKey2Name(kNewSubID));
+                            g_lNewSubIDs = [];
+                            SubMenu(kID);
+                            return;
+                        }
+                    } while (i++ < llGetListLength(g_lNewSubIDs));
+                    g_lNewSubIDs = [];
+                    SubMenu(kID);
+                }
+            }    
         }
         else if (iNum == DIALOG_URL)
             g_sDialogUrl = sStr;
@@ -566,6 +614,7 @@ default
         if (llGetListLength(g_lCageVictims)) {
             CageMenu();
         }
+        if (llGetListLength(g_lNewSubIDs)) AddSubMenu();
         llSetTimerEvent(0);
         g_lAgents = [];
         integer n = llGetListLength(g_lListeners) - 1;
@@ -583,39 +632,24 @@ default
                 if (llSubStringIndex(sData, "#") != 0) {//  if the line does not begin with a comment
                     integer index = llSubStringIndex(sData, "=");//  find first equal sign
                     if (~index) {//  if line contains equal sign
-                        string sName = llGetSubString(sData, 0, index - 1);//  get name of name/value pair
-                        string sValue = llGetSubString(sData, index + 1, -1);//  get value of name/value pair
-                        list lTemp = llParseString2List(sName, [" "], []);
-                        sName = llDumpList2String(lTemp, " ");//  trim name
-                        sName = llToLower(sName);//  make name lowercase (case insensitive)
-                        lTemp = llParseString2List(sValue, [" "], []);
-                        sValue = llDumpList2String(lTemp, " ");//  trim value
-                        if (sName == "subname")//  subname
-                            g_sSubName = sValue;
-                        else if (sName == "subid")//  subid
-                            g_kSubID = sValue;
-                        //else
-                        //    llOwnerSay("\n\nUnknown configuration value: " + sName + " on line " + (string)g_iLineNr);
-                    } //else//  line does not contain equal sign
-                        //llOwnerSay("\n\nConfiguration could not be read on line " + (string)g_iLineNr);
+                        string sName = llToLower(llStringTrim(llGetSubString(sData, 0, index - 1),STRING_TRIM));
+                        string sValue = llStringTrim(llGetSubString(sData, index + 1, -1),STRING_TRIM);
+                        if (sName == "subname") g_sSubName = sValue;
+                        else if (sName == "subid") g_kSubID = sValue;
+                    } 
                 }
-            }
-            if (g_sSubName!="" && g_kSubID!="")
-                AddSub(g_kSubID,g_sSubName);
-            //    g_sSubName="????";
-            //if (g_kSubID=="")
-            //    g_kSubID=NULL_KEY;
+                if (g_sSubName!="" && g_kSubID!="")
+                    AddSub(g_kSubID,g_sSubName);
+                }
             g_kLineID = llGetNotecardLine(g_sCard, ++g_iLineNr);//  read the next line
         }
     }
-    object_rez(key kID)
-    {
+    object_rez(key kID) {
         llSleep(0.5); // make sure object is rezzed and listens
         llRegionSayTo(kID,g_iCageChannel,"fetch"+(string)g_kVictimID);
     }
     
     changed(integer iChange) {
-//      reload on notcard changes should happen automaticly
         if (iChange & CHANGED_INVENTORY) {
             //llOwnerSay("\n\nReloading the "+g_sCard+" card\n!");
             g_iLineNr = 0;
