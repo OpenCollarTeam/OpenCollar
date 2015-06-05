@@ -21,6 +21,9 @@
 
 //  Start Jess's OC modified menu injection
 
+//Adjusted to OpenCollar name convention und format standards June 2015 Otto (garvin.twine)
+
+integer CMD_TOUCH         = 100;
 integer MENUNAME_REQUEST  = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU           = 3002;
@@ -448,14 +451,15 @@ default
                         llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_COLOR, ALL_SIDES, <0.49020, 0.73725, 0.49412>, 1.0]);
                 }
             }
-        }
-        if (sStr == "hide") {
-            if (g_iHidden) {
-                g_iHidden = !g_iHidden;
-                DefinePosition();
-            } else {
-                g_iHidden = !g_iHidden;
-                DoHide();
+        } else if (iNum == CMD_TOUCH) {
+            if (sStr == "hide") {
+                if (g_iHidden) {
+                    g_iHidden = !g_iHidden;
+                    DefinePosition();
+                } else {
+                    g_iHidden = !g_iHidden;
+                    DoHide();
+                }
             }
         }
     }
