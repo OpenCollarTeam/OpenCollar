@@ -82,7 +82,7 @@ list    g_lMenuIDs;
 integer g_iMenuStride = 3;
 
 
-float   g_fScanRange        = 25.0;
+integer g_iScanRange        = 20;
 integer g_iRLVRelayChannel  = -1812221819;
 integer g_iCageChannel      = -987654321;
 list    g_lCageVictims;
@@ -187,7 +187,7 @@ ManageMenu(key kID) {// Single page menu
 }
 
 PickSubMenu(key kID, integer iPage) { // Multi-page menu
-    string sPrompt = "\nWho of your manage subs will receive this command?\n\nOnly subs in this sim are shown.";
+    string sPrompt = "\nWho of your subs will receive this command?\n\nOnly subs in this sim are shown.";
     list lButtons;
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 2) {
@@ -333,11 +333,6 @@ default
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         //Debug("started.");
     }
-
- //   on_rez(integer iStart) {
-        //llSleep(2.0);
-        //llOwnerSay("Type these commands on channel 7:\n\t/7help for a HUD Guide\n\t/7update for an update Guide\n\t/7owner for an owners menu Setup Guide");
- //   }
     
     touch_start(integer iNum)
     {
@@ -498,8 +493,8 @@ default
                 else if (sMessage == "Collar") 
                     PickSubCmd("menu");
                 else if (sMessage == "Cage") {
-                    llOwnerSay("Scanning for possible cagees within "+(string)llRound(g_fScanRange)+"m with RLV-Relay...");
-                    llSensor("","",AGENT,g_fScanRange,PI);
+                    llOwnerSay("Scanning for possible cagees within "+(string)g_iScanRange+"m with RLV-Relay...");
+                    llSensor("","",AGENT,g_iScanRange,PI);
                 } else if (sMessage == "HUD Style")
                     llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
                 else if (sMessage == "Sit" || sMessage == "Stand")
