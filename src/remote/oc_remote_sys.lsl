@@ -10,6 +10,8 @@
 // ------------------------------------------------------------------------------ //
 ////////////////////////////////////////////////////////////////////////////////////
 
+//merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
+
 string g_sDialogUrl;
 
 //  strided list in the form key,name
@@ -87,8 +89,12 @@ string MAINMENU   = "SubMenu";
 string PICKMENU   = "PickSub";
 string REMOVEMENU = "RemoveSub";
 
+integer g_iRLVRelayChannel  = -1812221819;
+integer g_iCageChannel      = -987654321;
+list g_lCageVictims;
+key g_kVictimID;
 
-integer g_iProfiled=1;
+/*integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -98,7 +104,7 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
+}*/
 
 integer getPersonalChannel(key kOwner, integer iOffset) {
     integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
@@ -301,6 +307,30 @@ PickSubCmd(string sCmd) {
     }
 }
 
+CageMenu() {
+    string sPrompt = "\nLet's drop a cage on someone! Yay!\n\nChoose one of the found RLV Relay activated people:";
+    list lButtons;
+    string sName;
+    integer index;
+    integer i;
+    do {
+        sName = llList2String(g_lCageVictims,i);
+        index = llSubStringIndex(sName," ");
+        if (llGetSubString(sName,index+1,-1) == "Resident")
+            sName = llGetSubString(sName,0,index-1);
+        lButtons += [sName];
+        i+=2;
+    } while (i < llGetListLength(g_lCageVictims));
+    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, [UPMENU], 0);
+    list lNewStride = [g_kWearer, kMenuID, "CageMenu"];
+    index = llListFindList(g_lMenuIDs, [g_kWearer]);
+    if (~index)
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
+    else
+        g_lMenuIDs += lNewStride;
+    //g_lCageVictims = [];
+}
+
 default
 {
     state_entry() {
@@ -308,8 +338,9 @@ default
         g_sWearerName = llKey2Name(g_kWearer);  
         g_iListener=llListen(getPersonalChannel(g_kWearer,1111),"",NULL_KEY,""); //lets listen here
         SetCmdListener();
-       // llSleep(1.0);//giving time for others to reset before populating menu
-        Debug("started.");
+        llSleep(1.0);//giving time for others to reset before populating menu
+        llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
+        //Debug("started.");
 
     }
 
@@ -367,7 +398,9 @@ default
             key    kSubID   = llGetOwnerKey(kID);
             string sSubName = llKey2Name(kSubID);
             AddSub(kSubID,sSubName);
-        }
+        } else if (iChannel == g_iRLVRelayChannel && llGetSubString(sMessage,0,6) == "locator")
+            g_lCageVictims += [llKey2Name(llGetOwnerKey(kID)), llGetOwnerKey(kID)];
+
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -479,9 +512,11 @@ default
                     SubMenu(kID);
                 else if (sMessage == "Collar") 
                     PickSubCmd("menu");
-                else if (sMessage == "Cage")
-                    llMessageLinked(LINK_SET, CMD_OWNER,"cagemenu","");
-                else if (sMessage == "HUD Style")
+                else if (sMessage == "Cage") {
+                    llOwnerSay("Scanning for possible cagees within 25m with RLV-Relay...");
+                    llSensor("","",AGENT,25.0,PI);
+                    //llMessageLinked(LINK_SET, CMD_OWNER,"cagemenu","");
+                } else if (sMessage == "HUD Style")
                     llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
                 else if (sMessage == "Sit" || sMessage == "Stand")
                     PickSubCmd(llToLower(sMessage)+"now");
@@ -496,14 +531,41 @@ default
                     PickSubCmd("follow me");
                 else 
                     PickSubCmd(llToLower(sMessage));
+            } else if (sMenuType == "CageMenu") {
+                if (sMessage == UPMENU) {
+                    MainMenu(kID);
+                    g_lCageVictims = [];
+                    return;
+                } else if (! ~llSubStringIndex(sMessage, " ")) sMessage += " Resident";
+                g_kVictimID = llList2Key(g_lCageVictims,llListFindList(g_lCageVictims,[sMessage])+1);
+                llRezObject("Cage",llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
+                g_lCageVictims = [];
             }
         }
         else if (iNum == DIALOG_URL)
             g_sDialogUrl = sStr;
     }
 
+    sensor(integer iNumber)
+    {
+        g_lCageVictims = [];
+        g_lListeners += [llListen(g_iRLVRelayChannel,"","","")];
+        integer i;
+        do {
+            llRegionSayTo(llDetectedKey(i),g_iRLVRelayChannel,"locator,"+(string)llDetectedKey(i)+",!version");
+        } while (i++ < iNumber);
+        llSetTimerEvent(2.0);
+    }
+    no_sensor(){
+        llOwnerSay("nobody found");
+    }
+            
 //  clear things after ping
     timer() {
+        //Debug ("timer expired" + (string)llGetListLength(g_lCageVictims));
+        if (llGetListLength(g_lCageVictims)) {
+            CageMenu();
+        }
         llSetTimerEvent(0);
         g_lAgents = [];
         integer n = llGetListLength(g_lListeners) - 1;
@@ -545,6 +607,11 @@ default
             //    g_kSubID=NULL_KEY;
             g_kLineID = llGetNotecardLine(g_sCard, ++g_iLineNr);//  read the next line
         }
+    }
+    object_rez(key kID)
+    {
+        llSleep(0.5); // make sure object is rezzed and listens
+        llRegionSayTo(kID,g_iCageChannel,"fetch"+(string)g_kVictimID);
     }
     
     changed(integer iChange) {
