@@ -41,8 +41,7 @@ integer g_iChannel = 7;
 string g_sPendingCmd;
 
 //  MESSAGE MAP
-integer CMD_OWNER            = 500;
-integer POPUP_HELP           = 1001;
+integer CMD_TOUCH            = 100;
 
 integer MENUNAME_REQUEST     = 3000;
 integer MENUNAME_RESPONSE    = 3001;
@@ -90,10 +89,12 @@ string MAINMENU   = "SubMenu";
 string PICKMENU   = "PickSub";
 string REMOVEMENU = "RemoveSub";
 
+float   g_fScanRange        = 25.0;
 integer g_iRLVRelayChannel  = -1812221819;
 integer g_iCageChannel      = -987654321;
 list    g_lCageVictims;
 key     g_kVictimID;
+
 
 /*integer g_iProfiled=1;
 Debug(string sStr) {
@@ -150,7 +151,7 @@ SendNearbyCmd(string sCmd) {
 SendAllCmd(string sCmd) { 
     integer i;
     integer iStop = llGetListLength(g_lSubs);
-    for (; i < iStop; i+=4) {
+    for (; i < iStop; i+=2) {
         key kID = (key)llList2String(g_lSubs, i);
         if (kID != g_kWearer && InSim(kID)) //Don't expose out-of-sim subs
             SendCmd(kID, sCmd);
@@ -163,7 +164,7 @@ AddSub(key kID, string sName) {
     if ( llStringLength(sName) >= 24)
         sName=llStringTrim(llGetSubString(sName, 0, 23),STRING_TRIM);//only store first 24 char$ of subs name
     if (sName!="" && kID!="") {//don't register any unrecognised names
-        g_lSubs+=[kID,sName,"***","***"];//Well we got here so lets add them to the list.
+        g_lSubs+=[kID,sName];//Well we got here so lets add them to the list.
         llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kID+"/about has been registered as "+sName+".\n");//Tell the owner we made it.
     }
 }
@@ -207,7 +208,7 @@ PickSubMenu(key kID, integer iPage) { // Multi-page menu
     string sPrompt = "\nWho will receive this command?";
     list lButtons = [g_sAllSubs];
     integer i;
-    for (; i < llGetListLength(g_lSubs); i+= 4)
+    for (; i < llGetListLength(g_lSubs); i+= 2)
         lButtons += [llList2String(g_lSubs, i + 1)];
     
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
@@ -227,15 +228,11 @@ RemoveSubMenu(key kID, integer iPage) // Multi-page menu
     string sPrompt = "\nWho would you like to remove?\n\nNOTE: This will also remove you as their owner.";
     list lButtons;
     integer i;
-    for (; i < llGetListLength(g_lSubs); i+= 4)
+    for (; i < llGetListLength(g_lSubs); i+= 2)
         lButtons += [llList2String(g_lSubs, i + 1)];
-    
     key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
-    // UUID , Menu ID, Menu
     list lNewStride = [kID, kMenuID, REMOVEMENU];
-    // Check dialogs for previous entry and update if needed
     integer index = llListFindList(g_lMenuIDs, [kID]);
-//  this person is already in the dialog list.  replace their entry
     if (~index)
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
     else
@@ -246,11 +243,8 @@ MainMenu(key kID){
     string sPrompt = "\n\nwww.opencollar.at/ownerhud";
     list lButtons = g_lMainMenuButtons;[g_sManageMenu,"Collar","Cage","Pose","RLV","Sit","Stand","Leash","HUD Style"];
     key kMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
-    // UUID , Menu ID, Menu
     list lNewStride = [kID, kMenuID, g_sMainMenu];
-    // Check dialogs for previous entry and update if needed
     integer index = llListFindList(g_lMenuIDs, [kID]);
-//  this person is already in the dialog list.  replace their entry
     if (~index)
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
     else
@@ -261,23 +255,18 @@ QuickLeashMenu(key kID) {
     string sPrompt = "\n\nwww.opencollar.at/ownerhud\n\nLeash Quickmenu";
     list lButtons = ["Grab","Follow","STOP","Stay","Unstay"];
     key kMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
-    // UUID , Menu ID, Menu
     list lNewStride = [kID, kMenuID, "QuickLeash"];
-    // Check dialogs for previous entry and update if needed
     integer index = llListFindList(g_lMenuIDs, [kID]);
-//  this person is already in the dialog list.  replace their entry
     if (~index)
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
     else
         g_lMenuIDs += lNewStride;
 }
 
-ConfirmSubRemove(key kID) { // Single page menu
+ConfirmSubRemove(key kID) { 
     string sPrompt = "\nAre you sure you want to remove " + g_sSubName + "?\n\nNOTE: This will also remove you as their owner.";
     key kMenuID = Dialog(kID, sPrompt, ["Yes", "No"], [UPMENU], 0);
-//  UUID , Menu ID, Menu
     list lNewStride = [kID, kMenuID, REMOVEMENU];
-
     integer index = llListFindList(g_lMenuIDs, [kID]);
     if (~index)
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
@@ -303,9 +292,8 @@ PickSubCmd(string sCmd) {
     } else if (iLength == 4) {
         key kSubID = (key)llList2String(g_lSubs, 0);
         SendCmd(kSubID, sCmd);
-    } else {// you have 0 subs in list (empty)
+    } else
         llOwnerSay("\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/ownerhud\n");
-    }
 }
 
 AddSubMenu() {
@@ -391,7 +379,7 @@ default
             else if (sButton == "Leash")
                 QuickLeashMenu(kID);
             else if (llSubStringIndex(sButton,"Owner")>=0) 
-                llMessageLinked(LINK_SET, CMD_OWNER,"hide","");
+                llMessageLinked(LINK_SET, CMD_TOUCH,"hide","");
         }
     }
     
@@ -442,6 +430,7 @@ default
             string  sMessage    = llList2String(lParams, 1);
             integer iPage       = (integer)llList2String(lParams, 2);
             string  sMenuType   = llList2String(g_lMenuIDs, iMenuIndex + 1);
+            integer i;
 //              remove stride from menuids
 //              we have to subtract from the index because the dialog id comes in the middle of the stride
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -451,9 +440,8 @@ default
                     return;
                 } else if (sMessage == g_sListSubs) { //Lets List out subs
                     //list lTemp;
-                    integer i;
                     string sText ="\nI'm currently managing:\n";
-                    for (; i < llGetListLength(g_lSubs); i += 4) {
+                    for (i=0; i < llGetListLength(g_lSubs); i += 2) {
                         if (llStringLength(sText)>950) {
                             llOwnerSay(sText);
                             sText ="";
@@ -476,8 +464,7 @@ default
                      // Ping for auth OpenCollars in the parcel
                      g_lAgents = llGetAgentList(AGENT_LIST_PARCEL, []); //scan for who is in the parcel
                      llOwnerSay("Scanning for collars where you have access to.");
-                     integer i;
-                     for (; i < llGetListLength(g_lAgents); i++) {//build a list of who to scan
+                     for (i=0; i < llGetListLength(g_lAgents); i++) {//build a list of who to scan
                         // Lets not ping oursevles
                         // when ping reply listeners are added, then removed, our personal channel is removed
                         if (llList2Key(g_lAgents,i) != g_kWearer)
@@ -491,11 +478,10 @@ default
                     llOwnerSay(sPrompt);
                     sPrompt = "\n";
                     list lTemp;
-                    integer i;
-                    for (i = -1; i < llGetListLength(g_lSubs); i += 4) {
-                        lTemp = llList2List(g_lSubs, i + 2, i + 2);
-                        sPrompt+="\nsubname =  " + llDumpList2String(lTemp,"");
+                    for (i=0; i < llGetListLength(g_lSubs); i += 2) {
                         lTemp = llList2List(g_lSubs, i + 1, i + 1);
+                        sPrompt+="\nsubname =  " + llDumpList2String(lTemp,"");
+                        lTemp = llList2List(g_lSubs, i, i);
                         sPrompt+= "\nsubid = " + llDumpList2String(lTemp,"");
                     }
                     llOwnerSay(sPrompt);
@@ -530,9 +516,8 @@ default
                 else if (sMessage == "Collar") 
                     PickSubCmd("menu");
                 else if (sMessage == "Cage") {
-                    llOwnerSay("Scanning for possible cagees within 25m with RLV-Relay...");
-                    llSensor("","",AGENT,25.0,PI);
-                    //llMessageLinked(LINK_SET, CMD_OWNER,"cagemenu","");
+                    llOwnerSay("Scanning for possible cagees within "+(string)llRound(g_fScanRange)+"m with RLV-Relay...");
+                    llSensor("","",AGENT,g_fScanRange,PI);
                 } else if (sMessage == "HUD Style")
                     llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
                 else if (sMessage == "Sit" || sMessage == "Stand")
@@ -555,7 +540,10 @@ default
                     return;
                 } else if (! ~llSubStringIndex(sMessage, " ")) sMessage += " Resident";
                 g_kVictimID = llList2Key(g_lCageVictims,llListFindList(g_lCageVictims,[sMessage])+1);
-                llRezObject("Cage",llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
+                if (llGetInventoryType("Cage") == INVENTORY_OBJECT)
+                    llRezObject("Cage",llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
+                else
+                    llOwnerSay("You do not have a Cage in your HUD's inventory, unable to perform caging.");
                 g_lCageVictims = [];
             } else if (sMenuType == "AddSubMenu") {
                 if (sMessage == UPMENU) {
@@ -563,7 +551,7 @@ default
                     g_lNewSubIDs = [];
                     return;
                 } else if (sMessage == "ALL") {
-                    integer i;
+                    i=0;
                     key kNewSubID;
                     do {
                         kNewSubID = llList2Key(g_lNewSubIDs,i);
@@ -573,7 +561,7 @@ default
                     g_lNewSubIDs = [];
                     SubMenu(kID);
                 } else {
-                    integer i;
+                    i=0;
                     key kNewSubID;
                     if (! ~llSubStringIndex(sMessage, " ")) sMessage += " Resident";
                     do {
