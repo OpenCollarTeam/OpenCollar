@@ -23,6 +23,7 @@ integer g_iLockMeisterChan = -8888;
 integer g_iListener1;
 integer g_iListener2;
 integer g_iLockMeisterListener;
+integer g_iLeashPrim;
 
 integer g_iHUDListener;
 integer g_iHUDChan;
@@ -264,19 +265,19 @@ default {
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         //set up listeners... inlined existing function
         //public listener
-        llListenRemove(g_iListener1);
+       // llListenRemove(g_iListener1);
         if (g_iListenChan0 == TRUE) g_iListener1 = llListen(0, "", NULL_KEY, "");
         //private listener
-        llListenRemove(g_iListener2);
+       // llListenRemove(g_iListener2);
         g_iListener2 = llListen(g_iListenChan, "", NULL_KEY, "");
         //lockmeister listener
-        llListenRemove(g_iLockMeisterListener);
+       // llListenRemove(g_iLockMeisterListener);
         g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
         //garvin attachments listener
-        llListenRemove(g_iListenHandleAtt);
+       // llListenRemove(g_iListenHandleAtt);
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         //owner hud listener
-        llListenRemove(g_iHUDListener);
+       // llListenRemove(g_iHUDListener);
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,""); //reinstated
     
         integer iAttachPt = llGetAttached();
@@ -289,13 +290,9 @@ default {
     {
         //g_kWearer = llGetOwner();
         if (kID == NULL_KEY)
-        {
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
-        }
         else
-        {
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-        }
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
@@ -303,58 +300,41 @@ default {
 
     listen(integer iChan, string sName, key kID, string sMsg)
     {
-        if (iChan == g_iHUDChan)
-        {
-//            //track hud channel users
-//            integer hudIndex;
-//            if (~hudIndex=llListFindList(g_lHudComms,[kID])){
-//                g_lHudComms=llDeleteSubList(g_lHudComms,hudIndex,hudIndex+1);
-//            }
-//            g_lHudComms += [kID,llGetUnixTime()];
-            
+        if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
-            if (sMsg==(string)g_kWearer + ":ping")
-            {
-                //llMessageLinked(LINK_SET, CMD_ZERO, "ping", kID);
+            if (sMsg==(string)g_kWearer + ":ping") 
                 llMessageLinked(LINK_SET, CMD_ZERO, "ping", llGetOwnerKey(kID));
-            }
             // an object wants to know the version, we check if it is allowed to
-            else if (sMsg==(string)g_kWearer + ":version")
-            {
-                //llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", kID);
-                llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", llGetOwnerKey(kID));
-            }
+           // else if (sMsg==(string)g_kWearer + ":version")            
+            //    llMessageLinked(LINK_SET, CMD_ZERO, "objectversion", llGetOwnerKey(kID));
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
-            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":"))
-            {
+            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
                 sMsg = llGetSubString(sMsg, 37, -1);
                 //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
                 llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            }
-            else
-            {
-//                //Debug("command: "+sMsg+" from "+(string)kID);
-//                if (llGetOwnerKey(kID)==llGetOwner()){  //if the wearer's attachment requests it, then the command can be proxied for another user
-//                    key sDestAv = llGetSubString(sMsg, 0, 35);
-//                    if ((key)sDestAv){
-//                        sMsg = llGetSubString(sMsg, 36, -1);
-//                        kID=sDestAv;
-//                        //Debug("command for foreign user");
-//                    }
-//                }
-                //Debug("command: "+sMsg+" from "+(string)kID);
-                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
-                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            }
+            } //else
+              //  llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             return;
         }
-        if (iChan == g_iLockMeisterChan)
-        {
+        if (iChan == g_iLockMeisterChan) {
             llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
+            //new for LMV2
+            list lParams = llParseString2List( sMsg, ["|"], [] );
+            if( llList2List(lParams,0,3) == [g_kWearer, "LMV2", "RequestPoint", "collar"] ) {
+    //this message is for us, it's claiming to be an LMV2 message, it's a "Request" message, and concerns the mooring_point we specified
+     //message structure:   llGetOwner()|LMV2|RequestPoint|anchor_name
+      //Now that we are certain that the message concerns us, we look for the prim key to insert in our reply.
+               if(!g_iLeashPrim)
+                    //If there is no anchor set, we assume root prim.
+                    llRegionSayTo(kID, -8888, llDumpList2String( [llGetOwner(), "LMV2", "ReplyPoint", "collar", llGetKey()], "|" ) );
+                else {
+                        llRegionSayTo(kID, -8888, llDumpList2String( [llGetOwner(), "LMV2", "ReplyPoint", "collar", llGetLinkKey(g_iLeashPrim)], "|" ) );
+                        return;
+                    }
+            }
             return;
         }
-        if(llGetOwnerKey(kID) == g_kWearer) // also works for attachments
-        {
+        if(llGetOwnerKey(kID) == g_kWearer) { // also works for attachments
             string sw = sMsg; // we'll have to shave pieces off as we go to test
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
@@ -371,37 +351,29 @@ default {
             }
         }
         //added for attachment auth (garvin)
-        if (iChan == g_iInterfaceChannel)
-        {
+        if (iChan == g_iInterfaceChannel) {
             //Debug(sMsg);
             //do nothing if wearer isnt owner of the object
             if (llGetOwnerKey(kID) != g_kWearer) return;
             //if (sMsg == "OpenCollar?") llWhisper(g_iInterfaceChannel, "OpenCollar=Yes");
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
+            //no idea who asks this and needs to know...
+           // else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
             else {
                 list lParams = llParseString2List(sMsg, ["|"], []);
                 integer iAuth = llList2Integer(lParams, 0);
-                
-                if (iAuth == 0) //auth request
-                {
+                if (iAuth == CMD_ZERO) { //auth request
                     string sCmd = llList2String(lParams, 1);
                     string sUserId= llGetSubString(llList2String(lParams, 2),0,35);
                     string sObjectId= llGetSubString(llList2String(lParams, 2),36,-1);
-                    
                     //Debug("garvin auth for key"+sUserId);
                     //just send ATTACHMENT_REQUEST and ID to auth, as no script IN the collar needs the command anyway
                     llMessageLinked(LINK_SET, ATTACHMENT_REQUEST, sCmd+"|"+sUserId+"|"+sObjectId, (key)sUserId);
-                }
-                else if (iAuth == EXT_CMD_COLLAR) //command from attachment to AO
-                {
+                } else if (iAuth == EXT_CMD_COLLAR) //command from attachment to AO
                     llRegionSayTo(g_kWearer, g_iInterfaceChannel, sMsg);
-                }
                 else
-                {
-                    // we received a unkown command, so we just forward it via LM into the cuffs
+                // we received a unkown command, so we just forward it via LM into the cuffs
                     llMessageLinked(LINK_SET, ATTACHMENT_FORWARD, sMsg, kID);
-                }
             }
         } else { //check for our prefix, or *
             if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
@@ -487,9 +459,7 @@ default {
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store           
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+sNewName, "");  
                     }               
-                }
-                else if (sCommand == "channel")
-                {
+                } else if (sCommand == "channel") {
                     integer iNewChan = (integer)sValue;
                     if (sValue=="") {  //they left the param blank, report listener status
                         string message= "The "+g_sDeviceType+" is listening on channel";
@@ -504,24 +474,17 @@ default {
 
                         Notify(kID, "Now listening on channel " + (string)g_iListenChan + ".", FALSE);
                         if (g_iListenChan0) //save setting along with the state of thepublic listener (messy!)
-                        {
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iListenChan + ",TRUE", "");
-                        }
                         else
-                        {
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iListenChan + ",FALSE", "");
-                        }
                     }
-                    else if (iNewChan == 0) //enable public listener
-                    {
+                    else if (iNewChan == 0) { //enable public listener
                         g_iListenChan0 = TRUE;
                         llListenRemove(g_iListener1); 
                         g_iListener1 = llListen(0, "", NULL_KEY, "");
                         Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iListenChan + ",TRUE", "");
-                    }
-                    else if (iNewChan == -1)  //disable public listener
-                    {
+                    } else if (iNewChan == -1) {  //disable public listener
                         g_iListenChan0 = FALSE;
                         llListenRemove(g_iListener1); 
                         Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iListenChan, FALSE);
@@ -529,50 +492,33 @@ default {
                     }
                 }
             }
-            if (kID == g_kWearer)
-            {
-                if (sCommand == "safeword")
-                {   // new for safeword
+            if (kID == g_kWearer) {
+                if (sCommand == "safeword") {   // new for safeword
                     if(llStringTrim(sValue, STRING_TRIM) != "")
                     {
                         g_sSafeWord = sValue; // llList2String(lParams, 1);
                         Notify(g_kWearer,"You set a new safeword: " + g_sSafeWord + ".",FALSE);
                         //llOwnerSay("You set a new safeword: " + g_sSafeWord + ".");
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "safeword=" + g_sSafeWord, "");
-                    }
-                    else
-                    {
+                    } else
                         Notify(g_kWearer,"Your safeword is: " + g_sSafeWord + ".",FALSE);
-                       // llOwnerSay("Your safeword is: " + g_sSafeWord + ".");
-                    }
                 }                
-                else if (sCommand == "busted")
-                {
-                    if (sValue == "on")
-                    {
+                else if (sCommand == "busted") {
+                    if (sValue == "on") {
                         llMessageLinked(LINK_THIS,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
                         g_iTouchNotify=TRUE;
                         Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-                        //llOwnerSay("Touch notification is now enabled.");
-                    }                    
-                    else if (sValue == "off")
-                    {
+                    } else if (sValue == "off") {
                         llMessageLinked(LINK_THIS,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
                         g_iTouchNotify=FALSE;
                         Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
-                       // llOwnerSay("Touch notification is now disabled.");
-                    }
-                    else if (sValue == "") 
-                    {
+                    } else if (sValue == "") {
                         if (g_iTouchNotify) {
                             Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
-                            //llOwnerSay("Touch notification is now disabled.");
                             llMessageLinked(LINK_THIS,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
                             g_iTouchNotify = FALSE;
-                        }
-                        else {
+                        } else {
                             Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-                           // llOwnerSay("Touch notification is now enabled.");                           
                             llMessageLinked(LINK_THIS,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
                             g_iTouchNotify = TRUE;
                         }
@@ -593,6 +539,7 @@ default {
             {
                 if (sValue != "") g_sPrefix=sValue;
             }
+            else if (sToken == "leashpoint") g_iLeashPrim = (integer)sValue;
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
             else if (sToken == g_sGlobalToken+"touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
