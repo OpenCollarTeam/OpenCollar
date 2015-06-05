@@ -68,10 +68,10 @@ integer g_iOldPos;
 integer g_iNewPos;
 integer g_iTintable = FALSE;
 
-PlaceTheButton(float fYOff, float fZOff) {
+PlaceTheButton(float fYoff, float fZoff) {
     integer i = 2;
     for (; i <= llGetListLength(g_lPrimOrder); ++i)
-        llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i), [PRIM_POSITION, <0.0, fYOff * (i - 1), fZOff * (i - 1)>]);
+        llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i), [PRIM_POSITION, <0.0, fYoff * (i - 1), fZoff * (i - 1)>]);
 }
 
 DoTextures(string sStyle) {
@@ -172,11 +172,10 @@ DefinePosition() {
 }
 
 DoButtonOrder() {   // -- Set the button order and reset display
-    list lTemp = [];
     integer iOldPos = llList2Integer(g_lPrimOrder,g_iOldPos);
     integer iNewPos = llList2Integer(g_lPrimOrder,g_iNewPos);
     integer i = 2;
-    lTemp += [0,1];
+    list lTemp = [0,1];
     for(;i<llGetListLength(g_lPrimOrder);++i) {
         integer iTempPos = llList2Integer(g_lPrimOrder,i);
         if (iTempPos == iOldPos)
@@ -195,13 +194,13 @@ DoButtonOrder() {   // -- Set the button order and reset display
 }
 
 DoReset() {   // -- Reset the entire HUD back to default
-    integer i = llGetInventoryNumber(INVENTORY_ALL);
+    integer i = llGetInventoryNumber(INVENTORY_SCRIPT) -1;
     string sScript;
     do {
         sScript = llGetInventoryName(INVENTORY_SCRIPT,i);
         if (sScript != llGetScriptName() && sScript != "")
             llResetOtherScript(sScript);
-    } while (--i >= 0);
+    } while (--i > 0);
     g_iLayout = 0;
     g_iSPosition = 69; // -- Don't we just love that position? *winks*
     g_iTintable = FALSE;
@@ -220,8 +219,8 @@ DoReset() {   // -- Reset the entire HUD back to default
 default
 {
     state_entry() {
-       // llSleep(1.0);
-       // llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu + "|" + g_sSubMenu1, "");
+        llSleep(1.0);
+        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu + "|" + g_sSubMenu1, "");
     }
 
     attach(key kAttached) {
@@ -252,7 +251,7 @@ default
                 list lParams = llParseString2List(sStr, ["|"], []);
                 kID = (key)llList2String(lParams, 0);
                 string sButton = llList2String(lParams, 1);
-                integer page = (integer)llList2String(lParams, 2);
+                integer iPage = (integer)llList2String(lParams, 2);
                 integer iPrimCount = llGetListLength(g_lPrimOrder);
                 string sPrompt;
                 list lButtons;
@@ -277,7 +276,7 @@ default
                             sPrompt += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
                         lButtons = ["Gray Square","Gray Circle","Blue","Red","White"];
                         if (g_iTintable) lButtons += ["Tint","-","-"];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
                     } else if (sButton == "Order") {
                         g_sCurrentMenu = g_sSubMenu2;
                         sPrompt = "\nThis is the order menu, simply select the\n";
@@ -294,11 +293,11 @@ default
                             else if (_pos == 6) lButtons += ["Leash"];
                         }
                         lButtons += ["RESET"];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
                     } else if (sButton == "RESET") {
                         sPrompt = "\nConfirm reset of the entire HUD.\n\n";
                         lButtons = ["Confirm","Cancel"];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
                     }
                     else if (sButton == "Confirm")
                         DoReset();
@@ -317,7 +316,7 @@ default
                         sPrompt += "If you don't see a color you enjoy, simply edit\n";
                         sPrompt += "and select a color under the menu you wish.\n";
                         lButtons = ["Orange","Yellow","Pink","Purple","Sky Blue","Light Green","Cyan","Mint"];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
                     }
                 } else if (g_sCurrentMenu == g_sSubMenu2) {   
                     if (sButton == UPMENU)
@@ -337,7 +336,7 @@ default
                                 else if (iTemp == 6) lButtons += ["Leash:"+(string)i];
                             }
                         }
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "Beckon") {
                         g_iOldPos = llListFindList(g_lPrimOrder, [3]);
                         sPrompt = "\nSelect the new position for "+sButton+"\n\n";
@@ -353,7 +352,7 @@ default
                                 else if (iTemp == 6) lButtons += ["Leash:"+(string)i];
                             }
                         }
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "Bookmarks") {
                         g_iOldPos = llListFindList(g_lPrimOrder, [4]);
                         sPrompt = "\nSelect the new position for "+sButton+"\n\n";
@@ -369,7 +368,7 @@ default
                                 else if (iTemp == 6) lButtons += ["Leash:"+(string)i];
                             }
                         }
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "Couples") {
                         g_iOldPos = llListFindList(g_lPrimOrder, [5]);
                         sPrompt = "\nSelect the new position for "+sButton+"\n\n";
@@ -387,7 +386,7 @@ default
                                 else if (iTemp == 6) lButtons += ["Leash:"+(string)i];
                             }
                         }
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     }
                     else if (sButton == "Leash")
                     {
@@ -405,11 +404,11 @@ default
                                 else if (iTemp == 6) lButtons += ["Leash:"+(string)i];
                             }
                         }
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "RESET") {
                         sPrompt = "\nConfirm reset of the button order to default.\n\n";
                         lButtons = ["Confirm","Cancel"];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "Confirm") {
                         g_lPrimOrder = [];
                         g_lPrimOrder = [0,1,2,3,4,5,6];
@@ -430,7 +429,7 @@ default
                         else sPrompt += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
                         lButtons = ["Gray Square","Gray Circle","Blue","Red","White"];
                         if (g_iTintable) lButtons += ["Tint"," "," "];
-                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], page);
+                        g_kMenuID = Dialog(kID, sPrompt, lButtons, [], iPage);
                     } else if (sButton == "Orange")
                         llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_COLOR, ALL_SIDES, <1, 0.49804, 0>, 1.0]);
                     else if (sButton == "Yellow")
