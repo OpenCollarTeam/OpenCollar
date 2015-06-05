@@ -50,10 +50,10 @@ integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
 integer DIALOG_TIMEOUT       = -9002;
 
-integer SEND_CMD_PICK_SUB    = -1002;
+//integer SEND_CMD_PICK_SUB    = -1002;
 integer SEND_CMD_ALL_SUBS    = -1003;
 integer SEND_CMD_SUB         = -1005;
-integer SEND_CMD_NEARBY_SUBS = -1006;
+//integer SEND_CMD_NEARBY_SUBS = -1006;
 
 integer LOCALCMD_REQUEST     = -2000;
 integer LOCALCMD_RESPONSE    = -2001;
@@ -69,7 +69,7 @@ string g_sRemoveSub    = "Remove";
 string g_sScanSubs     = "Add";
 string g_sLoadCard     = "Load";
 string g_sPrintSubs    = "Print";
-string g_sAllSubs      = " ALL";
+string g_sAllSubs      = "ALL";
 
 list g_lMainMenuButtons = ["MANAGE","Collar","Cage","Pose","RLV","Sit","Stand","Leash"];//,"HUD Style"];
 
@@ -124,22 +124,21 @@ SendCmd(key kID, string sCmd) {
     if (InSim(kID)) {
         llRegionSayTo(kID,getPersonalChannel(kID,1111), (string)kID + ":" + sCmd);
     } else {
-        g_sSubName = "secondlife:///app//agent/"+(string)kID+"/about"; //llList2String(g_lSubs, (llListFindList(g_lSubs, [(string)kID])) + 1);
-        llOwnerSay("\n\nSorry!\n\nI can't find "+g_sSubName+" in this region.\n");
-        PickSubMenu(g_kWearer, 0);
+        g_sSubName = "secondlife:///app/agent/"+(string)kID+"/about"; //llList2String(g_lSubs, (llListFindList(g_lSubs, [(string)kID])) + 1);
+        llOwnerSay(g_sSubName+" is not in this region.");
+        //PickSubMenu(g_kWearer, 0);
     }
 }
 
-SendNearbyCmd(string sCmd) {
-   /* integer i;
+/*SendNearbyCmd(string sCmd) {
+    integer i;
     integer iStop = llGetListLength(g_lSubs);
     for (; i < iStop; i+=4) {
         key kID = (key)llList2String(g_lSubs, i);
         if (kID != g_kWearer && InSim(kID)) //Don't expose out-of-sim subs
             SendCmd(kID, sCmd);
-    }*/
-    SendAllCmd(sCmd);
-}
+    }
+}*/
 
 SendAllCmd(string sCmd) { 
     integer i;
@@ -188,12 +187,15 @@ ManageMenu(key kID) {// Single page menu
 }
 
 PickSubMenu(key kID, integer iPage) { // Multi-page menu
-    string sPrompt = "\nWho will receive this command?";
-    list lButtons = [g_sAllSubs];
+    string sPrompt = "\nWho of your manage subs will receive this command?\n\nOnly subs in this sim are shown.";
+    list lButtons;
     integer i;
-    for (; i < llGetListLength(g_lSubs); i+= 2)
-        lButtons += [llList2String(g_lSubs, i + 1)];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
+    for (; i < llGetListLength(g_lSubs); i+= 2) {
+        if (InSim(llList2Key(g_lSubs,i))) //only show subs you can give commands to
+            lButtons += [llList2String(g_lSubs, i + 1)];
+    }
+    if (!llGetListLength(lButtons)) lButtons = ["-"];
+    key kMenuID = Dialog(kID, sPrompt, lButtons, [g_sAllSubs,UPMENU], iPage);
     list lNewStride = [kID, kMenuID, "PickSubMenu"];
     integer index = llListFindList(g_lMenuIDs, [kID]);
     if (~index)
@@ -254,7 +256,7 @@ ConfirmSubRemove(key kID) {
 }
 
 //NG lets send pings here and listen for pong replys
-SendCommand(key kID) {
+SendPingRequest(key kID) {
     if (llGetListLength(g_lListeners) >= 60)
         return;  // lets not cause "too many listen" error
     integer iChannel = getPersonalChannel(kID, 1111);
@@ -396,8 +398,8 @@ default
             SendCmd(kID, sStr);
         else if (iNum == SEND_CMD_ALL_SUBS)
             SendAllCmd(sStr);
-        else if (iNum == SEND_CMD_NEARBY_SUBS)
-            SendNearbyCmd(sStr);
+       // else if (iNum == SEND_CMD_NEARBY_SUBS) as of now, ALL is anyway nearby
+        //    SendNearbyCmd(sStr);
         else if (iNum == SUBMENU && sStr == "Main")
             MainMenu(kID);
         else if (iNum == DIALOG_RESPONSE) {
@@ -447,22 +449,24 @@ default
                         // Lets not ping oursevles
                         // when ping reply listeners are added, then removed, our personal channel is removed
                         if (llList2Key(g_lAgents,i) != g_kWearer)
-                            SendCommand(llList2Key(g_lAgents, i)); //kick off "sendCommand" for each uuid
+                            SendPingRequest(llList2Key(g_lAgents, i));
                      }
                 } else if (sMessage == g_sPrintSubs) {
-                    string sPrompt = "\n#copy and paste this into your Subs notecard.\n# You need to add the name and Key of each person you wish to add to the hud.\n";
-                    sPrompt+= "# The subname can be shortened to a name you like\n# The subid is their Key which can be obtained from their profile";
-                    sPrompt+= "\n# This only adds the names to your hud, it does not mean you have access to their collar\n# Empty lines and lines beginning with '#' are ignored";
-                    llOwnerSay(sPrompt);
-                    sPrompt = "\n";
-                    list lTemp;
-                    for (i=0; i < llGetListLength(g_lSubs); i += 2) {
-                        lTemp = llList2List(g_lSubs, i + 1, i + 1);
-                        sPrompt+="\nsubname =  " + llDumpList2String(lTemp,"");
-                        lTemp = llList2List(g_lSubs, i, i);
-                        sPrompt+= "\nsubid = " + llDumpList2String(lTemp,"");
-                    }
-                    llOwnerSay(sPrompt);
+                    if (llGetListLength(g_lSubs)) {
+                        string sPrompt = "\n#copy and paste this into your Subs notecard.\n# You need to add the name and Key of each person you wish to add to the hud.\n";
+                        sPrompt+= "# The subname can be shortened to a name you like\n# The subid is their Key which can be obtained from their profile";
+                        sPrompt+= "\n# This only adds the names to your hud, it does not mean you have access to their collar\n# Empty lines and lines beginning with '#' are ignored";
+                        llOwnerSay(sPrompt);
+                        sPrompt = "\n";
+                        list lTemp;
+                        for (i=0; i < llGetListLength(g_lSubs); i += 2) {
+                            lTemp = llList2List(g_lSubs, i + 1, i + 1);
+                            sPrompt+="\nsubname =  " + llDumpList2String(lTemp,"");
+                            lTemp = llList2List(g_lSubs, i, i);
+                            sPrompt+= "\nsubid = " + llDumpList2String(lTemp,"");
+                        }
+                        llOwnerSay(sPrompt);
+                    } else llOwnerSay("Nothing to print here, you need to add subs to the HUD first.");
                 }
             } else if (sMenuType == "RemoveSubMenu") {
                 integer index = llListFindList(g_lSubs, [sMessage]);
