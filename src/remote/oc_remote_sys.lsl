@@ -15,9 +15,6 @@ string g_sDialogUrl;
 //  strided list in the form key,name
 list g_lSubs = [];
 
-//  these will be told to the listener on LOCALCMD_REQUEST, so it knows not to pass them through the remote
-string g_sLocalCmds = "reset,help";
-
 //  list of hud channel handles we are listening for, for building lists
 list g_lListeners;
 
@@ -72,6 +69,8 @@ string g_sScanSubs     = "Add";
 string g_sLoadCard     = "Load";
 string g_sPrintSubs    = "Print";
 string g_sAllSubs      = " ALL";
+
+list g_lMainMenuButtons = [g_sManageMenu,"Collar","Cage","Pose","RLV","Sit","Stand","Leash"];//,"HUD Style"];
 
 string g_sWearerName;
 key    g_kRemovedSubID;
@@ -219,7 +218,6 @@ PickSubMenu(key kID, integer iPage) { // Multi-page menu
 RemoveSubMenu(key kID, integer iPage) // Multi-page menu
 {
     string sPrompt = "\nWho would you like to remove?\n\nNOTE: This will also remove you as their owner.";
-    //add subs
     list lButtons;
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 4)
@@ -239,7 +237,7 @@ RemoveSubMenu(key kID, integer iPage) // Multi-page menu
 
 MainMenu(key kID){
     string sPrompt = "\n\nwww.opencollar.at/ownerhud";
-    list lButtons = [g_sManageMenu,"Collar","Cage","Pose","RLV","Sit","Stand","Leash","HUD Style"];
+    list lButtons = g_lMainMenuButtons;[g_sManageMenu,"Collar","Cage","Pose","RLV","Sit","Stand","Leash","HUD Style"];
     key kMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
     // UUID , Menu ID, Menu
     list lNewStride = [kID, kMenuID, g_sMainMenu];
@@ -374,19 +372,16 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
     
-        //if (iNum == MENUNAME_REQUEST && sStr == g_sMainMenu)
-          //  llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sMainMenu + "|" + g_sSubMenu, "");
-        //else if (iNum == SUBMENU && sStr == g_sManageMenu)
-        //    SubMenu(kID);
-        //else 
-        if (iNum == SEND_CMD_SUB)
+        if (iNum == MENUNAME_RESPONSE) {
+            list lParams = llParseString2List(sStr, ["|"], []);
+            if (llList2String(lParams,0) == g_sMainMenu)
+                g_lMainMenuButtons += llList2List(lParams,1,1);
+        } else if (iNum == SEND_CMD_SUB)
             SendCmd(kID, sStr);
         else if (iNum == SEND_CMD_ALL_SUBS)
             SendAllCmd(sStr);
         else if (iNum == SEND_CMD_NEARBY_SUBS)
             SendNearbyCmd(sStr);
-        else if (iNum == LOCALCMD_REQUEST)
-            llMessageLinked(LINK_THIS, LOCALCMD_RESPONSE, g_sLocalCmds, "");
         else if (iNum == SUBMENU && sStr == "Main")
             MainMenu(kID);
         else if (iNum == DIALOG_RESPONSE) {
