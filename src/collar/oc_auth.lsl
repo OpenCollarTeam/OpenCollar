@@ -178,21 +178,28 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
         list lButtons;
         integer iNum= llGetListLength(lPeople);
         integer n;
-        for (n=1; n <= iNum/2; n = n + 1) {
+        for(;n<iNum;n=n+2) {
+            string sName = llList2String(lPeople,n);
+            if (sName) {
+                //sPrompt +=sName;
+                lButtons += [sName];
+            }
+        }
+ /*       for (n=1; n <= iNum/2; n = n + 1) {
             string sName = llList2String(lPeople, 2*n-1);
             if (sName != "") {
                 sPrompt += "\n" + (string)(n) + " - " + sName;
                 lButtons += [(string)(n)];
             }
-        }
-        lButtons += ["Remove All"];
-        Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "remove"+sToken);
+        }*/
+       // lButtons += ["Remove All"];
+        Dialog(kID, sPrompt, lButtons, ["Remove All",UPMENU], -1, iAuth, "remove"+sToken);
     } else {
         llMessageLinked(LINK_SET,NOTIFY,"0"+"The list is empty",kID);
         AuthMenu(kID, iAuth);
     }
 }
-
+    
 RemovePerson(string sName, string sToken, key kCmdr) {
     //where "lPeople" is a 2-strided list in form key,name
     //looks for strides identified by "name", removes them if found, and returns the list
@@ -211,6 +218,8 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         //Notify(kCmdr,g_sAuthError,FALSE);
         return;
     }
+    //simple conversion from ID to Name when menus are used to remove 
+    if((key)sName) sName = llList2String(lPeople,llListFindList(lPeople,[(string)sName])+1);
     sName = llToLower(sName);
     integer iFound=FALSE;
     integer iNumPeople= llGetListLength(lPeople)/2;
@@ -800,7 +809,9 @@ default {
                         AuthMenu(kAv, iAuth);
                     } else  if (sMessage == "Remove All") {
                         UserCommand(iAuth, sMenu + " Remove All", kAv,TRUE);
-                    } else if (sMenu == "removeowner") {
+                    } else UserCommand(iAuth, sMenu+" " +sMessage, kAv, TRUE);
+                    //as we get a key no need to check every single list for a name
+                    /*else if (sMenu == "removeowner") {
                         UserCommand(iAuth, sMenu+" " + llList2String(g_lOwners, (integer)sMessage*2 - 1), kAv, TRUE);
                     } else if (sMenu == "remtempowner") {
                         UserCommand(iAuth, sMenu+" " + llList2String(g_lTempOwners, (integer)sMessage*2 - 1), kAv, TRUE);
@@ -808,7 +819,7 @@ default {
                         UserCommand(iAuth, sMenu+" " + llList2String(g_lTrusted, (integer)sMessage*2 - 1), kAv, TRUE);
                     } else if(sMenu == "removeblock") {
                         UserCommand(iAuth, sMenu+" " + llList2String(g_lBlockList, (integer)sMessage*2 - 1), kAv, TRUE);
-                    }
+                    }*/
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
                     if (sMessage == UPMENU) {
                         AuthMenu(kAv, iAuth);
