@@ -51,6 +51,7 @@ key g_kWearer;
 list g_lSensorDetails;
 integer g_bSensorLock;
 integer g_iSensorTimeout;
+integer g_iSelectAviMenu; //added to show URIs in menus june 2015 Otto(garvin.twine)
 integer g_iColorMenu;
 
 list g_lColors = [
@@ -88,6 +89,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart = 0;
     integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
+    if (g_iSelectAviMenu) iMyPageSize = iMyPageSize-3;
     string sPagerPrompt;
     if (iNumitems > iMyPageSize)
     {
@@ -135,7 +137,8 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) {
                 //fixme: inlined single use key2name function
-                if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
+                if (g_iSelectAviMenu) sButton = "secondlife:///app/agent/"+sButton+"/about";
+                else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
                 else sButton=llKey2Name((key)sButton);
             }
             
@@ -149,6 +152,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
 
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
+            if(g_iSelectAviMenu) sButton = sButtonNumber;
             lButtons += [sButton];
         }
         iNBPromptlen=GetStringBytes(sNumberedButtons);
@@ -483,6 +487,7 @@ default {
                     llInstantMessage(kRCPT, "Could not find any avatars "+ findNotify + "in this region.");
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
+                    g_iSelectAviMenu = TRUE;
                     ClearUser(kRCPT);
                     Dialog(kRCPT, "\nChoose the person you like to add:\n", agentList, [UPMENU], 0, kID, -1, iAuth, "getavi_|"+REQ+"|"+TYPE); //iDigits==-1 means dialog should calculate numbered dialogs
                 }
@@ -528,6 +533,10 @@ default {
             }
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
+            if (iPage < 0 ) {
+            g_iSelectAviMenu = TRUE;
+            iPage = 0;
+            }
             list lButtons = llParseString2List(llList2String(lParams, 3), ["`"], []);
             if (llList2String(lButtons,0) == "colormenu please") {
                 lButtons = llList2ListStrided(g_lColors,0,-1,2);
@@ -600,6 +609,7 @@ default {
             else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo);
             else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
             else {
+                g_iSelectAviMenu = FALSE;
                 string sAnswer;
                 integer iIndex = llListFindList(ubuttons, [sMessage]);
                 if (iDigits && !~iIndex)
@@ -637,6 +647,7 @@ default {
         if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails))
         {
             //Debug("no active dialogs, stopping timer");
+            g_iSelectAviMenu = FALSE;
             llSetTimerEvent(0.0);
         }
     }
