@@ -419,17 +419,18 @@ default {
                 else if (sCommand == "devicename") {
                     string sMessage;
                     string sObjectName = llGetObjectName();
+                    string sCmdOptions = llGetSubString(sStr,11,-1);
                     if (sValue == "") {
                         sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDeviceName command help:\n_PREFIX_devicename [newname|reset]\n";
                         llMessageLinked(LINK_SET, POPUP_HELP, sMessage, kID);
-                    } else if (sValue == "reset") {
+                    } else if (sCmdOptions == "reset") {
                         g_sDeviceName = sObjectName;
                         sMessage = "The device name is reset to \""+g_sDeviceName+"\".";
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, ""); 
                     } else {
-                        g_sDeviceName = sValue;
-                        sMessage = sObjectName+"'s new device name is \""+g_sDeviceName+"\".";
+                        g_sDeviceName = sCmdOptions;
+                        sMessage = sObjectName+"'s new device name is \""+ g_sDeviceName+"\".";
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, ""); 
                     }
