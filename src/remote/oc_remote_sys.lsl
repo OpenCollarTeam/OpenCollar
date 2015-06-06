@@ -154,16 +154,19 @@ AddSub(key kID, string sName) {
         return;
     if (sName!="" && kID!="") {//don't register any unrecognised names
         g_lSubs+=[kID,sName];//Well we got here so lets add them to the list.
-        llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kID+"/about has been registered as "+sName+".\n");//Tell the owner we made it.
+        llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kID+"/about has been registered.\n");//Tell the owner we made it.
     }
 }
 
 RemoveSub(key kSub) {
     integer index = llListFindList(g_lSubs,[kSub]);
     if (~index) {
-        g_lSubs=llDeleteSubList(g_lSubs,index, index+3);
-        SendCmd(kSub, "remowners "+g_sWearerName);
-        SendCmd(kSub, "remsecowner "+g_sWearerName);
+        g_lSubs=llDeleteSubList(g_lSubs,index, index+1);
+        if (InSim(kSub)) {
+            SendCmd(kSub, "remowners "+g_sWearerName);
+            SendCmd(kSub, "remsecowner "+g_sWearerName);
+        }
+        llOwnerSay("secondlife:///app/agent/"+(string)kSub+"/about has been removed from your Owner HUD.");
     }
 }
 
@@ -192,10 +195,10 @@ PickSubMenu(key kID, integer iPage) { // Multi-page menu
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 2) {
         if (InSim(llList2Key(g_lSubs,i))) //only show subs you can give commands to
-            lButtons += [llList2String(g_lSubs, i + 1)];
+            lButtons += [llList2String(g_lSubs, i)];
     }
     if (!llGetListLength(lButtons)) lButtons = ["-"];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [g_sAllSubs,UPMENU], iPage);
+    key kMenuID = Dialog(kID, sPrompt, lButtons, [g_sAllSubs,UPMENU], -1);
     list lNewStride = [kID, kMenuID, "PickSubMenu"];
     integer index = llListFindList(g_lMenuIDs, [kID]);
     if (~index)
@@ -206,12 +209,12 @@ PickSubMenu(key kID, integer iPage) { // Multi-page menu
 
 RemoveSubMenu(key kID, integer iPage) // Multi-page menu
 {
-    string sPrompt = "\nWho would you like to remove?\n\nNOTE: This will also remove you as their owner.";
+    string sPrompt = "\nWho would you like to remove?\n\nNOTE: This will also remove you as their owner if the sub is in the same sim.";
     list lButtons;
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 2)
-        lButtons += [llList2String(g_lSubs, i + 1)];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
+        lButtons += [llList2String(g_lSubs, i)];
+    key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], -1);
     list lNewStride = [kID, kMenuID, "RemoveSubMenu"];
     integer index = llListFindList(g_lMenuIDs, [kID]);
     if (~index)
@@ -245,7 +248,7 @@ QuickLeashMenu(key kID) {
 }
 
 ConfirmSubRemove(key kID) { 
-    string sPrompt = "\nAre you sure you want to remove " + g_sSubName + "?\n\nNOTE: This will also remove you as their owner.";
+    string sPrompt = "\nAre you sure you want to remove secondlife:///app/agent/"+(string)kID+"/about?\n\nNOTE: This will also remove you as their owner.";
     key kMenuID = Dialog(kID, sPrompt, ["Yes", "No"], [UPMENU], 0);
     list lNewStride = [kID, kMenuID, "RemoveSubMenu"];
     integer index = llListFindList(g_lMenuIDs, [kID]);
@@ -284,13 +287,14 @@ AddSubMenu() {
     integer iSpaceIndex;
     string sName;
     do {
-        sName = llKey2Name(llList2Key(g_lNewSubIDs,index));
+/*        sName = llKey2Name(llList2Key(g_lNewSubIDs,index));
         iSpaceIndex = llSubStringIndex(sName," ");
         if (llGetSubString(sName,iSpaceIndex+1,-1) == "Resident")
             sName = llGetSubString(sName,0,iSpaceIndex-1);
-        lButtons += [sName];
+        lButtons += [sName];*/
+        lButtons += llList2Key(g_lNewSubIDs,index);
     } while (index++ < llGetListLength(g_lNewSubIDs));
-    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], 0);
+    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], -1);
     list lNewStride = [g_kWearer, kMenuID, "AddSubMenu"];
     index = llListFindList(g_lMenuIDs, [g_kWearer]);
     if (~index)
@@ -306,14 +310,15 @@ CageMenu() {
     integer index;
     integer i;
     do {
-        sName = llList2String(g_lCageVictims,i);
+      /*  sName = llList2String(g_lCageVictims,i);
         index = llSubStringIndex(sName," ");
         if (llGetSubString(sName,index+1,-1) == "Resident")
             sName = llGetSubString(sName,0,index-1);
-        lButtons += [sName];
-        i+=2;
+        lButtons += [sName];*/
+        lButtons += llList2Key(g_lCageVictims,i);
+        i++;
     } while (i < llGetListLength(g_lCageVictims));
-    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, [UPMENU], 0);
+    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, [UPMENU], -1);
     list lNewStride = [g_kWearer, kMenuID, "CageMenu"];
     index = llListFindList(g_lMenuIDs, [g_kWearer]);
     if (~index)
@@ -380,7 +385,7 @@ default
             if (! ~llListFindList(g_lNewSubIDs, [llGetOwnerKey(kID)]) && ! ~llListFindList(g_lSubs, [llGetOwnerKey(kID)]))
                 g_lNewSubIDs += [llGetOwnerKey(kID)];
         } else if (iChannel == g_iRLVRelayChannel && llGetSubString(sMessage,0,6) == "locator")
-            g_lCageVictims += [llKey2Name(llGetOwnerKey(kID)), llGetOwnerKey(kID)];
+            g_lCageVictims += [llGetOwnerKey(kID)];
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -417,13 +422,20 @@ default
                 } else if (sMessage == g_sListSubs) { //Lets List out subs
                     //list lTemp;
                     string sText ="\nI'm currently managing:\n";
-                    for (i=0; i < llGetListLength(g_lSubs); i += 2) {
-                        if (llStringLength(sText)>950) {
-                            llOwnerSay(sText);
-                            sText ="";
-                        }
-                        sText += "secondlife:///app/agent/"+llList2String(g_lSubs,i)+"/about as \""+llList2String(g_lSubs,i+1)+"\"\n";
-                    }
+                    integer iSubCount = llGetListLength(g_lSubs);
+                    if (iSubCount) {
+                        i=0;
+                        do {
+                            if (llStringLength(sText)>950) {
+                                llOwnerSay(sText);
+                                sText ="";
+                            }
+                            sText += "secondlife:///app/agent/"+llList2String(g_lSubs,i)+"/about";
+                            i+=2;
+                           if (i>2 || iSubCount>4) sText += ", ";
+                        } while (i < iSubCount-2);
+                        if (iSubCount>2)sText += " and secondlife:///app/agent/"+llList2String(g_lSubs,i)+"/about";
+                    } else sText += "nobody";
                     llOwnerSay(sText);
                     ManageMenu(kID); //return to ManageMenu
                 } else if (sMessage == g_sRemoveSub) 
@@ -462,30 +474,32 @@ default
                         }
                         llOwnerSay(sPrompt);
                     } else llOwnerSay("Nothing to print here, you need to add subs to the HUD first.");
+                    ManageMenu(kID);
                 }
             } else if (sMenuType == "RemoveSubMenu") {
-                integer index = llListFindList(g_lSubs, [sMessage]);
+                integer index = llListFindList(g_lSubs, [(key)sMessage]);
                 if (sMessage == UPMENU)
                     ManageMenu(g_kWearer);
-                else if (sMessage == "Yes")
+                else if (sMessage == "Yes") {
                     RemoveSub(g_kRemovedSubID);
-                else if (sMessage == "No")
-                    return;
+                    ManageMenu(g_kWearer);
+                } else if (sMessage == "No")
+                    ManageMenu(g_kWearer);
                 else if (~index) {
-                    g_kRemovedSubID = (key)llList2String(g_lSubs, index - 1);
-                    g_sSubName = llList2String(g_lSubs, index);
+                    g_kRemovedSubID = (key)llList2String(g_lSubs, index);
+                    g_sSubName = llList2String(g_lSubs, index+1);
                     ConfirmSubRemove(kID);
                 }
             } else if (sMenuType == "PickSubMenu") {
-                integer index = llListFindList(g_lSubs, [sMessage]);
+                integer index = llListFindList(g_lSubs, [(key)sMessage]);
                 if (sMessage == UPMENU)
                     MainMenu(g_kWearer);
                 else if (sMessage == g_sAllSubs)
                     SendAllCmd(g_sPendingCmd);
                 else if (~index) {
                     g_sSubName = sMessage;
-                    key sub = (key)llList2String(g_lSubs, index - 1);
-                    SendCmd(sub, g_sPendingCmd);
+                   // key sub = (key)llList2Key(g_lSubs, index);
+                    SendCmd(llList2Key(g_lSubs, index), g_sPendingCmd);
                 }
             } else if (sMenuType == "Main") {
                 if (sMessage == "MANAGE")
@@ -516,7 +530,8 @@ default
                     g_lCageVictims = [];
                     return;
                 } else if (! ~llSubStringIndex(sMessage, " ")) sMessage += " Resident";
-                g_kVictimID = llList2Key(g_lCageVictims,llListFindList(g_lCageVictims,[sMessage])+1);
+                g_kVictimID = (key)sMessage;
+                //g_kVictimID = llList2Key(g_lCageVictims,llListFindList(g_lCageVictims,[sMessage])+1);
                 if (llGetInventoryType("Cage") == INVENTORY_OBJECT)
                     llRezObject("Cage",llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
                 else
