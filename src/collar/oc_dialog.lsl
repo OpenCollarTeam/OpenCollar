@@ -470,6 +470,7 @@ dequeueSensor(){
         (string)llList2Float(lSensorInfo,4)
     );
 */
+    if (llList2Integer(lSensorInfo,2) == AGENT) g_iSelectAviMenu = TRUE;
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
