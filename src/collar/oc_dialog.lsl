@@ -517,6 +517,7 @@ default {
                         dequeueSensor();            
                     } else {
                         g_bSensorLock=FALSE;
+                        g_iSelectAviMenu = FALSE;
                     }
                     return;
                 }
@@ -534,6 +535,7 @@ default {
         if (llGetListLength(g_lSensorDetails) > 0){
             dequeueSensor();            
         } else {
+            g_iSelectAviMenu = FALSE;
             g_bSensorLock=FALSE;
         }
         
@@ -574,7 +576,7 @@ default {
                 list excl = llParseString2List(llList2String(lParams, 6), [","], []); //list of uuids to exclude from the search
                 
                 //list AVIS = [];
-                list agentList = llGetAgentList(AGENT_LIST_REGION, []);
+                list agentList = llGetAgentList(AGENT_LIST_PARCEL, []);
                 integer numAgents = llGetListLength(agentList);
                 while(numAgents--){
                     key avId=llList2Key(agentList, numAgents);
