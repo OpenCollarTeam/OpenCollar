@@ -372,6 +372,7 @@ dequeueSensor(){
         (string)llList2Float(lSensorInfo,4)
     );
 */
+    if (llList2Integer(lSensorInfo,2) == AGENT) g_iSelectAviMenu = TRUE;
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
@@ -431,6 +432,7 @@ default {
             dequeueSensor();            
         } else {
             g_bSensorLock=FALSE;
+            g_iSelectAviMenu = TRUE;
         }
         
     }
@@ -450,6 +452,7 @@ default {
             dequeueSensor();            
         } else {
             g_bSensorLock=FALSE;
+            g_iSelectAviMenu = TRUE;
         }
         
     }        
@@ -470,7 +473,7 @@ default {
                 list excl = llParseString2List(llList2String(lParams, 6), [","], []); //list of uuids to exclude from the search
                 
                 //list AVIS = [];
-                list agentList = llGetAgentList(AGENT_LIST_REGION, []);
+                list agentList = llGetAgentList(AGENT_LIST_PARCEL, []);
                 integer numAgents = llGetListLength(agentList);
                 while(numAgents--){
                     key avId=llList2Key(agentList, numAgents);
