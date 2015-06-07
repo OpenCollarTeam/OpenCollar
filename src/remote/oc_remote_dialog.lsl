@@ -89,7 +89,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart = 0;
     integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
-    if (g_iSelectAviMenu) iMyPageSize = iMyPageSize-3;
+    if (g_iSelectAviMenu) { //we have to reduce buttons due to text length limitations we reach with URI
+        iMyPageSize = iMyPageSize-3; // june 2015 Otto(garvin.twine)
+        if (iNumitems == 8) iMyPageSize = iMyPageSize-1; 
+        //special cases again are 7 or 8 avis where we have to reduce "active" buttons again
+        else if (iNumitems == 7) iMyPageSize = iMyPageSize-2;    
+    }
     string sPagerPrompt;
     if (iNumitems > iMyPageSize)
     {
