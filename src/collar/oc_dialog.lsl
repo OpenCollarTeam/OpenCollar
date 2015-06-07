@@ -517,7 +517,7 @@ default {
                         dequeueSensor();            
                     } else {
                         g_bSensorLock=FALSE;
-                        g_iSelectAviMenu = FALSE;
+                     //   g_iSelectAviMenu = FALSE;
                     }
                     return;
                 }
@@ -527,7 +527,6 @@ default {
         //pack buttons back into a ` delimited list, and put it back into lParams
         string sButtons=llDumpList2String(lButtons,"`");
         lParams=llListReplaceList(lParams,[sButtons],3,3);
-        
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
         llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
         
@@ -535,10 +534,9 @@ default {
         if (llGetListLength(g_lSensorDetails) > 0){
             dequeueSensor();            
         } else {
-            g_iSelectAviMenu = FALSE;
+          //  g_iSelectAviMenu = TRUE;
             g_bSensorLock=FALSE;
         }
-        
     }
     no_sensor()
     {
@@ -555,6 +553,7 @@ default {
         if (llGetListLength(g_lSensorDetails) > 0){
             dequeueSensor();            
         } else {
+            g_iSelectAviMenu = FALSE;
             g_bSensorLock=FALSE;
         }
         
