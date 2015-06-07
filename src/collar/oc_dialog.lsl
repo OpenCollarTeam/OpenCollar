@@ -59,7 +59,7 @@ integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
 integer FIND_AGENT = -9005;
 
-integer iPagesize = 12;
+integer g_iPagesize = 12;
 string MORE = "►";
 string PREV = "◄";
 string UPMENU = "BACK"; // string to identify the UPMENU button in the utility lButtons
@@ -143,8 +143,13 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //calculate page start and end
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart = 0;
-    integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
-    if (g_iSelectAviMenu) iMyPageSize = iMyPageSize-3;
+    integer iMyPageSize = g_iPagesize - llGetListLength(lUtilityButtons);
+    if (g_iSelectAviMenu) { //we have to reduce buttons due to text length limitations we reach with URI
+        iMyPageSize = iMyPageSize-3; // june 2015 Otto(garvin.twine)
+        if (iNumitems == 8) iMyPageSize = iMyPageSize-1; 
+        //special cases again are 7 or 8 avis where we have to reduce "active" buttons again
+        else if (iNumitems == 7) iMyPageSize = iMyPageSize-2;    
+    }
     string sPagerPrompt;
     if (iNumitems > iMyPageSize)
     {
@@ -192,13 +197,16 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) {
                 //fixme: inlined single use key2name function
-                if (g_iSelectAviMenu) sButton = "secondlife:///app/agent/"+sButton+"/about";
+                if (g_iSelectAviMenu) {
+                    sButton = "secondlife:///app/agent/"+sButton+"/about";
+                }
                 else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
                 else sButton=llKey2Name((key)sButton);
             }
             
             //inlined single use Integer2String function
             string sButtonNumber = (string)iCur;
+
             while (llStringLength(sButtonNumber)<iWithNums){
                 sButtonNumber = "0"+sButtonNumber;
             }
