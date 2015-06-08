@@ -399,7 +399,6 @@ SayOwners() {  // Give a "you are owned by" message, nicely formatted.
 integer in_range(key kID) {
     if (g_iLimitRange) {
         if (llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]), 0)) > 20) { //if the distance between my position and their position  > 20
-            llDialog(kID, "\nNot in range...", [], (integer)llFrand(1000000)+99999);
             return FALSE;
         }
     }
