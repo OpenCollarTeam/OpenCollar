@@ -102,7 +102,7 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-
+/*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -113,8 +113,11 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
+}*/
 
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if ((key)kID){
@@ -253,7 +256,7 @@ default {
     state_entry() {
         llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llGetObjectName();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
@@ -433,7 +436,7 @@ default {
                         Notify(kID, message, FALSE);
                     } else if(sValue=="reset") { //unset Global_WearerName
                         message=g_sWearerName+"'s name is reset to ";
-                        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+                        g_sWearerName = NameURI(g_kWearer);
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");  
                         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");  
                         message += g_sWearerName;
@@ -441,7 +444,7 @@ default {
                     } else {
                         string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
                         message=g_sWearerName+"'s new name is ";
-                        g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about "+sNewName+"]";
+                        g_sWearerName = "["+NameURI(g_kWearer)+" "+sNewName+"]";
                         message += g_sWearerName;
                         Notify(kID, message, FALSE);
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store           
@@ -526,7 +529,7 @@ default {
             else if (sToken == g_sGlobalToken+"touchNotify") g_iTouchNotify = (integer)sValue; // for Touch Notify
             else if (sToken == g_sGlobalToken+"WearerName") {
                  if (llSubStringIndex(sValue, "secondlife:///app/agent"))
-                    g_sWearerName = "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+                    g_sWearerName = "["+NameURI(g_kWearer)+" " + sValue + "]";
             }
             else if (sToken == "auth_owner" && llStringLength(sValue) > 0) 
                 g_lOwners = llParseString2List(sValue, [","], []);

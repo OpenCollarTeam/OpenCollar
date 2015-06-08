@@ -112,6 +112,10 @@ Debug(string sStr) {
 }
 */
 
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
+
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -164,7 +168,6 @@ AuthMenu(key kAv, integer iAuth) {
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
 }
-
 
 RemPersonMenu(key kID, string sToken, integer iAuth) {
     list lPeople;
@@ -231,7 +234,7 @@ RemovePerson(string sName, string sToken, key kCmdr) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Your access to %WEARERNAME%'s %DEVICETYPE% has been revoked.",llList2String(lPeople,iNumPeople*2));
                // llRegionSayTo(g_kWearer, g_iInterfaceChannel, "CollarCommand|499|OwnerChange"); //tell attachments owner changed
             }
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"secondlife:///app/agent/"+llList2String(lPeople,iNumPeople*2)+"/about removed from " + sToken + " list.",kCmdr);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(llList2Key(lPeople,iNumPeople*2))+" removed from " + sToken + " list.",kCmdr);
            // llMessageLinked(LINK_SET,NOTIFY,"0"+sThisName + " removed from " + sToken + " list.",kCmdr);
             lPeople = llDeleteSubList(lPeople, iNumPeople*2, iNumPeople*2+1);
             iFound=TRUE;
@@ -315,13 +318,13 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
             if (sToken == "owner") {
                 if (~llListFindList(g_lTrusted,[(string)kPerson])) RemovePerson(sName, "trust", kAv);
                 if (~llListFindList(g_lBlockList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"You belong to secondlife:///app/agent/"+(string)kPerson+"/about now!",g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"You belong to "+NameURI(kPerson)+" now!",g_kWearer);
                 //Notify(g_kWearer, "You belong to " + sName +" now!", FALSE);
                 llPlaySound("1ec0f327-df7f-9b02-26b2-8de6bae7f9d5",1.0);
             }
             else if (sToken == "trust") {
                 if (~llListFindList(g_lBlockList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Looks like secondlife:///app/agent/"+(string)kPerson+"/about is someone you can trust!",g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
                 //Notify(g_kWearer, "Looks like " + sName +" is someone you can trust!", FALSE);
                 llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
             }
@@ -365,23 +368,23 @@ SayOwners() {  // Give a "you are owned by" message, nicely formatted.
             if (llList2Key(lTemp,0)==g_kWearer)
                 sMsg += "yourself.";
             else
-                sMsg += "secondlife:///app/agent/"+llList2String(lTemp,0)+"/about.";
+                sMsg += NameURI(llList2Key(lTemp,0))+".";
         } else if (iCount == 4) {
-            sMsg +=  "secondlife:///app/agent/"+llList2String(lTemp,0)+"/about and ";
+            sMsg +=  NameURI(llList2String(lTemp,0))+"t and ";
             if (llList2Key(lTemp,2)==g_kWearer)
                 sMsg += "yourself.";                
             else
-                sMsg += "secondlife:///app/agent/"+llList2String(lTemp,2)+"/about.";
+                sMsg += NameURI(llList2Key(lTemp,2))+".";
         } else {
             index=0;
             do {
-                sMsg += "secondlife:///app/agent/"+llList2String(lTemp,index)+"/about, ";
+                sMsg += NameURI(llList2Key(lTemp,index))+", ";
                 index+=2;
             } while (index<iCount-2);
             if (llList2Key(lTemp,index) == g_kWearer)
                 sMsg += "and yourself.";
             else 
-                sMsg += "and "+"secondlife:///app/agent/"+llList2String(lTemp,index)+"/about.";
+                sMsg += "and "+NameURI(llList2Key(lTemp,index))+".";
         }
         llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg,g_kWearer);
  //       Debug("Lists Loaded!");

@@ -126,17 +126,9 @@ Debug(string sStr) {
 }
 */
 
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}*/
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
@@ -198,7 +190,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             if ((key)sButton) {
                 //fixme: inlined single use key2name function
                 if (g_iSelectAviMenu) {
-                    sButton = "secondlife:///app/agent/"+sButton+"/about";
+                    sButton = NameURI((key)sButton);
                 }
                 else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
                 else sButton=llKey2Name((key)sButton);
@@ -245,7 +237,10 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iPromptlen + iNBPromptlen + iPagerPromptLen < 512) { //we can fit it all in the dialog
         sThisPrompt = sPrompt + sNumberedButtons + sPagerPrompt ;
     } else if (iPromptlen + iPagerPromptLen < 512) { //we can fit in the whole prompt and pager info, but not the buttons list
-        sThisPrompt = sPrompt + sPagerPrompt;
+        if (iPromptlen + iPagerPromptLen < 459) {
+            sThisPrompt = sPrompt + "\nPlease check nearby chat for button descriptions.\n" + sPagerPrompt;
+        } else 
+            sThisPrompt = sPrompt + sPagerPrompt;
         sThisChat = sNumberedButtons;
     } else {  //can't fit prompt and pager, so send truncated prompt, pager and chat full prompt and button list
         sThisPrompt=TruncateString(sPrompt,510-iPagerPromptLen)+sPagerPrompt;
@@ -495,7 +490,7 @@ default {
         //g_sScript = "dialog_";
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-        g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
+        g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llGetObjectName();
         //Debug("Starting");
     }
@@ -712,7 +707,10 @@ default {
             if (sToken == g_sSettingToken + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
-            else if (sToken == g_sGlobalToken+"WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            else if (sToken == g_sGlobalToken+"WearerName") {
+                if (llSubStringIndex(sValue, "secondlife:///app/agent"))
+                    g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
+            }
             else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == "listener_channel") g_iListenChan = (integer)sValue;
