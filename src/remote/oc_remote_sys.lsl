@@ -101,6 +101,10 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
+string NameURI(key kID) {
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
+
 integer getPersonalChannel(key kOwner, integer iOffset) {
     integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
     if (0 < iChan)
@@ -124,21 +128,11 @@ SendCmd(key kID, string sCmd) {
     if (InSim(kID)) {
         llRegionSayTo(kID,getPersonalChannel(kID,1111), (string)kID + ":" + sCmd);
     } else {
-        g_sSubName = "secondlife:///app/agent/"+(string)kID+"/about"; //llList2String(g_lSubs, (llListFindList(g_lSubs, [(string)kID])) + 1);
+        g_sSubName = NameURI(kID);
         llOwnerSay(g_sSubName+" is not in this region.");
         //PickSubMenu(g_kWearer, 0);
     }
 }
-
-/*SendNearbyCmd(string sCmd) {
-    integer i;
-    integer iStop = llGetListLength(g_lSubs);
-    for (; i < iStop; i+=4) {
-        key kID = (key)llList2String(g_lSubs, i);
-        if (kID != g_kWearer && InSim(kID)) //Don't expose out-of-sim subs
-            SendCmd(kID, sCmd);
-    }
-}*/
 
 SendAllCmd(string sCmd) { 
     integer i;
@@ -154,7 +148,7 @@ AddSub(key kID, string sName) {
         return;
     if (sName!="" && kID!="") {//don't register any unrecognised names
         g_lSubs+=[kID,sName];//Well we got here so lets add them to the list.
-        llOwnerSay("\n\nsecondlife:///app/agent/"+(string)kID+"/about has been registered.\n");//Tell the owner we made it.
+        llOwnerSay("\n\n"+NameURI(kID)+" has been registered.\n");//Tell the owner we made it.
     }
 }
 
@@ -166,7 +160,7 @@ RemoveSub(key kSub) {
             SendCmd(kSub, "remowners "+g_sWearerName);
             SendCmd(kSub, "remsecowner "+g_sWearerName);
         }
-        llOwnerSay("secondlife:///app/agent/"+(string)kSub+"/about has been removed from your Owner HUD.");
+        llOwnerSay(NameURI(kSub)+" has been removed from your Owner HUD.");
     }
 }
 
@@ -248,7 +242,7 @@ QuickLeashMenu(key kID) {
 }
 
 ConfirmSubRemove(key kID) { 
-    string sPrompt = "\nAre you sure you want to remove secondlife:///app/agent/"+(string)kID+"/about?\n\nNOTE: This will also remove you as their owner.";
+    string sPrompt = "\nAre you sure you want to remove "+NameURI(kID)+"?\n\nNOTE: This will also remove you as their owner.";
     key kMenuID = Dialog(kID, sPrompt, ["Yes", "No"], [UPMENU], 0);
     list lNewStride = [kID, kMenuID, "RemoveSubMenu"];
     integer index = llListFindList(g_lMenuIDs, [kID]);
@@ -430,11 +424,11 @@ default
                                 llOwnerSay(sText);
                                 sText ="";
                             }
-                            sText += "secondlife:///app/agent/"+llList2String(g_lSubs,i)+"/about";
+                            sText += NameURI(llList2Key(g_lSubs,i));
                             i+=2;
                            if (i>2 || iSubCount>4) sText += ", ";
                         } while (i < iSubCount-2);
-                        if (iSubCount>2)sText += " and secondlife:///app/agent/"+llList2String(g_lSubs,i)+"/about";
+                        if (iSubCount>2)sText += " and "+NameURI(llList2Key(g_lSubs,i));
                     } else sText += "nobody";
                     llOwnerSay(sText);
                     ManageMenu(kID); //return to ManageMenu
