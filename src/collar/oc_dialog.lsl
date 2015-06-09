@@ -353,28 +353,6 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons){  //r
 
     return lOut;
 }
-/*
-list PrettyMain(list lOptions)
-{
-    integer iA=llListFindList(lOptions,["Access"]);
-    integer iO=llListFindList(lOptions,["Options"]);
-    integer iH=llListFindList(lOptions,["Help/About"]);
-    
-    if(~iA && ~iO && ~iH) //all three buttons found. Otherwise menu isn't main or is messed up, and we return
-    {
-       lOptions=llDeleteSubList(lOptions,iA,iA);
-       if(iO>iA) --iO;
-       if(iH>iA) --iH;
-       lOptions=llDeleteSubList(lOptions,iO,iO);
-       if (iH>iO) --iH;
-       lOptions=llDeleteSubList(lOptions,iH,iH);
-       return lOptions+["Access","Options","Help/About"];
-    }
-    else return lOptions;
-}
-*/     
-
-    
 
 RemoveMenuStride(integer iIndex)       //fixme:  duplicates entire global lMenu list
 {
@@ -428,35 +406,26 @@ ClearUser(key kRCPT)
     //Debug(llDumpList2String(g_lMenus, ","));
 }
 
-integer UserCommand(integer iNum, string sStr, key kID)
+UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum < CMD_OWNER || iNum > CMD_WEARER) return FALSE;
-    if (iNum == CMD_GROUP) return FALSE;
+    if (iNum == CMD_GROUP) return;
     list lParams = llParseString2List(llToLower(sStr), ["="], []);
     string sToken = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
     if (sToken == SPAMSWITCH) // add/rem user to verbose=off list
     {
         integer i = llListFindList(MRSBUN, [kID]);
-        if (sValue == "off")
-        {
-            if (~i) return TRUE; // already in list
+        if (sValue == "off") {
+            if (~i) return; // already in list
             MRSBUN += [kID];
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature activated for you.",kID);
-            //Notify(kID, "Verbose Feature activated for you.", FALSE);
-        }
-        else if (~i)
-        {
+        } else if (~i) {
             MRSBUN = llDeleteSubList(MRSBUN, i, i);
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature de-activated for you.",kID);
-            //Notify(kID, "Verbose Feature de-activated for you.", FALSE);
-        }
-        else return TRUE; // not in list to start with
+        } else return; // not in list to start with
         if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
         else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
-        return TRUE;
     }
-    return FALSE;
 }
 
 dequeueSensor(){
@@ -602,8 +571,7 @@ default {
             //} else {
                 //Debug(sStr);
             }
-        } else 
-        if (iNum == SENSORDIALOG){
+        } else if (iNum == SENSORDIALOG){
             //first, store all incoming parameters in a global sensor details list
             
             //test for locked sensor subsystem
@@ -619,8 +587,7 @@ default {
                 dequeueSensor();
             }
             
-        } else 
-        if (iNum == DIALOG)
+        } else if (iNum == DIALOG)
         {//give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
             //Debug("DIALOG:"+sStr);
@@ -698,7 +665,7 @@ default {
                 }
             }
         }
-        else if (UserCommand(iNum, sStr, kID)) return;
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["="], []);

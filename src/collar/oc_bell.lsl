@@ -201,10 +201,8 @@ PrepareSounds() {
     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 }
 
-// returns TRUE if eligible (AUTHED link message number)
-integer UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
+UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
-    if (iNum > CMD_WEARER || iNum < CMD_OWNER) return FALSE; // sanity check
     string test=llToLower(sStr);
     if (sStr == "menu " + g_sSubMenu || sStr == "bell") {
         BellMenu(kID, iNum);
@@ -263,7 +261,6 @@ integer UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth val
         }
     }
     //Debug("command executed");
-    return TRUE;
 }
 
 default {
@@ -288,7 +285,7 @@ default {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }         
-        else if (UserCommand(iNum, sStr, kID)) return;
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE && kID == g_kDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAV = llList2String(lMenuParams, 0);

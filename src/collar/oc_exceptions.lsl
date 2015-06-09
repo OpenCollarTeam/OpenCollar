@@ -316,16 +316,14 @@ ClearEx() {
     llMessageLinked(LINK_SET, RLV_CMD, "clear=startim:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
 }
 
-integer UserCommand(integer iNum, string sStr, key kID) {
-    if ((iNum >= CMD_OWNER) && (iNum <= CMD_EVERYONE)) {
-        if (iNum != CMD_OWNER) {
-            if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-                llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
-            } return TRUE;
-        }
+UserCommand(integer iNum, string sStr, key kID) {
+    if (iNum != CMD_OWNER) {
+        if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
+        } 
+        return;
     }
-    if (iNum != CMD_OWNER) return FALSE; // Only Primary Owners
     if (sStr == "runaway") llResetScript();
     string sLower = llToLower(sStr);
     if (sLower == "ex" || sLower == "menu " + llToLower(g_sSubMenu)) {
@@ -334,7 +332,7 @@ integer UserCommand(integer iNum, string sStr, key kID) {
     }
     list lParts = llParseString2List(sStr, [" "], []); // ex,add,first,last at most
     integer iInd = llGetListLength(lParts);
-    if (iInd < 1 || iInd > 4 || llList2String(lParts, 0) != "ex") return FALSE;
+    if (iInd < 1 || iInd > 4 || llList2String(lParts, 0) != "ex") return;
     lParts = llDeleteSubList(lParts, 0, 0); // no longer need the "ex"
     iInd = llGetListLength(lParts);
     string sCom = llList2String(lParts, 0);
@@ -438,7 +436,6 @@ integer UserCommand(integer iNum, string sStr, key kID) {
         }
     }
     @UCDone;
-    return TRUE;
 }
 
 default {
@@ -458,7 +455,7 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (UserCommand(iNum, sStr, kID)) return;
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == LM_SETTING_RESPONSE) {

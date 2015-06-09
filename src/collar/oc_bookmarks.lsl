@@ -123,13 +123,7 @@ DoMenu(key keyID, integer iAuth)
     g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
 
-integer UserCommand(integer iNum, string sStr, key kID)
-{
-    if(!(iNum >= CMD_OWNER && iNum <= CMD_WEARER)) {
-        return FALSE;
-    }
-
-    // a validated command from a owner, secowner, groupmember or the wearer has been received
+UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     //string sCommand = llToLower(llList2String(lParams, 0));
     //string sValue = llToLower(llList2String(lParams, 1));
@@ -143,13 +137,11 @@ integer UserCommand(integer iNum, string sStr, key kID)
     } else if(sStr == PLUGIN_CHAT_CMD || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_CMD_ALT) {
         if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,,"0"+"%NOACCESS%,FALSE);
-            return TRUE;
         }
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {           if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
-            return TRUE;
         }
 //grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
@@ -174,10 +166,7 @@ You can enter:
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " remove") - 1) == PLUGIN_CHAT_CMD + " remove") { //grab partial string match to capture destination name
         if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError,FALSE);
-            return TRUE;
-        }
-        if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
+        } else if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_CMD + " remove"), -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID); 
@@ -196,15 +185,11 @@ You can enter:
         }
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
         if (iNum==CMD_GROUP){
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); 
-            //Notify(kID,g_sAuthError,FALSE);
-            return TRUE;
-        }
-        PrintDestinations(kID);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else PrintDestinations(kID);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD) - 1) == PLUGIN_CHAT_CMD) {
         if (iNum==CMD_GROUP){
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID); //Notify(kID,g_sAuthError,FALSE);
-            return TRUE;
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         }
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
@@ -243,8 +228,7 @@ You can enter:
             if(found == 0) {
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
                 if (llSubStringIndex(sCmd,"o:") == 0) {}//llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID); (enable this to support hud forcetp.  disabled now since rlvtp still does this
-                else llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID); //
-                //Notify(kID, "The bookmark '" + sCmd + "' has not been found in the " + g_sDeviceType + " of " + llKey2Name(g_kWearer) + ".", FALSE);
+                else llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID); 
             } else if(found > 1) {
                 g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             } else { //exactly one matching LM found, so use it
@@ -254,10 +238,8 @@ You can enter:
         //Can't find in list, lets try find substring matches
         else {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"I didn't understand your command.",kID);
-            //Notify(kID, "I didn't understand your command.", FALSE);
         }
     }
-    return TRUE;
 }
 
 addDestination(string sMessage, string sLoc, key kID)
@@ -544,9 +526,8 @@ default {
                     g_lVolatile_Slurls += [sValue];
                 }
             } 
-        } else if(UserCommand(iNum, sStr, kID)) {
-            // do nothing more if TRUE
-        } else if(iNum == DIALOG_RESPONSE) {
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if(iNum == DIALOG_RESPONSE) {
             if(llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
                 //got a menu response meant for us, extract the values
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);

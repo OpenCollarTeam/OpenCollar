@@ -270,10 +270,7 @@ MainMenu(key kID, integer iAuth) {
     else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
 }
 
-integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
-    if (iNum == CMD_EVERYONE) return TRUE;  // No command for people with no privilege in this plugin.
-    else if (iNum > CMD_EVERYONE || iNum < CMD_OWNER) return FALSE; // sanity check
-
+UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llToLower(llList2String(lParams, 0));
 
@@ -299,7 +296,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
     else if (sStr == "options") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
-        return TRUE;
     } else if (sCmd == "menuto") {
         key kAv = (key)llList2String(lParams, 1);
         if (llGetAgentSize(kAv) != ZERO_VECTOR) //if kAv is an avatar in this region
@@ -353,12 +349,10 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 g_iNews=FALSE;
                 //notify news off
                 llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nOk! No more news from now on.\n\n*pout*\n",kID);
-                //Notify(kID,"\n\nOk! No more news from now on.\n\n*pout*\n",TRUE);
             } else if (sStr=="news on"){
                 g_iNews=TRUE;
                 //notify news on
                 llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nThanks!\n\nWe won't spam you, promise! <3\n",kID);
-                //Notify(kID,"\n\nThanks!\n\nWe won't spam you, promise! <3\n",TRUE);
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
@@ -376,19 +370,16 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             g_kCurrentUser = kID;
             g_iUpdateAuth = iNum;
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Searching for nearby updater",kID);
-            //Notify(kID,"Searching for nearby updater",FALSE);
             g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
             g_iUpdateFromMenu=fromMenu;
             llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
-            //Notify(kID,"Only the wearer can update the " + g_sDeviceType + ".",FALSE);
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (sCmd == "version") {
         llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n",kID);
-        //Notify(kID, "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n", FALSE);
     } else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
         
@@ -404,7 +395,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;        
         llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
     }    
-    return TRUE;
 }
 
 string GetTimestamp() { // Return a string of the date and time
@@ -465,27 +455,20 @@ BuildLockElementList()//EB
     integer n;
     integer iLinkCount = llGetNumberOfPrims();
     list lParams;
-
     // clear list just in case
     g_lOpenLockElements = [];
     g_lClosedLockElements = [];
-
     //root prim is 1, so start at 2
-    for (n = 2; n <= iLinkCount; n++)
-    {
+    for (n = 2; n <= iLinkCount; n++) {
         // read description
         lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_DESC]), ["~"], []);
         // check inf name is lock name
-        if (llList2String(lParams, 0)==g_sLockPrimName || llList2String(lParams, 0)==g_sClosedLockPrimName)
-        {
+        if (llList2String(lParams, 0)==g_sLockPrimName || llList2String(lParams, 0)==g_sClosedLockPrimName)  
             // if so store the number of the prim
             g_lClosedLockElements += [n];
-        }
         else if (llList2String(lParams, 0)==g_sOpenLockPrimName) 
-        {
             // if so store the number of the prim
             g_lOpenLockElements += [n];
-        }
     }
 }
 
@@ -539,7 +522,6 @@ default
     state_entry() {
         //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
         g_kWearer = llGetOwner(); //updates in change event prompting script restart
-        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
         BuildLockElementList(); //updates in change event, doesn;t need a reset every time
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
        // llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Global_locked", ""); //settings will send these on_rez, so no need to ask every rez
@@ -683,60 +665,31 @@ default
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% aborted.\n",kAv);
                 }
             }
-        }
-        else if (UserCommand(iNum, sStr, kID, FALSE)) return;
-       // else if ((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE) 
-         //       && llSubStringIndex(sStr, "Global_WearerName") == 0 ) {
-         //   integer iInd = llSubStringIndex(sStr, "=");
-         //   string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to g_sWearerName to work with
-           // if (iNum == LM_SETTING_RESPONSE) g_sWearerName = sValue;
-           // else {
-           //     g_kWearer = llGetOwner();
-           //     g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";
-            //}
-        //}
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sGlobalToken+"locked") {
                 g_iLocked = (integer)sValue;
                 SetLockElementAlpha(); //EB
-            }// else if (sToken == "Global_DeviceType") g_sDeviceType = sValue;
-           // else if (sToken == "Global_WearerName") g_sWearerName = sValue;
-          /*  else if (sToken == "auth_owner")
-            {
-                g_lOwners = llParseString2List(sValue, [","], []);
-            }*/
-            else if(sToken =="lock_locksound")
-            {
+            } else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
-            }
-            else if(sToken =="lock_unlocksound")
-            {
-                if(sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
-                else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
-            }
-           // else if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
-            else if (sToken == "listener_safeword") g_sSafeWord = sValue;
-           // else if (sToken == "Global_prefix") g_sPrefix = sValue;
+            } else if(sToken =="lock_unlocksound") {
+                if (sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
+                else if ((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
+            } else if (sToken == "listener_safeword") g_sSafeWord = sValue;
             else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
-        }
-        else if (iNum == DIALOG_TIMEOUT)
-        {
+        } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             //remove stride from g_lMenuIDs
             //we have to subtract from the index because the dialog id comes in the middle of the stride
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
-        }
-        else if (iNum == LM_SETTING_SAVE)
-        {
+        } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -746,23 +699,18 @@ default
             //else 
             if (sToken == "listener_safeword") g_sSafeWord = sValue;
            // else if (sToken == "Global_prefix") g_sPrefix = sValue;
-        }
-        else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR)
-        {
+        } else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR) {
             if (g_iLocked) llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
             else llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
         }
     }
 
-    on_rez(integer iParam)
-    {
+    on_rez(integer iParam) {
         init();
     }
     
-    changed(integer iChange)
-    {
-        if (iChange & CHANGED_INVENTORY)
-        {
+    changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
                 llSleep(0.5); //wait for new scripts to start up
                 RebuildMenu(); //llResetScript();
@@ -771,8 +719,7 @@ default
             g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_COLOR) // ********************* 
-        {
+        if (iChange & CHANGED_COLOR) {
             integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
             if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
                 g_iHide = iNewHide;
@@ -789,29 +736,22 @@ default
         }
        */
     }
-    attach(key kID)
-    {
-        if (g_iLocked)
-        {
-            if(kID == NULL_KEY)
-            {
+    attach(key kID) {
+        if (g_iLocked) {
+            if(kID == NULL_KEY) {
                 g_bDetached = TRUE;
                 llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has attached me while locked at "+GetTimestamp()+"!",kID);
-                //NotifyOwners(g_sWearerName + " has detached me while locked at " + GetTimestamp() + "!");
-            }
-            else if(g_bDetached)
-            {
+            } else if (g_bDetached) {
                 llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has re-attached me at "+GetTimestamp()+"!",kID);
-                //NotifyOwners(g_sWearerName + " has re-atached me at " + GetTimestamp() + "!");
                 g_bDetached = FALSE;
             }
         }
     }
-    http_response(key id, integer status, list meta, string body){
+    
+    http_response(key id, integer status, list meta, string body) {
         if (status == 200) { // be silent on failures.
             if (id == g_kWebLookup){
                 llMessageLinked(LINK_SET,NOTIFY,"0"+body,g_kCurrentUser);
-                //Notify(g_kCurrentUser,body,FALSE);
             } else if (id == github_version_request) {  // strip the newline off the end of the text
                 if (compareVersions(llStringTrim(body, STRING_TRIM),g_sCollarVersion)) g_iLatestVersion=FALSE;
                 else g_iLatestVersion=TRUE;
@@ -824,7 +764,6 @@ default
                 if (compareVersions(this_news_time,g_sLastNewsTime)) {
                     string news = "Beep: " + body;
                     llMessageLinked(LINK_SET,NOTIFY,"0"+news,g_kWearer);
-                    //Notify(llGetOwner(), news, FALSE);
                     g_sLastNewsTime = this_news_time;
                 } 
             }
@@ -854,7 +793,6 @@ default
             if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
         } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
-            //Notify(g_kCurrentUser,"Multiple updaters were found nearby. Please remove all but one and try again.",FALSE);
         } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
         else UpdateConfirmMenu();  //perform update
     }
