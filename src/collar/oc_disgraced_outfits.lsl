@@ -49,7 +49,7 @@ integer CMD_OWNER                   = 500;
 integer CMD_WEARER                  = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD                = 510; 
+//integer CMD_SAFEWORD                = 510; 
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -129,11 +129,9 @@ RemAttached(key keyID, integer iAuth,string sFolders) {
     g_kRemAttachedMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }
 
-integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
+UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     sStr=llToLower(sStr);
-    if (!(iNum >= CMD_OWNER && iNum <= CMD_WEARER)) {
-        return FALSE;
-    } else if (sStr == "outfits" || sStr == "menu outfits") {
+    if (sStr == "outfits" || sStr == "menu outfits") {
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     } else if (llSubStringIndex(sStr,"wear ") == 0) {
@@ -153,7 +151,6 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     if (remenu) {
         DoMenu(kID, iNum);
     }
-    return TRUE;
 }
 
 string WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
@@ -228,12 +225,10 @@ default {
         else if (iNum == RLVA_VERSION) { 
             g_iRlvaOn = TRUE;
          }
-        else if (iNum == CMD_SAFEWORD) { 
+      //  else if (iNum == CMD_SAFEWORD) { 
             // Safeword has been received, release any restricitions that should be released
-         }
-        else if (UserCommand(iNum, sStr, kID, FALSE)) {
-                    // do nothing more if TRUE
-        }
+        // }
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) { 
 
             list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);

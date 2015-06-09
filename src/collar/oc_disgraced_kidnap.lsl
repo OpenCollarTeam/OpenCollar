@@ -132,8 +132,7 @@ doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
     }
 }
 
-integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
-    if (!(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)) return FALSE;
+UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"kidnap TempOwner") == 0){
         list lSplit = llParseString2List(sStr, ["~"], []);
@@ -146,7 +145,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     else if (sStrLower == "kidnap" || sStrLower == "menu kidnap") {
         if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
             if (g_iCaptureOn) Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kID, llKey2Name(kID));
-            else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID,g_sAuthError, FALSE);
+            else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         } else KidnapMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
     else if (iNum!=CMD_OWNER && iNum != CMD_WEARER){
@@ -154,19 +153,18 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     } 
     else if (llSubStringIndex(sStrLower,"kidnap")==0) {
         if (llGetListLength(g_lTempOwners)>0 && kID==g_kWearer) {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//Notify(g_kWearer, "You are no longer in charge here.", FALSE);
-            return(TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+            return;
         } else if (sStrLower == "kidnap on") {
-            llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode activated",kID);//Notify(kID,"Kidnap Mode activated.",TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode activated",kID);
             if (g_iVulnerableOn) {
                 llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
-                //WhisperVulnerable();
                 llSetTimerEvent(900.0);
             }
             g_iCaptureOn=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE,g_sSettingToken+"kidnap=1", "");
         } else if (sStrLower == "kidnap off") {
-            if(g_iCaptureOn) llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode deactivated",kID);//Notify(kID,"Kidnap Mode deactivated.",TRUE);
+            if(g_iCaptureOn) llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnap Mode deactivated",kID);
             g_iCaptureOn=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,g_sSettingToken+"kidnap", "");
             g_lTempOwners=[];
@@ -175,44 +173,29 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         } else if (sStrLower == "kidnap release") {
             llMessageLinked(LINK_SET, CMD_OWNER, "unfollow", kID);
             llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kID)+" has released you.",g_kWearer);
-            //Notify(g_kWearer,llGetDisplayName(kID)+" has released you.",FALSE);
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
-            //Notify(kID,"You have released "+g_sWearerName+".",FALSE);
             g_lTempOwners=[];
             saveTempOwners();
             llSetTimerEvent(0.0);
-            return TRUE;  //no remenuin case of release
+            return;  //no remenuin case of release
         } else if (sStrLower == "kidnap vulnerable on") {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"vulnerable=1", "");
             g_iVulnerableOn = TRUE;
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
-            //llOwnerSay("You are vulnerable now...");
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% is vulnerable now...",kID);
-            //Notify(kID,g_sWearerName+" is vulnerable now...",FALSE);
             if (g_iCaptureOn){
                  llSetTimerEvent(900.0);
                  llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
-                 //WhisperVulnerable();
                 }
         } else if (sStrLower == "kidnap vulnerable off") {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"vulnerable", "");
             g_iVulnerableOn = FALSE;
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Kidnappings will require consent first.",kID);
-            //Notify(kID,"Kidnappings will require consent first.",TRUE);
             llSetTimerEvent(0.0);
         }
         if (remenu) KidnapMenu(kID, iNum);
     }
-    return TRUE;
 }
-/*
-WhisperVulnerable() {
-    string sDeviceName = llGetObjectName();
-    llSetObjectName("");
-    llSay(0, g_sWearerName+": You can kidnap me if you touch my neck...");
-    llSetObjectName(sDeviceName);
-}*/
-
 
 default{
     
@@ -254,8 +237,8 @@ default{
             if (sToken == g_sSettingToken+"kidnap") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
             else if (sToken == g_sSettingToken+"vulnerable") g_iVulnerableOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
-        } else if (UserCommand(iNum, sStr, kID, FALSE)) {  // do nothing more if TRUE
-        } else if (iNum == DIALOG_RESPONSE) {
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
+        else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);

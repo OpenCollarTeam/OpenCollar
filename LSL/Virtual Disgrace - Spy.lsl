@@ -128,7 +128,6 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
             string sMessageToSend=llGetSubString(g_sChatBuffer,0,index);
             //Debug("send length:"+(string)llStringLength(sMessageToSend));
             NotifyOwners(sMessageToSend);
-//            llMessageLinked(LINK_SET,NOTIFY_OWNERS,sMessageToSend,"ignoreNearby");
             serial++;
             sHeader="["+(string)serial + "]\n";
             
@@ -140,7 +139,6 @@ DoReports(string sChatLine, integer sendNow, integer fromTimer) {
             sHeader="["+(string)serial + "]"+sLocation+"\n";
             NotifyOwners(sHeader+g_sChatBuffer);
             serial++;
-//            llMessageLinked(LINK_SET,NOTIFY_OWNERS,sHeader+g_sChatBuffer,"ignoreNearby");
             g_sChatBuffer="";
             //Debug("Emptied buffer");
         }
@@ -214,9 +212,7 @@ NotifyOwners(string sMsg) {
     }
 }
 
-integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
-    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return FALSE;
-
+UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
     sStr = llToLower(sStr);
         if (sStr == "☐ trace" || sStr == "trace on") {
             if (kID==g_kWearer) {
@@ -303,7 +299,6 @@ integer UserCommand (integer iAuth, string sStr, key kID, integer remenu) {
             g_iNotifyEnabled=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"notify", "");
         } else if (sStr == "spy" || sStr == "menu spy") DialogSpy(kID, iAuth);
-    return TRUE;
 }
 
 default {
@@ -329,9 +324,8 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (UserCommand(iNum, sStr, kID, FALSE)) {
-            // do nothing more if TRUE
-        } else if (iNum == LM_SETTING_DELETE) {
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        else if (iNum == LM_SETTING_DELETE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             if(sToken == "auth_owner") g_lOwners = [];
@@ -367,7 +361,10 @@ default {
                     }
                 }
             } else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
-            else if (sToken == g_sGlobalToken+"WearerName") g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            else if (sToken == g_sGlobalToken+"WearerName") {
+                if (llSubStringIndex(sValue, "secondlife:///app/agent"))
+                    g_sWearerName =  "[secondlife:///app/agent/"+(string)g_kWearer+"/about " + sValue + "]";
+            }
             else if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []); //owners list
             else if(sToken == "auth_tempowner" && llStringLength(sValue) > 0) g_lTempOwners = llParseString2List(sValue, [","], []); //tempowners list
         } else if (iNum == MENUNAME_REQUEST && sStr == "Apps") {
