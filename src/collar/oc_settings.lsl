@@ -236,16 +236,13 @@ SendValues() {
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
  
-integer UserCommand(integer iAuth, string sStr, key kID) {
-    if (iAuth != CMD_OWNER && iAuth != CMD_WEARER) return FALSE;
+UserCommand(integer iAuth, string sStr, key kID) {
     sStr = llToLower(sStr);
     if (sStr == "settings") PrintSettings(kID);
     else if (sStr == "load") {
         g_iLineNr = 0;
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
     }
-    else return FALSE;
-    return TRUE;
 }
 
 default {
@@ -333,8 +330,8 @@ default {
         }
     }
     link_message(integer sender, integer iNum, string sStr, key kID) {
-        if (UserCommand(iNum, sStr, kID)) return;
-        if (iNum == LM_SETTING_SAVE) {
+        if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID));
+        else if (iNum == LM_SETTING_SAVE) {
             //save the token, value
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
