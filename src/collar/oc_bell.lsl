@@ -62,18 +62,15 @@ integer CMD_EVERYONE = 504;
 //integer CMD_SAFEWORD = 510; 
 //integer CMD_BLOCKED = 520;
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 integer SAY = 1004;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from DB
-//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -83,8 +80,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 //integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "BACK";//when your menu hears this, give the parent menu
-//string g_sScript;
+string UPMENU = "BACK";
 string g_sSettingToken = "bell_";
 //string g_sGlobalToken = "global_";
 /*
@@ -135,7 +131,7 @@ BellMenu(key kID, integer iAuth) {
 }
 
 SetBellElementAlpha() {
-    if (g_iHide) return ; // ***** if collar is hide, don't do anything 
+    if (g_iHide) return ;
     //loop through stored links, setting color if element type is bell
     integer n;
     integer iLinkElements = llGetListLength(g_lBellElements);
@@ -149,8 +145,7 @@ UpdateGlow(integer link, integer alpha) {
     if (alpha == 0) {
         SavePrimGlow(link);
         llSetLinkPrimitiveParamsFast(link, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
-    }
-    else RestorePrimGlow(link);
+    } else RestorePrimGlow(link);
 }
 
 SavePrimGlow(integer link) {
@@ -167,15 +162,14 @@ RestorePrimGlow(integer link) {
 }
 
 BuildBellElementList() {
-    integer n;
-    integer iLinkCount = llGetNumberOfPrims();
     list lParams;
     g_lBellElements = [];
     //root prim is 1, so start at 2
-    for (n = 2; n <= iLinkCount; n++) {
-        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_DESC]), ["~"], []);
+    integer i = 2;
+    for (; i <= llGetNumberOfPrims(); i++) {
+        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(i), [OBJECT_DESC]), ["~"], []);
         if (llList2String(lParams, 0)=="Bell") {
-            g_lBellElements += [n];
+            g_lBellElements += [i];
             // Debug("added " + (string)n + " to elements");
         }
     } //Remove my menu and myself if no bell elements are found
@@ -188,12 +182,11 @@ BuildBellElementList() {
 
 PrepareSounds() {
     integer i;
-    integer m=llGetInventoryNumber(INVENTORY_SOUND);
-    string s;
-    for (i=0;i<m;i++) {
-        s=llGetInventoryName(INVENTORY_SOUND,i);
-        if (llSubStringIndex(s,"bell_")==0) {
-            g_listBellSounds+=llGetInventoryKey(s);
+    string sSoundName;
+    for (; i < llGetInventoryNumber(INVENTORY_SOUND); i++) {
+        sSoundName = llGetInventoryName(INVENTORY_SOUND,i);
+        if (llSubStringIndex(sSoundName,"bell_")==0) {
+            g_listBellSounds+=llGetInventoryKey(sSoundName);
         }
     }
     g_iBellSoundCount=llGetListLength(g_listBellSounds);
@@ -203,13 +196,11 @@ PrepareSounds() {
 
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
-    string test=llToLower(sStr);
-    if (sStr == "menu " + g_sSubMenu || sStr == "bell") {
+    sStr = llToLower(sStr);
+    if (sStr == "menu " + g_sSubMenu || sStr == "bell")
         BellMenu(kID, iNum);
-    }
-    else if (llSubStringIndex(test,"bell")==0) {
-        // it is a chat commad for the bell so process it
-        list lParams = llParseString2List(test, [" "], []);
+    else if (llSubStringIndex(sStr,"bell")==0) {
+        list lParams = llParseString2List(sStr, [" "], []);
         string sToken = llList2String(lParams, 1);
         string sValue = llList2String(lParams, 2);
         if (sToken=="volume") {
@@ -271,7 +262,6 @@ default {
     
     state_entry() {
         llSetMemoryLimit(36864);  
-        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer=llGetOwner();  
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();  
@@ -282,10 +272,10 @@ default {
     
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        }         
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) 
+            UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE && kID == g_kDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAV = llList2String(lMenuParams, 0);
@@ -311,9 +301,9 @@ default {
                 g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
-            } else if (sMessage == g_sBellOff || sMessage == g_sBellOn) {
+            } else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
                 UserCommand(iAuth,"bell "+llToLower(sMessage),kAV);
-            } else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
+            else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
                 g_iBellShow = !g_iBellShow;
                 SetBellElementAlpha();
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
