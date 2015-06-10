@@ -509,7 +509,7 @@ default {
                         AnimMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "Pose") {
-                    if (sMessage == "BACK") AnimMenu(kAv, iAuth); p
+                    if (sMessage == "BACK") AnimMenu(kAv, iAuth); 
                     else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
                         else UserCommand(iAuth, sMessage, kAv); 
