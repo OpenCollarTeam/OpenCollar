@@ -70,7 +70,7 @@ string OFF = "☐ Show";
 string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
-vector g_vPrimScale = <0.02,0.02,0.5>; // prim size, initial value (z - text offset height)
+vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text offset height)
 
 /*integer g_iProfiled;
 Debug(string sStr) {
@@ -181,15 +181,13 @@ default{
         while (linkNumber-- >2){
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
-                if (llList2Integer(llGetLinkPrimitiveParams(linkNumber,[PRIM_TYPE]),0)==PRIM_TYPE_BOX){
                     g_iTextPrim = linkNumber;
-                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide"]);
+                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_ROT_LOCAL,ZERO_ROTATION,PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
                     linkNumber = 0 ; // break while cycle
                 } else {
                     llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
                 }
             }
-        }
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
         
