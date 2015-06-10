@@ -117,16 +117,13 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
-//integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave descripts
-//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//sStr must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from DB
-//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
 
 integer MENUNAME_REQUEST = 3000;
@@ -138,13 +135,13 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message.
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-integer RLV_QUERY = 6102; //query from a script asking if RLV is currently functioning
-integer RLV_RESPONSE = 6103;  //reply to RLV_QUERY, with "ON" or "OFF" as the message
+integer RLV_OFF = 6100;
+integer RLV_ON = 6101; 
+integer RLV_QUERY = 6102; 
+integer RLV_RESPONSE = 6103; 
 
-//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
+//integer ANIM_START = 7000;
+//integer ANIM_STOP = 7001;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -154,7 +151,6 @@ integer FIND_AGENT = -9005;
 string UPMENU = "BACK";
 
 key REQUEST_KEY;
-//string g_sScript;
 string g_sSettingToken = "rlvex_";
 //string g_sGlobalToken = "global_";
 
@@ -187,7 +183,6 @@ Menu(key kID, string sWho, integer iAuth) {
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
-    
     list lButtons = ["Owner", "Trusted"];
     string sPrompt = "\nSet exemptions to the restrictions for RLV commands. That means the people added here will not be blocked from talking to the wearer. Also the ability to make teleports happen instantly can be set here.\n\n(\"Force Teleports\" are already defaulted for owners.)";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
@@ -212,8 +207,7 @@ ExMenu(key kID, string sWho, integer iAuth) {
     string sPrompt = "\nCurrent Settings for "+sWho+": "+"\n";    
     list lButtons;
     integer n;
-    integer iStop = llGetListLength(g_lPrettyCmds);
-    for (n = 0; n < iStop; n++) {
+    for (; n < llGetListLength(g_lPrettyCmds); n++) {
         //see if there's a setting for this in the settings list
         string sPretty = llList2String(g_lPrettyCmds, n);
         if (iExSettings & llList2Integer(g_lBinCmds, n)) {
@@ -233,15 +227,12 @@ ExMenu(key kID, string sWho, integer iAuth) {
 }
 
 UpdateSettings() {
-    //for now just redirect
     SetAllExs("");
 }
 
 SaveDefaults() {
     // these are lists of rlv exceptions, not to be confused with auth_owner listings
-    //save to DB
     if (OWNER_DEFAULT == g_iOwnerDefault && TRUSTED_DEFAULT == g_iTrustedDefault) {
-        //Debug("Defaults");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "trusted", "");
         return;
@@ -250,8 +241,8 @@ SaveDefaults() {
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "owner=" + (string)g_iOwnerDefault, "");
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "trusted=" + (string)g_iTrustedDefault, "");
 }
+
 SaveSettings() {
-    //save to local settings
     if (llGetListLength(g_lSettings))
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "List=" + llDumpList2String(g_lSettings, ","), "");
     else
@@ -260,11 +251,9 @@ SaveSettings() {
 
 SetAllExs(string sVal) {
     if (!g_iRLVOn) return;
-
     integer iStop = llGetListLength(g_lRLVcmds);
     integer n;
     integer i;
-    
     integer iLength = llGetListLength(g_lSecOwners);
     for (n = 0; n < iLength; n += 2) {
         list sCmd;
@@ -445,7 +434,6 @@ default {
 
     state_entry() {
         llSetMemoryLimit(49152); 
-        //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
@@ -459,9 +447,6 @@ default {
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == LM_SETTING_RESPONSE) {
-            //this is tricky since our stored value contains equals signs
-            //split string on both comma and equals sign
-            //first see if this is the token we care about
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -486,33 +471,27 @@ default {
                 UpdateSettings();
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = [];
-                //send accepttp command
                 ClearEx();
                 UpdateSettings();
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = [];
-                //send accepttp command
                 ClearEx();
                 UpdateSettings();
             }
         } else if (iNum == LM_SETTING_SAVE) {
-            //handle saving new owner here
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            //does soemthing here need to change?
             if (sToken == "auth_owner") {
                 g_lOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
                 UpdateSettings();
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = llParseString2List(sValue, [","], []);
-                //send accepttp command
                 ClearEx();
                 UpdateSettings();
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = llParseString2List(sValue, [","], []);
-                //send accepttp command
                 ClearEx();
                 UpdateSettings();
             }
@@ -527,14 +506,11 @@ default {
                 else if (sStr=="OFF") g_iRLVOn=FALSE;
             }
         } else if (iNum == RLV_CLEAR) {
-            //clear db and local settings list
-            //ClearSettings();
-            //do we not want to reset it?
             llSleep(2.0);
             UpdateSettings();
         } else if (iNum == RLV_VERSION) {
             g_sDetectedRLVersion = sStr;
-        } else if (iNum == RLV_OFF) { // rlvoff -> we have to turn the menu off too
+        } else if (iNum == RLV_OFF) { 
             g_iRLVOn=FALSE;
         } else if (iNum == RLV_ON) {
             g_iRLVOn=TRUE;
@@ -547,13 +523,12 @@ default {
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                //if we got *Back*, then request submenu RLV
                 if (sMessage == UPMENU)
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 else if (sMessage == "Owner")
-                    ExMenu(kAv, "owner", iAuth);  //give menu for owners defaults
+                    ExMenu(kAv, "owner", iAuth);  
                 else if (sMessage == "Trusted")
-                    ExMenu(kAv, "trusted", iAuth); //give menu for secowners defaults
+                    ExMenu(kAv, "trusted", iAuth);
             } else if (llListFindList(g_lExMenus, [kID]) != -1 ) {
                 //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -567,8 +542,6 @@ default {
                     g_kTmpKey = NULL_KEY;
                     g_sTmpName = g_sUserCommand = "";
                     string sMenu = llList2String(g_lExMenus, iMenuIndex + 1);
-                    //we got a command to enable or disable something, like "Enable LM"
-                    //get the actual command same by looking up the pretty name from the message
                     list lParams = llParseString2List(sMessage, [" "], []);
                     string sSwitch = llList2String(lParams, 0);
                     string sCmd = llList2String(lParams, 1);
@@ -584,17 +557,15 @@ default {
                         ExMenu(kAv, sMenu, iAuth);
                     } else if (~iIndex) {
                         sOut += llList2String(g_lRLVcmds, iIndex);
-                        if (sSwitch == TURNOFF) sOut += "=y"; // exempt
-                        else if (sSwitch == TURNON) sOut += "=n"; // enforce
-                        //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
+                        if (sSwitch == TURNOFF) sOut += "=y";
+                        else if (sSwitch == TURNON) sOut += "=n";
                         //Debug("ExMenu sending UC: " + sOut);
                         UserCommand(iAuth, sOut, kAv);
                         ExMenu(kAv, sMenu, iAuth);
                     } else if (sMessage == "Defaults") {
                         UserCommand(iAuth, sOut + "defaults", kAv);
                         ExMenu(kAv, sMenu, iAuth);
-                    }// else
-                        //something went horribly wrong. We got a command that we can't find in the list
+                    }
                     llDeleteSubList(g_lExMenus, iMenuIndex, iMenuIndex + 1);
                 }
             }
