@@ -49,7 +49,7 @@ integer CMD_OWNER                   = 500;
 integer CMD_WEARER                  = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD                = 510; 
+integer CMD_SAFEWORD                = 510; 
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -71,19 +71,19 @@ integer DIALOG_RESPONSE            = -9001;
 
 string  UPMENU                     = "BACK";
 string  BACKMENU                   = "⏎";
-
-
-
-//Debug(string sMsg) { llOwnerSay(llGetScriptName() + " [DEBUG]: " + sMsg);}
 /*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+integer g_iProfiled;
+Debug(string sStr) {
+    //if you delete the first // from the preceeding and following  lines,
+    //  profiling is off, debug is off, and the compiler will remind you to
+    //  remove the debug calls from the code, we're back to production mode
+    if (!g_iProfiled){
+        g_iProfiled=1;
+        llScriptProfiler(1);
     }
-}*/
-
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
+}
+*/
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -108,14 +108,13 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
     lMyButtons += llParseString2List(sFolders,[","],[""]);
     lMyButtons = llListSort(lMyButtons, 1, TRUE);
     // and dispay the menu
-    if (g_sCurrentPath == g_sPathPrefix+"/") { //If we're at root, don't bother with BACKMENU
+    if (g_sCurrentPath == g_sPathPrefix+"/") //If we're at root, don't bother with BACKMENU
         g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
-    } else {
-        if (sFolders == "") {
+    else {
+        if (sFolders == "") 
             g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, ["WEAR",UPMENU,BACKMENU], 0, iAuth);
-        } else {
+        else 
             g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU,BACKMENU], 0, iAuth);
-        }
     }
 }
 
@@ -131,10 +130,8 @@ RemAttached(key keyID, integer iAuth,string sFolders) {
 
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     sStr=llToLower(sStr);
-    if (sStr == "outfits" || sStr == "menu outfits") {
-        // an authorized user requested the plugin menu by typing the menus chat command
-        DoMenu(kID, iNum);
-    } else if (llSubStringIndex(sStr,"wear ") == 0) {
+    if (sStr == "outfits" || sStr == "menu outfits") DoMenu(kID, iNum);
+    else if (llSubStringIndex(sStr,"wear ") == 0) {
         sStr = llDeleteSubString(sStr,0,llStringLength("wear ")-1);
         if (sStr) { //we have a folder to try find...
             llSetTimerEvent(g_iTimeOut);
@@ -148,9 +145,8 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             }
         }
     }
-    if (remenu) {
+    if (remenu) 
         DoMenu(kID, iNum);
-    }
 }
 
 string WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
@@ -172,20 +168,21 @@ string WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits ou
 
 default {
 
-    state_entry()
-    {
+    state_entry() {
         llSetMemoryLimit(32768); //2015-05-06 (10952 bytes free)
         //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
     }
-    timer()
-    {
+    
+    timer() {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
+    
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer)  llResetScript();
     }
+    
     listen(integer iChan, string sName, key kID, string sMsg) {
         //llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
@@ -212,25 +209,15 @@ default {
             }
         }
     }
+    
     link_message(integer iSender, integer iNum, string sStr, key kID) { 
        // llOwnerSay(sStr+" | "+(string)iNum);
-        if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
-            // our parent menu requested to receive buttons, so send ours
+        if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) 
             llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
-        }
-
-        else if (iNum == RLV_ON) {
-            g_iRlvOn = TRUE;
-        }
-        else if (iNum == RLVA_VERSION) { 
-            g_iRlvaOn = TRUE;
-         }
-      //  else if (iNum == CMD_SAFEWORD) { 
-            // Safeword has been received, release any restricitions that should be released
-        // }
+        else if (iNum == RLV_ON) g_iRlvOn = TRUE;
+        else if (iNum == RLVA_VERSION) g_iRlvaOn = TRUE;
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) { 
-
             list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
             string sMessage = llList2String(lMenuParams, 1); // button label
@@ -238,30 +225,25 @@ default {
             integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
 
             if (kID == g_kFolderMenuID || kID == g_kMultipleMatchMenuID) {
-                  g_kMenuClicker = kAv;
-                  if (sMessage == UPMENU) {
-                      //give av the parent menu
-                      llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
-                  }
-                  else if (sMessage == BACKMENU) {
+                g_kMenuClicker = kAv;
+                if (sMessage == UPMENU) 
+                    llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
+                else if (sMessage == BACKMENU) {
                     list lTempSplit = llParseString2List(g_sCurrentPath,["/"],[]);
                     lTempSplit = llList2List(lTempSplit,0,llGetListLength(lTempSplit) -2);
                     g_sCurrentPath = llDumpList2String(lTempSplit,"/") + "/";
                     llSetTimerEvent(g_iTimeOut);
                     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                     llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
-                  }
-                  else if (sMessage == "WEAR") {
+                } else if (sMessage == "WEAR")
                     llOwnerSay(WearFolder(g_sCurrentPath));
-                    //llOwnerSay("@attachallover:"+g_sPathPrefix+"/.core/=force");
-                  }
-                  else if (sMessage != "") {
+                else if (sMessage != "") {
                     g_sCurrentPath += sMessage + "/";
                     if (kID == g_kMultipleMatchMenuID) g_sCurrentPath = sMessage;
                     llSetTimerEvent(g_iTimeOut);
                     g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                     llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
-                  }
+                }
             }
         }
     }

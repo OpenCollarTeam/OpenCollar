@@ -56,15 +56,12 @@ integer CMD_WEARER = 503;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
-//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-                            //str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-//integer LM_SETTING_DELETE = 2003;//delete token from DB
-//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+//integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+//integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -95,35 +92,19 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
+key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
 } 
-/*
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}*/
 
-integer MinMaxUnscaled(vector vSize, float fScale)
-{
-    if (fScale < 1.0)
-    {
+integer MinMaxUnscaled(vector vSize, float fScale) {
+    if (fScale < 1.0) {
         if (vSize.x <= 0.01) return TRUE;
         if (vSize.y <= 0.01) return TRUE;
         if (vSize.z <= 0.01) return TRUE;
-    }
-    else
-    {
+    } else {
         if (vSize.x >= 10.0) return TRUE;
         if (vSize.y >= 10.0) return TRUE;
         if (vSize.z >= 10.0) return TRUE;
@@ -131,16 +112,12 @@ integer MinMaxUnscaled(vector vSize, float fScale)
     return FALSE;
 }
 
-integer MinMaxScaled(vector vSize, float fScale)
-{
-    if (fScale < 1.0)
-    {
+integer MinMaxScaled(vector vSize, float fScale) {
+    if (fScale < 1.0) {
         if (vSize.x < 0.01) return TRUE;
         if (vSize.y < 0.01) return TRUE;
         if (vSize.z < 0.01) return TRUE;
-    }
-    else
-    {
+    } else {
         if (vSize.x > 10.0) return TRUE;
         if (vSize.y > 10.0) return TRUE;
         if (vSize.z > 10.0) return TRUE;
@@ -149,22 +126,17 @@ integer MinMaxScaled(vector vSize, float fScale)
 }
 
 
-Store_StartScaleLoop()
-{
+Store_StartScaleLoop() {
     g_lPrimStartSizes = [];
     integer iPrimIndex;
     vector vPrimScale;
     vector vPrimPosit;
     list lPrimParams;
-    if (llGetNumberOfPrims()<2) 
-    {
+    if (llGetNumberOfPrims()<2) {
         vPrimScale = llGetScale();
         g_lPrimStartSizes += vPrimScale.x;
-    }
-    else
-    {
-        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ )
-        {
+    } else {
+        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
             lPrimParams = llGetLinkPrimitiveParams( iPrimIndex, [PRIM_SIZE, PRIM_POSITION]);
             vPrimScale=llList2Vector(lPrimParams,0);
             vPrimPosit=(llList2Vector(lPrimParams,1)-llGetRootPosition())/llGetRootRotation();
@@ -174,95 +146,55 @@ Store_StartScaleLoop()
     g_iScaleFactor = 100;
 }
 
-ScalePrimLoop(integer iScale, integer iRezSize, key kAV)
-{
+ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
     integer iPrimIndex;
     float fScale = iScale / 100.0;
     list lPrimParams; 
     vector vPrimScale;
     vector vPrimPos;
     vector vSize;
-    if (llGetNumberOfPrims()<2) 
-    {
+    if (llGetNumberOfPrims()<2) {
         vSize = llList2Vector(g_lPrimStartSizes,0);
-        if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize)
-        {
+        if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize) {
             llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
-            //Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
             return;
-        }
-        else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize)
-        {
+        } else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize) {
             llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
-            //Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
             return;
-        }
-        else
-        {
-            llSetScale(fScale * vSize); // not linked prim
-        }
-    }
-    else
-    {
-        if  (!iRezSize)
-        {
+        } else llSetScale(fScale * vSize); // not linked prim
+    } else {
+        if  (!iRezSize) {
             // first some checking
-            for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ )
-            {
+            for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
                 lPrimParams = llGetLinkPrimitiveParams( iPrimIndex, [PRIM_SIZE, PRIM_POSITION]);
                 vPrimScale = llList2Vector(g_lPrimStartSizes, (iPrimIndex  - 1)*2);
 
-                if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale))
-                {
+                if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale)) {
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
-                    //Notify(kAV, "The object cannot be scaled as you requested; prims are already at minimum or maximum size.", TRUE);
                     return;
-                }
-                else if (MinMaxScaled(fScale * vPrimScale, fScale))
-                {
+                } else if (MinMaxScaled(fScale * vPrimScale, fScale)) {
                     llMessageLinked(LINK_SET,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
-                    //Notify(kAV, "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.", TRUE);
                     return;
                 }
             }
         }
         llMessageLinked(LINK_SET,NOTIFY,"1"+"Scaling started, please wait ...",kAV);
-        //Notify(kAV, "Scaling started, please wait ...", TRUE);
         g_iSizedByScript = TRUE;
-        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ )
-        {
-//            lPrimParams = llGetLinkPrimitiveParams(iPrimIndex, [PRIM_SIZE, PRIM_POSITION]);
+        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
             vPrimScale = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2);
             vPrimPos = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2+1);
             if (iPrimIndex == 1) 
-            {
                 llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale]);
-            }
             else 
-            {
                 llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale, PRIM_POSITION, vPrimPos]);
-            }
         }
         g_iScaleFactor = iScale;
         g_iSizedByScript = TRUE;
         llMessageLinked(LINK_SET,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
-        //Notify(kAV, "Scaling finished, the "+g_sDeviceType+" is now on "+ (string)g_iScaleFactor +"% of the rez size.", TRUE);
     }
 }
 
-
-//ForceUpdate()
-//{
-    //workaround for https://jira.secondlife.com/browse/VWR-1168
-    // 05/Dec/11 2:08 PM
-//This issue has not been updated in 2011 and relates to a deprecated viewer.
-//    llSetText(".", <1,1,1>, 1.0);
-//    llSetText("", <1,1,1>, 1.0);
-//}
-
-
-vector ConvertPos(vector pos)
-{
+vector ConvertPos(vector pos) {
     integer ATTACH = llGetAttached();
     vector out ;
     if (ATTACH == 1) { out.x = -pos.y; out.y = pos.z; out.z = pos.x; }
@@ -274,17 +206,11 @@ vector ConvertPos(vector pos)
     return out ;
 }
 
-AdjustPos(vector vDelta)
-{
-    if (llGetAttached())
-    {
-        llSetPos(llGetLocalPos() + ConvertPos(vDelta));
-        //ForceUpdate();
-    }
+AdjustPos(vector vDelta) {
+    if (llGetAttached()) llSetPos(llGetLocalPos() + ConvertPos(vDelta));
 }
 
-vector ConvertRot(vector rot)
-{
+vector ConvertRot(vector rot) {
     integer ATTACH = llGetAttached();
     vector out ;
     if (ATTACH == 1) { out.x = -rot.y; out.y = -rot.z; out.z = -rot.x; }
@@ -296,34 +222,21 @@ vector ConvertRot(vector rot)
     return out ;
 }
 
-AdjustRot(vector vDelta)
-{
-    if (llGetAttached())
-    {
-        llSetLocalRot(llGetLocalRot() * llEuler2Rot(ConvertRot(vDelta)));
-        //ForceUpdate();
-    }
+AdjustRot(vector vDelta) {
+    if (llGetAttached()) llSetLocalRot(llGetLocalRot() * llEuler2Rot(ConvertRot(vDelta)));
 }
 
-RotMenu(key kAv, integer iAuth)
-{
+RotMenu(key kAv, integer iAuth) {
     string sPrompt = "\nHere you can tilt and rotate the %DEVICETYPE%.";
     list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, ROTMENU];
-    if (iMenuIndex == -1)
-    {
-        g_lMenuIDs += lAddMe;
-    }
-    else
-    {
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
-    }
+    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
+    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
 }
 
-PosMenu(key kAv, integer iAuth)
-{
+PosMenu(key kAv, integer iAuth) {
     string sPrompt = "\nHere you can nudge the %DEVICETYPE% in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
     if (g_fNudge!=g_fSmallNudge) lMyButtons+=["▁"];
@@ -336,43 +249,24 @@ PosMenu(key kAv, integer iAuth)
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, POSMENU];
-    if (iMenuIndex == -1)
-    {
-        g_lMenuIDs += lAddMe;
-    }
-    else
-    {
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
-    }
+    if (iMenuIndex == -1)  g_lMenuIDs += lAddMe;
+    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
 }
 
-SizeMenu(key kAv, integer iAuth)
-{
+SizeMenu(key kAv, integer iAuth) {
     string sPrompt = "\nNumbers are based on the original size of the %DEVICETYPE%.\n\nCurrent size: " + (string)g_iScaleFactor + "%";
     key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
     list lAddMe = [kAv, kMenuID, SIZEMENU];
-    if (iMenuIndex == -1)
-    {
-        g_lMenuIDs += lAddMe;
-    }
-    else
-    {
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
-    }
-    //Debug("FreeMem: " + (string)llGetFreeMemory());
+    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
+    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
 }
 
-DoMenu(key kAv, integer iAuth)
-{
+DoMenu(key kAv, integer iAuth) {
     list lMyButtons ;
     string sPrompt;
-   // if (g_iAppLock && iAuth != CMD_OWNER) {
-    //    sPrompt = "\nThe appearance of the "+g_sDeviceType+" has been locked.\n\nAn owner must unlock it to allow modification.";        
-   // } else {
-        sPrompt = "\nChange the position, rotation and size of your %DEVICETYPE%.\n\nwww.opencollar.at/appearance";
-        lMyButtons = [POSMENU, ROTMENU, SIZEMENU]; //["Position", "Rotation", "Size"];
-   // }
+    sPrompt = "\nChange the position, rotation and size of your %DEVICETYPE%.\n\nwww.opencollar.at/appearance";
+    lMyButtons = [POSMENU, ROTMENU, SIZEMENU];
     
     key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
@@ -385,68 +279,22 @@ UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llToLower(llList2String(lParams, 1));
-    if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu)
-    {
-        //someone asked for our menu
-        //give this plugin's menu to id
-        if (kID!=g_kWearer && iNum!=CMD_OWNER)
-        {
+    if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu) {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError, FALSE);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
-        }
+        } else DoMenu(kID, iNum);
+    } else if (sStr == "appearance") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         else DoMenu(kID, iNum);
-   // } else if (sCommand=="lockappearance") {
-   //     g_iAppLock=(integer)sValue;
-    } else if (sStr == "appearance")
-    {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER)
-        {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError, FALSE);
-        }
-        else DoMenu(kID, iNum);
-    }
-    else if (sStr == "rotation")
-    {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER)
-        {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError, FALSE);
-        }
-       /* else if (g_iAppLock)
-        {
-            Notify(kID,g_sAuthError, FALSE);
-            DoMenu(kID, iNum);
-        }*/
+    } else if (sStr == "rotation") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         else RotMenu(kID, iNum);
-        }
-    else if (sStr == "position")
-    {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER)
-        {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError, FALSE);
-        }
-        /*else if (g_iAppLock)
-        {
-            Notify(kID,g_sAuthError, FALSE);
-            DoMenu(kID, iNum);
-        }*/
+    } else if (sStr == "position") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         else PosMenu(kID, iNum);
-    }
-    else if (sStr == "size")
-    {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER)
-        {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-            //Notify(kID,g_sAuthError, FALSE);
-        }
-       /* else if (g_iAppLock)
-        {
-            Notify(kID,g_sAuthError, FALSE);
-            DoMenu(kID, iNum);
-        }*/
+    } else if (sStr == "size") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         else SizeMenu(kID, iNum);
     }
 }
@@ -460,34 +308,18 @@ default {
         llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();       
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration   
-
         Store_StartScaleLoop();
         //Debug("Starting");
     }
     
-    link_message(integer iSender, integer iNum, string sStr, key kID)
-    {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        }
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
-        {
             UserCommand( iNum, sStr, kID);
-        }
-   /*     else if (iNum == LM_SETTING_RESPONSE)
-        {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-           // if (sToken == "Appearance_Lock") g_iAppLock = (integer)sValue;
-        }*/
-        else if (iNum == DIALOG_RESPONSE)
-        {
+        else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1)
-            {
-                //got a menu response meant for us.  pull out values
+            if (iMenuIndex != -1) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
@@ -497,23 +329,16 @@ default {
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                  
-                if (sMenuType == g_sSubMenu)
-                {
+                if (sMenuType == g_sSubMenu) {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == POSMENU) PosMenu(kAv, iAuth);
                     else if (sMessage == ROTMENU) RotMenu(kAv, iAuth);
                     else if (sMessage == SIZEMENU) SizeMenu(kAv, iAuth);
-                }
-                else if (sMenuType == POSMENU)
-                {
-                    if (sMessage == UPMENU)
-                    {
-                        //DoMenu(kAv, iAuth);
+                } else if (sMenuType == POSMENU) {
+                    if (sMessage == UPMENU) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
-                    }
-                    else if (llGetAttached())
-                    {
+                    } else if (llGetAttached()) {
                         if (sMessage == "forward ↳") AdjustPos(<g_fNudge, 0, 0>);
                         else if (sMessage == "left ←") AdjustPos(<0, g_fNudge, 0>);
                         else if (sMessage == "up ↑") AdjustPos(<0, 0, g_fNudge>);
@@ -523,72 +348,44 @@ default {
                         else if (sMessage == "▁") g_fNudge=g_fSmallNudge;
                         else if (sMessage == "▁ ▂") g_fNudge=g_fMediumNudge;
                         else if (sMessage == "▁ ▂ ▃") g_fNudge=g_fLargeNudge;
-                    }
-                    else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);//Notify(kAv, "Sorry, position can only be adjusted while worn",FALSE);
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
                     PosMenu(kAv, iAuth);                    
-                }
-                else if (sMenuType == ROTMENU)
-                {
-                    if (sMessage == UPMENU)
-                    {
-                        //DoMenu(kAv, iAuth);
+                } else if (sMenuType == ROTMENU) {
+                    if (sMessage == UPMENU) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
-                    }
-                    else if (llGetAttached())
-                    {
+                    } else if (llGetAttached()) {
                         if (sMessage == "tilt right ↘") AdjustRot(<g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt up ↻") AdjustRot(<0, g_fRotNudge, 0>);
                         else if (sMessage == "left ↶") AdjustRot(<0, 0, g_fRotNudge>);
                         else if (sMessage == "right ↷") AdjustRot(<0, 0, -g_fRotNudge>);
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
-                    }
-                    else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);//Notify(kAv, "Sorry, position can only be adjusted while worn", FALSE);
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
                     RotMenu(kAv, iAuth);                     
-                }
-                else if (sMenuType == SIZEMENU)
-                {
-                    if (sMessage == UPMENU)
-                    {
-                        //DoMenu(kAv, iAuth);
+                } else if (sMenuType == SIZEMENU) {
+                    if (sMessage == UPMENU) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                         return;
-                    }
-                    else
-                    {
+                    } else {
                         integer iMenuCommand = llListFindList(SIZEMENU_BUTTONS, [sMessage]);
-                        if (iMenuCommand != -1)
-                        {
+                        if (iMenuCommand != -1) {
                             integer iSizeFactor = llList2Integer(g_lSizeFactors, iMenuCommand);
-                            if (iSizeFactor == -1000)
-                            {
-                                // ResSize requested
+                            if (iSizeFactor == -1000) {
                                 if (g_iScaleFactor == 100)
-                                {
                                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Resizing canceled; the %DEVICETYPE% is already at original size.",kID);
-                                    //Notify(kAv, "Resizing canceled; the "+g_sDeviceType+" is already at original size.", FALSE); 
-                                }
-                                else
-                                {
-                                    ScalePrimLoop(100, TRUE, kAv);
-                                }
+                                else ScalePrimLoop(100, TRUE, kAv);
                             }
-                            else
-                            {
-                                ScalePrimLoop(g_iScaleFactor + iSizeFactor, FALSE, kAv);
-                            }
+                            else ScalePrimLoop(g_iScaleFactor + iSizeFactor, FALSE, kAv);
                         }
                         SizeMenu(kAv, iAuth);
                     }
                 }
             }            
         }
-        else if (iNum == DIALOG_TIMEOUT)
-        {
+        else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1)
-            {
+            if (iMenuIndex != -1) {
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                          
@@ -596,34 +393,18 @@ default {
         }
     } 
    
-    timer()
-    {
+    timer() {
         // the timer is needed as the changed_size even is triggered twice
         llSetTimerEvent(0);
-        if (g_iSizedByScript)
-            g_iSizedByScript = FALSE;
+        if (g_iSizedByScript) g_iSizedByScript = FALSE;
     }
     
-    changed(integer iChange)
-    {
-        if (iChange & (CHANGED_SCALE))
-        {
-            if (g_iSizedByScript)
-            // the item had ben rescaled by the script, do NOT reset the script and store new positions
-            {
-                // ignore the event and trigger timer to reset flag. needed as we got the event twice after scaling
-                llSetTimerEvent(0.5);
-            }
-            else
-            // it was a user change, so we have to store the basic values again
-            {
-                Store_StartScaleLoop();
-            }
+    changed(integer iChange) {
+        if (iChange & (CHANGED_SCALE)) {
+            if (g_iSizedByScript) llSetTimerEvent(0.5);
+            else Store_StartScaleLoop();
         }
-        if (iChange & (CHANGED_SHAPE | CHANGED_LINK))
-        {
-            Store_StartScaleLoop();
-        }
+        if (iChange & (CHANGED_SHAPE | CHANGED_LINK)) Store_StartScaleLoop();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
