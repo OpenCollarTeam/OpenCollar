@@ -364,7 +364,6 @@ default{
         while (linkNumber-- >2){
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
-                if (llList2Integer(llGetLinkPrimitiveParams(linkNumber,[PRIM_TYPE]),0)==PRIM_TYPE_BOX){
                     g_iTextPrim = linkNumber;
                     llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny"]);
                     linkNumber = 0 ; // break while cycle
@@ -372,7 +371,6 @@ default{
                     llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
                 }
             }
-        }
         g_kWearer = llGetOwner();
         //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
         
