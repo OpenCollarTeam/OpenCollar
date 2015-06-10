@@ -38,43 +38,36 @@ integer CMD_WEARER = 503;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from store
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the store
-//integer LM_SETTING_REQUEST_NOCACHE = 2005;
-
-//integer INTERFACE_CHANNEL;
+integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
 
 integer g_iSayLimit = 1024; // lsl "say" string limit
 integer g_iCardLimit = 255; // lsl card-line string limit
-string g_sDelimiter = "\\"; // end of card line, more value left for token
+string g_sDelimiter = "\\";
 
 // Get Group or Token, 0=Group, 1=Token
-string SplitToken(string sIn, integer iSlot)
-{
+string SplitToken(string sIn, integer iSlot) {
     integer i = llSubStringIndex(sIn, "_");
     if (!iSlot) return llGetSubString(sIn, 0, i - 1);
     return llGetSubString(sIn, i + 1, -1);
 }
 // To add new entries at the end of Groupings
-integer GroupIndex(list lCache, string sToken)
-{
+integer GroupIndex(list lCache, string sToken) {
     string sGroup = SplitToken(sToken, 0);
     integer i = llGetListLength(lCache) - 1;
     // start from the end to find last instance, +2 to get behind the value
-    for (; ~i ; i -= 2)
-    {
+    for (; ~i ; i -= 2) {
         if (SplitToken(llList2String(lCache, i - 1), 0) == sGroup) return i + 1;
     }
     return -1;
 }
-integer SettingExists(string sToken)
-{
+integer SettingExists(string sToken) {
     if (~llListFindList(g_lSettings, [sToken])) return TRUE;
     return FALSE;
 }
@@ -103,8 +96,7 @@ string GetSetting(string sToken) {
 // per = number of entries to put in each bracket
 list ListCombineEntries(list lIn, string sAdd, integer iPer) {
     list lOut;
-    while (llGetListLength(lIn))
-    {
+    while (llGetListLength(lIn)) {
         list lItem;
         integer i;
         for (; i < iPer; i++) lItem += llList2List(lIn, i, i);
@@ -116,12 +108,10 @@ list ListCombineEntries(list lIn, string sAdd, integer iPer) {
 
 DelSetting(string sToken) { // we'll only ever delete user settings
     integer i = llGetListLength(g_lSettings) - 1;
-    if (SplitToken(sToken, 1) == "all")
-    {
+    if (SplitToken(sToken, 1) == "all") {
         sToken = SplitToken(sToken, 0);
       //  string sVar;
-        for (; ~i; i -= 2)
-        {
+        for (; ~i; i -= 2) {
             if (SplitToken(llList2String(g_lSettings, i - 1), 0) == sToken)
                 g_lSettings = llDeleteSubList(g_lSettings, i - 1, i);
         }
@@ -153,8 +143,7 @@ list Add2OutList(list lIn) {
         integer bIsSplit = FALSE ;
         integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue) 
             + llStringLength(sID) +2; //+llStringLength(set);
-        if (sGroup != sID || llStringLength(sBuffer) == 0 || iAddedLength >= g_iCardLimit ) // new group
-        {
+        if (sGroup != sID || llStringLength(sBuffer) == 0 || iAddedLength >= g_iCardLimit ) { // new group
             // Starting a new group.. flush the buffer to the output.
             if ( llStringLength(sBuffer) ) lOut += [sBuffer] ;
             sID = sGroup;
@@ -165,15 +154,12 @@ list Add2OutList(list lIn) {
         sTemp = sPre + sToken + "~" + sValue;
         while (llStringLength(sTemp)) {
             sBuffer = sTemp;
-            if (llStringLength(sTemp) > g_iCardLimit)
-            {
+            if (llStringLength(sTemp) > g_iCardLimit) {
                 bIsSplit = TRUE ;
                 sBuffer = llGetSubString(sTemp, 0, g_iCardLimit - 2) + g_sDelimiter;
                 sTemp = "\n" + llDeleteSubString(sTemp, 0, g_iCardLimit - 2);
-            }
-            else sTemp = "";
-            if ( bIsSplit ) 
-            {
+            } else sTemp = "";
+            if ( bIsSplit ) {
                 // if this is either a split buffer or one of it's continuation
                 // line outputs, 
                 lOut += [sBuffer];
@@ -183,10 +169,6 @@ list Add2OutList(list lIn) {
     }
     // If there's anything left in the buffer, flush it to output.
     if ( llStringLength(sBuffer) ) lOut += [sBuffer] ;
-    // Possibly this line was supposed to reallocate the list to keep it from taking too
-    // much space. Logically, this is a 'do nothing' line - replacing the last item in 
-    // the 'out' list with the last item in the out list, with no changes.
-//////    out = llListReplaceList(out, [llList2String(out, -1)], -1, -1);
     return lOut;
 }
 
@@ -219,20 +201,18 @@ PrintSettings(key kID) {
 SendValues() {
     //Debug("Sending all settings");
     //loop through and send all the settings
-    integer n = 0;
+    integer n;
     string sToken;
     list lOut;
-    for (; n < llGetListLength(g_lSettings); n += 2)
-    {
+    for (; n < llGetListLength(g_lSettings); n += 2) {
         sToken = llList2String(g_lSettings, n) + "=";
         sToken += llList2String(g_lSettings, n + 1);
         if (llListFindList(lOut, [sToken]) == -1) lOut += [sToken];
     }
     n = 0;
     for (; n < llGetListLength(lOut); n++)
-    {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(lOut, n), "");
-    }
+
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
  
@@ -329,8 +309,9 @@ default {
             }
         }
     }
+    
     link_message(integer sender, integer iNum, string sStr, key kID) {
-        if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID));
+        if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
             //save the token, value
             list lParams = llParseString2List(sStr, ["="], []);
