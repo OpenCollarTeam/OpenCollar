@@ -42,21 +42,18 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;  // new for safeword
+integer CMD_SAFEWORD = 510; 
 integer CMD_BLOCKED = 520;
-// added so when the sub is locked out they can use postions
-//integer CMD_WEARERLOCKEDOUT = 521;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
 //integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
