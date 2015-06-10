@@ -89,7 +89,7 @@ key g_kLfmUserBoxId;      //text box handle
 string UPMENU = "BACK";
 float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
-vector g_vPrimScale = <0.02,0.02,0.4>; // prim size, initial value (z - text offset height)
+vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text offset height)
 
 /*
 integer g_iProfiled=1;
