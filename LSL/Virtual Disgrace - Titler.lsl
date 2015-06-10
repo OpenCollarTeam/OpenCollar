@@ -32,8 +32,6 @@ integer CMD_SAFEWORD        = 510;
 //integer CMD_RELAY_SAFEWORD= 511;
 //integer CMD_BLOCKED = 520;
 
-//integer SEND_IM = 1000; deprecated. each script should send its own IMs now. This is to reduce even the tiny bt of lag caused by having IM slave scripts
-//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 integer SAY = 1004;
 //integer UPDATE = 10001;
@@ -73,7 +71,6 @@ integer g_iCount;
 vector g_vColor = <1.000, 1.000, 0.000>; // default white 
 
 integer g_iTextPrim=-1;
-//string g_sScript= "titler_";
 float g_sEvilTimeout=60;
 float g_sEvilDuration=1800;
 
@@ -127,9 +124,8 @@ renderTitle(){
         g_sLastFmTitle+=llGetSubString(g_sLastFmTitle,0,0);
         g_sLastFmTitle=llGetSubString(g_sLastFmTitle,1,-1);
         g_sCurrentTitleText="♬ " + llGetSubString(g_sLastFmTitle,0,22);
-    } else if (g_sType=="off") {
-        g_sCurrentTitleText="";
-    } else if (g_sType=="normal") {
+    } else if (g_sType=="off") g_sCurrentTitleText="";
+    else if (g_sType=="normal") {
         g_sCurrentTitleText=g_sNormalTitleText;
         if (g_iScrollOn) {
             g_sScrollTitleText += llGetSubString(g_sScrollTitleText,0,0);
@@ -152,10 +148,7 @@ renderTitle(){
     llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sCurrentTitleText,g_vCurrentColor,1.0, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
 }
 
-UserCommand(integer iAuth, string sStr, key kAv){
-    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return;
-    
-    //first, jongle commands into a sane format
+UserCommand(integer iAuth, string sStr, key kAv) {
     if (llToLower(sStr) == "menu titler") sStr="title";
     else if (llToLower(sStr) == "menu titlercolor") sStr="title color";
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
@@ -175,10 +168,8 @@ UserCommand(integer iAuth, string sStr, key kAv){
         lParams=llDeleteSubList(lParams,0,0);
         sCommand = llToLower(llList2String(lParams, 0));
         
-        if (iAuth > g_iLastRank) {    //only change titler settings if commander has same or greater auth  
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS", kAv);           
-            //Notify(kAv,g_sAuthError, FALSE);
-        } else if (sCommand=="color") {
+        if (iAuth > g_iLastRank) llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS", kAv);           
+        else if (sCommand=="color") {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {    //we got a colour, so set the colour
                g_vColor=(vector)sColor;
@@ -256,9 +247,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
                     if (llList2String(lParams,2)=="") { //no name given, pop dialog
                         g_kLfmUserBoxId = Dialog(kAv, "\n- Enter your last.fm ID in the field below.\n- Submit a blank field to go back to " + "Titler" + ".", [], [], 0, iAuth);
                         return;
-                    } else {    //set ...        convert to .., and handle below.
-                        lParams=llDeleteSubList(lParams,1,1);
-                    }
+                    } else lParams=llDeleteSubList(lParams,1,1);
                 } 
                 //we got a name, use it
                 g_sLfmUser = llList2String(lParams, 1);
@@ -299,7 +288,6 @@ UserCommand(integer iAuth, string sStr, key kAv){
         } else {    //looks like we're setting the title, or popping a text box to ask for one
             if (sCommand=="") {    //<nothing>            pop main titler menu
                 string sPrompt = "\n[http://www.virtualdisgrace.com/titler Virtual Disgrace - Titler]\n\nCurrent Title: " + g_sNormalTitleText;
-                    
                 string normalButton ;
                 if(g_sType == "normal" || g_sType == "scroll") normalButton = "☒ Normal" ;
                 else normalButton = "☐ Normal" ;
@@ -320,9 +308,7 @@ UserCommand(integer iAuth, string sStr, key kAv){
                         //Debug("set <nothing>, give text box");
                         g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + "Titler" + ".", [], [], 0, iAuth);
                         return;
-                    } else {    //set ...        convert to .., and handle below.
-                        lParams=llDeleteSubList(lParams,0,0);
-                    }
+                    } else lParams = llDeleteSubList(lParams,0,0);
                 }
                 //set standard title
                 string sNewText= llDumpList2String(lParams, " ");
@@ -344,15 +330,14 @@ UserCommand(integer iAuth, string sStr, key kAv){
 }
 
 evilListenerOff(){
-    if (g_iEvilListenHandle){    //listener is set, so cancel it and stop timer
+    if (g_iEvilListenHandle) { 
         llListenRemove(g_iEvilListenHandle);
         g_iEvilListenHandle=0;
-        //llSetTimerEvent(0.0);
     }
 }
 
 default{
-    on_rez(integer param){
+    on_rez(integer param) {
         llResetScript();
     }
     
@@ -365,22 +350,21 @@ default{
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
-                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_ROT_LOCAL,ZERO_ROTATION,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0,1.0,0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
+                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[
+                    PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,
+                    PRIM_ROT_LOCAL,ZERO_ROTATION,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0,1.0,0.0>,ZERO_VECTOR,0.0,
+                    PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
                     linkNumber = 0 ; // break while cycle
-                } else {
+                } else 
                     llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
-                }
             }
         g_kWearer = llGetOwner();
-        //g_sWearerName = "secondlife:///app/agent/"+(string)g_kWearer+"/about";  //quick and dirty default, will get replaced by value from settings
-        
         if (g_iTextPrim < 0) {    //remove script if there is no title prim
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + "Titler", "");
             llRemoveInventory(llGetScriptName());
         }
         g_sCurrentTitleText="";
         renderTitle();
-        //Debug("Starting");
     } 
 
     http_response(key _id, integer _status, list _meta, string _data) {
@@ -416,7 +400,7 @@ default{
         } else if (g_sType=="lastfm" || g_iScrollOn || g_iRainbow) renderTitle();
     }
     
-    listen(integer channel, string name, key id, string message){
+    listen(integer channel, string name, key id, string message) {
         if (g_sType=="evil"){
             //assume any text on our channel is a new title
             if (id == g_kWearer) {
@@ -439,11 +423,10 @@ default{
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //Debug("Link Message Event");
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if (iNum == CMD_SAFEWORD){
-            UserCommand(500, "title off", "");
-        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+        else if (iNum == CMD_SAFEWORD)UserCommand(500, "title off", "");
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + "Titler", "");
-        } else if (iNum == LM_SETTING_RESPONSE) {
+        else if (iNum == LM_SETTING_RESPONSE) {
             //Debug("Got setting \""+sStr+"\"");
             if( sStr == "settings=sent") renderTitle();
             else {
@@ -537,7 +520,7 @@ default{
             if (llGetInventoryType("OpenCollar - titler") == INVENTORY_SCRIPT) llRemoveInventory("OpenCollar - titler"); 
         if (iChange & CHANGED_REGION) {
             httpRequest();
-/*      if (g_iProfiled){
+/*          if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }*/
