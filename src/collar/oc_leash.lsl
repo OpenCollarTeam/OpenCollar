@@ -632,7 +632,6 @@ default {
                     ApplyRestrictions();
                 }
             }
-            
             g_iAwayCounter++; //+1 every 3 secs
             if (g_iAwayCounter > 200) {//3mins 20 secs
             //slow down the sensor:
@@ -642,7 +641,7 @@ default {
         }
     }
     link_message(integer iPrim, integer iNum, string sMessage, key kMessageID){
-        if (iNum >= CMD_OWNER || iNum <= CMD_EVERYONE) UserCommand(iNum, sMessage, kMessageID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sMessage, kMessageID, FALSE);
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
             g_lButtons = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
