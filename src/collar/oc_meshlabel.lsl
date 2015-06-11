@@ -246,7 +246,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
             }
-            //SetLabel();          
+            SetLabel();          
         } else if (sCommand == "labelfont") {
             lParams = llDeleteSubList(lParams, 0, 0);
             string font = llDumpList2String(lParams, " ");
@@ -284,8 +284,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 
 default
 {
-    state_entry()
-    {
+    state_entry() {
         llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
