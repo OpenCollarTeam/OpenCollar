@@ -399,7 +399,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 default {
     on_rez(integer iNum) {
         if (llGetOwner() != g_kWearer) llResetScript();
-        if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
+       //if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
     }
 
     state_entry() {
