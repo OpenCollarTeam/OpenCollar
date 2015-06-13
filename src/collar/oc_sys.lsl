@@ -123,6 +123,9 @@ string REFRESH_MENU = "Fix";
 string g_sGlobalToken = "global_";
 integer STEALTH;
 
+integer g_iWaitUpdate;
+integer g_iWaitRebuild;
+
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -324,6 +327,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
             g_iUpdateFromMenu=fromMenu;
             llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+            g_iWaitUpdate = TRUE;
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
@@ -443,8 +447,10 @@ RebuildMenu() {
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     CheckJB();
-    llSleep(1.0);//delay menu rebuild until other scripts are ready
-    RebuildMenu();
+    //llSleep(1.0);//delay menu rebuild until other scripts are ready
+    //RebuildMenu();
+    g_iWaitRebuild = TRUE;
+    llSetTimerEvent(1);
 }
 
 StartUpdate(){
@@ -452,6 +458,7 @@ StartUpdate(){
     llSetRemoteScriptAccessPin(pin);
     llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
 }
+
 default
 {
     state_entry() {
@@ -689,14 +696,21 @@ default
     }
 
     timer() {
-        llSetTimerEvent(0.0);
-        llListenRemove(g_iUpdateHandle);
-        if (!g_iWillingVDUpdaters && !g_iWillingUpdaters ) {   //if no updaters responded, get upgrader info from web and remenu
-            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
-        } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
-        } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
-        else UpdateConfirmMenu();  //perform update
+        if (g_iWaitUpdate) {
+            g_iWaitUpdate = FALSE;
+            llListenRemove(g_iUpdateHandle);
+            if (!g_iWillingVDUpdaters && !g_iWillingUpdaters ) {   //if no updaters responded, get upgrader info from web and remenu
+                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
+            } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
+            } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
+            else UpdateConfirmMenu();  //perform update
+        }
+        if (g_iWaitRebuild) {            
+            g_iWaitRebuild = FALSE;
+            RebuildMenu();
+        }
+        if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
 }
