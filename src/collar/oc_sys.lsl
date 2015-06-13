@@ -623,8 +623,10 @@ default
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
-                llSleep(0.5); //wait for new scripts to start up
-                RebuildMenu(); //llResetScript();
+                //llSleep(0.5); //wait for new scripts to start up
+                //RebuildMenu(); //llResetScript();
+                g_iWaitRebuild = TRUE;
+                llSetTimerEvent(0.5);
             }
             CheckJB();
             g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
