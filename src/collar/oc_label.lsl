@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                        | script - YYMMDD.n   |                           //
+//                           Label - 150610.1                               //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -62,7 +62,7 @@ string g_sSettingToken = "label_";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER            = 500;
-integer CMD_TRUSTED 		 = 501;
+integer CMD_TRUSTED          = 501;
 //integer CMD_GROUP          = 502;
 integer CMD_WEARER           = 503;
 //integer CMD_EVERYONE       = 504;
@@ -435,7 +435,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
 
-		if (sCommand == "labeltext") {
+        if (sCommand == "labeltext") {
             lParams = llDeleteSubList(lParams, 0, 0);
             g_sLabelText = llDumpList2String(lParams, " ");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
