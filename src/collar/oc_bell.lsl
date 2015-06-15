@@ -237,7 +237,7 @@ PrepareSounds() {
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
     sStr = llToLower(sStr);
-    if (sStr == "menu " + g_sSubMenu || sStr == "bell")
+    if (sStr == "menu bell" || sStr == "bell" || sStr == g_sSubMenu)
         BellMenu(kID, iNum);
     else if (llSubStringIndex(sStr,"bell")==0) {
         list lParams = llParseString2List(sStr, [" "], []);
