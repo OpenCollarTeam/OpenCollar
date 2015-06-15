@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 150611.1                            //
+//                         Mesh Label - 150615.1                            //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -103,10 +103,10 @@ string g_sCharmap = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ
 
 list g_lFonts = [
     "Solid", "91b730bc-b763-52d4-d091-260eddda3198", 
-    "Outlined", "d7b5b96c-7ff8-405f-f970-fd97f489caae"
+    "Outlined", "c1481c75-15ea-9d63-f6cf-9abb6db87039"
     ];
 
-key g_kFontTexture = "d7b5b96c-7ff8-405f-f970-fd97f489caae";
+key g_kFontTexture = "c1481c75-15ea-9d63-f6cf-9abb6db87039";
 
 integer x = 45;
 integer y = 19;
