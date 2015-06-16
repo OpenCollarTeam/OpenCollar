@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 150610.1                              //
+//                          Couples - 150616.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -194,8 +194,8 @@ CoupleAnimMenu(key kID, integer iAuth) {
     //sPrompt += "\n\nwww.opencollar.at/animations\n\n";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
-    if (g_iVerbose) lButtons += ["Verbose Off"];
-    else lButtons += ["Verbose On"];
+    //if (g_iVerbose) lButtons += ["Verbose Off"];
+    //else lButtons += ["Verbose On"];
     g_kAnimmenu=Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth);
 }
 
@@ -350,7 +350,7 @@ default {
                     string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
                     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
                     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
-                    g_kTimerMenu=Dialog(kAv, sPrompt, ["10", "20", "30","40", "50", "60","90", "120", "ENDLESS"], [UPMENU],0, iAuth);
+                    g_kTimerMenu=Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth);
                 } else if (llGetSubString(sMessage,0,6) == "Verbose") {
                     if (llGetSubString(sMessage,8,-1) == "Off") {
                         g_iVerbose = FALSE;

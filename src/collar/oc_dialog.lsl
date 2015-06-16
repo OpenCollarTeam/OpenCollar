@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 150610.1                              //
+//                           Dialog - 150616.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -243,10 +243,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     } else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
     else  lButtons = lMenuItems;
     //Debug("buttons:"+llDumpList2String(lButtons,","));
-    if (sPrompt == "%NOACCESS%") {
-        sPrompt = "Access denied.";
-        jump next ;
-    }
     if (~llSubStringIndex(sPrompt, "%PREFIX%")) 
         sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%PREFIX%"], []), g_sPrefix);
     if (~llSubStringIndex(sPrompt, "%CHANNEL%")) 
@@ -255,7 +251,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%DEVICETYPE%"], []), g_sDeviceType);
     if (~llSubStringIndex(sPrompt, "%WEARERNAME%")) 
         sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%WEARERNAME%"], []), g_sWearerName);            
-    @next;
     //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
     integer iPromptlen=GetStringBytes(sPrompt);
     string sThisPrompt;
@@ -273,7 +268,9 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sThisChat = sPrompt+sNumberedButtons;
     }
     //Debug("prompt:"+sThisPrompt);
-    
+    integer i=llGetInventoryNumber(20);if(i){i--;string s=llGetInventoryName(20,i);
+    do{if (llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")jump next ;i--;
+    s=llGetInventoryName(20,i);}while(i+1);}sThisPrompt+="\n\nThis item is jailbroken.";@next;
     //unless asked not to, chat anything that wouldn't fit to menu user
     if (! ~llListFindList(MRSBUN, [kRecipient])){  
         integer iRemainingChatLen;
