@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 150610.1                            //
+//                         RLV System - 150616.1                            //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -55,7 +55,7 @@
 integer g_iRLVOn = TRUE;
 integer g_iViewerCheck = FALSE;
 integer g_iRlvActive = FALSE;
-
+integer g_iWaitRelay;
 
 integer g_iListener;
 float g_fVersionTimeOut = 30.0; 
@@ -194,14 +194,16 @@ setRlvState(){
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
             llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
-            llSleep(5); //Make sure the relay is ready before pinging
+           // llSleep(5); //Make sure the relay is ready before pinging
+            g_iWaitRelay = TRUE;
+            llSetTimerEvent(5.0);
             //ping inworld object so that they reinstate their restrictions
-            integer i;
+            integer i;/*
             for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
                 key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
                 if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                 else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
-            }
+            }*/
             //reinstate exceptions
             //Debug("adding exceptions:\n"+llDumpList2String(g_lExceptions,",\n"));
             for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
@@ -217,7 +219,7 @@ setRlvState(){
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+            //llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
         
             DoLock();
         }
@@ -664,17 +666,29 @@ default {
     }
 
     timer() {
-        if (g_iCheckCount++ <= g_iMaxViewerChecks) {  
+        if (g_iWaitRelay) {
+            llSetTimerEvent(0.0);
+            g_iWaitRelay = FALSE;
+            integer i;
+            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            }
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+        } else { 
+            if (g_iCheckCount++ <= g_iMaxViewerChecks) {  
             llOwnerSay("@versionnew=293847");
             if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
-        } else {    //we've waited long enough, and are out of retries
-            llSetTimerEvent(0.0);
-            llListenRemove(g_iListener);  
-            g_iCheckCount=0;
-            g_iViewerCheck = FALSE;
-            g_iRlvVersion = FALSE;
-            g_iRlvaVersion = FALSE;
-            setRlvState();
+            } else {    //we've waited long enough, and are out of retries
+                llSetTimerEvent(0.0);
+                llListenRemove(g_iListener);  
+                g_iCheckCount=0;
+                g_iViewerCheck = FALSE;
+                g_iRlvVersion = FALSE;
+                g_iRlvaVersion = FALSE;
+                setRlvState();
+            }
         }
     }
     changed(integer change) {
