@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 150610.1                             //
+//                          Particle - 150618.1                             //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -135,7 +135,7 @@ list g_lLeashPrims;
 
 //global integer used for loops
 integer g_iLoop;
-string g_sSettingToken = "leashparticle_";
+string g_sSettingToken = "particle_";
 //string g_sGlobalToken = "global_";
 //Particle system and variables
 
@@ -464,7 +464,7 @@ default {
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             }
-            else if (llToLower(sMessage) == "leashparticle reset") {
+            else if (llToLower(sMessage) == "particle reset") {
                 g_lSettings = []; // clear current settings
                 if (kMessageID) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID); 
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "all", "");
