@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150613.1                              //
+//                           System - 150616.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -238,7 +238,9 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 3.9\n";
-    if (CheckJB()=="") sPrompt = "\nOpenCollar API: 3.9 (jailbroken)\n";
+    if (C_JB()==""){key kCreator=llGetCreator();
+        if(kCreator!="1d07a229-b239-4fe9-90c1-84e4e4fa5107")llMessageLinked(LINK_SET,NOTIFY,"1"+"This %DEVICETYPE% is jailbroken. For help and support, please contact the seller of this item, secondlife:///app/agent/"+(string)kCreator+"/about.",kID);
+        else llMessageLinked(LINK_SET,NOTIFY,"1"+"This %DEVICETYPE% is jailbroken. For help and support, please contact the seller of this item.",kID);}
     sPrompt+="Disgraced Version "+g_sCollarVersion;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
@@ -336,7 +338,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Menus fixed!",kID);
         } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sCmd == "jailbreak" && kID == g_kWearer) {
-        if (CheckJB())
+        if (C_JB())
             Dialog(kID,"Jailbreaking will make your item transferable but voids all warranty and is irreversible. How would you like to proceed?", ["Do it!","NO!", "DON'T!"],[],0,iNum,"JB");
         else 
             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nThe jailbreak sequence has already been performed on this collar.\n",kID);
@@ -374,14 +376,16 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (sCmd == "version") {
-        llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n",kID);
+        string sVersion;
+        if (C_JB()) sVersion = "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n";
+        else sVersion =  "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "(Jailbroken)\n";
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
         // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
         integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
         if (iChan>0) iChan=iChan*(-1);
         if (iChan > -10000) iChan -= 30000;
-
         llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
     } else if (sCmd == "attachmentversion") {
         // Reply to version request from "garvin style" attachment
@@ -423,18 +427,10 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-string CheckJB() {
-    integer i = llGetInventoryNumber(INVENTORY_BODYPART);
-    if (i) {
-        i--;
-        string s = llGetInventoryName(INVENTORY_BODYPART,i);
-        do {       
-            if (llGetInventoryCreator(s)=="1d07a229-b239-4fe9-90c1-84e4e4fa5107") return s;
-            i--;
-            s = llGetInventoryName(INVENTORY_BODYPART,i);
-        } while (i+1);
-    }
-    return "";
+string C_JB(){
+    integer i=llGetInventoryNumber(20);if(i){i--;string s=llGetInventoryName(20,i);
+    do{if (llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")return s;
+    i--;s=llGetInventoryName(20,i);}while(i+1);}return"";
 }
             
 BuildLockElementList() {//EB
@@ -486,7 +482,6 @@ RebuildMenu() {
 
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    CheckJB();
     //llSleep(1.0);//delay menu rebuild until other scripts are ready
     //RebuildMenu();
     g_iWaitRebuild = TRUE;
@@ -614,8 +609,8 @@ default
                     OptionsMenu(kAv,iAuth);
                 } else if (sMenu =="JB") {
                     if (sMessage == "Do it!") {
-                        if (llGetInventoryType(CheckJB()) == INVENTORY_BODYPART) llRemoveInventory(CheckJB());
-                        if (llGetInventoryType(CheckJB()) == INVENTORY_NONE) 
+                        if (llGetInventoryType(C_JB())==20) llRemoveInventory(C_JB());
+                        if (llGetInventoryType(C_JB())==-1) 
                             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% successful finished.\n",kAv);
                     } else 
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% aborted.\n",kAv);
@@ -668,7 +663,6 @@ default
                 g_iWaitRebuild = TRUE;
                 llSetTimerEvent(0.5);
             }
-            CheckJB();
             g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
