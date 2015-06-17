@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 150615.1                            //
+//                         Mesh Label - 150618.1                            //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -122,7 +122,7 @@ integer g_iScroll = FALSE;
 integer g_iShow = TRUE;
 vector g_vColor = <1,1,1>;
 
-string g_sLabelText = "";
+string g_sLabelText = "OpenCollar";
 string g_sSettingToken = "label_";
 //string g_sGlobalToken = "global_";
 
@@ -334,8 +334,8 @@ default
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
-        g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
-        //SetLabel();
+        //g_sLabelText = llList2String(llParseString2List(llKey2Name(llGetOwner()), [" "], []), 0);
+        SetLabel();
     }
 
     on_rez(integer iNum) {
