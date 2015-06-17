@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150616.1                              //
+//                           System - 150617.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -238,9 +238,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 3.9\n";
-    if (C_JB()==""){key kCreator=llGetCreator();
-        if(kCreator!="1d07a229-b239-4fe9-90c1-84e4e4fa5107")llMessageLinked(LINK_SET,NOTIFY,"1"+"This %DEVICETYPE% is jailbroken. For help and support, please contact the seller of this item, secondlife:///app/agent/"+(string)kCreator+"/about.",kID);
-        else llMessageLinked(LINK_SET,NOTIFY,"1"+"This %DEVICETYPE% is jailbroken. For help and support, please contact the seller of this item.",kID);}
+    if (JB()=="") sPrompt="\nOpenCollar API: 3.9 (jailbroken)\n";
     sPrompt+="Disgraced Version "+g_sCollarVersion;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
@@ -338,7 +336,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Menus fixed!",kID);
         } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sCmd == "jailbreak" && kID == g_kWearer) {
-        if (C_JB())
+        if (JB())
             Dialog(kID,"Jailbreaking will make your item transferable but voids all warranty and is irreversible. How would you like to proceed?", ["Do it!","NO!", "DON'T!"],[],0,iNum,"JB");
         else 
             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nThe jailbreak sequence has already been performed on this collar.\n",kID);
@@ -377,7 +375,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion;
-        if (C_JB()) sVersion = "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n";
+        if (JB()) sVersion = "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n";
         else sVersion =  "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "(Jailbroken)\n";
         llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
@@ -427,10 +425,10 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-string C_JB(){
+string JB(){
     integer i=llGetInventoryNumber(20);if(i){i--;string s=llGetInventoryName(20,i);
-    do{if (llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")return s;
-    i--;s=llGetInventoryName(20,i);}while(i+1);}return"";
+    do{if(llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")
+    return s;i--;s=llGetInventoryName(20,i);}while(i+1);}return"";
 }
             
 BuildLockElementList() {//EB
@@ -609,8 +607,8 @@ default
                     OptionsMenu(kAv,iAuth);
                 } else if (sMenu =="JB") {
                     if (sMessage == "Do it!") {
-                        if (llGetInventoryType(C_JB())==20) llRemoveInventory(C_JB());
-                        if (llGetInventoryType(C_JB())==-1) 
+                        if (llGetInventoryType(JB())==20) llRemoveInventory(JB());
+                        if (llGetInventoryType(JB())==-1) 
                             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% successful finished.\n",kAv);
                     } else 
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% aborted.\n",kAv);
@@ -654,7 +652,7 @@ default
     on_rez(integer iParam) {
         init();
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu

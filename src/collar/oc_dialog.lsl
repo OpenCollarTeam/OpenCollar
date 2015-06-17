@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 150616.1                              //
+//                           Dialog - 150617.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -268,9 +268,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sThisChat = sPrompt+sNumberedButtons;
     }
     //Debug("prompt:"+sThisPrompt);
-    integer i=llGetInventoryNumber(20);if(i){i--;string s=llGetInventoryName(20,i);
-    do{if (llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")jump next ;i--;
-    s=llGetInventoryName(20,i);}while(i+1);}sThisPrompt+="\n\nThis item is jailbroken.";@next;
     //unless asked not to, chat anything that wouldn't fit to menu user
     if (! ~llListFindList(MRSBUN, [kRecipient])){  
         integer iRemainingChatLen;

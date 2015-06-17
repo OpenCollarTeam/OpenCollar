@@ -277,8 +277,8 @@ BuildTexturesList() {
         }
     }
     //after inventory, start reading textures notecard
-    g_sTextureCard=".textures";
-    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard="textures";
+    g_sTextureCard="!textures";
+    if(llGetInventoryType(g_sTextureCard)!=INVENTORY_NOTECARD) g_sTextureCard=".textures";
     if(llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) {
         g_iTexturesNotecardLine=0;
         g_kTextureCardUUID=llGetInventoryKey(g_sTextureCard);

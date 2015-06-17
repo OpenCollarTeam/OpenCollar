@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 150611.1                               //
+//                           Leash - 150617.1                               //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -506,11 +506,11 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llGiveInventory(kMessageID, "Leash Holder");
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else if (sMessage == "givepost" || sMessage == "give post") {
-            llGiveInventory(kMessageID, "Red Balloon");
+            llGiveInventory(kMessageID, "Pretty Balloon");
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
         } else if (sMessage == "rezpost" || sMessage == "rez post" || sMessage == "park") {
             g_iRezAuth=iAuth;
-            llRezObject("Red Balloon", llGetPos() + (<0.2, 0.0, 0.3> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
+            llRezObject("Pretty Balloon", llGetPos() + (<0.2, 0.0, 1.2> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
             //Person holding the leash can yank.
