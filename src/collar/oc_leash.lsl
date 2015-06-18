@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 150617.1                               //
+//                           Leash - 150618.1                               //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -168,7 +168,10 @@ Debug(string sStr) {
 */
 
 string NameURI(key kID){
-    return "secondlife:///app/agent/"+(string)kID+"/about";
+    if (llGetAgentSize(kID))
+        return "secondlife:///app/agent/"+(string)kID+"/about";
+    else 
+        return "secondlife:///app/objectim/"+(string)kID+"/?name="+llEscapeURL(llKey2Name(kID))+"&owner="+(string)llGetOwnerKey(kID);
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
