@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150617.1                              //
+//                           System - 150618.1                              //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -124,10 +124,10 @@ string g_sClosedLockPrimName="ClosedLock"; // Prim description of elements that 
 list g_lClosedLockElements; //to store the locks prim to hide or show //EB
 list g_lOpenLockElements; //to store the locks prim to hide or show //EB
 
-string g_sDefaultLockSound="2f0943ac-4981-0bb0-0b23-8f429b72cf8e";
-string g_sDefaultUnlockSound="e6482ba6-eae1-4d1b-049e-4de13bbd0f5b";
-string g_sLockSound="2f0943ac-4981-0bb0-0b23-8f429b72cf8e";
-string g_sUnlockSound="e6482ba6-eae1-4d1b-049e-4de13bbd0f5b";
+string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
+string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
