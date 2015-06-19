@@ -497,6 +497,7 @@ default
     state_entry() {
         //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
         g_kWearer = llGetOwner(); 
+        news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
         g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
         init(); 
