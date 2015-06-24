@@ -84,6 +84,12 @@ integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;
 
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+
+integer g_iRebootConfirmed;
+key g_kConfirmDialogID;
+
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
 
@@ -255,13 +261,29 @@ SendValues() {
 
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
- 
+
 UserCommand(integer iAuth, string sStr, key kID) {
     sStr = llToLower(sStr);
     if (sStr == "settings") PrintSettings(kID);
     else if (sStr == "load") {
         g_iLineNr = 0;
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
+    } else if (sStr == "reboot") {
+        if (g_iRebootConfirmed) {
+            g_iRebootConfirmed = FALSE;
+            integer iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT)-1;
+            string sScriptName;
+            string sMyName = llGetScriptName();
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"\nReboot started: Resetting all scripts except "+sMyName+".\n",kID);
+            do {
+                sScriptName = llGetInventoryName(INVENTORY_SCRIPT, iScriptCount);
+                if (sScriptName != sMyName) llResetOtherScript(sScriptName);
+            } while (iScriptCount--);
+            llSetTimerEvent(1.0);
+        } else {
+            g_kConfirmDialogID = llGenerateKey();
+            llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes Reboot`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
+        }
     }
 }
 
@@ -278,13 +300,10 @@ default {
     }
 
     on_rez(integer iParam) {
-        // resend settings to plugins, if owner hasn't changed, in which case
-        // reset the whole lot.
         if (g_kWearer == llGetOwner()) {
             llSleep(0.5); // brief wait for others to reset
             SendValues();    
-        }
-        else llResetScript();
+        } else llResetScript();
     }
 
     dataserver(key id, string data) {
@@ -365,8 +384,21 @@ default {
             else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
+        else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
+            list lMenuParams = llParseString2List(sStr, ["|"], []);
+            kID = llList2Key(lMenuParams,0);
+            if (llList2String(lMenuParams,1) == "Yes Reboot") {
+                g_iRebootConfirmed = TRUE;
+                UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
+            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Reboot aborted.",kID);
+        }
     }
-
+    
+    timer() {
+        llSetTimerEvent(0.0);
+        SendValues();
+    }
+    
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
