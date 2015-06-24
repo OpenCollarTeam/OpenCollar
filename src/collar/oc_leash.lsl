@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 150618.1                               //
+//                           Leash - 150617.1                               //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -506,14 +506,24 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else if (sMessage == "giveholder" || sMessage == "give holder") {
-            llGiveInventory(kMessageID, "Leash Holder");
+            if (llGetInventoryType("Leash Holder") == INVENTORY_OBJECT)
+                llGiveInventory(kMessageID, "Leash Holder");
+            else
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, there is no leash holder in this %DEVICETYPE%.",kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else if (sMessage == "givepost" || sMessage == "give post") {
-            llGiveInventory(kMessageID, "Pretty Balloon");
+            if (llGetInventoryType("Leash Post") == INVENTORY_OBJECT)
+                llGiveInventory(kMessageID, "Leash Post");
+            else
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, there is no leash post in this %DEVICETYPE%.",kMessageID);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
         } else if (sMessage == "rezpost" || sMessage == "rez post" || sMessage == "park") {
             g_iRezAuth=iAuth;
-            llRezObject("Pretty Balloon", llGetPos() + (<0.2, 0.0, 1.2> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
+            if (llGetInventoryType("Pretty Balloon") == INVENTORY_OBJECT)
+                llRezObject("Pretty Balloon", llGetPos() + (<0.2, 0.0, 1.2> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
+            else if (llGetInventoryType("Leash Post") == INVENTORY_OBJECT)
+                llRezObject("Leash Post", llGetPos() + (<0.1, 0.0, 0.37> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 270> * DEG_TO_RAD), 0);
+            else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, there is no leash post in this %DEVICETYPE%.",kMessageID);
             if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
             //Person holding the leash can yank.
