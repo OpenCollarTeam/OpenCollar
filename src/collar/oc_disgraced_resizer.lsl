@@ -130,11 +130,13 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     //Debug("Made menu.");
-    return kID;
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
 } 
 
 integer MinMaxUnscaled(vector vSize, float fScale) {
@@ -267,11 +269,7 @@ AdjustRot(vector vDelta) {
 RotMenu(key kAv, integer iAuth) {
     string sPrompt = "\nHere you can tilt and rotate the %DEVICETYPE%.";
     list lMyButtons = ["tilt up ↻", "left ↶", "tilt left ↙", "tilt down ↺", "right ↷", "tilt right ↘"];// ria change
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
-    integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
-    list lAddMe = [kAv, kMenuID, ROTMENU];
-    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
-    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
+    Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,ROTMENU);
 }
 
 PosMenu(key kAv, integer iAuth) {
@@ -283,21 +281,12 @@ PosMenu(key kAv, integer iAuth) {
     else sPrompt += "▁ ▂";
     if (g_fNudge!=g_fLargeNudge) lMyButtons+=["▁ ▂ ▃"];
     else sPrompt += "▁ ▂ ▃";
-    
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
-    integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
-    list lAddMe = [kAv, kMenuID, POSMENU];
-    if (iMenuIndex == -1)  g_lMenuIDs += lAddMe;
-    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
+    Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,POSMENU);
 }
 
 SizeMenu(key kAv, integer iAuth) {
     string sPrompt = "\nNumbers are based on the original size of the %DEVICETYPE%.\n\nCurrent size: " + (string)g_iScaleFactor + "%";
-    key kMenuID = Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth);
-    integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
-    list lAddMe = [kAv, kMenuID, SIZEMENU];
-    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
-    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
+    Dialog(kAv, sPrompt, SIZEMENU_BUTTONS, [UPMENU], 0, iAuth,SIZEMENU);
 }
 
 DoMenu(key kAv, integer iAuth) {
@@ -305,12 +294,7 @@ DoMenu(key kAv, integer iAuth) {
     string sPrompt;
     sPrompt = "\nChange the position, rotation and size of your %DEVICETYPE%.\n\nwww.opencollar.at/appearance";
     lMyButtons = [POSMENU, ROTMENU, SIZEMENU];
-    
-    key kMenuID = Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
-    integer iMenuIndex = llListFindList(g_lMenuIDs, [kAv]);
-    list lAddMe = [kAv, kMenuID, g_sSubMenu];
-    if (iMenuIndex == -1) g_lMenuIDs += lAddMe;
-    else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);    
+    Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,g_sSubMenu);
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
