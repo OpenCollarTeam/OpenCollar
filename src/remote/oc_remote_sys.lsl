@@ -165,26 +165,22 @@ RemoveSub(key kSub) {
 }
 
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage) {
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, string sMenuType) {
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET,DIALOG,(string)kRCPT+"|"+sPrompt+"|"+(string)iPage+"|"+llDumpList2String(lChoices,"`")+"|"+llDumpList2String(lUtilityButtons,"`"),kID);
-    return kID;
+    integer index = llListFindList(g_lMenuIDs, [kID]);
+    if (~index) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kID, sMenuType], index, index - 1 + g_iMenuStride);
+    else g_lMenuIDs += [kRCPT, kID, sMenuType];
 }
 
 ManageMenu(key kID) {// Single page menu
     string sPrompt = "\nClick \"Add\" to register collars!\n\nwww.opencollar.at/ownerhud";
     list lButtons = [g_sScanSubs,g_sListSubs,g_sRemoveSub,g_sLoadCard,g_sPrintSubs];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0);
-    list lNewStride = [kID, kMenuID, "ManageMenu"];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, "ManageMenu");
 }
 
-PickSubMenu(key kID, integer iPage) { // Multi-page menu
-    string sPrompt = "\nWho of your subs will receive this command?\n\nOnly subs in this sim are shown.";
+PickSubMenu(key kID, string sCmd) { // Multi-page menu
+    string sPrompt = "\nWhich sub shall receive the \""+sCmd+"\" command?\nOnly subs in this sim are shown.\n";
     list lButtons;
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 2) {
@@ -192,13 +188,7 @@ PickSubMenu(key kID, integer iPage) { // Multi-page menu
             lButtons += [llList2String(g_lSubs, i)];
     }
     if (!llGetListLength(lButtons)) lButtons = ["-"];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [g_sAllSubs,UPMENU], -1);
-    list lNewStride = [kID, kMenuID, "PickSubMenu"];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, lButtons, [g_sAllSubs,UPMENU], -1,"PickSubMenu");
 }
 
 RemoveSubMenu(key kID, integer iPage) // Multi-page menu
@@ -208,48 +198,24 @@ RemoveSubMenu(key kID, integer iPage) // Multi-page menu
     integer i;
     for (; i < llGetListLength(g_lSubs); i+= 2)
         lButtons += [llList2String(g_lSubs, i)];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], -1);
-    list lNewStride = [kID, kMenuID, "RemoveSubMenu"];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, lButtons, [UPMENU], -1,"RemoveSubMenu");
 }
 
 MainMenu(key kID){
     string sPrompt = "\n\nwww.opencollar.at/ownerhud";
     list lButtons = g_lMainMenuButtons;["MANAGE","Collar","Cage","Pose","RLV","Sit","Stand","Leash","HUD Style"];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
-    list lNewStride = [kID, kMenuID, g_sMainMenu];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, lButtons, [], 0,g_sMainMenu);
 }
 
 QuickLeashMenu(key kID) {
     string sPrompt = "\n\nwww.opencollar.at/ownerhud\n\nLeash Quickmenu";
     list lButtons = ["Grab","Follow","STOP","Stay","Unstay"];
-    key kMenuID = Dialog(kID, sPrompt, lButtons, [], 0);
-    list lNewStride = [kID, kMenuID, "QuickLeash"];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, lButtons, [], 0,"QuickLeash");
 }
 
 ConfirmSubRemove(key kID) { 
     string sPrompt = "\nAre you sure you want to remove "+NameURI(kID)+"?\n\nNOTE: This will also remove you as their owner.";
-    key kMenuID = Dialog(kID, sPrompt, ["Yes", "No"], [UPMENU], 0);
-    list lNewStride = [kID, kMenuID, "RemoveSubMenu"];
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(kID, sPrompt, ["Yes", "No"], [UPMENU], 0,"RemoveSubMenu");
 }
 
 //NG lets send pings here and listen for pong replys
@@ -266,7 +232,7 @@ PickSubCmd(string sCmd) {
     integer iLength = llGetListLength(g_lSubs);
     if (iLength > 2) {
         g_sPendingCmd = sCmd;
-        PickSubMenu(g_kWearer,0);
+        PickSubMenu(g_kWearer,sCmd);
     } else if (iLength == 2) {
         key kSubID = (key)llList2String(g_lSubs, 0);
         SendCmd(kSubID, sCmd);
@@ -288,13 +254,7 @@ AddSubMenu() {
         lButtons += [sName];*/
         lButtons += llList2Key(g_lNewSubIDs,index);
     } while (index++ < llGetListLength(g_lNewSubIDs));
-    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], -1);
-    list lNewStride = [g_kWearer, kMenuID, "AddSubMenu"];
-    index = llListFindList(g_lMenuIDs, [g_kWearer]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;    
+    Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], -1,"AddSubMenu");
 }
 
 CageMenu() {
@@ -312,13 +272,7 @@ CageMenu() {
         lButtons += llList2Key(g_lCageVictims,i);
         i++;
     } while (i < llGetListLength(g_lCageVictims));
-    key kMenuID = Dialog(g_kWearer, sPrompt, lButtons, [UPMENU], -1);
-    list lNewStride = [g_kWearer, kMenuID, "CageMenu"];
-    index = llListFindList(g_lMenuIDs, [g_kWearer]);
-    if (~index)
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, lNewStride, index, index - 1 + g_iMenuStride);
-    else
-        g_lMenuIDs += lNewStride;
+    Dialog(g_kWearer, sPrompt, lButtons, [UPMENU], -1,"CageMenu");
 }
 
 default
