@@ -58,7 +58,8 @@
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
-key g_kDialogID;
+list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
+integer g_iMenuStride = 3;
 
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
@@ -137,11 +138,13 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     //Debug("Made menu.");
-    return kID;
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1); 
+    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType]; 
 } 
 
 BellMenu(key kID, integer iAuth) {
@@ -167,7 +170,7 @@ BellMenu(key kID, integer iAuth) {
 
     lMyButtons += ["Next Sound","Vol +","Vol -"];
 
-    g_kDialogID = Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");
 }
 
 SetBellElementAlpha() {
@@ -316,39 +319,43 @@ default {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) 
             UserCommand(iNum, sStr, kID);
-        else if (iNum == DIALOG_RESPONSE && kID == g_kDialogID) {
-            list lMenuParams = llParseString2List(sStr, ["|"], []);
-            key kAV = llList2String(lMenuParams, 0);
-            string sMessage = llList2String(lMenuParams, 1);
-            integer iPage = (integer)llList2String(lMenuParams, 2);
-            integer iAuth = (integer)llList2String(lMenuParams, 3);
-            if (sMessage == UPMENU) {
-                llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAV);
-                return;
-            } else if (sMessage == "Vol +") { 
-                g_fVolume+=g_fVolumeStep;
-                if (g_fVolume>1.0) g_fVolume=1.0;
-                llPlaySound(g_kCurrentBellSound,g_fVolume);                   
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
-            } else if (sMessage == "Vol -") {
-                g_fVolume-=g_fVolumeStep;
-                if (g_fVolume<0.1) g_fVolume=0.1;
-                llPlaySound(g_kCurrentBellSound,g_fVolume);                   
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
-            } else if (sMessage == "Next Sound") {
-                g_iCurrentBellSound++;
-                if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
-                g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                llPlaySound(g_kCurrentBellSound,g_fVolume);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
-            } else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
-                UserCommand(iAuth,"bell "+llToLower(sMessage),kAV);
-            else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
-                g_iBellShow = !g_iBellShow;
-                SetBellElementAlpha();
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
+        else if (iNum == DIALOG_RESPONSE) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) { 
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                list lMenuParams = llParseString2List(sStr, ["|"], []);
+                key kAV = llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
+                integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                if (sMessage == UPMENU) {
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAV);
+                    return;
+                } else if (sMessage == "Vol +") { 
+                    g_fVolume+=g_fVolumeStep;
+                    if (g_fVolume>1.0) g_fVolume=1.0;
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
+                } else if (sMessage == "Vol -") {
+                    g_fVolume-=g_fVolumeStep;
+                    if (g_fVolume<0.1) g_fVolume=0.1;
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
+                } else if (sMessage == "Next Sound") {
+                    g_iCurrentBellSound++;
+                    if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
+                    g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
+                } else if (sMessage == g_sBellOff || sMessage == g_sBellOn)
+                    UserCommand(iAuth,"bell "+llToLower(sMessage),kAV);
+                else if (sMessage == g_sBellShow || sMessage == g_sBellHide) {
+                    g_iBellShow = !g_iBellShow;
+                    SetBellElementAlpha();
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
+                }
+                BellMenu(kAV, iAuth);
             }
-            BellMenu(kAV, iAuth);
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
