@@ -21,7 +21,11 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150618.1                              //
+//                         RLV System - 150616.1                            //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
+//  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
+//  Sumi Perl et al.                                                        //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -44,43 +48,43 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (C) 2008 - 2015:    Individual Contributors                   //
-//                                OpenCollar - submission set free(TM)      //
-//                                and Virtual Disgrace(TM)                  //
-// ------------------------------------------------------------------------ //
-//  Source Code Repository:       github.com/OpenCollar/OC                  //
+//                         github.com/OpenCollar/OC                         //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-//on start, send request for submenu names
-//on getting submenu name, add to list if not already present
-//on menu request, give dialog, with alphabetized list of submenus
-//on listen, send submenu link message
+integer g_iRLVOn = TRUE;
+integer g_iViewerCheck = FALSE;
+integer g_iRlvActive = FALSE;
+integer g_iWaitRelay;
 
-string g_sCollarVersion="20150525.1";
-integer g_iLatestVersion=TRUE;
+integer g_iListener;
+float g_fVersionTimeOut = 30.0; 
+integer g_iRlvVersion;
+integer g_iRlvaVersion;
+integer g_iCheckCount;
+integer g_iMaxViewerChecks=10;
+integer g_iCollarLocked=FALSE;
 
-key g_kWearer;
-
-list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
-integer g_iMenuStride = 3;
-
-integer g_iScriptCount;//when the scriptcount changes, rebuild menus
+string g_sParentMenu = "Main";
+string g_sSubMenu = "RLV";
+list g_lMenu;
+key kMenuID;
+integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
+integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
-//integer CMD_RELAY_SAFEWORD = 511;
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
+//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
-integer NOTIFY_OWNERS = 1003;
 
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
@@ -92,82 +96,45 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-//5000 block is reserved for IM slaves
-
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
+
+integer RLV_OFF = 6100; 
+integer RLV_ON = 6101; 
+integer RLV_QUERY = 6102; 
+integer RLV_RESPONSE = 6103; 
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
+string TURNON = "  ON";
+string TURNOFF = " OFF";
+string CLEAR = "CLEAR ALL";
 
-string GIVECARD = "Help";
-string HELPCARD = ".help";
-string CONTACT = "Contact";
-string LICENSE="License";
-key g_kWebLookup;
-key g_kCurrentUser;
+key g_kWearer;
 
-list g_lAppsButtons;
-
-integer g_iLocked = FALSE;
-integer g_bDetached = FALSE;
-integer g_iHide ; // global hide
-integer g_iNews=TRUE;
-
-string g_sLockPrimName="Lock"; // Description for lock elements to recognize them //EB //SA: to be removed eventually (kept for compatibility)
-string g_sOpenLockPrimName="OpenLock"; // Prim description of elements that should be shown when unlocked
-string g_sClosedLockPrimName="ClosedLock"; // Prim description of elements that should be shown when locked
-list g_lClosedLockElements; //to store the locks prim to hide or show //EB
-list g_lOpenLockElements; //to store the locks prim to hide or show //EB
-
-string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
-string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
-
-integer g_iAnimsMenu=FALSE;
-integer g_iRlvMenu=FALSE;
-integer g_iKidnapMenu=FALSE;
-integer g_iResizer=FALSE;
-
-integer g_iUpdateChan = -7483214;
-integer g_iUpdateHandle;
-
-key g_kUpdaterOrb;
-integer g_iUpdateFromMenu;
-
-string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~version";
-key github_version_request;
-string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~news";
-key news_request;
-string g_sLastNewsTime = "0";
-
-integer g_iUpdateAuth;
-integer g_iWillingUpdaters = 0;
-integer g_iWillingVDUpdaters = 0;
-
-string g_sSafeWord="RED";
-
-//Option Menu variables
-string DUMPSETTINGS = "Print";
-
-string STEALTH_OFF = "☐ Stealth"; // show the whole device
-string STEALTH_ON = "☒ Stealth"; // hide the whole device
-string LOADCARD="Load";
-string REFRESH_MENU = "Fix";
-
+string g_sSettingToken = "rlvmain_";
 string g_sGlobalToken = "global_";
-integer STEALTH;
+string g_sRlvVersionString="(unknown)";
+string g_sRlvaVersionString="(unknown)";
 
-integer g_iWaitUpdate;
-integer g_iWaitRebuild;
+list g_lOwners;
+list g_lRestrictions;  //2 strided list of sourceId, § separated list of restrictions strings
+list g_lExceptions;
+list g_lBaked=[]; //list of restrictions currently in force
+key g_kSitter=NULL_KEY;
+key g_kSitTarget=NULL_KEY;
+
+integer CMD_ADDSRC = 11;
+integer CMD_REMSRC = 12;
 
 /*
-integer g_iProfiled=1;
+integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to 
@@ -176,576 +143,582 @@ Debug(string sStr) {
         g_iProfiled=1;
         llScriptProfiler(1);
     }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+") :\n" + sStr);
-}*/
-
-integer compareVersions(string v1, string v2) { //compares two symantic version strings, true if v1 >= v2
-    integer v1Index=llSubStringIndex(v1,".");
-    integer v2Index=llSubStringIndex(v2,".");
-    integer v1a=(integer)llGetSubString(v1,0,v1Index);
-    integer v2a=(integer)llGetSubString(v2,0,v2Index);
-    if (v1a == v2a) {
-        if (~v1Index || ~v2Index) {
-            string v1b;
-            if (v1Index == -1 || v1Index==llStringLength(v1)) v1b="0";
-            else v1b=llGetSubString(v1,v1Index+1,-1);
-            string v2b;
-            if (v2Index == -1 || v2Index==llStringLength(v2)) v2b="0";
-            else v2b=llGetSubString(v2,v2Index+1,-1);
-            return compareVersions(v1b,v2b);
-        } else return FALSE;
-    }
-    return v1a > v2a;
+    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
+*/
 
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
-    key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+DoMenu(key kID, integer iAuth){
+    list lButtons;
+    if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
+    else lButtons += [TURNON];
 
-    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) //we've alread given a menu to this user.  overwrite their entry
-        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
-    else //we've not already given this user a menu. append to list
-        g_lMenuIDs += [kID, kMenuID, sName];
+    string sPrompt = "\n[http://www.virtualdisgrace.com/collar#rlv Remote Scripted Viewer Controls]\n";
+    if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
+    if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
+    //sPrompt +="\n\nwww.opencollar.at/rlv";
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
+    //Debug("Made menu.");
 } 
 
-OptionsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n\"" + DUMPSETTINGS + "\" current settings to chat.";
-    sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
-    sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
-    sPrompt += "\nSelect Themes to customize looks.";
-    list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
-    if (STEALTH) {
-        sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
-        lButtons += [STEALTH_ON];
-    } else {
-        sPrompt +="\nCheck " + STEALTH_OFF + " to hide your collar.";
-        lButtons += [STEALTH_OFF];
-    }
-    Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Options");
-}
-
-
-AppsMenu(key kID, integer iAuth) {
-    string sPrompt="\nBrowse apps, extras and custom features.";
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    Dialog(kID, sPrompt, g_lAppsButtons, [UPMENU], 0, iAuth, "Apps");
-}
-
-UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your %DEVICETYPE% and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, CMD_WEARER, "UpdateConfirmMenu");
-}
-
-HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar API: 3.9\n";
-    if (JB()=="") sPrompt="\nOpenCollar API: 3.9 (jailbroken)\n";
-    sPrompt+="Disgraced Version "+g_sCollarVersion;
-    sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
-    if(!g_iLatestVersion) sPrompt+="\n\nℹ: Update available!";
-    //sPrompt+="\n\nwww.virtualdisgrace.com/collar";
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    list lUtility = [UPMENU];
-    
-    string sNewsButton="☐ News";
-    if (g_iNews) sNewsButton="☒ News";
-    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
-    Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
-}
-
-MainMenu(key kID, integer iAuth) {
-    //string sPrompt="\nOpenCollar Version "+g_sCollarVersion;
-    //if(!g_iLatestVersion) sPrompt+="\nUpdate available!";
-    string sPrompt = "\n Welcome to the main menu!\n Touch the heart for help:  [http://www.virtualdisgrace.com/collar ❤]";
-    //Debug("max memory used: "+(string)llGetSPMaxMemory());
-    list lStaticButtons=["Apps"];
-    if (g_iAnimsMenu) lStaticButtons+="Animations";
-    else lStaticButtons+=" ";
-    
-    if (g_iKidnapMenu) lStaticButtons+="Kidnap";
-    else lStaticButtons+=" ";
-    
-    lStaticButtons+=["Leash"];
-    
-    if (g_iRlvMenu) lStaticButtons+="RLV";
-    else lStaticButtons+=" ";
-    lStaticButtons+=["Access","Options","Help/About"];
-    
-    if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
-    else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
-}
-
-UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
-    list lParams = llParseString2List(sStr, [" "], []);
-    string sCmd = llToLower(llList2String(lParams, 0));
-
-    if (sCmd == "menu") {
-        string sSubmenu = llToLower(llList2String(lParams, 1));
-        if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
-        else if (sSubmenu == "apps" || sSubmenu=="addons") AppsMenu(kID, iNum);
-        else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
-        else if (sSubmenu == "options") {
-            if (iNum != CMD_OWNER && iNum != CMD_WEARER) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
-                MainMenu(kID, iNum);
-            } else OptionsMenu(kID, iNum);
+rebakeSourceRestrictions(key kSource){
+    //Debug("rebakeSourceRestrictions "+(string)kSource);
+    integer iSourceIndex=llListFindList(g_lRestrictions,[kSource]);
+    if (~iSourceIndex) {      
+        list lRestr=llParseString2List(llList2String(g_lRestrictions,iSourceIndex+1),["§"],[]);
+        while(llGetListLength(lRestr)){
+            ApplyAdd(llList2String(lRestr,-1));
+            lRestr=llDeleteSubList(lRestr,-1,-1);
         }
-    } else if (sStr == "license") {
-        if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_SET,NOTIFY,"0"+"License notecard missing from collar, sorry.",kID);//Notify(kID,"License notecard missing from collar, sorry.", FALSE); 
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sStr == "help") {
-        llGiveInventory(kID, HELPCARD);
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);               
-    else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
-    else if (sStr == "options") {
-        if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
-    } else if (sCmd == "menuto") {
+    }
+}
+
+DoLock(){
+    integer numSources=llGetListLength(llList2ListStrided(g_lRestrictions,0,-2,2));
+    while (numSources--){
+        if ((key)llList2Key(llList2ListStrided(g_lRestrictions,0,-2,2),numSources)){
+            ApplyAdd("detach");
+            return;
+        }
+    }
+    ApplyRem("detach"); //we only get here if none of the active sources is a real source, so remove our lock
+}
+
+setRlvState(){
+    if (g_iRLVOn && g_iViewerCheck){  //everyone says RLV on
+        if (!g_iRlvActive) {  //its newly active
+            //Debug("RLV went active");
+            //Debug("Sources:"+llDumpList2String(g_lSources,";"));
+            g_iRlvActive=TRUE;
+            llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+            g_lMenu = [] ; // flush submenu buttons
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
+            //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
+           // llSleep(5); //Make sure the relay is ready before pinging
+            g_iWaitRelay = TRUE;
+            llSetTimerEvent(5.0);
+            //ping inworld object so that they reinstate their restrictions
+            integer i;/*
+            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            }*/
+            //reinstate exceptions
+            //Debug("adding exceptions:\n"+llDumpList2String(g_lExceptions,",\n"));
+            for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
+                key kSource=(key)llList2String(g_lExceptions,i);
+                list lBehaviours=llParseString2List(llList2String(g_lExceptions,i+1),["§"],[]);
+                while (llGetListLength(lBehaviours)){
+                    //Debug("re-adding exception "+llList2String(lBehaviours,-1)+" for "+(string)kSource);
+                    ApplyAdd(llList2String(lBehaviours,-1)+":"+(string)kSource);
+                    lBehaviours=llDeleteSubList(lBehaviours,-1,-1);
+                }
+            }
+            llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
+            if (g_iRlvaVersion) { //Respond on RLVa as well
+                 llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+            }
+            //llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+        
+            DoLock();
+        }
+    } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
+        //Debug("RLV went inactive");
+        g_iRlvActive=FALSE;
+        while (llGetListLength(g_lBaked)){
+            llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
+            g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
+        }
+        llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
+    } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
+        if (g_iListener) llListenRemove(g_iListener);
+        g_iListener = llListen(293847, "", g_kWearer, "");
+        llSetTimerEvent(g_fVersionTimeOut);
+        g_iCheckCount=0;
+        llOwnerSay("@versionnew=293847");
+    } else {  //else both are FALSE, its the only combination left, No need to do viewercheck if g_iRLVOn is FALSE
+        llSetTimerEvent(0.0);
+    }
+}
+
+AddRestriction(key kID, string sBehav) {
+    if (kID=="rlvex"){  //if its an exception, add it to the exceptions list
+        list lParams = llParseString2List(sBehav, [":"], []);
         key kAv = (key)llList2String(lParams, 1);
-        if (llGetAgentSize(kAv) != ZERO_VECTOR) {//if kAv is an avatar in this region
-            if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
-            else  llMessageLinked(LINK_SET, CMD_ZERO, "menu", kAv);   //else send an auth request for the menu
-        }
-    } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {    //does anything use togglelock?  If not, it'd be nice to get rid of it
-        //Debug("User command:"+sCmd);
-        if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
-            //inlined old "Lock()" function        
-            g_iLocked = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"locked=1", "");
-            llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
-            llPlaySound(g_sLockSound, 1.0);
-            SetLockElementAlpha();//EB
-            llMessageLinked(LINK_SET,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been locked.",kID);
-        }
-        else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);;
-        if (fromMenu) MainMenu(kID, iNum);
-    } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
-        if (iNum == CMD_OWNER)  { 
-            g_iLocked = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");
-            llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
-            llPlaySound(g_sUnlockSound, 1.0);
-            SetLockElementAlpha(); //EB
-            llMessageLinked(LINK_SET,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been unlocked.",kID);
-        }
-        else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-        if (fromMenu) MainMenu(kID, iNum);
-    } else if (sCmd == "fix") {
-        if (kID == g_kWearer){
-            RebuildMenu();
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Menus fixed!",kID);
-        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-    } else if (sCmd == "jailbreak" && kID == g_kWearer) {
-        if (JB())
-            Dialog(kID,"Jailbreaking will make your item transferable but voids all warranty and is irreversible. How would you like to proceed?", ["Do it!","NO!", "DON'T!"],[],0,iNum,"JB");
-        else 
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nThe jailbreak sequence has already been performed on this collar.\n",kID);
-    } else if (sCmd == "news"){
-        if (kID == g_kWearer || iNum==CMD_OWNER){
-            if (sStr=="news off"){
-                g_iNews=FALSE;
-                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nOk! No more news from now on.\n\n*pout*\n",kID);
-            } else if (sStr=="news on"){
-                g_iNews=TRUE;
-                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nThanks!\n\nWe won't spam you, promise! <3\n",kID);
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            } else {
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        string sBehav = llList2String(lParams, 0);
+        //Debug("apply exception ("+(string)kAv+")"+sBehav);
+        if ((key)kAv){
+            integer iSource=llListFindList(g_lExceptions,[kAv]);
+            if (! ~iSource ) {  //if this is an exception for a new agent
+                //Debug("Exception for new agent "+(string)kAv);
+                g_lExceptions+=[kAv,""];    //add UUID and blank list to exceptions list
+                iSource=-2;
             }
-        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-        if (fromMenu) HelpMenu(kID, iNum);
-    } else if (sCmd == "update") {
-        if (kID == g_kWearer) {
-            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
-            g_iWillingUpdaters = 0;
-            g_iWillingVDUpdaters = 0;
-            g_kCurrentUser = kID;
-            g_iUpdateAuth = iNum;
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Searching for nearby updater",kID);
-            g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
-            g_iUpdateFromMenu=fromMenu;
-            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
-            g_iWaitUpdate = TRUE;
-            llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
-        } else {
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
-            if (fromMenu) HelpMenu(kID, iNum);
-        }
-    } else if (sCmd == "version") {
-        string sVersion;
-        if (JB()) sVersion = "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "\n";
-        else sVersion =  "\n\nOpenCollar API: 3.9\nDisgraced Version " + g_sCollarVersion + "(Jailbroken)\n";
-        llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
-    } else if (sCmd == "objectversion") {
-        // ping from an object, we answer to it on the object channel
-        // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
-        integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
-        if (iChan>0) iChan=iChan*(-1);
-        if (iChan > -10000) iChan -= 30000;
-        llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
-    } else if (sCmd == "attachmentversion") {
-        // Reply to version request from "garvin style" attachment
-        integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;        
-        llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
-    }    
-}
+            //Debug("trying to apply exception ("+(string)kID+")"+sBehav);
+            string sSrcRestr = llList2String(g_lExceptions,iSource+1);
+            if (!(sSrcRestr==sBehav || ~llSubStringIndex(sSrcRestr,"§"+sBehav) || ~llSubStringIndex(sSrcRestr,sBehav+"§")) ) {
+                //Debug("AddRestriction 2.2");
+                sSrcRestr+="§"+sBehav;
+                if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
 
-string GetTimestamp() { // Return a string of the date and time
-    string out;
-    string DateUTC = llGetDate();
-    if (llGetGMTclock() < 28800) { // that's 28800 seconds, a.k.a. 8 hours.
-        list DateList = llParseString2List(DateUTC, ["-", "-"], []);
-        integer year = llList2Integer(DateList, 0);
-        integer month = llList2Integer(DateList, 1);
-        integer day = llList2Integer(DateList, 2);
-       if(day==1) {
-           if(month==1) return (string)(year-1) + "-01-31";
-           else {
-                --month;
-                if(month==2) day = 28+(year%4==FALSE); //To do: fix before 28th feb 2100.
-                else day = 30+ (!~llListFindList([4,6,9,11],[month])); //31 days hath == TRUE
+                g_lExceptions=llListReplaceList(g_lExceptions,[sSrcRestr],iSource+1, iSource+1);
+                ApplyAdd(sBehav+":"+(string)kAv);
+            //} else {
+                //Debug("exception already active ("+(string)kID+")"+sBehav);
+                //Debug(sSrcRestr);
+            }
+        /*} else {
+            Debug("OC doesn't currently support global exceptions");*/
+        }
+    } else {      //add this restriction to the list for this source
+        //add new sources to sources list
+        integer iSource=llListFindList(g_lRestrictions,[kID]);
+        if (! ~iSource ) {  //if this is a restriction from a new source
+            g_lRestrictions += [kID,""];
+            iSource=-2;
+            if ((key)kID) llMessageLinked(LINK_SET, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
+        }
+    
+        string sSrcRestr = llList2String(g_lRestrictions,iSource+1);
+        //Debug("AddRestriction 2.1");
+        if (!(sSrcRestr==sBehav || ~llSubStringIndex(sSrcRestr,"§"+sBehav) || ~llSubStringIndex(sSrcRestr,sBehav+"§")) ) {
+            //Debug("AddRestriction 2.2");
+            sSrcRestr+="§"+sBehav;
+            if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
+
+            g_lRestrictions=llListReplaceList(g_lRestrictions,[sSrcRestr],iSource+1, iSource+1);
+            //Debug("apply restriction ("+(string)kID+")"+sBehav);
+            ApplyAdd(sBehav);
+            if (sBehav=="unsit") {
+                g_kSitTarget = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
+                g_kSitter=kID;
             }
         }
-        else --day;
-        out=(string)year + "-" + (string)month + "-" + (string)day;
-    } else out=llGetDate();
-    
-    integer t = (integer)llGetWallclock(); // seconds since midnight
-    out += " " + (string)(t / 3600) + ":";
-    
-    integer mins=(t % 3600) / 60;
-    if (mins <10) out += "0";
-    out += (string)mins+":";
-    integer secs=t % 60;
-    if (secs < 10) out += "0";
-    out += (string)secs;
-    return out;
-}
-
-string JB(){ 
-    integer i=llGetInventoryNumber(6);if(i){i--;string s=llGetInventoryName(6,i);
-    do{if(llGetInventoryCreator(s)=="4da2b231-87e1-45e4-a067-05cf3a5027ea")
-    return s;i--;s=llGetInventoryName(6,i);}while(i+1);}return"";
-}
-            
-BuildLockElementList() {//EB
-    list lParams;
-    // clear list just in case
-    g_lOpenLockElements = [];
-    g_lClosedLockElements = [];
-    //root prim is 1, so start at 2
-    integer n=2;
-    for (; n <= llGetNumberOfPrims(); n++) {
-        // read description
-        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_DESC]), ["~"], []);
-        // check inf name is lock name
-        if (llList2String(lParams, 0)==g_sLockPrimName || llList2String(lParams, 0)==g_sClosedLockPrimName)  
-            // if so store the number of the prim
-            g_lClosedLockElements += [n];
-        else if (llList2String(lParams, 0)==g_sOpenLockPrimName) 
-            // if so store the number of the prim
-            g_lOpenLockElements += [n];
+        DoLock(); //if there are sources with valid keys, collar should be locked.
     }
 }
 
-SetLockElementAlpha() { //EB
-    if (g_iHide) return ; // ***** if collar is hide, don't do anything 
-    //loop through stored links, setting alpha if element type is lock
-    integer n;
-    integer iLinkElements = llGetListLength(g_lOpenLockElements);
-    //float fAlpha;
-    //if (g_iLocked) fAlpha = 1.0; else fAlpha = 0.0; //Let's just use g_iLocked!
-    for (; n < iLinkElements; n++)
-        llSetLinkAlpha(llList2Integer(g_lOpenLockElements,n), !g_iLocked, ALL_SIDES);
-    iLinkElements = llGetListLength(g_lClosedLockElements);
-    for (n=0; n < iLinkElements; n++)
-        llSetLinkAlpha(llList2Integer(g_lClosedLockElements,n), g_iLocked, ALL_SIDES);
+ApplyAdd (string sBehav) {
+    if (! ~llListFindList(g_lBaked, [sBehav])) {  //if this restriction is not already baked
+        g_lBaked+=[sBehav];
+        llOwnerSay("@"+sBehav+"=n");
+        //Debug("'"+sBehav+"' added to the baked list");
+    //} else {
+        //Debug(sBehav+" is already baked");
+    }
 }
 
-RebuildMenu() {
-    //Debug("Rebuild Menu");
-    g_iAnimsMenu=FALSE;
-    g_iRlvMenu=FALSE;
-    g_iKidnapMenu=FALSE;
-    g_iResizer=FALSE;
-    g_lAppsButtons = [] ;
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Options", "");
+RemRestriction(key kID, string sBehav) {
+    if ((string)kID=="rlvex"){
+        //Debug("RemRestriction [rlvex] "+sBehav);
+        list lParams = llParseString2List(sBehav, [":"], []);
+        key kAv = (key)llList2String(lParams, 1);
+        string sBehav = llList2String(lParams, 0);
+        
+        integer iSource=llGetListLength(g_lExceptions);
+        while (iSource){
+            iSource -= 2;
+            key thisAgent=llList2Key(g_lExceptions,iSource);
+            if (thisAgent==kAv || kAv==""){ //if we're clearing this one, or all
+                //Debug("clearing "+(string)sBehav+" for "+(string)thisAgent);
+                list lSrcRestr = llParseString2List(llList2String(g_lExceptions,iSource+1),["§"],[]); //get a list of this source's restrictions
+                integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
+                if (~iRestr) {   //if the restriction is in the list
+                    if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
+                        //Debug("removing last restriction");
+                        g_lExceptions=llDeleteSubList(g_lExceptions,iSource, iSource+1);  //remove the restrictions list
+                    } else {                              //else, the source has other restrictions
+                        lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
+                        g_lExceptions=llListReplaceList(g_lExceptions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
+                        //Debug("removed restriction, there are "+(string)llGetListLength(lSrcRestr)+" remaining "+llDumpList2String(lSrcRestr,"|"));
+                    }
+                    lSrcRestr=[];
+                    ApplyRem(sBehav+":"+(string)thisAgent);
+                //} else {
+                    //Debug("restriction is not in the list");
+                }
+            }
+        }
+    } else {
+        //Debug("RemRestriction ("+(string)kID+")"+sBehav);
+        integer iSource=llListFindList(g_lRestrictions,[kID]); //find index of the source
+        if (~iSource) { //if this source set any restrictions
+            list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
+            integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
+            if (~iRestr || sBehav=="ALL") {   //if the restriction is in the list
+                if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
+                    g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
+                    if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
+                } else {                              //else, the source has other restrictions
+                    lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
+                    g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
+                }
+                if (sBehav=="unsit"&&g_kSitter==kID) {
+                    g_kSitter=NULL_KEY;
+                    g_kSitTarget=NULL_KEY;
+                }
+                lSrcRestr=[];
+                ApplyRem(sBehav);
+            }
+        }
+        DoLock();
+    }
 }
 
-init (){
-    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    //llSleep(1.0);//delay menu rebuild until other scripts are ready
-    //RebuildMenu();
-    g_iWaitRebuild = TRUE;
-    llSetTimerEvent(1);
+ApplyRem(string sBehav) {
+    //Debug("(rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
+    integer iRestr=llListFindList(g_lBaked, [sBehav]);  //look for this restriction in the baked list
+    if (~iRestr) {  //if this restriction has been baked already
+        integer i;
+        for (i=0;i<=llGetListLength(g_lRestrictions);i++) {   //for each source
+            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,i),["§"],[]); //get its restrictions list
+            if (llListFindList(lSrcRestr, [sBehav])!=-1) return; //check it for this restriction
+        }
+        //also check the exceptions list, in case its an exception
+        list lParts=llParseString2List(sBehav,[":"],[]);
+        key exceptee=llList2Key(lParts,1);
+        if (exceptee) {
+            integer exceptionIndex=llListFindList(g_lExceptions,[exceptee]);
+            if (~exceptionIndex){
+                //Debug("This exceptee has exceptions");
+                list lExceptions=llParseString2List(llList2String(g_lExceptions,exceptionIndex+1),["§"],[]);
+                string exception=llList2String(lParts,0);
+                if (~llListFindList(lExceptions,[exception])){
+                    //Debug("we found this exception for this person set by rlvex, so don't release it");
+                    return;
+                }
+            //} else {
+                //Debug("Exceptions list is "+llDumpList2String(g_lExceptions,",")+"\n checking for "+exception+" from "+(string)exceptee);
+            }
+        //} else {
+            //Debug((string)exceptee+" is not a key, so this is not an exception");
+        }
+
+        g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
+        llOwnerSay("@"+sBehav+"=y"); //remove restriction
+    //} else {
+        //Debug("Restriction '"+sBehav+"'not in baked list"); 
+    }
+    //Debug("(post rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
 }
 
-StartUpdate(){
-    integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
-    llSetRemoteScriptAccessPin(pin);
-    llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
+
+SafeWord() {
+    //leave lock and exceptions intact, clear everything else
+    integer numRestrictions=llGetListLength(g_lRestrictions);
+    while (numRestrictions){
+        numRestrictions -= 2;
+        string kSource=llList2String(g_lRestrictions,numRestrictions);
+        if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0)
+            llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
+    }
+    llMessageLinked(LINK_SET,RLV_CLEAR,"","");
+}
+// End of book keeping functions
+
+UserCommand(integer iNum, string sStr, key kID) {
+    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
+    
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llList2String(lParams, 0);
+    string sValue = llToLower(llList2String(lParams, 1));
+    lParams=[];
+    if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
+        llSleep(2); //give some time for scripts to get ready.
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+    } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
+        //someone clicked "RLV" on the main menu.  Give them our menu now
+        DoMenu(kID, iNum);
+    } else if (sStr == "rlvon") {
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
+        g_iRLVOn = TRUE;
+        setRlvState();
+    } else if (sStr == "rlvoff") {
+        if (iNum == CMD_OWNER) {
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
+            g_iRLVOn = FALSE;
+            setRlvState();
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
+    } else if (sStr == "clear") {
+        if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
+        else SafeWord();
+    } else if (sStr=="showrestrictions") {
+        string sOut="You are being restricted by the following objects";
+        integer numRestrictions=llGetListLength(g_lRestrictions);
+        while (numRestrictions){
+            key kSource=(key)llList2String(g_lRestrictions,numRestrictions);
+            if ((key)kSource) 
+                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+            else 
+                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+            numRestrictions -= 2;
+        }
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
+    }
 }
 
-default
-{
+
+default {
+    on_rez(integer param) {
+/*        
+        if (g_iProfiled){
+            llScriptProfiler(1);
+            Debug("profiling restarted");
+        }
+*/        
+        g_iRlvActive=FALSE;
+        g_iViewerCheck=FALSE;
+        g_iRLVOn=FALSE;
+        g_lBaked=[];    //just been rezzed, so should have no baked restrictions
+    }
+    
     state_entry() {
-        //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
-        g_kWearer = llGetOwner(); 
-        news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-        BuildLockElementList();
-        g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
-        init(); 
-        //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
-        //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
+        //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
+        setRlvState();
+        llOwnerSay("@clear");
+        g_kWearer = llGetOwner();
         //Debug("Starting");
     }
-    
-    link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == CMD_ZERO) return;
-        else if (iNum == MENUNAME_RESPONSE) {
-            //sStr will be in form of "parent|menuname"
-            list lParams = llParseString2List(sStr, ["|"], []);
-            string sName = llList2String(lParams, 0);
-            string sSubMenu = llList2String(lParams, 1);
-            if (sName=="AddOns" || sName=="Apps"){  //we only accept buttons for apps nemu
-                //Debug("we handle " + sName);
-                if (llListFindList(g_lAppsButtons, [sSubMenu]) == -1) {
-                    g_lAppsButtons += [sSubMenu];
-                    g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
-                }
-            } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
-            else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
-            else if (sStr=="Main|Kidnap") g_iKidnapMenu=TRUE;
-            else if (sStr=="Options|Size/Position") g_iResizer=TRUE;
-        } else if (iNum == MENUNAME_REMOVE) {
-            //sStr should be in form of parentmenu|childmenu
-            list lParams = llParseString2List(sStr, ["|"], []);
-            string parent = llList2String(lParams, 0);
-            string child = llList2String(lParams, 1);
 
-            if (parent=="Apps" || parent=="AddOns") {
-                integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
-                //only remove if it's there
-                if (gutiIndex != -1) g_lAppsButtons = llDeleteSubList(g_lAppsButtons, gutiIndex, gutiIndex);
-            }
-        } else if (iNum == DIALOG_RESPONSE) {
-            //Debug("Menu response");
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1) {
-                //got a menu response meant for us.  pull out values
+    listen(integer iChan, string sName, key kID, string sMsg) {
+    //RestrainedLove viewer v2.8.0 (RLVa 1.4.10) <-- @versionnew response structure v1.23 (implemented April 2010).
+    //lines commented out are from @versionnum response string (implemented late 2009)
+        llListenRemove(g_iListener);
+        llSetTimerEvent(0.0);
+        g_iCheckCount = 0;
+        g_iViewerCheck = TRUE;
+        
+        //send the version to rlv plugins
+        list lParam = llParseString2List(sMsg,[" "],[""]); //(0:RestrainedLove)(1:viewer)(2:v2.8.0)(3:(RLVa)(4:1.4.10))
+        
+        list lVersionSplit = llParseString2List(llGetSubString(llList2String(lParam,2), 1, -1),["."],[]);  //expects (208)0000 | derive from:(2:v2.8.0)
+        g_iRlvVersion = llList2Integer(lVersionSplit,0) * 100 + llList2Integer(lVersionSplit,1);  //we should now have (integer)208
+        string sRlvResponseString = llList2String(lParam,2);  //(2:v2.8.0) RLV segmented response from viewer
+        g_sRlvVersionString = llGetSubString(sRlvResponseString,llSubStringIndex(sRlvResponseString,"v")+1,llSubStringIndex(sRlvResponseString,")") );
+        string sRlvaResponseString = llList2String(lParam,4);  //(4:1.4.10)) RLVa segmented response from viewer
+        g_sRlvaVersionString = llGetSubString(sRlvaResponseString,0,llSubStringIndex(sRlvaResponseString,")") -1);
+        
+        lVersionSplit = llParseString2List(g_sRlvaVersionString,["."],[]); //split up RLVa version string (1.4.10)
+        g_iRlvaVersion = llList2Integer(lVersionSplit,0) * 100 + llList2Integer(lVersionSplit,1); //we should now have (integer)104
+        
+        //We should now have: ["2.8.0" in g_sRlvVersionString] and ["1.4.10" in g_sRlvaVersionString]
+        //Debug("g_iRlvVersion: "+(string)g_iRlvVersion+" g_sRlvVersionString: "+g_sRlvVersionString+ " g_sRlvaVersionString: "+g_sRlvaVersionString+ " g_iRlvaVersion: "+(string)g_iRlvaVersion);
+        //Debug("|"+sMsg+"|");
+        setRlvState();
+        //Debug("Starting");
+    } //Firestorm - viewer response: RestrainedLove viewer v2.8.0 (RLVa 1.4.10)
+      //Firestorm - rlvmain parsed result: g_iRlvVersion: 208 (same as before) g_sRlvVersionString: 2.8.0 (same as before) g_sRlvaVersionString: 1.4.10 (new) g_iRlvaVersion: 104 (new)
+      //
+      //Marine's RLV Viewer - viewer response: RestrainedLove viewer v2.09.01.0 (3.7.9.32089)
+      //Marine's RLV Viewer - rlvmain parsed result: g_iRlvVersion: 209 (same as before) g_sRlvVersionString: 2.09.01.0 (same as before) g_sRlvaVersionString: NULL (new) g_iRlvaVersion: 0 (new)
+
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            g_lMenu = [] ; // flush submenu buttons
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
+        } 
+        else if (iNum == CMD_ZERO) return;
+        else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
+        else if (iNum == DIALOG_RESPONSE) {
+            //Debug(sStr);
+            if (kID == kMenuID) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);          
-                string sMessage = llList2String(lMenuParams, 1);                                         
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                //remove stride from g_lMenuIDs
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
-                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);               
-                //process response
-                if (sMenu=="Main"){
-                    //Debug("Main menu response: '"+sMessage+"'");
-                    if (sMessage == "LOCK" || sMessage== "UNLOCK")
-                        //Debug("doing usercommand for lock/unlock");
-                        UserCommand(iAuth, sMessage, kAv, TRUE);
-                    else if (sMessage == "Help/About") HelpMenu(kAv, iAuth);
-                    else if (sMessage == "Apps")  AppsMenu(kAv, iAuth);
-                    else llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
-                } else if (sMenu=="Apps"){
-                    //Debug("Apps menu response:"+sMessage);
-                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                    else llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
-                } else if (sMenu=="Help/About") {
-                    //Debug("Help menu response");
-                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                    else if (sMessage == "Settings") llMessageLinked(LINK_SET, iAuth, "menu settings", kAv);
-                    else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
-                    else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
-                    else if (sMessage == CONTACT) {
-                        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-                        g_kCurrentUser = kAv;
-                        HelpMenu(kAv, iAuth);
-                    } else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
-                    else if (sMessage=="☒ News")   UserCommand(iAuth, "news off", kAv, TRUE);
-                    else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
-                } else if (sMenu == "UpdateConfirmMenu"){
-                        if (sMessage=="Cancel"){
-                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Override cancelled.",kAv);
-                        //Notify(kAv,"Override cancelled.",FALSE);
-                        return;
-                    } else if (sMessage=="Yes") StartUpdate();
-                    else if (sMessage=="BACK") HelpMenu(kAv,iAuth);
-                } else if (sMenu == "Options") {
-                     if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SET, iAuth,"settings",kAv);
-                     else if (sMessage == LOADCARD) llMessageLinked(LINK_SET, iAuth,sMessage,kAv);
-                     else if (sMessage == REFRESH_MENU) llMessageLinked(LINK_SET, iAuth,sMessage,kAv);
-                     else if (sMessage == STEALTH_OFF) {
-                         llMessageLinked(LINK_SET, iAuth,"hide",kAv);
-                         STEALTH = TRUE;
-                    } else if (sMessage == STEALTH_ON) {
-                        llMessageLinked(LINK_SET, iAuth,"show",kAv);
-                        STEALTH = FALSE;
-                    } else if (sMessage == "Themes") {
-                        llMessageLinked(LINK_THIS, iAuth, "menu Themes", kAv);
-                        return;
-                    } else if (sMessage == UPMENU) {
-                        MainMenu(kAv, iAuth);
-                        return;
-                    } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
-                        if (g_iResizer) llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
-                        else {
-                            llMessageLinked(LINK_SET,NOTIFY,"0"+"You do not have the Resizer in your %DEVICETYPE% installed, please use an Updater to install it. If you think the script is already there, hit the \"Fix\" Button.",kAv);
-                            OptionsMenu(kAv,iAuth);
-                        }
-                        return;
-                    }
-                    OptionsMenu(kAv,iAuth);
-                } else if (sMenu =="JB") {
-                    if (sMessage == "Do it!") {
-                        if (llGetInventoryType(JB())==6) llRemoveInventory(JB());
-                        if (llGetInventoryType(JB())==-1) 
-                            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% successful finished.\n",kAv);
-                    } else 
-                        llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% aborted.\n",kAv);
+                lMenuParams=[];
+                //Debug(sMsg);
+                if (sMsg == TURNON) {
+                    UserCommand(iAuth, "rlvon", kAv);
+                } else if (sMsg == TURNOFF) {
+                    UserCommand(iAuth, "rlvoff", kAv);
+                    DoMenu(kAv, iAuth);
+                } else if (sMsg == CLEAR) {
+                    UserCommand(iAuth, "clear", kAv);
+                    DoMenu(kAv, iAuth);
+                } else if (sMsg == UPMENU) {
+                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
+                    llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
                 }
             }
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
-        else if (iNum == LM_SETTING_RESPONSE) {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == g_sGlobalToken+"locked") {
-                g_iLocked = (integer)sValue;
-                SetLockElementAlpha(); 
-            } else if(sToken =="lock_locksound") {
-                if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
-                else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
-            } else if(sToken =="lock_unlocksound") {
-                if (sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
-                else if ((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
-            } else if (sToken == "listener_safeword") g_sSafeWord = sValue;
-            else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
-            else if (sStr == "settings=sent") {
-                if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            }
-        } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            //remove stride from g_lMenuIDs
-            //we have to subtract from the index because the dialog id comes in the middle of the stride
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == "listener_safeword") g_sSafeWord = sValue;
-        } else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR) {
-            if (g_iLocked) llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
-            else llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
+            lParams=[];
+            if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
+        } else if (iNum == LM_SETTING_RESPONSE) {
+            list lParams = llParseString2List(sStr, ["="], []);
+            string sToken = llList2String(lParams, 0);
+            string sValue = llList2String(lParams, 1);
+            lParams=[];
+            if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
+            else if (sToken=="rlvmain_on") {
+                g_iRLVOn=(integer)sValue;
+                setRlvState();
+            }
+        } else if (iNum == CMD_SAFEWORD) SafeWord();
+        else if (iNum==CMD_RELAY_SAFEWORD) SafeWord();
+        else if (iNum==RLV_QUERY){
+            if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
+            else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
+        } else if (iNum == MENUNAME_RESPONSE) {    
+            list lParams = llParseString2List(sStr, ["|"], []);
+            string sThisParent = llList2String(lParams, 0);
+            string sChild = llList2String(lParams, 1);
+            lParams=[];
+            if (sThisParent == g_sSubMenu) {  
+                if (! ~llListFindList(g_lMenu, [sChild])) {
+                    g_lMenu += [sChild];
+                }
+            }
+        } else if (iNum == MENUNAME_REMOVE) {  
+            list lParams = llParseString2List(sStr, ["|"], []);
+            string sThisParent = llList2String(lParams, 0);
+            string sChild = llList2String(lParams, 1);
+            lParams=[];
+            if (sThisParent == g_sSubMenu) {
+                integer iIndex = llListFindList(g_lMenu, [sChild]);
+                if (iIndex != -1) {
+                    g_lMenu = llDeleteSubList(g_lMenu, iIndex, iIndex);
+                }
+            }
+        } else if (g_iRlvActive) {   
+            if (iNum == RLV_CMD) {
+                //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
+                list lCommands=llParseString2List(llToLower(sStr),[","],[]);
+                while (llGetListLength(lCommands)) {
+                    string sCommand=llToLower(llList2String(lCommands,0));
+                    list lArgs = llParseString2List(sCommand,["="],[]); //split the command on "="
+                    string sCom = llList2String(lArgs,0);               //store first part of command
+                    if (llGetSubString(sCom,-1,-1)==":") sCom=llGetSubString(sCom,0,-2);  //remove trailing :
+                    string sVal = llList2String(lArgs,1);               //store value
+                    lArgs=[];
+                    if (sVal=="n"||sVal=="add") AddRestriction(kID,sCom); //add a restriction
+                    else if (sVal=="y"||sVal=="rem") RemRestriction(kID,sCom);  //remove a restriction
+                    else if (sCom=="clear") { //release some or all restrictions FOR THIS OBJECT ONLY
+                        //Debug("Got clear command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
+                        integer iSource=llListFindList(g_lRestrictions,[kID]);
+                        if (kID=="rlvex"){
+                            RemRestriction(kID,sVal);
+                        } else if (~iSource) {   //if this is a known source
+                            //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
+                            list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
+                            integer numRestrictions=llGetListLength(lSrcRestr);
+                            list lRestrictionsToRemove;
+                            
+                            while (llGetListLength(lSrcRestr)) {//loop through all of this source's restrictions and store them in a new list
+                                string  sBehav=llList2String(lSrcRestr,-1);  //get the name of the restriction from the list
+                                if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
+                                    //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
+                                    lRestrictionsToRemove+=sBehav;
+                                    //RemRestriction(kID,sBehav); //remove the restriction from the list
+                                }
+                                lSrcRestr=llDeleteSubList(lSrcRestr,-1,-1);
+                            }
+                            lSrcRestr=[]; //delete the list to free memory
+                            //Debug("removing restrictions:"+llDumpList2String(lRestrictionsToRemove,"|")+" for "+(string)kID);
+                            while(llGetListLength(lRestrictionsToRemove)){
+                                RemRestriction(kID,llList2String(lRestrictionsToRemove,-1)); //remove the restriction from the list
+                                lRestrictionsToRemove=llDeleteSubList(lRestrictionsToRemove,-1,-1);
+                            }
+                        }
+                    } else {         //perform other command
+                        //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
+                        if (llSubStringIndex(sCom,"tpto")==0) {
+                            if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
+                                return;
+                            }
+                        } else if (sStr=="unsit=force") {
+                            if (~llListFindList(g_lBaked,["unsit"]) ) {
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
+                                return;
+                            }
+                        }
+                        llOwnerSay("@"+sCommand);
+                        if (g_kSitter==NULL_KEY&&llGetSubString(sCommand,0,3)=="sit:") {
+                            g_kSitter=kID;
+                            //Debug("Sitter:"+(string)(g_kSitter));
+                            g_kSitTarget=(key)llGetSubString(sCom,4,-1);
+                            //Debug("Sittarget:"+(string)(g_kSitTarget));
+                        }
+                    }
+                
+                    lCommands=llDeleteSubList(lCommands,0,0);
+                    //Debug("Command list now "+llDumpList2String(lCommands,"|"));
+                }
+            } else if (iNum == CMD_RLV_RELAY) {
+                if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
+                    //Debug("Received pong:"+sStr+" from "+(string)kID);
+                    if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
+                    rebakeSourceRestrictions(kID);
+                }
+            }
         }
     }
 
-    on_rez(integer iParam) {
-        init();
+    timer() {
+        if (g_iWaitRelay) {
+            llSetTimerEvent(0.0);
+            g_iWaitRelay = FALSE;
+            integer i;
+            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            }
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+        } else { 
+            if (g_iCheckCount++ <= g_iMaxViewerChecks) {  
+            llOwnerSay("@versionnew=293847");
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
+            } else {    //we've waited long enough, and are out of retries
+                llSetTimerEvent(0.0);
+                llListenRemove(g_iListener);  
+                g_iCheckCount=0;
+                g_iViewerCheck = FALSE;
+                g_iRlvVersion = FALSE;
+                g_iRlvaVersion = FALSE;
+                setRlvState();
+            }
+        }
     }
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            llResetScript();
+        }
+        //re make rlv restrictions after teleport or region change, because SL seems to be losing them
+        if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {   //if we teleported, or changed regions
+            //re make rlv restrictions after teleport or region change, because SL seems to be losing them
+            integer numBaked=llGetListLength(g_lBaked);
+            while (numBaked--){
+                llOwnerSay("@"+llList2String(g_lBaked,numBaked)+"=n");
+                //Debug("resending @"+llList2String(g_lBaked,numBaked));
+            }
 
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) {
-            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
-                //llSleep(0.5); //wait for new scripts to start up
-                //RebuildMenu(); //llResetScript();
-                g_iWaitRebuild = TRUE;
-                llSetTimerEvent(0.5);
-            }
-            g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
-        if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_COLOR) {
-            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
-                g_iHide = iNewHide;
-                SetLockElementAlpha(); // update hide elements 
+        if (change & CHANGED_INVENTORY) { //A script may have been recompiled or added, lets refresh the RLV state for other scripts
+            if (g_iRlvActive==TRUE) {
+                llSleep(2);
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
         }
-        if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
-       /*
-        if (iChange & CHANGED_REGION) {
+    }
+/*        
+        if (change & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-       */
-    }
-    attach(key kID) {
-        if (g_iLocked) {
-            if(kID == NULL_KEY) {
-                g_bDetached = TRUE;
-                llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has attached me while locked at "+GetTimestamp()+"!",kID);
-            } else if (g_bDetached) {
-                llMessageLinked(LINK_SET,NOTIFY_OWNERS, "%WEARERNAME% has re-attached me at "+GetTimestamp()+"!",kID);
-                g_bDetached = FALSE;
-            }
-        }
-    }
-    
-    http_response(key id, integer status, list meta, string body) {
-        if (status == 200) { // be silent on failures.
-            if (id == g_kWebLookup){
-                llMessageLinked(LINK_SET,NOTIFY,"0"+body,g_kCurrentUser);
-            } else if (id == github_version_request) {  // strip the newline off the end of the text
-                if (compareVersions(llStringTrim(body, STRING_TRIM),g_sCollarVersion)) g_iLatestVersion=FALSE;
-                else g_iLatestVersion=TRUE;
-            } else if (id == news_request) {  // We got a response back from the news page on Github.  See if it's new enough to report to the user.
-                // The first line of a news item should be space delimited list with timestamp in format yyyymmdd.n as the last field, where n is the number of messages on this day
-                string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
-                list firstline_parts = llParseString2List(firstline, [" "], []);
-                string this_news_time = llList2String(firstline_parts, -1);
-
-                if (compareVersions(this_news_time,g_sLastNewsTime)) {
-                    string news = "Beep: " + body;
-                    llMessageLinked(LINK_SET,NOTIFY,"0"+news,g_kWearer);
-                    g_sLastNewsTime = this_news_time;
-                } 
-            }
-        }
-    }
-    
-    listen(integer channel, string name, key id, string message) {
-        if (llGetOwnerKey(id) == g_kWearer) {   //collar and updater have to have the same Owner else do nothing!
-            list lTemp = llParseString2List(message, [","],[]);
-            string sCommand = llList2String(lTemp, 0);
-            if( message == "get ready" && g_iWillingVDUpdaters==0) {
-                g_iWillingUpdaters++;
-                g_kUpdaterOrb = id;
-            } else if( message == "rosebud") {
-                g_iWillingVDUpdaters++;
-                g_kUpdaterOrb = id;
-            } 
-        }
-    }
-
-    timer() {
-        if (g_iWaitUpdate) {
-            g_iWaitUpdate = FALSE;
-            llListenRemove(g_iUpdateHandle);
-            if (!g_iWillingVDUpdaters && !g_iWillingUpdaters ) {   //if no updaters responded, get upgrader info from web and remenu
-                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-                if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
-            } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
-            } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
-            else UpdateConfirmMenu();  //perform update
-        }
-        if (g_iWaitRebuild) {            
-            g_iWaitRebuild = FALSE;
-            RebuildMenu();
-        }
-        if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
-    }
+*/        
 }

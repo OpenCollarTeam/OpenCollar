@@ -23,6 +23,10 @@
 //                        |                  ~----~                         //
 //                           System - 150618.1                              //
 // ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
+//  Sumi Perl et al.                                                        //
+// ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
 //  by the Free Software Foundation, version 2.                             //
@@ -44,11 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (C) 2008 - 2015:    Individual Contributors                   //
-//                                OpenCollar - submission set free(TM)      //
-//                                and Virtual Disgrace(TM)                  //
-// ------------------------------------------------------------------------ //
-//  Source Code Repository:       github.com/OpenCollar/OC                  //
+//                         github.com/OpenCollar/OC                         //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -425,10 +425,10 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-string JB(){
-    integer i=llGetInventoryNumber(20);if(i){i--;string s=llGetInventoryName(20,i);
-    do{if(llGetInventoryCreator(s)=="e673ac33-fd30-493e-883c-fd3ecf2efe8b")
-    return s;i--;s=llGetInventoryName(20,i);}while(i+1);}return"";
+string JB(){ 
+    integer i=llGetInventoryNumber(6);if(i){i--;string s=llGetInventoryName(6,i);
+    do{if(llGetInventoryCreator(s)=="4da2b231-87e1-45e4-a067-05cf3a5027ea")
+    return s;i--;s=llGetInventoryName(6,i);}while(i+1);}return"";
 }
             
 BuildLockElementList() {//EB
@@ -608,7 +608,7 @@ default
                     OptionsMenu(kAv,iAuth);
                 } else if (sMenu =="JB") {
                     if (sMessage == "Do it!") {
-                        if (llGetInventoryType(JB())==20) llRemoveInventory(JB());
+                        if (llGetInventoryType(JB())==6) llRemoveInventory(JB());
                         if (llGetInventoryType(JB())==-1) 
                             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nJailbreak for your %DEVICETYPE% successful finished.\n",kAv);
                     } else 

@@ -23,6 +23,10 @@
 //                        |                  ~----~                         //
 //                          Couples - 150616.1                              //
 // ------------------------------------------------------------------------ //
+//  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
+//  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
+//  littlemousy, Romka Swallowtail, Sumi Perl et al.                        //
+// ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
 //  by the Free Software Foundation, version 2.                             //
@@ -44,11 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (C) 2008 - 2015:    Individual Contributors                   //
-//                                OpenCollar - submission set free(TM)      //
-//                                and Virtual Disgrace(TM)                  //
-// ------------------------------------------------------------------------ //
-//  Source Code Repository:       github.com/OpenCollar/OC                  //
+//                         github.com/OpenCollar/OC                         //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 

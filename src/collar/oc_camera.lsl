@@ -23,6 +23,9 @@
 //                        |                  ~----~                         //
 //                           Camera - 141231.1                              //
 // ------------------------------------------------------------------------ //
+//  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Medea Destiny, //
+//  littlemousy, Romka Swallowtail et al.                                   //
+// ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
 //  by the Free Software Foundation, version 2.                             //
@@ -44,15 +47,11 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (C) 2008 - 2015:    Individual Contributors                   //
-//                                OpenCollar - submission set free(TM)      //
-//                                and Virtual Disgrace(TM)                  //
-// ------------------------------------------------------------------------ //
-//  Source Code Repository:       github.com/OpenCollar/OC                  //
+//                         github.com/OpenCollar/OC                         //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-//allows dom to set different camera mode
+//allows owner to set different camera mode
 //responds to commands from modes list
 
 key g_kWearer;
