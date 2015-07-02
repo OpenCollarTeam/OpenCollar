@@ -1,29 +1,67 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                             OpenCollar - rlvmain                               //
-//                                 version 3.990                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
-// ------------------------------------------------------------------------------ //
-//                    github.com/OpenCollar/OpenCollarUpdater                     //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                         RLV System - 150616.1                            //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
+//  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
+//  Sumi Perl et al.                                                        //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//                         github.com/OpenCollar/OC                         //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
-//201410060330
-
-integer g_iRLVOn = TRUE;//set to TRUE if DB says user has turned RLV features on
-integer g_iViewerCheck = FALSE;//set to TRUE if viewer is has responded to @versionnum message
+integer g_iRLVOn = TRUE;
+integer g_iViewerCheck = FALSE;
 integer g_iRlvActive = FALSE;
+integer g_iWaitRelay;
 
-//integer g_iRLVNotify = FALSE;//if TRUE, ownersay on each RLV restriction
 integer g_iListener;
-float g_fVersionTimeOut = 30.0; //MD- changed from 60. 2 minute wait before finding RLV is off is too long.
+float g_fVersionTimeOut = 30.0; 
 integer g_iRlvVersion;
 integer g_iRlvaVersion;
-integer g_iCheckCount;//increment this each time we say @versionnum.  check it each time timer goes off in default state. give up if it's >= 2
+integer g_iCheckCount;
 integer g_iMaxViewerChecks=10;
 integer g_iCollarLocked=FALSE;
 
@@ -34,24 +72,25 @@ key kMenuID;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-//integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
-integer COMMAND_SAFEWORD = 510;
-integer COMMAND_RELAY_SAFEWORD = 511;
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510; 
+integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_BLOCKED = 520;
 
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-//str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from DB
-//integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -63,10 +102,10 @@ integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
 
-integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-integer RLV_QUERY = 6102; //query from a script asking if RLV is currently functioning
-integer RLV_RESPONSE = 6103;  //reply to RLV_QUERY, with "ON" or "OFF" as the message
+integer RLV_OFF = 6100; 
+integer RLV_ON = 6101; 
+integer RLV_QUERY = 6102; 
+integer RLV_RESPONSE = 6103; 
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -76,10 +115,11 @@ string UPMENU = "BACK";
 string TURNON = "  ON";
 string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
-string CTYPE = "collar";
-string WEARERNAME;
+
 key g_kWearer;
-string g_sScript="rlvmain_";
+
+string g_sSettingToken = "rlvmain_";
+string g_sGlobalToken = "global_";
 string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
@@ -107,29 +147,15 @@ Debug(string sStr) {
 }
 */
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else{
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
-
 DoMenu(key kID, integer iAuth){
     list lButtons;
-    if (g_iRLVOn)
-    {
-        lButtons += [TURNOFF];
-        if (g_iViewerCheck) lButtons += [CLEAR] + llListSort(g_lMenu, 1, TRUE);
-    }
+    if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
 
-    string sPrompt = "\nRestrained Love Viewer Options\n";
-    if (g_iRlvVersion) sPrompt += "Detected Version of RLV: "+g_sRlvVersionString;
-    if (g_iRlvaVersion) sPrompt += " (RLVa: "+g_sRlvaVersionString+")";
-    if (!g_iViewerCheck) sPrompt += "Could not detect Restrained Love Viewer.\nRestrained Love functions disabled.";
-    sPrompt +="\n\nwww.opencollar.at/rlv";
+    string sPrompt = "\n[http://www.virtualdisgrace.com/collar#rlv Remote Scripted Viewer Controls]\n";
+    if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
+    if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
+    //sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
     //Debug("Made menu.");
 } 
@@ -137,7 +163,7 @@ DoMenu(key kID, integer iAuth){
 rebakeSourceRestrictions(key kSource){
     //Debug("rebakeSourceRestrictions "+(string)kSource);
     integer iSourceIndex=llListFindList(g_lRestrictions,[kSource]);
-    if (~iSourceIndex) {       // if its a known source, rebake its restrictions
+    if (~iSourceIndex) {      
         list lRestr=llParseString2List(llList2String(g_lRestrictions,iSourceIndex+1),["§"],[]);
         while(llGetListLength(lRestr)){
             ApplyAdd(llList2String(lRestr,-1));
@@ -147,11 +173,9 @@ rebakeSourceRestrictions(key kSource){
 }
 
 DoLock(){
-    //lock the collar if there are still restrictions from active traps.  Garbage collection will clear lock if they are stale.
     integer numSources=llGetListLength(llList2ListStrided(g_lRestrictions,0,-2,2));
     while (numSources--){
         if ((key)llList2Key(llList2ListStrided(g_lRestrictions,0,-2,2),numSources)){
-            //an active source has a valid key, so remain locked... return
             ApplyAdd("detach");
             return;
         }
@@ -170,15 +194,16 @@ setRlvState(){
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
             llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
-            llSleep(5); //Make sure the relay is ready before pinging
+           // llSleep(5); //Make sure the relay is ready before pinging
+            g_iWaitRelay = TRUE;
+            llSetTimerEvent(5.0);
             //ping inworld object so that they reinstate their restrictions
-            integer i;
+            integer i;/*
             for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
                 key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
                 if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                 else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
-            }
-            
+            }*/
             //reinstate exceptions
             //Debug("adding exceptions:\n"+llDumpList2String(g_lExceptions,",\n"));
             for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
@@ -194,14 +219,13 @@ setRlvState(){
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-            llOwnerSay("RLV ready! (v" + g_sRlvVersionString + ")");
-            
+            //llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+        
             DoLock();
         }
     } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
         g_iRlvActive=FALSE;
-        //SafeWord(TRUE);
         while (llGetListLength(g_lBaked)){
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
@@ -219,12 +243,10 @@ setRlvState(){
 }
 
 AddRestriction(key kID, string sBehav) {
-
     if (kID=="rlvex"){  //if its an exception, add it to the exceptions list
         list lParams = llParseString2List(sBehav, [":"], []);
         key kAv = (key)llList2String(lParams, 1);
         string sBehav = llList2String(lParams, 0);
-        
         //Debug("apply exception ("+(string)kAv+")"+sBehav);
         if ((key)kAv){
             integer iSource=llListFindList(g_lExceptions,[kAv]);
@@ -246,8 +268,8 @@ AddRestriction(key kID, string sBehav) {
                 //Debug("exception already active ("+(string)kID+")"+sBehav);
                 //Debug(sSrcRestr);
             }
-        } else {
-            llOwnerSay("OC doesn't currently support global exceptions");
+        /*} else {
+            Debug("OC doesn't currently support global exceptions");*/
         }
     } else {      //add this restriction to the list for this source
         //add new sources to sources list
@@ -268,7 +290,6 @@ AddRestriction(key kID, string sBehav) {
             g_lRestrictions=llListReplaceList(g_lRestrictions,[sSrcRestr],iSource+1, iSource+1);
             //Debug("apply restriction ("+(string)kID+")"+sBehav);
             ApplyAdd(sBehav);
-            //Debug("AddRestriction 2.3");
             if (sBehav=="unsit") {
                 g_kSitTarget = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
                 g_kSitter=kID;
@@ -354,8 +375,7 @@ ApplyRem(string sBehav) {
             list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,i),["§"],[]); //get its restrictions list
             if (llListFindList(lSrcRestr, [sBehav])!=-1) return; //check it for this restriction
         }
-
-//        //also check the exceptions list, in case its an exception
+        //also check the exceptions list, in case its an exception
         list lParts=llParseString2List(sBehav,[":"],[]);
         key exceptee=llList2Key(lParts,1);
         if (exceptee) {
@@ -390,46 +410,39 @@ SafeWord() {
     while (numRestrictions){
         numRestrictions -= 2;
         string kSource=llList2String(g_lRestrictions,numRestrictions);
-        if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0){
+        if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0)
             llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
-        }
     }
     llMessageLinked(LINK_SET,RLV_CLEAR,"","");
 }
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum == COMMAND_EVERYONE) return;  // No command for people with no privilege in this plugin.
+    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
     
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llList2String(lParams, 0);
     string sValue = llToLower(llList2String(lParams, 1));
     lParams=[];
-
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on="+(string)g_iRLVOn, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
     } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
-//    } else if (sStr == "rlvnotify on") {
-//        g_iRLVNotify = TRUE;
-//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=1", "");
-//    } else if (sStr == "rlvnotify off") {
-//        g_iRLVNotify = FALSE;
-//        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "notify=0", "");
     } else if (sStr == "rlvon") {
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=1", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
         setRlvState();
     } else if (sStr == "rlvoff") {
-        if (iNum == COMMAND_OWNER) {
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sScript + "on=0", "");
+        if (iNum == CMD_OWNER) {
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
-        } else Notify(kID, "Sorry, only owner may disable Restrained Love functions", FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
     } else if (sStr == "clear") {
-        if (iNum == COMMAND_WEARER) llOwnerSay("Sorry, but the sub cannot clear RLV settings.");
+        if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
         else SafeWord();
     } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
@@ -439,10 +452,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             if ((key)kSource) 
                 sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             else 
-                sOut+="\nThis " + CTYPE + "("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             numRestrictions -= 2;
         }
-        Notify(kID,sOut,FALSE);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
     }
 }
 
@@ -462,11 +475,10 @@ default {
     }
     
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
+        //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         //Debug("Starting");
     }
 
@@ -481,14 +493,8 @@ default {
         //send the version to rlv plugins
         list lParam = llParseString2List(sMsg,[" "],[""]); //(0:RestrainedLove)(1:viewer)(2:v2.8.0)(3:(RLVa)(4:1.4.10))
         
-        //g_iRlvVersion = (integer) llGetSubString(sMsg, 0, 2); //expects (208)0000 (old versionnum response)
         list lVersionSplit = llParseString2List(llGetSubString(llList2String(lParam,2), 1, -1),["."],[]);  //expects (208)0000 | derive from:(2:v2.8.0)
         g_iRlvVersion = llList2Integer(lVersionSplit,0) * 100 + llList2Integer(lVersionSplit,1);  //we should now have (integer)208
-        //integer i=(integer)sMsg;
-        //string s3=llGetSubString((string)(i/100),-2,-1);
-        //string s2=llGetSubString((string)(i/10000),-2,-1);
-        //string s1=llGetSubString((string)(i/1000000),-2,-1);
-        //g_sRlvVersionString = s1+"."+s2+"."+s3;
         string sRlvResponseString = llList2String(lParam,2);  //(2:v2.8.0) RLV segmented response from viewer
         g_sRlvVersionString = llGetSubString(sRlvResponseString,llSubStringIndex(sRlvResponseString,"v")+1,llSubStringIndex(sRlvResponseString,")") );
         string sRlvaResponseString = llList2String(lParam,4);  //(4:1.4.10)) RLVa segmented response from viewer
@@ -514,8 +520,8 @@ default {
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         } 
-        else if (iNum == COMMAND_NOAUTH) return; // SA: TODO remove later
-        else if (iNum <= COMMAND_EVERYONE && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_ZERO) return;
+        else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             if (kID == kMenuID) {
@@ -546,38 +552,34 @@ default {
             string sValue = llList2String(lParams, 1);
             lParams=[];
             if(sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_CType") CTYPE=sValue;
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken=="Global_lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="Global_CType") CTYPE=sValue;
-            else if (sToken=="Global_WearerName") WEARERNAME=sValue;
-//            else if (sToken=="rlvmain_notify") g_iRLVNotify = (integer)sValue;
+            else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
             else if (sToken=="rlvmain_on") {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
             }
-        } else if (iNum == COMMAND_SAFEWORD) SafeWord();
-        else if (iNum==COMMAND_RELAY_SAFEWORD) SafeWord();
+        } else if (iNum == CMD_SAFEWORD) SafeWord();
+        else if (iNum==CMD_RELAY_SAFEWORD) SafeWord();
         else if (iNum==RLV_QUERY){
             if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
-        } else if (iNum == MENUNAME_RESPONSE) {     //sStr will be in form of "parentmenu|menuname"
+        } else if (iNum == MENUNAME_RESPONSE) {    
             list lParams = llParseString2List(sStr, ["|"], []);
             string sThisParent = llList2String(lParams, 0);
             string sChild = llList2String(lParams, 1);
             lParams=[];
-            if (sThisParent == g_sSubMenu) {        //add this str to our menu buttons
+            if (sThisParent == g_sSubMenu) {  
                 if (! ~llListFindList(g_lMenu, [sChild])) {
                     g_lMenu += [sChild];
                 }
             }
-        } else if (iNum == MENUNAME_REMOVE) {       //sStr will be in form of "parentmenu|menuname"
+        } else if (iNum == MENUNAME_REMOVE) {  
             list lParams = llParseString2List(sStr, ["|"], []);
             string sThisParent = llList2String(lParams, 0);
             string sChild = llList2String(lParams, 1);
@@ -588,22 +590,17 @@ default {
                     g_lMenu = llDeleteSubList(g_lMenu, iIndex, iIndex);
                 }
             }
-        }
-
-        //these are things we only do if RLV is ready to go
-        else if (g_iRlvActive) {                         //if RLV is off, don't even respond to RLV submenu events
+        } else if (g_iRlvActive) {   
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
                 list lCommands=llParseString2List(llToLower(sStr),[","],[]);
-                
-                while (llGetListLength(lCommands)){
+                while (llGetListLength(lCommands)) {
                     string sCommand=llToLower(llList2String(lCommands,0));
                     list lArgs = llParseString2List(sCommand,["="],[]); //split the command on "="
                     string sCom = llList2String(lArgs,0);               //store first part of command
                     if (llGetSubString(sCom,-1,-1)==":") sCom=llGetSubString(sCom,0,-2);  //remove trailing :
                     string sVal = llList2String(lArgs,1);               //store value
                     lArgs=[];
-                    
                     if (sVal=="n"||sVal=="add") AddRestriction(kID,sCom); //add a restriction
                     else if (sVal=="y"||sVal=="rem") RemRestriction(kID,sCom);  //remove a restriction
                     else if (sCom=="clear") { //release some or all restrictions FOR THIS OBJECT ONLY
@@ -617,7 +614,7 @@ default {
                             integer numRestrictions=llGetListLength(lSrcRestr);
                             list lRestrictionsToRemove;
                             
-                            while (llGetListLength(lSrcRestr)) {  //loop through all of this source's restrictions and store them in a new list
+                            while (llGetListLength(lSrcRestr)) {//loop through all of this source's restrictions and store them in a new list
                                 string  sBehav=llList2String(lSrcRestr,-1);  //get the name of the restriction from the list
                                 if (sVal=="" || llSubStringIndex(sBehav,sVal)!=-1) {  //if the restriction to remove matches the start of the behaviour in the list, or we need to remove all of them
                                     //Debug("Clearing restriction "+sBehav+" for "+(string)kID);
@@ -635,14 +632,14 @@ default {
                         }
                     } else {         //perform other command
                         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
-                        if (llSubStringIndex(sCom,"tpto")==0) {  //looks like a tpto command, lets check to see if we should honour it or not, and message back if we can if it fails
+                        if (llSubStringIndex(sCom,"tpto")==0) {
                             if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) Notify(kID,"Can't teleport due to RLV restrictions",TRUE);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
                                 return;
                             }
                         } else if (sStr=="unsit=force") {
                             if (~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) Notify(kID,"Can't force stand due to RLV restrictions",TRUE);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
                                 return;
                             }
                         }
@@ -658,7 +655,7 @@ default {
                     lCommands=llDeleteSubList(lCommands,0,0);
                     //Debug("Command list now "+llDumpList2String(lCommands,"|"));
                 }
-            } else if (iNum == COMMAND_RLV_RELAY) {
+            } else if (iNum == CMD_RLV_RELAY) {
                 if (llGetSubString(sStr,-43,-1)== ","+(string)g_kWearer+",!pong") { //if it is a pong aimed at wearer
                     //Debug("Received pong:"+sStr+" from "+(string)kID);
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
@@ -669,32 +666,28 @@ default {
     }
 
     timer() {
-        if (g_iCheckCount++ <= g_iMaxViewerChecks) {   //no response in timeout period, try again
-            llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, POPUP_HELP, "\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your "+CTYPE+"'s RLV menu or by typing: _PREFIX_rlvoff\n", g_kWearer);
-        } else {    //we've waited long enough, and are out of retries
+        if (g_iWaitRelay) {
             llSetTimerEvent(0.0);
-            llListenRemove(g_iListener);  
-            g_iCheckCount=0;
-            //llSetTimerEvent(0.0);
-            
-            g_iViewerCheck = FALSE;
-            g_iRlvVersion = FALSE;
-            g_iRlvaVersion = FALSE;
-            setRlvState();
-
-            llOwnerSay("Could not detect Restrained Love Viewer.  Restrained Love functions disabled.");
-            if (llGetListLength(g_lRestrictions) > 0 && llGetListLength(g_lOwners) > 0) {
-                string sMsg = WEARERNAME+" appears to have logged in without using the Restrained Love Viewer.  Their Restrained Love functions have been disabled.";
-
-                integer i_OwnerCount=llGetListLength(g_lOwners);
-                integer i;
-                for(i=0; i < i_OwnerCount; i+=2) {
-                    Notify(llList2Key(g_lOwners,i), sMsg, FALSE);
-                }
-                
-                if (i_OwnerCount == 2) llOwnerSay("Your owner has been notified.");
-                else llOwnerSay("Your owners have been notified.");
+            g_iWaitRelay = FALSE;
+            integer i;
+            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            }
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
+        } else { 
+            if (g_iCheckCount++ <= g_iMaxViewerChecks) {  
+            llOwnerSay("@versionnew=293847");
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
+            } else {    //we've waited long enough, and are out of retries
+                llSetTimerEvent(0.0);
+                llListenRemove(g_iListener);  
+                g_iCheckCount=0;
+                g_iViewerCheck = FALSE;
+                g_iRlvVersion = FALSE;
+                g_iRlvaVersion = FALSE;
+                setRlvState();
             }
         }
     }

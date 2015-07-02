@@ -1,3 +1,0 @@
-﻿Issue: 20150227.1
-
-MAINTENANCE RELEASE: OpenCollar 3.997 is now available. If you need a current Updater, get one free at [http://maps.secondlife.com/secondlife/Haven%20VI/231/27/21 The Temple of the Collar] and please check out [http://www.opencollar.at/blog our website] for marketplace links and details.
