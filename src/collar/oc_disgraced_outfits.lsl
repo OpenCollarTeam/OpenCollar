@@ -46,7 +46,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,7 @@ integer CMD_OWNER                   = 500;
 integer CMD_WEARER                  = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD                = 510; 
+integer CMD_SAFEWORD                = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -148,9 +148,9 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
     if (g_sCurrentPath == g_sPathPrefix+"/") //If we're at root, don't bother with BACKMENU
         g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
     else {
-        if (sFolders == "") 
+        if (sFolders == "")
             g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, ["WEAR",UPMENU,BACKMENU], 0, iAuth);
-        else 
+        else
             g_kFolderMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU,BACKMENU], 0, iAuth);
     }
 }
@@ -182,7 +182,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             }
         }
     }
-    if (remenu) 
+    if (remenu)
         DoMenu(kID, iNum);
 }
 
@@ -210,16 +210,16 @@ default {
         //g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
     }
-    
+
     timer() {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
-    
+
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer)  llResetScript();
     }
-    
+
     listen(integer iChan, string sName, key kID, string sMsg) {
         //llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
@@ -246,15 +246,15 @@ default {
             }
         }
     }
-    
-    link_message(integer iSender, integer iNum, string sStr, key kID) { 
+
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
        // llOwnerSay(sStr+" | "+(string)iNum);
-        if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) 
+        if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU)
             llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
         else if (iNum == RLV_ON) g_iRlvOn = TRUE;
         else if (iNum == RLVA_VERSION) g_iRlvaOn = TRUE;
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
-        else if (iNum == DIALOG_RESPONSE) { 
+        else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
             string sMessage = llList2String(lMenuParams, 1); // button label
@@ -263,7 +263,7 @@ default {
 
             if (kID == g_kFolderMenuID || kID == g_kMultipleMatchMenuID) {
                 g_kMenuClicker = kAv;
-                if (sMessage == UPMENU) 
+                if (sMessage == UPMENU)
                     llMessageLinked(LINK_THIS, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
                 else if (sMessage == BACKMENU) {
                     list lTempSplit = llParseString2List(g_sCurrentPath,["/"],[]);

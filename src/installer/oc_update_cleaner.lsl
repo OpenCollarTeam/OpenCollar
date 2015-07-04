@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +71,7 @@ integer UPDATE = 10001;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -95,7 +95,7 @@ DelMatchingItems(string pattern) {
             llRemoveInventory(name);
             //Debug("found " + name);
         }
-    }           
+    }
 }
 
 DelItems(list items) {
@@ -113,7 +113,7 @@ default {
         if (llSubStringIndex(llGetObjectName(), "Updater") != -1) {
             //Debug("In an updater.  Sleeping.");
             llSetScriptState(llGetScriptName(), FALSE);
-        }    
+        }
 
         key transKey="bd7d7770-39c2-d4c8-e371-0342ecf20921";
         integer primNumber=llGetNumberOfPrims()+1;
@@ -130,19 +130,19 @@ default {
         DelItems(garbage);
 
         if (llGetLinkNumber() > 1) {
-            // in a child prim.  
+            // in a child prim.
             // Since we already cleaned up, we can just die now
             llRemoveInventory(llGetScriptName());
         } else {
             // If in root prim, then ping for scripts in child prims.
             llMessageLinked(LINK_SET, UPDATE, "prepare", "");
-            
+
             // and set the death timer
-            llSetTimerEvent(deathtimer);            
+            llSetTimerEvent(deathtimer);
         }
-        //Debug("starting");    
+        //Debug("starting");
     }
-    
+
     link_message(integer sender, integer num, string str, key id) {
         //Debug(llDumpList2String([sender, num, str, id], ", "));
         if (num == UPDATE) {
@@ -157,12 +157,12 @@ default {
             }
         }
     }
-    
+
     timer() {
         //Debug("timer");
         llRemoveInventory(llGetScriptName());
     }
-    
+
 /*
     changed(integer iChange) {
         if (iChange & CHANGED_REGION) {

@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +120,7 @@ string g_sScript;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -136,7 +136,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
-} 
+}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
@@ -153,44 +153,44 @@ CamMode(string sMode)
 {
     llClearCameraParams();
     integer iIndex = llListFindList(g_lModes, [sMode]);
-    string lParams = llList2String(g_lModes, iIndex + 1);    
-    llSetCameraParams(TightListTypeParse(lParams));  
+    string lParams = llList2String(g_lModes, iIndex + 1);
+    llSetCameraParams(TightListTypeParse(lParams));
     g_sCurrentMode = sMode;
 }
 
 ClearCam()
 {
     if (llGetPermissions()&PERMISSION_CONTROL_CAMERA) llClearCameraParams();
-    g_iLastNum = 0;    
+    g_iLastNum = 0;
     g_iSync2Me = FALSE;
     llMessageLinked(LINK_SET, RLV_CMD, "camunlock=y", "camera");
     llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=y", "camera");
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");    
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
 }
 
 CamFocus(vector g_vCamPos, rotation g_rCamRot)
 {
-    vector vStartPose = llGetCameraPos();    
+    vector vStartPose = llGetCameraPos();
     rotation rStartRot = llGetCameraRot();
     float fSteps = 8.0;
     //Keep fSteps a float, but make sure its rounded off to the nearest 1.0
     fSteps = (float)llRound(fSteps);
- 
+
     //Calculate camera position increments
     vector vPosStep = (g_vCamPos - vStartPose) / fSteps;
- 
+
     //Calculate camera rotation increments
     //rotation rStep = (g_rCamRot - rStartRot);
     //rStep = <rStep.x / fSteps, rStep.y / fSteps, rStep.z / fSteps, rStep.s / fSteps>;
- 
- 
+
+
     float fCurrentStep = 0.0; //Loop through motion for fCurrentStep = current step, while fCurrentStep <= Total steps
     for(; fCurrentStep <= fSteps; ++fCurrentStep)
     {
         //Set next position in tween
         vector vNextPos = vStartPose + (vPosStep * fCurrentStep);
         rotation rNextRot = Slerp( rStartRot, g_rCamRot, fCurrentStep / fSteps);
- 
+
         //Set camera parameters
         llSetCameraParams([
             CAMERA_ACTIVE, 1, //1 is active, 0 is inactive
@@ -209,7 +209,7 @@ CamFocus(vector g_vCamPos, rotation g_rCamRot)
         ]);
     }
 }
- 
+
 rotation Slerp( rotation a, rotation b, float f ) {
     float fAngleBetween = llAngleBetween(a, b);
     if ( fAngleBetween > PI )
@@ -232,7 +232,7 @@ CamMenu(key kID, integer iAuth)
     string sPrompt = "\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera\n\nNOTE: Full functionality only on RLV API v2.9 and greater.";
     list lButtons = ["CLEAR","FREEZE","MOUSELOOK"];
     integer n;
-    integer stop = llGetListLength(g_lModes);    
+    integer stop = llGetListLength(g_lModes);
     for (n = 0; n < stop; n +=2)
     {
         lButtons += [Capitalize(llList2String(g_lModes, n))];
@@ -276,13 +276,13 @@ integer TightListTypeLength(string sInput)
            llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3),
            llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]) != []) + (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6)) >> 1;
 }
- 
+
 integer TightListTypeEntryType(string sInput, integer iIndex)
 {
     string sSeperators = llGetSubString(sInput,(0),6);
     return llSubStringIndex(sSeperators, sInput) + ((sInput = llList2String(llList2List(sInput + llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)), llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3), llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]), (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6) << 1, -1),  iIndex << 1)) != "");
 }
- 
+
 list TightListTypeParse(string sInput) {
     list lPartial;
     if(llStringLength(sInput) > 6)
@@ -309,7 +309,7 @@ list TightListTypeParse(string sInput) {
     }
     return lPartial;
 }
- 
+
 string TightListTypeDump(list lInput, string sSeperators) {//This function is dangerous
     sSeperators += "|/?!@#$%^&*()_=:;~`'<>{}[],.\n\" qQxXzZ\\";
     string sCumulator = (string)(lInput);
@@ -321,15 +321,15 @@ string TightListTypeDump(list lInput, string sSeperators) {//This function is da
             iCounter = -~iCounter;
     while(iCounter<6);
     sSeperators = llGetSubString(sSeperators,(0),5);
- 
+
         sCumulator =  "";
- 
+
     if((iCounter = (lInput != [])))
     {
         do
         {
             integer iType = ~-llGetListEntryType(lInput, iCounter = ~-iCounter);
- 
+
             sCumulator = (sCumulator = llGetSubString(sSeperators,iType,iType)) + llList2String(lInput,iCounter) + sCumulator;
         }while(iCounter);
     }
@@ -347,11 +347,11 @@ ChatCamParams(integer chan)
 {
     g_vCamPos = llGetCameraPos();
     g_rCamRot = llGetCameraRot();
-    string sPosLine = StrReplace((string)g_vCamPos, " ", "") + " " + StrReplace((string)g_rCamRot, " ", ""); 
-    //if not channel 0, say to whole region.  else just say locally   
+    string sPosLine = StrReplace((string)g_vCamPos, " ", "") + " " + StrReplace((string)g_rCamRot, " ", "");
+    //if not channel 0, say to whole region.  else just say locally
     if (chan)
     {
-        llRegionSay(chan, sPosLine);                    
+        llRegionSay(chan, sPosLine);
     }
     else
     {
@@ -386,8 +386,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
             return TRUE;
-        }   
-        //Debug("g_iLastNum=" + (string)g_iLastNum);                        
+        }
+        //Debug("g_iLastNum=" + (string)g_iLastNum);
         if (sValue == "clear")
         {
             ClearCam();
@@ -397,21 +397,21 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
         {
             LockCam();
             Notify(kID, "Freezing current camera position.", TRUE);
-            g_iLastNum = iNum;                    
-            SaveSetting("freeze");                          
+            g_iLastNum = iNum;
+            SaveSetting("freeze");
         }
         else if (sValue == "mouselook")
         {
             Notify(kID, "Enforcing mouselook.", TRUE);
-            g_iLastNum = iNum; 
-            llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");                   
-            SaveSetting("mouselook");                          
+            g_iLastNum = iNum;
+            llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");
+            SaveSetting("mouselook");
         }
         else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR)
         {
             Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
             //CamFocus((vector)sValue, (vector)sValue2);
-            g_iLastNum = iNum;                        
+            g_iLastNum = iNum;
             //Debug("newiNum=" + (string)iNum);
         }
         else
@@ -430,13 +430,13 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
                 Notify(kID, "Invalid camera mode: " + sValue, FALSE);
             }
         }
-    } 
+    }
     else if (sCommand == "camto")
     {
         if (!g_iLastNum || iNum <= g_iLastNum)
         {
             CamFocus((vector)sValue, (rotation)sValue2);
-            g_iLastNum = iNum;                    
+            g_iLastNum = iNum;
         }
         else
         {
@@ -465,8 +465,8 @@ integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value
 default {
     on_rez(integer iNum) {
         llResetScript();
-    }    
-    
+    }
+
     state_entry() {
         //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
@@ -474,7 +474,7 @@ default {
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
         //Debug("Starting");
     }
-    
+
     run_time_permissions(integer iPerms)
     {
         if (iPerms & (PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA))
@@ -482,7 +482,7 @@ default {
             llClearCameraParams();
         }
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         //only respond to owner, secowner, group, wearer
@@ -495,7 +495,7 @@ default {
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sMyMenu, "");
-        }    
+        }
         else if (iNum == LM_SETTING_RESPONSE)
         {
             list lParams = llParseString2List(sStr, ["=", ","], []);
@@ -508,11 +508,11 @@ default {
                 if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)
                 {
                     if (sToken == "freeze") LockCam();
-                    else if (sToken == "mouselook") llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera"); 
+                    else if (sToken == "mouselook") llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");
                     else if (~llListFindList(g_lModes, [sToken])) CamMode(sToken);
                     g_iLastNum = (integer)sValue;
                 }
-            }           
+            }
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -520,10 +520,10 @@ default {
             {
                 //got a menu response meant for us.  pull out values
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);          
-                string sMessage = llList2String(lMenuParams, 1);                                         
-                // integer iPage = (integer)llList2String(lMenuParams, 2); 
-                integer iAuth = (integer)llList2String(lMenuParams, 3); 
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU)
                 {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -532,14 +532,14 @@ default {
                 {
                     UserCommand(iAuth, "cam " + llToLower(sMessage), kAv);
                     CamMenu(kAv, iAuth);
-                }                              
+                }
             }
         }
     }
-    
+
     timer()
-    {       
-        //handle cam pos/rot changes 
+    {
+        //handle cam pos/rot changes
         if (g_iSync2Me)
         {
             vector vNewPos = llGetCameraPos();
@@ -551,10 +551,10 @@ default {
         }
         else
         {
-            llSetTimerEvent(0.0);            
+            llSetTimerEvent(0.0);
         }
     }
-    
+
     changed(integer iChange) {
 /*
         if (iChange & CHANGED_REGION) {

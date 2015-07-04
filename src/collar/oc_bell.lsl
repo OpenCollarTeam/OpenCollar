@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +79,7 @@ key g_kCurrentBellSound; // curent bell sound key
 integer g_iCurrentBellSound; // curent bell sound sumber
 integer g_iBellSoundCount; // number of avail bell sounds
 
-key g_kLastToucher ; // store toucher key 
+key g_kLastToucher ; // store toucher key
 float g_fNextTouch ;  // store time for the next touch
 
 list g_lBellElements; // list with number of prims related to the bell
@@ -100,7 +100,7 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
@@ -128,7 +128,7 @@ string g_sSettingToken = "bell_";
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -143,9 +143,9 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1); 
-    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType]; 
-} 
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
+}
 
 BellMenu(key kID, integer iAuth) {
     string sPrompt = "\n";
@@ -302,26 +302,26 @@ default {
         g_kWearer=llGetOwner();
         if (g_iBellOn) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
     }
-    
+
     state_entry() {
-        llSetMemoryLimit(36864);  
-        g_kWearer=llGetOwner();  
+        llSetMemoryLimit(36864);
+        g_kWearer=llGetOwner();
         llResetTime();  // reset script time used for ringing the bell in intervalls
-        BuildBellElementList();  
+        BuildBellElementList();
         PrepareSounds();
         SetBellElementAlpha();
         //Debug("Starting");
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) 
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
             UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) { 
+            if (~iMenuIndex) {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAV = llList2String(lMenuParams, 0);
@@ -331,19 +331,19 @@ default {
                 if (sMessage == UPMENU) {
                     llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAV);
                     return;
-                } else if (sMessage == "Vol +") { 
+                } else if (sMessage == "Vol +") {
                     g_fVolume+=g_fVolumeStep;
                     if (g_fVolume>1.0) g_fVolume=1.0;
-                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
                 } else if (sMessage == "Vol -") {
                     g_fVolume-=g_fVolumeStep;
                     if (g_fVolume<0.1) g_fVolume=0.1;
-                    llPlaySound(g_kCurrentBellSound,g_fVolume);                   
+                    llPlaySound(g_kCurrentBellSound,g_fVolume);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
                 } else if (sMessage == "Next Sound") {
                     g_iCurrentBellSound++;
-                    if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;                        
+                    if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;
                     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
                     llPlaySound(g_kCurrentBellSound,g_fVolume);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
@@ -390,16 +390,16 @@ default {
         //the user is pressing a movement key
         if ( nChange & (CONTROL_LEFT|CONTROL_RIGHT|CONTROL_DOWN|CONTROL_UP|CONTROL_FWD|CONTROL_BACK) )
             llPlaySound(g_kCurrentBellSound,g_fVolume);
-        //the user is holding down a movement key and is running 
+        //the user is holding down a movement key and is running
         if ( (nHeld & (CONTROL_FWD|CONTROL_BACK)) && (llGetAgentInfo(g_kWearer) & AGENT_ALWAYS_RUN))
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
     }
-    
+
     collision_start(integer iNum) {
         if (g_iBellOn)
             llPlaySound(g_kCurrentBellSound,g_fVolume);
     }
-    
+
     run_time_permissions(integer nParam) {
         if( nParam & PERMISSION_TAKE_CONTROLS){
             //Debug("Bing");
@@ -421,7 +421,7 @@ default {
             }
         }
     }
-    
+
     changed(integer iChange) {
         if(iChange & CHANGED_LINK) BuildBellElementList();
         else if (iChange & CHANGED_INVENTORY) PrepareSounds();
@@ -429,17 +429,17 @@ default {
             integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
             if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
                 g_iHide = iNewHide;
-                SetBellElementAlpha(); // update hide elements 
+                SetBellElementAlpha(); // update hide elements
             }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
-/*        
+/*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/        
+*/
     }
 }

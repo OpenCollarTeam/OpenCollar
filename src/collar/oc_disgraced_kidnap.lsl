@@ -46,7 +46,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@
 // Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 1.3.2
 
-key     g_kWearer; 
+key     g_kWearer;
 
 list    g_lMenuIDs;      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
 
@@ -67,7 +67,7 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510; 
+integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -173,9 +173,9 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         key kKidnapper=(key)llList2String(lSplit,2);
         string sKidnapper=llList2String(lSplit,1);
         if (iNum==CMD_OWNER || iNum==CMD_TRUSTED || iNum==CMD_GROUP) { //do nothing, owners get their own menu but cannot kidnap
-        } 
+        }
         else Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kKidnapper, sKidnapper);
-    } 
+    }
     else if (sStrLower == "kidnap" || sStrLower == "menu kidnap") {
         if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
             if (g_iCaptureOn) Dialog(kID, "\nYou can try to kidnap %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmKidnapMenu", kID, llKey2Name(kID));
@@ -184,7 +184,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     }
     else if (iNum!=CMD_OWNER && iNum != CMD_WEARER){
         //silent fail, no need to do anything more in this case
-    } 
+    }
     else if (llSubStringIndex(sStrLower,"kidnap")==0) {
         if (llGetListLength(g_lTempOwners)>0 && kID==g_kWearer) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
@@ -232,17 +232,17 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
 }
 
 default{
-    
+
     state_entry() {
         llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }
-    
+
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer)  llResetScript();
     }
-    
+
     touch_start(integer num_detected) {
         key kToucher = llDetectedKey(0);
         if (kToucher == g_kWearer) return;  //wearer can't capture
@@ -252,7 +252,7 @@ default{
         if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could kidnap %WEARERNAME% if you get a bit closer.",kToucher);
         else llMessageLinked(LINK_SET,0,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Kidnap", "");
         else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
@@ -271,7 +271,7 @@ default{
             if (sToken == g_sSettingToken+"kidnap") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
             else if (sToken == g_sSettingToken+"vulnerable") g_iVulnerableOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE); 
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -292,7 +292,7 @@ default{
                 } else if (sMenu=="AllowKidnapMenu") {  //wearer must confirm when forced is off
                     if (sMessage == "BACK") llMessageLinked(LINK_THIS, iAuth, "menu kidnap", kAv);
                     else if (sMessage == "Allow") doCapture(kKidnapper, sKidnapper, TRUE);
-                    else if (sMessage == "Reject") { 
+                    else if (sMessage == "Reject") {
                         llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kKidnapper)+" didn't pass your face control. Sucks for them!",kAv);
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"Looks like %WEARERNAME% didn't want to be kidnapped after all. C'est la vie!",kKidnapper);
                     }
@@ -301,7 +301,7 @@ default{
                     else if (g_iCaptureOn) {  //in case app was switched off in the mean time
                         if (sMessage == "Yes") doCapture(kKidnapper, sKidnapper, g_iVulnerableOn);
                         else if (sMessage == "No") llMessageLinked(LINK_SET,NOTIFY,"0"+"You let %WEARERNAME% be.",kAv);
-                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% can no longer be kidnapped",kAv); 
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% can no longer be kidnapped",kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
@@ -309,11 +309,11 @@ default{
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }
     }
-    
+
     timer() {
         llMessageLinked(LINK_SET,SAY,"1"+"%WEARERNAME%: You can kidnap me if you touch my neck...","");
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_TELEPORT) {
             if (llGetListLength(g_lTempOwners) == 0) {
@@ -329,5 +329,5 @@ default{
                 Debug("profiling restarted");
             }
         }*/
-    } 
+    }
 }

@@ -49,7 +49,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +73,7 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -180,7 +180,7 @@ list Add2OutList(list lIn) {
     string sToken;
     string sValue;
     integer i;
-    
+
     for (i=0 ; i < llGetListLength(lIn); i += 2) {
         sToken = llList2String(lIn, i);
         sValue = llList2String(lIn, i + 1);
@@ -188,7 +188,7 @@ list Add2OutList(list lIn) {
         sGroup = llToUpper(SplitToken(sToken, 0));
         sToken = SplitToken(sToken, 1);
         integer bIsSplit = FALSE ;
-        integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue) 
+        integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue)
             + llStringLength(sID) +2; //+llStringLength(set);
         if (sGroup != sID || llStringLength(sBuffer) == 0 || iAddedLength >= g_iCardLimit ) { // new group
             // Starting a new group.. flush the buffer to the output.
@@ -208,7 +208,7 @@ list Add2OutList(list lIn) {
             } else sTemp = "";
             if ( bIsSplit ) {
                 // if this is either a split buffer or one of it's continuation
-                // line outputs, 
+                // line outputs,
                 lOut += [sBuffer];
                 sBuffer = "" ;
             }
@@ -303,7 +303,7 @@ default {
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
             llSleep(0.5); // brief wait for others to reset
-            SendValues();    
+            SendValues();
         } else llResetScript();
     }
 
@@ -322,7 +322,7 @@ default {
                 data = llStringTrim(data, STRING_TRIM_HEAD);
                 if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
                 // check for "continued" line pieces
-                if ( llStringLength(g_sSplitLine) ) { 
+                if ( llStringLength(g_sSplitLine) ) {
                     data = g_sSplitLine + data ;
                     g_sSplitLine = "" ;
                 }
@@ -348,7 +348,7 @@ default {
                             list lOut;
                             integer n;
                             do {//sanity check for valid entries
-                                if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless 
+                                if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless
                                     lOut += llList2List(lTest,n,n+1);
                                 }
                                 n = n+2;
@@ -369,7 +369,7 @@ default {
             }
         }
     }
-    
+
     link_message(integer sender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
@@ -379,8 +379,8 @@ default {
             string sValue = llList2String(lParams, 1);
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
         }
-        else if (iNum == LM_SETTING_REQUEST) {  
-             //check the cache for the token 
+        else if (iNum == LM_SETTING_REQUEST) {
+             //check the cache for the token
             if (SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
             else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
         }
@@ -394,12 +394,12 @@ default {
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Reboot aborted.",kID);
         }
     }
-    
+
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {

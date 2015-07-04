@@ -48,16 +48,16 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
 string UPMENU = "BACK";
-key g_kAnimmenu;   
-key g_kPart;   
-key g_kTimerMenu;   
+key g_kAnimmenu;
+key g_kPart;
+key g_kTimerMenu;
 integer g_iAnimTimeout;
 integer g_iPermissionTimeout;
 
@@ -84,12 +84,12 @@ key g_kCardID1;//used to detect whether coupleanims card has changed
 key g_kCardID2;
 float g_fRange = 10.0;
 
-float g_fWalkingDistance = 1.0; 
+float g_fWalkingDistance = 1.0;
 float g_fWalkingTau = 1.5;
 float g_fAlignTau = 0.05;
 float g_fAlignDelay = 0.6;
 
-key g_kCmdGiver; 
+key g_kCmdGiver;
 integer g_iCmdAuth;
 integer g_iCmdIndex;
 key g_kPartner;
@@ -109,7 +109,7 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
@@ -152,7 +152,7 @@ integer g_iListener;    //stop listener handle
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -167,7 +167,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
-} 
+}
 
 refreshTimer(){
     integer timeNow = llGetUnixTime();
@@ -188,7 +188,7 @@ refreshTimer(){
 }
 
 CoupleAnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;    
+    string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     //sPrompt += "\n\nwww.opencollar.at/animations\n\n";
@@ -238,7 +238,7 @@ MoveToPartner() {
     vector partnerEuler = llRot2Euler(partnerRot);
     // turn to face the partner
     llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
-    
+
     g_iTargetID = llTarget(partnerPos, g_fWalkingDistance);
     llMoveToTarget(partnerPos, g_fWalkingTau);
 }
@@ -252,7 +252,7 @@ default {
         }
         llResetScript();
     }
-    
+
     state_entry() {
         llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_kWearer = llGetOwner();
@@ -271,7 +271,7 @@ default {
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
-    
+
     listen(integer iChannel, string sName, key kID, string sMessage) {
         //Debug("listen: " + sMessage + ", iChannel=" + (string)channel);
         llListenRemove(g_iListener);
@@ -281,7 +281,7 @@ default {
             llMessageLinked(LINK_SET, CMD_GROUP, "stopcouples", kID);
         }
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
@@ -299,7 +299,7 @@ default {
                     string sTmpName = llDumpList2String(llList2List(lParams, 1, -1), " ");//this makes it so we support even full names in the command
                     g_kPart=llGenerateKey();
                     llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI +"`"+sTmpName+"`1"+ "|BACK|" + (string)iNum, g_kPart);
-                } else {       //no name given.  
+                } else {       //no name given.
                     if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
                     } else {               //else set partner to commander
@@ -349,7 +349,7 @@ default {
                 } else if (sMessage == TIME_COUPLES) {
                     string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
                     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
-                    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";  
+                    else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
                     g_kTimerMenu=Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth);
                 } else if (llGetSubString(sMessage,0,6) == "Verbose") {
                     if (llGetSubString(sMessage,8,-1) == "Off") {
@@ -387,7 +387,7 @@ default {
                     llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
-                }   
+                }
             } else if (kID == g_kTimerMenu) {
                 //Debug("Response from timer menu"+sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -414,7 +414,7 @@ default {
         llTargetRemove(g_iTargetID);
         MoveToPartner();
     }
-    
+
     at_target(integer tiNum, vector targetpos, vector ourpos) {
         llTargetRemove(tiNum);
         llStopMoveToTarget();
@@ -424,7 +424,7 @@ default {
         vector partnerPos = llList2Vector(partnerDetails, 0);
         rotation partnerRot = llList2Rot(partnerDetails, 1);
         vector myPos = llList2Vector(llGetObjectDetails(llGetOwner(), [OBJECT_POS]), 0);
-    
+
         vector target = partnerPos + (<1.0, 0.0, 0.0> * partnerRot * offset); // target is <offset> meters in front of the partner
         target.z = myPos.z; // ignore height differences
         llMoveToTarget(target, g_fAlignTau);
@@ -432,14 +432,14 @@ default {
         llStopMoveToTarget();
         g_sSubAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4);
         g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
-        
+
         llMessageLinked(LINK_SET, ANIM_START, g_sSubAnim, "");
         llStartAnimation(g_sDomAnim);
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
         llMessageLinked(LINK_SET,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
-        
+
         string sText = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
-        if (sText != "" && g_iVerbose) {    
+        if (sText != "" && g_iVerbose) {
             sText = StrReplace(sText,"_PARTNER_",g_sPartnerName);
             sText = StrReplace(sText,"_SELF_","%WEARERNAME%");
             llMessageLinked(LINK_SET,SAY,"0"+sText,"");
