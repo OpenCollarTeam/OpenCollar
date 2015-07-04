@@ -50,7 +50,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +68,7 @@ integer CMD_TRUSTED = 501;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -104,7 +104,7 @@ key g_kColorID;
 string g_sCharmap = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǰǺǻǼǽǾǿȘșʼˆˇˉ˘˙˚˛˜˝˳̣̀́̃̉̏΄΅Ά·ΈΉΊΌΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϑϒϖЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҃҄҅҆҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡӢӣӤӥӦӧӨөӪӫӬӭӮӯӰӱӲӳӴӵӶӷӸӹӺӻӼӽӾӿԀԁԂԃԄԅԆԇԈԉԊԋԌԍԎԏԐԑԒԓḀḁḾḿẀẁẂẃẄẅẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹὍ–—―‗‘’‚‛“”„†‡•…‰′″‹›‼⁄ⁿ₣₤₧₫€℅ℓ№™Ω℮⅛⅜⅝⅞∂∆∏∑−√∞∫≈≠≤≥◊ﬁﬂﬃﬄ￼ ";
 
 list g_lFonts = [
-    "Solid", "91b730bc-b763-52d4-d091-260eddda3198", 
+    "Solid", "91b730bc-b763-52d4-d091-260eddda3198",
     "Outlined", "c1481c75-15ea-9d63-f6cf-9abb6db87039"
     ];
 
@@ -135,7 +135,7 @@ float Vreps;
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -156,12 +156,12 @@ integer GetIndex(string sChar) {
 RenderString(integer iPos, string sChar) {  // iPos - позиция символа на лейбле
     integer frame = GetIndex(sChar);  //номер символа в таблице
     integer i = iPos/faces;
-    integer link = llList2Integer(g_lLabelLinks,i);    
-    integer face = iPos - faces * i;        
+    integer link = llList2Integer(g_lLabelLinks,i);
+    integer face = iPos - faces * i;
     integer frameY = frame / x;
     integer frameX = frame - x * frameY;
     float Uoffset = -0.5 + (Ureps/2 + Ureps*(frameX)) ;
-    float Voffset = 0.5 - (Vreps/2 + Vreps*(frameY)) ;            
+    float Voffset = 0.5 - (Vreps/2 + Vreps*(frameY)) ;
     llSetLinkPrimitiveParamsFast(link, [PRIM_TEXTURE, face, g_kFontTexture, <Ureps, Vreps,0>, <Uoffset, Voffset, 0>, 0]);
 }
 
@@ -169,8 +169,8 @@ SetColor() {
     integer i=0;
     do {
         integer link = llList2Integer(g_lLabelLinks,i);
-        float alpha = llList2Float(llGetLinkPrimitiveParams( link,[PRIM_COLOR,ALL_SIDES]),1);  
-        llSetLinkPrimitiveParamsFast(link, [PRIM_COLOR, ALL_SIDES, g_vColor, alpha]);    
+        float alpha = llList2Float(llGetLinkPrimitiveParams( link,[PRIM_COLOR,ALL_SIDES]),1);
+        llSetLinkPrimitiveParamsFast(link, [PRIM_COLOR, ALL_SIDES, g_vColor, alpha]);
     } while (i++ < llGetListLength(g_lLabelLinks));
 }
 
@@ -215,7 +215,7 @@ integer LabelsCount() {
 SetLabel() {
     string sText ;
     if (g_iShow) sText = g_sLabelText;
-    
+
     string sPadding;
     if(g_iScroll==TRUE) {
         while(llStringLength(sPadding) < g_iCharLimit) sPadding += " ";
@@ -245,10 +245,10 @@ MainMenu(key kID, integer iAuth) {
     list lButtons= [g_sTextMenu, g_sColorMenu, g_sFontMenu];
     if (g_iShow) lButtons += ["☒ Show"];
     else lButtons += ["☐ Show"];
-    
+
     if (g_iScroll) lButtons += ["☒ Scroll"];
-    else lButtons += ["☐ Scroll"];    
-        
+    else lButtons += ["☐ Scroll"];
+
     string sPrompt = "\nCustomize the %DEVICETYPE%'s label!\n\nwww.opencollar.at/label";
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
@@ -277,45 +277,45 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         if (sStr == "menu " + g_sSubMenu || llToLower(sStr)=="label") {
             MainMenu(kAv, iAuth);
             return;
-        }        
+        }
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
         if (sCommand == "labeltext") {
             lParams = llDeleteSubList(lParams, 0, 0);
-            g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);            
+            g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
             if (llStringLength(g_sLabelText) > g_iCharLimit) {
                 string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
             }
-            SetLabel();          
+            SetLabel();
         } else if (sCommand == "labelfont") {
             lParams = llDeleteSubList(lParams, 0, 0);
             string font = llDumpList2String(lParams, " ");
             integer iIndex = llListFindList(g_lFonts, [font]);
-            if (iIndex != -1) {                
+            if (iIndex != -1) {
                 g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
                 SetLabel();
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
-            } else FontMenu(kAv, iAuth);            
+            } else FontMenu(kAv, iAuth);
         } else if (sCommand == "labelcolor") {
             string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
             if (sColor != "") {
                 g_vColor=(vector)sColor;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
                 SetColor();
-            } 
+            }
         } else if (sCommand == "labelshow") {
             g_iShow = llList2Integer(lParams, 1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
-            SetLabel();            
+            SetLabel();
         } else if (sCommand == "labelscroll") {
             g_iScroll = llList2Integer(lParams, 1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
-            SetLabel();            
-        }        
+            SetLabel();
+        }
     } else if (iAuth >= CMD_TRUSTED && iAuth <= CMD_WEARER) {
-        string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));        
+        string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
         if (sStr=="menu "+g_sSubMenu) {
             llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
@@ -357,11 +357,11 @@ default
                 else if (sToken == "font") g_kFontTexture = (key)sValue;
                 else if (sToken == "color") g_vColor = (vector)sValue;
                 else if (sToken == "show") g_iShow = (integer)sValue;
-                else if (sToken == "scroll") g_iScroll = (integer)sValue;                
+                else if (sToken == "scroll") g_iScroll = (integer)sValue;
             } else if (sToken == "settings" && sValue == "sent") {
                 SetColor();
                 SetLabel();
-            }                
+            }
         }
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");

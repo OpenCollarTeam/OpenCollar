@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,7 @@ integer CMD_OWNER = 500;
 //integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510; 
+integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
@@ -106,7 +106,7 @@ string g_sSettingToken = "badwords_";
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -124,7 +124,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
     //Debug("Made "+sName+" menu.");
-} 
+}
 
 
 ListenControl() {
@@ -154,17 +154,17 @@ MenuBadwords(key kID, integer iNum){
     list lButtons = ["Penance", "Add", "Remove", "Animation", "Sound", "Clear"];
     if (g_iIsEnabled) lButtons += ["OFF"];
     else lButtons += ["ON"];
-    
+
     string sText="\n\nwww.opencollar.at/badwords\n\n";
     sText+="\nBad Words: " + llDumpList2String(g_lBadWords, ", ");
     sText+="\nBad Word Anim: " + g_sBadWordAnim;
     sText+="\nPenance: " + g_sPenance;
     sText+="\nBad Word Sound: " + g_sBadWordSound;
-     
+
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");
 }
 
-UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id 
+UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
     //Debug("Got command:"+sStr);
     sStr=llStringTrim(sStr,STRING_TRIM);
     list lParams = llParseString2List(sStr, [" "], []);
@@ -178,14 +178,14 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
             list lNewBadWords = llDeleteSubList(lParams, 0, 1);
             if (llGetListLength(lNewBadWords)){
                 while (llGetListLength(lNewBadWords)){
-                    string sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));  
+                    string sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));
                     if (remenu) {
                         string sCRLF= llUnescapeURL("%0A");
                         if (~llSubStringIndex(sNewWord, sCRLF)) {
                             list lTemp = llParseString2List(sNewWord, [sCRLF], []);
                             lNewBadWords = llDeleteSubList(lNewBadWords,-1,-1);
                             lNewBadWords = lTemp + lNewBadWords;
-                            sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));   
+                            sNewWord=llToLower(DePunctuate(llList2String(lNewBadWords,-1)));
                         }
                     }
                     if (~llSubStringIndex(g_sPenance, sNewWord))
@@ -222,7 +222,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     sName=llGetInventoryName(INVENTORY_ANIMATION, i);
                     //check here if the anim start with ~ or for some reason does not get a name returned (spares to check that all again in the menu ;)
                     if (sName != "" && llGetSubString(sName, 0, 0) != "~") lPoseList+=sName;
-                }    
+                }
                 string sText = "Current punishment animation is: "+g_sBadWordAnim+"\n\n";
                 sText += "Select a new animation to use as a punishment.\n\n";
                 Dialog(kID, sText, lPoseList, ["BACK"],0, iNum, "BadwordsAnimation");
@@ -270,7 +270,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                 }
                 if (llGetListLength(lTemp)) {
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"You cannot have badwords in the Penance phrase, please try again without these word(s):\n"+llList2CSV(lTemp),kID);
-                } else { 
+                } else {
                     g_sPenance = sPenance;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"penance=" + g_sPenance, "");
                     llMessageLinked(LINK_SET,NOTIFY,"0"+WordPrompt() ,kID);
@@ -319,8 +319,8 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
         ListenControl();
     }
 }
- 
- 
+
+
 default {
     on_rez(integer iParam) {
         ListenControl();
@@ -363,11 +363,11 @@ default {
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-               
+
                 //remove stride from g_lMenuIDs
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                
-                
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+
                 if (sMenu=="BadwordsMenu") {
                     if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "menu apps", kAv);
                     else UserCommand(iAuth, "badwords "+sMessage, kAv, TRUE);
@@ -394,7 +394,7 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             //remove stride from g_lMenuIDs
             //we have to subtract from the index because the dialog id comes in the middle of the stride
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         }
     }
 

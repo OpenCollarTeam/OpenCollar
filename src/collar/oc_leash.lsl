@@ -49,7 +49,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -69,17 +69,17 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510; 
+integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY                = 1002;
 
-integer LM_SETTING_SAVE             = 2000; 
+integer LM_SETTING_SAVE             = 2000;
 integer LM_SETTING_REQUEST          = 2001;
 integer LM_SETTING_RESPONSE         = 2002;
-integer LM_SETTING_DELETE           = 2003; 
-//integer LM_SETTING_EMPTY            = 2004; 
+integer LM_SETTING_DELETE           = 2003;
+//integer LM_SETTING_EMPTY            = 2004;
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
@@ -115,7 +115,7 @@ key g_kFollowTargetConfirmDialogID;
 key g_kLeashCmderID;
 
 list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
-list g_lButtons;   
+list g_lButtons;
 // ----- collar -----
 
 key g_kWearer;
@@ -158,7 +158,7 @@ string OWNER_STRING = "auth_owner";
 integer g_iProfiled=TRUE;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -171,7 +171,7 @@ Debug(string sStr) {
 string NameURI(key kID){
     if (llGetAgentSize(kID))
         return "secondlife:///app/agent/"+(string)kID+"/about";
-    else 
+    else
         return "secondlife:///app/objectim/"+(string)kID+"/?name="+llEscapeURL(llKey2Name(kID))+"&owner="+(string)llGetOwnerKey(kID);
 }
 
@@ -180,7 +180,7 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
-} 
+}
 
 ConfirmDialog(key kAv, key kCmdGiver, key kType, integer iAuth) {
     if ((string)kAv == BUTTON_UPMENU) {
@@ -265,9 +265,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
         return FALSE;
     }
     if (!CheckCommandAuth(kCmdGiver, iAuth)) return FALSE;
-    
+
     if (g_kLeashedTo==kTarget) return TRUE;
-    
+
     if (g_kLeashedTo) DoUnleash();
 
     integer bCmdGiverIsAvi=llGetAgentSize(kCmdGiver) != ZERO_VECTOR;
@@ -345,7 +345,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints) {
         llMessageLinked(LINK_THIS, CMD_PARTICLE, "unleash", g_kLeashedTo);
     else {
         integer iPointCount = llGetListLength(lPoints);
-        g_sCheck = "";  
+        g_sCheck = "";
         if (iPointCount) {//if more than one leashpoint, listen for all strings, else listen just for that point
             if (iPointCount == 1) g_sCheck = (string)llGetOwnerKey(kTarget) + llList2String(lPoints, 0) + " ok";
         }
@@ -354,7 +354,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints) {
         llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
         llSetTimerEvent(3.0);   //check for leasher out of range
     }
-    // change to llTarget events by Lulu Pink 
+    // change to llTarget events by Lulu Pink
     g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo, [OBJECT_POS]), 0);
     //to prevent multiple target events and llMoveToTargets
     llTargetRemove(g_iTargetHandle);
@@ -433,7 +433,7 @@ DoUnleash(){
 YankTo(key kIn){
     llMoveToTarget(llList2Vector(llGetObjectDetails(kIn, [OBJECT_POS]), 0), 0.5);
     llSleep(2.0);
-    llStopMoveToTarget();    
+    llStopMoveToTarget();
 }
 
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
@@ -451,7 +451,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         string sComm = llToLower(llList2String(lParam, 0));
         string sVal = llToLower(llList2String(lParam, 1));
         string sVal2= llList2String(lParam, 2);
-        
+
         sMessage = llToLower(sMessage);  //convert sMessage to lower case for caseless comparisson
         //debug(sMessage);
         if (sMessage=="leashmenu" || sMessage == "menu leash"){
@@ -463,17 +463,17 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 else lButtons += ["Unleash"];
             }
             else lButtons += " ";
-            if (kMessageID == g_kLeashedTo) lButtons += "Yank";//only if leash holder 
+            if (kMessageID == g_kLeashedTo) lButtons += "Yank";//only if leash holder
             else lButtons += " ";
             lButtons += ["Follow"];
             lButtons += ["Post","Pass"];
             lButtons += ["Length"];
             lButtons += g_lButtons;
-            
+
             string sPrompt = "\nLet's go walkies!";
             g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
         } else  if (sComm == "post") {
-            if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu); 
+            if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);
             else if (sVal==llToLower(BUTTON_UPMENU)) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             else if (sMessage == "post give post")   UserCommand(iAuth, "givepost", kMessageID ,bFromMenu);
             else if (sMessage == "post park")        UserCommand(iAuth, "rezpost", kMessageID ,bFromMenu);
@@ -634,14 +634,14 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|chatmode|0|``"+(string)(PASSIVE | ACTIVE)+"`10`"+(string)PI +"`"+sVal+"`1|BACK|" + (string)iAuth, g_kPostTargetDialogID);
             }
         }
-    } 
+    }
 }
 
 default {
     on_rez(integer start_param) {
         DoUnleash();
     }
-    
+
     state_entry() {
         //llSetMemoryLimit(57344);
         g_kWearer = llGetOwner();
@@ -650,13 +650,13 @@ default {
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
         //Debug("Starting");
     }
-    
+
     timer() {
         //inlined old isInSimOrJustOutside function
         vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
         integer iIsInSimOrJustOutside=TRUE;
         if(vLeashedToPos == ZERO_VECTOR || vLeashedToPos.x < -25 || vLeashedToPos.x > 280 || vLeashedToPos.y < -25 || vLeashedToPos.y > 280) iIsInSimOrJustOutside=FALSE;
-        
+
         if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<60) {   //if the leasher is now in range
             if(!g_iLeasherInRange) { //and the leasher was previously not in range
                 if (g_iAwayCounter) {
@@ -666,7 +666,7 @@ default {
                 //Debug("leashing with "+g_sCheck);
                 llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
                 g_iLeasherInRange = TRUE;
-                
+
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vLeashedToPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
@@ -740,13 +740,13 @@ default {
             }//else //Debug("setting response:"+sToken);
         } else if (iNum == DIALOG_RESPONSE) {
             list lMenuParams = llParseString2List(sMessage, ["|"], []);
-            key kAV = (key)llList2String(lMenuParams, 0);          
+            key kAV = (key)llList2String(lMenuParams, 0);
             string sButton = llList2String(lMenuParams, 1);
             integer iAuth = (integer) llList2String(lMenuParams, 3);
             if (kMessageID == g_kMainDialogID){
-                if (sButton == BUTTON_UPMENU) 
-                    llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV); 
-                else if (~llListFindList(g_lButtons, [sButton])) 
+                if (sButton == BUTTON_UPMENU)
+                    llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
+                else if (~llListFindList(g_lButtons, [sButton]))
                     llMessageLinked(LINK_SET, iAuth, "menu "+sButton, kAV);
                 else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
             }
@@ -797,9 +797,9 @@ default {
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);// - myAngle;
             if (g_iTurnModeOn) llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
             g_iJustMoved = 0;
-        }   
+        }
     }
-    
+
     not_at_target() {
         g_iJustMoved = 1;
         // i ran into a problem here which seems to be "speed" related, specially when using the menu to unleash this event gets triggered together or just after the CleanUp() function
@@ -818,7 +818,7 @@ default {
             DoUnleash();
         }
     }
-  
+
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_TAKE_CONTROLS) {
             //disbale all controls but left mouse button (for stay cmd)
@@ -828,8 +828,8 @@ default {
     object_rez(key id) {
         g_iLength=3;
         DoLeash(id, g_iRezAuth, []);
-    }    
-    
+    }
+
     changed (integer iChange){
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();

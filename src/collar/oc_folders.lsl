@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +64,7 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -153,7 +153,7 @@ list g_lHistory;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -294,7 +294,7 @@ string FolderFromButton(string sButton) {
     return llToLower(llGetSubString(sButton, 2, -1));
 }
 
-updateFolderLocks(string sFolder, integer iAdd, integer iRem) { 
+updateFolderLocks(string sFolder, integer iAdd, integer iRem) {
 // adds and removes locks for sFolder, which implies saving to central settings and triggering a RLV command (dolockFolder)
     integer iLock;
     integer iIndex = llListFindList(g_lFolderLocks, [sFolder]);
@@ -415,7 +415,7 @@ SaveFolder(string sStr) {
         g_lToCheck=llDeleteSubList(g_lToCheck,-1,-1);
         QueryFolders("save");
     } else {
-        llMessageLinked(LINK_SET,NOTIFY,"1"+"Current outfit has been saved.",g_kAsyncMenuUser); 
+        llMessageLinked(LINK_SET,NOTIFY,"1"+"Current outfit has been saved.",g_kAsyncMenuUser);
         //Notify(g_kAsyncMenuUser,"Current outfit has been saved.", TRUE);
         g_sCurrentFolder="";
         if (g_iAsyncMenuRequested) {
@@ -442,7 +442,7 @@ handleMultiSearch() {
     if (pref1 == "&") g_sFolderType += "over";
 
     @next;
-    
+
     searchSingle(sItem);
 }
 
@@ -526,9 +526,9 @@ default {
     on_rez(integer iParam) {
         llResetScript();
     }
-    
+
     state_entry() {
-        //llSetMemoryLimit(65536);  
+        //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }
@@ -559,7 +559,7 @@ default {
                     g_sCurrentFolder = sMessage;
                     g_iPage = 0;
                     SetAsyncMenu(kAv, iAuth);
-                    QueryFolders("history");                    
+                    QueryFolders("history");
                 }
             } else if (kID == g_kMultipleFoldersOnSearchMenuID) {
                 if (sMessage == UPMENU) {
@@ -675,7 +675,7 @@ default {
                 } else if (sMessage == lockFolderButton(0xFFFF,3, 0)) {
                     updateFolderLocks(g_sCurrentFolder, 0, 0x88);
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ " and its subfolders.",kAv);
-                } else if (llGetSubString(sMessage, 0, 0) == "(") 
+                } else if (llGetSubString(sMessage, 0, 0) == "(")
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"%NOACCESS%",kAv);
                 if (sMessage != UPMENU) { addToHistory(g_sCurrentFolder); llSleep(1.0);} //time for command to take effect so that we see the result in menu
                 //Return to browse menu
@@ -720,7 +720,7 @@ default {
                 FolderActionsMenu(iState, g_kAsyncMenuUser, g_iAsyncMenuAuth);
             } else if (g_sFolderType=="save") SaveFolder(sMsg);
             else if (llGetSubString(g_sFolderType,0,5)=="search") {
-                if (sMsg=="") llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg+"No folder found.",g_kAsyncMenuUser); 
+                if (sMsg=="") llMessageLinked(LINK_SET,NOTIFY,"0"+sMsg+"No folder found.",g_kAsyncMenuUser);
                 else if (llGetSubString(g_sFolderType,6,-1)=="browse") {
                     g_sCurrentFolder = sMsg;
                     QueryFolders("browse");
@@ -735,7 +735,7 @@ default {
                         g_sFirstsearch="";
                         g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                         llSetTimerEvent(g_iTimeOut);
-                        llOwnerSay("@getinv:"+g_sBuildpath+"="+(string)g_iFolderRLV); 
+                        llOwnerSay("@getinv:"+g_sBuildpath+"="+(string)g_iFolderRLV);
                     } else {
                         if(g_sNextsearch!="") {
                             list tlist=llParseString2List(sMsg,[","],[]);

@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +64,7 @@ integer CMD_OWNER            = 500;
 integer CMD_WEARER           = 503;
 integer CMD_EVERYONE         = 504;
 //integer CMD_RLV_RELAY      = 507;
-//integer CMD_SAFEWORD       = 510; 
+//integer CMD_SAFEWORD       = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -88,7 +88,7 @@ integer DIALOG_RESPONSE = -9001;
 integer g_iLastRank = CMD_EVERYONE ;
 integer g_iOn = FALSE;
 string g_sText;
-vector g_vColor = <1.0,1.0,1.0>; // default white 
+vector g_vColor = <1.0,1.0,1.0>; // default white
 
 integer g_iTextPrim;
 
@@ -113,7 +113,7 @@ vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text off
 /*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -163,27 +163,27 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
         }
         ShowHideText();
-        
+
     } else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         g_sText = "";
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();
     } else if (llSubStringIndex(sCommand,"title")==0) {
-        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has smae or greater auth             
+        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has smae or greater auth
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
         } else  if (sCommand == "title") {
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");//pop off the "text" command
-        
+
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
             if (sNewText == "") {
                 g_iOn = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"title", "");
-            } else { 
-                g_iOn = TRUE; 
+            } else {
+                g_iOn = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"title="+g_sText, "");
             }
-            g_iLastRank=iAuth;            
+            g_iLastRank=iAuth;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         } else if (sCommand == "titleoff") {
@@ -228,14 +228,14 @@ default{
             }
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
-        
+
         if (g_iTextPrim < 0) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sFeatureName, "");
             llRemoveInventory(llGetScriptName());
         }
         ShowHideText();
-    } 
-    
+    }
+
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //Debug("Link Message Event");
         if (iNum >- CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
@@ -275,20 +275,20 @@ default{
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                
+
                 if (sMessage == UPMENU) UserCommand(iAuth, "menu titler", kAv);
                 else {
                     UserCommand(iAuth, "titlercolor "+sMessage, kAv);
                     UserCommand(iAuth, "menu titlercolor", kAv);
                 }
-                
+
             } else if (kID == g_kTBoxId) {  //response from text box
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                
+
                 if(sMessage != "") UserCommand(iAuth, "title " + sMessage, kAv);
                 UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
             }
@@ -298,7 +298,7 @@ default{
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
     }
-    
+
     on_rez(integer param){
         llResetScript();
     }

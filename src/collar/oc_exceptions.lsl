@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ list g_lRLVcmds = [
     "accepttp",   //32
     "startim"   //64
         ];
-        
+
 list g_lBinCmds = [ //binary values for each item in g_lRLVcmds
     8,
     4,
@@ -129,7 +129,7 @@ list g_lDescriptionsOff =[ //descriptions of commands when not exempted.
     "Seeing emotes from them can be blocked",
     "Teleport offers from them can be blocked",
     "Wearer can refuse their tp offers"
-        ];      
+        ];
 
 string TURNON = "☐";
 string TURNOFF = "☒";
@@ -153,7 +153,7 @@ integer CMD_OWNER = 500;
 //integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -176,9 +176,9 @@ integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon
 integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message.
 
 integer RLV_OFF = 6100;
-integer RLV_ON = 6101; 
-integer RLV_QUERY = 6102; 
-integer RLV_RESPONSE = 6103; 
+integer RLV_ON = 6101;
+integer RLV_QUERY = 6102;
+integer RLV_RESPONSE = 6103;
 
 //integer ANIM_START = 7000;
 //integer ANIM_STOP = 7001;
@@ -198,7 +198,7 @@ string g_sSettingToken = "rlvex_";
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -230,21 +230,21 @@ Menu(key kID, string sWho, integer iAuth) {
 
 ExMenu(key kID, string sWho, integer iAuth) {
     //Debug("ExMenu for :"+sWho);
-    if (!g_iRLVOn) { 
+    if (!g_iRLVOn) {
         llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
         llMessageLinked(LINK_SET, iAuth, "menu RLV", kID);
         return;
     }
     integer iExSettings = 0;
     integer iInd;
-    if (sWho == "owner" || ~llListFindList(g_lOwners, [sWho])) 
+    if (sWho == "owner" || ~llListFindList(g_lOwners, [sWho]))
         iExSettings = g_iOwnerDefault;
     else if (sWho == "trusted" || ~llListFindList(g_lSecOwners, [sWho]))
         iExSettings = g_iTrustedDefault;
     if (~iInd = llListFindList(g_lSettings, [sWho])) // replace deefault with custom
         iExSettings = llList2Integer(g_lSettings, iInd + 1);
 
-    string sPrompt = "\nCurrent Settings for "+sWho+": "+"\n";    
+    string sPrompt = "\nCurrent Settings for "+sWho+": "+"\n";
     list lButtons;
     integer n;
     for (; n < llGetListLength(g_lPrettyCmds); n++) {
@@ -309,7 +309,7 @@ SetAllExs(string sVal) {
             llSleep(0.2);
         }
     }
-    
+
     iLength = llGetListLength(g_lOwners+g_lTempOwners);
     for (n = 0; n < iLength; n += 2) {
         list sCmd;
@@ -325,7 +325,7 @@ SetAllExs(string sVal) {
             llSleep(0.2);
         }
     }
-        
+
     iLength = llGetListLength(g_lSettings);
     for (n = 0; n < iLength; n += 2) {
         list sCmd;
@@ -350,7 +350,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
-        } 
+        }
         return;
     }
     if (sStr == "runaway") llResetScript();
@@ -399,7 +399,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             jump nextwho;
         } else if (~llListFindList(g_lSecOwners, [sWho])) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.",kID);
-            jump nextwho;            
+            jump nextwho;
         }
         // okay, now we have a key for sWho (if avatar) & they are in g_lNames - this will deliver all settings to the right places
         g_sUserCommand = "";
@@ -473,7 +473,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(49152); 
+        llSetMemoryLimit(49152);
         g_kWearer = llGetOwner();
         g_kTmpKey = NULL_KEY;
         g_sTmpName = "";
@@ -550,7 +550,7 @@ default {
             UpdateSettings();
         } else if (iNum == RLV_VERSION) {
             g_sDetectedRLVersion = sStr;
-        } else if (iNum == RLV_OFF) { 
+        } else if (iNum == RLV_OFF) {
             g_iRLVOn=FALSE;
         } else if (iNum == RLV_ON) {
             g_iRLVOn=TRUE;
@@ -566,7 +566,7 @@ default {
                 if (sMessage == UPMENU)
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 else if (sMessage == "Owner")
-                    ExMenu(kAv, "owner", iAuth);  
+                    ExMenu(kAv, "owner", iAuth);
                 else if (sMessage == "Trusted")
                     ExMenu(kAv, "trusted", iAuth);
             } else if (llListFindList(g_lExMenus, [kID]) != -1 ) {

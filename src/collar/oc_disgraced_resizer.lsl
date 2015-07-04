@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -90,7 +90,7 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510; 
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
@@ -120,7 +120,7 @@ key g_kWearer;
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -137,7 +137,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
-} 
+}
 
 integer MinMaxUnscaled(vector vSize, float fScale) {
     if (fScale < 1.0) {
@@ -189,7 +189,7 @@ Store_StartScaleLoop() {
 ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
     integer iPrimIndex;
     float fScale = iScale / 100.0;
-    list lPrimParams; 
+    list lPrimParams;
     vector vPrimScale;
     vector vPrimPos;
     vector vSize;
@@ -223,9 +223,9 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
         for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
             vPrimScale = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2);
             vPrimPos = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2+1);
-            if (iPrimIndex == 1) 
+            if (iPrimIndex == 1)
                 llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale]);
-            else 
+            else
                 llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale, PRIM_POSITION, vPrimPos]);
         }
         g_iScaleFactor = iScale;
@@ -328,12 +328,12 @@ default {
 
     state_entry() {
         llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
-        g_kWearer = llGetOwner();       
-        g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration   
+        g_kWearer = llGetOwner();
+        g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration
         Store_StartScaleLoop();
         //Debug("Starting");
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -343,14 +343,14 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);          
-                string sMessage = llList2String(lMenuParams, 1);                                         
+                key kAv = (key)llList2String(lMenuParams, 0);
+                string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                  
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenuType == g_sSubMenu) {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == POSMENU) PosMenu(kAv, iAuth);
@@ -371,7 +371,7 @@ default {
                         else if (sMessage == "▁ ▂") g_fNudge=g_fMediumNudge;
                         else if (sMessage == "▁ ▂ ▃") g_fNudge=g_fLargeNudge;
                     } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
-                    PosMenu(kAv, iAuth);                    
+                    PosMenu(kAv, iAuth);
                 } else if (sMenuType == ROTMENU) {
                     if (sMessage == UPMENU) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -384,7 +384,7 @@ default {
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
                     } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
-                    RotMenu(kAv, iAuth);                     
+                    RotMenu(kAv, iAuth);
                 } else if (sMenuType == SIZEMENU) {
                     if (sMessage == UPMENU) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
@@ -403,24 +403,24 @@ default {
                         SizeMenu(kAv, iAuth);
                     }
                 }
-            }            
+            }
         }
         else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                          
-            }            
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            }
         }
-    } 
-   
+    }
+
     timer() {
         // the timer is needed as the changed_size even is triggered twice
         llSetTimerEvent(0);
         if (g_iSizedByScript) g_iSizedByScript = FALSE;
     }
-    
+
     changed(integer iChange) {
         if (iChange & (CHANGED_SCALE)) {
             if (g_iSizedByScript) llSetTimerEvent(0.5);

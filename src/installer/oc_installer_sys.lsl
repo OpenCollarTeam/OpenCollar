@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +79,7 @@ integer iPin;
 // the collar's key
 key kCollarKey;
 
-// strided list of bundles in the prim and whether they are supposed to be 
+// strided list of bundles in the prim and whether they are supposed to be
 // installed.
 list lBundles;
 
@@ -119,7 +119,7 @@ DoBundle() {
     string card = llList2String(lBundles, iBundleIdx);
     string mode = llList2String(lBundles, iBundleIdx + 1);
     string bundlemsg = llDumpList2String([iSecureChannel, kCollarKey, card, iPin, mode], "|");
-    llMessageLinked(LINK_SET, DO_BUNDLE, bundlemsg, "");    
+    llMessageLinked(LINK_SET, DO_BUNDLE, bundlemsg, "");
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage) {
@@ -183,10 +183,10 @@ SetInstallmode(string type) {
 
 BundleMenu(integer page) {
     // Give the plugin selection/start menu.
-    
+
     string prompt = "\n\nAdd/remove plugins by checking the boxes below.";
-    prompt += "\n\nClick START when you're ready to update.\n";  
-    
+    prompt += "\n\nClick START when you're ready to update.\n";
+
     // build list of buttons from list of bundles
     integer n;
     integer stop = llGetListLength(lBundles);
@@ -196,11 +196,11 @@ BundleMenu(integer page) {
         string status = llList2String(lBundles, n + 1);
         list parts = llParseString2List(card, ["_"], []);
         string name = llList2String(parts, 2);
-        
+
         if (status == "INSTALL") {
             choices += [BTN_INSTALL + " " + name];
         } else if (status == "REQUIRED") {
-            choices += [BTN_REQUIRED + " " + name];                            
+            choices += [BTN_REQUIRED + " " + name];
         } else if (status == "REMOVE") {
             choices += [BTN_UNINSTALL + " " + name];
         } else if (status == "DEPRECATED") {
@@ -237,8 +237,8 @@ SetFloatText() {
 }
 
 Particles(key target) {
-    llParticleSystem([ 
-        PSYS_PART_FLAGS, 
+    llParticleSystem([
+        PSYS_PART_FLAGS,
             PSYS_PART_INTERP_COLOR_MASK |
             PSYS_PART_INTERP_SCALE_MASK |
             PSYS_PART_TARGET_POS_MASK |
@@ -272,7 +272,7 @@ default {
                 // ignore updater scripts.  set others to not running.
                 if (llSubStringIndex(name, "OpenCollarUpdater") != 0) {
                     DisableScript(name);
-                }                
+                }
             } else if (type == INVENTORY_NOTECARD) {
                 // add card to bundle list if it's a bundle
                 if (llSubStringIndex(name, "BUNDLE_") == 0) {
@@ -301,16 +301,16 @@ default {
                 } else if (cmd == "ready") {
                     // person clicked "Yes I want to update" on the collar menu.
                     // the script pin will be in the param
-                    iPin = (integer)param;     
+                    iPin = (integer)param;
                     kCollarKey = id;
                     //BundleMenu(0);
                     GiveMethodMenu();
-                }                
+                }
             } else if (channel == iSecureChannel) {
                 if (msg == "reallyready") {
                     Particles(id);
                     iBundleIdx = 0;
-                    DoBundle();       
+                    DoBundle();
                 }
             }
         }
@@ -329,7 +329,7 @@ default {
                     string shim = "OpenCollar - UpdateShim";
                     iSecureChannel = (integer)llFrand(-2000000000 + 1);
                     llListen(iSecureChannel, "", kCollarKey, "");
-                    llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);                                        
+                    llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);
 
                 }
                 //else if (button == "Basic" || button == "Standard" || button == "Developer")
@@ -371,7 +371,7 @@ default {
             if (iBundleIdx < count) {
                 DoBundle();
             } else {
-                // tell the shim to restore settings, set version, 
+                // tell the shim to restore settings, set version,
                 // remove the script pin, and delete himself.
                 string myversion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(kCollarKey, iSecureChannel, "CLEANUP|" + myversion);

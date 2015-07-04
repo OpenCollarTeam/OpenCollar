@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +77,7 @@ list lDeprecatedSettingTokens = [
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -107,7 +107,7 @@ key GetScriptFullname(string name) {
     if (idx == -1) {
         return (key)"";
     }
-    
+
     string version = llList2String(lScripts, idx + 1);
     if (version == "") {
         return name;
@@ -128,7 +128,7 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings
 // Some versions of the collar have a hover text script in them that breaks
 // updates because it set a script pin that overwrites the one set by this shim
 // script.  So before starting, delete any script that starts with "OpenCollar
-// - hovertext".  
+// - hovertext".
 // In general, removal of old cruft should be done with the cleanup script or
 // a "DEPRECATED" bundle, but this has to be done here because it breaks the updater
 // before bundles get going.
@@ -151,7 +151,7 @@ default
         iStartParam = llGetStartParameter();
 
         RemoveHoverTextScript();
-        
+
         // build script list
         integer n;
         integer stop = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -160,18 +160,18 @@ default
             // add to script list
             lScripts += GetNameParts(name);
         }
-        
+
         //Debug(llDumpList2String(lScripts, "|"));
-        
+
         // listen on the start param channel
         llListen(iStartParam, "", "", "");
-        
+
         // let mama know we're ready
         llWhisper(iStartParam, "reallyready");
 
         //Debug("Starting");
     }
-    
+
     listen(integer channel, string name, key id, string msg) {
         //Debug("heard: " + msg);
         if (llGetOwnerKey(id) == llGetOwner()) {
@@ -217,7 +217,7 @@ default
                             // we don't have item. get it.
                             cmd = "GIVE";
                         }
-                    }                
+                    }
                 } else if (mode == "REMOVE" || mode == "DEPRECATED") {
                     //Debug("remove: " + msg);
                     if (type == "SCRIPT") {
@@ -235,7 +235,7 @@ default
                 }
                 string response = llDumpList2String([type, name, cmd], "|");
                 //Debug("responding: " + response);
-                llRegionSayTo(id, channel, response);                                                                
+                llRegionSayTo(id, channel, response);
             } else {
                 if (llSubStringIndex(msg, "CLEANUP") == 0) {
                     // Prior to 3.706, collars would store version number in
@@ -255,26 +255,26 @@ default
                     list nameparts = llParseString2List(llGetObjectName(), [" - "], []);
                     if (llGetListLength(nameparts) == 2 && (integer)llList2String(nameparts, 1)) {
                         // looks like there's a version in the name.  Remove
-                        // it!  
+                        // it!
                         string just_name = llList2String(nameparts, 0);
                         llSetObjectName(just_name);
                     }
-                    
+
                     // We used to set the version in the desc too.  Now we just
                     // leave it alone in this script.  The in-collar update
                     // script now uses that part of the desc to remember the
                     // timestamp of the last news item that it reported.
-                    
-                    //restore settings 
+
+                    //restore settings
                     integer n;
-                    integer stop = llGetListLength(lSettings); 
+                    integer stop = llGetListLength(lSettings);
                     list sDeprecatedSplitSettingTokenForTest;
                     for (n = 0; n < stop; n++) {
                         string setting = llList2String(lSettings, n);
                         //Look through deprecated settings to see if we should ignore any...
                         // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
                         sDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(setting,["="],[]),0,0);
-    
+
                         if (llListFindList(lDeprecatedSettingTokens,sDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, setting, "");
                             //Debug("SP - Saving :"+setting);
@@ -285,25 +285,25 @@ default
                             llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(sDeprecatedSplitSettingTokenForTest,0), "");
                         }
                     }
-                    
+
                     // tell scripts to rebuild menus (in case plugins have been removed)
                     llMessageLinked(LINK_SET, COMMAND_NOAUTH, "fixmenus", llGetOwner());
-                    
+
                     // remove the script pin
                     llSetRemoteScriptAccessPin(0);
-                    
+
                     // celebrate
                     llOwnerSay("Update complete!");
-                    
+
                     // delete shim script
                     llRemoveInventory(llGetScriptName());
                 }
             }
         }
     }
-    
+
     link_message(integer sender, integer num, string str, key id) {
-        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them 
+        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them
         // so they can be restored when we're done.
         if (num == LM_SETTING_RESPONSE) {
             if (str != "settings=sent") {

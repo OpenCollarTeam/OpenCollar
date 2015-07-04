@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +80,7 @@ integer g_iLastPostureRank = 504;
 integer g_iLastPoselockRank = 504;
 list g_lAnimButtons;  // initialized in state_entry for OpenSim compatibility (= ["Pose", "AO Menu", g_sGiveAO, "AO ON", "AO OFF"];)
 
-integer g_iAnimLock = FALSE; 
+integer g_iAnimLock = FALSE;
 integer g_iPosture;  //posture lock on/off
 
 //MESSAGE MAP
@@ -91,7 +91,7 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510; 
+integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
 //EXTERNAL MESSAGE MAP
@@ -99,9 +99,9 @@ integer EXT_CMD_COLLAR = 499;  //added for collar or cuff commands to put ao to 
 
 integer NOTIFY = 1002;
 
-integer LM_SETTING_SAVE = 2000; 
-integer LM_SETTING_RESPONSE = 2002; 
-integer LM_SETTING_DELETE = 2003; 
+integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_RESPONSE = 2002;
+integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -127,7 +127,7 @@ integer g_iMenuStride = 3;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -142,7 +142,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1); 
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];  //we've not already given this user a menu. append to list
     //Debug("Made "+sName+" menu.");
 }
@@ -150,7 +150,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 AnimMenu(key kID, integer iAuth) {
     string sPrompt = "\n%WEARERNAME%";
     list lButtons;
-    
+
     if (g_iAnimLock) {
         sPrompt += " is forbidden to change or stop poses on their own";
         lButtons = ["☒ AnimLock"];
@@ -259,7 +259,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
             if (llGetListLength(g_lAnims)) UnPlayAnim(llList2String(g_lAnims, 0));
-            
+
             g_lAnims = [sAnim] + g_lAnims;  //this way, g_lAnims[0] is always the currently playing anim
 
             PlayAnim(sAnim);
@@ -290,7 +290,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
             }
 
             UnPlayAnim(sAnim);
-            
+
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
             else {
@@ -314,7 +314,7 @@ CreateAnimList() {
     while (iNumberOfAnims--) {
         string sName=llGetInventoryName(INVENTORY_ANIMATION, iNumberOfAnims);
 
-        if (sName != "" && llGetSubString(sName, 0, 0) != "~") g_lPoseList+=[sName];  
+        if (sName != "" && llGetSubString(sName, 0, 0) != "~") g_lPoseList+=[sName];
         if (llSubStringIndex(sName,"~")==0 && llStringLength(sName)==4) {
             sName=llGetSubString(sName,1,3);
         }
@@ -341,12 +341,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         }
     } else if (sStr == "animations") AnimMenu(kID, iNum);
-    else if (sStr == "pose") PoseMenu(kID, 0, iNum);  
-    else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {  
+    else if (sStr == "pose") PoseMenu(kID, 0, iNum);
+    else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         llResetScript();
-    } else if ( sCommand=="posture") {  
+    } else if ( sCommand=="posture") {
         if ( sValue=="on") {
             if (iNum<=CMD_WEARER) {
                 g_iLastPostureRank=iNum;
@@ -362,11 +362,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"PostureRank", "");
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"You can move your neck again.",g_kWearer);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to move their neck.", kID);
-            } 
+            }
                 else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%",kID);
         }
-    } else if ( sCommand=="animlock") {  
-        if ( sValue=="on") {  
+    } else if ( sCommand=="animlock") {
+        if ( sValue=="on") {
             if (iNum<=CMD_WEARER) {
                 g_iLastPoselockRank=iNum;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"PoselockRank="+(string)g_iLastPoselockRank,"");
@@ -384,7 +384,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is free to change or stop poses on their own.", kID);
             } else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         }
-    } else if (sCommand == "ao") { 
+    } else if (sCommand == "ao") {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
         else if (sValue == "off") {
             llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOOFF|" + (string)kID);
@@ -396,7 +396,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         else if (sValue == "unlock") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_UNLOCK|" + (string)kID);
         else if (sValue == "hide") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOHIDE|" + (string)kID);
         else if (sValue == "show") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW|" + (string)kID);
-    } else if (sCommand == "antislide") {  
+    } else if (sCommand == "antislide") {
         if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
             if (sValue == "on") {
@@ -425,7 +425,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else if (sValue=="") PoseMoveMenu(kID,0,iNum);
             else llMessageLinked(LINK_SET, NOTIFY, "0"+"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower, kID);
         } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners or the wearer can change antislide settings.",g_kWearer);
-    } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {  
+    } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
         if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
             if (g_sCurrentPose != "") llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
             g_sCurrentPose = sStr;
@@ -449,7 +449,7 @@ default {
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
-        if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine); 
+        if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
         //Debug("Starting");
     }
 
@@ -486,11 +486,11 @@ default {
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Main|Animations", "");
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Animations", "");
         } else if (iNum == MENUNAME_RESPONSE) {
-            if (llSubStringIndex(sStr, "Animations|")==0) {  
+            if (llSubStringIndex(sStr, "Animations|")==0) {
                 string child = llList2String(llParseString2List(sStr, ["|"], []), 1);
                 if (llListFindList(g_lAnimButtons, [child]) == -1) g_lAnimButtons += [child];
             }
-        } else if (iNum == CMD_SAFEWORD) {  
+        } else if (iNum == CMD_SAFEWORD) {
             if (llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION) {
                 g_iLastRank = 0;
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
@@ -521,7 +521,7 @@ default {
             }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) { 
+            if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -535,7 +535,7 @@ default {
                     //Debug("Got message "+sMessage);
                     if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "menu Main", kAv);
                     else if (sMessage == "Pose") PoseMenu(kAv, 0, iAuth);
-                    else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth); 
+                    else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using a Submissive AO or an AO Link script in their normal AO.", kAv);
@@ -549,14 +549,14 @@ default {
                         AnimMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "Pose") {
-                    if (sMessage == "BACK") AnimMenu(kAv, iAuth); 
+                    if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
-                        else UserCommand(iAuth, sMessage, kAv); 
+                        else UserCommand(iAuth, sMessage, kAv);
                         PoseMenu(kAv, iPage, iAuth);
                     }
                 } else if (sMenuType == "AntiSlide") {
-                    if (sMessage == "BACK") AnimMenu(kAv, iAuth); 
+                    if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else {
                         if (sMessage == "ON") UserCommand(iAuth, "antislide on", kAv);
                         else if (sMessage == "OFF") UserCommand(iAuth, "antislide off", kAv);

@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -144,10 +144,10 @@ list CharacterCountCheck(list lIn, key ID)
         else
         {
             lOut+=[s];
-        }     
+        }
     }
     return lOut;
-    
+
 }
 
 
@@ -170,7 +170,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iNumitems = llGetListLength(lMenuItems);
     integer iStart;
     integer iMyPageSize = iPagesize - llGetListLength(lUtilityButtons);
-        
+
     //slice the menuitems by page
     if (iNumitems > iMyPageSize)
     {
@@ -187,7 +187,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         iStart = 0;
         lButtons = lMenuItems;
     }
-    
+
     // check promt lenghtes
     integer iPromptlen=llStringLength(sPrompt);
     if (iPromptlen>511)
@@ -204,7 +204,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     {
         sThisPrompt= sPrompt;
     }
-    
+
     //integer stop = llGetListLength(lCurrentItems);
     //integer n;
     //for (n = 0; n < stop; n++)
@@ -212,23 +212,23 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //    string sName = llList2String(lMenuItems, iStart + n);
     //    lButtons += [sName];
     //}
-    
 
-    
+
+
     lButtons = SanitizeButtons(lButtons);
     lUtilityButtons = SanitizeButtons(lUtilityButtons);
-    
+
     integer iChan = RandomUniqueChannel();
     integer g_iListener = llListen(iChan, "", kRecipient, "");
     llSetTimerEvent(g_iReapeat);
     if (iNumitems > iMyPageSize)
     {
-        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[PREV,MORE]), iChan);      
+        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[PREV,MORE]), iChan);
     }
     else
     {
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons,[]), iChan);
-    }    
+    }
     integer ts = llGetUnixTime() + g_iTimeOut;
     g_lMenus += [iChan, kID, g_iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage];
 }
@@ -243,7 +243,7 @@ list SanitizeButtons(list lIn)
         if (llList2String(lIn, n) == "") //remove empty sStrings
         {
             lIn = llDeleteSubList(lIn, n, n);
-        }        
+        }
         else if (type != TYPE_STRING)        //cast anything else to string
         {
             lIn = llListReplaceList(lIn, [llList2String(lIn, n)], n, n);
@@ -256,7 +256,7 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
 {//returns a list formatted to that "options" will start in the top left of a dialog, and "utilitybuttons" will start in the bottom right
     list lSpacers;
     list lCombined = lOptions + lUtilityButtons + iPagebuttons;
-    while (llGetListLength(lCombined) % 3 != 0 && llGetListLength(lCombined) < 12)    
+    while (llGetListLength(lCombined) % 3 != 0 && llGetListLength(lCombined) < 12)
     {
         lSpacers += [BLANK];
         lCombined = lOptions + lSpacers + lUtilityButtons + iPagebuttons;
@@ -267,11 +267,11 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
     {
         lCombined = llDeleteSubList(lCombined, u, u);
     }
-    
+
     list lOut = llList2List(lCombined, 9, 11);
     lOut += llList2List(lCombined, 6, 8);
-    lOut += llList2List(lCombined, 3, 5);    
-    lOut += llList2List(lCombined, 0, 2);    
+    lOut += llList2List(lCombined, 3, 5);
+    lOut += llList2List(lCombined, 0, 2);
 
     //make sure we move UPMENU to the lower right corner
     if (u != -1)
@@ -279,7 +279,7 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons)
         lOut = llListInsertList(lOut, [UPMENU], 2);
     }
 
-    return lOut;    
+    return lOut;
 }
 
 
@@ -287,7 +287,7 @@ list RemoveMenuStrkIDe(list lMenu, integer iIndex)
 {
     //tell this function the menu you wish to remove, identified by list index
     //it will close the listener, remove the menu's entry from the list, and return the new list
-    //should be called in the listen event, and on menu timeout    
+    //should be called in the listen event, and on menu timeout
     integer g_iListener = llList2Integer(lMenu, iIndex + 2);
     llListenRemove(g_iListener);
     return llDeleteSubList(lMenu, iIndex, iIndex + g_iStrideLength - 1);
@@ -307,12 +307,12 @@ CleanList()
         //Debug("dietime: " + (string)iDieTime);
         if (iNow > iDieTime)
         {
-            Debug("menu timeout");                
+            Debug("menu timeout");
             key kID = llList2Key(g_lMenus, n + 1);
             llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
             g_lMenus = RemoveMenuStrkIDe(g_lMenus, n);
-        }            
-    } 
+        }
+    }
 }
 
 ClearUser(key kRCPT)
@@ -339,7 +339,7 @@ integer InSim(key id)
 }
 
 default
-{    
+{
     state_entry()
     {
         g_kWearer=llGetOwner();
@@ -374,8 +374,8 @@ default
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
             list lbuttons = CharacterCountCheck(llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []), kRCPT);
-            list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);        
-            
+            list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
+
             //first clean out any strides already in place for that user.  prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
             //now give the dialog and save the new stride
@@ -421,7 +421,7 @@ default
             }
         }
     }
-    
+
     listen(integer iChan, string sName, key kID, string sMessage)
     {
         integer iMenuIndex = llListFindList(g_lMenus, [iChan]);
@@ -429,12 +429,12 @@ default
         {
             key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
             key kAv = llList2Key(g_lMenus, iMenuIndex + 4);
-            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);            
+            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);
             list items = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
             list ubuttons = llParseStringKeepNulls(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
-            integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);    
-            g_lMenus = RemoveMenuStrkIDe(g_lMenus, iMenuIndex);       
-                   
+            integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);
+            g_lMenus = RemoveMenuStrkIDe(g_lMenus, iMenuIndex);
+
             if (sMessage == MORE)
             {
                 Debug((string)iPage);
@@ -462,24 +462,24 @@ default
                 Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
             }
             else if (sMessage == BLANK)
-            
+
             {
                 //give the same menu back
                 Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID);
-            }            
+            }
             else
             {
                 llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
-            }  
+            }
         }
     }
-    
+
     timer()
     {
-        CleanList();    
-        
+        CleanList();
+
         //if list is empty after that, then stop timer
-        
+
         if (!llGetListLength(g_lMenus))
         {
             Debug("no active dialogs, stopping timer");

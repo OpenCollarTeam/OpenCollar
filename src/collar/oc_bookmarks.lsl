@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//                         github.com/OpenCollar/OC                         //
+//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -70,8 +70,8 @@ key    g_kRemoveMenu                  = NULL_KEY; //Use a separate key for the r
 integer g_iRLVOn                      = FALSE; //Assume RLV is off until we hear otherwise
 string g_tempLoc                      = "";   //This holds a global temp location for manual entry from provided location but no favorite name - g_kTBoxIdLocationOnly
 
-key     g_kMenuID; 
-key     g_kWearer; 
+key     g_kMenuID;
+key     g_kWearer;
 
 key     g_kTBoxIdSave               = "null";
 key     g_kTBoxIdLocationOnly       = "null";
@@ -94,7 +94,7 @@ integer CMD_GROUP                   = 502;
 integer CMD_WEARER                  = 503;
 //integer CMD_EVERYONE              = 504;
 //integer CMD_RLV_RELAY             = 507;
-//integer CMD_SAFEWORD              = 510; 
+//integer CMD_SAFEWORD              = 510;
 //integer CMD_BLOCKED               = 520;
 
 integer NOTIFY                     = 1002;
@@ -113,7 +113,7 @@ integer DIALOG_RESPONSE            = -9001;
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -160,7 +160,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"This destination name is already taken",kID); 
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"This destination name is already taken",kID);
             } else {
                 string slurl = FormatRegionName();
                 addDestination(sAdd, slurl, kID);
@@ -181,14 +181,14 @@ You can enter:
         } else if (llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_CMD + " remove"), -1), STRING_TRIM);
             if (llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID); 
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID);
             } else {
                 integer iIndex;
                 llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + sDel, "");
                 iIndex = llListFindList(g_lVolatile_Destinations, [sDel]);
                 g_lVolatile_Destinations = llDeleteSubList(g_lVolatile_Destinations, iIndex, iIndex);
                 g_lVolatile_Slurls = llDeleteSubList(g_lVolatile_Slurls, iIndex, iIndex);
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Removed destination " + sDel,kID); 
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Removed destination " + sDel,kID);
             }
         } else {
             g_kRemoveMenu = Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum);
@@ -237,14 +237,14 @@ You can enter:
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
                 //if (llSubStringIndex(sCmd,"o:") == 0) llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID);// (enable this to support hud forcetp.  disabled now since rlvtp still does this
                 //else
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID); 
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID);
             } else if(found > 1)
                 g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
             else  //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_CMD + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command
         }
         //Can't find in list, lets try find substring matches
-        else 
+        else
             llMessageLinked(LINK_SET,NOTIFY,"0"+"I didn't understand your command.",kID);
     }
 }
@@ -279,7 +279,7 @@ string convertSlurl(string sStr, key kAv, integer iAuth) {  //convert the slurl 
     integer iHttpInString = llSubStringIndex(llList2String(lPieces, 0), sIndex);
     if(iHttpInString > 0)
         sStringToKeep = llGetSubString(llList2String(lPieces, 0), 0, iHttpInString - 1);
-    if(llGetListLength(lPieces) == 8) { 
+    if(llGetListLength(lPieces) == 8) {
         string sRegion = llList2String(lPieces, iHttploc + 4);
         string sLocationx = llList2String(lPieces, iHttploc + 5);
         string sLocationy = llList2String(lPieces, iHttploc + 6);
@@ -351,9 +351,9 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth);
 
 ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/OpenCollarUpdater/main/LSL/~bookmarks
     key kAv;
-   // webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks", 
+   // webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks",
        //[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/workshop/LSL/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards
@@ -452,17 +452,17 @@ default {
             pos_str = (string)((integer)global_pos.x)
                       + "/" + (string)((integer)global_pos.y)
                       + "/" + (string)((integer)global_pos.z);
-            //Debug("Global position : "+(string)pos_str); 
+            //Debug("Global position : "+(string)pos_str);
             // Pass command to main
             if(g_iRLVOn) {
                 string sRlvCmd = "tpto:" + pos_str + "=force";
                 llMessageLinked(LINK_SET, RLV_CMD, sRlvCmd, g_kCommander);
             }
         }
-        if(kID == g_kDataID) { 
+        if(kID == g_kDataID) {
             list split;
             if(sData != EOF) {
-                if(llGetSubString(sData, 0, 2) != "") { 
+                if(llGetSubString(sData, 0, 2) != "") {
                     sData = llStringTrim(sData, STRING_TRIM);
                     split = llParseString2List(sData, ["~"], []);
                     if(! ~llListFindList(g_lDestinations, [llStringTrim(llList2String(split, 0), STRING_TRIM)])){
@@ -483,9 +483,9 @@ default {
             llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
             g_lButtons = [] ;
             llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
-        } else if(iNum == RLV_OFF) { 
+        } else if(iNum == RLV_OFF) {
             g_iRLVOn = FALSE;
-        } else if(iNum == RLV_ON) { 
+        } else if(iNum == RLV_ON) {
             g_iRLVOn = TRUE;
         } else if(iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sStr, ["|"], []);
@@ -506,7 +506,7 @@ default {
                     g_lVolatile_Destinations += lDestination;
                     g_lVolatile_Slurls += [sValue];
                 }
-            } 
+            }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == DIALOG_RESPONSE) {
             if(llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
@@ -518,14 +518,14 @@ default {
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                 if(kID == g_kTBoxIdLocationOnly) {
-                    if(sMessage != "") 
+                    if(sMessage != "")
                         addDestination(sMessage, g_tempLoc, kID);
                     UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                 } else if(kID == g_kTBoxIdSave) {
                     //Debug("TBoxIDSave " + sMessage);
-                    if(sMessage != "") 
+                    if(sMessage != "")
                         validatePlace(convertSlurl(sMessage, kAv, iAuth), kAv, iAuth);
-                    else 
+                    else
                         UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                 } else if(kID == g_kRemoveMenu) {
                     //       Debug("|"+sMessage+"|");
@@ -541,9 +541,9 @@ default {
                 } else if(sMessage == UPMENU) {
                     llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
                 } else if(~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
-                    if(sMessage == "SAVE") 
+                    if(sMessage == "SAVE")
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " save", kAv);
-                    else if(sMessage == "REMOVE") 
+                    else if(sMessage == "REMOVE")
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " remove", kAv);
                     else if(sMessage == "PRINT") {
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " print", kAv);
@@ -556,7 +556,7 @@ default {
             }
         }
     }
-    
+
     changed(integer iChange) {
         if(iChange & CHANGED_INVENTORY) ReadDestinations();
         if(iChange & CHANGED_OWNER)  llResetScript();
