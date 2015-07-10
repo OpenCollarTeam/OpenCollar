@@ -234,6 +234,12 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
     }
 }
 
+ForceUpdate() {
+     //workaround for https://jira.secondlife.com/browse/VWR-1168
+    llSetText(".", <1,1,1>, 1.0);
+    llSetText("", <1,1,1>, 1.0);
+}
+
 vector ConvertPos(vector pos) {
     integer ATTACH = llGetAttached();
     vector out ;
@@ -248,6 +254,7 @@ vector ConvertPos(vector pos) {
 
 AdjustPos(vector vDelta) {
     if (llGetAttached()) llSetPos(llGetLocalPos() + ConvertPos(vDelta));
+    ForceUpdate();
 }
 
 vector ConvertRot(vector rot) {
@@ -264,6 +271,7 @@ vector ConvertRot(vector rot) {
 
 AdjustRot(vector vDelta) {
     if (llGetAttached()) llSetLocalRot(llGetLocalRot() * llEuler2Rot(ConvertRot(vDelta)));
+    ForceUpdate();
 }
 
 RotMenu(key kAv, integer iAuth) {
