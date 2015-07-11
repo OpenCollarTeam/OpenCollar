@@ -1,68 +1,374 @@
-================
-OpenCollar - Quick Guide
-================
+=================================
+OpenCollar Help Card | 2015-07-11
+=================================
 
-Your prefix are the first letter of your firstname and the first letter of your surname. If you don't have a surname, your surname will always be "Resident".
+This is only a short version of the manual, explaining the basic usage and lists all chat commands.
 
-    - Wendy Starfall (wendy.starfall)'s prefix is: ws
-    - wendy4u (wendy4u Resident)'s prefix is: wr
-    - ????i? ?l?? (fraulein.fapalot)'s prefix is: ff
- 
+The manual on the web is a lot more gentle on the eyes and has the major advantage that we can improve it in between update releases. Some of the menus have useful hotlinks to manual pages.
+
+http://www.opencollar.at
+
+
+===============
+The Very Basics
+===============
+
+Making use of the many, many features in your collar can be done by touching your neck, by touching your collar directly, by using a remote or with individual chat commands.
+
+-----------
+The Prefix:
+-----------
+
+Your [prefix] are the first two letters of your username
+
+    Wendy Starfall's prefix is: we
+    Otto (garvin.twine)'s prefix is: ga
+    little sissy mouse (littlemousy)'s prefix is: li
+
 Your prefix is used to issue commands in the Nearby Chat.
- 
-    <prefix>menu
-    <prefix>pose
-    <prefix>kneel
-    <prefix>release
-    <prefix>grab
-    <prefix>yank
-    <prefix>unleash
-    <prefix>sitnow
- 
-If you don't like your prefix, you can change it.
- 
+
+    [prefix]menu
+    [prefix]kneel
+    [prefix]stop
+
+If you don’t like your prefix, you can change it. Only the owner can change the prefix, and the wearer if there is no owner set.
+
     wsprefix wen
     wrprefix we
     jsprefix sex
- 
+
+There are two special prefixes. * issues commands to everyone nearby and # issues commands to everyone except yourself.
+
+    *trauma
+    #grab
+
+---------
+Channels:
+---------
+
 You can also issue commands on channel 1.
- 
-    /1<prefix>menu
- 
-Or if you don't like channel 1 set a different channel.
- 
-    <prefix>channel 2
-    <prefix>channel 3
-    <prefix>channel 69
-    <prefix>channel 9001
- 
+
+    /1[prefix]menu
+
+Or if you don’t like channel 1 set a different channel.
+
+    [prefix]channel 2
+    [prefix]channel 3
+    [prefix]channel 69
+    [prefix]channel 9001
+
 If you are considerate about lag, you can also turn off the Nearby Chat listener.
- 
-    <prefix>channel -1
- 
-Your collar also has a safeword which you simply type in the nearby chat. This will lift all RLV resctrictions, unpose, unleash and unlock you. It will also send your Owner a message to check for your well being.
- 
+
+    [prefix]channel -1
+
+Too much hassle to always type a slash after all?
+
+    /1[prefix]channel 0
+
+---------
+Safeword:
+---------
+
+Your collar also has a safeword which you simply type in the nearby chat. This will lift all RLV resctrictions, unpose and unleash you. It will also send your Owner a message to check for your well being. RED in capital letters is the default safeword.
+
     RED
- 
-RED in capital letters is the default safeword.
- 
-If that's too hard to remember you can easily change it.
+    /1RED
+    ((RED))
 
-    <prefix>safeword Mayday!
-    <prefix>safeword taxi
-    <prefix>safeword BANANA
+If that’s too hard to remember you can easily change it.
 
-Too much to type? There is also a menu that has buttons for all these many commands. The menu can be opened in multiple ways.
+    [prefix]safeword Mayday!
+    [prefix]safeword taxi
+    [prefix]safeword BANANA
 
-    1. <prefix>menu
-    2. Click the collar!
-    3. If you use the Sub AO, it's menu has a button.
-    4. If you are an Owner, use the Owner HUD.
-    
-Yay! Now that you know how to use your prefix, your channel, chat commands and the menu, you are ready to find an Owner. If things don't turn out all that great:
 
-    <prefix>runaway
-    
-===============================    
- For a full manual, please visit www.opencollar.at
-===============================
+=====================
+List of Chat Commands
+=====================
+
+Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles!
+
+-----------------
+General Commands:
+-----------------
+
+    #menu
+
+    #lock
+    #unlock
+
+    #apps
+
+    #channel [positive number]
+    #channel -1
+    #channel 0
+
+    #prefix [custom prefix]
+
+    RED
+    /1RED
+    ((RED))
+
+    #safeword [custom safeword]
+
+    CustomSafeword
+    /1CustomSafeword
+    ((CustomSafeword))
+
+----------
+Bookmarks:
+----------
+
+    #bookmarks
+    #tp
+
+    #tp [name of bookmark]
+
+    #tp save
+    #tp print
+    #tp remove
+
+-------
+Titler:
+-------
+
+    #menu titler
+
+    #titlebox
+
+    #title [a fancy title]
+
+    #titleon
+    #titleoff
+
+-----------
+Animations:
+-----------
+
+    #animations
+
+    #posture on
+    #posture off
+
+    #ao menu
+
+    #ao on
+    #ao off
+
+    #antislide
+
+    #antislide on
+    #antislide off
+
+------
+Poses:
+------
+
+    #pose
+
+    #back
+    #beautystand
+    #belly
+    #booty
+
+    #bop
+    #bracelets
+    #cutie
+    #display
+
+    #doggie
+    #kneel
+    #nadu
+    #rise
+
+    #shy
+    #submit
+    #table
+    #tower
+
+    #stop
+
+------------------
+Couple Animations:
+------------------
+
+    #couples
+
+    #hug
+    #kiss
+    #pet
+
+    #cling
+    #foot
+    #catch
+
+    #stopcouples
+
+-------
+Kidnap:
+-------
+
+    #kidnap
+
+    #kidnap on
+    #kidnap off
+    #kidnap vulnerable on
+    #kidnap vulnerable off
+
+------
+Leash:
+------
+
+    #menu leash
+
+    #leash
+    #grab
+    #yank
+    #unleash
+
+    #follow
+    #beckon
+    #unfollow
+
+    #post
+
+    #anchor
+    #park
+
+    #pass
+
+    #length
+
+    #configure
+
+----
+RLV:
+----
+
+    #rlv
+
+    #rlvon
+    #rlvoff
+    #clear
+
+----------
+Force Sit:
+----------
+
+    #sit
+    #stand
+
+--------
+Outfits:
+--------
+
+    #outfits
+
+    #wear [name of the outfit]
+
+-------------
+Restrictions:
+-------------
+
+    #restrictions
+
+    #allow sendim
+    #forbid sendim
+
+    #allow readim
+    #forbid readim
+
+    #allow hear
+    #forbid hear
+
+    #allow touch
+    #forbid touch
+
+    #allow stray
+    #forbid stray
+
+    #allow talk
+    #forbid talk
+
+    #allow rummage
+    #forbid rummage
+
+    #allow dress
+    #forbid dress
+
+    #dazzle
+    #undazzle
+
+    #daze
+    #undaze
+
+------------
+RLV Folders:
+------------
+
+    #folders
+
+    #+ foldername (wears it)
+    #++ foldername (wears it and its subfolders)
+
+    #& foldername (adds it)
+    #&& foldername (adds it and its subfolders)
+
+    #- foldername (removes it)
+    #-- foldername (removes it and its subfolders)
+
+    #history
+
+-------
+Access:
+-------
+
+    #access
+
+    #owner [UUID or name]
+    #removeowner [name]
+
+    #trust [UUID or name]
+    #removetrust [name]
+
+    #block [UUID or name]
+    #removeblock [name]
+
+    #public
+    #private
+
+    #limitrange
+    #unlimitrange
+
+    #runaway
+
+--------
+Options:
+--------
+
+    #options
+
+    #settings
+
+    #fix
+    #stealth
+
+    #themes
+
+-----------
+Help/About:
+-----------
+
+    #about
+
+    #help
+    #license
+
+    #news on
+    #news off
+
+    #update
+
+======================================================
+That's all! Please consult www.opencollar.at for more.
+======================================================
