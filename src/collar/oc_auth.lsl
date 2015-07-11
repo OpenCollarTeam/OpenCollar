@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 150610.1                           //
+//                          Authorizer - 150711.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -66,6 +66,7 @@ integer g_iGroupEnabled = FALSE;
 
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
+string g_sHeadline = "\n[http://www.opencollar.at/access.html Access]\n";
 integer g_iRunawayDisable=0;
 
 list g_lQueryId; //5 strided list of dataserver/http request: key, uuid, requestType, kAv, remenu.  For AV name/group name  lookups
@@ -179,7 +180,7 @@ FetchAvi(integer iAuth, string sType, string sName, key kAv) {
 }
 
 AuthMenu(key kAv, integer iAuth) {
-    string sPrompt = "\n\"My lips may promise...\n but my heart is a whore.\"";
+    string sPrompt = g_sHeadline;
     list lButtons = ["✚ Owner", "✚ Trusted", "✚ Blocked", "♻ Owner", "♻ Trusted", "♻ Blocked"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
@@ -331,10 +332,10 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         }
 
         if (sToken == "owner")
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",kPerson);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
 
         if (sToken == "trust")
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [http://www.virtualdisgrace.com/collar here] what that means!\n",kPerson);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
 
         string sOldToken=sToken;
         if (sToken == "secowner") sOldToken+="s";

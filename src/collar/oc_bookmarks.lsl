@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 150610.1                            //
+//                          Bookmarks - 150711.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -54,6 +54,7 @@
 
 string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
 string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string g_sHeadline = "\n[http://www.opencollar.at/bookmarks.html Bookmarks]\n";
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
@@ -131,7 +132,8 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 DoMenu(key keyID, integer iAuth) {
-    string sPrompt = "\nTake me away, gumby!\n\nwww.opencollar.at/bookmarks";
+    string sPrompt = g_sHeadline;
+           sPrompt+= "\nTake me away, gumby!";
     list lMyButtons = PLUGIN_BUTTONS + g_lButtons + g_lDestinations + g_lVolatile_Destinations;
     g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
 }

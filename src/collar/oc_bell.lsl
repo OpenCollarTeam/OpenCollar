@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Bell - 150610.1                                //
+//                           Bell - 150711.1                                //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2009 - 2015 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
@@ -58,6 +58,7 @@
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
+string g_sHeadline = "\n[http://www.opencollar.at/bell.html Bell]\n";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 
@@ -148,7 +149,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 BellMenu(key kID, integer iAuth) {
-    string sPrompt = "\n";
+    string sPrompt = g_sHeadline;
     list lMyButtons;
     if (g_iBellOn>0) {
         lMyButtons+= g_sBellOff;
@@ -166,8 +167,7 @@ BellMenu(key kID, integer iAuth) {
     }
     sPrompt += "Bell Volume:  \t"+(string)((integer)(g_fVolume*10))+"/10\n";
     sPrompt += "Active Sound:\t"+(string)(g_iCurrentBellSound+1)+"/"+(string)g_iBellSoundCount+"\n";
-    sPrompt +="\nwww.opencollar.at/bell";
-
+    
     lMyButtons += ["Next Sound","Vol +","Vol -"];
 
     Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");

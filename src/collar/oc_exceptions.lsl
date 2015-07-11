@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Exceptions - 150610.1                            //
+//                         Exceptions - 150711.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Medea Destiny, Garvin Twine, littlemousy,               //
@@ -70,6 +70,7 @@ list g_lTempOwners;
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Exceptions";
+string g_sHeadline = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n";
 
 //statics to compare
 integer OWNER_DEFAULT = 127;//1+2+4+8+16+32;//all on
@@ -224,7 +225,8 @@ Menu(key kID, string sWho, integer iAuth) {
         return;
     }
     list lButtons = ["Owner", "Trusted"];
-    string sPrompt = "\nSet exemptions to the restrictions for RLV commands. That means the people added here will not be blocked from talking to the wearer. Also the ability to make teleports happen instantly can be set here.\n\n(\"Force Teleports\" are already defaulted for owners.)";
+    string sPrompt = g_sHeadline;
+           sPrompt+= "\nSet exemptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 

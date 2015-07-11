@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 150618.1                             //
+//                          Particle - 150711.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -51,6 +51,8 @@
 //         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sHeadline = "\n[http://www.opencollar.at/leash.html Leash Configuration]\n";
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -385,7 +387,7 @@ ConfigureMenu(key kIn, integer iAuth) {
     else if (g_sParticleMode == "Classic")  lButtons += ["☒ "+L_CLASSIC_TEX,"☐ "+L_RIBBON_TEX,"☐ Invisible"];
 
     lButtons += [L_FEEL, L_COLOR];
-    string sPrompt = "\nCustomize the looks and feel of your leash.";
+    string sPrompt = g_sHeadline+"\nCustomize the looks and feel of your leash.";
     g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 

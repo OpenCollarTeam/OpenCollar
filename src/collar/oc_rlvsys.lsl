@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 150616.1                            //
+//                         RLV System - 150711.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -51,6 +51,8 @@
 //         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sHeadline = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
 
 integer g_iRLVOn = TRUE;
 integer g_iViewerCheck = FALSE;
@@ -152,10 +154,9 @@ DoMenu(key kID, integer iAuth){
     if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
 
-    string sPrompt = "\n[http://www.virtualdisgrace.com/collar#rlv Remote Scripted Viewer Controls]\n";
+    string sPrompt = g_sHeadline;
     if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
     if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
-    //sPrompt +="\n\nwww.opencollar.at/rlv";
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
     //Debug("Made menu.");
 }

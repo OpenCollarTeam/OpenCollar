@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 150617.1                               //
+//                           Leash - 150711.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -52,6 +52,8 @@
 //         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sHeadline = "\n[http://www.opencollar.at/leash.html Leash]\n";
 
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
@@ -470,7 +472,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             lButtons += ["Length"];
             lButtons += g_lButtons;
 
-            string sPrompt = "\nLet's go walkies!";
+            string sPrompt = g_sHeadline+"\nLet's go walkies!";
             g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
         } else  if (sComm == "post") {
             if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);

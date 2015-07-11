@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 150612.1                             //
+//                          Animator - 150711.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -56,6 +56,8 @@
 //this script as essentially two layers
 //lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
 //upper layer: use the link message anim api to provide a pose menu
+
+string g_sHeadline = "\n[http://www.opencollar.at/animations.html Animations]\n";
 
 list g_lAnims;  //list of queued anims
 list g_lPoseList;  //list of standard poses to use in the menu
@@ -148,7 +150,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 AnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\n%WEARERNAME%";
+    string sPrompt = g_sHeadline+"\n%WEARERNAME%";
     list lButtons;
 
     if (g_iAnimLock) {
@@ -176,7 +178,7 @@ AnimMenu(key kID, integer iAuth) {
 }
 
 PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
-    string sPrompt = "\nCurrently playing: ";
+    string sPrompt = "\n[http://www.opencollar.at/animations.html#pose Pose]\n\nCurrently playing: ";
     if (g_sCurrentPose == "")sPrompt += "-\n";
     else sPrompt += g_sCurrentPose +"\n";
 

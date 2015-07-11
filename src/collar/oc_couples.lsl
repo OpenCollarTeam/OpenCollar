@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 150616.1                              //
+//                          Couples - 150711.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -54,6 +54,7 @@
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
+string g_sHeadline = "\n[http://www.opencollar.at/animations.html#couples Couples]\n";
 string UPMENU = "BACK";
 key g_kAnimmenu;
 key g_kPart;
@@ -188,10 +189,10 @@ refreshTimer(){
 }
 
 CoupleAnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\nChoose an animation to play.\n\nAnimations will play " ;
+    string sPrompt = g_sHeadline;
+           sPrompt+= "\nChoose an animation to play.\n\nAnimations will play " ;
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
-    //sPrompt += "\n\nwww.opencollar.at/animations\n\n";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
     //if (g_iVerbose) lButtons += ["Verbose Off"];
