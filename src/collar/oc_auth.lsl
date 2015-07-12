@@ -66,7 +66,6 @@ integer g_iGroupEnabled = FALSE;
 
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
-string g_sHeadline = "\n[http://www.opencollar.at/access.html Access]\n";
 integer g_iRunawayDisable=0;
 
 list g_lQueryId; //5 strided list of dataserver/http request: key, uuid, requestType, kAv, remenu.  For AV name/group name  lookups
@@ -180,7 +179,7 @@ FetchAvi(integer iAuth, string sType, string sName, key kAv) {
 }
 
 AuthMenu(key kAv, integer iAuth) {
-    string sPrompt = g_sHeadline;
+    string sPrompt = "\n[http://www.opencollar.at/access.html Access]\n";
     list lButtons = ["✚ Owner", "✚ Trusted", "✚ Blocked", "♻ Owner", "♻ Trusted", "♻ Blocked"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group

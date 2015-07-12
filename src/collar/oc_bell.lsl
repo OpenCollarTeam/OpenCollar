@@ -58,7 +58,6 @@
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
-string g_sHeadline = "\n[http://www.opencollar.at/bell.html Bell]\n";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 
@@ -149,7 +148,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 BellMenu(key kID, integer iAuth) {
-    string sPrompt = g_sHeadline;
+    string sPrompt = "\n[http://www.opencollar.at/bell.html Bell]\n";
     list lMyButtons;
     if (g_iBellOn>0) {
         lMyButtons+= g_sBellOff;
@@ -167,7 +166,7 @@ BellMenu(key kID, integer iAuth) {
     }
     sPrompt += "Bell Volume:  \t"+(string)((integer)(g_fVolume*10))+"/10\n";
     sPrompt += "Active Sound:\t"+(string)(g_iCurrentBellSound+1)+"/"+(string)g_iBellSoundCount+"\n";
-    
+
     lMyButtons += ["Next Sound","Vol +","Vol -"];
 
     Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");

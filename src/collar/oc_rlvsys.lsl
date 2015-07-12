@@ -52,8 +52,6 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sHeadline = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
-
 integer g_iRLVOn = TRUE;
 integer g_iViewerCheck = FALSE;
 integer g_iRlvActive = FALSE;
@@ -154,7 +152,7 @@ DoMenu(key kID, integer iAuth){
     if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
 
-    string sPrompt = g_sHeadline;
+    string sPrompt = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
     if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
     if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());

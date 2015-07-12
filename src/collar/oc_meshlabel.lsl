@@ -249,12 +249,12 @@ MainMenu(key kID, integer iAuth) {
     if (g_iScroll) lButtons += ["☒ Scroll"];
     else lButtons += ["☐ Scroll"];
 
-    string sPrompt = "\nCustomize the %DEVICETYPE%'s label!\n\nwww.opencollar.at/label";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nCustomize the %DEVICETYPE%'s label!";
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 TextMenu(key kID, integer iAuth) {
-    string sPrompt="\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to " + g_sSubMenu + ".\n\nwww.opencollar.at/label";
+    string sPrompt="\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to " + g_sSubMenu + ".";
     g_kTBoxID = Dialog(kID, sPrompt, [], [], 0, iAuth);
 }
 
@@ -265,7 +265,7 @@ ColorMenu(key kID, integer iAuth) {
 
 FontMenu(key kID, integer iAuth) {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
-    string sPrompt = "\nSelect the font for the %DEVICETYPE%'s label.\n\nNOTE: This feature requires a design with label prims. If the worn design doesn't have any of those, it is recommended to uninstall Label with the updater.\n\nwww.opencollar.at/label";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nSelect the font for the %DEVICETYPE%'s label.";
 
     g_kFontID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }

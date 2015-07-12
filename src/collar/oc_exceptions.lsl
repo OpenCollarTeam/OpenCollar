@@ -70,7 +70,6 @@ list g_lTempOwners;
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Exceptions";
-string g_sHeadline = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n";
 
 //statics to compare
 integer OWNER_DEFAULT = 127;//1+2+4+8+16+32;//all on
@@ -225,8 +224,7 @@ Menu(key kID, string sWho, integer iAuth) {
         return;
     }
     list lButtons = ["Owner", "Trusted"];
-    string sPrompt = g_sHeadline;
-           sPrompt+= "\nSet exemptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
+    string sPrompt = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n\nSet exemptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
     g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 

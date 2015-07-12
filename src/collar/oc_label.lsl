@@ -56,7 +56,6 @@
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
-string g_sHeadline = "\n[http://www.opencollar.at/label.html Label]\n";
 
 key g_kWearer;
 string g_sSettingToken = "label_";
@@ -406,14 +405,12 @@ MainMenu(key kID, integer iAuth) {
     if (g_iScroll) lButtons += ["☒ Scroll"];
     else lButtons += ["☐ Scroll"];
 
-    string sPrompt = g_sHeadline;
-           sPrompt+= "\nCustomize the %DEVICETYPE%'s label!";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nCustomize the %DEVICETYPE%'s label!";
     g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }
 
 TextMenu(key kID, integer iAuth) {
-    string sPrompt = g_sHeadline;
-           sPrompt+= "\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to " + g_sSubMenu + ".";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to " + g_sSubMenu + ".";
     g_kTBoxID = Dialog(kID, sPrompt, [], [], 0, iAuth);
 }
 
@@ -424,8 +421,7 @@ ColorMenu(key kID, integer iAuth) {
 
 FontMenu(key kID, integer iAuth) {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
-    string sPrompt = g_sHeadline;
-           sPrompt+= "\nSelect the font for the %DEVICETYPE%'s label.";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nSelect the font for the %DEVICETYPE%'s label.";
 
     g_kFontID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
 }

@@ -57,8 +57,6 @@
 // Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 1.9.7
 
-string g_sHeadline = "\n[http://www.opencollar.at/themes.html Themes]\n";
-
 list g_lElements;  //list of element types, built on script start.  Changed event restarts script on link set change
 list g_lElementFlags;
 list g_lTextureDefaults;  //default textures for each element, actually the last textures sent out by the settings script, so not so much "default settings", closer to "what wa set when worn"
@@ -164,7 +162,7 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, g_sHeadline+"\nChoose a visual theme for your %DEVICETYPE%.", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 ShinyMenu(key kID, integer iAuth, string sElement) {

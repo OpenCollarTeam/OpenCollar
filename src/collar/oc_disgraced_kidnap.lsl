@@ -54,8 +54,6 @@
 // Compatible with OpenCollar API   3.9
 // and/or minimum Disgraced Version 1.3.2
 
-string g_sHeadline = "\n[http://www.opencollar.at/kidnap.html Kidnap]\n";
-
 key     g_kWearer;
 
 list    g_lMenuIDs;      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
@@ -124,7 +122,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 KidnapMenu(key kId, integer iAuth) {
-    string sPrompt = g_sHeadline;
+    string sPrompt = "\n[http://www.opencollar.at/kidnap.html Kidnap]\n";
     list lMyButtons;
     if (llGetListLength(g_lTempOwners)) lMyButtons += "Release";
     else {

@@ -54,7 +54,6 @@
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
-string g_sHeadline = "\n[http://www.opencollar.at/animations.html#couples Couples]\n";
 string UPMENU = "BACK";
 key g_kAnimmenu;
 key g_kPart;
@@ -189,8 +188,7 @@ refreshTimer(){
 }
 
 CoupleAnimMenu(key kID, integer iAuth) {
-    string sPrompt = g_sHeadline;
-           sPrompt+= "\nChoose an animation to play.\n\nAnimations will play " ;
+    string sPrompt+= "\n[http://www.opencollar.at/animations.html#couples Couples]\n\nChoose an animation to play.\n\nAnimations will play " ;
     if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     list lButtons = g_lAnimCmds;

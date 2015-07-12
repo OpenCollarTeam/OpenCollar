@@ -54,7 +54,6 @@
 
 string g_sParentMenu = "Apps";
 string g_sFeatureName = "Titler";
-string g_sHeadline = "\n[http://www.opencollar.at/titler.html Titler]\n";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
 
 //MESSAGE MAP
@@ -145,12 +144,10 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string ON_OFF ;
         string sPrompt;
         if (g_iTextPrim == -1) {
-            sPrompt = g_sHeadline;
-            sPrompt+= "\nThis design is missing a FloatText box. Titler disabled.";
+            sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nThis design is missing a FloatText box. Titler disabled.";
             g_kDialogID = Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth);
         } else {
-            sPrompt = g_sHeadline;
-            sPrompt+= "\nCurrent Title: " + g_sText ;
+            sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nCurrent Title: " + g_sText ;
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
             g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth);

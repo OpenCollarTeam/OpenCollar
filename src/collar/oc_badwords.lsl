@@ -52,8 +52,6 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sHeadline = "\n[http://www.opencollar.at/badwords.html Badwords]\n";
-
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -157,7 +155,7 @@ MenuBadwords(key kID, integer iNum){
     if (g_iIsEnabled) lButtons += ["OFF"];
     else lButtons += ["ON"];
 
-    string sText= g_sHeadline;
+    string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\n";
     sText+= "\nBad Words: " + llDumpList2String(g_lBadWords, ", ");
     sText+= "\nBad Word Anim: " + g_sBadWordAnim;
     sText+= "\nPenance: " + g_sPenance;

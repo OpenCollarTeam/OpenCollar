@@ -57,8 +57,6 @@
 //lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
 //upper layer: use the link message anim api to provide a pose menu
 
-string g_sHeadline = "\n[http://www.opencollar.at/animations.html Animations]\n";
-
 list g_lAnims;  //list of queued anims
 list g_lPoseList;  //list of standard poses to use in the menu
 integer g_iNumberOfAnims;  //we store this to avoid running createanimlist() every time inventory is changed...
@@ -150,7 +148,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 AnimMenu(key kID, integer iAuth) {
-    string sPrompt = g_sHeadline+"\n%WEARERNAME%";
+    string sPrompt = "\n[http://www.opencollar.at/animations.html Animations]\n\n%WEARERNAME%";
     list lButtons;
 
     if (g_iAnimLock) {

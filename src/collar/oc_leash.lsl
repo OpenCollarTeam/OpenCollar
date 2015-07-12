@@ -53,8 +53,6 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sHeadline = "\n[http://www.opencollar.at/leash.html Leash]\n";
-
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
 // - Should be constant across collars, so not prefixed
@@ -472,7 +470,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             lButtons += ["Length"];
             lButtons += g_lButtons;
 
-            string sPrompt = g_sHeadline+"\nLet's go walkies!";
+            string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n\nLet's go walkies!";
             g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
         } else  if (sComm == "post") {
             if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);
