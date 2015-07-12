@@ -334,7 +334,7 @@ SetTexture(string sIn, key kIn) {
     else if (sIn=="Chain") g_sParticleTextureID="4cde01ac-4279-2742-71e1-47ff81cc3529";
     else if (sIn=="Leather") g_sParticleTextureID="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
     else if (sIn=="Rope") g_sParticleTextureID="9a342cda-d62a-ae1f-fc32-a77a24a85d73";
-    else if (sIn=="totallytransparent") g_sParticleTextureID="bd7d7770-39c2-d4c8-e371-0342ecf20921";
+    else if (sIn=="totallytransparent") g_sParticleTextureID=TEXTURE_TRANSPARENT;
     else {
         if (llToLower(g_sParticleTexture) == "noleash") g_sParticleMode = "noParticle";
         //Debug("particleTexture= " + sIn);
