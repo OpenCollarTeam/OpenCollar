@@ -68,7 +68,9 @@ integer g_iCollarLocked=FALSE;
 string g_sParentMenu = "Main";
 string g_sSubMenu = "RLV";
 list g_lMenu;
-key kMenuID;
+//key kMenuID;
+list    g_lMenuIDs;
+integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
@@ -148,6 +150,7 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
+    key kMenuID = llGenerateKey();
     list lButtons;
     if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
@@ -155,7 +158,10 @@ DoMenu(key kID, integer iAuth){
     string sPrompt = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
     if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
     if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
     //Debug("Made menu.");
 }
 
@@ -523,28 +529,35 @@ default {
         else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
-            if (kID == kMenuID) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 lMenuParams=[];
-                //Debug(sMsg);
-                if (sMsg == TURNON) {
-                    UserCommand(iAuth, "rlvon", kAv);
-                } else if (sMsg == TURNOFF) {
-                    UserCommand(iAuth, "rlvoff", kAv);
-                    DoMenu(kAv, iAuth);
-                } else if (sMsg == CLEAR) {
-                    UserCommand(iAuth, "clear", kAv);
-                    DoMenu(kAv, iAuth);
-                } else if (sMsg == UPMENU) {
-                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
-                    llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
+                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                if (sMenu == g_sSubMenu) {
+                    if (sMsg == TURNON) {
+                        UserCommand(iAuth, "rlvon", kAv);
+                    } else if (sMsg == TURNOFF) {
+                        UserCommand(iAuth, "rlvoff", kAv);
+                        DoMenu(kAv, iAuth);
+                    } else if (sMsg == CLEAR) {
+                        UserCommand(iAuth, "clear", kAv);
+                        DoMenu(kAv, iAuth);
+                    } else if (sMsg == UPMENU) {
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
+                        llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
+                    }
                 }
             }
+        }  else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
