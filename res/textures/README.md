@@ -3,7 +3,7 @@
 ###### In this place we are going to collaborate on images.
 
 For collaborations eXperimental Computing Facility (XCF) are welcome.
-The final format for images will be Truevision Advanced Raster Graphics Adapter (TGA) exported as 32 bit with RLE compression.
+The final format for images will be Portable Network Graphics (PNG).
 
 Free software for image manipulation:
 * [GIMP](http://www.gimp.org/)
