@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Bell - 150711.1                                //
+//                           Bell - 150712.1                                //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2009 - 2015 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
@@ -148,7 +148,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 BellMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/bell.html Bell]\n";
+    string sPrompt = "\n[http://www.opencollar.at/bell.html Bell]\n\n";
     list lMyButtons;
     if (g_iBellOn>0) {
         lMyButtons+= g_sBellOff;
