@@ -52,17 +52,20 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-key g_kLMID;//store the request id here when we look up a LM
-key g_kMenuID;
-key g_kSensorMenuID;
-key g_kPersonMenuID;
-list g_lPersonMenu;
-list g_lExMenus;
-key lmkMenuID;
-key g_kDialoger;
-integer g_iDialogerAuth;
-list g_lScan;
-integer g_iRlvUnknown=TRUE;
+//key g_kLMID;//store the request id here when we look up a LM
+//key g_kMenuID;
+//key g_kSensorMenuID;
+//key g_kPersonMenuID;
+//list g_lPersonMenu;
+//list g_lExMenus;
+//key lmkMenuID;
+//key g_kDialoger;
+//integer g_iDialogerAuth;
+//list g_lScan;
+//integer g_iRlvUnknown=TRUE;
+
+list g_lMenuIDs;  //menu information
+integer g_iMenuStride=3;
 
 list g_lOwners;
 list g_lSecOwners;
@@ -79,8 +82,8 @@ integer TRUSTED_DEFAULT = 110;//all off
 integer g_iOwnerDefault = 127;//1+2+4+8+16+32;//all on
 integer g_iTrustedDefault = 110;//all off
 
-string g_sLatestRLVersionSupport = "1.15.1"; //the version which brings the latest used feature to check against
-string g_sDetectedRLVersion;
+//string g_sLatestRLVersionSupport = "1.15.1"; //the version which brings the latest used feature to check against
+//string g_sDetectedRLVersion;
 list g_lSettings;//2-strided list in form of [key, value]
 //list g_lNames;
 
@@ -133,17 +136,17 @@ list g_lDescriptionsOff =[ //descriptions of commands when not exempted.
 
 string TURNON = "☐";
 string TURNOFF = "☒";
-string DESTINATIONS = "Destinations";
+//string DESTINATIONS = "Destinations";
 
 integer g_iRLVOn=FALSE;
 integer g_iAuth = 0;
 
 key g_kWearer;
-key g_kHTTPID = NULL_KEY;
-key g_kTmpKey = NULL_KEY;
-key g_kTestKey = NULL_KEY;
-string g_sTmpName = "";
-string g_sUserCommand = "";
+//key g_kHTTPID = NULL_KEY;
+//key g_kTmpKey = NULL_KEY;
+//key g_kTestKey = NULL_KEY;
+//string g_sTmpName = "";
+//string g_sUserCommand = "";
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -187,7 +190,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-integer FIND_AGENT = -9005;
+//integer FIND_AGENT = -9005;
 string UPMENU = "BACK";
 
 key REQUEST_KEY;
@@ -208,14 +211,13 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth,string sMenuID) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
 }
-
 
 Menu(key kID, string sWho, integer iAuth) {
     if (!g_iRLVOn) {
@@ -224,8 +226,8 @@ Menu(key kID, string sWho, integer iAuth) {
         return;
     }
     list lButtons = ["Owner", "Trusted"];
-    string sPrompt = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n\nSet exemptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
-    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    string sPrompt = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n\nSet execptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "main");
 }
 
 ExMenu(key kID, string sWho, integer iAuth) {
@@ -262,13 +264,13 @@ ExMenu(key kID, string sWho, integer iAuth) {
     lButtons += ["All","None"];
     //Debug(sPrompt);
     //Debug((string)llStringLength(sPrompt));
-    key kTmp = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
-    g_lExMenus = [kTmp, sWho] + g_lExMenus;
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "ex "+sWho);
 }
 
-UpdateSettings() {
-    SetAllExs("");
-}
+//a function just to call another function?
+//UpdateSettings() {
+//    SetAllExs("");
+//}
 
 SaveDefaults() {
     // these are lists of rlv exceptions, not to be confused with auth_owner listings
@@ -402,12 +404,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             jump nextwho;
         }
         // okay, now we have a key for sWho (if avatar) & they are in g_lNames - this will deliver all settings to the right places
-        g_sUserCommand = "";
+        //g_sUserCommand = "";
         lCom = llParseString2List(llToLower(llList2String(lParts, iL + 1)), [","], []);
         sCom = llList2String(lCom, 0);
         if (llGetSubString(sCom, 0, 3) == "all=") {// should be the only entry for this Who if so
             lCom = []; // convert all rlvcmds to a strided list of "cmd1=x,cmd2=x" etc
             sVal = llGetSubString(sCom, 3, -1);
+            for (iC = 0; iC < llGetListLength(g_lRLVcmds); iC++)
                 lCom += [llList2String(g_lRLVcmds, iC) + sVal];
         }
         for (iC = 0; iC < llGetListLength(lCom); iC++) {// cycle through strided entries
@@ -459,7 +462,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         @nextwho;
         if (bChange) {
-            UpdateSettings();
+            SetAllExs("");
             if(bChange & 1) SaveDefaults();
             if(bChange & 2) SaveSettings();
         }
@@ -475,9 +478,9 @@ default {
     state_entry() {
         llSetMemoryLimit(49152);
         g_kWearer = llGetOwner();
-        g_kTmpKey = NULL_KEY;
-        g_sTmpName = "";
-        llMessageLinked(LINK_SET, RLV_QUERY, "", "");
+        //g_kTmpKey = NULL_KEY;
+        //g_sTmpName = "";
+        //llMessageLinked(LINK_SET, RLV_QUERY, "", "");
         //Debug("Starting");
     }
 
@@ -508,15 +511,15 @@ default {
             if (sToken == "auth_owner") {
                 g_lOwners = [];
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = [];
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = [];
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             }
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -525,89 +528,91 @@ default {
             if (sToken == "auth_owner") {
                 g_lOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                UpdateSettings();
+                SetAllExs("");
             }
         } else if (iNum == RLV_REFRESH) {
             //rlvmain just started up. Tell it about our current restrictions
             g_iRLVOn = TRUE;
-            UpdateSettings();
-        } else if (iNum == RLV_RESPONSE) {
+            SetAllExs("");
+        /*} else if (iNum == RLV_RESPONSE) {
             if (g_iRlvUnknown) {
                 g_iRlvUnknown=FALSE;
                 if (sStr=="ON") g_iRLVOn=TRUE;
                 else if (sStr=="OFF") g_iRLVOn=FALSE;
-            }
+            }*/
         } else if (iNum == RLV_CLEAR) {
             llSleep(2.0);
-            UpdateSettings();
-        } else if (iNum == RLV_VERSION) {
-            g_sDetectedRLVersion = sStr;
+            SetAllExs("");
+        //} else if (iNum == RLV_VERSION) {
+        //    g_sDetectedRLVersion = sStr;
         } else if (iNum == RLV_OFF) {
             g_iRLVOn=FALSE;
         } else if (iNum == RLV_ON) {
             g_iRLVOn=TRUE;
-            UpdateSettings();//send the settings as we did notbefore
+            //SetAllExs("");//send the settings as we did notbefore
         } else if (iNum == DIALOG_RESPONSE) {
-            if (kID == g_kMenuID) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) { 
                 //Debug("dialog response: " + sStr);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU)
-                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                else if (sMessage == "Owner")
-                    ExMenu(kAv, "owner", iAuth);
-                else if (sMessage == "Trusted")
-                    ExMenu(kAv, "trusted", iAuth);
-            } else if (llListFindList(g_lExMenus, [kID]) != -1 ) {
-                //Debug("dialog response: " + sStr);
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                integer iMenuIndex = llListFindList(g_lExMenus, [kID]);
-                if (sMessage == UPMENU) Menu(kAv,"", iAuth);
-                else {  // clear out Tmp settings
-                    g_kTmpKey = NULL_KEY;
-                    g_sTmpName = g_sUserCommand = "";
-                    string sMenu = llList2String(g_lExMenus, iMenuIndex + 1);
-                    list lParams = llParseString2List(sMessage, [" "], []);
-                    string sSwitch = llList2String(lParams, 0);
-                    string sCmd = llList2String(lParams, 1);
-                    string sOut = "ex " + sMenu + ":";
-                    integer iIndex = llListFindList(g_lPrettyCmds, [sCmd]);
-                    if (sSwitch == "All") {
-                        sOut += "all=n";
-                        UserCommand(iAuth, sOut, kAv);
-                        ExMenu(kAv, sMenu, iAuth);
-                    } else if (sSwitch == "None") {
-                        sOut += "all=y";
-                        UserCommand(iAuth, sOut, kAv);
-                        ExMenu(kAv, sMenu, iAuth);
-                    } else if (~iIndex) {
-                        sOut += llList2String(g_lRLVcmds, iIndex);
-                        if (sSwitch == TURNOFF) sOut += "=y";
-                        else if (sSwitch == TURNON) sOut += "=n";
-                        //Debug("ExMenu sending UC: " + sOut);
-                        UserCommand(iAuth, sOut, kAv);
-                        ExMenu(kAv, sMenu, iAuth);
-                    } else if (sMessage == "Defaults") {
-                        UserCommand(iAuth, sOut + "defaults", kAv);
-                        ExMenu(kAv, sMenu, iAuth);
+                key kAv = (key)llList2String(lMenuParams, 0);          
+                string sMessage = llList2String(lMenuParams, 1);                                         
+                integer iPage = (integer)llList2String(lMenuParams, 2); 
+                integer iAuth = (integer)llList2String(lMenuParams, 3); 
+                string sMenu=llList2String(g_lMenuIDs, iMenuIndex+1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                if (sMenu == "main") {
+                    if (sMessage == UPMENU)
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == "Owner")
+                        ExMenu(kAv, "owner", iAuth);
+                    else if (sMessage == "Trusted")
+                        ExMenu(kAv, "trusted", iAuth);
+
+                } else if (llGetSubString(sMenu,0,1) == "ex") {
+                    if (sMessage == UPMENU) Menu(kAv,"", iAuth);
+                    else {  // clear out Tmp settings
+                        //g_kTmpKey = NULL_KEY;
+                        //g_sTmpName = g_sUserCommand = "";
+                        list lParams = llParseString2List(sMessage, [" "], []);
+                        string sSwitch = llList2String(lParams, 0);
+                        string sCmd = llList2String(lParams, 1);
+                        string sOut = sMenu + ":";
+                        sMenu = llGetSubString(sMenu,3,-1);
+                        integer iIndex = llListFindList(g_lPrettyCmds, [sCmd]);
+                        //Debug(sSwitch+" "+sCmd);
+                        if (sSwitch == "All") {
+                            sOut += "all=n";
+                            UserCommand(iAuth, sOut, kAv);
+                            ExMenu(kAv, sMenu, iAuth);
+                        } else if (sSwitch == "None") {
+                            sOut += "all=y";
+                            UserCommand(iAuth, sOut, kAv);
+                            ExMenu(kAv, sMenu, iAuth);
+                        } else if (~iIndex) {
+                            sOut += llList2String(g_lRLVcmds, iIndex);
+                            if (sSwitch == TURNOFF) sOut += "=y";
+                            else if (sSwitch == TURNON) sOut += "=n";
+                            //Debug("ExMenu sending UC: " + sOut);
+                            UserCommand(iAuth, sOut, kAv);
+                            ExMenu(kAv, sMenu, iAuth);
+                        } else if (sMessage == "Defaults") {
+                            UserCommand(iAuth, sOut + "defaults", kAv);
+                            ExMenu(kAv, sMenu, iAuth);
+                        }
                     }
-                    llDeleteSubList(g_lExMenus, iMenuIndex, iMenuIndex + 1);
                 }
+            } else if (iNum == DIALOG_TIMEOUT) {
+                integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
             }
         }
     }
