@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150618.1                              //
+//                           System - 150711.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="20150704.1";
+string g_sCollarVersion="20150712.1";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -210,7 +210,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 OptionsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n\"" + DUMPSETTINGS + "\" current settings to chat.";
+    string sPrompt = "\n[http://www.opencollar.at/options.html Options]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
@@ -227,7 +227,7 @@ OptionsMenu(key kID, integer iAuth) {
 
 
 AppsMenu(key kID, integer iAuth) {
-    string sPrompt="\nBrowse apps, extras and custom features.";
+    string sPrompt="\n[http://www.opencollar.at/apps.html Apps]\n\nBrowse apps, extras and custom features.";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     Dialog(kID, sPrompt, g_lAppsButtons, [UPMENU], 0, iAuth, "Apps");
 }
@@ -238,7 +238,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Perfect.";
-    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Jailbroken.";
+    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: not production ready";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -251,7 +251,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n Welcome to the Main Menu\n";
+    string sPrompt = "\n [http://www.opencollar.at/manual.html OpenCollar]\n\n Welcome to the Main Menu\n";
     if(!g_iLatestVersion) sPrompt+="\n I'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -373,7 +373,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sCmd == "version") {
         string sVersion;
         if (JB()) sVersion = "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Perfect.\n";
-        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Jailbroken.\n";
+        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: not production ready\n";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {

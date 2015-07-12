@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Titler - 150618.1                              //
+//                           Titler - 150711.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
@@ -144,12 +144,10 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string ON_OFF ;
         string sPrompt;
         if (g_iTextPrim == -1) {
-            sPrompt="\nThis design is missing a FloatText box. Titler disabled.";
-            sPrompt+= "\n\nwww.opencollar.at/titler";
+            sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nThis design is missing a FloatText box. Titler disabled.";
             g_kDialogID = Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth);
         } else {
-            sPrompt = "\nCurrent Title: " + g_sText ;
-            sPrompt+= "\n\nwww.opencollar.at/titler";
+            sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nCurrent Title: " + g_sText ;
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
             g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth);

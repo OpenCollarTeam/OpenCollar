@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 150610.1                             //
+//                          Badwords - 150711.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -155,11 +155,11 @@ MenuBadwords(key kID, integer iNum){
     if (g_iIsEnabled) lButtons += ["OFF"];
     else lButtons += ["ON"];
 
-    string sText="\n\nwww.opencollar.at/badwords\n\n";
-    sText+="\nBad Words: " + llDumpList2String(g_lBadWords, ", ");
-    sText+="\nBad Word Anim: " + g_sBadWordAnim;
-    sText+="\nPenance: " + g_sPenance;
-    sText+="\nBad Word Sound: " + g_sBadWordSound;
+    string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\n";
+    sText+= "\nBad Words: " + llDumpList2String(g_lBadWords, ", ");
+    sText+= "\nBad Word Anim: " + g_sBadWordAnim;
+    sText+= "\nPenance: " + g_sPenance;
+    sText+= "\nBad Word Sound: " + g_sBadWordSound;
 
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");
 }
