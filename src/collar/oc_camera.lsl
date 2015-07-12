@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 141231.1                              //
+//                           Camera - 150712.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Medea Destiny, //
 //  littlemousy, Romka Swallowtail et al.                                   //
@@ -66,8 +66,11 @@ float g_fReapeat = 0.5;
 integer g_iSync2Me;//TRUE if we're currently dumping cam pos/rot iChanges to chat so the owner can sync to us
 vector g_vCamPos;
 rotation g_rCamRot;
-integer g_rBroadChan;
+integer g_iBroadChan;
+key g_kBroadRcpt;
 
+string g_sJsonModes;
+/*
 //a 2-strided list in the form modename,camparams, where camparams is a serialized list
 list g_lModes = [
 "default", "|/?!@#|12|0",//[CAMERA_ACTIVE, FALSE]
@@ -79,27 +82,27 @@ list g_lModes = [
 "ground", "|/?!@#|12|1|0/-15.000000",//[CAMERA_ACTIVE, TRUE, CAMERA_PITCH, -15.0]
 "worm", "|/?!@#|12|1|7/0.500000|1@<0.000000, 0.000000, -0.750000>|0/-15.000000" //[CAMERA_ACTIVE, TRUE,CAMERA_DISTANCE, 0.5,CAMERA_FOCUS_OFFSET, <0,0,-0.75>, CAMERA_PITCH, -15.0]
 ];
+*/
 
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507;
-integer COMMAND_SAFEWORD = 510;  // new for safeword
-integer COMMAND_BLACKLIST = 520;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510;  // new for safeword
 
-//integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.  This is to reduce even the tiny bt of lag caused by having IM slave scripts
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
                             //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -112,15 +115,17 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "BACK";
-//string MORE = ">";
-string g_sScript;
+list g_lMenuIDs;  //menu information
+integer g_iMenuStride=3;
 
-/*
-integer g_iProfiled;
+string UPMENU = "BACK";
+
+string g_sSettingToken = "camera_";
+
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
+    //  profiling is off, debug is off, and the compiler will remind you to 
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -128,70 +133,100 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
+
+//changed the mode handles to a Json object with json arrays, one issue remains:
+//vectors get converted into strings and need to be reconverted to vectors. 
+//For this to work easiest seems to just put for any mode which contains a vector,
+//the vector as last entry (if there shall be a mode which contains 2 vectors, 
+//this needs to be addressed and handles as excetion in the list lJsonModes function
+string JsonModes() {
+    string sDefault =   llList2Json(JSON_ARRAY, [CAMERA_ACTIVE,FALSE]);
+    string sHuman =     llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_BEHINDNESS_ANGLE,0.0,
+                                                CAMERA_BEHINDNESS_LAG,0.0,
+                                                CAMERA_DISTANCE,2.5,
+                                                CAMERA_FOCUS_LAG,0.05,
+                                                CAMERA_POSITION_LOCKED,FALSE,
+                                                CAMERA_FOCUS_THRESHOLD,0.0,
+                                                CAMERA_PITCH,20.0,
+                                                CAMERA_POSITION_LAG,0.0,
+                                                CAMERA_POSITION_THRESHOLD,0.0,
+                                                CAMERA_FOCUS_OFFSET,<0.0, 0.0, 0.35>]);
+    string s1stperson = llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_DISTANCE, 0.5,
+                                                CAMERA_FOCUS_OFFSET, <2.5,0,1.0>]);
+    string sAss =       llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_DISTANCE,0.5]);
+    string sFar =       llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_DISTANCE,10.0]);
+    string sGod =       llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_DISTANCE,10.0,
+                                                CAMERA_PITCH,80.0]);
+    string sGround =    llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_PITCH,-15.0]);
+    string sWorm =      llList2Json(JSON_ARRAY,[CAMERA_ACTIVE,TRUE,
+                                                CAMERA_PITCH,-15.0,
+                                                CAMERA_FOCUS_OFFSET, <0.0,0.0,-0.75>]);
+                                            
+    return llList2Json(JSON_OBJECT,["default",sDefault,"human", sHuman, "1stperson",s1stperson,"ass",sAss,"far",sFar,"god",sGod,"ground",sGround,"worm",sWorm]);
+
 }
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
+list lJsonModes(string sMode) {
+    string sJsonTmp = llJsonGetValue(g_sJsonModes, [sMode]);
+    list lTest = llJson2List(sJsonTmp);
+    integer index = llGetListLength(lTest)-1;
+    //last entry is checked if it is a vector to be converted from string to vector here:
+    if ((vector)llList2String(lTest,index)) lTest = llListReplaceList(lTest,[(vector)llList2String(lTest,index)],index,index);
+    return lTest;
 }
 
-CamMode(string sMode)
-{
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, sName];
+} 
+
+CamMode(string sMode) {
     llClearCameraParams();
-    integer iIndex = llListFindList(g_lModes, [sMode]);
-    string lParams = llList2String(g_lModes, iIndex + 1);
-    llSetCameraParams(TightListTypeParse(lParams));
-    g_sCurrentMode = sMode;
+//    integer iIndex = llListFindList(g_lModes, [sMode]);
+//    string lParams = llList2String(g_lModes, iIndex + 1);
+    llSetCameraParams(lJsonModes(sMode));
+   // llSetCameraParams(TightListTypeParse(lParams));  
+    //g_sCurrentMode = sMode;
 }
 
-ClearCam()
-{
+ClearCam() {
     if (llGetPermissions()&PERMISSION_CONTROL_CAMERA) llClearCameraParams();
-    g_iLastNum = 0;
+    g_iLastNum = 0;    
     g_iSync2Me = FALSE;
     llMessageLinked(LINK_SET, RLV_CMD, "camunlock=y", "camera");
     llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=y", "camera");
-    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sScript + "all", "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "all", "");
 }
 
-CamFocus(vector g_vCamPos, rotation g_rCamRot)
-{
-    vector vStartPose = llGetCameraPos();
+
+CamFocus(vector g_vCamPos, rotation g_rCamRot) {
+    vector vStartPose = llGetCameraPos();    
     rotation rStartRot = llGetCameraRot();
     float fSteps = 8.0;
     //Keep fSteps a float, but make sure its rounded off to the nearest 1.0
     fSteps = (float)llRound(fSteps);
-
     //Calculate camera position increments
     vector vPosStep = (g_vCamPos - vStartPose) / fSteps;
-
     //Calculate camera rotation increments
     //rotation rStep = (g_rCamRot - rStartRot);
     //rStep = <rStep.x / fSteps, rStep.y / fSteps, rStep.z / fSteps, rStep.s / fSteps>;
-
-
     float fCurrentStep = 0.0; //Loop through motion for fCurrentStep = current step, while fCurrentStep <= Total steps
-    for(; fCurrentStep <= fSteps; ++fCurrentStep)
-    {
+    for(; fCurrentStep <= fSteps; ++fCurrentStep) {
         //Set next position in tween
         vector vNextPos = vStartPose + (vPosStep * fCurrentStep);
         rotation rNextRot = Slerp( rStartRot, g_rCamRot, fCurrentStep / fSteps);
-
-        //Set camera parameters
+         //Set camera parameters
         llSetCameraParams([
             CAMERA_ACTIVE, 1, //1 is active, 0 is inactive
             CAMERA_BEHINDNESS_ANGLE, 0.0, //(0 to 180) degrees
@@ -208,8 +243,9 @@ CamFocus(vector g_vCamPos, rotation g_rCamRot)
             CAMERA_FOCUS_OFFSET, ZERO_VECTOR //<-10,-10,-10> to <10,10,10> meters
         ]);
     }
+   // Debug("Focus set");
 }
-
+ 
 rotation Slerp( rotation a, rotation b, float f ) {
     float fAngleBetween = llAngleBetween(a, b);
     if ( fAngleBetween > PI )
@@ -217,8 +253,7 @@ rotation Slerp( rotation a, rotation b, float f ) {
     return a*llAxisAngle2Rot(llRot2Axis(b/a)*a, fAngleBetween*f);
 }//Written by Francis Chung, Taken from http://forums.secondlife.com/showthread.php?p=536622
 
-LockCam()
-{
+LockCam() {
     llSetCameraParams([
         CAMERA_ACTIVE, TRUE,
         //CAMERA_POSITION, llGetCameraPos()
@@ -227,36 +262,30 @@ LockCam()
     llMessageLinked(LINK_SET, RLV_CMD, "camunlock=n", "camera");
 }
 
-CamMenu(key kID, integer iAuth)
-{
+CamMenu(key kID, integer iAuth) {
     string sPrompt = "\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera\n\nNOTE: Full functionality only on RLV API v2.9 and greater.";
     list lButtons = ["CLEAR","FREEZE","MOUSELOOK"];
     integer n;
-    integer stop = llGetListLength(g_lModes);
+    integer stop = llGetListLength(llJson2List(g_sJsonModes)); 
     for (n = 0; n < stop; n +=2)
-    {
-        lButtons += [Capitalize(llList2String(g_lModes, n))];
-    }
-    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+        lButtons += [Capitalize(llList2String(llJson2List(g_sJsonModes),n))];
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "CamMenu");
 }
 
-string Capitalize(string sIn)
-{
+string Capitalize(string sIn) {
     return llToUpper(llGetSubString(sIn, 0, 0)) + llGetSubString(sIn, 1, -1);
 }
 
-string StrReplace(string sSrc, string sFrom, string sTo)
-{//replaces all occurrences of 'sFrom' with 'sTo' in 'sSrc'.
+string StrReplace(string sSrc, string sFrom, string sTo) {
+//replaces all occurrences of 'sFrom' with 'sTo' in 'sSrc'.
     integer iLen = (~-(llStringLength(sFrom)));
-    if(~iLen)
-    {
+    if(~iLen) {
         string  sBuffer = sSrc;
         integer iBufPos = -1;
         integer iToLen = (~-(llStringLength(sTo)));
         @loop;//instead of a while loop, saves 5 bytes (and run faster).
         integer iToPos = ~llSubStringIndex(sBuffer, sFrom);
-        if(iToPos)
-        {
+        if(iToPos) {
 //            iBufPos -= iToPos;
 //            sSrc = llInsertString(llDeleteSubString(sSrc, iBufPos, iBufPos + iLen), iBufPos, sTo);
 //            iBufPos += iToLen;
@@ -267,22 +296,21 @@ string StrReplace(string sSrc, string sFrom, string sTo)
     }
     return sSrc;
 }
-
+/* no more needed due to JSON funktion
 //These TightListType functions allow serializing a list to a string, and deserializing it back, while preserving variable type information.  We use them so we can have a list of camera modes, where each mode is itself a list
-integer TightListTypeLength(string sInput)
-{
+integer TightListTypeLength(string sInput) {
     string sSeperators = llGetSubString(sInput,(0),6);
     return ((llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)),
            llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3),
            llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]) != []) + (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6)) >> 1;
 }
-
+ 
 integer TightListTypeEntryType(string sInput, integer iIndex)
 {
     string sSeperators = llGetSubString(sInput,(0),6);
     return llSubStringIndex(sSeperators, sInput) + ((sInput = llList2String(llList2List(sInput + llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)), llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3), llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]), (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6) << 1, -1),  iIndex << 1)) != "");
 }
-
+ 
 list TightListTypeParse(string sInput) {
     list lPartial;
     if(llStringLength(sInput) > 6)
@@ -309,7 +337,7 @@ list TightListTypeParse(string sInput) {
     }
     return lPartial;
 }
-
+ 
 string TightListTypeDump(list lInput, string sSeperators) {//This function is dangerous
     sSeperators += "|/?!@#$%^&*()_=:;~`'<>{}[],.\n\" qQxXzZ\\";
     string sCumulator = (string)(lInput);
@@ -321,248 +349,187 @@ string TightListTypeDump(list lInput, string sSeperators) {//This function is da
             iCounter = -~iCounter;
     while(iCounter<6);
     sSeperators = llGetSubString(sSeperators,(0),5);
-
+ 
         sCumulator =  "";
-
-    if((iCounter = (lInput != [])))
-    {
-        do
-        {
+ 
+    if((iCounter = (lInput != []))) {
+        do {
             integer iType = ~-llGetListEntryType(lInput, iCounter = ~-iCounter);
-
-            sCumulator = (sCumulator = llGetSubString(sSeperators,iType,iType)) + llList2String(lInput,iCounter) + sCumulator;
-        }while(iCounter);
+             sCumulator = (sCumulator = llGetSubString(sSeperators,iType,iType)) + llList2String(lInput,iCounter) + sCumulator;
+        } while(iCounter);
     }
     return sSeperators + sCumulator;
-}
+}*/
 
-SaveSetting(string sToken)
-{
-    sToken = g_sScript + sToken;
+SaveSetting(string sToken) {
+    //Debug("last mode: "+g_sCurrentMode);
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + g_sCurrentMode, "");
+    g_sCurrentMode = sToken;
+    sToken = g_sSettingToken + sToken;
     string sValue = (string)g_iLastNum;
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, sToken + "=" + sValue, "");
 }
 
-ChatCamParams(integer chan)
-{
+ChatCamParams(integer iChannel, key kID) {
     g_vCamPos = llGetCameraPos();
     g_rCamRot = llGetCameraRot();
-    string sPosLine = StrReplace((string)g_vCamPos, " ", "") + " " + StrReplace((string)g_rCamRot, " ", "");
-    //if not channel 0, say to whole region.  else just say locally
-    if (chan)
-    {
-        llRegionSay(chan, sPosLine);
-    }
+    string sPosLine = StrReplace((string)g_vCamPos, " ", "") + " " + StrReplace((string)g_rCamRot, " ", ""); 
+    //if not channel 0, say to whole region.  else just say locally   
+    llMessageLinked(LINK_SET,NOTIFY,"1"+sPosLine,kID);
+    if (iChannel)
+        llRegionSayTo(kID, iChannel, sPosLine);                    
     else
-    {
-        llSay(chan, sPosLine);
-    }
+        llMessageLinked(LINK_SET,NOTIFY,"1"+sPosLine,kID);
 }
 
-integer UserCommand(integer iNum, string sStr, key kID) // here iNum: auth value, sStr: user command, kID: avatar id
-{
-    if (iNum > COMMAND_WEARER || iNum < COMMAND_OWNER) return FALSE; // sanity check
+UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
     string sValue2 = llList2String(lParams, 2);
     if (sStr == "menu " + g_sMyMenu) {
         CamMenu(kID, iNum);
-    }
-    else if (sCommand == "cam" || sCommand == "camera")
-    {
-        if (sValue == "")
-        {
-            //they just said *cam.  give menu
+    } else if (sCommand == "cam" || sCommand == "camera") {
+        //Debug("g_iLastNum=" + (string)g_iLastNum);  
+        if (sValue == "")//they just said *cam.  give menu
             CamMenu(kID, iNum);
-            return TRUE;
-        }
-        if (!(llGetPermissions() & PERMISSION_CONTROL_CAMERA))
-        {
-            Notify(kID, "Permissions error: Can not control camera.", FALSE);
-            return TRUE;
-        }
-        if (g_iLastNum && iNum > g_iLastNum)
-        {
-            Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
-            return TRUE;
-        }
-        //Debug("g_iLastNum=" + (string)g_iLastNum);
-        if (sValue == "clear")
-        {
+        else if (!(llGetPermissions() & PERMISSION_CONTROL_CAMERA))
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        else if (g_iLastNum && iNum > g_iLastNum)
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.",kID);
+        else if (sValue == "clear") {
             ClearCam();
-            Notify(kID, "Cleared camera settings.", TRUE);
-        }
-        else if (sValue == "freeze")
-        {
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Cleared camera settings.", kID);
+        } else if (sValue == "freeze") {
             LockCam();
-            Notify(kID, "Freezing current camera position.", TRUE);
-            g_iLastNum = iNum;
-            SaveSetting("freeze");
-        }
-        else if (sValue == "mouselook")
-        {
-            Notify(kID, "Enforcing mouselook.", TRUE);
-            g_iLastNum = iNum;
-            llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");
-            SaveSetting("mouselook");
-        }
-        else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR)
-        {
-            Notify(kID, "Setting camera focus to " + sValue + ".", TRUE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Freezing current camera position.", kID);
+            g_iLastNum = iNum;                    
+            SaveSetting("freeze");                          
+        } else if (sValue == "mouselook") {
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Enforcing mouselook.", kID);
+            g_iLastNum = iNum; 
+            llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");                   
+            SaveSetting("mouselook");                          
+       /* } else if ((vector)sValue != ZERO_VECTOR && (vector)sValue2 != ZERO_VECTOR) {
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Setting camera focus to " + sValue + ".", kID);
             //CamFocus((vector)sValue, (vector)sValue2);
-            g_iLastNum = iNum;
+            g_iLastNum = iNum; */                 
             //Debug("newiNum=" + (string)iNum);
-        }
-        else
-        {
-            integer iIndex = llListFindList(g_lModes, [sValue]);
-            if (iIndex != -1)
-            {
+        } else {
+            integer iIndex = llSubStringIndex(g_sJsonModes, sValue);//llListFindList(g_lModes, [sValue]);
+            if (iIndex != -1) {
                 CamMode(sValue);
                 g_iLastNum = iNum;
                 llMessageLinked(LINK_SET, RLV_CMD, "camunlock=n", "camera");
-                Notify(kID, "Set " + sValue + " camera mode.", TRUE);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"Set " + sValue + " camera mode.", kID);
                 SaveSetting(sValue);
-            }
-            else
-            {
-                Notify(kID, "Invalid camera mode: " + sValue, FALSE);
-            }
+            } else
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"Invalid camera mode: " + sValue, kID);
         }
-    }
-    else if (sCommand == "camto")
-    {
-        if (!g_iLastNum || iNum <= g_iLastNum)
-        {
+    } else if (sCommand == "camto") {
+        if (!g_iLastNum || iNum <= g_iLastNum) {
             CamFocus((vector)sValue, (rotation)sValue2);
-            g_iLastNum = iNum;
-        }
-        else
-        {
-            Notify(kID, "Sorry, cam settings have already been set by someone outranking you.", FALSE);
-        }
-    }
-    else if (sCommand == "camdump")
-    {
-        g_rBroadChan = (integer)sValue;
+            g_iLastNum = iNum;                    
+        } else
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.", kID);
+    } else if (sCommand == "camdump") {
+        g_iBroadChan = (integer)sValue;
         integer g_fReapeat = (integer)sValue2;
-        ChatCamParams(g_rBroadChan);
-        if (g_fReapeat)
-        {
+        ChatCamParams(g_iBroadChan, kID);
+        if (g_fReapeat) {
+            g_kBroadRcpt = kID;
             g_iSync2Me = TRUE;
             llSetTimerEvent(g_fReapeat);
         }
-    }
-    else if ((iNum == COMMAND_OWNER  || kID == g_kWearer) && sStr == "runaway")
-    {
+    } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
         ClearCam();
         llResetScript();
     }
-    return TRUE;
+   // Debug(sCommand+" executed");
 }
 
 default {
     on_rez(integer iNum) {
         llResetScript();
-    }
-
+    }    
+    
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
+        llSetMemoryLimit(36864);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
+        g_sJsonModes = JsonModes();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
         //Debug("Starting");
     }
-
-    run_time_permissions(integer iPerms)
-    {
+    
+    run_time_permissions(integer iPerms) {
         if (iPerms & (PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA))
-        {
             llClearCameraParams();
-        }
     }
-
-    link_message(integer iSender, integer iNum, string sStr, key kID)
-    {
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
         //only respond to owner, secowner, group, wearer
-        if (UserCommand(iNum, sStr, kID)) return;
-        else if (iNum == COMMAND_SAFEWORD || iNum == RLV_CLEAR)
-        {
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR) {
             ClearCam();
             llResetScript();
-        }
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-        {
+        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sMyMenu, "");
-        }
-        else if (iNum == LM_SETTING_RESPONSE)
-        {
+        else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sScript)
-            {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
-                if (llGetPermissions() & PERMISSION_CONTROL_CAMERA)
-                {
+                if (llGetPermissions() & PERMISSION_CONTROL_CAMERA) {
                     if (sToken == "freeze") LockCam();
-                    else if (sToken == "mouselook") llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera");
-                    else if (~llListFindList(g_lModes, [sToken])) CamMode(sToken);
+                    else if (sToken == "mouselook") llMessageLinked(LINK_SET, RLV_CMD, "camdistmax:0=n", "camera"); 
+                    else if (~llSubStringIndex(g_sJsonModes, sToken)) CamMode(sToken);
                     g_iLastNum = (integer)sValue;
                 }
-            }
-        }
-        else if (iNum == DIALOG_RESPONSE)
-        {
-            if (kID == g_kMenuID)
-            {
+            }           
+        } else if (iNum == DIALOG_RESPONSE) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (iMenuIndex != -1) { 
                 //got a menu response meant for us.  pull out values
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                // integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                key kAv = (key)llList2String(lMenuParams, 0);          
+                string sMessage = llList2String(lMenuParams, 1);                                         
+                // integer iPage = (integer)llList2String(lMenuParams, 2); 
+                integer iAuth = (integer)llList2String(lMenuParams, 3); 
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMessage == UPMENU)
-                {
                     llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                }
-                else
-                {
+                else {
                     UserCommand(iAuth, "cam " + llToLower(sMessage), kAv);
                     CamMenu(kAv, iAuth);
-                }
+                }                              
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
         }
     }
-
-    timer()
-    {
-        //handle cam pos/rot changes
-        if (g_iSync2Me)
-        {
+    
+    timer() {       
+        //handle cam pos/rot changes 
+        if (g_iSync2Me) {
             vector vNewPos = llGetCameraPos();
             rotation rNewRot = llGetCameraRot();
             if (vNewPos != g_vCamPos || rNewRot != g_rCamRot)
-            {
-                ChatCamParams(g_rBroadChan);
-            }
-        }
-        else
-        {
+                ChatCamParams(g_iBroadChan,g_kBroadRcpt);
+        } else {
+            g_kBroadRcpt = "";
             llSetTimerEvent(0.0);
         }
     }
-
+/*    
     changed(integer iChange) {
-/*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
         }
-*/
-    }
+    }*/
 }
