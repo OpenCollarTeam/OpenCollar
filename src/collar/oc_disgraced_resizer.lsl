@@ -97,13 +97,13 @@ integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 //integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
-integer LM_SETTING_RESPONSE = 2002;
+//integer LM_SETTING_RESPONSE = 2002;
 //integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-//integer MENUNAME_REMOVE = 3003;
+integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -305,6 +305,11 @@ DoMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,g_sSubMenu);
 }
 
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the resizer script?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmresizer");
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
@@ -326,6 +331,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr == "size") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         else SizeMenu(kID, iNum);
+    } else if (sStr == "rm resizer") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        else ConfirmDeleteMenu(kID, iNum);
     }
 }
 
@@ -410,6 +418,12 @@ default {
                         }
                         SizeMenu(kAv, iAuth);
                     }
+                } else if (sMenuType == "rmresizer") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing Resizer script...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing Resizer script aborted.", kAv);
                 }
             }
         }

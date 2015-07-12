@@ -112,6 +112,7 @@ key g_kWebLookup;
 key g_kCurrentUser;
 
 list g_lAppsButtons;
+list g_lResizeButtons;
 
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
@@ -132,7 +133,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iKidnapMenu=FALSE;
-integer g_iResizer=FALSE;
+//integer g_iResizer=FALSE;
 
 integer g_iUpdateChan = -7483214;
 integer g_iUpdateHandle;
@@ -214,7 +215,8 @@ OptionsMenu(key kID, integer iAuth) {
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
-    list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU,"Position","Rotation","Size"];
+    list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
+    lButtons += g_lResizeButtons;
     if (STEALTH) {
         sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
         lButtons += [STEALTH_ON];
@@ -468,7 +470,8 @@ RebuildMenu() {
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
     g_iKidnapMenu=FALSE;
-    g_iResizer=FALSE;
+    //g_iResizer=FALSE;
+    g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
@@ -520,7 +523,10 @@ default
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
             else if (sStr=="Main|Kidnap") g_iKidnapMenu=TRUE;
-            else if (sStr=="Options|Size/Position") g_iResizer=TRUE;
+            else if (sStr=="Options|Size/Position") {
+                //g_iResizer=TRUE;
+                g_lResizeButtons = ["Position","Rotation","Size"];
+            }
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
             list lParams = llParseString2List(sStr, ["|"], []);
@@ -531,7 +537,7 @@ default
                 integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
                 //only remove if it's there
                 if (gutiIndex != -1) g_lAppsButtons = llDeleteSubList(g_lAppsButtons, gutiIndex, gutiIndex);
-            }
+            } else if (child == "Size/Position") g_lResizeButtons = [];
         } else if (iNum == DIALOG_RESPONSE) {
             //Debug("Menu response");
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -596,11 +602,7 @@ default
                         MainMenu(kAv, iAuth);
                         return;
                     } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
-                        if (g_iResizer) llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
-                        else {
-                            llMessageLinked(LINK_SET,NOTIFY,"0"+"This %DEVICETYPE% has no resize and adjustment features installed.",kAv);
-                            OptionsMenu(kAv,iAuth);
-                        }
+                        llMessageLinked(LINK_THIS, iAuth, llToLower(sMessage), kAv);
                         return;
                     }
                     OptionsMenu(kAv,iAuth);
