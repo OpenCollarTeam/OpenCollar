@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150711.1                              //
+//                           System - 150712.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -235,12 +235,12 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a stock OpenCollar Updater!\n\nThis will override your %DEVICETYPE% and migrate it to the public OpenCollar update channel. This process is irreversible.\n\nNote: Some App Installers use a similar mechanism to install plugins. In that case, please ignore this warning.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, CMD_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\n\nWARNING: You are using a 3.9 API OpenCollar Updater!\n\nThis will only work if using OpenCollar Updater 3.999 and overrides all 4.0 features.\n\nNote: Some App Installers use a similar mechanism to install plugins. Make sure they are indicated as 4.0 compatible on the packaging.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, CMD_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Perfect.";
-    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: not production ready";
+    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Unstable!";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -253,7 +253,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n [http://www.opencollar.at/manual.html OpenCollar]\n\n Welcome to the Main Menu\n";
+    string sPrompt = "\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠\n\nWelcome to the OpenCollar 4 Beta:\nThanks for participating in this test!\n\n- [http://www.opencollar.at/chat.html Chat] -\t - [https://github.com/OpenCollar/opencollar/issues Tracker] -\t - [https://github.com/OpenCollar/opencollar/commits/master Changelog] -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
     if(!g_iLatestVersion) sPrompt+="\n I'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -375,7 +375,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sCmd == "version") {
         string sVersion;
         if (JB()) sVersion = "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Perfect.\n";
-        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: not production ready\n";
+        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Unstable!\n";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
