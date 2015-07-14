@@ -330,8 +330,8 @@ default {
                 sMsg = llGetSubString(sMsg, 37, -1);
                 //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
                 llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            } //else
-              //  llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+            } else
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             return;
         }
         if (iChan == g_iLockMeisterChan) {
