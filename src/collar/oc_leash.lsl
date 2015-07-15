@@ -432,6 +432,7 @@ DoUnleash(){
 
 YankTo(key kIn){
     llMoveToTarget(llList2Vector(llGetObjectDetails(kIn, [OBJECT_POS]), 0), 0.5);
+    if (llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "");
     llSleep(2.0);
     llStopMoveToTarget();
 }
