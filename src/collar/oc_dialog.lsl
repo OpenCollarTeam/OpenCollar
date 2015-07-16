@@ -540,7 +540,7 @@ default {
                 if (!numAgents) {
                     string findNotify;
                     if (find != "") findNotify = "starting with \"" + find + "\" ";
-                    llInstantMessage(kRCPT, "Could not find any avatars "+ findNotify + "in this region.");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Could not find any avatars "+findNotify+"in this region.",kRCPT);
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     g_iSelectAviMenu = TRUE;
