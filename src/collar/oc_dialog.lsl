@@ -538,9 +538,18 @@ default {
 
                 numAgents = llGetListLength(agentList);
                 if (!numAgents) {
-                    string findNotify;
-                    if (find != "") findNotify = "starting with \"" + find + "\" ";
-                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Could not find any avatars "+findNotify+"in this region.",kRCPT);
+                    string findNotify = "Could not find any avatars in this region.";
+                    if (find != "") {
+                        findNotify = "Could not find any avatars starting with \""+find+"\" in this region.";
+                        integer n = llGetListLength(excl);
+                        while(n--) { //search 'find' in 'excl' list
+                            if (~llSubStringIndex(llToLower(llKey2Name(llList2Key(excl,n))),llToLower(find))) {
+                                findNotify = "Avatar starting with \""+find+"\" already in "+TYPE+" list.";
+                                n = 0;
+                            }
+                        }
+                    }
+                    llMessageLinked(LINK_SET,NOTIFY, "0" + findNotify, kRCPT);
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     g_iSelectAviMenu = TRUE;
