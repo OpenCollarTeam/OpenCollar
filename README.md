@@ -33,10 +33,10 @@ At the moment this repository is separated into resources, source code and web q
 
 OpenCollar source code and creative resource are covered and protected by strong [copyleft](https://en.wikipedia.org/wiki/Copyleft "What does "copyleft" mean?") licenses.
 
-* All LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
+* LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
 
-* All creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
+* Creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 * Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Role Play Device](https://raw.githubusercontent.com/OpenCollar/opencollar/master/LICENSE).
 
-**NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar goes beyond personal use (i.e. commercial redistribution). For summarized licenses, try: [tl;drLegal](https://tldrlegal.com/)
+**NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
