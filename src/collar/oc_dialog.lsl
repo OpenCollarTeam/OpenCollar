@@ -544,7 +544,7 @@ default {
                         integer n = llGetListLength(excl);
                         while(n--) { //search 'find' in 'excl' list
                             if (~llSubStringIndex(llToLower(llKey2Name(llList2Key(excl,n))),llToLower(find))) {
-                                findNotify = "Avatar starting with \""+find+"\" already in "+TYPE+" list.";
+                                findNotify = "Avatar starting with \""+find+"\" already in "+TYPE+" list: "+NameURI(llList2Key(excl,n));
                                 n = 0;
                             }
                         }
