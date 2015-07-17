@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 150711.1                           //
+//                          Authorizer - 150717.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -123,7 +123,7 @@ string UPMENU = "BACK";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
-integer g_iSelfOwned;
+integer g_iVanilla; // self-owned wearers
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -187,10 +187,8 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☒"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-   // if (g_iLimitRange) lButtons += ["LimitRange ☒"];    //set ranged
-   // else lButtons += ["LimitRange ☐"];    //unset open ranged
-    if (g_iSelfOwned) lButtons += ["Self ☒"];
-    else lButtons +=["Self ☐"]; 
+    if (g_iVanilla) lButtons += ["Vanilla ☒"];    //add wearer as owner
+    else lButtons +=["Vanilla ☐"];    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
@@ -250,8 +248,8 @@ RemovePerson(string sName, string sToken, key kCmdr) {
             if (sToken == "owner" || sToken == "trust") {
                 key kID = llList2Key(lPeople,iNumPeople*2);
                 if (sToken == "owner" && kID == g_kWearer) {
-                    g_iSelfOwned = FALSE;
-                    if (kCmdr == g_kWearer) 
+                    g_iVanilla = FALSE;
+                    if (kCmdr == g_kWearer)
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"You no longer own yourself.",kCmdr);
                     else
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% does no longer own themselves.",kCmdr);
@@ -326,7 +324,7 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
 
         if (! ~llListFindList(lPeople, [(string)kPerson])) { //owner is not already in list.  add him/her
             lPeople += [(string)kPerson, sName];
-            if (kPerson == g_kWearer) g_iSelfOwned = TRUE;
+            if (kPerson == g_kWearer) g_iVanilla = TRUE;
         } else {
             llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kPerson)+" is already registered as "+sToken+".",kAv);
             return;
@@ -483,16 +481,16 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sStr == "ownself" || sStr == "unownself") {
+    } else if (sStr == "setvanilla" || sStr == "unsetvanilla") {
         if (iNum != CMD_OWNER) {
             llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%", kID);
             if (iRemenu) AuthMenu(kID, iNum);
         } else {
-            if (sStr == "ownself") {
-                g_iSelfOwned = TRUE;
+            if (sStr == "setvanilla") {
+                g_iVanilla = TRUE;
                 UserCommand(iNum, "owner " + (string)g_kWearer, kID, FALSE);
             } else {
-                g_iSelfOwned = FALSE;
+                g_iVanilla = FALSE;
                 UserCommand(iNum, "removeowner " + (string)g_kWearer, kID, FALSE);
             }
             if (iRemenu) AuthMenu(kID, iNum);
@@ -681,7 +679,7 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     g_lOwners = llParseString2List(sValue, [","], []);
-                    if (~llSubStringIndex(sValue,(string)g_kWearer)) g_iSelfOwned = TRUE;
+                    if (~llSubStringIndex(sValue,(string)g_kWearer)) g_iVanilla = TRUE;
                 } else if (sToken == "tempowner") {
                     g_lTempOwners = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwners,","));
@@ -743,20 +741,19 @@ default {
                     else {
                         list lTranslation=[
                             "✚ Owner","owner",
-//                            "✓ Temp Owner","tempowner",
+                            //"✓ Temp Owner","tempowner",
                             "✚ Trusted","trust",
                             "✚ Blocked","block",
                             "♻ Owner","removeowner",
-//                            "✗ Temp Owner","remtempowner",
+                            //"✗ Temp Owner","remtempowner",
                             "♻ Trusted","removetrust",
                             "♻ Blocked","removeblock",
                             "Group ☐","setgroup",
                             "Group ☒","unsetgroup",
                             "Public ☐","public",
                             "Public ☒","private",
-                            "Self ☐","ownself",
-                            "Self ☒","unownself",
-                            //"Give Hud","givehud",
+                            "Vanilla ☐","setvanilla",
+                            "Vanilla ☒","unsetvanilla",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
