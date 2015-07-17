@@ -123,6 +123,7 @@ string UPMENU = "BACK";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
+integer g_iSelfOwned;
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -186,8 +187,10 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☒"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iLimitRange) lButtons += ["LimitRange ☒"];    //set ranged
-    else lButtons += ["LimitRange ☐"];    //unset open ranged
+   // if (g_iLimitRange) lButtons += ["LimitRange ☒"];    //set ranged
+   // else lButtons += ["LimitRange ☐"];    //unset open ranged
+    if (g_iSelfOwned) lButtons += ["Self ☒"];
+    else lButtons +=["Self ☐"]; 
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
@@ -245,7 +248,15 @@ RemovePerson(string sName, string sToken, key kCmdr) {
         //Debug("checking " + sThisName);
         if (sName == sThisName || sName == "remove all") {   //remove name and key
             if (sToken == "owner" || sToken == "trust") {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+"Your access to %WEARERNAME%'s %DEVICETYPE% has been revoked.",llList2String(lPeople,iNumPeople*2));
+                key kID = llList2Key(lPeople,iNumPeople*2);
+                if (sToken == "owner" && kID == g_kWearer) {
+                    g_iSelfOwned = FALSE;
+                    if (kCmdr == g_kWearer) 
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"You no longer own yourself.",kCmdr);
+                    else
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% does no longer own themselves.",kCmdr);
+                } else
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Your access to %WEARERNAME%'s %DEVICETYPE% has been revoked.",kID);
             }
             llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(llList2Key(lPeople,iNumPeople*2))+" removed from " + sToken + " list.",kCmdr);
             lPeople = llDeleteSubList(lPeople, iNumPeople*2, iNumPeople*2+1);
@@ -313,9 +324,13 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         } else
             return;
 
-        if (! ~llListFindList(lPeople, [(string)kPerson])) //owner is not already in list.  add him/her
+        if (! ~llListFindList(lPeople, [(string)kPerson])) { //owner is not already in list.  add him/her
             lPeople += [(string)kPerson, sName];
-
+            if (kPerson == g_kWearer) g_iSelfOwned = TRUE;
+        } else {
+            llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kPerson)+" is already registered as "+sToken+".",kAv);
+            return;
+        }
         if (kPerson != g_kWearer) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Building relationship...",g_kWearer);
             if (sToken == "owner") {
@@ -329,13 +344,17 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
                 llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
             }
         }
-
-        if (sToken == "owner")
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
-
+        if (sToken == "owner") {
+            if (kPerson == g_kWearer) {
+                if (kAv == g_kWearer)
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nCongratulations, you own yourself now.\n",g_kWearer);
+                else
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% is thier own Owner now.\n",kAv);
+            } else
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
+        }
         if (sToken == "trust")
             llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
-
         string sOldToken=sToken;
         if (sToken == "secowner") sOldToken+="s";
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
@@ -464,6 +483,20 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
+    } else if (sStr == "ownself" || sStr == "unownself") {
+        if (iNum != CMD_OWNER) {
+            llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%", kID);
+            if (iRemenu) AuthMenu(kID, iNum);
+        } else {
+            if (sStr == "ownself") {
+                g_iSelfOwned = TRUE;
+                UserCommand(iNum, "owner " + (string)g_kWearer, kID, FALSE);
+            } else {
+                g_iSelfOwned = FALSE;
+                UserCommand(iNum, "removeowner " + (string)g_kWearer, kID, FALSE);
+            }
+            if (iRemenu) AuthMenu(kID, iNum);
+        }
     } else if (sStr == "owners" || sStr == "access") {   //give owner menu
         AuthMenu(kID, iNum);
     } else if (sMessage == "owner" && iRemenu==FALSE) { //request for access menu from chat
@@ -648,6 +681,7 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     g_lOwners = llParseString2List(sValue, [","], []);
+                    if (~llSubStringIndex(sValue,(string)g_kWearer)) g_iSelfOwned = TRUE;
                 } else if (sToken == "tempowner") {
                     g_lTempOwners = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwners,","));
@@ -720,8 +754,8 @@ default {
                             "Group ☒","unsetgroup",
                             "Public ☐","public",
                             "Public ☒","private",
-                            "LimitRange ☐","limitrange",
-                            "LimitRange ☒","unlimitrange",
+                            "Self ☐","ownself",
+                            "Self ☒","unownself",
                             //"Give Hud","givehud",
                             "Access List","list",
                             "Runaway","runaway"
