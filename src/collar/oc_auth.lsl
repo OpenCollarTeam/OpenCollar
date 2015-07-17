@@ -181,7 +181,7 @@ FetchAvi(integer iAuth, string sType, string sName, key kAv) {
 
 AuthMenu(key kAv, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/access.html Access]\n";
-    list lButtons = ["✚ Owner", "✚ Trusted", "✚ Blocked", "♻ Owner", "♻ Trusted", "♻ Blocked"];
+    list lButtons = ["+ Owner", "+ Trusted", "+ Blocked", "− Owner", "− Trusted", "− Blocked"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☒"];    //unset group
@@ -740,14 +740,14 @@ default {
                         llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else {
                         list lTranslation=[
-                            "✚ Owner","owner",
-                            //"✓ Temp Owner","tempowner",
-                            "✚ Trusted","trust",
-                            "✚ Blocked","block",
-                            "♻ Owner","removeowner",
-                            //"✗ Temp Owner","remtempowner",
-                            "♻ Trusted","removetrust",
-                            "♻ Blocked","removeblock",
+                            "+ Owner","owner",
+                            //"+ Temp Owner","tempowner",
+                            "+ Trusted","trust",
+                            "+ Blocked","block",
+                            "− Owner","removeowner",
+                            //"− Temp Owner","remtempowner",
+                            "− Trusted","removetrust",
+                            "− Blocked","removeblock",
                             "Group ☐","setgroup",
                             "Group ☒","unsetgroup",
                             "Public ☐","public",
