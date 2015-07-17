@@ -58,7 +58,6 @@ key     g_kWearer;
 
 list    g_lMenuIDs;      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
 
-
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -150,6 +149,10 @@ saveTempOwners() {
 doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
     if (llGetListLength(g_lTempOwners)) {
         llMessageLinked(LINK_SET,NOTIFY,"0"+"%WEARERNAME% is already kidnapped, try another time.",kKidnapper);
+        return;
+    }
+    if (llVecDist(llList2Vector(llGetObjectDetails( kKidnapper,[OBJECT_POS] ),0),llGetPos()) > 10 ) { 
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"You could kidnap %WEARERNAME% if you get a bit closer.",kKidnapper);
         return;
     }
     if (!iIsConfirmed) {
