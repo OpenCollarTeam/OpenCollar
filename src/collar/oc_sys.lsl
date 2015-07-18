@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150712.1                              //
+//                           System - 150718.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="20150712.1";
+string g_sCollarVersion="2.0.0";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -239,8 +239,8 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Perfect.";
-    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Version "+g_sCollarVersion+"\n\nSystem Integrity: Unstable!";
+    string sPrompt="\nOpenCollar API: 4.0\nOpenCollar Beta: "+g_sCollarVersion+"\n\nSystem Integrity: Perfect.";
+    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Beta: "+g_sCollarVersion+"\n\nSystem Integrity: Unstable!";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -374,8 +374,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion;
-        if (JB()) sVersion = "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Perfect.\n";
-        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Version " + g_sCollarVersion + "\n\nSystem Integrity: Unstable!\n";
+        if (JB()) sVersion = "\n\nOpenCollar API: 4.0\nOpenCollar Beta: " + g_sCollarVersion + "\n\nSystem Integrity: Perfect.\n";
+        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Beta: " + g_sCollarVersion + "\n\nSystem Integrity: Unstable!\n";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_SET,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
