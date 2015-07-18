@@ -343,17 +343,18 @@ default {
                     if (sValue != "") { //if no value, nothing to do
                         if (sID == "auth_") { //if we have auth, can only be the below, else we dont care
                             sToken = llToLower(sToken);
-                            if (! ~llListFindList(["block","trust","owner"],[sToken])) jump nextline ;
-                            list lTest = llParseString2List(sValue,[","],[]);
-                            list lOut;
-                            integer n;
-                            do {//sanity check for valid entries
-                                if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless
-                                    lOut += llList2List(lTest,n,n+1);
-                                }
-                                n = n+2;
-                            } while (n < llGetListLength(lTest));
-                            sValue = llDumpList2String(lOut,",");
+                            if (~llListFindList(["block","trust","owner"],[sToken])) {
+                                list lTest = llParseString2List(sValue,[","],[]);
+                                list lOut;
+                                integer n;
+                                do {//sanity check for valid entries
+                                    if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless
+                                        lOut += llList2List(lTest,n,n+1);
+                                    }
+                                    n = n+2;
+                                } while (n < llGetListLength(lTest));
+                                sValue = llDumpList2String(lOut,",");
+                            } 
                         }
                         g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
                     }
