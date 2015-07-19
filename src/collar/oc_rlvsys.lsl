@@ -68,7 +68,9 @@ integer g_iCollarLocked=FALSE;
 string g_sParentMenu = "Main";
 string g_sSubMenu = "RLV";
 list g_lMenu;
-key kMenuID;
+//key kMenuID;
+list    g_lMenuIDs;
+integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
@@ -148,6 +150,7 @@ Debug(string sStr) {
 */
 
 DoMenu(key kID, integer iAuth){
+    key kMenuID = llGenerateKey();
     list lButtons;
     if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
     else lButtons += [TURNON];
@@ -155,7 +158,10 @@ DoMenu(key kID, integer iAuth){
     string sPrompt = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
     if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
     if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID = llGenerateKey());
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
     //Debug("Made menu.");
 }
 
@@ -417,22 +423,23 @@ SafeWord() {
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
-  //  if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
-    //list lParams = llParseString2List(sStr, [" "], []);
-   // string sCmd = llList2String(lParams, 0);
-   // string sValue = llToLower(llList2String(lParams, 1));
-   // lParams=[];
+    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
+
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCmd = llList2String(lParams, 0);
+    string sValue = llToLower(llList2String(lParams, 1));
+    lParams=[];
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
     } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
-    } else if (sStr == "rlv on") {
+    } else if (sStr == "rlvon") {
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
         setRlvState();
-    } else if (sStr == "rlv off") {
+    } else if (sStr == "rlvoff") {
         if (iNum == CMD_OWNER) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
@@ -442,7 +449,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr == "clear") {
         if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
         else SafeWord();
-    } else if (sStr=="show restrictions") {
+    } else if (sStr=="showrestrictions") {
         string sOut="You are being restricted by the following objects";
         integer numRestrictions=llGetListLength(g_lRestrictions);
         while (numRestrictions){
@@ -518,32 +525,39 @@ default {
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
-        else if (iNum == CMD_ZERO || iNum == CMD_EVERYONE) return;
-        else if (iNum <= CMD_OWNER && iNum >= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_ZERO) return;
+        else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
-            if (kID == kMenuID) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 lMenuParams=[];
-                //Debug(sMsg);
-                if (sMsg == TURNON) {
-                    UserCommand(iAuth, "rlv on", kAv);
-                } else if (sMsg == TURNOFF) {
-                    UserCommand(iAuth, "rlv off", kAv);
-                    DoMenu(kAv, iAuth);
-                } else if (sMsg == CLEAR) {
-                    UserCommand(iAuth, "clear", kAv);
-                    DoMenu(kAv, iAuth);
-                } else if (sMsg == UPMENU) {
-                    llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
-                    llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
+                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                if (sMenu == g_sSubMenu) {
+                    if (sMsg == TURNON) {
+                        UserCommand(iAuth, "rlvon", kAv);
+                    } else if (sMsg == TURNOFF) {
+                        UserCommand(iAuth, "rlvoff", kAv);
+                        DoMenu(kAv, iAuth);
+                    } else if (sMsg == CLEAR) {
+                        UserCommand(iAuth, "clear", kAv);
+                        DoMenu(kAv, iAuth);
+                    } else if (sMsg == UPMENU) {
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
+                    } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
+                        llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
+                    }
                 }
             }
+        }  else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -677,7 +691,7 @@ default {
         } else {
             if (g_iCheckCount++ <= g_iMaxViewerChecks) {
             llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlv off\n", g_kWearer);
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);

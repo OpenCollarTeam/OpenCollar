@@ -214,8 +214,8 @@ Say(string sMsg, integer iWhisper) {
         sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
     string sObjectName = llGetObjectName();
     llSetObjectName("");
-    if (iWhisper) llWhisper(0, sMsg);
-    else llSay(0, sMsg);
+    if (iWhisper) llWhisper(0, "/me " + sMsg);
+    else llSay(0, "/me " + sMsg);
     llSetObjectName(sObjectName);
 }
 
@@ -396,8 +396,6 @@ default {
             else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
-            //to allow a space between prefix and command:
-            sMsg = llStringTrim(sMsg, STRING_TRIM_HEAD);
             //Debug("Got comand "+sMsg);
             llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
         }
