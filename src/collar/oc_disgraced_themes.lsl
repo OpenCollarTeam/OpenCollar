@@ -363,7 +363,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {
-                    string sLinkType=LinkType(iLinkCount, "nohide");
+                    string sLinkType=LinkType(iLinkCount, "no"+sCommand);
                     if (sLinkType == sElement || sElement==g_sDeviceType) {
                         if (!g_iCollarHidden || sElement == g_sDeviceType ) {
                             //don't change things if collar is set hidden, unless we're doing the hiding now
