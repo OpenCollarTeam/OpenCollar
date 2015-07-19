@@ -355,16 +355,15 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 //get currently shown state
                 integer iCurrentlyShown;
                 if (sElement=="") sElement=g_sDeviceType;
-                if (sElement == g_sDeviceType) {
-                    if (sCommand=="show")       g_iCollarHidden=1;
-                    else if (sCommand=="hide")  g_iCollarHidden=0;
-                    else                        g_iCollarHidden = !g_iCollarHidden;  //toggle whole collar visibility
-                    iCurrentlyShown=g_iCollarHidden;  //set visibility flag to match new collar visibility
-                }
+                if (sCommand == "show")       iCurrentlyShown = 1;
+                else if (sCommand == "hide")  iCurrentlyShown = 0;
+                else if (sCommand == "stealth") iCurrentlyShown = g_iCollarHidden;
+                if (sElement == g_sDeviceType) g_iCollarHidden = !iCurrentlyShown;  //toggle whole collar visibility
+
                 //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {
-                    string sLinkType=LinkType(iLinkCount, "no"+sCommand);
+                    string sLinkType=LinkType(iLinkCount, "nohide");
                     if (sLinkType == sElement || sElement==g_sDeviceType) {
                         if (!g_iCollarHidden || sElement == g_sDeviceType ) {
                             //don't change things if collar is set hidden, unless we're doing the hiding now
