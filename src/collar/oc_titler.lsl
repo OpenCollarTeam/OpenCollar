@@ -139,8 +139,9 @@ ShowHideText() {
 UserCommand(integer iAuth, string sStr, key kAv) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
-
-    if (llToLower(sStr) == "menu titler") {
+    string sAction = llToLower(llList2String(lParams, 1));
+    string sLowerStr = llToLower(sStr);
+    if (sLowerStr == "menu titler" || sLowerStr == "titler") {
         string ON_OFF ;
         string sPrompt;
         if (g_iTextPrim == -1) {
@@ -152,10 +153,10 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             else ON_OFF = OFF ;
             g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth);
         }
-    } else if (sStr=="menu titlercolor" || sStr=="titlercolor") {
+    } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         g_kColorDialogID = Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth);
-    } else if (sCommand=="titlercolor") {
-        string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+    } else if ((sCommand=="titler" || sCommand == "title") && sAction == "color") {
+        string sColor= llDumpList2String(llDeleteSubList(lParams,0,1)," ");
         if (sColor != ""){
             g_vColor=(vector)sColor;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
@@ -167,11 +168,32 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();
-    } else if (llSubStringIndex(sCommand,"title")==0) {
-        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has smae or greater auth
+    } else if (sCommand == "title") {
+        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has same or greater auth
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
-        } else  if (sCommand == "title") {
-            string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");//pop off the "text" command
+
+        } else if (sAction == "on") {
+            g_iLastRank = iAuth;
+            g_iOn = TRUE;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+        } else if (sAction == "off") {
+            g_iLastRank = CMD_EVERYONE;
+            g_iOn = FALSE;
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"on", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
+        } else if (sAction == "up") {
+            g_vPrimScale.z += 0.05 ;
+            if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
+        } else if (sAction ==  "down") {
+            g_vPrimScale.z -= 0.05 ;
+            if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
+        } else if (sAction == "box") {
+            g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);
+        } else if (sAction == "text") {
+            string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");//pop off the "text" command
 
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
             if (sNewText == "") {
@@ -184,26 +206,6 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             g_iLastRank=iAuth;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
-        } else if (sCommand == "titleoff") {
-            g_iLastRank = CMD_EVERYONE;
-            g_iOn = FALSE;
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"on", "");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
-        } else if (sCommand == "titleon") {
-            g_iLastRank = iAuth;
-            g_iOn = TRUE;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
-        } else if (sCommand == "titleup") {
-            g_vPrimScale.z += 0.05 ;
-            if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
-        } else if (sCommand == "titledown") {
-            g_vPrimScale.z -= 0.05 ;
-            if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
-        } else if (sCommand == "titlebox") {
-            g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);
         }
         ShowHideText();
     }
@@ -236,7 +238,7 @@ default{
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //Debug("Link Message Event");
-        if (iNum >- CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, "");
         else if (iNum == LM_SETTING_RESPONSE) {
@@ -257,14 +259,14 @@ default{
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == SET) UserCommand(iAuth, "titlebox", kAv);
-                else if (sMessage == "Color") UserCommand(iAuth, "menu titlercolor", kAv);
+                if (sMessage == SET) UserCommand(iAuth, "title box", kAv);
+                else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                 else if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                 else {
-                    if (sMessage == UP) UserCommand(iAuth, "titleup", kAv);
-                    else if (sMessage == DN) UserCommand(iAuth, "titledown", kAv);
-                    else if (sMessage == OFF) UserCommand(iAuth, "titleon", kAv);
-                    else if (sMessage == ON) UserCommand(iAuth, "titleoff", kAv);
+                    if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
+                    else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
+                    else if (sMessage == OFF) UserCommand(iAuth, "title on", kAv);
+                    else if (sMessage == ON) UserCommand(iAuth, "title off", kAv);
                     UserCommand(iAuth, "menu titler", kAv);
                 }
             } else if (kID == g_kColorDialogID) {  //response form the colours menu
@@ -276,8 +278,8 @@ default{
 
                 if (sMessage == UPMENU) UserCommand(iAuth, "menu titler", kAv);
                 else {
-                    UserCommand(iAuth, "titlercolor "+sMessage, kAv);
-                    UserCommand(iAuth, "menu titlercolor", kAv);
+                    UserCommand(iAuth, "titler color "+sMessage, kAv);
+                    UserCommand(iAuth, "menu titler color", kAv);
                 }
 
             } else if (kID == g_kTBoxId) {  //response from text box
@@ -287,7 +289,7 @@ default{
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
 
-                if(sMessage != "") UserCommand(iAuth, "title " + sMessage, kAv);
+                if(sMessage != "") UserCommand(iAuth, "title text " + sMessage, kAv);
                 UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
             }
         }
