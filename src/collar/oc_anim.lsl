@@ -328,11 +328,10 @@ UserCommand(integer iNum, string sStr, key kID) {
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llToLower(llList2String(lParams, 1));
     if (sCommand == "menu") {
-        string sSubmenu = llGetSubString(sStr, 5, -1);
-        if (sSubmenu == "Pose") PoseMenu(kID, 0, iNum);
-        else if (sSubmenu == "AntiSlide") PoseMoveMenu(kID,0,iNum);
-        else if (sSubmenu == "AO") AOMenu(kID, iNum);
-        else if (sSubmenu == "Animations") AnimMenu(kID, iNum);
+        if (sValue == "pose") PoseMenu(kID, 0, iNum);
+        else if (sValue == "antislide") PoseMoveMenu(kID,0,iNum);
+        else if (sValue == "ao") AOMenu(kID, iNum);
+        else if (sValue == "animations") AnimMenu(kID, iNum);
     } else if (sStr == "release" || sStr == "stop") {  //only release if person giving command outranks person who posed us
         if (iNum <= g_iLastRank || !g_iAnimLock) {
             g_iLastRank = 0;
@@ -346,7 +345,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         llResetScript();
-    } else if ( sCommand=="posture") {
+    } else if (sCommand=="posture") {
         if ( sValue=="on") {
             if (iNum<=CMD_WEARER) {
                 g_iLastPostureRank=iNum;
@@ -365,8 +364,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
                 else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%",kID);
         }
-    } else if ( sCommand=="animlock") {
-        if ( sValue=="on") {
+    } else if (sCommand=="animlock") {
+        if (sValue=="on") {
             if (iNum<=CMD_WEARER) {
                 g_iLastPoselockRank=iNum;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"PoselockRank="+(string)g_iLastPoselockRank,"");
@@ -375,7 +374,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, NOTIFY, "0"+"Only owners can change or stop your poses now.",g_kWearer);
                 if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
             } else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
-        } else if ( sValue=="off") {
+        } else if (sValue=="off") {
             if (iNum<=g_iLastPoselockRank) {
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
