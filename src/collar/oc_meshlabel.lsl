@@ -61,12 +61,12 @@ key g_kWearer;
 
 
 //MESSAGE MAP
-//integer CMD_ZERO = 0;
+integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -273,53 +273,60 @@ FontMenu(key kID, integer iAuth) {
 
 UserCommand(integer iAuth, string sStr, key kAv) {
     //Debug("Command: "+sStr);
+    string sLowerStr = llToLower(sStr);
     if (iAuth == CMD_OWNER) {
-        if (sStr == "menu " + g_sSubMenu || llToLower(sStr)=="label") {
+        if (sLowerStr == "menu label" || sLowerStr == "label") {
             MainMenu(kAv, iAuth);
             return;
         }
         list lParams = llParseString2List(sStr, [" "], []);
         string sCommand = llToLower(llList2String(lParams, 0));
-        if (sCommand == "labeltext") {
-            lParams = llDeleteSubList(lParams, 0, 0);
-            g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
-            if (llStringLength(g_sLabelText) > g_iCharLimit) {
-                string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
-                llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
-            }
-            SetLabel();
-        } else if (sCommand == "labelfont") {
-            lParams = llDeleteSubList(lParams, 0, 0);
-            string font = llDumpList2String(lParams, " ");
-            integer iIndex = llListFindList(g_lFonts, [font]);
-            if (iIndex != -1) {
-                g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
+        string sAction = llToLower(llList2String(lParams, 1));
+        string sValue = llToLower(llList2String(lParams, 2));
+        if (sCommand == "label") {
+            if (sAction == "text") {
+                lParams = llDeleteSubList(lParams, 0, 1);
+                g_sLabelText = llStringTrim(llDumpList2String(lParams, " "),STRING_TRIM);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
+                if (llStringLength(g_sLabelText) > g_iCharLimit) {
+                    string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
+                    llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
+                }
                 SetLabel();
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
-            } else FontMenu(kAv, iAuth);
-        } else if (sCommand == "labelcolor") {
-            string sColor= llDumpList2String(llDeleteSubList(lParams,0,0)," ");
-            if (sColor != "") {
-                g_vColor=(vector)sColor;
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
-                SetColor();
+            } else if (sAction == "font") {
+                lParams = llDeleteSubList(lParams, 0, 1);
+                string font = llDumpList2String(lParams, " ");
+                integer iIndex = llListFindList(g_lFonts, [font]);
+                if (iIndex != -1) {
+                    g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
+                    SetLabel();
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
+                } else FontMenu(kAv, iAuth);
+            } else if (sAction == "color") {
+                string sColor= llDumpList2String(llDeleteSubList(lParams,0,1)," ");
+                if (sColor != "") {
+                    g_vColor=(vector)sColor;
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
+                    SetColor();
+                }
+            } else if (sAction == "show") {
+                if (sValue == "on") g_iShow = TRUE;
+                else if (sValue == "off") g_iShow = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
+                SetLabel();
+            } else if (sAction == "scroll") {
+                if (sValue == "on") g_iScroll = TRUE;
+                else if (sValue == "off") g_iScroll = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
+                SetLabel();
             }
-        } else if (sCommand == "labelshow") {
-            g_iShow = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
-            SetLabel();
-        } else if (sCommand == "labelscroll") {
-            g_iScroll = llList2Integer(lParams, 1);
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
-            SetLabel();
         }
     } else if (iAuth >= CMD_TRUSTED && iAuth <= CMD_WEARER) {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
-        if (sStr=="menu "+g_sSubMenu) {
+        if (sLowerStr == "menu label") {
             llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
-        } else if (sCommand=="labeltext" || sCommand == "labelfont" || sCommand == "labelcolor" || sCommand == "labelshow")
+        } else if (sCommand == "label")
             llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
     }
 }
@@ -345,6 +352,7 @@ default
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == CMD_ZERO || iNum == CMD_EVERYONE) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -378,16 +386,16 @@ default
                 else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
                 else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
                 else if (sMessage == "☐ Show") {
-                    UserCommand(iAuth, "labelshow 1", kAv);
+                    UserCommand(iAuth, "label show on", kAv);
                     MainMenu(kAv, iAuth);
                 } else if (sMessage == "☒ Show") {
-                    UserCommand(iAuth, "labelshow 0", kAv);
+                    UserCommand(iAuth, "label show off", kAv);
                     MainMenu(kAv, iAuth);
                 } else if (sMessage == "☐ Scroll") {
-                    UserCommand(iAuth, "labelscroll 1", kAv);
+                    UserCommand(iAuth, "label scroll on", kAv);
                     MainMenu(kAv, iAuth);
                 } else if (sMessage == "☒ Scroll") {
-                    UserCommand(iAuth, "labelscroll 0", kAv);
+                    UserCommand(iAuth, "label scroll off", kAv);
                     MainMenu(kAv, iAuth);
                 }
             } else if (kID == g_kColorID) {
@@ -398,7 +406,7 @@ default
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                 else {
-                    UserCommand(iAuth, "labelcolor "+sMessage, kAv);
+                    UserCommand(iAuth, "label color "+sMessage, kAv);
                     ColorMenu(kAv, iAuth);
                 }
             } else if (kID == g_kFontID) {
@@ -409,7 +417,7 @@ default
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                 else {
-                    UserCommand(iAuth, "labelfont " + sMessage, kAv);
+                    UserCommand(iAuth, "label font " + sMessage, kAv);
                     FontMenu(kAv, iAuth);
                 }
             } else if (kID == g_kTBoxID) { // TextBox response, extract values
@@ -417,7 +425,7 @@ default
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage != "") UserCommand(iAuth, "labeltext " + sMessage, kAv);
+                if (sMessage != "") UserCommand(iAuth, "label text " + sMessage, kAv);
                 llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sSubMenu, kAv);
             }
         }
