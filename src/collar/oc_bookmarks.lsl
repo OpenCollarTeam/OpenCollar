@@ -147,7 +147,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             //only owner and wearer may reset
             llResetScript();
         }
-    } else if(sStr == PLUGIN_CHAT_CMD || sStr == "menu " + SUBMENU_BUTTON || sStr == PLUGIN_CHAT_CMD_ALT) {
+    } else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
         if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         }
