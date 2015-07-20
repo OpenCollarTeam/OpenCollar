@@ -435,7 +435,7 @@ default {
                     string sCmdOptions = llDumpList2String(llDeleteSubList(lParams,0,1), " ");
 
                     if (sValue == "") {
-                        sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDeviceName command help:\n_PREFIX_devicename [newname|reset]\n";
+                        sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDevice Name command help:\n_PREFIX_ device name [newname|reset]\n";
                         llMessageLinked(LINK_SET, POPUP_HELP, sMessage, kID);
                     } else if (sCmdOptions == "reset") {
                         g_sDeviceName = sObjectName;
