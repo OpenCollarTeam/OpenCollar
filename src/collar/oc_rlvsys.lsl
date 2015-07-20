@@ -423,23 +423,17 @@ SafeWord() {
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
-
-    list lParams = llParseString2List(sStr, [" "], []);
-    string sCmd = llList2String(lParams, 0);
-    string sValue = llToLower(llList2String(lParams, 1));
-    lParams=[];
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
     } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
-    } else if (sStr == "rlvon") {
+    } else if (sStr == "rlv on") {
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
         setRlvState();
-    } else if (sStr == "rlvoff") {
+    } else if (sStr == "rlv off") {
         if (iNum == CMD_OWNER) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
@@ -449,7 +443,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr == "clear") {
         if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
         else SafeWord();
-    } else if (sStr=="showrestrictions") {
+    } else if (sStr=="show restrictions") {
         string sOut="You are being restricted by the following objects";
         integer numRestrictions=llGetListLength(g_lRestrictions);
         while (numRestrictions){
@@ -525,8 +519,8 @@ default {
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
-        else if (iNum == CMD_ZERO) return;
-        else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
+        else if (iNum == CMD_ZERO || iNum == CMD_EVERYONE) return;
+        else if (iNum <= CMD_WEARER && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -541,9 +535,9 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenu == g_sSubMenu) {
                     if (sMsg == TURNON) {
-                        UserCommand(iAuth, "rlvon", kAv);
+                        UserCommand(iAuth, "rlv on", kAv);
                     } else if (sMsg == TURNOFF) {
-                        UserCommand(iAuth, "rlvoff", kAv);
+                        UserCommand(iAuth, "rlv off", kAv);
                         DoMenu(kAv, iAuth);
                     } else if (sMsg == CLEAR) {
                         UserCommand(iAuth, "clear", kAv);
