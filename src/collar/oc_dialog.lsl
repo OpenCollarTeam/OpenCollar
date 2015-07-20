@@ -551,12 +551,10 @@ default {
                             }
                         }
                     } else {
-                        findNotify = "Could not find any avatars in this parcel besides the ones already registered:";
-                        integer n;
+                        findNotify = "Could not find any avatars in this parcel besides the one(s) already registered:";
                         while (llGetListLength(lRemovedAgents)) {
-                            findNotify += " " + NameURI(llList2Key(lRemovedAgents,n));
-                            lRemovedAgents = llDeleteSubList(lRemovedAgents,n,n);
-                            n += 1;
+                            findNotify += " " + NameURI(llList2Key(lRemovedAgents,0));
+                            lRemovedAgents = llDeleteSubList(lRemovedAgents,0,0);
                         }
                     }
                     llMessageLinked(LINK_SET,NOTIFY, "0" + findNotify, kRCPT);
