@@ -214,8 +214,8 @@ Say(string sMsg, integer iWhisper) {
         sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
     string sObjectName = llGetObjectName();
     llSetObjectName("");
-    if (iWhisper) llWhisper(0, "/me " + sMsg);
-    else llSay(0, "/me " + sMsg);
+    if (iWhisper) llWhisper(0, sMsg);
+    else llSay(0, sMsg);
     llSetObjectName(sObjectName);
 }
 
@@ -397,7 +397,7 @@ default {
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
             //Debug("Got comand "+sMsg);
-            llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
+            llMessageLinked(LINK_SET, CMD_ZERO, llStringTrim(sMsg,STRING_TRIM_HEAD), kID);
         }
     }
 
@@ -428,11 +428,11 @@ default {
                     Notify(kID, "\n" + g_sWearerName + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + g_sDeviceType + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
                 }
-                else if (sCommand == "devicename") {
+                else if (sCommand == "device" && sValue == "name") {
 
                     string sMessage;
                     string sObjectName = llGetObjectName();
-                    string sCmdOptions = llGetSubString(sStr,11,-1);
+                    string sCmdOptions = llDumpList2String(llDeleteSubList(lParams,0,1), " ");
 
                     if (sValue == "") {
                         sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDeviceName command help:\n_PREFIX_devicename [newname|reset]\n";
