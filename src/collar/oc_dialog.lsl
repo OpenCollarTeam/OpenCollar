@@ -527,29 +527,40 @@ default {
                 list excl = llParseString2List(llList2String(lParams, 6), [","], []); //list of uuids to exclude from the search
                 //list AVIS = [];
                 list agentList = llGetAgentList(AGENT_LIST_PARCEL, []);
+                list lRemovedAgents;
                 integer numAgents = llGetListLength(agentList);
                 while(numAgents--) {
                     key avId=llList2Key(agentList, numAgents);
                     string name = llKey2Name(avId);
                     if ( !~llSubStringIndex(llToLower(name), llToLower(find)) || ~llListFindList(excl,[(string)avId])) {       //if this name does not contain find string or key is in the exclude list
                         agentList=llDeleteSubList(agentList,numAgents,numAgents); //delete this agent from the list
+                        lRemovedAgents += [avId];
                     }
                 }
 
                 numAgents = llGetListLength(agentList);
                 if (!numAgents) {
-                    string findNotify = "Could not find any avatars in this region.";
+                    string findNotify;  //= "Could not find any avatars in this region.";
                     if (find != "") {
-                        findNotify = "Could not find any avatars starting with \""+find+"\" in this region.";
+                        findNotify = "Could not find any avatars starting with \""+find+"\" in this parcel.";
                         integer n = llGetListLength(excl);
                         while(n--) { //search 'find' in 'excl' list
                             if (~llSubStringIndex(llToLower(llKey2Name(llList2Key(excl,n))),llToLower(find))) {
-                                findNotify = "Avatar starting with \""+find+"\" already in "+TYPE+" list: "+NameURI(llList2Key(excl,n));
+                                findNotify = "Avatar starting with \""+find+"\" already registered: "+NameURI(llList2Key(excl,n));
                                 n = 0;
                             }
                         }
+                    } else {
+                        findNotify = "Could not find any avatars in this parcel besides the ones already registered:";
+                        integer n;
+                        while (llGetListLength(lRemovedAgents)) {
+                            findNotify += " " + NameURI(llList2Key(lRemovedAgents,n));
+                            lRemovedAgents = llDeleteSubList(lRemovedAgents,n,n);
+                            n += 1;
+                        }
                     }
                     llMessageLinked(LINK_SET,NOTIFY, "0" + findNotify, kRCPT);
+                    llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kRCPT+"|"+(string)iAuth+"|"+TYPE+"|BACK", kID);
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     g_iSelectAviMenu = TRUE;
