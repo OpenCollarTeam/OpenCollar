@@ -292,14 +292,12 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                     string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
                     llMessageLinked(LINK_SET, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
                 }
-                SetLabel();
             } else if (sAction == "font") {
                 lParams = llDeleteSubList(lParams, 0, 1);
                 string font = llDumpList2String(lParams, " ");
                 integer iIndex = llListFindList(g_lFonts, [font]);
                 if (iIndex != -1) {
                     g_kFontTexture = (key)llList2String(g_lFonts, iIndex + 1);
-                    SetLabel();
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "font=" + (string)g_kFontTexture, "");
                 } else FontMenu(kAv, iAuth);
             } else if (sAction == "color") {
@@ -309,17 +307,18 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
                     SetColor();
                 }
-            } else if (sAction == "show") {
-                if (sValue == "on") g_iShow = TRUE;
-                else if (sValue == "off") g_iShow = FALSE;
+            } else if (sAction == "on") {
+                   g_iShow = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
-                SetLabel();
+            } else if (sAction == "off") {
+                g_iShow = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
             } else if (sAction == "scroll") {
                 if (sValue == "on") g_iScroll = TRUE;
                 else if (sValue == "off") g_iScroll = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"scroll="+(string)g_iScroll, "");
-                SetLabel();
             }
+            SetLabel();
         }
     } else if (iAuth >= CMD_TRUSTED && iAuth <= CMD_WEARER) {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
@@ -386,10 +385,10 @@ default
                 else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
                 else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
                 else if (sMessage == "☐ Show") {
-                    UserCommand(iAuth, "label show on", kAv);
+                    UserCommand(iAuth, "label on", kAv);
                     MainMenu(kAv, iAuth);
                 } else if (sMessage == "☒ Show") {
-                    UserCommand(iAuth, "label show off", kAv);
+                    UserCommand(iAuth, "label off", kAv);
                     MainMenu(kAv, iAuth);
                 } else if (sMessage == "☐ Scroll") {
                     UserCommand(iAuth, "label scroll on", kAv);
