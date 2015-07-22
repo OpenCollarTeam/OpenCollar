@@ -53,7 +53,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sParentMenu = "Apps";
-string g_sFeatureName = "Titler";
+string g_sSubMenu = "Titler";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
 
 //MESSAGE MAP
@@ -82,7 +82,7 @@ integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
 
 integer g_iLastRank = CMD_EVERYONE ;
@@ -96,9 +96,12 @@ key g_kWearer;
 string g_sSettingToken = "titler_";
 //string g_sGlobalToken = "global_";
 
-key g_kDialogID;    //menu handle
-key g_kColorDialogID;    //menu handle
-key g_kTBoxId;      //text box handle
+list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
+integer g_iMenuStride = 3;
+
+//key g_kDialogID;    //menu handle
+//key g_kColorDialogID;    //menu handle
+//key g_kTBoxId;      //text box handle
 
 string SET = "Set Title" ;
 string UP = "↑ Up";
@@ -122,10 +125,13 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    //Debug("Made menu.");
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
 ShowHideText() {
@@ -134,6 +140,11 @@ ShowHideText() {
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
     }
+}
+
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmtitler");
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
@@ -146,15 +157,15 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string sPrompt;
         if (g_iTextPrim == -1) {
             sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nThis design is missing a FloatText box. Titler disabled.";
-            g_kDialogID = Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth);
+            Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
         } else {
             sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\n\nCurrent Title: " + g_sText ;
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
-            g_kDialogID = Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth);
+            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth,"main");
         }
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
-        g_kColorDialogID = Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth);
+        Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
     } else if ((sCommand=="titler" || sCommand == "title") && sAction == "color") {
         string sColor= llDumpList2String(llDeleteSubList(lParams,0,1)," ");
         if (sColor != ""){
@@ -191,7 +202,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
         } else if (sAction == "box") {
-            g_kTBoxId = Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sFeatureName + ".", [], [], 0, iAuth);
+            Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
         } else if (sAction == "text") {
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");//pop off the "text" command
 
@@ -208,6 +219,9 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         }
         ShowHideText();
+    } else if (sStr == "rm titler") {
+            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kAv);
+            else ConfirmDeleteMenu(kAv, iAuth);
     }
 }
 
@@ -230,7 +244,7 @@ default{
         //Debug("State Entry Event ended");
 
         if (g_iTextPrim < 0) {
-            llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sFeatureName, "");
+            llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
         ShowHideText();
@@ -240,7 +254,7 @@ default{
         //Debug("Link Message Event");
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sFeatureName, "");
+            llMessageLinked(LINK_ROOT, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == LM_SETTING_RESPONSE) {
             string sGroup = llGetSubString(sStr, 0,  llSubStringIndex(sStr, "_") );
             string sToken = llGetSubString(sStr, llSubStringIndex(sStr, "_")+1, llSubStringIndex(sStr, "=")-1);
@@ -253,44 +267,45 @@ default{
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
             } else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
-            if (kID == g_kDialogID) {   //response from our main menu
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) {
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);        
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == SET) UserCommand(iAuth, "title box", kAv);
-                else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
-                else if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                else {
-                    if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
-                    else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
-                    else if (sMessage == OFF) UserCommand(iAuth, "title on", kAv);
-                    else if (sMessage == ON) UserCommand(iAuth, "title off", kAv);
-                    UserCommand(iAuth, "menu titler", kAv);
+                if (sMenuType == "main") { 
+                    if (sMessage == SET) UserCommand(iAuth, "title box", kAv);
+                    else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
+                    else if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else {
+                        if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
+                        else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
+                        else if (sMessage == OFF) UserCommand(iAuth, "title on", kAv);
+                        else if (sMessage == ON) UserCommand(iAuth, "title off", kAv);
+                        UserCommand(iAuth, "menu titler", kAv);
+                    }
+                } else if (sMenuType == "color") {  //response form the colours menu
+                    if (sMessage == UPMENU) UserCommand(iAuth, "menu titler", kAv);
+                    else {
+                        UserCommand(iAuth, "titler color "+sMessage, kAv);
+                        UserCommand(iAuth, "menu titler color", kAv);
+                    }
+                } else if (sMenuType == "textbox") {  //response from text box
+                    if(sMessage != "") UserCommand(iAuth, "title text " + sMessage, kAv);
+                    UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
+                } else if (sMenuType == "rmtitler") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
-            } else if (kID == g_kColorDialogID) {  //response form the colours menu
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-
-                if (sMessage == UPMENU) UserCommand(iAuth, "menu titler", kAv);
-                else {
-                    UserCommand(iAuth, "titler color "+sMessage, kAv);
-                    UserCommand(iAuth, "menu titler color", kAv);
-                }
-
-            } else if (kID == g_kTBoxId) {  //response from text box
-                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-
-                if(sMessage != "") UserCommand(iAuth, "title text " + sMessage, kAv);
-                UserCommand(iAuth, "menu " + g_sFeatureName, kAv);
+            } else if (iNum == DIALOG_TIMEOUT) {
+                integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
             }
         }
     }
