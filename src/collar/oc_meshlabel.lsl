@@ -96,10 +96,13 @@ string g_sTextMenu = "Set Label";
 string g_sFontMenu = "Font";
 string g_sColorMenu = "Color";
 
-key g_kDialogID;
-key g_kTBoxID;
-key g_kFontID;
-key g_kColorID;
+list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
+integer g_iMenuStride = 3;
+
+//key g_kDialogID;
+//key g_kTBoxID;
+//key g_kFontID;
+//key g_kColorID;
 
 string g_sCharmap = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǰǺǻǼǽǾǿȘșʼˆˇˉ˘˙˚˛˜˝˳̣̀́̃̉̏΄΅Ά·ΈΉΊΌΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϑϒϖЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҃҄҅҆҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡӢӣӤӥӦӧӨөӪӫӬӭӮӯӰӱӲӳӴӵӶӷӸӹӺӻӼӽӾӿԀԁԂԃԄԅԆԇԈԉԊԋԌԍԎԏԐԑԒԓḀḁḾḿẀẁẂẃẄẅẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹὍ–—―‗‘’‚‛“”„†‡•…‰′″‹›‼⁄ⁿ₣₤₧₫€℅ℓ№™Ω℮⅛⅜⅝⅞∂∆∏∑−√∞∫≈≠≤≥◊ﬁﬂﬃﬄ￼ ";
 
@@ -234,11 +237,13 @@ SetLabel() {
     //Debug("Label Set");
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    return kID;
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    //Debug("Made menu.");
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
 MainMenu(key kID, integer iAuth) {
@@ -250,31 +255,38 @@ MainMenu(key kID, integer iAuth) {
     else lButtons += ["☐ Scroll"];
 
     string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nCustomize the %DEVICETYPE%'s label!";
-    g_kDialogID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"main");
 }
 
 TextMenu(key kID, integer iAuth) {
     string sPrompt="\n- Submit the new label in the field below.\n- Submit a few spaces to clear the label.\n- Submit a blank field to go back to " + g_sSubMenu + ".";
-    g_kTBoxID = Dialog(kID, sPrompt, [], [], 0, iAuth);
+    Dialog(kID, sPrompt, [], [], 0, iAuth,"textbox");
 }
 
 ColorMenu(key kID, integer iAuth) {
     string sPrompt = "\n\nSelect a color from the list";
-    g_kColorID=Dialog(kID, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth,"color");
 }
 
 FontMenu(key kID, integer iAuth) {
     list lButtons=llList2ListStrided(g_lFonts,0,-1,2);
     string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nSelect the font for the %DEVICETYPE%'s label.";
 
-    g_kFontID=Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"font");
 }
 
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmlabel");
+}
 
 UserCommand(integer iAuth, string sStr, key kAv) {
     //Debug("Command: "+sStr);
     string sLowerStr = llToLower(sStr);
-    if (iAuth == CMD_OWNER) {
+     if (sStr == "rm label") {
+        if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kAv);
+        else ConfirmDeleteMenu(kAv, iAuth);
+    } else if (iAuth == CMD_OWNER) {
         if (sLowerStr == "menu label" || sLowerStr == "label") {
             MainMenu(kAv, iAuth);
             return;
@@ -373,59 +385,60 @@ default
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == DIALOG_RESPONSE) {
-            if (kID==g_kDialogID) {
-                //got a menu response meant for us.  pull out values
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex) {
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                else if (sMessage == g_sTextMenu) TextMenu(kAv, iAuth);
-                else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
-                else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
-                else if (sMessage == "☐ Show") {
-                    UserCommand(iAuth, "label on", kAv);
-                    MainMenu(kAv, iAuth);
-                } else if (sMessage == "☒ Show") {
-                    UserCommand(iAuth, "label off", kAv);
-                    MainMenu(kAv, iAuth);
-                } else if (sMessage == "☐ Scroll") {
-                    UserCommand(iAuth, "label scroll on", kAv);
-                    MainMenu(kAv, iAuth);
-                } else if (sMessage == "☒ Scroll") {
-                    UserCommand(iAuth, "label scroll off", kAv);
-                    MainMenu(kAv, iAuth);
+                if (sMenuType=="main") {
+                    //got a menu response meant for us.  pull out values
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == g_sTextMenu) TextMenu(kAv, iAuth);
+                    else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
+                    else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
+                    else if (sMessage == "☐ Show") {
+                        UserCommand(iAuth, "label on", kAv);
+                        MainMenu(kAv, iAuth);
+                    } else if (sMessage == "☒ Show") {
+                        UserCommand(iAuth, "label off", kAv);
+                        MainMenu(kAv, iAuth);
+                    } else if (sMessage == "☐ Scroll") {
+                        UserCommand(iAuth, "label scroll on", kAv);
+                        MainMenu(kAv, iAuth);
+                    } else if (sMessage == "☒ Scroll") {
+                        UserCommand(iAuth, "label scroll off", kAv);
+                        MainMenu(kAv, iAuth);
+                    }
+                } else if (sMenuType == "color") {
+                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
+                    else {
+                        UserCommand(iAuth, "label color "+sMessage, kAv);
+                        ColorMenu(kAv, iAuth);
+                    }
+                } else if (sMenuType == "font") {
+                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
+                    else {
+                        UserCommand(iAuth, "label font " + sMessage, kAv);
+                        FontMenu(kAv, iAuth);
+                    }
+                } else if (sMenuType == "textbox") { // TextBox response, extract values
+                    if (sMessage != "") UserCommand(iAuth, "label text " + sMessage, kAv);
+                    llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sSubMenu, kAv);
+                } else if (sMenuType == "rmlabel") {
+                    if (sMessage == "Yes") {
+                        if (g_sScrollText) UserCommand(iAuth, "label scroll off", kAv);
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
-            } else if (kID == g_kColorID) {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                else {
-                    UserCommand(iAuth, "label color "+sMessage, kAv);
-                    ColorMenu(kAv, iAuth);
-                }
-            } else if (kID == g_kFontID) {
-                list lMenuParams = llParseString2List(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                else {
-                    UserCommand(iAuth, "label font " + sMessage, kAv);
-                    FontMenu(kAv, iAuth);
-                }
-            } else if (kID == g_kTBoxID) { // TextBox response, extract values
-                list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0);
-                string sMessage = llList2String(lMenuParams, 1);
-                integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMessage != "") UserCommand(iAuth, "label text " + sMessage, kAv);
-                llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sSubMenu, kAv);
+            } else if (iNum == DIALOG_TIMEOUT) {
+                integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
             }
         }
     }
