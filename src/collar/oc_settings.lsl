@@ -59,7 +59,7 @@ string g_sCard = ".settings";
 string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
 key g_kLineID;
-key g_kCardID;
+key g_kCardID = NULL_KEY; //needed for change event check if no .settings card is in the inventory
 key g_kWearer;
 
 //string g_sSettingToken = "settings_";
