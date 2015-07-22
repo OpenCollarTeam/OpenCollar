@@ -119,7 +119,7 @@ integer MENUNAME_REMOVE = 3003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
 string UPMENU = "BACK";
 string g_sSettingToken = "bell_";
@@ -170,6 +170,11 @@ BellMenu(key kID, integer iAuth) {
     lMyButtons += ["Next Sound","Vol +","Vol -"];
 
     Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");
+}
+
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbell");
 }
 
 SetBellElementAlpha() {
@@ -292,6 +297,9 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
         } else if (sToken=="ring") {
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         }
+    } else if (sStr == "rm bell") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        else ConfirmDeleteMenu(kID, iNum);
     }
     //Debug("command executed");
 }
@@ -321,6 +329,7 @@ default {
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAV = llList2String(lMenuParams, 0);
@@ -352,9 +361,18 @@ default {
                     g_iBellShow = !g_iBellShow;
                     SetBellElementAlpha();
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
+                } else if (sMenuType == "rmbell") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAV);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAV);
                 }
                 BellMenu(kAV, iAuth);
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
