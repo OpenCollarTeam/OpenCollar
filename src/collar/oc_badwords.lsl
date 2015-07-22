@@ -72,6 +72,7 @@ integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+integer MENUNAME_REMOVE = 3003;
 
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
@@ -82,6 +83,9 @@ integer DIALOG_TIMEOUT = -9002;
 
 //string g_sDeviceType = "collar";
 //string g_sWearerName;
+
+string g_sParentMenu = "Apps";
+string g_sSubMenu = "Badwords";
 
 string g_sNoSound = "silent" ;
 string g_sBadWordSound;
@@ -164,6 +168,11 @@ MenuBadwords(key kID, integer iNum){
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");
 }
 
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the Badwords App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbadwords");
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
     //Debug("Got command:"+sStr);
     sStr=llStringTrim(sStr,STRING_TRIM);
@@ -171,6 +180,9 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
     string sCommand = llList2String(lParams, 0);
     if (llToLower(sStr) == "badwords" || llToLower(sStr) == "menu badwords") {
         MenuBadwords(kID, iNum);
+    } else if (sStr == "rm badwords") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        else ConfirmDeleteMenu(kID, iNum);
     } else if (llToLower(sCommand)=="badwords"){
         if (iNum != CMD_OWNER) return;
         sCommand = llToLower(llList2String(lParams, 1));
@@ -337,7 +349,7 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //Debug("Got message:"+(string)iNum+" "+sStr);
         if (kID == g_kWearer || iNum == CMD_OWNER) UserCommand(iNum, sStr, kID, FALSE);
-        else if (iNum == MENUNAME_REQUEST && sStr == "Apps") llMessageLinked(LINK_SET, MENUNAME_RESPONSE, "Apps|Badwords", "");
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+g_sSubMenu, "");
         else if (iNum == CMD_SAFEWORD) {
             if(g_sBadWordSound != g_sNoSound) llStopSound();
             llMessageLinked(LINK_SET, ANIM_STOP, g_sBadWordAnim, "");
@@ -388,6 +400,12 @@ default {
                 } else if (sMenu=="BadwordsPenance") {
                     if (sMessage) UserCommand(iAuth, "badwords penance " + sMessage, kAv, TRUE);
                     else  MenuBadwords(kID,iNum);
+                } else if (sMenu == "rmbadwords") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu+"|"+g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
