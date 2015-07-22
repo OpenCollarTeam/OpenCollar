@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 150712.1                              //
+//                           Camera - 141231.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Medea Destiny, //
 //  littlemousy, Romka Swallowtail et al.                                   //
@@ -56,7 +56,7 @@
 
 key g_kWearer;
 integer g_iLastNum;
-string g_sMyMenu = "Camera";
+string g_sSubMenu = "Camera";
 string g_sParentMenu = "Apps";
 key g_kMenuID;
 string g_sCurrentMode = "default";
@@ -70,19 +70,6 @@ integer g_iBroadChan;
 key g_kBroadRcpt;
 
 string g_sJsonModes;
-/*
-//a 2-strided list in the form modename,camparams, where camparams is a serialized list
-list g_lModes = [
-"default", "|/?!@#|12|0",//[CAMERA_ACTIVE, FALSE]
-"human", "|/?!@#|12|1|8/0.000000|9/0.000000|7/2.500000|6/0.050000|22|0|11/0.000000|0/20.000000|5/0.000000|21|0|10/0.000000|1@<0.000000, 0.000000, 0.350000>",
-"1stperson", "|/?!@#|12|1|7/0.500000|1@<2.500000, 0.000000, 1.000000>", //CAMERA_ACTIVE, TRUE, CAMERA_DISTANCE, 0.5,CAMERA_FOCUS_OFFSET, <2.5,0,1.0>]]
-"ass", "|/?!@#|12|1|7/0.500000",//[CAMERA_ACTIVE, TRUE, CAMERA_DISTANCE, 0.5]
-"far", "|/?!@#|12|1|7/10.000000", //[CAMERA_ACTIVE, TRUE,CAMERA_DISTANCE, 10.0]]
-"god", "|/?!@#|12|1|7/10.000000|0/80.000000", //[CAMERA_ACTIVE, TRUE,CAMERA_DISTANCE, 10.0,CAMERA_PITCH, 80.0]]
-"ground", "|/?!@#|12|1|0/-15.000000",//[CAMERA_ACTIVE, TRUE, CAMERA_PITCH, -15.0]
-"worm", "|/?!@#|12|1|7/0.500000|1@<0.000000, 0.000000, -0.750000>|0/-15.000000" //[CAMERA_ACTIVE, TRUE,CAMERA_DISTANCE, 0.5,CAMERA_FOCUS_OFFSET, <0,0,-0.75>, CAMERA_PITCH, -15.0]
-];
-*/
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -191,6 +178,11 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 } 
 
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmcamera");
+}
+
 CamMode(string sMode) {
     llClearCameraParams();
 //    integer iIndex = llListFindList(g_lModes, [sMode]);
@@ -269,7 +261,7 @@ CamMenu(key kID, integer iAuth) {
     integer stop = llGetListLength(llJson2List(g_sJsonModes)); 
     for (n = 0; n < stop; n +=2)
         lButtons += [Capitalize(llList2String(llJson2List(g_sJsonModes),n))];
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "CamMenu");
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "camera");
 }
 
 string Capitalize(string sIn) {
@@ -296,70 +288,6 @@ string StrReplace(string sSrc, string sFrom, string sTo) {
     }
     return sSrc;
 }
-/* no more needed due to JSON funktion
-//These TightListType functions allow serializing a list to a string, and deserializing it back, while preserving variable type information.  We use them so we can have a list of camera modes, where each mode is itself a list
-integer TightListTypeLength(string sInput) {
-    string sSeperators = llGetSubString(sInput,(0),6);
-    return ((llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)),
-           llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3),
-           llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]) != []) + (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6)) >> 1;
-}
- 
-integer TightListTypeEntryType(string sInput, integer iIndex)
-{
-    string sSeperators = llGetSubString(sInput,(0),6);
-    return llSubStringIndex(sSeperators, sInput) + ((sInput = llList2String(llList2List(sInput + llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)), llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3), llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]), (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6) << 1, -1),  iIndex << 1)) != "");
-}
- 
-list TightListTypeParse(string sInput) {
-    list lPartial;
-    if(llStringLength(sInput) > 6)
-    {
-        string sSeperators = llGetSubString(sInput,(0),6);
-        integer iPos = ([] != (lPartial = llList2List(sInput + llParseStringKeepNulls(llDeleteSubString(sInput,(0),5), [],[sInput=llGetSubString(sSeperators,(0),(0)), llGetSubString(sSeperators,1,1),llGetSubString(sSeperators,2,2),llGetSubString(sSeperators,3,3), llGetSubString(sSeperators,4,4),llGetSubString(sSeperators,5,5)]), (llSubStringIndex(sSeperators,llGetSubString(sSeperators,6,6)) < 6) << 1, -1)));
-        integer iType = (0);
-        integer iSubPos = (0);
-        do
-        {
-            list s_Current = (list)(sInput = llList2String(lPartial, iSubPos= -~iPos));//TYPE_STRING || TYPE_INVALID (though we don't care about invalid)
-            if(!(iType = llSubStringIndex(sSeperators, llList2String(lPartial,iPos))))//TYPE_INTEGER
-                s_Current = (list)((integer)sInput);
-            else if(iType == 1)//TYPE_FLOAT
-                s_Current = (list)((float)sInput);
-            else if(iType == 3)//TYPE_KEY
-                s_Current = (list)((key)sInput);
-            else if(iType == 4)//TYPE_VECTOR
-                s_Current = (list)((vector)sInput);
-            else if(iType == 5)//TYPE_ROTATION
-                s_Current = (list)((rotation)sInput);
-            lPartial = llListReplaceList(lPartial, s_Current, iPos, iSubPos);
-        }while((iPos= -~iSubPos) & 0x80000000);
-    }
-    return lPartial;
-}
- 
-string TightListTypeDump(list lInput, string sSeperators) {//This function is dangerous
-    sSeperators += "|/?!@#$%^&*()_=:;~`'<>{}[],.\n\" qQxXzZ\\";
-    string sCumulator = (string)(lInput);
-    integer iCounter = (0);
-    do
-        if(~llSubStringIndex(sCumulator,llGetSubString(sSeperators,iCounter,iCounter)))
-            sSeperators = llDeleteSubString(sSeperators,iCounter,iCounter);
-        else
-            iCounter = -~iCounter;
-    while(iCounter<6);
-    sSeperators = llGetSubString(sSeperators,(0),5);
- 
-        sCumulator =  "";
- 
-    if((iCounter = (lInput != []))) {
-        do {
-            integer iType = ~-llGetListEntryType(lInput, iCounter = ~-iCounter);
-             sCumulator = (sCumulator = llGetSubString(sSeperators,iType,iType)) + llList2String(lInput,iCounter) + sCumulator;
-        } while(iCounter);
-    }
-    return sSeperators + sCumulator;
-}*/
 
 SaveSetting(string sToken) {
     //Debug("last mode: "+g_sCurrentMode);
@@ -387,7 +315,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
     string sCommand = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
     string sValue2 = llList2String(lParams, 2);
-    if (sStr == "menu " + g_sMyMenu) {
+    if (sStr == "menu " + g_sSubMenu) {
         CamMenu(kID, iNum);
     } else if (sCommand == "cam" || sCommand == "camera") {
         //Debug("g_iLastNum=" + (string)g_iLastNum);  
@@ -441,6 +369,9 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             g_iSync2Me = TRUE;
             llSetTimerEvent(g_fReapeat);
         }
+    } else if (sStr == "rm camera") {
+            if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            else ConfirmDeleteMenu(kID, iNum);
     } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
         ClearCam();
         llResetScript();
@@ -473,7 +404,7 @@ default {
             ClearCam();
             llResetScript();
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sMyMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["=", ","], []);
             string sToken = llList2String(lParams, 0);
@@ -496,14 +427,23 @@ default {
                 key kAv = (key)llList2String(lMenuParams, 0);          
                 string sMessage = llList2String(lMenuParams, 1);                                         
                 // integer iPage = (integer)llList2String(lMenuParams, 2); 
-                integer iAuth = (integer)llList2String(lMenuParams, 3); 
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-                if (sMessage == UPMENU)
-                    llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
-                else {
-                    UserCommand(iAuth, "cam " + llToLower(sMessage), kAv);
-                    CamMenu(kAv, iAuth);
-                }                              
+                if (sMenuType == "camera") {
+                    if (sMessage == UPMENU)
+                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    else {
+                        UserCommand(iAuth, "cam " + llToLower(sMessage), kAv);
+                        CamMenu(kAv, iAuth);
+                    }
+                } else if (sMenuType == "rmcamera") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                }                      
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
