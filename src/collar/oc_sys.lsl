@@ -65,7 +65,7 @@ key g_kWearer;
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
 
-integer g_iScriptCount;//when the scriptcount changes, rebuild menus
+//integer g_iScriptCount;//when the scriptcount changes, rebuild menus *unreliable due to failure of change event on scripted removal of inv
 
 //MESSAGE MAP
 integer CMD_ZERO = 0;
@@ -474,7 +474,7 @@ RebuildMenu() {
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
+   // llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", ""); //pre 4.0 api, no longer supported
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Options", "");
 }
@@ -500,7 +500,7 @@ default
         g_kWearer = llGetOwner();
         news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
-        g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event;
+      //g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event; *sadly this fails when scripts are removed by scripts
         init();
         //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
@@ -656,13 +656,11 @@ default
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
-            if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
-                //llSleep(0.5); //wait for new scripts to start up
-                //RebuildMenu(); //llResetScript();
-                g_iWaitRebuild = TRUE;
-                llSetTimerEvent(0.5);
-            }
-            g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
+          //  if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
+            g_iWaitRebuild = TRUE;
+            llSetTimerEvent(0.5);
+         //   }
+         //   g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_COLOR) {
