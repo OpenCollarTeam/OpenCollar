@@ -52,8 +52,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string  SUBMENU_BUTTON              = "Bookmarks"; // Name of the submenu
-string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
+string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
@@ -66,15 +66,19 @@ list   g_lVolatile_Destinations       = []; //These are in memory preferences th
 list   g_lVolatile_Slurls             = []; //These are in memory preferences that are not yet saved into the notecard
 key    g_kRequestHandle               = NULL_KEY; //Sim Request Handle to convert global coordinates
 vector g_vLocalPos                    = ZERO_VECTOR;
-key    g_kRemoveMenu                  = NULL_KEY; //Use a separate key for the remove menu ID
+//key    g_kRemoveMenu                  = NULL_KEY; //Use a separate key for the remove menu ID
 integer g_iRLVOn                      = FALSE; //Assume RLV is off until we hear otherwise
 string g_tempLoc                      = "";   //This holds a global temp location for manual entry from provided location but no favorite name - g_kTBoxIdLocationOnly
 
-key     g_kMenuID;
+//key     g_kMenuID;
+
+list g_lMenuIDs;//3-strided list of avkey, dialogid, menuname
+integer g_iMenuStride = 3;
+
 key     g_kWearer;
 
-key     g_kTBoxIdSave               = "null";
-key     g_kTBoxIdLocationOnly       = "null";
+//key     g_kTBoxIdSave               = "null";
+//key     g_kTBoxIdLocationOnly       = "null";
 
 string  g_sSettingToken             = "bookmarks_";
 //string g_sGlobalToken             = "global_";
@@ -103,12 +107,13 @@ integer LM_SETTING_RESPONSE        = 2002;
 integer LM_SETTING_DELETE          = 2003;
 integer MENUNAME_REQUEST           = 3000;
 integer MENUNAME_RESPONSE          = 3001;
+integer MENUNAME_REMOVE            = 3003;
 integer RLV_CMD                    = 6000;
 integer RLV_OFF                    = 6100;
 integer RLV_ON                     = 6101;
 integer DIALOG                     = -9000;
 integer DIALOG_RESPONSE            = -9001;
-
+integer DIALOG_TIMEOUT             = -9002;
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -123,17 +128,24 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     //Debug("Made menu.");
-    return kID;
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
 }
 
 DoMenu(key keyID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/bookmarks.html Bookmarks]\n\nTake me away, gumby!";
     list lMyButtons = PLUGIN_BUTTONS + g_lButtons + g_lDestinations + g_lVolatile_Destinations;
-    g_kMenuID = Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth);
+    Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "bookmarks");
+}
+
+ConfirmDeleteMenu(key kAv, integer iAuth) {
+    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
+    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbookmarks");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -147,7 +159,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             //only owner and wearer may reset
             llResetScript();
         }
-    } else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
+    } else if (sStr == "rm bookmarks") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+        else ConfirmDeleteMenu(kID, iNum);
+    }else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
         if (iNum==CMD_GROUP){
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         }
@@ -167,12 +182,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         } else {
             // Notify that they need to give a description of the saved destination ie. <prefix>bookmarks save description
-            g_kTBoxIdSave = Dialog(kID,
+            Dialog(kID,
 
 "Enter a name for the destination below. Submit a blank field to cancel and return.
 You can enter:
 1) A friendly name to save your current location to your favorites
-2) A new location or SLurl", [], [], 0, iNum);
+2) A new location or SLurl", [], [], 0, iNum,"TextBoxIdSave");
 
         }
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " remove") - 1) == PLUGIN_CHAT_CMD + " remove") { //grab partial string match to capture destination name
@@ -191,7 +206,7 @@ You can enter:
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Removed destination " + sDel,kID);
             }
         } else {
-            g_kRemoveMenu = Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum);
+            Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum,"RemoveMenu");
         }
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
         if (iNum==CMD_GROUP){
@@ -239,7 +254,7 @@ You can enter:
                 //else
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID);
             } else if(found > 1)
-                g_kMenuID = Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum);
+                Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum,"choose bookmark");
             else  //exactly one matching LM found, so use it
                 UserCommand(iNum, PLUGIN_CHAT_CMD + " " + llList2String(matchedBookmarks, 0), g_kCommander); //Push matched result to command
         }
@@ -338,9 +353,9 @@ integer validatePlace(string sStr, key kAv, integer iAuth) {
     }
     if(sFriendlyName == "") {
         g_tempLoc = sRegionName + sAssembledLoc; //assign a global for use in response menu
-        g_kTBoxIdLocationOnly = Dialog(kAv,
+        Dialog(kAv,
 "\nEnter a name for the destination " + sRegionName + sAssembledLoc + "
-below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth);
+below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth,"TextBoxIdLocation");
 
     } else {
         addDestination(sFriendlyName, sRegionName, kAv);
@@ -408,8 +423,8 @@ default {
        // llSetMemoryLimit(49152);  //2015-05-06 (7512 bytes free)
         g_kWearer = llGetOwner();  // store key of wearer
         ReadDestinations(); //Grab our presets
-        //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
+        //llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubMenu, "");
+        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
 
@@ -479,17 +494,17 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //     Debug((string)iSender + "|" + (string)iNum + "|" + sStr + "|" + (string)kID);
-        if(iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
+        if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lButtons = [] ;
-            llMessageLinked(LINK_THIS, MENUNAME_REQUEST, SUBMENU_BUTTON, "");
+            llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubMenu, "");
         } else if(iNum == RLV_OFF) {
             g_iRLVOn = FALSE;
         } else if(iNum == RLV_ON) {
             g_iRLVOn = TRUE;
         } else if(iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sStr, ["|"], []);
-            if(llList2String(lParts, 0) == SUBMENU_BUTTON) {
+            if(llList2String(lParts, 0) == g_sSubMenu) {
                 string button = llList2String(lParts, 1);
                 if(llListFindList(g_lButtons, [button]) == -1) {
                     g_lButtons = llListSort(g_lButtons + [button], 1, TRUE);
@@ -509,7 +524,9 @@ default {
             }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == DIALOG_RESPONSE) {
-            if(llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (iMenuIndex != -1) {
+//            if(llListFindList([g_kMenuID, g_kTBoxIdSave, g_kRemoveMenu, g_kTBoxIdLocationOnly], [kID]) != -1) {
                 //got a menu response meant for us, extract the values
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
@@ -517,17 +534,19 @@ default {
                 integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
-                if(kID == g_kTBoxIdLocationOnly) {
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                if(sMenuType == "TextBoxIdLocation") {
                     if(sMessage != "")
                         addDestination(sMessage, g_tempLoc, kID);
                     UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
-                } else if(kID == g_kTBoxIdSave) {
+                } else if(sMenuType == "TextBoxIdSave") {
                     //Debug("TBoxIDSave " + sMessage);
                     if(sMessage != "")
                         validatePlace(convertSlurl(sMessage, kAv, iAuth), kAv, iAuth);
                     else
                         UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
-                } else if(kID == g_kRemoveMenu) {
+                } else if(sMenuType == "RemoveMenu") {
                     //       Debug("|"+sMessage+"|");
                     if(sMessage == UPMENU) {
                         UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
@@ -539,7 +558,13 @@ default {
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " remove", kAv);
                     } else { UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv); }
                 } else if(sMessage == UPMENU) {
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
+                } else if (sMenuType == "rmbookmarks") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 } else if(~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
                     if(sMessage == "SAVE")
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " save", kAv);
@@ -554,6 +579,9 @@ default {
                 else if(~llListFindList(g_lButtons, [sMessage]))
                     llMessageLinked(LINK_THIS, iAuth, "menu " + sMessage, kAv);
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }
     }
 
