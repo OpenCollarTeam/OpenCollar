@@ -214,7 +214,7 @@ Say(string sMsg, integer iWhisper) {
         sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
     string sObjectName = llGetObjectName();
     llSetObjectName("");
-    if (iWhisper) llWhisper(0, sMsg);
+    if (iWhisper) llWhisper(0,"/me "+sMsg);
     else llSay(0, sMsg);
     llSetObjectName(sObjectName);
 }
