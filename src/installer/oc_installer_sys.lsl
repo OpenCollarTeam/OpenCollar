@@ -67,6 +67,8 @@
 // This script also does a little bit of magic to ensure that the updater's
 // version number always matches the contents of the ".version" card.
 
+string installer = "oc_installer";
+string shim = "oc_update_shim";
 
 key version_line_id;
 
@@ -270,7 +272,7 @@ default {
             integer type = llGetInventoryType(name);
             if (type == INVENTORY_SCRIPT) {
                 // ignore updater scripts.  set others to not running.
-                if (llSubStringIndex(name, "OpenCollarUpdater") != 0) {
+                if (llSubStringIndex(name, installer) != 0) {
                     DisableScript(name);
                 }
             } else if (type == INVENTORY_NOTECARD) {
@@ -325,8 +327,7 @@ default {
                 string button = llList2String(parts, 1);
                 integer page = (integer)llList2String(parts, 2);
                 if (button == "START") {
-                    // so let's load the shim.
-                    string shim = "OpenCollar - UpdateShim";
+                    // so let's load the shim.                    
                     iSecureChannel = (integer)llFrand(-2000000000 + 1);
                     llListen(iSecureChannel, "", kCollarKey, "");
                     llRemoteLoadScriptPin(kCollarKey, shim, iPin, TRUE, iSecureChannel);
