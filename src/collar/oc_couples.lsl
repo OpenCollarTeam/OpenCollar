@@ -310,7 +310,7 @@ default {
                         llMessageLinked(LINK_SET,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
                     }
                 }
-            } else if (sStr == "stopcouples") StopAnims();
+            } else if (sStr == "stop couples") StopAnims();
             else if (sStr == "menu "+g_sSubMenu || sStr == "couples") CoupleAnimMenu(kID, iNum);
             else if (sCommand == "couples" && sValue == "verbose") {
                 sValue = llToLower(llList2String(lParams, 2));
