@@ -1,5 +1,5 @@
 =================================
-OpenCollar Help Card | 2015-07-11
+OpenCollar Help Card | 2015-07-26
 =================================
 
 This is only a short version of the manual, explaining the basic usage and lists all chat commands.
@@ -27,15 +27,15 @@ Your [prefix] are the first two letters of your username
 
 Your prefix is used to issue commands in the Nearby Chat.
 
-    [prefix]menu
-    [prefix]kneel
-    [prefix]stop
+    [prefix] menu
+    [prefix] kneel
+    [prefix] stop
 
 If you don’t like your prefix, you can change it. Only the owner can change the prefix, and the wearer if there is no owner set.
 
-    wsprefix wen
-    wrprefix we
-    jsprefix sex
+    ws prefix wen
+    wr prefix we
+    js prefix sex
 
 There are two special prefixes. * issues commands to everyone nearby and # issues commands to everyone except yourself.
 
@@ -48,22 +48,22 @@ Channels:
 
 You can also issue commands on channel 1.
 
-    /1[prefix]menu
+    /1[prefix] menu
 
 Or if you don’t like channel 1 set a different channel.
 
-    [prefix]channel 2
-    [prefix]channel 3
-    [prefix]channel 69
-    [prefix]channel 9001
+    [prefix] channel 2
+    [prefix] channel 3
+    [prefix] channel 69
+    [prefix] channel 9001
 
 If you are considerate about lag, you can also turn off the Nearby Chat listener.
 
-    [prefix]channel -1
+    [prefix] channel -1
 
 Too much hassle to always type a slash after all?
 
-    /1[prefix]channel 0
+    /1[prefix] channel 0
 
 ---------
 Safeword:
@@ -77,9 +77,9 @@ Your collar also has a safeword which you simply type in the nearby chat. This w
 
 If that’s too hard to remember you can easily change it.
 
-    [prefix]safeword Mayday!
-    [prefix]safeword taxi
-    [prefix]safeword BANANA
+    [prefix] safeword Mayday!
+    [prefix] safeword taxi
+    [prefix] safeword BANANA
 
 
 =====================
@@ -134,12 +134,12 @@ Titler:
 
     #menu titler
 
-    #titlebox
+    #title box
 
-    #title [a fancy title]
+    #title text [a fancy title]
 
-    #titleon
-    #titleoff
+    #title on
+    #title off
 
 -----------
 Animations:
@@ -202,7 +202,7 @@ Couple Animations:
     #foot
     #catch
 
-    #stopcouples
+    #stop couples
 
 -------
 Kidnap:
@@ -247,8 +247,8 @@ RLV:
 
     #rlv
 
-    #rlvon
-    #rlvoff
+    #rlv on
+    #rlv off
     #clear
 
 ----------
@@ -325,20 +325,20 @@ Access:
 
     #access
 
-    #owner [UUID or name]
-    #removeowner [name]
+    #add owner [UUID or name]
+    #remove owner [name]
 
-    #trust [UUID or name]
-    #removetrust [name]
+    #add trust [UUID or name]
+    #remove trust [name]
 
-    #block [UUID or name]
-    #removeblock [name]
+    #add block [UUID or name]
+    #remove block [name]
 
-    #public
-    #private
+    #public on
+    #public off
 
-    #limitrange
-    #unlimitrange
+    #limitrange on
+    #limitrange off
 
     #runaway
 
