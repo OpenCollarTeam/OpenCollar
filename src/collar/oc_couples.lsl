@@ -277,7 +277,7 @@ default {
         if (iChannel == g_iStopChan) {
             //this abuses the GROUP auth a bit but i think it's ok.
             //Debug("message on stop channel");
-            llMessageLinked(LINK_SET, CMD_GROUP, "stopcouples", kID);
+            llMessageLinked(LINK_SET, CMD_GROUP, "stop couples", kID);
         }
     }
 
@@ -403,7 +403,7 @@ default {
                 } else if (sMessage == "ENDLESS") {
                     g_fTimeOut = 0.0;
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "timeout=0.0", "");
-                    llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type *stopcouples to stop them again.",kAv);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type %PREFIX% stop couples to stop them again.",kAv);
                     CoupleAnimMenu(kAv, iAuth);
                 }
             }
