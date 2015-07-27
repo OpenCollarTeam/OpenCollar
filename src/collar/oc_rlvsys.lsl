@@ -686,7 +686,7 @@ default {
         } else {
             if (g_iCheckCount++ <= g_iMaxViewerChecks) {
             llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX%rlvoff\n", g_kWearer);
+            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);
