@@ -54,11 +54,11 @@
 
 key g_kWearer;
 
-list g_lOwners;//strided list in form key,name
-list g_lTrusted;//strided list in the form key,name
+list g_lOwner;//strided list in form key,name
+list g_lTrust;//strided list in the form key,name
 //list g_lSecOwners;
-list g_lBlockList;//list of blacklisted UUID
-list g_lTempOwners;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
+list g_lBlock;//list of blacklisted UUID
+list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
 
 key g_kGroup = "";
 string g_sGroupName;
@@ -165,10 +165,10 @@ FetchAvi(integer iAuth, string sType, string sName, key kAv) {
     if (sName == "") sName = " ";
     string out = llDumpList2String(["getavi_", g_sSettingToken, kAv, iAuth, sType, sName], "|");
     integer i = 0;
-    list src = g_lOwners;
-    if (sType == "tempowner") src += g_lTempOwners;
-    if (sType == "trust") src += g_lTrusted;
-    else if (sType == "block") src = g_lBlockList;
+    list src = g_lOwner;
+    if (sType == "tempowner") src += g_lTempOwner;
+    if (sType == "trust") src += g_lTrust;
+    else if (sType == "block") src = g_lBlock;
     list exclude; // build list of existing-listed keys to exclude from name search
     for (; i < llGetListLength(src); i += 2) {
         exclude += [llList2String(src, i)];
@@ -180,7 +180,7 @@ FetchAvi(integer iAuth, string sType, string sName, key kAv) {
 
 AuthMenu(key kAv, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/access.html Access]\n";
-    list lButtons = ["+ Owner", "+ Trusted", "+ Blocked", "− Owner", "− Trusted", "− Blocked"];
+    list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☒"];    //unset group
@@ -195,10 +195,10 @@ AuthMenu(key kAv, integer iAuth) {
 
 RemPersonMenu(key kID, string sToken, integer iAuth) {
     list lPeople;
-    if (sToken=="owner") lPeople=g_lOwners;
-    else if (sToken=="tempowner") lPeople=g_lTempOwners;
-    else if (sToken=="trust") lPeople=g_lTrusted;
-    else if (sToken=="block") lPeople=g_lBlockList;
+    if (sToken=="owner") lPeople=g_lOwner;
+    else if (sToken=="tempowner") lPeople=g_lTempOwner;
+    else if (sToken=="trust") lPeople=g_lTrust;
+    else if (sToken=="block") lPeople=g_lBlock;
     else return;
     if (llGetListLength(lPeople)){
         string sPrompt = "\nChoose the person to remove:\n";
@@ -225,13 +225,13 @@ RemovePerson(string sName, string sToken, key kCmdr) {
     //Debug("removing: " + sName);
     //all our comparisons will be cast to lower case first
     list lPeople;
-    if (sToken=="owner") lPeople=g_lOwners;
-    else if (sToken=="tempowner") lPeople=g_lTempOwners;
-    else if (sToken=="trust") lPeople=g_lTrusted;
-    else if (sToken=="block") lPeople=g_lBlockList;
+    if (sToken=="owner") lPeople=g_lOwner;
+    else if (sToken=="tempowner") lPeople=g_lTempOwner;
+    else if (sToken=="trust") lPeople=g_lTrust;
+    else if (sToken=="block") lPeople=g_lBlock;
     else return;
 // ~ is bitwise NOT which is used for the llListFindList function to simply turn the result "-1" for "not found" into a 0 (FALSE)
-    if (~llListFindList(g_lTempOwners,[(string)kCmdr]) && ! ~llListFindList(g_lOwners,[(string)kCmdr]) && sToken != "tempowner"){
+    if (~llListFindList(g_lTempOwner,[(string)kCmdr]) && ! ~llListFindList(g_lOwner,[(string)kCmdr]) && sToken != "tempowner"){
         llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kCmdr);
         return;
     }
@@ -269,12 +269,12 @@ RemovePerson(string sName, string sToken, key kCmdr) {
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + sOldToken, "");
         //store temp list
         if (sToken=="owner") {
-            g_lOwners = lPeople;
-            if (llGetListLength(g_lOwners)) SayOwners();
+            g_lOwner = lPeople;
+            if (llGetListLength(g_lOwner)) SayOwners();
         }
-        else if (sToken=="tempowner") g_lTempOwners = lPeople;
-        else if (sToken=="trust") g_lTrusted = lPeople;
-        else if (sToken=="block") g_lBlockList = lPeople;
+        else if (sToken=="tempowner") g_lTempOwner = lPeople;
+        else if (sToken=="trust") g_lTrust = lPeople;
+        else if (sToken=="block") g_lBlock = lPeople;
     } else
         llMessageLinked(LINK_SET,NOTIFY,"0"+"\""+sName + "\" is not in "+sToken+" list.",kCmdr);
 }
@@ -282,39 +282,39 @@ RemovePerson(string sName, string sToken, key kCmdr) {
 AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
     list lPeople;
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
-    if (~llListFindList(g_lTempOwners,[(string)kAv]) && ! ~llListFindList(g_lOwners,[(string)kAv]) && sToken != "tempowner")
+    if (~llListFindList(g_lTempOwner,[(string)kAv]) && ! ~llListFindList(g_lOwner,[(string)kAv]) && sToken != "tempowner")
         llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kAv);
     else {
         if (sToken=="owner") {
-            lPeople=g_lOwners;
+            lPeople=g_lOwner;
             if (llGetListLength (lPeople) >=6) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nThree people at a time can have this role.\n",kAv);
                 return;
             }
         } else if (sToken=="trust") {
-            lPeople=g_lTrusted;
+            lPeople=g_lTrust;
             if (llGetListLength (lPeople) >=30) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\n15 people at a time can have this role.\n",kAv);
                 return;
-            } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
+            } else if (~llListFindList(g_lOwner,[(string)kPerson])) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOops!\n\n"+sName+" is already Owner! You should really trust them.\n",kAv);
                 return;
             }
         } else if (sToken=="tempowner") {
-            lPeople=g_lTempOwners;
+            lPeople=g_lTempOwner;
             if (llGetListLength (lPeople) >=2) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nSorry!\n\nYou can only be captured by one person at a time.\n",kAv);
                 return;
             }
         } else if (sToken=="block") {
-            lPeople=g_lBlockList;
+            lPeople=g_lBlock;
             if (llGetListLength (lPeople) >=18) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOops!\n\nYour Blacklist is already full.\n",kAv);
                 return;
-            } else if (~llListFindList(g_lTrusted,[(string)kPerson])) {
+            } else if (~llListFindList(g_lTrust,[(string)kPerson])) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOops!\n\nYou trust "+sName+". If you really want to block "+sName+" then you should remove them as trusted first.\n",kAv);
                 return;
-            } else if (~llListFindList(g_lOwners,[(string)kPerson])) {
+            } else if (~llListFindList(g_lOwner,[(string)kPerson])) {
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nOops!\n\n"+sName+" is Owner! Remove them as owner before you block them.\n",kAv);
                 return;
             }
@@ -331,12 +331,12 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         if (kPerson != g_kWearer) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Building relationship...",g_kWearer);
             if (sToken == "owner") {
-                if (~llListFindList(g_lTrusted,[(string)kPerson])) RemovePerson(sName, "trust", kAv);
-                if (~llListFindList(g_lBlockList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
+                if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv);
+                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv);
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"You belong to "+NameURI(kPerson)+" now!",g_kWearer);
                 llPlaySound("1ec0f327-df7f-9b02-26b2-8de6bae7f9d5",1.0);
             } else if (sToken == "trust") {
-                if (~llListFindList(g_lBlockList,[(string)kPerson])) RemovePerson(sName, "block", kAv);
+                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv);
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
                 llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
             }
@@ -357,19 +357,19 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + sOldToken + "=" + llDumpList2String(lPeople, ","), "");
 
         if (sToken=="owner") {
-            g_lOwners = lPeople;
-            if (llGetListLength(g_lOwners)>2) SayOwners();
+            g_lOwner = lPeople;
+            if (llGetListLength(g_lOwner)>2) SayOwners();
         }
-        else if (sToken=="trust") g_lTrusted = lPeople;
-        else if (sToken=="tempowner") g_lTempOwners = lPeople;
-        else if (sToken=="block") g_lBlockList = lPeople;
+        else if (sToken=="trust") g_lTrust = lPeople;
+        else if (sToken=="tempowner") g_lTempOwner = lPeople;
+        else if (sToken=="block") g_lBlock = lPeople;
     }
 }
 
 SayOwners() {  // Give a "you are owned by" message, nicely formatted.
-    integer iCount = llGetListLength(g_lOwners);
+    integer iCount = llGetListLength(g_lOwner);
     if (iCount) {
-        list lTemp = g_lOwners;
+        list lTemp = g_lOwner;
         integer index = llListFindList(lTemp, [(string)g_kWearer]);
         //if wearer is also owner, move the key to the end of the list.
         if (~index) lTemp = llDeleteSubList(lTemp,index,index+1) + [g_kWearer];
@@ -413,14 +413,14 @@ integer in_range(key kID) {
 integer Auth(string sObjID, integer iAttachment) {
     string sID = (string)llGetOwnerKey(sObjID); // if sObjID is an avatar key, then sID is the same key
     integer iNum;
-    if (~llListFindList(g_lOwners+g_lTempOwners, [sID]))
+    if (~llListFindList(g_lOwner+g_lTempOwner, [sID]))
         iNum = CMD_OWNER;
-    else if (llGetListLength(g_lOwners+g_lTempOwners) == 0 && sID == (string)g_kWearer)
+    else if (llGetListLength(g_lOwner+g_lTempOwner) == 0 && sID == (string)g_kWearer)
         //if no owners set, then wearer's cmds have owner auth
         iNum = CMD_OWNER;
-    else if (~llListFindList(g_lBlockList, [sID]))
+    else if (~llListFindList(g_lBlock, [sID]))
         iNum = CMD_BLOCKED;
-    else if (~llListFindList(g_lTrusted, [sID]))
+    else if (~llListFindList(g_lTrust, [sID]))
         iNum = CMD_TRUSTED;
     else if (sID == (string)g_kWearer)
         iNum = CMD_WEARER;
@@ -452,26 +452,26 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     else if (sStr == "list") {   //say owner, secowners, group
         if (iNum == CMD_OWNER || kID == g_kWearer) {
             //Do Owners list
-            integer iLength = llGetListLength(g_lOwners);
+            integer iLength = llGetListLength(g_lOwner);
             string sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lOwners, --iLength) + " (" + llList2String(g_lOwners,  --iLength) + ")";
+                sOutput += "\n" + llList2String(g_lOwner, --iLength) + " (" + llList2String(g_lOwner,  --iLength) + ")";
             if (sOutput) llMessageLinked(LINK_SET,NOTIFY,"0"+"Owners: "+sOutput,kID);
             else llMessageLinked(LINK_SET,NOTIFY,"0"+"Owners: none",kID);
-            iLength = llGetListLength(g_lTempOwners);
+            iLength = llGetListLength(g_lTempOwner);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lTempOwners, --iLength) + " (" + llList2String(g_lTempOwners,  --iLength) + ")";
+                sOutput += "\n" + llList2String(g_lTempOwner, --iLength) + " (" + llList2String(g_lTempOwner,  --iLength) + ")";
             if (sOutput) llMessageLinked(LINK_SET,NOTIFY,"0"+"Temporary Owner: "+sOutput,kID);
-            iLength = llGetListLength(g_lTrusted);
+            iLength = llGetListLength(g_lTrust);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lTrusted, --iLength) + " (" + llList2String(g_lTrusted, --iLength) + ")";
+                sOutput += "\n" + llList2String(g_lTrust, --iLength) + " (" + llList2String(g_lTrust, --iLength) + ")";
             if (sOutput) llMessageLinked(LINK_SET,NOTIFY,"0"+"Trusted: "+sOutput,kID);
-            iLength = llGetListLength(g_lBlockList);
+            iLength = llGetListLength(g_lBlock);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lBlockList, --iLength) + " (" + llList2String(g_lBlockList, --iLength) + ")";
+                sOutput += "\n" + llList2String(g_lBlock, --iLength) + " (" + llList2String(g_lBlock, --iLength) + ")";
             if (sOutput) llMessageLinked(LINK_SET,NOTIFY,"0"+"Blocked: "+sOutput,kID);
             if (g_sGroupName) llMessageLinked(LINK_SET,NOTIFY,"0"+"Group: "+g_sGroupName,kID);
             if (g_kGroup) llMessageLinked(LINK_SET,NOTIFY,"0"+"Group Key: "+(string)g_kGroup,kID);
@@ -597,13 +597,13 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         //Debug("runaway button");
         Dialog(kID, message, lButtons, [UPMENU], 0, iNum, "runawayMenu");
     } else if (sCommand == "runaway") {
-        if (sCommand == "on") {
+        if (sAction == "on") {
             if (iNum == CMD_OWNER) {
                 g_iRunawayDisable = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"norun","");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The ability to runaway is enabled.",kID);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (sCommand == "off") {
+        } else if (sAction == "off") {
             if (iNum == CMD_OWNER || iNum == CMD_WEARER) {
                 g_iRunawayDisable = TRUE;
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"norun=1","");
@@ -615,7 +615,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
 
 RunAway() {
     integer n;
-    integer stop = llGetListLength(g_lOwners+g_lTempOwners);
+    integer stop = llGetListLength(g_lOwner+g_lTempOwner);
     llMessageLinked(LINK_SET,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
 
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
@@ -669,11 +669,11 @@ default {
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
-                    g_lOwners = llParseString2List(sValue, [","], []);
+                    g_lOwner = llParseString2List(sValue, [","], []);
                     if (~llSubStringIndex(sValue,(string)g_kWearer)) g_iVanilla = TRUE;
                 } else if (sToken == "tempowner") {
-                    g_lTempOwners = llParseString2List(sValue, [","], []);
-                    //Debug("Tempowners: "+llDumpList2String(g_lTempOwners,","));
+                    g_lTempOwner = llParseString2List(sValue, [","], []);
+                    //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
                 } else if (sToken == "group") {
                     g_kGroup = (key)sValue;
                     //check to see if the object's group is set properly
@@ -687,10 +687,10 @@ default {
                 else if (sToken == "public") g_iOpenAccess = (integer)sValue;
                 else if (sToken == "limitrange") g_iLimitRange = (integer)sValue;
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
-                else if (sToken == "trust") g_lTrusted = llParseString2List(sValue, [","], [""]);
-                else if (sToken == "block") g_lBlockList = llParseString2List(sValue, [","], [""]);
+                else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
+                else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
             } else if (llToLower(sStr) == "settings=sent") {
-                if (llGetListLength(g_lOwners)) SayOwners();
+                if (llGetListLength(g_lOwner)) SayOwners();
             }
         }
     // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
@@ -732,12 +732,12 @@ default {
                         list lTranslation=[
                             "+ Owner","add owner",
                             //"+ Temp Owner","tempowner",
-                            "+ Trusted","add trust",
-                            "+ Blocked","add block",
+                            "+ Trust","add trust",
+                            "+ Block","add block",
                             "− Owner","rm owner",
                             //"− Temp Owner","remtempowner",
-                            "− Trusted","rm trust",
-                            "− Blocked","rm block",
+                            "− Trust","rm trust",
+                            "− Block","rm block",
                             "Group ☐","group on",
                             "Group ☒","group off",
                             "Public ☐","public on",
@@ -769,9 +769,9 @@ default {
                     } else if (sMessage == "Cancel" || sMessage == "Stay") {
                         return;  //no remenu on canel
                     } else if (sMessage == "Release") {
-                        integer iOwnerIndex=llListFindList(g_lOwners,[(string)kAv]);
+                        integer iOwnerIndex=llListFindList(g_lOwner,[(string)kAv]);
                         if (~iOwnerIndex){
-                            string name=llList2String(g_lOwners,iOwnerIndex+1);
+                            string name=llList2String(g_lOwner,iOwnerIndex+1);
                             UserCommand(iAuth, "removeowner "+name, kAv, FALSE);  //no remenu, owner is done with this sub
                         } else {
                             llMessageLinked(LINK_SET,NOTIFY,"1"+"You are not on the access list.",kAv);
