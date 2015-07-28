@@ -62,8 +62,8 @@ float g_fVersionTimeOut = 30.0;
 integer g_iRlvVersion;
 integer g_iRlvaVersion;
 integer g_iCheckCount;
-integer g_iMaxViewerChecks=10;
-integer g_iCollarLocked=FALSE;
+integer g_iMaxViewerChecks = 3;
+integer g_iCollarLocked = FALSE;
 
 string g_sParentMenu = "Main";
 string g_sSubMenu = "RLV";
@@ -423,10 +423,11 @@ SafeWord() {
 // End of book keeping functions
 
 UserCommand(integer iNum, string sStr, key kID) {
+    sStr = llToLower(sStr);
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
-    } else if (llToLower(sStr) == "rlv" || llToLower(sStr) == "menu rlv" ){
+    } else if (sStr == "rlv" || sStr == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
     } else if (sStr == "rlv on") {
@@ -438,12 +439,21 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);//llOwnerSay("RLV disabled.");
-        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sStr == "clear") {
-        if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);//llOwnerSay(g_sAuthError);
+        if (iNum == CMD_WEARER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
         else SafeWord();
-    } else if (sStr=="show restrictions") {
+    } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
+        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+        else {
+            if ((integer)llGetSubString(sStr,-2,-1)) {
+                g_iMaxViewerChecks = (integer)llGetSubString(sStr,-2,-1);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"Next time RLV is turned on or the %DEVICETYPE% attached with RLV turned on, there will be "+(string)g_iMaxViewerChecks+" extra handshake attempts before disabling RLV.", kID);
+                llMessageLinked(LINK_SET,LM_SETTING_SAVE,g_sSettingToken + "handshakes="+(string)g_iMaxViewerChecks, "");
+            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
+        }
+    }  else if (sStr=="show restrictions") {
         string sOut="You are being restricted by the following objects";
         integer numRestrictions=llGetListLength(g_lRestrictions);
         while (numRestrictions){
@@ -457,7 +467,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
     }
 }
-
 
 default {
     on_rez(integer param) {
@@ -567,6 +576,7 @@ default {
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
+            else if (sToken=="rlvmain_handshakes") g_iMaxViewerChecks=(integer)sValue;
             else if (sToken=="rlvmain_on") {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
@@ -684,17 +694,19 @@ default {
             }
             llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
         } else {
-            if (g_iCheckCount++ <= g_iMaxViewerChecks) {
-            llOwnerSay("@versionnew=293847");
-            if (g_iCheckCount>1) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
+            if (g_iCheckCount++ < g_iMaxViewerChecks) {
+                llOwnerSay("@versionnew=293847");
+               // if (g_iCheckCount==2) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nUnable to confirm that your viewer does support RLV, RLV will be disabled in your %DEVICETYPE%. You can enable it again in the RLV menu or by typing: %PREFIX% rlv on\n", g_kWearer);
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);
                 g_iCheckCount=0;
                 g_iViewerCheck = FALSE;
                 g_iRlvVersion = FALSE;
                 g_iRlvaVersion = FALSE;
-                setRlvState();
+                UserCommand(500, "rlv off", g_kWearer);
+               // setRlvState();
             }
         }
     }
