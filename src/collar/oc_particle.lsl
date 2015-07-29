@@ -191,7 +191,7 @@ FindLinkedPrims() {
     }
     //if we did not find any leashpoint... we unset the root as one
     if (!llGetListLength(g_lLeashPrims)) g_lLeashPrims = ["collar", LINK_THIS, "1"];
-    else llMessageLinked(LINK_SET, LM_SETTING_RESPONSE,"leashpoint="+llDumpList2String(g_lLeashPrims,",") ,"");
+    else llMessageLinked(LINK_SET, LM_SETTING_RESPONSE,"leashpoint="+llList2String(g_lLeashPrims,1) ,"");
 }
 
 Particles(integer iLink, key kParticleTarget) {
@@ -231,7 +231,7 @@ StartParticles(key kParticleTarget) {
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
-           if (g_sParticleMode == "Classic") g_iLoop = g_iLoop + 3;
+           //if (g_sParticleMode == "Classic") g_iLoop = g_iLoop + 3;
         }
     }
     g_iLeashActive = TRUE;
@@ -246,7 +246,8 @@ StopParticles(integer iEnd) {
         g_kLeashedTo = NULLKEY;
         g_kLeashToPoint = NULLKEY;
         g_kParticleTarget = NULLKEY;
-        llSensorRemove();
+        llSetTimerEvent(0.0);
+       // llSensorRemove();
     }
 }
 
@@ -345,11 +346,8 @@ SetTexture(string sIn, key kIn) {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
         if (GetSetting("R_TextureID")) g_sParticleTextureID = GetSetting("R_TextureID");
-        if (kIn) {
-            string sMessage = "Leash texture set to " + L_RIBBON_TEX;
-            if (llGetListLength(g_lLeashPrims) <= 3)  "\nThis %DEVICETYPE% has only one particle prim defined, this does not match OpenCollar 4.0 specifications and this mode will not have the desired effect.";
-            llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kIn);
-        }
+        if (kIn) 
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);
     }
     else if (g_sParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
@@ -406,7 +404,8 @@ ColorMenu(key kIn, integer iAuth) {
 
 LMSay() {
     llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "collar");
-    llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) +  "handle");
+    llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "handle");
+    llSetTimerEvent(4.0);
 }
 
 default {
@@ -634,43 +633,51 @@ default {
             if (sMessage == "leash_leashedto") StopParticles(TRUE);
         }
     }
+    
+    timer() {
+        if (llGetOwnerKey(g_kParticleTarget) == g_kParticleTarget) {
+            if(g_kLeashedTo) {
+                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
+                g_kParticleTarget = g_kLeashedTo;
+                StartParticles(g_kParticleTarget);
+            }
+            else if(!g_iLeashActive) llSetTimerEvent(0.0);
+        } 
+    }
+    
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == LOCKMEISTER) {
             //leash holder announced it got detached... send particles to avi
             if (sMessage == (string)g_kLeashedTo + "handle detached") {
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
+                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
             }
             // We heard from a leash holder. re-direct particles
             if (llGetOwnerKey(kID) == g_kLeashedTo) {
-                sMessage = llGetSubString(sMessage, 36, -1);
-                if (sMessage == "collar ok") {
-                    g_kParticleTarget = kID;
-                    StartParticles(g_kParticleTarget);
-                }
-                if (sMessage == "handle ok") {
-                    g_kParticleTarget = kID;
-                    StartParticles(g_kParticleTarget);
+                if(llGetSubString(sMessage,-2,-1)=="ok") {//it's an old style v1 LM reply
+                    sMessage = llGetSubString(sMessage, 36, -1);
+                    if (sMessage == "collar ok") {
+                        g_kParticleTarget = kID;
+                        StartParticles(g_kParticleTarget);
+                        llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
+                    }
+                    if (sMessage == "handle ok") {
+                        g_kParticleTarget = kID;
+                        StartParticles(g_kParticleTarget);
+                        //llSetTimerEvent(0.0);
+                    }
+                }  else {//v2 style LM reply
+                    list lTemp = llParseString2List(sMessage,["|"],[""]);
+                    // lTemp should look like [g_kLeashto,"LMV2","ReplyPoint","handle",g_kParticleTarget]
+                    // is it a v2 style LM reply?
+                    if(llList2String(lTemp,1)=="LMV2" && llList2String(lTemp,2)=="ReplyPoint") {   
+                        g_kParticleTarget = (key)llList2String(lTemp,4);
+                        StartParticles(g_kParticleTarget);
+                    }
                 }
             }
         }
-        // ADDED BELOW FOR BETA 0.1  TOGGLES LEASH PARTICLES OFF IF COFFLES BEING USED.
-    /*    else if(iChannel == CMD_PARTICLE) {
-            if(llGetOwnerKey(kID) == g_kWearer) {
-                integer currentglow;
-                if(sMessage == "noLeash") {
-                    currentglow = g_iParticleGlow;
-                    g_iParticleGlow = FALSE;
-                    SetTexture(sMessage, g_kWearer);
-                    StartParticles(g_kParticleTarget);
-                }
-                if(sMessage == "Leather") {
-                    g_iParticleGlow = currentglow;
-                    SetTexture(sMessage, g_kWearer);
-                    StartParticles(g_kParticleTarget);
-                }
-            }
-        }*/
     }
 
     changed(integer iChange) {
