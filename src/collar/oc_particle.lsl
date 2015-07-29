@@ -112,8 +112,8 @@ list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ri
 
 list g_lSettings=g_lDefaultSettings;
 
-string g_sCurrentMenu;
-key g_kDialogID;
+list g_lMenuIDs;
+integer g_iMenuStride = 3;
 key g_kWearer;
 
 key NULLKEY;
@@ -165,11 +165,15 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuName) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) 
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sMenuName], iIndex, iIndex + g_iMenuStride - 1);
+    else 
+        g_lMenuIDs += [kID, kMenuID, sMenuName];
 }
 
 FindLinkedPrims() {
@@ -370,7 +374,6 @@ integer KeyIsAv(key id) {
 //Menus
 
 ConfigureMenu(key kIn, integer iAuth) {
-    g_sCurrentMenu = SUBMENU;
     list lButtons;
     if (g_iParticleGlow) lButtons += "☑ Shine";
     else lButtons += "☐ Shine";
@@ -384,22 +387,19 @@ ConfigureMenu(key kIn, integer iAuth) {
 
     lButtons += [L_FEEL, L_COLOR];
     string sPrompt = "\n[http://www.opencollar.at/leash.html Leash Configuration]\n\nCustomize the looks and feel of your leash.";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"configure");
 }
 
 FeelMenu(key kIn, integer iAuth) {
     list lButtons = ["Bigger", "Smaller", L_DEFAULTS, "Heavier", "Lighter"];
-    g_sCurrentMenu = L_FEEL;
     vector defaultsize = (vector)GetDefaultSetting(L_SIZE);
     string sPrompt = "\nHere you can change the weight and size of your leash.";
-    g_kDialogID = Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"feel");
 }
 
 ColorMenu(key kIn, integer iAuth) {
     string sPrompt = "\nChoose a color.";
-    //list lButtons =llList2ListStrided(g_lColors,0,-1,2);
-    g_sCurrentMenu = L_COLOR;
-    g_kDialogID = Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth);
+    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth,"color");
 }
 
 LMSay() {
@@ -414,12 +414,10 @@ default {
     }
 
     state_entry() {
-        //llSetMemoryLimit(57344);
         g_kWearer = llGetOwner();
         FindLinkedPrims();
         StopParticles(TRUE);
         GetSettings(FALSE);
-       // llListen(CMD_PARTICLE,"","","");    // ADDED FOR BETA 0.1
         //Debug("Starting");
     }
 
@@ -473,17 +471,19 @@ default {
         else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         else if (iNum == DIALOG_RESPONSE) {
-            if (kMessageID == g_kDialogID) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
+            if (~iMenuIndex) {
                 //Debug("Current menu:"+g_sCurrentMenu);
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
+                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sButton == UPMENU) {
-                    if(g_sCurrentMenu == SUBMENU) llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
+                    if(sMenu == "configure") llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
                     else ConfigureMenu(kAv, iAuth);
-                }
-                else if (g_sCurrentMenu == SUBMENU) {
+                } else  if (sMenu == "configure") {
                     string sButtonType = llGetSubString(sButton,2,-1);
                     string sButtonCheck = llGetSubString(sButton,0,0);
                     if (sButton == L_COLOR) {
@@ -543,24 +543,20 @@ default {
                     else if (g_iLeashActive) StopParticles(FALSE);
                     else StopParticles(TRUE);
                     ConfigureMenu(kAv, iAuth);
-                }
-                else if (g_sCurrentMenu == L_COLOR) {
+                } else if (sMenu == "color") {
                     g_vLeashColor = (vector)sButton;
                     SaveSettings(L_COLOR, sButton, TRUE,0,"");
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
                     ColorMenu(kAv, iAuth);
-                }
-                else if (g_sCurrentMenu == L_FEEL) {
+                } else if (sMenu == "feel") {
                     if (sButton == L_DEFAULTS) {
                         if (g_sParticleMode == "Ribbon") g_vLeashSize = (vector)GetDefaultSetting(L_SIZE);
                         else g_vLeashSize = (vector)GetDefaultSetting(L_SIZE) + <0.03,0.03,0.0>;
                         g_vLeashGravity.z = (float)GetDefaultSetting(L_GRAVITY);
-                     }
-                     else if (sButton == "Bigger") {
+                     } else if (sButton == "Bigger") {
                         g_vLeashSize.x +=0.03;
                         g_vLeashSize.y +=0.03;
-                    }
-                    else if (sButton == "Smaller") {
+                    } else if (sButton == "Smaller") {
                         g_vLeashSize.x -=0.03;
                         g_vLeashSize.y -=0.03;
                         if (g_vLeashSize.x < 0.04 && g_vLeashSize.y < 0.04) {
@@ -568,15 +564,13 @@ default {
                             g_vLeashSize.y = 0.04 ;
                             llMessageLinked(LINK_SET,NOTIFY,"0"+"The leash won't get much smaller.",kAv);
                         }
-                    }
-                    else if (sButton == "Heavier") {
+                    } else if (sButton == "Heavier") {
                         g_vLeashGravity.z -= 0.1;
                         if (g_vLeashGravity.z < -3.0) {
                             g_vLeashGravity.z = -3.0;
                             llMessageLinked(LINK_SET,NOTIFY,"0"+"That's the heaviest it can be.",kAv);
                         }
-                    }
-                    else if (sButton == "Lighter") {
+                    } else if (sButton == "Lighter") {
                         g_vLeashGravity.z += 0.1;
                         if (g_vLeashGravity.z > 0.0) {
                             g_vLeashGravity.z = 0.0 ;
@@ -588,10 +582,12 @@ default {
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
                     FeelMenu(kAv, iAuth);
                 }
-
             //} else {
                 //Debug("Not our menu");
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LM_SETTING_RESPONSE) {
            // Debug ("LocalSettingsResponse: " + sMessage);
             integer i = llSubStringIndex(sMessage, "=");
