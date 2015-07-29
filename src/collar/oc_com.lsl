@@ -295,7 +295,8 @@ default {
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iPublicListener = llListen(0, "", NULL_KEY, "");
         g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-        g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
+        //g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
+        g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", "", "");
         //garvin attachments listener
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,"");
@@ -335,19 +336,16 @@ default {
             return;
         }
         if (iChan == g_iLockMeisterChan) {
-            llWhisper(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
+            if(llGetSubString(sMsg,36,-1)=="collar")
+                llSay(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
             //new for LMV2
-            list lParams = llParseString2List( sMsg, ["|"], [] );
-            if( llList2List(lParams,0,3) == [g_kWearer, "LMV2", "RequestPoint", "collar"] ) {
+            if(sMsg == (string)g_kWearer+"|LMV2|RequestPoint|collar") {
     //this message is for us, it's claiming to be an LMV2 message, it's a "Request" message, and concerns the mooring_point we specified
      //message structure:   llGetOwner()|LMV2|RequestPoint|anchor_name
-               if(!g_iLeashPrim)
-                    //If there is no anchor set, we assume root prim.
-                    llRegionSayTo(kID, -8888, llDumpList2String( [llGetOwner(), "LMV2", "ReplyPoint", "collar", llGetKey()], "|" ) );
-                else {
-                        llRegionSayTo(kID, -8888, llDumpList2String( [llGetOwner(), "LMV2", "ReplyPoint", "collar", llGetLinkKey(g_iLeashPrim)], "|" ) );
-                        return;
-                    }
+                if(g_iLeashPrim)
+                    llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string)llGetLinkKey(g_iLeashPrim));
+                else 
+                    llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string) llGetKey());
             }
             return;
         }
