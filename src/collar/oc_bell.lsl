@@ -64,6 +64,8 @@ integer g_iMenuStride = 3;
 float g_fVolume=0.5; // volume of the bell
 float g_fVolumeStep=0.1; // stepping for volume
 
+float g_fNextRing;
+
 integer g_iBellOn=0; // are we ringing. Off is 0, On = Auth of person which enabled
 string g_sBellOn="ON"; // menu text of bell on
 string g_sBellOff="OFF"; // menu text of bell off
@@ -295,6 +297,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
         } else if (sToken=="ring") {
+            g_fNextRing=llGetTime()+1.0;
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         }
     } else if (sStr == "rm bell") {
@@ -405,11 +408,15 @@ default {
     control( key kID, integer nHeld, integer nChange ) {
         if (!g_iBellOn) return;
         //the user is pressing a movement key
-        if ( nChange & (CONTROL_LEFT|CONTROL_RIGHT|CONTROL_DOWN|CONTROL_UP|CONTROL_FWD|CONTROL_BACK) )
+        if (nChange & (CONTROL_LEFT|CONTROL_RIGHT|CONTROL_DOWN|CONTROL_UP|CONTROL_FWD|CONTROL_BACK))
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         //the user is holding down a movement key and is running
-        if ( (nHeld & (CONTROL_FWD|CONTROL_BACK)) && (llGetAgentInfo(g_kWearer) & AGENT_ALWAYS_RUN))
+        if ((nHeld & (CONTROL_FWD|CONTROL_BACK)) && (llGetAgentInfo(g_kWearer) & AGENT_ALWAYS_RUN)) {
+             if (llGetTime()>g_fNextRing) {
+                g_fNextRing=llGetTime()+1.0;
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
+            }
+        }
     }
 
     collision_start(integer iNum) {
