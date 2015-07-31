@@ -303,7 +303,6 @@ ChatCamParams(integer iChannel, key kID) {
     g_rCamRot = llGetCameraRot();
     string sPosLine = StrReplace((string)g_vCamPos, " ", "") + " " + StrReplace((string)g_rCamRot, " ", ""); 
     //if not channel 0, say to whole region.  else just say locally   
-    llMessageLinked(LINK_SET,NOTIFY,"1"+sPosLine,kID);
     if (iChannel)
         llRegionSayTo(kID, iChannel, sPosLine);                    
     else
