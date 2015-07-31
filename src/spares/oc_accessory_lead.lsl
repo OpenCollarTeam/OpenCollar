@@ -55,51 +55,47 @@
 integer g_iMychannel = -8888;
 string g_sListenfor;
 string g_sResponse;
+key g_kLeashed;
+string g_sWearerID;
 
-AnnounceLeashHolder()
-{
-    llSay(g_iMychannel, g_sResponse);
+AnnounceLeashHolder() {
+    if (g_kLeashed) llRegionSayTo(g_kLeashed, g_iMychannel, g_sResponse);
+    else            llSay(g_iMychannel, g_sResponse);
 }
 
-default
-{
-    state_entry()
-    {
-        llSetMemoryLimit(10240);
-        g_sListenfor = (string)llGetOwner() + "handle";
-        g_sResponse = (string)llGetOwner() + "handle ok";
+default {
+    state_entry() {
+        llSetMemoryLimit(8192);
+        g_sWearerID = (string)llGetOwner();
+        g_sListenfor = g_sWearerID + "handle";
+        g_sResponse = g_sWearerID + "handle ok";
         llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
         AnnounceLeashHolder();
         llSetTimerEvent(2.0);         
     }
     
-    listen(integer channel, string name, key id, string message)
-    {
+    listen(integer channel, string name, key id, string message) {
+        g_kLeashed = id;
         AnnounceLeashHolder();
         llSetTimerEvent(2.0);
     }
-    attach(key kAttached)
-    {
-        if (kAttached == NULL_KEY)
-        {
-            llSay(g_iMychannel, (string)llGetOwner() + "handle detached");
+    attach(key kAttached) {
+        if (kAttached == NULL_KEY) {
+            if (g_kLeashed) llRegionSayTo(g_kLeashed, g_iMychannel, g_sWearerID+"handle detached");
+            else            llSay(g_iMychannel, g_sWearerID+"handle detached");
         }
     }
-    changed(integer change)
-    {
-        if (change & CHANGED_TELEPORT)
-        {
+    changed(integer change) {
+        if (change & CHANGED_TELEPORT) {
             AnnounceLeashHolder();
             llSetTimerEvent(2.0);
         }
     }
-    timer()
-    {
+    timer() {
         llSetTimerEvent(0.0);
         AnnounceLeashHolder();
     }
-    on_rez(integer param)
-    {
+    on_rez(integer param) {
         llResetScript();
     }
 }
