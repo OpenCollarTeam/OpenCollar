@@ -87,9 +87,12 @@ integer MENUNAME_REMOVE     = 3003;
 
 integer RLV_CMD = 6000;
 
+integer RLV_OFF = 6100;
+integer RLV_ON = 6101;
+
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
-//integer DIALOG_TIMEOUT      = -9002;
+integer DIALOG_TIMEOUT      = -9002;
 integer SENSORDIALOG = -9003;
 
 integer CMD_PARTICLE     = 20000;
@@ -103,18 +106,22 @@ string BUTTON_SUBMENU      = "Leash";
 // ---------------------------------------------
 // ------ VARIABLE DEFINITIONS ------
 // ----- menu -----
-key g_kMenuUser;
-key g_kMainDialogID;
-key g_kSetLengthDialogID;
-key g_kLeashTargetDialogID;
-key g_kFollowTargetDialogID;
-key g_kPostTargetDialogID;
-key g_kPostMenuDialogID;
-key g_kLeashTargetConfirmDialogID;
-key g_kFollowTargetConfirmDialogID;
+
+list     g_lMenuIDs;
+integer g_iMenuStride = 3;
+
+//key g_kMenuUser;
+//key g_kMainDialogID;
+//key g_kSetLengthDialogID;
+//key g_kLeashTargetDialogID;
+//key g_kFollowTargetDialogID;
+//key g_kPostTargetDialogID;
+//key g_kPostMenuDialogID;
+//key g_kLeashTargetConfirmDialogID;
+//key g_kFollowTargetConfirmDialogID;
 key g_kLeashCmderID;
 
-list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
+//list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
 list g_lButtons;
 // ----- collar -----
 
@@ -149,8 +156,8 @@ integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
 
 list g_lRestrictionNames= ["fly","tplm","tplure","tploc"];
-string RLV_STRING = "rlvmain_on";
-string OWNER_STRING = "auth_owner";
+//string RLV_STRING = "rlvmain_on";
+//string OWNER_STRING = "auth_owner";
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -175,14 +182,31 @@ string NameURI(key kID){
         return "secondlife:///app/objectim/"+(string)kID+"/?name="+llEscapeURL(llKey2Name(kID))+"&owner="+(string)llGetOwnerKey(kID);
 }
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
+/*key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth){
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     //Debug("Made menu.");
     return kID;
+}*/
+
+Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
 }
 
-ConfirmDialog(key kAv, key kCmdGiver, key kType, integer iAuth) {
+SensorDialog(key kRCPT, string sPrompt, string sSearchName, integer iAuth, string sMenuID, integer iSensorType) {
+    key kMenuID = llGenerateKey();
+    if (sSearchName != "") sSearchName = "`"+sSearchName+"`1";
+    llMessageLinked(LINK_THIS, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)iSensorType+"`10`"+(string)PI+sSearchName+"|"+BUTTON_UPMENU+"|" + (string)iAuth, kMenuID);
+    integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuID], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
+}
+
+ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
     if ((string)kAv == BUTTON_UPMENU) {
         UserCommand(iAuth, "leashmenu", kCmdGiver ,TRUE);
         return;
@@ -192,18 +216,18 @@ ConfirmDialog(key kAv, key kCmdGiver, key kType, integer iAuth) {
     string sMessage;
     if (kCmdGiver == g_kWearer) sPrompt = "%WEARERNAME% wants to ";
     else sPrompt = sCmdGiverURI + " wants to ";
-    if (kType == g_kLeashTargetDialogID) {
+    if (sType == "LeashTarget") {
         sMessage = "Asking "+NameURI(kAv)+" to accept %WEARERNAME%'s leash.";
         if (kCmdGiver == g_kWearer) sPrompt += "pass you their leash.";
         else sPrompt += "pass you %WEARERNAME%'s leash.";
         sPrompt += "\nAre you OK with this?";
-        g_kLeashTargetConfirmDialogID = Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth);
+        Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth,"LeashTargetConfirm");
     } else {
         sMessage = "Asking "+NameURI(kAv)+" to accept %WEARERNAME% to follow them.";
         if (kCmdGiver == g_kWearer) sPrompt += "follow you.";
         else sPrompt += " command %WEARERNAME% to follow you.";
         sPrompt += "\nAre you OK with this?";
-        g_kFollowTargetConfirmDialogID = Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth);
+        Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth,"FollowTargetConfirm");
     }
     llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kCmdGiver);
 }
@@ -256,11 +280,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     if (!g_iPassConfirmed) {
         g_kLeashCmderID = kCmdGiver;
         if (iFollowMode) {
-            g_kFollowTargetDialogID = llGenerateKey();
-            ConfirmDialog(kTarget, kCmdGiver, g_kFollowTargetDialogID, iAuth);
+            ConfirmDialog(kTarget, kCmdGiver, "FollowTarget", iAuth);
         } else {
-            g_kLeashTargetDialogID = llGenerateKey();
-            ConfirmDialog(kTarget, kCmdGiver, g_kLeashTargetDialogID, iAuth);
+            ConfirmDialog(kTarget, kCmdGiver, "LeashTarget", iAuth);
         }
         return FALSE;
     }
@@ -426,7 +448,6 @@ DoUnleash(){
     llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
-
     ApplyRestrictions();
 }
 
@@ -472,14 +493,14 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             lButtons += g_lButtons;
 
             string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n\nLet's go walkies!";
-            g_kMainDialogID = Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth);
+            Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth, "MainDialog");
         } else  if (sComm == "post") {
             if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);
             else if (sVal==llToLower(BUTTON_UPMENU)) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             else if (sMessage == "post give post")   UserCommand(iAuth, "givepost", kMessageID ,bFromMenu);
             else if (sMessage == "post park")        UserCommand(iAuth, "rezpost", kMessageID ,bFromMenu);
             else if (sMessage == "post anchor")      UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
-            else  g_kPostMenuDialogID = Dialog(kMessageID, "\nAnchor the leash to something nearby\nor use instant parking mode!", ["Anchor", "Park"], [BUTTON_UPMENU], 0, iAuth);
+            else  Dialog(kMessageID, "\nAnchor the leash to something nearby\nor use instant parking mode!", ["Anchor", "Park"], [BUTTON_UPMENU], 0, iAuth,"PostMenu");
         } else  if (sMessage == "grab" || sMessage == "leash" || (sMessage == "toggleleash" && NULL_KEY == g_kLeashedTo)) {
             g_iPassConfirmed = TRUE;
             LeashTo(kMessageID, kMessageID, iAuth, ["handle"], FALSE);
@@ -487,21 +508,16 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         } else if(sComm == "follow" || sComm == "followtarget") {
             //Debug("Got a follow command:"+sMessage);
             if (!CheckCommandAuth(kMessageID, iAuth)) return;
-            if (sVal==llToLower(BUTTON_UPMENU)){
+            if (sVal==llToLower(BUTTON_UPMENU))
                 UserCommand(iAuth, "leash", kMessageID ,bFromMenu);
-            } else if (sVal == ""){
-                g_kFollowTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall be followed?\n|0|``"+(string)AGENT+"`10`"+(string)PI + "|BACK|" + (string)iAuth, g_kFollowTargetDialogID);
-            } else if (sVal == "me") {
+            else if (sVal == "me") {
                 g_iPassConfirmed = TRUE;
                 LeashTo(kMessageID, kMessageID, iAuth, [], TRUE);
             } else if ((key)sVal) {
                 g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, [], TRUE);
-            } else {
-                g_kFollowTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall be followed?\n|0|``"+(string)AGENT+"`10`"+(string)PI +"`"+sVal+"`1|BACK|" + (string)iAuth, g_kFollowTargetDialogID);
-            }
+            } else
+                SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
         } else if (sMessage == "runaway" && iAuth == CMD_OWNER) {
             Unleash(kMessageID);
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
@@ -583,21 +599,16 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SET,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
         } else if (sComm == "leashto" || sComm == "pass") {
             if (!CheckCommandAuth(kMessageID, iAuth)) return;
-            if (sVal==llToLower(BUTTON_UPMENU)){
+            if (sVal==llToLower(BUTTON_UPMENU))
                 UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            } else if (sVal == "") {
-                g_kLeashTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall we pass the leash?\n|0|``"+(string)AGENT+"`10`"+(string)PI + "|BACK|" + (string)iAuth, g_kLeashTargetDialogID);
-            } else if((key)sVal) {
+            else if((key)sVal) {
                 list lPoints;
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
                 //debug("leash target is key");//could be a post, or could be we specified an av key
-                g_kLeashTargetDialogID = "";
+                //g_kLeashTargetDialogID = "";
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else {
-                g_kLeashTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nWho shall we pass the leash?\n|0|``"+(string)AGENT+"`10`"+(string)PI +"`"+sVal+"`1|BACK|" + (string)iAuth, g_kLeashTargetDialogID);
-            }
+            } else 
+                SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
         } else if (sComm == "length") {
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
@@ -613,27 +624,23 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             } else { //no value, or value out of bounds
                 if (sVal != "")  //value out of range
                     llMessageLinked(LINK_SET,NOTIFY,"1"+"Oops! The leash can only reach 20 meters at most.",kMessageID);
-                g_kSetLengthDialogID = Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth);
+                Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth,"SetLength");
             }
-        } else if (sComm == "findpost" || sMessage == "find post" || sMessage == "anchor") {
+        } else if (sComm == "findpost" || sMessage == "find post" || sComm == "anchor") {
             if (!CheckCommandAuth(kMessageID, iAuth)) {
                 if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
             }
             if (sVal==llToLower(BUTTON_UPMENU))  UserCommand(iAuth, "post", kMessageID ,bFromMenu);
-            else if (sVal == ""){// no parameters were passed
-                g_kPostTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n|0|``"+(string)(PASSIVE | ACTIVE)+"`10`"+(string)PI + "|BACK|" + (string)iAuth, g_kPostTargetDialogID);
-            } else if((key)sVal) {
+            else if((key)sVal) {
                 list lPoints;
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
                 //debug("leash target is key");//could be a post, or could be we specified an av key
-                if (bFromMenu) UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
-                g_iPassConfirmed = TRUE;
+                //if (bFromMenu) UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
+                if (llGetAgentSize((key)sVal)) g_iPassConfirmed = FALSE;
+                else g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else {
-                g_kPostTargetDialogID=llGenerateKey();
-                llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|chatmode|0|``"+(string)(PASSIVE | ACTIVE)+"`10`"+(string)PI +"`"+sVal+"`1|BACK|" + (string)iAuth, g_kPostTargetDialogID);
-            }
+            } else 
+                SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
         }
     }
 }
@@ -648,7 +655,7 @@ default {
         g_kWearer = llGetOwner();
         llMinEventDelay(0.44);
         DoUnleash();
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, RLV_STRING, "");
         //Debug("Starting");
     }
 
@@ -734,57 +741,72 @@ default {
                     g_iStrictRank = (integer)llList2String(lParam, 1);
                     ApplyRestrictions();
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
-            } else if (sToken == RLV_STRING) { // something enabled or disabled RLV.  Remember which
+            } /*else if (sToken == RLV_STRING) { // something enabled or disabled RLV.  Remember which
                 //Debug("SetRLV:"+sValue);
                 g_iRLVOn = (integer)sValue;
                 ApplyRestrictions();
-            }//else //Debug("setting response:"+sToken);
+            }*///else //Debug("setting response:"+sToken);
+        } else if (iNum == RLV_ON) {
+            g_iRLVOn = TRUE;
+            ApplyRestrictions();
+        } else if (iNum == RLV_OFF) {
+            g_iRLVOn = FALSE;
+            ApplyRestrictions();
         } else if (iNum == DIALOG_RESPONSE) {
-            list lMenuParams = llParseString2List(sMessage, ["|"], []);
-            key kAV = (key)llList2String(lMenuParams, 0);
-            string sButton = llList2String(lMenuParams, 1);
-            integer iAuth = (integer) llList2String(lMenuParams, 3);
-            if (kMessageID == g_kMainDialogID){
-                if (sButton == BUTTON_UPMENU)
-                    llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
-                else if (~llListFindList(g_lButtons, [sButton]))
-                    llMessageLinked(LINK_SET, iAuth, "menu "+sButton, kAV);
-                else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
-            }
-            else if (kMessageID == g_kPostTargetDialogID) UserCommand(iAuth, "findpost " + sButton, kAV, TRUE);
-            else if (kMessageID == g_kSetLengthDialogID) UserCommand(iAuth, "length " + sButton, kAV, TRUE);
-            else if (kMessageID == g_kPostMenuDialogID) UserCommand(iAuth, "post " + sButton, kAV, TRUE);
-            // added for Confirmation Request 15-04-17 Otto
-            else if (kMessageID == g_kLeashTargetDialogID) {
-                g_kLeashCmderID = kAV;
-                ConfirmDialog((key)sButton, kAV, g_kLeashTargetDialogID, iAuth);
-            } else if (kMessageID == g_kLeashTargetConfirmDialogID) {
-                if (sButton == "Yes") {
-                    g_iPassConfirmed = TRUE;
-                    if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
-                    UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
-                } else {
-                    llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kAV)+" did not accept %WEARERNAME%'s leash.",g_kLeashCmderID);
-                    g_iPassConfirmed = FALSE;
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
+            if (~iMenuIndex) {
+                list lMenuParams = llParseString2List(sMessage, ["|"], []);
+                key kAV = (key)llList2String(lMenuParams, 0);
+                string sButton = llList2String(lMenuParams, 1);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
+                integer iAuth = (integer)llList2String(lMenuParams, 3);
+                string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                if (sMenu == "MainDialog"){
+                    if (sButton == BUTTON_UPMENU)
+                        llMessageLinked(LINK_SET, iAuth, "menu "+BUTTON_PARENTMENU, kAV);
+                    else if (~llListFindList(g_lButtons, [sButton]))
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sButton, kAV);
+                    else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
-                g_kLeashCmderID = "";
-            } else if (kMessageID == g_kFollowTargetDialogID) {
-                if (kAV == (key)sButton) UserCommand(iAuth, "follow " + (string)kAV, kAV, TRUE);
-                else {
+                else if (sMenu == "PostTarget") UserCommand(iAuth, "findpost " + sButton, kAV, TRUE);
+                else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
+                else if (sMenu == "PostMenu") UserCommand(iAuth, "post " + sButton, kAV, TRUE);
+                // added for Confirmation Request 15-04-17 Otto
+                else if (sMenu == "LeashTarget") {
                     g_kLeashCmderID = kAV;
-                    ConfirmDialog((key)sButton, kAV, g_kFollowTargetDialogID, iAuth);
+                    ConfirmDialog((key)sButton, kAV, "LeashTarget", iAuth);
+                } else if (sMenu == "LeashTargetConfirm") {
+                    if (sButton == "Yes") {
+                        g_iPassConfirmed = TRUE;
+                        if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
+                        UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
+                    } else {
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kAV)+" did not accept %WEARERNAME%'s leash.",g_kLeashCmderID);
+                        g_iPassConfirmed = FALSE;
+                    }
+                    g_kLeashCmderID = "";
+                } else if (sMenu == "FollowTarget") {
+                    if (kAV == (key)sButton) UserCommand(iAuth, "follow " + (string)kAV, kAV, TRUE);
+                    else {
+                        g_kLeashCmderID = kAV;
+                        ConfirmDialog((key)sButton, kAV, "FollowTarget", iAuth);
+                    }
+                } else if (sMenu == "FollowTargetConfirm") {
+                    if (sButton == "Yes") {
+                        g_iPassConfirmed = TRUE;
+                        if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
+                        UserCommand(iAuth, "follow " + (string)kAV, g_kLeashCmderID, TRUE);
+                    } else {
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kAV)+" denied %WEARERNAME% to follow them.",g_kLeashCmderID);
+                    g_iPassConfirmed = FALSE;
+                    }
+                    g_kLeashCmderID = "";
                 }
-            } else if (kMessageID == g_kFollowTargetConfirmDialogID) {
-                if (sButton == "Yes") {
-                    g_iPassConfirmed = TRUE;
-                    if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
-                    UserCommand(iAuth, "follow " + (string)kAV, g_kLeashCmderID, TRUE);
-                } else {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+NameURI(kAV)+" denied %WEARERNAME% to follow them.",g_kLeashCmderID);
-                g_iPassConfirmed = FALSE;
-                }
-                g_kLeashCmderID = "";
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
         }
     }
 
