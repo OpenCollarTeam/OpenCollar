@@ -158,7 +158,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 LooksMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose which look you want to change for your %DEVICETYPE%.", ["Color","Glow","Shiny","Texture"], ["Cancel"],0, iAuth, "LooksMenu~menu");
+    Dialog(kID, "\nChoose which look you want to change for your %DEVICETYPE%.", ["Color","Glow","Shiny","Texture","Themes"], ["Cancel"],0, iAuth, "LooksMenu~menu");
 }
 
 StyleMenu(key kID, integer iAuth) {
