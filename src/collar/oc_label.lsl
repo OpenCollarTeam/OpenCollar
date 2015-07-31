@@ -315,7 +315,7 @@ integer LabelsCount() {
         if(sLabel == "Label") {
             g_lLabelLinks += [0]; // fill list witn nulls
             //change prim description
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide"]);
+            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
         }
     }
     g_iCharLimit = llGetListLength(g_lLabelLinks);
