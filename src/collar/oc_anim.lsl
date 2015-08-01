@@ -308,17 +308,12 @@ UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods conf
 
 CreateAnimList() {
     g_lPoseList=[];
-    g_iNumberOfAnims=llGetInventoryNumber(INVENTORY_ANIMATION);
-
-    integer iNumberOfAnims = g_iNumberOfAnims;
-    while (iNumberOfAnims--) {
-        string sName=llGetInventoryName(INVENTORY_ANIMATION, iNumberOfAnims);
-
-        if (sName != "" && llGetSubString(sName, 0, 0) != "~") g_lPoseList+=[sName];
-        if (llSubStringIndex(sName,"~")==0 && llStringLength(sName)==4) {
-            sName=llGetSubString(sName,1,3);
-        }
-    }
+    g_iNumberOfAnims = llGetInventoryNumber(INVENTORY_ANIMATION);
+    string sName;
+    integer i;
+    do { sName = llGetInventoryName(INVENTORY_ANIMATION, i);
+        if (sName != "" && llSubStringIndex(sName,"~")) g_lPoseList+=[sName];
+    } while (g_iNumberOfAnims > i++);
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
