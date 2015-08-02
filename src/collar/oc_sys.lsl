@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150731.1                              //
+//                           System - 150802.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.4.0";
+string g_sCollarVersion="3.4.4";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -718,10 +718,10 @@ default
         if (llGetOwnerKey(id) == g_kWearer) {   //collar and updater have to have the same Owner else do nothing!
             list lTemp = llParseString2List(message, [","],[]);
             string sCommand = llList2String(lTemp, 0);
-            if( message == "get ready" && g_iWillingVDUpdaters==0) {
+            if( message == ".- ... -.-" && g_iWillingVDUpdaters==0) {
                 g_iWillingUpdaters++;
                 g_kUpdaterOrb = id;
-            } else if( message == "rosebud") {
+            } else if( message == "-.. ---") {
                 g_iWillingVDUpdaters++;
                 g_kUpdaterOrb = id;
             }
