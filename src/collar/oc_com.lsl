@@ -95,8 +95,8 @@ integer LM_SETTING_DELETE = 2003;
 //integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
 
-integer INTERFACE_REQUEST = -9006;
-integer INTERFACE_RESPONSE = -9007;
+//integer INTERFACE_REQUEST = -9006;
+//integer INTERFACE_RESPONSE = -9007;
 
 integer TOUCH_REQUEST = -9500;
 integer TOUCH_CANCEL = -9501;
@@ -360,7 +360,7 @@ default {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 Notify(g_kWearer,"You used your safeword, your owners will be notified you did.",FALSE);
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
-                llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
+               // llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
             }
         }
@@ -369,11 +369,14 @@ default {
             //Debug(sMsg);
             //do nothing if wearer isnt owner of the object
             if (llGetOwnerKey(kID) != g_kWearer) return;
+            //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            //no idea who asks this and needs to know...
-           // else if (sMsg == "version") llMessageLinked(LINK_SET, CMD_WEARER, "attachmentversion", g_kWearer);  //main knows version number, main can respond to this request for us
-            else {
-                list lParams = llParseString2List(sMsg, ["|"], []);
+            else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
+                if (!llSubStringIndex(sMsg, "AuthRequest")) {
+                    llMessageLinked(LINK_SET,ATTACHMENT_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
+                }
+            }
+               /* list lParams = llParseString2List(sMsg, ["|"], []);
                 integer iAuth = llList2Integer(lParams, 0);
                 if (iAuth == CMD_ZERO) { //auth request
                     string sCmd = llList2String(lParams, 1);
@@ -387,7 +390,7 @@ default {
                 else
                 // we received a unkown command, so we just forward it via LM into the cuffs
                     llMessageLinked(LINK_SET, ATTACHMENT_FORWARD, sMsg, kID);
-            }
+            }*/
         } else { //check for our prefix, or *
             if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
             else if (!llSubStringIndex(sMsg, "/"+g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
@@ -400,9 +403,10 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum==INTERFACE_RESPONSE) {
-            if (sStr == "safeword") llRegionSay(g_iHUDChan, "safeword");
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
+       // if (iNum==INTERFACE_RESPONSE) {
+       //     if (sStr == "safeword") llRegionSay(g_iHUDChan, "safeword");
+       // } else 
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
 
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand = llToLower(llList2String(lParams, 0));
