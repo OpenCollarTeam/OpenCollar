@@ -114,10 +114,10 @@ integer FIND_AGENT = -9005;
 
 //added for attachment auth (garvin)
 integer ATTACHMENT_REQUEST = 600;
-integer ATTACHMENT_RESPONSE = 601;
+//integer ATTACHMENT_RESPONSE = 601;
 //new evolution style to handle attachment auth
-integer INTERFACE_REQUEST  = -9006;
-integer INTERFACE_RESPONSE = -9007;
+//integer INTERFACE_REQUEST  = -9006;
+//integer INTERFACE_RESPONSE = -9007;
 
 string UPMENU = "BACK";
 
@@ -647,7 +647,7 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
-            integer iAuth = Auth((string)kID, FALSE);
+            integer iAuth = Auth(kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"Runaway is currently disabled.",g_kWearer);
@@ -693,14 +693,13 @@ default {
                 if (llGetListLength(g_lOwner)) SayOwners();
             }
         }
-    // JS: For backwards compatibility until all attachments/etc are rolled over to new interface
-        //added for attachment auth (Garvin)
-        else if (iNum == ATTACHMENT_REQUEST) {
-          integer iAuth = Auth((string)kID, TRUE);
-          llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, (string)iAuth+"|"+sStr, kID);
-        }
+// Redone simpler auth for attachments with direct reply to them from here without giving a reply first by LM to com - Otto (garvin.twine) aug 2015
+        else if (iNum == ATTACHMENT_REQUEST) //The reply is: "AuthReply|UUID|iAuth"
+            llRegionSayTo((key)llGetSubString(sStr,0,35),(integer)llGetSubString(sStr,36,-1),"AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE));
+
+//remove the code below later to cleanup
     // JS: Remove ATTACHMENT_REQUEST & RESPONSE after all attachments have been updated properly
-        else if (iNum == INTERFACE_REQUEST) {
+      /*  else if (iNum == INTERFACE_REQUEST) {
             list lParams = llParseString2List(sStr, ["|"], []);
             string sTarget = llList2String(lParams, 0);
             string sCommand = llList2String(lParams, 1);
@@ -711,8 +710,8 @@ default {
                 }
                 else return; // do not send response if the message was erroneous
                 llMessageLinked(LINK_SET, INTERFACE_RESPONSE, llDumpList2String(lParams, "|"), kID);
-            }
-        } else if (iNum == DIALOG_RESPONSE) {
+            }*/
+        else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
