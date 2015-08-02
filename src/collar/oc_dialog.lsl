@@ -479,6 +479,7 @@ default {
                     if (llGetListLength(g_lSensorDetails) > 0)
                         dequeueSensor();
                     else g_bSensorLock=FALSE;
+                    g_iSelectAviMenu = FALSE;
                     return;
                 }
             }
