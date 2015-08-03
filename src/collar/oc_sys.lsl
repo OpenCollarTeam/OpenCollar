@@ -299,6 +299,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
     else if (sStr == "options") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
+    } else if (sStr == "contact") {
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        g_kCurrentUser = kID;
+        if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "menuto") {
         key kAv = (key)llList2String(lParams, 1);
         if (llGetAgentSize(kAv) != ZERO_VECTOR) {//if kAv is an avatar in this region
@@ -571,11 +575,8 @@ default
                     else if (sMessage == "Settings") llMessageLinked(LINK_SET, iAuth, "menu settings", kAv);
                     else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
-                    else if (sMessage == CONTACT) {
-                        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-                        g_kCurrentUser = kAv;
-                        HelpMenu(kAv, iAuth);
-                    } else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
+                    else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
+                    else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
                     else if (sMessage=="☒ News")   UserCommand(iAuth, "news off", kAv, TRUE);
                     else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
