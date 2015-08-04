@@ -173,39 +173,39 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
         }
         ShowHideText();
-
-    } else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
+    } else if (sCommand=="titler" && sAction == "box") 
+        Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
+    else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         g_sText = "";
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();
     } else if (sCommand == "title") {
-        if (g_iOn && iAuth > g_iLastRank) { //only change text if commander has same or greater auth
+        integer iIsCommand;
+        if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
+        if (g_iOn && iAuth > g_iLastRank) //only change text if commander has same or greater auth
             llMessageLinked(LINK_SET,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
-
-        } else if (sAction == "on") {
+        else if (sAction == "on") {
             g_iLastRank = iAuth;
             g_iOn = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
-        } else if (sAction == "off") {
+        } else if (sAction == "off" && iIsCommand) {
             g_iLastRank = CMD_EVERYONE;
             g_iOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"on", "");
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
-        } else if (sAction == "up") {
+        } else if (sAction == "up" && iIsCommand) {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
-        } else if (sAction ==  "down") {
+        } else if (sAction ==  "down" && iIsCommand) {
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
-        } else if (sAction == "box") {
-            Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
-        } else if (sAction == "text") {
-            string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");//pop off the "text" command
-
+        } else {//if (sAction == "text") {
+            //string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");//pop off the "text" command
+            string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
             if (sNewText == "") {
                 g_iOn = FALSE;
@@ -277,7 +277,7 @@ default{
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMenuType == "main") { 
-                    if (sMessage == SET) UserCommand(iAuth, "title box", kAv);
+                    if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else {
@@ -294,7 +294,7 @@ default{
                         UserCommand(iAuth, "menu titler color", kAv);
                     }
                 } else if (sMenuType == "textbox") {  //response from text box
-                    if(sMessage != "") UserCommand(iAuth, "title text " + sMessage, kAv);
+                    if(sMessage != " ") UserCommand(iAuth, "title " + sMessage, kAv);
                     UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmtitler") {
                     if (sMessage == "Yes") {
