@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 150804.1                            //
+//                         Mesh Label - 150804.2                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2015 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -111,7 +111,7 @@ list g_lFonts = [
     "Outlined", "c1481c75-15ea-9d63-f6cf-9abb6db87039"
     ];
 
-key g_kFontTexture = "c1481c75-15ea-9d63-f6cf-9abb6db87039";
+key g_kFontTexture = "91b730bc-b763-52d4-d091-260eddda3198";
 
 integer x = 45;
 integer y = 19;
