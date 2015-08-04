@@ -384,7 +384,7 @@ default {
                     if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "menu apps", kAv);
                     else UserCommand(iAuth, "badwords "+sMessage, kAv, TRUE);
                 } else if (sMenu=="BadwordsAdd") {
-                    if (sMessage) UserCommand(iAuth, "badwords add " + sMessage, kAv, TRUE);
+                    if (sMessage != " ") UserCommand(iAuth, "badwords add " + sMessage, kAv, TRUE);
                     else MenuBadwords(kID,iNum);
                 } else if (sMenu=="BadwordsRemove") {
                     if (sMessage == "BACK") MenuBadwords(kID,iNum);
