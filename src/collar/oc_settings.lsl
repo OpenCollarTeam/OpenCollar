@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 150726.1                             //
+//                          Settings - 150804.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -275,7 +275,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
             integer iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT)-1;
             string sScriptName;
             string sMyName = llGetScriptName();
-            llMessageLinked(LINK_SET,NOTIFY,"1"+"\nReboot started: Resetting all scripts except "+sMyName+".\n",kID);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"Rebooting...",kID);
             do {
                 sScriptName = llGetInventoryName(INVENTORY_SCRIPT, iScriptCount);
                 if (sScriptName != sMyName) llResetOtherScript(sScriptName);
@@ -283,7 +283,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
             llSetTimerEvent(1.0);
         } else {
             g_kConfirmDialogID = llGenerateKey();
-            llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes Reboot`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
+            llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
     }
 }
@@ -389,7 +389,7 @@ default {
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
-            if (llList2String(lMenuParams,1) == "Yes Reboot") {
+            if (llList2String(lMenuParams,1) == "Yes") {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Reboot aborted.",kID);
