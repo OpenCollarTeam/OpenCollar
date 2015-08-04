@@ -537,12 +537,12 @@ default {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if(sMenuType == "TextBoxIdLocation") {
-                    if(sMessage != "")
+                    if(sMessage != " ")
                         addDestination(sMessage, g_tempLoc, kID);
                     UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                 } else if(sMenuType == "TextBoxIdSave") {
                     //Debug("TBoxIDSave " + sMessage);
-                    if(sMessage != "")
+                    if(sMessage != " ")
                         validatePlace(convertSlurl(sMessage, kAv, iAuth), kAv, iAuth);
                     else
                         UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
