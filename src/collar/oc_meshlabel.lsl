@@ -424,7 +424,7 @@ default
                         FontMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "textbox") { // TextBox response, extract values
-                    if (sMessage != " ") UserCommand(iAuth, "label text " + sMessage, kAv);
+                    if (sMessage != " ") UserCommand(iAuth, "label " + sMessage, kAv);
                     llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmlabel") {
                     if (sMessage == "Yes") {
