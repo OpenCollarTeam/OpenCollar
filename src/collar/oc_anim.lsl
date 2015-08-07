@@ -489,6 +489,7 @@ default {
                 g_iLastRank = 0;
                 llMessageLinked(LINK_SET, ANIM_STOP, g_sCurrentPose, "");
                 g_iAnimLock = FALSE;
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
                 g_sCurrentPose = "";
             }
