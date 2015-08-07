@@ -428,8 +428,7 @@ default {
                 StopParticles(TRUE);
                 llListenRemove(g_iLMListener);
                 llListenRemove(g_iLMListernerDetach);
-            }
-            else {
+            } else {
                 //Debug("leash active");
                 if (g_sParticleMode != "noParticle") {
                     integer bLeasherIsAv = (integer)llList2String(llParseString2List(sMessage, ["|"], [""]), 1);
@@ -441,34 +440,28 @@ default {
                         if (llGetSubString(sMessage, 0, 10)  == "leashhandle") {
                             g_iLMListener = llListen(LOCKMEISTER, "", "", (string)g_kLeashedTo + "handle ok");
                             g_iLMListernerDetach = llListen(LOCKMEISTER, "", "", (string)g_kLeashedTo + "handle detached");
-                        }
-                        else  g_iLMListener = llListen(LOCKMEISTER, "", "", "");
-
+                        } else  g_iLMListener = llListen(LOCKMEISTER, "", "", "");
                         LMSay();
                     }
                 }
             }
-        }
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
-            if (llToLower(sMessage) == llToLower(SUBMENU)) {
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
+            if (llToLower(sMessage) == "leash configure") {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID);
-            }
-            else if (sMessage == "menu "+SUBMENU) {
+            } else if (sMessage == "menu "+SUBMENU) {
                 if(iNum == CMD_OWNER || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
                     llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kMessageID);
                     llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
                 }
-            }
-            else if (llToLower(sMessage) == "particle reset") {
+            } else if (llToLower(sMessage) == "particle reset") {
                 g_lSettings = []; // clear current settings
                 if (kMessageID) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID);
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "all", "");
                 GetSettings(TRUE);
             }
-        }
-        else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
+        } else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
             llMessageLinked(LINK_SET, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
