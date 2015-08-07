@@ -574,8 +574,8 @@ default {
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="rlvmain_handshakes") g_iMaxViewerChecks=(integer)sValue;
-            else if (sToken=="rlvmain_on") {
+            else if (sToken==g_sSettingToken+"handshakes") g_iMaxViewerChecks=(integer)sValue;
+            else if (sToken==g_sSettingToken+"on") {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
             }
