@@ -267,11 +267,6 @@ ExMenu(key kID, string sWho, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "ex "+sWho);
 }
 
-//a function just to call another function?
-//UpdateSettings() {
-//    SetAllExs("");
-//}
-
 SaveDefaults() {
     // these are lists of rlv exceptions, not to be confused with auth_owner listings
     if (OWNER_DEFAULT == g_iOwnerDefault && TRUSTED_DEFAULT == g_iTrustedDefault) {
@@ -291,72 +286,88 @@ SaveSettings() {
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "List", "");
 }
 
-SetAllExs(string sVal) {
+SetAllExs() {
     if (!g_iRLVOn) return;
     integer iStop = llGetListLength(g_lRLVcmds);
     integer n;
     integer i;
+    string sRLVCmd = "@";
     integer iLength = llGetListLength(g_lSecOwners);
     for (n = 0; n < iLength; n += 2) {
-        list sCmd;
+       // list sCmd;
         string sTmpOwner = llList2String(g_lSecOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
             for (i = 0; i<iStop; i++) {
-                if (g_iTrustedDefault & llList2Integer(g_lBinCmds, i) ) sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
-                else sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                if (g_iTrustedDefault & llList2Integer(g_lBinCmds, i) )
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"; 
+                   // sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
+                else 
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"; 
+                   // sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                llOwnerSay(sRLVCmd);
+                sRLVCmd = "@";
             }
-            string sStr = llDumpList2String(sCmd, ",");
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
-            // lets give rlvmain a break
-            llSleep(0.2);
+            //string sStr = llDumpList2String(sCmd, ",");
+            //llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
         }
     }
-
     iLength = llGetListLength(g_lOwners+g_lTempOwners);
     for (n = 0; n < iLength; n += 2) {
-        list sCmd;
+        //list sCmd;
         string sTmpOwner = llList2String(g_lOwners+g_lTempOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
             for (i = 0; i<iStop; i++) {
-                if (g_iOwnerDefault & llList2Integer(g_lBinCmds, i) ) sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
-                else sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                if (g_iOwnerDefault & llList2Integer(g_lBinCmds, i) ) //sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
+                else //sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
+                llOwnerSay(sRLVCmd);
+                sRLVCmd = "@";
             }
-            string sStr = llDumpList2String(sCmd, ",");
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
-            // lets give rlvmain a break
-            llSleep(0.2);
+            //string sStr = llDumpList2String(sCmd, ",");
+            //llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
         }
     }
-
     iLength = llGetListLength(g_lSettings);
     for (n = 0; n < iLength; n += 2) {
-        list sCmd;
+        //list sCmd;
         string sTmpOwner = llList2String(g_lSettings, n);
         if(sTmpOwner!=g_kWearer) {
             integer iTmpOwner = llList2Integer(g_lSettings, n+1);
             for (i = 0; i<iStop; i++) {
-                if (iTmpOwner & llList2Integer(g_lBinCmds, i) ) sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
-                else sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                if (iTmpOwner & llList2Integer(g_lBinCmds, i) ) //sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n"];
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
+                else //sCmd += [llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y"];
+                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
             }
-            string sStr = llDumpList2String(sCmd, ",");
-            llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
+            llOwnerSay(sRLVCmd);
+            sRLVCmd = "@";
+            //string sStr = llDumpList2String(sCmd, ",");
+            //llMessageLinked(LINK_SET, RLV_CMD, sStr, "rlvex");
         }
     }
 }
+
 ClearEx() {
-    llMessageLinked(LINK_SET, RLV_CMD, "clear=startim:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
+    if (g_iRLVOn) {
+        integer i = llGetListLength(g_lRLVcmds);
+        do { i--;
+            llOwnerSay("@clear="+llList2String(g_lRLVcmds,i));
+        } while (i);
+    }
+    //llMessageLinked(LINK_SET, RLV_CMD, "clear=startim:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:,clear=tplure:,clear=accepttp:", "rlvex");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
+    string sLower = llToLower(sStr);
     if (iNum != CMD_OWNER) {
-        if (llToLower(sStr) == "ex" || llToLower(sStr) == "menu exceptions") {
+        if (sLower == "ex" || sLower == "menu exceptions") {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_SET, iNum, "menu rlv", kID);
         }
         return;
     }
     if (sStr == "runaway") llResetScript();
-    string sLower = llToLower(sStr);
     if (sLower == "ex" || sLower == "menu " + llToLower(g_sSubMenu)) {
         Menu(kID, "", iNum);
         jump UCDone;
@@ -367,8 +378,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     lParts = llDeleteSubList(lParts, 0, 0); // no longer need the "ex"
     iInd = llGetListLength(lParts);
     string sCom = llList2String(lParts, 0);
-    if (iInd == 1) // handle requests 4 menus first
-    {
+    if (iInd == 1) {// handle requests 4 menus first
         if (sCom == "owner") ExMenu(kID, "owner", iNum);
         else if (sCom == "trusted") ExMenu(kID, "trusted", iNum);
         if (!llSubStringIndex(sCom, ":")) jump UCDone;// not done if we received a 1-who 1-exception case
@@ -419,8 +429,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (~iNames = llSubStringIndex(sCom, "=")) {
                 sVal = llGetSubString(sCom, iNames + 1, -1);
                 sCom = llGetSubString(sCom, 0, iNames -1);
-            }
-            else sVal = "";
+            } else sVal = "";
             if (sVal == "exempt" || sVal == "add") sVal = "n"; // conversions
             else if (sVal == "enforce" || sVal == "rem") sVal = "y";
             iRLV = llListFindList(g_lRLVcmds, [sCom]);
@@ -432,8 +441,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else if (sVal == "y") g_iOwnerDefault = g_iOwnerDefault & ~iBin;
                 bChange = bChange | 1;
                 jump nextcom;
-            }
-            else if (sWho == "trusted") {
+            } else if (sWho == "trusted") {
                 if (sCom == "defaults") g_iTrustedDefault = TRUSTED_DEFAULT;
                 else if (sVal == "n") g_iTrustedDefault = g_iTrustedDefault | iBin;
                 else if (sVal == "y") g_iTrustedDefault = g_iTrustedDefault & ~iBin;
@@ -462,7 +470,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         @nextwho;
         if (bChange) {
-            SetAllExs("");
+            SetAllExs();
             if(bChange & 1) SaveDefaults();
             if(bChange & 2) SaveSettings();
         }
@@ -503,7 +511,7 @@ default {
             else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []);
             else if (sToken == "settings") {
-                if (sValue == "sent") SetAllExs("");//sendcommands
+                if (sValue == "sent") SetAllExs();//sendcommands
             }
         } else if (iNum == LM_SETTING_DELETE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -511,15 +519,15 @@ default {
             if (sToken == "auth_owner") {
                 g_lOwners = [];
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = [];
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = [];
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             }
         } else if (iNum == LM_SETTING_SAVE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -528,21 +536,21 @@ default {
             if (sToken == "auth_owner") {
                 g_lOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             } else if (sToken == "auth_trust") {
                 g_lSecOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             } else if (sToken == "auth_tempowner") {
                 g_lTempOwners = llParseString2List(sValue, [","], []);
                 ClearEx();
-                SetAllExs("");
+                SetAllExs();
             }
-        } else if (iNum == RLV_REFRESH) {
+        /*} else if (iNum == RLV_REFRESH) {
             //rlvmain just started up. Tell it about our current restrictions
             g_iRLVOn = TRUE;
-            SetAllExs("");
-        /*} else if (iNum == RLV_RESPONSE) {
+            SetAllExs();
+        } else if (iNum == RLV_RESPONSE) {
             if (g_iRlvUnknown) {
                 g_iRlvUnknown=FALSE;
                 if (sStr=="ON") g_iRLVOn=TRUE;
@@ -550,14 +558,15 @@ default {
             }*/
         } else if (iNum == RLV_CLEAR) {
             llSleep(2.0);
-            SetAllExs("");
+            SetAllExs();
         //} else if (iNum == RLV_VERSION) {
         //    g_sDetectedRLVersion = sStr;
         } else if (iNum == RLV_OFF) {
-            g_iRLVOn=FALSE;
+            ClearEx();
+            g_iRLVOn= FALSE;
         } else if (iNum == RLV_ON) {
-            g_iRLVOn=TRUE;
-            //SetAllExs("");//send the settings as we did notbefore
+            g_iRLVOn = TRUE;
+            SetAllExs();//send the settings as we did notbefore
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) { 
