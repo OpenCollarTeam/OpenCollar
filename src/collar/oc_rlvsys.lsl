@@ -194,14 +194,14 @@ setRlvState(){
             //Debug("RLV went active");
             //Debug("Sources:"+llDumpList2String(g_lSources,";"));
             g_iRlvActive=TRUE;
-            llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+           // llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
             g_lMenu = [] ; // flush submenu buttons
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
             llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
            // llSleep(5); //Make sure the relay is ready before pinging
-            g_iWaitRelay = TRUE;
-            llSetTimerEvent(5.0);
+            g_iWaitRelay = 1;
+            llSetTimerEvent(1.5);
             //ping inworld object so that they reinstate their restrictions
             integer i;/*
             for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
@@ -211,7 +211,7 @@ setRlvState(){
             }*/
             //reinstate exceptions
             //Debug("adding exceptions:\n"+llDumpList2String(g_lExceptions,",\n"));
-            for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
+           /* for (i=0;i<llGetListLength(g_lExceptions);i+=2) {
                 key kSource=(key)llList2String(g_lExceptions,i);
                 list lBehaviours=llParseString2List(llList2String(g_lExceptions,i+1),["§"],[]);
                 while (llGetListLength(lBehaviours)){
@@ -223,10 +223,8 @@ setRlvState(){
             llMessageLinked(LINK_SET, RLV_VERSION, (string) g_iRlvVersion, NULL_KEY);
             if (g_iRlvaVersion) { //Respond on RLVa as well
                  llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
+            }*/
             //llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
-
-            DoLock();
         }
     } else if (g_iRlvActive) {  //Both were true, but not now. g_iViewerCheck must still be TRUE (as it was once true), so g_iRLVOn must have just been set FALSE
         //Debug("RLV went inactive");
@@ -684,15 +682,25 @@ default {
 
     timer() {
         if (g_iWaitRelay) {
-            llSetTimerEvent(0.0);
-            g_iWaitRelay = FALSE;
-            integer i;
-            for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
-                key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
-                if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
-                else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+            if (g_iWaitRelay < 2) {
+                g_iWaitRelay = 2;
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_VERSION, (string)g_iRlvVersion, "");
+                if (g_iRlvaVersion)  //Respond on RLVa as well
+                    llMessageLinked(LINK_SET, RLVA_VERSION, (string)g_iRlvaVersion, "");
+                DoLock();
+                llSetTimerEvent(3.0);
+            } else {
+                llSetTimerEvent(0.0);
+                g_iWaitRelay = FALSE;
+                integer i;
+                for (i=0;i<llGetListLength(g_lRestrictions)/2;i++) {
+                    key kSource=(key)llList2String(llList2ListStrided(g_lRestrictions,0,-1,2),i);
+                    if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
+                    else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
+                }
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
             }
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
         } else {
             if (g_iCheckCount++ < g_iMaxViewerChecks) {
                 llOwnerSay("@versionnew=293847");
