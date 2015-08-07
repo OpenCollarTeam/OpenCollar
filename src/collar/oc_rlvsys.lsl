@@ -120,14 +120,14 @@ string CLEAR = "CLEAR ALL";
 
 key g_kWearer;
 
-string g_sSettingToken = "rlvmain_";
+string g_sSettingToken = "rlvsys_";
 string g_sGlobalToken = "global_";
 string g_sRlvVersionString="(unknown)";
 string g_sRlvaVersionString="(unknown)";
 
 list g_lOwners;
 list g_lRestrictions;  //2 strided list of sourceId, § separated list of restrictions strings
-list g_lExceptions;
+//list g_lExceptions;
 list g_lBaked=[]; //list of restrictions currently in force
 key g_kSitter=NULL_KEY;
 key g_kSitTarget=NULL_KEY;
@@ -246,7 +246,7 @@ setRlvState(){
 }
 
 AddRestriction(key kID, string sBehav) {
-    if (kID=="rlvex"){  //if its an exception, add it to the exceptions list
+ /*   if (kID=="rlvex"){  //if its an exception, add it to the exceptions list
         list lParams = llParseString2List(sBehav, [":"], []);
         key kAv = (key)llList2String(lParams, 1);
         string sBehav = llList2String(lParams, 0);
@@ -272,9 +272,9 @@ AddRestriction(key kID, string sBehav) {
                 //Debug(sSrcRestr);
             }
         /*} else {
-            Debug("OC doesn't currently support global exceptions");*/
+            Debug("OC doesn't currently support global exceptions");
         }
-    } else {      //add this restriction to the list for this source
+    } else {    */ //add this restriction to the list for this source
         //add new sources to sources list
         integer iSource=llListFindList(g_lRestrictions,[kID]);
         if (! ~iSource ) {  //if this is a restriction from a new source
@@ -299,7 +299,7 @@ AddRestriction(key kID, string sBehav) {
             }
         }
         DoLock(); //if there are sources with valid keys, collar should be locked.
-    }
+   // }
 }
 
 ApplyAdd (string sBehav) {
@@ -313,7 +313,7 @@ ApplyAdd (string sBehav) {
 }
 
 RemRestriction(key kID, string sBehav) {
-    if ((string)kID=="rlvex"){
+ /*   if ((string)kID=="rlvex"){
         //Debug("RemRestriction [rlvex] "+sBehav);
         list lParams = llParseString2List(sBehav, [":"], []);
         key kAv = (key)llList2String(lParams, 1);
@@ -343,7 +343,7 @@ RemRestriction(key kID, string sBehav) {
                 }
             }
         }
-    } else {
+    } else {*/
         //Debug("RemRestriction ("+(string)kID+")"+sBehav);
         integer iSource=llListFindList(g_lRestrictions,[kID]); //find index of the source
         if (~iSource) { //if this source set any restrictions
@@ -366,7 +366,7 @@ RemRestriction(key kID, string sBehav) {
             }
         }
         DoLock();
-    }
+   // }
 }
 
 ApplyRem(string sBehav) {
@@ -380,7 +380,7 @@ ApplyRem(string sBehav) {
         }
         //also check the exceptions list, in case its an exception
         list lParts=llParseString2List(sBehav,[":"],[]);
-        key exceptee=llList2Key(lParts,1);
+      /*  key exceptee=llList2Key(lParts,1);
         if (exceptee) {
             integer exceptionIndex=llListFindList(g_lExceptions,[exceptee]);
             if (~exceptionIndex){
@@ -396,7 +396,7 @@ ApplyRem(string sBehav) {
             }
         //} else {
             //Debug((string)exceptee+" is not a key, so this is not an exception");
-        }
+        }*/
 
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
@@ -574,8 +574,8 @@ default {
             lParams=[];
             if (sToken == "auth_owner" && llStringLength(sValue) > 0) g_lOwners = llParseString2List(sValue, [","], []);
             else if (sToken==g_sGlobalToken+"lock") g_iCollarLocked=(integer)sValue;
-            else if (sToken=="rlvmain_handshakes") g_iMaxViewerChecks=(integer)sValue;
-            else if (sToken=="rlvmain_on") {
+            else if (sToken==g_sSettingToken+"handshakes") g_iMaxViewerChecks=(integer)sValue;
+            else if (sToken==g_sSettingToken+"on") {
                 g_iRLVOn=(integer)sValue;
                 setRlvState();
             }
