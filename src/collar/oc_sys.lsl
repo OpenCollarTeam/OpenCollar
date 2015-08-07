@@ -315,6 +315,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             //inlined old "Lock()" function
             g_iLocked = TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"locked=1", "");
+            llOwnerSay("@detach=n");
             llMessageLinked(LINK_SET, RLV_CMD, "detach=n", "main");
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
@@ -326,6 +327,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (iNum == CMD_OWNER)  {
             g_iLocked = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");
+            llOwnerSay("@detach=y");
             llMessageLinked(LINK_SET, RLV_CMD, "detach=y", "main");
             llPlaySound(g_sUnlockSound, 1.0);
             SetLockElementAlpha(); //EB
@@ -623,6 +625,7 @@ default
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sGlobalToken+"locked") {
                 g_iLocked = (integer)sValue;
+                if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
             } else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
@@ -659,7 +662,7 @@ default
         if (iChange & CHANGED_INVENTORY) {
           //  if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
             g_iWaitRebuild = TRUE;
-            llSetTimerEvent(0.5);
+            llSetTimerEvent(1.0);
          //   }
          //   g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
