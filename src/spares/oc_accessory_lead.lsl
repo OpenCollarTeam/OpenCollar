@@ -57,6 +57,7 @@ string g_sListenfor;
 string g_sResponse;
 key g_kLeashed;
 string g_sWearerID;
+integer g_i;
 
 AnnounceLeashHolder() {
     if (g_kLeashed) llRegionSayTo(g_kLeashed, g_iMychannel, g_sResponse);
@@ -75,7 +76,7 @@ default {
     }
     
     listen(integer channel, string name, key id, string message) {
-        g_kLeashed = id;
+        g_kLeashed = llGetOwnerKey(id);
         AnnounceLeashHolder();
         llSetTimerEvent(2.0);
     }
@@ -92,8 +93,14 @@ default {
         }
     }
     timer() {
-        llSetTimerEvent(0.0);
-        AnnounceLeashHolder();
+        if (g_i) {
+            g_i = FALSE;
+            llSetTimerEvent(0.0);
+            AnnounceLeashHolder();
+        } else {
+            g_i = TRUE;
+            AnnounceLeashHolder();
+        }
     }
     on_rez(integer param) {
         llResetScript();
