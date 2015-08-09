@@ -482,10 +482,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
     } else if (sCommand == "vanilla") {
-        if (iNum != CMD_OWNER) {
-            llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%", kID);
-            if (iRemenu) AuthMenu(kID, iNum);
-        } else {
+        if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
                 g_iVanilla = TRUE;
                 UserCommand(iNum, "add owner " + (string)g_kWearer, kID, FALSE);
@@ -493,8 +490,8 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 g_iVanilla = FALSE;
                 UserCommand(iNum, "rm owner " + (string)g_kWearer, kID, FALSE);
             }
-            if (iRemenu) AuthMenu(kID, iNum);
-        }
+        } else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%", kID);
+         if (iRemenu) AuthMenu(kID, iNum);
     } else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
