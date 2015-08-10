@@ -261,6 +261,7 @@ default{
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, "Main|Kidnap", "");
         else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
             if (iNum == CMD_SAFEWORD && g_iCaptureOn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);
+            if (llGetListLength(g_lTempOwners)) llMessageLinked(LINK_SET,NOTIFY,"0"+"Your kidnap role play with %WEARERNAME% is over.",llList2Key(g_lTempOwners,0));
             g_iCaptureOn=FALSE;
             g_iVulnerableOn = FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,g_sSettingToken+"kidnap", "");
