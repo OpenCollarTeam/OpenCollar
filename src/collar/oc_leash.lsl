@@ -287,9 +287,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
         return FALSE;
     }
     if (!CheckCommandAuth(kCmdGiver, iAuth)) return FALSE;
-
-    if (g_kLeashedTo==kTarget) return TRUE;
-
+    //if (g_kLeashedTo==kTarget) return TRUE; 
     if (g_kLeashedTo) DoUnleash();
 
     integer bCmdGiverIsAvi=llGetAgentSize(kCmdGiver) != ZERO_VECTOR;
