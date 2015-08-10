@@ -163,7 +163,7 @@ doCapture(key kKidnapper, string sKidnapper, integer iIsConfirmed) {
         llMessageLinked(LINK_SET, CMD_OWNER, "follow " + (string)kKidnapper, kKidnapper);
         llMessageLinked(LINK_SET, CMD_OWNER, "yank", kKidnapper);
         llMessageLinked(LINK_SET, NOTIFY, "0"+"You are at "+NameURI(kKidnapper)+"'s whim.",g_kWearer);
-        llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX_restrictions\n/%CHANNEL%%PREFIX_sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During kidnap RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the kidnapping, please type: /%CHANNEL%%PREFIX%kidnap release\n\nHave fun!\n", kKidnapper);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX%restrictions\n/%CHANNEL%%PREFIX%sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During kidnap RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the kidnapping, please type: /%CHANNEL%%PREFIX%kidnap release\n\nHave fun!\n", kKidnapper);
         g_lTempOwners+=[kKidnapper,sKidnapper];
         saveTempOwners();
         llSetTimerEvent(0.0);
