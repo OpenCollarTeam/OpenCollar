@@ -285,7 +285,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
             g_kConfirmDialogID = llGenerateKey();
             llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
-    }
+    } else if (sStr == "runaway") llSetTimerEvent(2.0);
 }
 
 default {
