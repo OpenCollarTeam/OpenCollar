@@ -786,17 +786,10 @@ default {
                     key kAv = llList2Key(params, 2);
                     integer iAuth = llList2Integer(params, 3);
                     key kNewOwner = (key)llList2String(params, 5);
-                    if ((key)kNewOwner){
+                    if ((key)kNewOwner)
                         AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), sRequestType, kAv); //should be safe to uase key2name here, as we added from sensor dialog
-                       // integer iNewAuth=Auth(kAv,FALSE);
-                       // if (iNewAuth == CMD_OWNER){
-                        //    UserCommand(iNewAuth,"add "+sRequestType,kAv,TRUE);
-                       // } else {
-                        AuthMenu(kAv,Auth(kAv,FALSE));
-                       // }
-                    } else if (llList2String(params, 5) == "BACK"){
+                    else if (llList2String(params, 5) == "BACK")
                         AuthMenu(kAv,iAuth);
-                    }
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
