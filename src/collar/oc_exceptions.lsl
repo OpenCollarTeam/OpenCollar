@@ -367,7 +367,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         return;
     }
-    if (sStr == "runaway") llResetScript();
+   // if (sStr == "runaway") llResetScript();
     if (sLower == "ex" || sLower == "menu " + llToLower(g_sSubMenu)) {
         Menu(kID, "", iNum);
         jump UCDone;
