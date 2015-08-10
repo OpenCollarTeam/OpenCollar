@@ -577,25 +577,24 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sMessage == "runaway"){
         list lButtons=[];
-        string message="Only the wearer or an Owner can access this menu";
+        string message;//="\nOnly the wearer or an Owner can access this menu";
         if (kID == g_kWearer){  //wearer called for menu
-            if (g_iRunawayDisable){
-                lButtons=["Stay","Cancel","Remain","Don't Run", "Stay Loyal"];
-                message="\nACCESS DENIED:\n\nYou chose to disable the runaway function.\n\nOnly primary owners can restore this ability.";
-            } else {
-                lButtons=["Runaway!", "Stay"];
-                message="\nYou can run away from your owners or you can stay with them.";
-            }
-        } else if (iNum == CMD_OWNER ) {  //owner called for menu
+            if (g_iRunawayDisable)
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
+            else
+                Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu");
+        } else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
+    }
+        /*if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {  //owner called for menu
             lButtons=["Release"];
             message="\nYou can release this sub of your service.";
 
         }
         //Debug("runaway button");
         Dialog(kID, message, lButtons, [UPMENU], 0, iNum, "runawayMenu");
-    } else if (sCommand == "runaway") {
+    }/* else if (sCommand == "runaway") {
         if (sAction == "on") {
-            if (iNum == CMD_OWNER) {
+            if (iNum == CMD_OWNER ) {
                 g_iRunawayDisable = FALSE;
                 llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"norun","");
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The ability to runaway is enabled.",kID);
@@ -607,15 +606,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_SET,NOTIFY,"0"+"The ability to runaway is disabled.",kID);
             } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         }
-    }
+    }*/
 }
 
 RunAway() {
-    integer n;
-    integer stop = llGetListLength(g_lOwner+g_lTempOwner);
     llMessageLinked(LINK_SET,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
-
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "owner=", "");
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "tempowner=", "");    
     llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "tempowner", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + "trust=", "");
     //llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + "all", "");
@@ -760,9 +758,10 @@ default {
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
                     if (sMessage == UPMENU) {
                         AuthMenu(kAv, iAuth);
-                    } else  if (sMessage == "Runaway!") {
+                    } else  if (sMessage == "Yes") {
                         RunAway();
-                    } else if (sMessage == "Cancel" || sMessage == "Stay") {
+                    } 
+                    /*else if (sMessage == "Cancel" || sMessage == "Stay") {
                         return;  //no remenu on canel
                     } else if (sMessage == "Release") {
                         integer iOwnerIndex=llListFindList(g_lOwner,[(string)kAv]);
@@ -775,7 +774,7 @@ default {
                         }
                     } else {
                         AuthMenu(kAv, iAuth);
-                    }
+                    }*/
                 }
             }
         } else if (iNum == FIND_AGENT) { //reply from add-by-name or add-from-menu (via FetchAvi dialog)
