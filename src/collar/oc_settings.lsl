@@ -79,6 +79,7 @@ integer CMD_WEARER = 503;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
+//integer SAY = 1004;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -87,7 +88,9 @@ integer LM_SETTING_EMPTY = 2004;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-
+integer LINK_DIALOG = 3;
+integer REBOOT = -1000;
+integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
 
@@ -239,7 +242,7 @@ PrintSettings(key kID) {
     }
     lOut += [sOld];
     while (llGetListLength(lOut)) {
-        llMessageLinked(LINK_SET, NOTIFY, "0"+llList2String(lOut, 0), kID);
+        llMessageLinked(LINK_ROOT,NOTIFY,"0"+llList2String(lOut, 0), kID);
         //Notify(kID, llList2String(lOut, 0), TRUE);
         lOut = llDeleteSubList(lOut, 0, 0);
     }
@@ -258,9 +261,9 @@ SendValues() {
     }
     n = 0;
     for (; n < llGetListLength(lOut); n++)
-        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(lOut, n), "");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, llList2String(lOut, n), "");
 
-    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
+    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
 UserCommand(integer iAuth, string sStr, key kID) {
@@ -271,19 +274,13 @@ UserCommand(integer iAuth, string sStr, key kID) {
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
     } else if (sStr == "reboot") {
         if (g_iRebootConfirmed) {
+            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
-            integer iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT)-1;
-            string sScriptName;
-            string sMyName = llGetScriptName();
-            llMessageLinked(LINK_SET,NOTIFY,"1"+"Rebooting...",kID);
-            do {
-                sScriptName = llGetInventoryName(INVENTORY_SCRIPT, iScriptCount);
-                if (sScriptName != sMyName) llResetOtherScript(sScriptName);
-            } while (iScriptCount--);
-            llSetTimerEvent(1.0);
+            llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
+            llSetTimerEvent(2.0);
         } else {
             g_kConfirmDialogID = llGenerateKey();
-            llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
+            llMessageLinked(LINK_DIALOG,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
     } else if (sStr == "runaway") llSetTimerEvent(2.0);
 }
@@ -371,7 +368,7 @@ default {
         }
     }
 
-    link_message(integer sender, integer iNum, string sStr, key kID) {
+    link_message(integer iLink, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
             //save the token, value
@@ -382,8 +379,9 @@ default {
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
-            if (SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
-            else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
+            if (SettingExists(sStr)) llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
+            else if (sStr == "ALL") llSetTimerEvent(2.0);
+            else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
@@ -392,7 +390,11 @@ default {
             if (llList2String(lMenuParams,1) == "Yes") {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
-            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Reboot aborted.",kID);
+            } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Reboot aborted.",kID);
+        } else if (iNum == LOADPIN) {
+            integer iPin = (integer)llFrand(99999.0);
+            llSetRemoteScriptAccessPin(iPin);
+            llMessageLinked(iLink, LOADPIN, (string)iPin,llGetKey());
         }
     }
 

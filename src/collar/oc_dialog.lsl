@@ -67,7 +67,8 @@ integer CMD_WEARER = 503;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-
+integer LINK_SAVE = 5;
+integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -146,7 +147,6 @@ list g_lColors = [
 "Black",<0.00000, 0.00000, 0.00000>,
 "White",<1.00000, 1.00000, 1.00000>
 ];
-
 
 /*
 integer g_iProfiled;
@@ -273,12 +273,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         integer iRemainingChatLen;
         while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
             if(iRemainingChatLen<1015) {
-                llMessageLinked(LINK_SET,NOTIFY,"0"+sThisChat,kRecipient);
+                llMessageLinked(LINK_ROOT,NOTIFY,"0"+sThisChat,kRecipient);
                 //Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
                 sThisChat="";
             } else {
                 string sMessageChunk=TruncateString(sPrompt,1015);
-                llMessageLinked(LINK_SET,NOTIFY,"0"+sMessageChunk,kRecipient);
+                llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMessageChunk,kRecipient);
                 //Notify(kRecipient,sMessageChunk,FALSE);
                 sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
             }
@@ -286,7 +286,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     }
     //Debug("chat prompt:"+sThisChat);
 
-    //calculate random channel number for dialog, inlined single use RandomUniqueChanel function
     integer iChan=llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
@@ -326,8 +325,7 @@ string TruncateString(string sStr, integer iBytes) {
                 j += 2;
                 iBytes -= 2;
             }
-        }
-        else if (iBytes >= 1) {
+        } else if (iBytes >= 1) {
             sOut += c;
             iBytes --;
         }
@@ -378,7 +376,7 @@ CleanList() {
         if (iNow > iDieTime) {
             //Debug("menu timeout");
             key kID = llList2Key(g_lMenus, n + 1);
-            llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
+            llMessageLinked(LINK_ALL_OTHERS, DIALOG_TIMEOUT, "", kID);
             RemoveMenuStride(n);
         }
     }
@@ -410,13 +408,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (sValue == "off") {
             if (~i) return; // already in list
             MRSBUN += [kID];
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature activated for you.",kID);
+            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Verbose Feature activated for you.",kID);
         } else if (~i) {
             MRSBUN = llDeleteSubList(MRSBUN, i, i);
-            llMessageLinked(LINK_SET,NOTIFY,"0"+"Verbose Feature de-activated for you.",kID);
+            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Verbose Feature de-activated for you.",kID);
         } else return; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_THIS, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
-        else llMessageLinked(LINK_THIS, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
+        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
+        else llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
     }
 }
 
@@ -447,11 +445,11 @@ default {
     }
 
     state_entry() {
-       // llSetMemoryLimit(57344);  //2015-05-06 (9926 bytes free)
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
-        g_sDeviceName = llGetObjectName();
+        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
+        llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
         //Debug("Starting");
     }
 
@@ -474,7 +472,7 @@ default {
             lButtons += llDetectedKey(i);
             if (bReturnFirstMatch){ //if we're supposed to be finding the first match,
                 if (llSubStringIndex(llToLower(llDetectedName(i)),llToLower(sFind))==0){ //if they match, send it back as a dialogresponse without popping the dialog
-                    llMessageLinked(LINK_SET, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
+                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
                     //if we have more sensors to run, run another one now, else unlock subsys and quite
                     if (llGetListLength(g_lSensorDetails) > 0)
                         dequeueSensor();
@@ -510,7 +508,6 @@ default {
             g_iSelectAviMenu = FALSE;
             g_bSensorLock=FALSE;
         }
-
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -538,7 +535,6 @@ default {
                         lRemovedAgents += [avId];
                     }
                 }
-
                 numAgents = llGetListLength(agentList);
                 if (!numAgents) {
                     string findNotify;  //= "Could not find any avatars in this region.";
@@ -558,8 +554,8 @@ default {
                             lRemovedAgents = llDeleteSubList(lRemovedAgents,0,0);
                         }
                     }
-                    llMessageLinked(LINK_SET,NOTIFY, "0" + findNotify, kRCPT);
-                    llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kRCPT+"|"+(string)iAuth+"|"+TYPE+"|BACK", kID);
+                    llMessageLinked(LINK_ROOT,NOTIFY, "0" + findNotify, kRCPT);
+                    llMessageLinked(LINK_ALL_OTHERS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kRCPT+"|"+(string)iAuth+"|"+TYPE+"|BACK", kID);
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     g_iSelectAviMenu = TRUE;
@@ -574,13 +570,11 @@ default {
             //test for locked sensor subsystem
             //if subsys locked, do nothing
             //if subsys open, run sensor with first set of details in the list, and set timeout
-
             g_lSensorDetails+=[iSender, iNum, sStr, kID];
             if (! g_bSensorLock){
                 g_bSensorLock=TRUE;
                 dequeueSensor();
             }
-
         } else if (iNum == DIALOG) {
         //give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
@@ -623,7 +617,7 @@ default {
                         g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [kID, llGetSubString(sCmd, 4, -1)], iIndex, iIndex+1);
                     else
                         g_lRemoteMenus += [kID, llGetSubString(sCmd, 4, -1)];
-                    llMessageLinked(LINK_SET, iNum, "menu", kID);
+                    llMessageLinked(LINK_ALL_OTHERS, iNum, "menu", kID);
                 } else if (llGetSubString(sCmd, 0, 2) == "off") {
                     integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
                     if (~iIndex)
@@ -632,9 +626,9 @@ default {
                 else if (llGetSubString(sCmd, 0, 8) == "response:") {
                     list lParams = llParseString2List(llGetSubString(sCmd, 9, -1), ["|"], []);
                     //llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
-                    llMessageLinked(LINK_SET, DIALOG_RESPONSE, llList2String(lParams, 0) + "|" + llList2String(lParams, 1) + "|" + llList2String(lParams, 2), llList2String(lParams, 3));
+                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams, 0) + "|" + llList2String(lParams, 1) + "|" + llList2String(lParams, 2), llList2String(lParams, 3));
                 } else if (llGetSubString(sCmd, 0, 7) == "timeout:")
-                    llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", llGetSubString(sCmd, 8, -1));
+                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_TIMEOUT, "", llGetSubString(sCmd, 8, -1));
             }
         }
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
@@ -644,20 +638,17 @@ default {
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sSettingToken + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
-            else if (sToken == g_sGlobalToken+"DeviceName") g_sDeviceName = sValue;
-            else if (sToken == g_sGlobalToken+"WearerName") {
+            else if (sToken == g_sGlobalToken+"DeviceName") {
+                g_sDeviceName = sValue;
+                llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
+            } else if (sToken == g_sGlobalToken+"WearerName") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
             }
             else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
-            } else if (sToken == "listener_channel") g_iListenChan = (integer)sValue;
-        } else if (iNum == LM_SETTING_SAVE) {
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == "listener_channel") g_iListenChan = llList2Integer(llParseString2List(sValue,[","],[]),0);
-        }
+            } else if (sToken == "com_channel") g_iListenChan = (integer)sValue;
+        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {
@@ -698,10 +689,10 @@ default {
                     string REQ=llList2String(lExtraInfo,1);   //name of script that originated the request
                     string TYPE=llList2String(lExtraInfo,2);  //type string sent in initial request by calling script
 
-                    llMessageLinked(LINK_THIS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
+                    llMessageLinked(LINK_ALL_OTHERS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
                 }
                 if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
-                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
+                llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }
         }
     }

@@ -96,8 +96,13 @@ integer LM_SETTING_RESPONSE =  2002;
 integer LM_SETTING_DELETE   =  2003;
 
 integer NOTIFY = 1002;
+integer SAY = 1004;
+integer REBOOT              = -1000;
+integer LINK_DIALOG         = 3;
+//integer LINK_RLV            = 4;
+integer LINK_SAVE           = 5;
 //integer MENUNAME_REQUEST    =  3000;
-integer MENUNAME_RESPONSE   =  3001;
+//integer MENUNAME_RESPONSE   =  3001;
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
@@ -150,7 +155,7 @@ Debug(string sStr) {
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -347,7 +352,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 } else if (g_kStylesCardUUID) StyleMenu(kID,iNum);
                 else {
                     llMessageLinked(LINK_SET, iNum, "options", kID);
-                    llMessageLinked(LINK_SET, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX%looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
+                    llMessageLinked(LINK_ROOT, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX%looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
@@ -401,7 +406,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
                         }
                     }
-                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
                     if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
                 }
             }
@@ -424,7 +429,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);
                         }
                     }
-                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
                     if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
                 }
             } else if (sCommand == "color") {
@@ -461,7 +466,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 if (sTextureShortName=="") {  //no texture name supplied, send texture menu for this element
                     TextureMenu(kID, 0, iNum, sStr);
                 } else if (! ~iTextureIndex) {  //invalid texture name supplied, send texture menu for this element
-                    llMessageLinked(LINK_THIS, NOTIFY, "0"+"No texture "+sTextureShortName+" found, please choose one from the menu.",kID);
+                    llMessageLinked(LINK_ROOT,NOTIFY, "0"+"No texture "+sTextureShortName+" found, please choose one from the menu.",kID);
                     TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {  //valid element and texture names supplied, apply texture
                     //get key from long name
@@ -494,7 +499,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 }
             }
         } else {  //anyone else gets an error
-            llMessageLinked(LINK_THIS, NOTIFY, "0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_ROOT,NOTIFY, "0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_SET, iNum, "menu " + "options", kID);
         }
     }
@@ -512,6 +517,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -558,9 +564,9 @@ default {
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
                         if (sMessage == "*Touch*") {
-                            llMessageLinked(LINK_SET, NOTIFY, "0"+"Please touch the part of the %DEVICETYPE% you want to change. Press ctr+alt+T to see invisible parts.",kAv);
+                            llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Please touch the part of the %DEVICETYPE% you want to change. Press ctr+alt+T to see invisible parts.",kAv);
                             key kTouchID = llGenerateKey();
-                            llMessageLinked(LINK_SET, TOUCH_REQUEST, (string)kAv + "|3|" + (string)iAuth, kTouchID);  //3 = touchStart and touchEnd
+                            llMessageLinked(LINK_ROOT, TOUCH_REQUEST, (string)kAv + "|3|" + (string)iAuth, kTouchID);  //3 = touchStart and touchEnd
                             integer iIndex = llListFindList(g_lMenuIDs, [kID]);
                             if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kTouchID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
                             else g_lMenuIDs += [kID, kTouchID, sMenuType];
@@ -571,7 +577,7 @@ default {
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
                     if (sMessage == "BACK") {
-                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_SET, iAuth, "options", kAv);
+                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_ROOT, iAuth, "options", kAv);
                         else  ElementMenu(kAv, 0, iAuth, sBackMenu);
                     }
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
@@ -589,7 +595,7 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 string sElement = LinkType(iLinkNumber, "no"+sTouchType);
                 if (sElement == "immutable") {
-                    llMessageLinked(LINK_SET, NOTIFY, "0"+"You can't change the "+sTouchType+" of the part you selected. You can try again.", kAv);
+                    llMessageLinked(LINK_ROOT, NOTIFY, "0"+"You can't change the "+sTouchType+" of the part you selected. You can try again.", kAv);
                     //Debug("calling usercommand with: "+sTouchType);
                     UserCommand(iAuth, sTouchType, kAv, TRUE);
                 } else {
@@ -600,7 +606,7 @@ default {
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-        }
+        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     dataserver(key kID, string sData) {
@@ -619,7 +625,7 @@ default {
                             g_lTextureKeys+=kTextureKey;
                             g_lTextureShortNames+=sShortName;
                         }
-                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture key for "+sTextureName+" in textures notecard not recognised, dropping.",g_kWearer);
+                    } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Texture key for "+sTextureName+" in textures notecard not recognised, dropping.",g_kWearer);
                 }
                 g_kTexturesNotecardRead=llGetNotecardLine(g_sTextureCard,++g_iTexturesNotecardLine);
             }
@@ -639,7 +645,7 @@ default {
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
                             if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                             else g_iLeashParticle = FALSE;
-                            llMessageLinked(LINK_SET, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
+                            llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                             UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                             return;
                         }
@@ -658,8 +664,8 @@ default {
                                     llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                                     integer i;
                                     for (; i < llGetListLength(lParams); i=i+2) {
-                                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
-                                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
+                                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
+                                        llMessageLinked(LINK_SAVE, LM_SETTING_RESPONSE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                     }
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
@@ -683,7 +689,7 @@ default {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
                     if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                     else g_iLeashParticle = FALSE;
-                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
+                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                     UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                 //} else {
                     //Debug(llDumpList2String(g_lStyles,","));
