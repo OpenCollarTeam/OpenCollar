@@ -96,6 +96,7 @@ integer CMD_SAFEWORD = 510;
 
 //EXTERNAL MESSAGE MAP
 integer EXT_CMD_COLLAR = 499;  //added for collar or cuff commands to put ao to pause or standOff
+integer ATTACHMENT_RESPONSE = 601;
 
 integer NOTIFY = 1002;
 integer LOADPIN = -1904;
@@ -225,7 +226,8 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
 }
 
 AOMenu(key kID, integer iAuth) {  // wrapper to send menu back to the AO's menu
-    llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iAuth + "|ZHAO_MENU|" + (string)kID);
+   // com script needs to send this from root
+    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iAuth+"|ZHAO_MENU|"+(string)kID, g_kWearer);
     llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_MENU|" + (string)kID);
 }
 
