@@ -103,12 +103,11 @@ integer TOUCH_EXPIRE = -9503;
 string g_sSafeWord = "RED";
 
 //added for attachment auth
-integer g_iInterfaceChannel; // AO Backwards Compatibility
+integer g_iInterfaceChannel;
 integer g_iListenHandleAtt;
 
-integer ATTACHMENT_REQUEST = 600;
-integer ATTACHMENT_RESPONSE = 601;
-//integer ATTACHMENT_FORWARD = 610;
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY = 601;
 
 key g_kWearer;
 string g_sSettingToken = "com_";
@@ -362,7 +361,7 @@ default {
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
             else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
                 if (llSubStringIndex(sMsg, "AuthRequest")==0) {
-                    llMessageLinked(LINK_AUTH,ATTACHMENT_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
+                    llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
                 }
             }
         } else { //check for our prefix, or *
@@ -548,7 +547,7 @@ default {
                 if (g_iNeedsPose && [] == g_lTouchRequests) llStopAnimation(g_sPOSE_ANIM);
             }
         } //needed to be the same ID that send earlier pings or pongs
-        else if (iNum == ATTACHMENT_RESPONSE) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
+        else if (iNum == AUTH_REPLY) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
         else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum==NOTIFY_OWNERS)   NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();

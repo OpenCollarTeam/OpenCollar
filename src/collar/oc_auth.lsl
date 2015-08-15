@@ -114,8 +114,8 @@ integer DIALOG_TIMEOUT = -9002;
 integer FIND_AGENT = -9005;
 
 //added for attachment auth (garvin)
-integer ATTACHMENT_REQUEST = 600;
-
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY = 601;
 string UPMENU = "BACK";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
@@ -662,8 +662,8 @@ default {
             }
         }
 // Redone simpler auth for attachments with direct reply to them from here without giving a reply first by LM to com - Otto (garvin.twine) aug 2015
-        else if (iNum == ATTACHMENT_REQUEST) //The reply is: "AuthReply|UUID|iAuth"
-            llRegionSayTo((key)llGetSubString(sStr,0,35),(integer)llGetSubString(sStr,36,-1),"AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE));
+        else if (iNum == AUTH_REQUEST) //The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
+            llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
