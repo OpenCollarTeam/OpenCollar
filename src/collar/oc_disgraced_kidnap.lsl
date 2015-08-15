@@ -59,7 +59,7 @@ key     g_kWearer;
 list    g_lMenuIDs;      //menu information, 5 strided list, userKey, menuKey, menuName, kidnapperKey, kidnapperName
 
 //MESSAGE MAP
-//integer CMD_ZERO = 0;
+integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
@@ -73,9 +73,10 @@ integer CMD_SAFEWORD = 510;
 integer NOTIFY              =  1002;
 integer SAY                 =  1004;
 integer REBOOT              = -1000;
-integer LINK_DIALOG         = 3;
-integer LINK_RLV            = 4;
-integer LINK_SAVE           = 5;
+integer LINK_AUTH           =  2;
+integer LINK_DIALOG         =  3;
+integer LINK_RLV            =  4;
+integer LINK_SAVE           =  5;
 integer LM_SETTING_SAVE     =  2000;
 integer LM_SETTING_REQUEST  =  2001;
 integer LM_SETTING_RESPONSE =  2002;
@@ -141,12 +142,11 @@ KidnapMenu(key kId, integer iAuth) {
 
 saveTempOwners() {
     if (llGetListLength(g_lTempOwners)) {
-        llMessageLinked(LINK_SET, LINK_SAVE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
     } else {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner=", "");
-        llMessageLinked(LINK_SET, LINK_SAVE, "auth_tempowner", "");
-        //llMessageLinked(LINK_SET, LM_SETTING_EMPTY, "auth_tempowner", "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner", "");
     }
 }
 
@@ -257,7 +257,7 @@ default{
         if (llGetListLength(g_lTempOwners)) return;  //no one can capture if already captured
         if (!g_iCaptureOn) return;  //no one can capture if disabled
         if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could kidnap %WEARERNAME% if you get a bit closer.",kToucher);
-        else llMessageLinked(2,0,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
+        else llMessageLinked(LINK_AUTH,CMD_ZERO,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
             //llMessageLinked(LINK_SET,0,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
     }
 
