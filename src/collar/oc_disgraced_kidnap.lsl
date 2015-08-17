@@ -146,7 +146,7 @@ saveTempOwners() {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
     } else {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner=", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner", "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "auth_tempowner", "");
     }
 }
 
