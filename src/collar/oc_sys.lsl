@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150807.1                              //
+//                           System - 150817.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.6.11";
+string g_sCollarVersion="3.7.0";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -259,8 +259,8 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\nWelcome to the OpenCollar 4 Beta:\n\n\t - [https://github.com/OpenCollar/opencollar/issues Tracker] -\t - [https://github.com/OpenCollar/opencollar/commits/master Changelog] -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
-    if(!g_iLatestVersion) sPrompt+="\n I'm outdated, please update me!";
+    string sPrompt = "\nOC4 Performance Branch:\n\n- Main Menu -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
+    if(!g_iLatestVersion) sPrompt+="\n\nI'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
