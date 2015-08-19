@@ -249,9 +249,9 @@ integer SetPosture(integer iOn, key kCommander) {
     }
 }
 
-MessageAOs(string sONOFF){
-    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+llToUpper(sONOFF), g_kWearer);
-    llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STAND"+llToUpper(sONOFF));
+MessageAOs(string sONOFF){ //send string as "ON"  / "OFF" saves 2 llToUpper
+    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+sONOFF, g_kWearer);
+    llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STAND"+sONOFF);
     llRegionSayTo(g_kWearer,-8888,(string)g_kWearer+"boot"+llToLower(sONOFF)); //for Firestorm AO
 }
 
@@ -272,7 +272,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
             if (llGetListLength(g_lAnims)) UnPlayAnim(llList2String(g_lAnims, 0));
             g_lAnims = [sAnim] + g_lAnims;  //this way, g_lAnims[0] is always the currently playing anim
             PlayAnim(sAnim);
-            MessageAOs("off");
+            MessageAOs("OFF");
         }
     } else  llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -298,7 +298,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
             UnPlayAnim(sAnim);
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
-            else MessageAOs("on");
+            else MessageAOs("ON");
         }
     } else  llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -382,8 +382,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sCommand == "ao") {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
-        else if (sValue == "off") MessageAOs(sValue);
-        else if (sValue == "on") MessageAOs(sValue);
+        else if (sValue == "off") MessageAOs("OFF");
+        else if (sValue == "on") MessageAOs("ON");
         //doesnt work as it should, needs adjustment in AO
         /*} else if (sValue == "lock") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_LOCK|"+(string)kID, g_kWearer);
         else if (sValue == "unlock") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_UNLOCK|"+(string)kID, g_kWearer);
