@@ -257,7 +257,8 @@ MainMenu(key kID, integer iAuth) {
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+=" ";
     if (g_iKidnapMenu) lStaticButtons+="Kidnap";
-    else lStaticButtons+=" ";
+    else lStaticButtons+="Looks";
+   // else lStaticButtons+=" ";
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+=" ";
@@ -554,7 +555,7 @@ default
                 } else if (sMenu=="Help/About") {
                     //Debug("Help menu response");
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                    else if (sMessage == "Settings") llMessageLinked(LINK_SET, iAuth, "menu settings", kAv);
+                    else if (sMessage == "Looks") llMessageLinked(LINK_ROOT, iAuth, "looks",kAv);
                     else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
                     else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
