@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Kidnap - 150811.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Kidnap - 150817.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -258,7 +258,6 @@ default{
         if (!g_iCaptureOn) return;  //no one can capture if disabled
         if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could kidnap %WEARERNAME% if you get a bit closer.",kToucher);
         else llMessageLinked(LINK_AUTH,CMD_ZERO,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
-            //llMessageLinked(LINK_SET,0,"kidnap TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {

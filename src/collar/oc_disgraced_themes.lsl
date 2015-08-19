@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 150731.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 150817.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -273,7 +273,7 @@ BuildTexturesList() {
         string sTextureName = llGetInventoryName(INVENTORY_TEXTURE, numInventoryTextures);
         string sShortName=llList2String(llParseString2List(sTextureName, ["~"], []), -1);
         if (!(llGetSubString(sTextureName, 0, 5) == "leash_" || sTextureName == "chain" || sTextureName == "rope")) {  // we want to ignore particle textures, and textures named in the notecard
-            if(llStringLength(sShortName)>23) llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
+            if(llStringLength(sShortName)>23) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
             else {
                 g_lTextures += sTextureName;
                 g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
@@ -351,7 +351,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
                 } else if (g_kStylesCardUUID) StyleMenu(kID,iNum);
                 else {
-                    llMessageLinked(LINK_SET, iNum, "options", kID);
+                    llMessageLinked(LINK_ROOT, iNum, "options", kID);
                     llMessageLinked(LINK_ROOT, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX%looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
@@ -406,7 +406,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
                         }
                     }
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
                     if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
                 }
             }
@@ -429,7 +429,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);
                         }
                     }
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
                     if (reMenu) GlowMenu(kID, iNum, "glow "+sElement);
                 }
             } else if (sCommand == "color") {
@@ -444,7 +444,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             llSetLinkColor(iLinkCount, vColorValue, ALL_SIDES);  //set link to new color
                         }
                     }
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
                     if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {
                     ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
@@ -494,13 +494,13 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         }
                     }
                     //save to settings
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
                     if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             }
         } else {  //anyone else gets an error
             llMessageLinked(LINK_ROOT,NOTIFY, "0"+"%NOACCESS%",kID);
-            llMessageLinked(LINK_SET, iNum, "menu " + "options", kID);
+            llMessageLinked(LINK_ROOT, iNum, "menu " + "options", kID);
         }
     }
 }
@@ -617,9 +617,9 @@ default {
                     key kTextureKey=(key)llStringTrim(llList2String(lThisLine,1),STRING_TRIM);
                     string sTextureName=llStringTrim(llList2String(lThisLine,0),STRING_TRIM);
                     string sShortName=llList2String(llParseString2List(sTextureName, ["~"], []), -1);
-                    if ( ~llListFindList(g_lTextures,[sTextureName])) llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture "+sTextureName+" is in the collar AND the notecard.  Collar texture takes priority.",g_kWearer);
+                    if ( ~llListFindList(g_lTextures,[sTextureName])) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Texture "+sTextureName+" is in the collar AND the notecard.  Collar texture takes priority.",g_kWearer);
                     else if((key)kTextureKey) {  //if the notecard has valid key, and texture is not already in collar
-                        if(llStringLength(sShortName)>23) llMessageLinked(LINK_SET,NOTIFY,"0"+"Texture "+sTextureName+" in textures notecard too long, dropping.",g_kWearer);
+                        if(llStringLength(sShortName)>23) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Texture "+sTextureName+" in textures notecard too long, dropping.",g_kWearer);
                         else {
                             g_lTextures+=sTextureName;
                             g_lTextureKeys+=kTextureKey;

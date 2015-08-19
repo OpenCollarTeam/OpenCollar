@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 150804.1                            //
+//                          Bookmarks - 150817.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -129,7 +129,6 @@ Debug(string sStr) {
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
@@ -177,7 +176,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else {
             // Notify that they need to give a description of the saved destination ie. <prefix>bookmarks save description
             Dialog(kID,
-
 "Enter a name for the destination below. Submit a blank field to cancel and return.
 You can enter:
 1) A friendly name to save your current location to your favorites
@@ -299,7 +297,6 @@ string convertSlurl(string sStr, key kAv, integer iAuth) {  //convert the slurl 
     return sStr; //failed conversion, send raw string assuming there's no Slurls
 }
 
-
 integer isInteger(string input) { //for validating location scheme
     return ((string)((integer)input) == input);
 }
@@ -407,12 +404,7 @@ PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations 
 }
 
 default {
-    on_rez(integer iParam) {
-        if(llGetOwner() != g_kWearer) llResetScript();  // Reset if wearer changed
-    }
-
     state_entry() {
-        //llSetMemoryLimit(49152);  //2015-05-06 (7512 bytes free)
         g_kWearer = llGetOwner();  // store key of wearer
         ReadDestinations(); //Grab our presets
         //Debug("Starting");

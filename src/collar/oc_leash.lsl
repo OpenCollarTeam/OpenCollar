@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 150810.1                               //
+//                           Leash - 150817.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -114,18 +114,8 @@ string BUTTON_SUBMENU      = "Leash";
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
 
-//key g_kMenuUser;
-//key g_kMainDialogID;
-//key g_kSetLengthDialogID;
-//key g_kLeashTargetDialogID;
-//key g_kFollowTargetDialogID;
-//key g_kPostTargetDialogID;
-//key g_kPostMenuDialogID;
-//key g_kLeashTargetConfirmDialogID;
-//key g_kFollowTargetConfirmDialogID;
 key g_kLeashCmderID;
 
-//list g_lDialogs;    //tracks dialogs generated.  2 strided, key, type
 list g_lButtons;
 // ----- collar -----
 
@@ -160,8 +150,6 @@ integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
 
 list g_lRestrictionNames= ["fly","tplm","tplure","tploc"];
-//string RLV_STRING = "rlvmain_on";
-//string OWNER_STRING = "auth_owner";
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -591,6 +579,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         } else if (sMessage == "turn off") {
             g_iTurnModeOn=FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "turn", "");
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
         } else if (sComm == "leashto" || sComm == "pass") {
             if (!CheckCommandAuth(kMessageID, iAuth)) return;

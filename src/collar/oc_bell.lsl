@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Bell - 150731.1                                //
+//                           Bell - 150817.1                                //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2009 - 2015 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
@@ -91,7 +91,6 @@ key g_kWearer; // key of the current wearer to reset only on owner changes
 
 integer g_iHasControl=FALSE; // dow we have control over the keyboard?
 
-//list g_lButtons;
 integer g_iHide ; // global hide
 
 //MESSAGE MAP
@@ -145,7 +144,6 @@ Debug(string sStr) {
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
@@ -226,7 +224,7 @@ BuildBellElementList() {
     } //Remove my menu and myself if no bell elements are found
     if (llGetListLength(g_lBellElements)==0) {
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"all","");
-        llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+        llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
         llRemoveInventory(llGetScriptName());
     }
 }
@@ -435,8 +433,7 @@ default {
     }
 
     touch_start(integer n) {
-        if (g_iBellShow && !g_iHide && ~llListFindList(g_lBellElements,[llDetectedLinkNumber(0)]))
-        {
+        if (g_iBellShow && !g_iHide && ~llListFindList(g_lBellElements,[llDetectedLinkNumber(0)])) {
             key toucher = llDetectedKey(0);
             if (toucher != g_kLastToucher || llGetTime() > g_fNextTouch) {
                 //one touch every 10 secounds is enough dude

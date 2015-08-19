@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//      Disgraced RLV - 150711.1         .*' /  .*' ; .*`- +'  `*'          //
+//      Disgraced RLV - 150817.1         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -68,11 +68,6 @@ key     g_kMenuClicker;
 
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
-
-
-//key     g_kMenuID;                              // menu handler
-//key     g_kSitMenuID;                           // sit menu handler
-//key     g_kTerminalID;                          //Terminal menu handler
 
 //string g_sSettingToken                = "restrictions_";
 //string g_sGlobalToken                 = "global_";
@@ -179,7 +174,7 @@ Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer i
 
 RestrictionsMenu(key keyID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/rlv.html#restrictions Restrictions]";
-    list lMyButtons;// = ["Force Sit"];
+    list lMyButtons;
     
     if (g_bSendRestricted) lMyButtons += "☐ Send IMs";
     else lMyButtons += "☒ Send IMs";
@@ -504,7 +499,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
         llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Get Up!",kID);
         llSleep(0.5);
-        if (bFromMenu) llMessageLinked(LINK_SET, iNum, "menu force sit", kID);
+        if (bFromMenu) UserCommand(iNum, "menu force sit", kID, TRUE);
     } else if (sLowerStr == "menu force sit" || sLowerStr == "sit" || sLowerStr == "sitnow"){
         integer agentInfo=llGetAgentInfo( g_kWearer );
         string sButton;
@@ -521,9 +516,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
             } else 
                 sButton="BACK";
         }
-        //Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID)
         Dialog(kID, sitPrompt+"\nChoose a seat:\n", [sButton], [], 0, iNum, "sensor");
-       // llMessageLinked(3, SENSORDIALOG, (string)kID +"|"+sitPrompt+"\nChoose a seat:\n|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI +"|"+sButton+"|" + (string)iNum, g_kSitMenuID=llGenerateKey());
     } else if (sLowerStr == "clear") releaseRestrictions();
 }
 
@@ -609,14 +602,14 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenu == "restrictions") UserCommand(iAuth, "restrictions "+sMessage,kAv,TRUE);   
                 else if (sMenu == "sensor") {
-                    if (sMessage=="BACK") llMessageLinked(LINK_SET, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    if (sMessage=="BACK") llMessageLinked(LINK_RLV, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
                     else if (sMessage == "Sit Back Down!") {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
                         llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Sit back down, and stay there!",kID);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_SET, iAuth, "menu force sit", kAv);
+                        UserCommand(iAuth, "menu force sit", kID, TRUE);
                     } else if (sMessage == "Get Up!") UserCommand(iAuth, "stand", kAv, TRUE);
                     else {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
@@ -626,15 +619,15 @@ default {
                         g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_SET, iAuth, "menu force sit", kAv);
+                        UserCommand(iAuth, "menu force sit", kID, TRUE);
                     } 
                 } else if (sMenu == "terminal") {
                         if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
-                        if (g_iMenuCommand) llMessageLinked(LINK_SET, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                        if (g_iMenuCommand) llMessageLinked(LINK_RLV, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
                 } else if (sMenu == "folder" || sMenu == "multimatch") {
                     g_kMenuClicker = kAv;
                     if (sMessage == UPMENU)
-                        llMessageLinked(LINK_SET, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
+                        llMessageLinked(LINK_RLV, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
                     else if (sMessage == BACKMENU) {
                         list lTempSplit = llParseString2List(g_sCurrentPath,["/"],[]);
                         lTempSplit = llList2List(lTempSplit,0,llGetListLength(lTempSplit) -2);

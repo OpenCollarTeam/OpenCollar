@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 150807.1                             //
+//                          Particle - 150817.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -198,7 +198,7 @@ FindLinkedPrims() {
     }
     //if we did not find any leashpoint... we unset the root as one
     if (!llGetListLength(g_lLeashPrims)) g_lLeashPrims = ["collar", LINK_THIS, "1"];
-    else llMessageLinked(LINK_SET, LM_SETTING_RESPONSE,"leashpoint="+llList2String(g_lLeashPrims,1) ,"");
+    else llMessageLinked(LINK_ROOT, LM_SETTING_RESPONSE,"leashpoint="+llList2String(g_lLeashPrims,1) ,"");
 }
 
 Particles(integer iLink, key kParticleTarget) {
