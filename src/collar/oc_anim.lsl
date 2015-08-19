@@ -119,7 +119,6 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 integer g_iAOChannel = -782690;
-integer g_iInterfaceChannel = -12587429;
 
 string g_sSettingToken = "anim_";
 //string g_sGlobalToken = "global_";
@@ -250,6 +249,12 @@ integer SetPosture(integer iOn, key kCommander) {
     }
 }
 
+MessageAOs(string sONOFF){
+    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+llToUpper(sONOFF), g_kWearer);
+    llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STAND"+llToUpper(sONOFF));
+    llRegionSayTo(g_kWearer,-8888,(string)g_kWearer+"boot"+llToLower(sONOFF)); //for Firestorm AO
+}
+
 RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and call this function in "changed" event on TP
     if (llGetListLength(g_lAnims)) {
         if (g_iPosture) llStartAnimation("~stiff");
@@ -265,13 +270,9 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
             if (llGetListLength(g_lAnims)) UnPlayAnim(llList2String(g_lAnims, 0));
-
             g_lAnims = [sAnim] + g_lAnims;  //this way, g_lAnims[0] is always the currently playing anim
-
             PlayAnim(sAnim);
-            //switch off AO
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDOFF");
-            llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDOFF");
+            MessageAOs("off");
         }
     } else  llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -294,15 +295,10 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
                 integer n=llListFindList(g_lAnims,[sAnim]);
                 g_lAnims=llDeleteSubList(g_lAnims, n, n);
             }
-
             UnPlayAnim(sAnim);
-
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
-            else {
-                llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDON");
-                llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
-            }
+            else MessageAOs("on");
         }
     } else  llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -386,16 +382,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sCommand == "ao") {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
-        else if (sValue == "off") {
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOOFF|" + (string)kID);
-            llRegionSayTo(g_kWearer,g_iAOChannel,"ZHAO_AOOFF");
-        } else if (sValue == "on") {
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOON|" + (string)kID);
-            llRegionSayTo(g_kWearer,g_iAOChannel,"ZHAO_AOON");
-        } else if (sValue == "lock") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_LOCK|" + (string)kID);
-        else if (sValue == "unlock") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_UNLOCK|" + (string)kID);
-        else if (sValue == "hide") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOHIDE|" + (string)kID);
-        else if (sValue == "show") llRegionSayTo(g_kWearer,g_iInterfaceChannel, "CollarCommand|" + (string)iNum + "|ZHAO_AOSHOW|" + (string)kID);
+        else if (sValue == "off") MessageAOs(sValue);
+        else if (sValue == "on") MessageAOs(sValue);
+        //doesnt work as it should, needs adjustment in AO
+        /*} else if (sValue == "lock") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_LOCK|"+(string)kID, g_kWearer);
+        else if (sValue == "unlock") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_UNLOCK|"+(string)kID, g_kWearer);
+        else if (sValue == "hide") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_HIDE|"+(string)kID, g_kWearer);
+        else if (sValue == "show") llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_SHOW|"+(string)kID, g_kWearer);*/
     } else if (sCommand == "antislide") {
         if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
@@ -449,8 +442,6 @@ default {
     state_entry() {
         llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
-        g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
@@ -475,7 +466,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) {  //we were just detached.  clear the anim list and tell the ao to play stands again.
-            llRegionSayTo(g_kWearer,g_iInterfaceChannel, (string)EXT_CMD_COLLAR + "|ZHAO_STANDON");
+            llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,(string)EXT_CMD_COLLAR + "|ZHAO_STANDON", g_kWearer);
             llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
             g_lAnims = [];
         }
