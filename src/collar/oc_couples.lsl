@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 150805.1                              //
+//                          Couples - 150817.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -57,9 +57,7 @@ string g_sSubMenu = " Couples";
 string UPMENU = "BACK";
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
-//key g_kAnimmenu;
-//key g_kPart;
-//key g_kTimerMenu;
+
 integer g_iAnimTimeout;
 integer g_iPermissionTimeout;
 
@@ -97,6 +95,7 @@ integer g_iCmdIndex;
 key g_kPartner;
 string g_sPartnerName;
 float g_fTimeOut = 20.0;
+string g_sDeviceName;
 
 integer g_iTargetID;
 string g_sSubAnim;
@@ -144,7 +143,7 @@ integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
 
 string g_sSettingToken = "coupleanim_";
-//string g_sGlobalToken = "global_";
+string g_sGlobalToken = "global_";
 string g_sStopString = "stop";
 integer g_iStopChan = 99;
 integer g_iListener;    //stop listener handle
@@ -250,6 +249,13 @@ MoveToPartner() {
     llMoveToTarget(partnerPos, g_fWalkingTau);
 }
 
+GetPartnerPermission() {
+    string sObjectName = llGetObjectName();
+    llSetObjectName(g_sDeviceName);
+    llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+    llSetObjectName(sObjectName);
+}
+
 default {
     on_rez(integer iStart) {
         //added to stop anims after relog when you logged off while in an endless couple anim
@@ -275,7 +281,8 @@ default {
             g_iLine2 = 0;
             g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
         }
-        llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
+       // llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
 
@@ -312,7 +319,7 @@ default {
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         //added to stop eventual still going animations
                         StopAnims();
-                        llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+                        GetPartnerPermission();
                         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
                     }
                 }
@@ -338,6 +345,8 @@ default {
                 g_fTimeOut = (float)sValue;
             else if (sToken == g_sSettingToken + "verbose")
                 g_iVerbose = (integer)sValue;
+            else if (sToken == g_sGlobalToken+"DeviceName")
+                g_sDeviceName = sValue;
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -388,7 +397,7 @@ default {
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         StopAnims();
                         string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
-                        llRequestPermissions(g_kPartner, PERMISSION_TRIGGER_ANIMATION);
+                        GetPartnerPermission();
                         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
                         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
                     }

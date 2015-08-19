@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 150807.1                             //
+//                          Animator - 150817.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -433,7 +433,11 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
         } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"%NOACCESS%", kID);
-    }
+    } else if ((sStr == "show animator")&&(iNum == CMD_OWNER || kID == g_kWearer)){
+        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"To hide the animator prim again type:\n%PREFIX% hide animator\n",kID);
+    } else if ((sStr == "hide animator")&&(iNum == CMD_OWNER || kID == g_kWearer))
+        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
 }
 
 default {

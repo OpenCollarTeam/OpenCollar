@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150807.1                              //
+//                           System - 150817.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,15 +57,13 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.6.11";
+string g_sCollarVersion="3.7.0";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
-
-//integer g_iScriptCount;//when the scriptcount changes, rebuild menus *unreliable due to failure of change event on scripted removal of inv
 
 //MESSAGE MAP
 integer CMD_ZERO = 0;
@@ -83,7 +81,6 @@ integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
 integer SAY = 1004;
 
-
 integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
@@ -97,8 +94,6 @@ integer LM_SETTING_DELETE = 2003;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
-
-//5000 block is reserved for IM slaves
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -139,17 +134,16 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iKidnapMenu=FALSE;
-//integer g_iResizer=FALSE;
 
 integer g_iUpdateChan = -7483214;
 integer g_iUpdateHandle;
-
 key g_kUpdaterOrb;
 integer g_iUpdateFromMenu;
 
 string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~version";
 key github_version_request;
 string news_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~news";
+string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
 
@@ -161,7 +155,6 @@ string g_sSafeWord="RED";
 
 //Option Menu variables
 string DUMPSETTINGS = "Print";
-
 string STEALTH_OFF = "☐ Stealth"; // show the whole device
 string STEALTH_ON = "☒ Stealth"; // hide the whole device
 string LOADCARD="Load";
@@ -233,7 +226,6 @@ OptionsMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Options");
 }
 
-
 AppsMenu(key kID, integer iAuth) {
     string sPrompt="\n[http://www.opencollar.at/apps.html Apps]\n\nBrowse apps, extras and custom features.";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -251,7 +243,6 @@ HelpMenu(key kID, integer iAuth) {
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
-
     string sNewsButton="☐ News";
     if (g_iNews) sNewsButton="☒ News";
     list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
@@ -259,22 +250,18 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\nWelcome to the OpenCollar 4 Beta:\n\n\t - [https://github.com/OpenCollar/opencollar/issues Tracker] -\t - [https://github.com/OpenCollar/opencollar/commits/master Changelog] -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
-    if(!g_iLatestVersion) sPrompt+="\n I'm outdated, please update me!";
+    string sPrompt = "\nOC4 Performance Branch:\n\n- Main Menu -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
+    if(!g_iLatestVersion) sPrompt+="\n\nI'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+=" ";
-
     if (g_iKidnapMenu) lStaticButtons+="Kidnap";
     else lStaticButtons+=" ";
-
     lStaticButtons+=["Leash"];
-
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+=" ";
     lStaticButtons+=["Access","Options","Help/About"];
-
     if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
 }
@@ -282,7 +269,6 @@ MainMenu(key kID, integer iAuth) {
 UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCmd = llToLower(llList2String(lParams, 0));
-
     if (sCmd == "menu") {
         string sSubmenu = llToLower(llList2String(lParams, 1));
         if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
@@ -290,13 +276,13 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
         else if (sSubmenu == "options") {
             if (iNum != CMD_OWNER && iNum != CMD_WEARER) {
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID, g_sAuthError, FALSE);
+                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
                 MainMenu(kID, iNum);
             } else OptionsMenu(kID, iNum);
         }
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: https://raw.githubusercontent.com/OpenCollar/opencollar/master/LICENSE",kID);//Notify(kID,"License notecard missing from collar, sorry.", FALSE);
+        else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: "+license_url,kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
         llGiveInventory(kID, HELPCARD);
@@ -358,7 +344,6 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 llMessageLinked(LINK_ROOT,NOTIFY,"1"+"News feature disabled.",kID);
             } else if (sStr=="news on"){
                 g_iNews=TRUE;
-                //llMessageLinked(LINK_ROOT,NOTIFY,"1"+"\n\nThanks!\n\nWe won't spam you, promise! <3\n",kID);
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
@@ -424,10 +409,8 @@ string GetTimestamp() { // Return a string of the date and time
         else --day;
         out=(string)year + "-" + (string)month + "-" + (string)day;
     } else out=llGetDate();
-
     integer t = (integer)llGetWallclock(); // seconds since midnight
     out += " " + (string)(t / 3600) + ":";
-
     integer mins=(t % 3600) / 60;
     if (mins <10) out += "0";
     out += (string)mins+":";
@@ -463,13 +446,17 @@ BuildLockElementList() {//EB
     }
 }
 
+SafeX(){if(!(llGetObjectPermMask(1)&0x4000)){llOwnerSay(
+    "\n\nKernel panic - not syncing: Fatal permission in root\n\nSorry, this item cannot run OpenCollar. See ["+license_url+"#3d details]\n");
+    string n=llGetScriptName();integer i=llGetInventoryNumber(10);string s;do{
+    i--;s=llGetInventoryName(10,i);if(s!=n)llSetScriptState(s,0);}while(i);llSetScriptState(n,0);}
+}
+
 SetLockElementAlpha() { //EB
     if (g_iHide) return ; // ***** if collar is hide, don't do anything
     //loop through stored links, setting alpha if element type is lock
     integer n;
     integer iLinkElements = llGetListLength(g_lOpenLockElements);
-    //float fAlpha;
-    //if (g_iLocked) fAlpha = 1.0; else fAlpha = 0.0; //Let's just use g_iLocked!
     for (; n < iLinkElements; n++)
         llSetLinkAlpha(llList2Integer(g_lOpenLockElements,n), !g_iLocked, ALL_SIDES);
     iLinkElements = llGetListLength(g_lClosedLockElements);
@@ -482,20 +469,16 @@ RebuildMenu() {
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
     g_iKidnapMenu=FALSE;
-    //g_iResizer=FALSE;
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
-   // llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", ""); //pre 4.0 api, no longer supported
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Options", "");
 }
 
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    //llSleep(1.0);//delay menu rebuild until other scripts are ready
-    //RebuildMenu();
-    g_iWaitRebuild = TRUE;
+    g_iWaitRebuild = TRUE;SafeX();
     llSetTimerEvent(1);
 }
 
@@ -508,13 +491,10 @@ StartUpdate(){
 default
 {
     state_entry() {
-        //llSetMemoryLimit(65539);  //2015-05-06 (12830 bytes free)
         g_kWearer = llGetOwner();
         news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
-      //g_iScriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);  //updates on change event; *sadly this fails when scripts are removed by scripts
         init();
-        //llScriptProfiler(PROFILE_SCRIPT_MEMORY);
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
         //Debug("Starting");
     }
@@ -535,16 +515,12 @@ default
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
             else if (sStr=="Main|Kidnap") g_iKidnapMenu=TRUE;
-            else if (sStr=="Options|Size/Position") {
-                //g_iResizer=TRUE;
-                g_lResizeButtons = ["Position","Rotation","Size"];
-            }
+            else if (sStr=="Options|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
             list lParams = llParseString2List(sStr, ["|"], []);
             string parent = llList2String(lParams, 0);
             string child = llList2String(lParams, 1);
-
             if (parent=="Apps" || parent=="AddOns") {
                 integer gutiIndex = llListFindList(g_lAppsButtons, [child]);
                 //only remove if it's there
@@ -560,8 +536,6 @@ default
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                //remove stride from g_lMenuIDs
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 //process response
@@ -590,7 +564,6 @@ default
                 } else if (sMenu == "UpdateConfirmMenu"){
                         if (sMessage=="Cancel"){
                         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Override canceled.",kAv);
-                        //Notify(kAv,"Override cancelled.",FALSE);
                         return;
                     } else if (sMessage=="Yes") StartUpdate();
                     else if (sMessage=="BACK") HelpMenu(kAv,iAuth);
@@ -599,19 +572,19 @@ default
                      else if (sMessage == LOADCARD) llMessageLinked(LINK_SAVE, iAuth,sMessage,kAv);
                      else if (sMessage == REFRESH_MENU) UserCommand(iAuth, sMessage, kAv, TRUE);
                      else if (sMessage == STEALTH_OFF) {
-                         llMessageLinked(LINK_SET, iAuth,"hide",kAv);
+                         llMessageLinked(LINK_ROOT, iAuth,"hide",kAv);
                          STEALTH = TRUE;
                     } else if (sMessage == STEALTH_ON) {
-                        llMessageLinked(LINK_SET, iAuth,"show",kAv);
+                        llMessageLinked(LINK_ROOT, iAuth,"show",kAv);
                         STEALTH = FALSE;
                     } else if (sMessage == "Themes") {
-                        llMessageLinked(LINK_SET, iAuth, "menu Themes", kAv);
+                        llMessageLinked(LINK_ROOT, iAuth, "menu Themes", kAv);
                         return;
                     } else if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
                         return;
                     } else if (sMessage == "Position" || sMessage == "Rotation" || sMessage == "Size") {
-                        llMessageLinked(LINK_SET, iAuth, llToLower(sMessage), kAv);
+                        llMessageLinked(LINK_ROOT, iAuth, llToLower(sMessage), kAv);
                         return;
                     }
                     OptionsMenu(kAv,iAuth);
@@ -646,8 +619,6 @@ default
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            //remove stride from g_lMenuIDs
-            //we have to subtract from the index because the dialog id comes in the middle of the stride
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR) {
             if (g_iLocked) llMessageLinked(LINK_RLV, RLV_CMD, "detach=n", "main");
@@ -661,12 +632,9 @@ default
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
-          //  if (llGetInventoryNumber(INVENTORY_SCRIPT) != g_iScriptCount) { //a script has been added or removed.  Reset to rebuild menu
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             g_iWaitRebuild = TRUE;
             llSetTimerEvent(1.0);
-         //   }
-         //   g_iScriptCount=llGetInventoryNumber(INVENTORY_SCRIPT);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_COLOR) {
@@ -677,14 +645,12 @@ default
             }
         }
         if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
-       /*
-        if (iChange & CHANGED_REGION) {
+     /*  if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
-       */
+        }*/
     }
     attach(key kID) {
         if (g_iLocked) {

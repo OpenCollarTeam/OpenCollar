@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 150811.1                          //
+//                         Communicator - 150817.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -82,7 +82,6 @@ integer POPUP_HELP = 1001;
 integer NOTIFY=1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
-
 integer LINK_AUTH = 2;
 integer LINK_SAVE = 5;
 integer REBOOT = -1000;
@@ -129,8 +128,7 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-/*
-integer g_iProfiled;
+/*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to
@@ -281,7 +279,6 @@ default {
         //inlined single use getOwnerChannel function
         g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
         if (g_iHUDChan > -10000) g_iHUDChan -= 30000;
-
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iPublicListener = llListen(0, "", NULL_KEY, "");
@@ -291,7 +288,6 @@ default {
         //garvin attachments listener
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,"");
-
         integer iAttachPt = llGetAttached();
         if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
@@ -317,7 +313,6 @@ default {
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
                 sMsg = llGetSubString(sMsg, 37, -1);
-                //llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
                 llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else
                 llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
@@ -348,7 +343,6 @@ default {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 Notify(g_kWearer,"You used your safeword, your owners will be notified you did.",FALSE);
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
-               // llMessageLinked(LINK_THIS, INTERFACE_RESPONSE, "safeword", "");
                 return;
             }
         }

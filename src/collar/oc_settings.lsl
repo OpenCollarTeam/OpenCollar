@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 150810.1                             //
+//                          Settings - 150817.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -282,7 +282,12 @@ UserCommand(integer iAuth, string sStr, key kID) {
             g_kConfirmDialogID = llGenerateKey();
             llMessageLinked(LINK_DIALOG,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
-    } else if (sStr == "runaway") llSetTimerEvent(2.0);
+    } else if (sStr == "show storage") {
+        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"To hide the storage prim again type:\n%PREFIX% hide storage\n",kID);
+    } else if (sStr == "hide storage")
+        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
+    else if (sStr == "runaway") llSetTimerEvent(2.0);
 }
 
 default {
