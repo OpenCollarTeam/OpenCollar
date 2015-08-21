@@ -613,7 +613,7 @@ default
             } else if(sToken =="lock_unlocksound") {
                 if (sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
                 else if ((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
-            } else if (sToken == "com_safeword") g_sSafeWord = sValue;
+            } else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
             else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");

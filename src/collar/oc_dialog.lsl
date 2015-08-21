@@ -647,7 +647,7 @@ default {
             }
             else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
-            } else if (sToken == "com_channel") g_iListenChan = (integer)sValue;
+            } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

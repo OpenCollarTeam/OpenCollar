@@ -109,7 +109,7 @@ integer AUTH_REQUEST = 600;
 integer AUTH_REPLY = 601;
 
 key g_kWearer;
-string g_sSettingToken = "com_";
+//string g_sSettingToken = "com_";
 string g_sGlobalToken = "global_";
 string g_sDeviceType = "collar";
 string g_sDeviceName;
@@ -263,6 +263,134 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     }
 }
 
+UserCommand(key kID, integer iAuth, string sStr) {
+    if (sStr == "ping") { // ping from an object, we answer to it on the object channel
+        llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
+        return;
+    }
+    list lParams = llParseString2List(sStr, [" "], []);
+    string sCommand = llToLower(llList2String(lParams, 0));
+    string sValue = llList2String(lParams, 1); //llToLower(llList2String(lParams, 1));
+    if (iAuth == CMD_OWNER || kID == g_kWearer) {  //handle changing prefix and channel from owner
+        if (sCommand == "prefix") {
+            if (sValue == "") {
+                Notify(kID,"\n"+g_sWearerName+"'s prefix is \"" + g_sPrefix+"\"", FALSE);
+                return;
+            } else if (sValue == "reset") {
+                g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
+                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"prefix", "");
+            } else {
+                g_sPrefix = sValue;
+                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
+            }
+            Notify(kID, "\n" + g_sWearerName + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + g_sDeviceType + " or say '" + g_sPrefix + " menu' for the main menu.\nSay '" + g_sPrefix + " help' for a list of chat commands.", FALSE);
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
+        }
+        else if (sCommand == "device" && sValue == "name") {
+            string sMessage;
+            string sObjectName = llGetObjectName();
+            string sCmdOptions = llDumpList2String(llDeleteSubList(lParams,0,1), " ");
+            if (sValue == "") {
+                sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDevice Name command help:\n%PREFIX% device name [newname|reset]\n";
+                Notify(kID, sMessage, FALSE);
+            } else if (sCmdOptions == "reset") {
+                g_sDeviceName = sObjectName;
+                sMessage = "The device name is reset to \""+g_sDeviceName+"\".";
+                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
+            } else {
+                g_sDeviceName = sCmdOptions;
+                sMessage = sObjectName+"'s new device name is \""+ g_sDeviceName+"\".";
+                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
+            }
+            if (sValue) Notify(kID, sMessage, FALSE);
+        } else if (sCommand == "name") {
+            if (iAuth != CMD_OWNER) Notify(kID,"%NOACCESS%",FALSE);
+            else {
+                string message;
+                if (sValue=="") {  //Just let them know their current name
+                    message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + g_sWearerName;
+                    message += "\nName command help: <prefix>name [newname|reset]\n";
+                    Notify(kID, message, FALSE);
+                } else if(sValue=="reset") { //unset Global_WearerName
+                    message=g_sWearerName+"'s name is reset to ";
+                    g_sWearerName = NameURI(g_kWearer);
+                    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");
+                    message += g_sWearerName;
+                    Notify(kID, message, FALSE);
+                } else {
+                    string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
+                    message=g_sWearerName+"'s new name is ";
+                    g_sWearerName = "["+NameURI(g_kWearer)+" "+sNewName+"]";
+                    message += g_sWearerName;
+                    Notify(kID, message, FALSE);
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+sNewName, "");
+                }
+            }
+        } else if (sCommand == "channel") {
+            integer iNewChan = (integer)sValue;
+            if (sValue=="") {  //they left the param blank, report listener status
+                string message= "The "+g_sDeviceType+" is listening on channel";
+                if (g_iPublicListenChan) message += "s 0 and";
+                message += " "+(string)g_iPrivateListenChan+".";
+                Notify(kID, message, FALSE);
+            } else if (iNewChan > 0) { //set new channel for private listener
+                g_iPrivateListenChan =  iNewChan;
+                llListenRemove(g_iPrivateListener);
+                g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
+                Notify(kID, "Now listening on channel " + (string)g_iPrivateListenChan + ".", FALSE);
+                if (g_iPublicListenChan) //save setting along with the state of thepublic listener (messy!)
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+                else
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+            } else if (iNewChan == 0) { //enable public listener
+                g_iPublicListenChan = TRUE;
+                llListenRemove(g_iPublicListener);
+                g_iPublicListener = llListen(0, "", NULL_KEY, "");
+                Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
+                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+            } else if (iNewChan == -1) {  //disable public listener
+                g_iPublicListenChan = FALSE;
+                llListenRemove(g_iPublicListener);
+                Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iPrivateListenChan, FALSE);
+                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+            }
+        } else if (kID == g_kWearer) {
+            if (sCommand == "safeword") {
+                if(llStringTrim(sValue, STRING_TRIM) != "") {
+                    g_sSafeWord = sValue; // llList2String(lParams, 1);
+                    Notify(g_kWearer,"You set a new safeword: " + g_sSafeWord + ".",FALSE);
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
+                } else
+                    Notify(g_kWearer,"Your safeword is: " + g_sSafeWord + ".",FALSE);
+            }
+            else if (sCommand == "busted") {
+                if (sValue == "on") {
+                    llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
+                    g_iTouchNotify=TRUE;
+                    Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                } else if (sValue == "off") {
+                    llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
+                    g_iTouchNotify=FALSE;
+                    Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                } else if (sValue == "") {
+                    if (g_iTouchNotify) {
+                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
+                        llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
+                        g_iTouchNotify = FALSE;
+                    } else {
+                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
+                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
+                        g_iTouchNotify = TRUE;
+                    }
+                }
+            }
+        }
+    }
+} 
 
 default {
     on_rez(integer iParam) {
@@ -371,131 +499,8 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == NOTIFY)   Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
-            list lParams = llParseString2List(sStr, [" "], []);
-            string sCommand = llToLower(llList2String(lParams, 0));
-            string sValue = llList2String(lParams, 1); //llToLower(llList2String(lParams, 1));
-            if (sStr == "ping")  // ping from an object, we answer to it on the object channel
-                llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
-            else if (iNum == CMD_OWNER) {  //handle changing prefix and channel from owner
-                if (sCommand == "prefix") {
-                    if (sValue == "") {
-                        Notify(kID,"\n"+g_sWearerName+"'s prefix is \"" + g_sPrefix+"\"", FALSE);
-                        return;
-                    } else if (sValue == "reset") {
-                        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"prefix", "");
-                    } else {
-                        g_sPrefix = sValue;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
-                    }
-                    Notify(kID, "\n" + g_sWearerName + "'s prefix is '" + g_sPrefix + "'.\nTouch the " + g_sDeviceType + " or say '" + g_sPrefix + "menu' for the main menu.\nSay '" + g_sPrefix + "help' for a list of chat commands.", FALSE);
-                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
-                }
-                else if (sCommand == "device" && sValue == "name") {
-                    string sMessage;
-                    string sObjectName = llGetObjectName();
-                    string sCmdOptions = llDumpList2String(llDeleteSubList(lParams,0,1), " ");
-
-                    if (sValue == "") {
-                        sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDevice Name command help:\n%PREFIX% device name [newname|reset]\n";
-                        Notify(kID, sMessage, FALSE);
-                    } else if (sCmdOptions == "reset") {
-                        g_sDeviceName = sObjectName;
-                        sMessage = "The device name is reset to \""+g_sDeviceName+"\".";
-                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
-                    } else {
-                        g_sDeviceName = sCmdOptions;
-                        sMessage = sObjectName+"'s new device name is \""+ g_sDeviceName+"\".";
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
-                    }
-                    if (sValue) Notify(kID, sMessage, FALSE);
-                } else if (sCommand == "name") {
-                    string message;
-                    if (sValue=="") {  //Just let them know their current name
-                        message= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + g_sWearerName;
-                        message += "\nName command help: <prefix>name [newname|reset]\n";
-                        Notify(kID, message, FALSE);
-                    } else if(sValue=="reset") { //unset Global_WearerName
-                        message=g_sWearerName+"'s name is reset to ";
-                        g_sWearerName = NameURI(g_kWearer);
-                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");
-                        message += g_sWearerName;
-                        Notify(kID, message, FALSE);
-                    } else {
-                        string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
-                        message=g_sWearerName+"'s new name is ";
-                        g_sWearerName = "["+NameURI(g_kWearer)+" "+sNewName+"]";
-                        message += g_sWearerName;
-                        Notify(kID, message, FALSE);
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store
-                        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+sNewName, "");
-                    }
-                } else if (sCommand == "channel") {
-                    integer iNewChan = (integer)sValue;
-                    if (sValue=="") {  //they left the param blank, report listener status
-                        string message= "The "+g_sDeviceType+" is listening on channel";
-                        if (g_iPublicListenChan) message += "s 0 and";
-                        message += " "+(string)g_iPrivateListenChan+".";
-                        Notify(kID, message, FALSE);
-                    } else if (iNewChan > 0) { //set new channel for private listener
-                        g_iPrivateListenChan =  iNewChan;
-                        llListenRemove(g_iPrivateListener);
-                        g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-                        Notify(kID, "Now listening on channel " + (string)g_iPrivateListenChan + ".", FALSE);
-                        if (g_iPublicListenChan) //save setting along with the state of thepublic listener (messy!)
-                            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
-                        else
-                            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
-                    } else if (iNewChan == 0) { //enable public listener
-                        g_iPublicListenChan = TRUE;
-                        llListenRemove(g_iPublicListener);
-                        g_iPublicListener = llListen(0, "", NULL_KEY, "");
-                        Notify(kID, "You enabled the public channel listener.\nTo disable it use -1 as channel command.", FALSE);
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
-                    } else if (iNewChan == -1) {  //disable public listener
-                        g_iPublicListenChan = FALSE;
-                        llListenRemove(g_iPublicListener);
-                        Notify(kID, "You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iPrivateListenChan, FALSE);
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
-                    }
-                }
-            }
-            if (kID == g_kWearer) {
-                if (sCommand == "safeword") {
-                    if(llStringTrim(sValue, STRING_TRIM) != "") {
-                        g_sSafeWord = sValue; // llList2String(lParams, 1);
-                        Notify(g_kWearer,"You set a new safeword: " + g_sSafeWord + ".",FALSE);
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "safeword=" + g_sSafeWord, "");
-                    } else
-                        Notify(g_kWearer,"Your safeword is: " + g_sSafeWord + ".",FALSE);
-                }
-                else if (sCommand == "busted") {
-                    if (sValue == "on") {
-                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
-                        g_iTouchNotify=TRUE;
-                        Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-                    } else if (sValue == "off") {
-                        llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
-                        g_iTouchNotify=FALSE;
-                        Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
-                    } else if (sValue == "") {
-                        if (g_iTouchNotify) {
-                            Notify(g_kWearer,"Touch notification is now disabled.",FALSE);
-                            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
-                            g_iTouchNotify = FALSE;
-                        } else {
-                            Notify(g_kWearer,"Touch notification is now enabled.",FALSE);
-                            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
-                            g_iTouchNotify = TRUE;
-                        }
-                    }
-                }
-            }
-        } else if (iNum == LM_SETTING_RESPONSE) {
+        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(kID, iNum, sStr);
+        else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -511,8 +516,8 @@ default {
             }
             else if (sToken == "auth_owner")
                 g_lOwners = llParseString2List(sValue, [","], []);
-            else if (sToken == g_sSettingToken+"safeword") g_sSafeWord = sValue;
-            else if (sToken == g_sSettingToken+"channel") {
+            else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
+            else if (sToken == g_sGlobalToken+"channel") {
                 g_iPrivateListenChan = (integer)sValue;
                 if (llGetSubString(sValue, llStringLength(sValue) - 5 , -1) == "FALSE") g_iPublicListenChan = FALSE;
                 else g_iPublicListenChan = TRUE;
