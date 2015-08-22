@@ -153,7 +153,7 @@ determineType() { //function to determine AO type.
         g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
         g_iLMListenHandle = llListen(g_iLMChannel,"","","");
         g_iCommandHandle = llListen(g_iCommandChannel,"",g_kWearer,"");
-        llOwnerSay("Lockmeister protocol support to interact with couple animatiors and furnitures is enabled, to disable it type:\n/88 LM off\nto enable again\n/88 LM on");
+        llOwnerSay("Lockmeister protocol support to interact with couple animators and furnitures is enabled, to disable it type:\n/88 LM off\nto enable again\n/88 LM on");
     }
 }
 
@@ -262,12 +262,12 @@ default {
             return;
         } else if (iChannel == g_iCommandChannel) {
             if (sMsg == "LM on") {
-                llOwnerSay("Lockeister support enabled, you can disable it by typing:\n/88 LM off");
+                llOwnerSay("Lockmeister support enabled, you can disable it by typing:\n/88 LM off");
                 llListenRemove(g_iLMListenHandle);
                 g_iLMListenHandle = llListen(g_iLMChannel,"","","");
             } else if (sMsg == "LM off") {
                 llListenRemove(g_iLMListenHandle);
-                llOwnerSay("Lockeister support disabled, you can ensable it by typing:\n/88 LM on");
+                llOwnerSay("Lockmeister support disabled, you can enable it by typing:\n/88 LM on");
             }
             return;
         } else if (iChannel == g_iLMChannel) {
