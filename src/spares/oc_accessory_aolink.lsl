@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          AO Link - 150804.1                              //
+//                          AO Link - 150803.2                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Medea Destiny, XenHat Liamano, Silkie Sabra,  //
 //  Wendy Starfall, Sumi Perl, Ansariel Hiller and Garvin Twine             //
@@ -84,6 +84,13 @@ integer HUDDLES = 6;
 integer g_iAOChannel = -782690;
 integer g_iAOListenHandle;
 
+//Lockmeister protocol support for couple animations and furnitures
+
+integer g_iLMChannel = -8888;
+integer g_iLMListenHandle;
+integer g_iCommandChannel = 88;
+integer g_iCommandHandle;
+
 //Menu handler for script's own ZHAO menu
 integer g_iMenuHandle; 
 integer g_iMenuChannel = -23423456; //dummy channel, changed to unique on attach
@@ -98,6 +105,7 @@ integer g_iOCSwitch = TRUE; //monitor on/off due to collar pauses (FALSE=paused,
 
 integer g_iSitOverride = TRUE; //monitor AO sit override
 
+key g_kWearer;
 
 determineType() { //function to determine AO type.
     llListenRemove(g_iAOListenHandle);
@@ -141,7 +149,12 @@ determineType() { //function to determine AO type.
     }
     @next;
     if(iType == 0) llOwnerSay("Cannot identify AO type. The script:"+llGetScriptName()+" is intended to be dropped into a Zhao2 or Oracul AO hud.");
-    else g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
+    else {
+        g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
+        g_iLMListenHandle = llListen(g_iLMChannel,"","","");
+        g_iCommandHandle = llListen(g_iCommandChannel,"",g_kWearer,"");
+        llOwnerSay("Lockmeister protocol support to interact with couple animatiors and furnitures is enabled, to disable it type:\n/88 LM off\nto enable again\n/88 LM on");
+    }
 }
 
 
@@ -181,11 +194,59 @@ zhaoMenu(key kMenuTo) {
     llSetTimerEvent(g_iMenuTimeout);
     llDialog(kMenuTo,"AO options. Depending on model of AO, some may not work. Use OC Sub AO for more comprehensive control!",lButtons,g_iMenuChannel);   
 }
+
+MenuCommand(string sMsg, key kID) {
+    if(sMsg == "Done" || sMsg == "Cancel") {
+        integer i = llListFindList(g_lMenuUsers,[kID]);
+        if(i > -1) g_lMenuUsers=llDeleteSubList(g_lMenuUsers,i,i); //remove user from menu users list.
+        if(!llGetListLength(g_lMenuUsers)) {//remove listener if no menu users left
+            llListenRemove(g_iMenuHandle);
+            llSetTimerEvent(0);
+        }
+        return; // we're done here!
+    } else if(sMsg == "Load Notecard") {//scan for notecards and provide a dialog to user
+        list lButtons;
+        integer x = llGetInventoryNumber(INVENTORY_NOTECARD);
+        while(x) {
+            x--;
+           string sCardName = llGetInventoryName(INVENTORY_NOTECARD,x);
+           if(llSubStringIndex(llToLower(sCardName),"read me") == -1 && llSubStringIndex(llToLower(sCardName),"help") == -1 && llStringLength(sCardName) < 23) lButtons += sCardName; //we only take notecards without "help" or "read me" in the title and with short enough names to fit on a button.
+        }
+        if(llGetListLength(lButtons) > 11) {
+            llRegionSayTo(kID,0,"Too many notecards found, displaying the first 11"); //ZHAO doesn't bother multi pages, so we won't.
+            lButtons = llDeleteSubList(lButtons,11,-1);
+        }
+        llSetTimerEvent(g_iMenuTimeout);
+        llDialog(kID,"Pick an AO settings notecard to load, or click Cancel",lButtons+["Cancel"],g_iMenuChannel);
+        
+    } else if(sMsg == "AO Sits ON") {
+        g_iSitOverride = TRUE; //this will get set by the link message anyway, but set here just in case remenu happens before link message is read.
+        llMessageLinked(LINK_SET,0,"ZHAO_SITON","");
+    } else if(sMsg == "AO Sits OFF") {
+        g_iSitOverride = FALSE;
+        llMessageLinked(LINK_SET,0,"ZHAO_SITOFF","");
+    } else if(sMsg == "AO on") {
+        if(g_iOCSwitch) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); // don't switch on AO if we are paused
+        g_iAOSwitch = TRUE;
+    }
+    else if(sMsg == "AO off")
+        llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
+    else if(sMsg=="Next Stand") {
+        if(iType == 2) // ZHAO-II
+            llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
+        else // VISTA                
+            llMessageLinked(LINK_SET,0,"ZHAO_NEXTPOSE","");
+    //check if sMsg is a notecard picked from Load Notecard menu, and send load command if so.
+    } else  if(llGetInventoryType(sMsg) == INVENTORY_NOTECARD) llMessageLinked(LINK_THIS,0,"ZHAO_LOAD|"+sMsg,"");
+    //resend the menu where it makes sense.
+    if(sMsg!="Done" && sMsg!="Cancel" && sMsg!="Load Notecard") zhaoMenu(kID);
+}
                                    
 default {
     state_entry() {
-       if(iType == 0) determineType();
-       g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
+        g_kWearer = llGetOwner();
+        if(iType == 0) determineType();
+        g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
     }
     
     attach(key kAvatar) {
@@ -197,78 +258,34 @@ default {
     
     listen(integer iChannel, string sName, key kID, string sMsg) {
         if(iChannel == g_iMenuChannel) {// this is for our own limited ZHAO menu.
-            if(sMsg == "Done" || sMsg == "Cancel") {
-                integer i = llListFindList(g_lMenuUsers,[kID]);
-                if(i > -1) g_lMenuUsers=llDeleteSubList(g_lMenuUsers,i,i); //remove user from menu users list.
-                if(!llGetListLength(g_lMenuUsers)) {//remove listener if no menu users left
-                    llListenRemove(g_iMenuHandle);
-                    llSetTimerEvent(0);
-                }
-                return; // we're done here!
-            } else if(sMsg == "Load Notecard") {//scan for notecards and provide a dialog to user
-                list lButtons;
-                integer x = llGetInventoryNumber(INVENTORY_NOTECARD);
-                while(x) {
-                    x--;
-                   string sCardName = llGetInventoryName(INVENTORY_NOTECARD,x);
-                   if(llSubStringIndex(llToLower(sCardName),"read me") == -1 && llSubStringIndex(llToLower(sCardName),"help") == -1 && llStringLength(sCardName) < 23) lButtons += sCardName; //we only take notecards without "help" or "read me" in the title and with short enough names to fit on a button.
-                }
-                if(llGetListLength(lButtons) > 11) {
-                    llRegionSayTo(kID,0,"Too many notecards found, displaying the first 11"); //ZHAO doesn't bother multi pages, so we won't.
-                    lButtons = llDeleteSubList(lButtons,11,-1);
-                }
-                llSetTimerEvent(g_iMenuTimeout);
-                llDialog(kID,"Pick an AO settings notecard to load, or click Cancel",lButtons+["Cancel"],g_iMenuChannel);
-                
-            } else if(sMsg == "AO Sits ON") {
-                g_iSitOverride = TRUE; //this will get set by the link message anyway, but set here just in case remenu happens before link message is read.
-                llMessageLinked(LINK_SET,0,"ZHAO_SITON","");
-            } else if(sMsg == "AO Sits OFF") {
-                g_iSitOverride = FALSE;
-                llMessageLinked(LINK_SET,0,"ZHAO_SITOFF","");
-            } else if(sMsg == "AO on") {
-                if(g_iOCSwitch) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); // don't switch on AO if we are paused
-                g_iAOSwitch = TRUE;
-            }
-            else if(sMsg == "AO off")
-                llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
-            else if(sMsg=="Next Stand") {
-                if(iType == 2) // ZHAO-II
-                    llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
-                else // VISTA                
-                    llMessageLinked(LINK_SET,0,"ZHAO_NEXTPOSE","");
-            //check if sMsg is a notecard picked from Load Notecard menu, and send load command if so.
-            } else  if(llGetInventoryType(sMsg) == INVENTORY_NOTECARD) llMessageLinked(LINK_THIS,0,"ZHAO_LOAD|"+sMsg,"");
-            //resend the menu where it makes sense.
-            if(sMsg!="Done" && sMsg!="Cancel" && sMsg!="Load Notecard") zhaoMenu(kID);
+            MenuCommand(sMsg,kID);
             return;
-        }
-        else if(llGetOwnerKey(kID) != llGetOwner()) return; //reject commands from other sources. 
+        } else if (iChannel == g_iCommandChannel) {
+            if (sMsg == "LM on") {
+                llOwnerSay("Lockeister support enabled, you can disable it by typing:\n/88 LM off");
+                llListenRemove(g_iLMListenHandle);
+                g_iLMListenHandle = llListen(g_iLMChannel,"","","");
+            } else if (sMsg == "LM off") {
+                llListenRemove(g_iLMListenHandle);
+                llOwnerSay("Lockeister support disabled, you can ensable it by typing:\n/88 LM on");
+            }
+            return;
+        } else if (iChannel == g_iLMChannel) {
+            if (llGetSubString(sMsg,0,35) == g_kWearer) {
+                sMsg = llGetSubString(sMsg,36,-1);
+                if (sMsg == "booton") AOUnPause();
+                else if (sMsg == "bootoff") AOPause();
+            } else return;
+        } else if(llGetOwnerKey(kID) != g_kWearer) return;
         else if (iChannel == g_iAOChannel) {
-            if(sMsg == "ZHAO_STANDON") AOUnPause();
-            else if (sMsg == "ZHAO_STANDOFF") AOPause();
-            else if (sMsg == "ZHAO_AOOFF") {
-                if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
-                else if(iType == AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause"); 
-                else if(iType == GAELINE) llMessageLinked(LINK_THIS, 102, "", "ocpause");
-                else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_OFF", "ocpause");
-                else if(iType > 1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); 
-            } else if (sMsg == "ZHAO_AOON") {
-                if(g_iOCSwitch) {// don't switch on AO if we are paused
-                    if (iType == ORACUL && g_sOraculstring!="") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
-                    else if(iType == AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
-                    else if(iType == GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
-                    else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_ON", "ocpause");
-                    else if(iType > 1) llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "ocpause"); 
-                }
-                g_iAOSwitch=TRUE;
-            } 
-            else if (llGetSubString(sMsg,0,8) == "ZHAO_MENU") {
+            if(sMsg == "ZHAO_STANDON" || sMsg == "ZHAO_AOON") AOUnPause();
+            else if (sMsg == "ZHAO_STANDOFF" || sMsg == "ZHAO_AOOFF") AOPause();
+            else if ((llGetSubString(sMsg,0,8) == "ZHAO_MENU") && (llGetOwnerKey(kID) == g_kWearer)) {
                 key kMenuTo = (key)llGetSubString(sMsg,10,-1);
                 if(iType == ORACUL) llMessageLinked(LINK_SET,4,"",kMenuTo);
                 else if (iType > 1) zhaoMenu(kMenuTo);
             }
-        } 
+        }
     }
     
     link_message(integer iPrim, integer iNum, string sMsg, key kID) {
@@ -289,14 +306,6 @@ default {
     timer() {
         llSetTimerEvent(0);
         llListenRemove(g_iMenuHandle);
-        //inform current menu users of listener timeout.
-        /*lets not spam this at all 
-        integer x = llGetListLength(g_lMenuUsers);
-        while(x) {
-            x--;
-            key tKey = llList2Key(g_lMenuUsers,x);
-            if(llGetAgentSize(tKey)) llRegionSayTo(tKey,0,"AO Menu timed out, try again."); //avoid IM spam by only notifying those in sim.
-        }*/
         g_lMenuUsers = []; //clear list
     }
     

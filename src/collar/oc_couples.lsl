@@ -146,6 +146,7 @@ string g_sSettingToken = "coupleanim_";
 string g_sGlobalToken = "global_";
 string g_sStopString = "stop";
 integer g_iStopChan = 99;
+integer g_iLMChannel = -8888;
 integer g_iListener;    //stop listener handle
 
 /*
@@ -166,7 +167,6 @@ Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer i
     key kMenuID = llGenerateKey();
     string sSearch;
     if (sMenuID == "sensor") {
-         //llMessageLinked(LINK_THIS, SENSORDIALOG, (string)g_kCmdGiver + "|\nChoose a partner:\n|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI +"`"+sTmpName+"`1"+ "|BACK|" + (string)iNum, g_kPart);
         if (lButtons) sSearch = "`"+llList2String(lButtons,0)+"`1";
         llMessageLinked(LINK_DIALOG, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)AGENT+"`"+(string)g_fRange+"`"+(string)PI+sSearch+"|"+llDumpList2String(lUtilityButtons, "`")+"|" + (string)iAuth, kMenuID);
     } else
@@ -200,8 +200,6 @@ CoupleAnimMenu(key kID, integer iAuth) {
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
-    //if (g_iVerbose) lButtons += ["Verbose Off"];
-    //else lButtons += ["Verbose On"];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth,"couples");
 }
 
@@ -230,7 +228,10 @@ string StrReplace(string sSrc, string sFrom, string sTo) {
 StopAnims() {
     if (llGetInventoryType(g_sSubAnim) == INVENTORY_ANIMATION) llMessageLinked(LINK_THIS, ANIM_STOP, g_sSubAnim, "");
     if (llGetInventoryType(g_sDomAnim) == INVENTORY_ANIMATION) {
-        if (llKey2Name(g_kPartner) != "") llStopAnimation(g_sDomAnim);
+        if (llKey2Name(g_kPartner) != "") {
+            llStopAnimation(g_sDomAnim);
+            llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"booton");
+        }
     }
     g_sSubAnim = "";
     g_sDomAnim = "";
@@ -243,7 +244,7 @@ MoveToPartner() {
     rotation partnerRot = llList2Rot(partnerDetails, 1);
     vector partnerEuler = llRot2Euler(partnerRot);
     // turn to face the partner
-    llMessageLinked(4, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
+    llMessageLinked(LINK_RLV, RLV_CMD, "setrot:" + (string)(-PI_BY_TWO-partnerEuler.z) + "=force", NULL_KEY);
 
     g_iTargetID = llTarget(partnerPos, g_fWalkingDistance);
     llMoveToTarget(partnerPos, g_fWalkingTau);
@@ -450,6 +451,7 @@ default {
         g_sDomAnim = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 1);
 
         llMessageLinked(LINK_THIS, ANIM_START, g_sSubAnim, "");
+        llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"bootoff");
         llStartAnimation(g_sDomAnim);
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
