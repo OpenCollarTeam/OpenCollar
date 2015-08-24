@@ -331,7 +331,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sCmd == "fix") {
         if (kID == g_kWearer){
             RebuildMenu();
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Menus fixed!",kID);
+            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sCmd == "jailbreak" && kID == g_kWearer) {
         if (JB())
@@ -571,8 +571,10 @@ default
                 } else if (sMenu == "Options") {
                      if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SAVE, iAuth,"settings",kAv);
                      else if (sMessage == LOADCARD) llMessageLinked(LINK_SAVE, iAuth,sMessage,kAv);
-                     else if (sMessage == REFRESH_MENU) UserCommand(iAuth, sMessage, kAv, TRUE);
-                     else if (sMessage == STEALTH_OFF) {
+                     else if (sMessage == REFRESH_MENU) {
+                         UserCommand(iAuth, sMessage, kAv, TRUE);
+                         return;
+                    } else if (sMessage == STEALTH_OFF) {
                          llMessageLinked(LINK_ROOT, iAuth,"hide",kAv);
                          STEALTH = TRUE;
                     } else if (sMessage == STEALTH_ON) {
