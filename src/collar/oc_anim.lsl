@@ -59,6 +59,7 @@
 
 list g_lAnims;  //list of queued anims
 list g_lPoseList;  //list of standard poses to use in the menu
+list g_lOtherAnims; //list of animations not in g_lPoseList to forward to requesting scripts
 integer g_iNumberOfAnims;  //we store this to avoid running createanimlist() every time inventory is changed...
 
 //PoseMove tweak stuff
@@ -113,6 +114,8 @@ integer MENUNAME_RESPONSE = 3001;
 
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
+integer ANIM_LIST_REQUEST = 7002;
+integer ANIM_LIST_RESPONSE =7003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -310,12 +313,15 @@ UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods conf
 
 CreateAnimList() {
     g_lPoseList=[];
+    g_lOtherAnims =[];
     g_iNumberOfAnims = llGetInventoryNumber(INVENTORY_ANIMATION);
     string sName;
     integer i;
     do { sName = llGetInventoryName(INVENTORY_ANIMATION, i);
         if (sName != "" && llSubStringIndex(sName,"~")) g_lPoseList+=[sName];
+        else if (!llSubStringIndex(sName,"~")) g_lOtherAnims+=sName;
     } while (g_iNumberOfAnims > i++);
+    llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -494,7 +500,9 @@ default {
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
                 g_sCurrentPose = "";
             }
-        } else if (iNum == LM_SETTING_RESPONSE) {
+        } else if (iNum == ANIM_LIST_REQUEST)
+            llMessageLinked(iLink,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
+        else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
