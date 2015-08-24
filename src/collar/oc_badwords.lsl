@@ -236,7 +236,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                 string sName = llStringTrim(llGetSubString(sStr, iPos+2, -1),STRING_TRIM);
                 if(sName == "Default") {
                     if (g_iDefaultAnim) sName = "~shock";
-                    else sName = llList2String(g_lAmins,0);
+                    else sName = llList2String(g_lAnims,0);
                 }
                 if (~llListFindList(g_lAnims,[sName])) {
                     g_sBadWordAnim = sName;
