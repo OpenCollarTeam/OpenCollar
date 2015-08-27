@@ -272,8 +272,8 @@ UserCommand(integer iAuth, string sStr, key kID) {
     else if (sStr == "load") {
         g_iLineNr = 0;
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
-    } else if (sStr == "reboot") {
-        if (g_iRebootConfirmed) {
+    } else if (sStr == "reboot" || sStr == "reboot --f") {
+        if (g_iRebootConfirmed || sStr == "reboot --f") {
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
