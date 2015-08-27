@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 150817.1                             //
+//                          Settings - 150826.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -293,6 +293,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
 default {
     state_entry() {
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         llSleep(0.5);
         g_kWearer = llGetOwner();
         g_iLineNr = 0;
@@ -399,7 +400,7 @@ default {
         } else if (iNum == LOADPIN) {
             integer iPin = (integer)llFrand(99999.0);
             llSetRemoteScriptAccessPin(iPin);
-            llMessageLinked(iLink, LOADPIN, (string)iPin,llGetKey());
+            llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         }
     }
 

@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 150817.1                              //
+//                           Dialog - 150826.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -69,6 +69,7 @@ integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 integer LINK_SAVE = 5;
 integer REBOOT = -1000;
+integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -445,6 +446,7 @@ default {
     }
 
     state_entry() {
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
@@ -644,10 +646,13 @@ default {
             } else if (sToken == g_sGlobalToken+"WearerName") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
-            }
-            else if (sToken == g_sGlobalToken+"prefix"){
+            } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
+        } else if (iNum == LOADPIN) {
+            integer iPin = (integer)llFrand(99999.0);
+            llSetRemoteScriptAccessPin(iPin);
+            llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

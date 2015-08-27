@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 150817.1                           //
+//                          Authorizer - 150826.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -204,9 +204,7 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
         integer n;
         for(;n<iNum;n=n+2) {
             string sName = llList2String(lPeople,n);
-            if (sName) {
-                lButtons += [sName];
-            }
+            if (sName) lButtons += [sName];
         }
         Dialog(kID, sPrompt, lButtons, ["Remove All",UPMENU], -1, iAuth, "remove"+sToken);
     } else {
@@ -609,6 +607,7 @@ default {
            // Debug("profiling restarted");
         }*/
         //llSetMemoryLimit(65536);
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         g_kWearer = llGetOwner();
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
@@ -639,17 +638,16 @@ default {
                 if (sToken == "owner") {
                     g_lOwner = llParseString2List(sValue, [","], []);
                     if (~llSubStringIndex(sValue,(string)g_kWearer)) g_iVanilla = TRUE;
-                } else if (sToken == "tempowner") {
+                } else if (sToken == "tempowner")
                     g_lTempOwner = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
-                } else if (sToken == "group") {
+                else if (sToken == "group") {
                     g_kGroup = (key)sValue;
                     //check to see if the object's group is set properly
                     if (g_kGroup != "") {
                         if ((key)llList2String(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]), 0) == g_kGroup) g_iGroupEnabled = TRUE;
                         else g_iGroupEnabled = FALSE;
-                    }
-                    else g_iGroupEnabled = FALSE;
+                    } else g_iGroupEnabled = FALSE;
                 }
                 else if (sToken == "groupname") g_sGroupName = sValue;
                 else if (sToken == "public") g_iOpenAccess = (integer)sValue;
@@ -658,11 +656,9 @@ default {
                 else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
             } else if (llToLower(sStr) == "settings=sent") {
-                if (llGetListLength(g_lOwner)) SayOwners();
+                if (llGetListLength(g_lOwner) && !llGetStartParameter()) SayOwners();
             }
-        }
-// Redone simpler auth for attachments with direct reply to them from here without giving a reply first by LM to com - Otto (garvin.twine) aug 2015
-        else if (iNum == AUTH_REQUEST) //The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
+        } else if (iNum == AUTH_REQUEST) //The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -696,21 +692,20 @@ default {
                             "Runaway","runaway"
                           ];
                         integer buttonIndex=llListFindList(lTranslation,[sMessage]);
-                        if (~buttonIndex){
+                        if (~buttonIndex)
                             sMessage=llList2String(lTranslation,buttonIndex+1);
-                        }
                         //Debug("Sending UserCommand "+sMessage);
                         UserCommand(iAuth, sMessage, kAv, TRUE);
                     }
                 } else if (sMenu == "removeowner" || sMenu == "removetrust" || sMenu == "removeblock" ) {
                     string sCmd = "rm "+llGetSubString(sMenu,6,-1)+" ";
-                    if (sMessage == UPMENU) {
+                    if (sMessage == UPMENU)
                         AuthMenu(kAv, iAuth);
-                    } else UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
+                    else UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
-                    if (sMessage == UPMENU) {
+                    if (sMessage == UPMENU)
                         AuthMenu(kAv, iAuth);
-                    } else  if (sMessage == "Yes") RunAway();
+                    else  if (sMessage == "Yes") RunAway();
                 }
             }
         } else if (iNum == FIND_AGENT) { //reply from add-by-name or add-from-menu (via FetchAvi dialog)
@@ -734,7 +729,7 @@ default {
         } else if (iNum == LOADPIN) {
             integer iPin = (integer)llFrand(99999.0);
             llSetRemoteScriptAccessPin(iPin);
-            llMessageLinked(iSender, LOADPIN, (string)iPin,llGetKey());
+            llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
@@ -752,7 +747,7 @@ default {
                     && iPos2 > iPos // Has to be after it
                     && iPos2 <= iPos + 43 // 36 characters max (that's 7+36 because <title> has 7)
                     && !~llSubStringIndex(sBody, "AccessDenied") // Check as per groupname.py (?)
-                ) {
+                    ) {
                     g_sGroupName = llGetSubString(sBody, iPos + 7, iPos2 - 1);
                 }
             }
@@ -768,9 +763,7 @@ default {
             string sRequestType = llList2String(g_lQueryId,listIndex+2);
             key kAv  =llList2Key(g_lQueryId,listIndex+3);
             integer iRemenu = llList2Integer(g_lQueryId,listIndex+4);
-
             g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
-
             AddUniquePerson(newOwner, sData, sRequestType, kAv);
             if (iRemenu){
                 integer iNewAuth = Auth(kAv,FALSE);

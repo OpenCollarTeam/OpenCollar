@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 150817.1                            //
+//                         RLV System - 150826.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -382,6 +382,7 @@ default {
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         //Debug("Starting");
     }
 
@@ -578,7 +579,7 @@ default {
             } else if (iNum == LOADPIN) {
                 integer iPin = (integer)llFrand(99999.0);
                 llSetRemoteScriptAccessPin(iPin);
-                llMessageLinked(iSender, LOADPIN, (string)iPin,llGetKey());
+                llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
             } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         }
     }
