@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 150817.1                             //
+//                          Settings - 150826.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -272,8 +272,8 @@ UserCommand(integer iAuth, string sStr, key kID) {
     else if (sStr == "load") {
         g_iLineNr = 0;
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
-    } else if (sStr == "reboot") {
-        if (g_iRebootConfirmed) {
+    } else if (sStr == "reboot" || sStr == "reboot --f") {
+        if (g_iRebootConfirmed || sStr == "reboot --f") {
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
@@ -292,6 +292,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 default {
     state_entry() {
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -396,10 +397,10 @@ default {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
             } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Reboot aborted.",kID);
-        } else if (iNum == LOADPIN) {
-            integer iPin = (integer)llFrand(99999.0);
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
-            llMessageLinked(iLink, LOADPIN, (string)iPin,llGetKey());
+            llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         }
     }
 

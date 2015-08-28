@@ -163,7 +163,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 LooksMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose which look you want to change for your %DEVICETYPE%.", ["Color","Glow","Shiny","Texture","Themes"], ["Cancel"],0, iAuth, "LooksMenu~menu");
+    Dialog(kID, "\nChoose which look you want to change for your %DEVICETYPE%.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
 }
 
 StyleMenu(key kID, integer iAuth) {
@@ -553,7 +553,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                if (sMessage == "Cancel") return;
+               // if (sMessage == "Cancel") return;
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
@@ -572,7 +572,8 @@ default {
                             else g_lMenuIDs += [kID, kTouchID, sMenuType];
                         } else UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
                     }
-                } else {
+                } else if (sMenu == "LooksMenu~menu" && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu",kAv);
+                 else {
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);

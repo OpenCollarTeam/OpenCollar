@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150817.1                              //
+//                           System - 150826.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -144,6 +144,7 @@ string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencol
 key github_version_request;
 string news_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~news";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
+string help_url = "http://www.opencollar.at/manual";
 key news_request;
 string g_sLastNewsTime = "0";
 
@@ -283,10 +284,11 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: "+license_url,kID);
+        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Please find the most recent revision at this address: "+license_url,kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
-        llGiveInventory(kID, HELPCARD);
+         if(llGetInventoryType(HELPCARD)==INVENTORY_NOTECARD) llGiveInventory(kID, HELPCARD);
+         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Please find the most recent revision at this address: "+help_url,kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
@@ -630,11 +632,11 @@ default
     }
 
     on_rez(integer iParam) {
-        init();
+        init(); 
     }
 
     changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) {
+        if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             g_iWaitRebuild = TRUE;
             llSetTimerEvent(1.0);
