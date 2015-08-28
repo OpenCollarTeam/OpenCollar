@@ -602,12 +602,12 @@ default {
     }
 
     state_entry() {
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
       /*  if (g_iProfiled){
             llScriptProfiler(1);
            // Debug("profiling restarted");
         }*/
         //llSetMemoryLimit(65536);
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         g_kWearer = llGetOwner();
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
@@ -726,8 +726,8 @@ default {
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-        } else if (iNum == LOADPIN) {
-            integer iPin = (integer)llFrand(99999.0);
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();

@@ -446,6 +446,7 @@ default {
     }
 
     state_entry() {
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
@@ -571,9 +572,10 @@ default {
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        } else if (iNum == LOADPIN) {
-            llSetRemoteScriptAccessPin(LOADPIN); 
-            llMessageLinked(iLink, LOADPIN, (string)LOADPIN+"@"+llGetScriptName(),llGetKey());
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
+            llSetRemoteScriptAccessPin(iPin);
+            llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

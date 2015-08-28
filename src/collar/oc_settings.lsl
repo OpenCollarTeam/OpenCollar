@@ -292,8 +292,8 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 default {
     state_entry() {
-        // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
+        // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
         g_iLineNr = 0;
@@ -397,8 +397,8 @@ default {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
             } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Reboot aborted.",kID);
-        } else if (iNum == LOADPIN) {
-            integer iPin = (integer)llFrand(99999.0);
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         }

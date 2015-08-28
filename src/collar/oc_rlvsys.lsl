@@ -377,12 +377,12 @@ default {
     }
 
     state_entry() {
+        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         //Debug("Starting");
     }
 
@@ -576,8 +576,8 @@ default {
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
                     rebakeSourceRestrictions(kID);
                 }
-            } else if (iNum == LOADPIN) {
-                integer iPin = (integer)llFrand(99999.0);
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+                integer iPin = (integer)llFrand(99999.0)+1;
                 llSetRemoteScriptAccessPin(iPin);
                 llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
             } else if (iNum == REBOOT && sStr == "reboot") llResetScript();

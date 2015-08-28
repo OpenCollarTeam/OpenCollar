@@ -649,8 +649,8 @@ default {
             } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
-        } else if (iNum == LOADPIN) {
-            integer iPin = (integer)llFrand(99999.0);
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
