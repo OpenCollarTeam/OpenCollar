@@ -1,26 +1,64 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                        OpenCollarUpdater - BundleGiver                         //
-//                                 version 3.928                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
-// ------------------------------------------------------------------------------ //
-//                    github.com/OpenCollar/OpenCollarUpdater                     //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                       Installer Bundles - 140401.1                       //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall                 //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
-// this script receives DO_BUNDLE messages that contain the uuid of the collar being updated, 
+// this script receives DO_BUNDLE messages that contain the uuid of the collar being updated,
 // the name of a bundle notecard, the talkchannel on which the collar shim script is listening, and
 // the script pin set by the shim.  This script then loops over the items listed in the notecard
-// and chats with the shim about each one.  Items that are already present (as determined by uuid) 
+// and chats with the shim about each one.  Items that are already present (as determined by uuid)
 // are skipped.  Items not present are given to the collar.  Items that are present but don't have the
-// right uuid are deleted and replaced with the version in the updater.  Scripts are loaded with 
+// right uuid are deleted and replaced with the version in the updater.  Scripts are loaded with
 // llRemoteLoadScriptPin, and are set running immediately.
 
-// once the end of the notecard is reached, this script sends a BUNDLE_DONE message that includes all the same 
+// once the end of the notecard is reached, this script sends a BUNDLE_DONE message that includes all the same
 // stuff it got in DO_BUNDLE (talkchannel, recipient, card, pin).
 
 integer DO_BUNDLE = 98749;
