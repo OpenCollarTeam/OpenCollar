@@ -1,55 +1,16 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                         Update Shim - 141014.1                           //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
-//  littlemousy, Sumi Perl et al.                                           //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//        github.com/OpenCollar/opencollar/tree/master/src/installer        //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            OpenCollar - UpdateShim                             //
+//                                 version 3.985                                  //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
+// ------------------------------------------------------------------------------ //
+//                    github.com/OpenCollar/OpenCollarUpdater                     //
+// ------------------------------------------------------------------------------ //
+////////////////////////////////////////////////////////////////////////////////////
 
 // This script is like a kamikaze missile.  It sits dormant in the updater
 // until an update process starts.  Once the initial handshake is done, it's
@@ -58,65 +19,23 @@
 // update is finished, this script does a little final cleanup and then deletes
 // itself.
 
-integer iStartParam;
+integer g_iStartParam;
+integer LOADPIN = -1904;
 
 // a strided list of all scripts in inventory, with their names,versions,uuids
 // built on startup
-list lScripts;
+list g_lScripts;
+
+list g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
 
 // list where we'll record all the settings and local settings we're sent, for replay later.
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
-list lSettings;
+list g_lSettings;
 
 // list of deprecated tokens to remove from previous collar scripts
-list lDeprecatedSettingTokens = [
-    "collarversion"
-];
+list g_lDeprecatedSettingTokens = ["collarversion"];
 
-/*
-integer g_iProfiled;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
-
-// Return the name and version of an item as a list.  If item has no version, return empty string for that part.
-list GetNameParts(string name) {
-    list nameparts = llParseString2List(name, [" - "], []);
-    string shortname = llDumpList2String(llList2List(nameparts, 0, 1), " - ");
-    string version;
-    if (llGetListLength(nameparts) > 2) {
-        version = llList2String(nameparts, -1);
-    } else {
-        version = "";
-    }
-    return [shortname, version];
-}
-
-// Given the name (but not version) of a script, look it up in our list and return the key
-// returns "" if not found.
-key GetScriptFullname(string name) {
-    integer idx = llListFindList(lScripts, [name]);
-    if (idx == -1) {
-        return (key)"";
-    }
-
-    string version = llList2String(lScripts, idx + 1);
-    if (version == "") {
-        return name;
-    } else {
-        return llDumpList2String([name, version], " - ");
-    }
-}
-
-integer COMMAND_NOAUTH = 0;
+integer CMD_OWNER = 500;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
@@ -125,191 +44,150 @@ integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on 
 integer LM_SETTING_DELETE = 2003;//delete token from store
 integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
-// Some versions of the collar have a hover text script in them that breaks
-// updates because it set a script pin that overwrites the one set by this shim
-// script.  So before starting, delete any script that starts with "OpenCollar
-// - hovertext".
-// In general, removal of old cruft should be done with the cleanup script or
-// a "DEPRECATED" bundle, but this has to be done here because it breaks the updater
-// before bundles get going.
-RemoveHoverTextScript() {
-    string kill = "OpenCollar - hovertext";
-    integer n;
-    // loop from the top down to avoid shifting indices
-    for (n = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; n >= 0; n--) {
-        string name = llGetInventoryName(INVENTORY_SCRIPT, n);
-        if (llSubStringIndex(name, kill) == 0) {
-            llRemoveInventory(name);
-        }
-    }
+debug(string msg) {
+   // llOwnerSay(llGetScriptName() + ": " + msg);
 }
 
-default
-{
-    state_entry()
-    {
-        iStartParam = llGetStartParameter();
-
-        RemoveHoverTextScript();
-
-        // build script list
-        integer n;
-        integer stop = llGetInventoryNumber(INVENTORY_SCRIPT);
-        for (n = 0; n < stop; n++) {
-            string name = llGetInventoryName(INVENTORY_SCRIPT, n);
-            // add to script list
-            lScripts += GetNameParts(name);
+Check4Core5Script() {
+    integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+    string sScriptName;
+    do { i--;
+        sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
+        if (~llListFindList(g_lCore5Scripts,[sScriptName])) {
+            llMessageLinked(LINK_ALL_OTHERS,LOADPIN,sScriptName,"");
+            return;
         }
+    } while (i);
+}
 
-        //Debug(llDumpList2String(lScripts, "|"));
-
+default {
+    state_entry() {
+        g_iStartParam = llGetStartParameter();
+        // build script list
+        integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+        string sName;
+        do { i--;
+            sName = llGetInventoryName(INVENTORY_SCRIPT,i);
+            g_lScripts += sName;
+        } while (i);
+        debug(llDumpList2String(g_lScripts, "|"));
         // listen on the start param channel
-        llListen(iStartParam, "", "", "");
-
+        llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
-        llWhisper(iStartParam, "reallyready");
-
-        //Debug("Starting");
+        llWhisper(g_iStartParam, "reallyready");
     }
-
-    listen(integer channel, string name, key id, string msg) {
-        //Debug("heard: " + msg);
-        if (llGetOwnerKey(id) == llGetOwner()) {
-            list parts = llParseString2List(msg, ["|"], []);
-            if (llGetListLength(parts) == 4) {
-                string type = llList2String(parts, 0);
-                string name = llList2String(parts, 1);
-                key uuid = (key)llList2String(parts, 2);
-                string mode = llList2String(parts, 3);
-                string cmd;
-                if (mode == "INSTALL" || mode == "REQUIRED") {
-                    if (type == "SCRIPT") {
-                        // see if we have that script in our list.
-                        integer idx = llListFindList(lScripts, [name]);
-                        if (idx == -1) {
-                            // script isn't in our list.
-                            cmd = "GIVE";
+    
+    listen(integer iChannel, string sName, key kID, string sMsg) {
+        debug("heard: " + sMsg);
+        if (llGetOwnerKey(kID) != llGetOwner()) return;
+        list lParts = llParseString2List(sMsg, ["|"], []);
+        if (llGetListLength(lParts) == 4) {
+            string sType = llList2String(lParts, 0);
+            string sName = llList2String(lParts, 1);
+            key kUUID = (key)llList2String(lParts, 2);
+            string sMode = llList2String(lParts, 3);
+            string sCmd;
+            if (sMode == "INSTALL" || sMode == "REQUIRED") {
+                if (sType == "SCRIPT") {
+                    // see if we have that script in our list.
+                    integer idx = llListFindList(g_lScripts, [sName]);
+                    if (idx == -1) {
+                        // script isn't in our list.
+                        sCmd = "GIVE";
+                    } else {
+                        // it's in our list.  Check UUID.
+                        if (llGetInventoryKey(sName) == kUUID && sName != "oc_sys") {
+                            // already have script.  skip
+                            sCmd = "SKIP";
                         } else {
-                            // it's in our list.  Check UUID.
-                            string script_name = GetScriptFullname(name);
-                            key script_id = llGetInventoryKey(script_name);
-                            if (script_id == uuid) {
-                                // already have script.  skip
-                                cmd = "SKIP";
-                            } else {
-                                // we have the script but it's the wrong version.  delete and get new one.
-                                llRemoveInventory(script_name);
-                                cmd = "GIVE";
-                            }
-                        }
-                    } else if (type == "ITEM") {
-                        if (llGetInventoryType(name) != INVENTORY_NONE) {
-                            // item exists.  check uuid.
-                            if (llGetInventoryKey(name) != uuid) {
-                                // mismatch.  delete and report
-                                llRemoveInventory(name);
-                                cmd = "GIVE";
-                            } else {
-                                // match.  Skip
-                                cmd = "SKIP";
-                            }
-                        } else {
-                            // we don't have item. get it.
-                            cmd = "GIVE";
+                            // we have the script but it's the wrong version.  delete and get new one.
+                            llRemoveInventory(sName);
+                            sCmd = "GIVE";
                         }
                     }
-                } else if (mode == "REMOVE" || mode == "DEPRECATED") {
-                    //Debug("remove: " + msg);
-                    if (type == "SCRIPT") {
-                        string script_name = GetScriptFullname(name);
-                        //Debug("script name: " + script_name);
-                        if (llGetInventoryType(script_name) != INVENTORY_NONE) {
-                            llRemoveInventory(script_name);
+                } else if (sType == "ITEM") {
+                    if (llGetInventoryType(sName) != INVENTORY_NONE) {
+                        // item exists.  check uuid.
+                        if (llGetInventoryKey(sName) != kUUID) {
+                            // mismatch.  delete and report
+                            llRemoveInventory(sName);
+                            sCmd = "GIVE";
+                        } else {
+                            // match.  Skip
+                            sCmd = "SKIP";
                         }
-                    } else if (type == "ITEM") {
-                        if (llGetInventoryType(name) != INVENTORY_NONE) {
-                            llRemoveInventory(name);
-                        }
+                    } else {
+                        // we don't have item. get it.
+                        sCmd = "GIVE";
                     }
-                    cmd = "OK";
+                }                
+            } else if (sMode == "REMOVE" || sMode == "DEPRECATED") {
+                debug("remove: " + sMsg);
+                if (sType == "SCRIPT") {
+                    if (llGetInventoryType(sName) != INVENTORY_NONE) {
+                        llRemoveInventory(sName);
+                    }
+                } else if (sType == "ITEM") {
+                    if (llGetInventoryType(sName) != INVENTORY_NONE) {
+                        llRemoveInventory(sName);
+                    }
                 }
-                string response = llDumpList2String([type, name, cmd], "|");
-                //Debug("responding: " + response);
-                llRegionSayTo(id, channel, response);
-            } else {
-                if (llSubStringIndex(msg, "CLEANUP") == 0) {
-                    // Prior to 3.706, collars would store version number in
-                    // both the object name and description.  This has
-                    // problems: 1) It prevents running updates while worn,
-                    // since llSetObjectName doesn't reliably persist for
-                    // attachments, 2) it's needless repetition and creates
-                    // unnecessary complexity, and 3) version numbers are ugly.
-                    // So now we store version number in just one place, inside
-                    // the "~version" notecard, which is automatically kept up
-                    // to date when the core bundle is installed.  The lines
-                    // below here exist to clean up version numbers in old
-                    // collars.
+                sCmd = "OK";
+            }
+            //check if there is a core5 script to move to its destination prim
+            Check4Core5Script();
+            string sResponse = llDumpList2String([sType, sName, sCmd], "|");
+            //debug("responding: " + response);
+            llRegionSayTo(kID, iChannel, sResponse);     
+        } else if (sMsg == "Core5Done") Check4Core5Script();
+        else if (llSubStringIndex(sMsg, "DONE") == 0) {
+            //restore settings 
+            integer n;
+            integer iStop = llGetListLength(g_lSettings); 
+            list lDeprecatedSplitSettingTokenForTest;
+            for (n = 0; n < iStop; n++) {
+                string sSetting = llList2String(g_lSettings, n);
+                //Look through deprecated settings to see if we should ignore any...
+                // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
+                lDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(sSetting,["="],[]),0,0);
 
-                    list msgparts = llParseString2List(msg, ["|"], []);
-                    // look for a version in the name and remove if present
-                    list nameparts = llParseString2List(llGetObjectName(), [" - "], []);
-                    if (llGetListLength(nameparts) == 2 && (integer)llList2String(nameparts, 1)) {
-                        // looks like there's a version in the name.  Remove
-                        // it!
-                        string just_name = llList2String(nameparts, 0);
-                        llSetObjectName(just_name);
-                    }
-
-                    // We used to set the version in the desc too.  Now we just
-                    // leave it alone in this script.  The in-collar update
-                    // script now uses that part of the desc to remember the
-                    // timestamp of the last news item that it reported.
-
-                    //restore settings
-                    integer n;
-                    integer stop = llGetListLength(lSettings);
-                    list sDeprecatedSplitSettingTokenForTest;
-                    for (n = 0; n < stop; n++) {
-                        string setting = llList2String(lSettings, n);
-                        //Look through deprecated settings to see if we should ignore any...
-                        // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
-                        sDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(setting,["="],[]),0,0);
-
-                        if (llListFindList(lDeprecatedSettingTokens,sDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, setting, "");
-                            //Debug("SP - Saving :"+setting);
-                        }
-                        else {
-                            //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
-                             //remove it if it's somehow persistent still
-                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(sDeprecatedSplitSettingTokenForTest,0), "");
-                        }
-                    }
-
-                    // tell scripts to rebuild menus (in case plugins have been removed)
-                    llMessageLinked(LINK_SET, COMMAND_NOAUTH, "fixmenus", llGetOwner());
-
-                    // remove the script pin
-                    llSetRemoteScriptAccessPin(0);
-
-                    // celebrate
-                    llOwnerSay("Update complete!");
-
-                    // delete shim script
-                    llRemoveInventory(llGetScriptName());
+                if (llListFindList(g_lDeprecatedSettingTokens,lDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
+                    debug("SP - Saving :"+sSetting);
+                } else {
+                    //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
+                     //remove it if it's somehow persistent still
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(lDeprecatedSplitSettingTokenForTest,0), "");
+                }
+            }
+            // remove the script pin
+            llSetRemoteScriptAccessPin(0);
+            // celebrate
+            llOwnerSay("Update complete!");
+            //reboot scripts
+            llMessageLinked(5,CMD_OWNER,"reboot --f",llGetOwner());
+            // delete shim script
+            llRemoveInventory(llGetScriptName());
+        }
+    }
+    
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
+        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them 
+        // so they can be restored when we're done.
+        if (iNum == LM_SETTING_RESPONSE) {
+            if (sStr != "settings=sent") {
+                if (llListFindList(g_lSettings, [sStr]) == -1) {
+                    g_lSettings += [sStr];
                 }
             }
         }
-    }
-
-    link_message(integer sender, integer num, string str, key id) {
-        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them
-        // so they can be restored when we're done.
-        if (num == LM_SETTING_RESPONSE) {
-            if (str != "settings=sent") {
-                if (llListFindList(lSettings, [str]) == -1) {
-                    lSettings += [str];
-                }
+        if (iNum == LOADPIN) {
+            integer iPin =  (integer)llGetSubString(sStr,0,llSubStringIndex(sStr,"@")-1);
+            string sScriptName = llGetSubString(sStr,llSubStringIndex(sStr,"@")+1,-1);
+            debug("PrimNr:"+(string)iSender+" - "+sStr);
+            if (llGetInventoryType(sScriptName) == INVENTORY_SCRIPT) {
+                llRemoteLoadScriptPin(kID, sScriptName, iPin, TRUE, 825);
+                llRemoveInventory(sScriptName);
             }
         }
     }
