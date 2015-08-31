@@ -447,7 +447,7 @@ default {
             return;
         }
         if (iChan == g_iLockMeisterChan) {
-            if(llGetSubString(sMsg,36,-1)=="collar")
+            if(sMsg ==(string)g_kWearer+"collar")
                 llSay(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
             //new for LMV2
             if(sMsg == (string)g_kWearer+"|LMV2|RequestPoint|collar") {
