@@ -209,6 +209,10 @@ integer LabelsCount() {
             }
         }
     }
+    if (!ok) {
+        if (~llSubStringIndex(llGetObjectName(),"Installer") && ~llSubStringIndex(llGetObjectName(),"Updater")) 
+            return 1;
+    }
     return ok;
 }
 
@@ -338,7 +342,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 default
 {
     state_entry() {
-        llSetMemoryLimit(45056);
+       // llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;

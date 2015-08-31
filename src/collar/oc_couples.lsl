@@ -269,7 +269,7 @@ default {
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-        llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
+       // llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_kWearer = llGetOwner();
         if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
             g_kCardID1 = llGetInventoryKey(CARD1);

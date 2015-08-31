@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Bell - 150817.1                                //
+//                           Bell - 150827.1                                //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2009 - 2015 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
@@ -314,7 +314,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(36864);
+       // llSetMemoryLimit(36864);
         g_kWearer=llGetOwner();
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();

@@ -457,7 +457,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(49152);
+        //llSetMemoryLimit(49152);
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }

@@ -441,13 +441,14 @@ UserCommand(integer iNum, string sStr, key kID) {
 
 default {
     on_rez(integer iNum) {
+        if (iNum == 825) llSetRemoteScriptAccessPin(0);
         if (llGetOwner() != g_kWearer) llResetScript();
        //if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
     }
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-        llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
+       // llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
