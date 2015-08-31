@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150826.1                              //
+//                           System - 150827.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -144,13 +144,11 @@ string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencol
 key github_version_request;
 string news_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~news";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
-string help_url = "http://www.opencollar.at/manual";
 key news_request;
 string g_sLastNewsTime = "0";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
-integer g_iWillingVDUpdaters = 0;
 
 string g_sSafeWord="RED";
 
@@ -234,7 +232,7 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a 3.9 API OpenCollar Updater!\n\nThis will only work if using OpenCollar Updater 3.999 and overrides all 4.0 features.\n\nNote: Some App Installers use a similar mechanism to install plugins. Make sure they are indicated as 4.0 compatible on the packaging.\n\nDo you really want to continue?", ["Yes","Cancel"], ["BACK"], 0, CMD_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\n\nWARNING: You are using a 3.9 API OpenCollar Updater!\n\nThis will only work if using OpenCollar Updater 3.999 and overrides all 4.0 features.\n\nNote: Some App Installers use a similar mechanism to install plugins. Make sure they are indicated as 4.0 compatible on the packaging.\n\nDo you really want to continue?", ["Yes","No"], ["Cancel"], 0, CMD_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
@@ -284,11 +282,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Please find the most recent revision at this address: "+license_url,kID);
+        else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: "+license_url,kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
-         if(llGetInventoryType(HELPCARD)==INVENTORY_NOTECARD) llGiveInventory(kID, HELPCARD);
-         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Please find the most recent revision at this address: "+help_url,kID);
+        llGiveInventory(kID, HELPCARD);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
@@ -357,20 +354,23 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
         if (kID == g_kWearer) {
-            string sVersion = llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 1);
             g_iWillingUpdaters = 0;
-            g_iWillingVDUpdaters = 0;
             g_kCurrentUser = kID;
             g_iUpdateAuth = iNum;
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Searching for nearby updater",kID);
             g_iUpdateHandle = llListen(g_iUpdateChan, "", "", "");
             g_iUpdateFromMenu=fromMenu;
-            llWhisper(g_iUpdateChan, "UPDATE|" + sVersion);
+            llWhisper(g_iUpdateChan, "UPDATE|" + g_sCollarVersion);
             g_iWaitUpdate = TRUE;
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
             if (fromMenu) HelpMenu(kID, iNum);
+        }
+    } else if (!llSubStringIndex(sStr,".- ... -.-")) { 
+        if (kID == g_kWearer) {
+            g_kUpdaterOrb = (key)llGetSubString(sStr,10,-1);
+            UpdateConfirmMenu(); 
         }
     } else if (sCmd == "version") {
         string sVersion;
@@ -495,7 +495,8 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner();
-        news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        if (!llGetStartParameter())
+            news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
@@ -565,11 +566,11 @@ default
                     else if (sMessage=="☒ News")   UserCommand(iAuth, "news off", kAv, TRUE);
                     else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
-                        if (sMessage=="Cancel"){
-                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Override canceled.",kAv);
+                    if (sMessage=="Yes") StartUpdate();
+                    else {
+                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Installation canceled.",kAv);
                         return;
-                    } else if (sMessage=="Yes") StartUpdate();
-                    else if (sMessage=="BACK") HelpMenu(kAv,iAuth);
+                    }
                 } else if (sMenu == "Options") {
                      if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SAVE, iAuth,"settings",kAv);
                      else if (sMessage == LOADCARD) llMessageLinked(LINK_SAVE, iAuth,sMessage,kAv);
@@ -632,7 +633,7 @@ default
     }
 
     on_rez(integer iParam) {
-        init(); 
+        init();
     }
 
     changed(integer iChange) {
@@ -695,11 +696,8 @@ default
         if (llGetOwnerKey(id) == g_kWearer) {   //collar and updater have to have the same Owner else do nothing!
             list lTemp = llParseString2List(message, [","],[]);
             string sCommand = llList2String(lTemp, 0);
-            if( message == ".- ... -.-" && g_iWillingVDUpdaters==0) {
+            if( message == "-.. ---") {
                 g_iWillingUpdaters++;
-                g_kUpdaterOrb = id;
-            } else if( message == "-.. ---") {
-                g_iWillingVDUpdaters++;
                 g_kUpdaterOrb = id;
             }
         }
@@ -709,13 +707,13 @@ default
         if (g_iWaitUpdate) {
             g_iWaitUpdate = FALSE;
             llListenRemove(g_iUpdateHandle);
-            if (!g_iWillingVDUpdaters && !g_iWillingUpdaters ) {   //if no updaters responded, get upgrader info from web and remenu
+            if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
                 g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
-            } else if (g_iWillingVDUpdaters > 1  || (!g_iWillingVDUpdaters && g_iWillingUpdaters>1)) {    //if too many updaters, PANIC!
+            } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
-            } else if (g_iWillingVDUpdaters) StartUpdate();  //update without warning, it's a friendly updater
-            else UpdateConfirmMenu();  //perform update
+            } else StartUpdate();  //update 
+           // else UpdateConfirmMenu();  //perform update
         }
         if (g_iWaitRebuild) {
             g_iWaitRebuild = FALSE;

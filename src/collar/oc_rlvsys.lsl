@@ -603,7 +603,7 @@ default {
                     if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                     else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
                 }
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV ready!",g_kWearer);
+                if (!llGetStartParameter()) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV ready!",g_kWearer);
             }
         } else {
             if (g_iCheckCount++ < g_iMaxViewerChecks) {
