@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 150817.1                          //
+//                         Communicator - 150827.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -398,7 +398,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
+       // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llGetObjectName();

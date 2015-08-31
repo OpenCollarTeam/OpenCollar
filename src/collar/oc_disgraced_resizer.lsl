@@ -345,7 +345,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
+        //llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration
         Store_StartScaleLoop();

@@ -377,7 +377,7 @@ default {
     }    
     
     state_entry() {
-        llSetMemoryLimit(36864);  //this script needs to be profiled, and its memory limited
+       // llSetMemoryLimit(36864);  
         g_kWearer = llGetOwner();
         g_sJsonModes = JsonModes();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);

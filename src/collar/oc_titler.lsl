@@ -226,7 +226,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 
 default{
     state_entry(){
-        llSetMemoryLimit(36864);
+       // llSetMemoryLimit(36864);
         g_iTextPrim = -1 ;
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){

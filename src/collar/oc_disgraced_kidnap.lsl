@@ -241,7 +241,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
 default{
 
     state_entry() {
-        llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
+       //llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }
