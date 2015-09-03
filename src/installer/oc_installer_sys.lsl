@@ -94,6 +94,9 @@ string g_sShim = "oc_update_shim";
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
+integer INSTALLION_DONE = 98751;
+
+integer g_iDone;
 
 string g_sVersion;
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
@@ -153,6 +156,9 @@ Particles(key kTarget) {
 
 default {
     state_entry() {
+        llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
+        llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
+        llSetTimerEvent(30.0);
         ReadVersionLine();
         llListen(g_initChannel, "", "", "");
         // set all scripts except self to not running
@@ -177,10 +183,15 @@ default {
         SetFloatText();
         llParticleSystem([]);
     }
-    touch(integer iNumber) {
+    touch_start(integer iNumber) {
         if (llDetectedKey(0) != llGetOwner()) return;
+        if (g_iDone) {
+            g_iDone = FALSE;
+            llSetTimerEvent(30.0);
+        }
         integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),2,7)) + 1111);
         if (iChan > -10000) iChan -= 30000;
+        llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
         llWhisper(iChan,(string)llGetOwner()+":.- ... -.-"+(string)llGetKey());
     }
     
@@ -194,10 +205,15 @@ default {
             list lParts = llParseString2List(sMsg, ["|"], []);
             string sCmd = llList2String(lParts, 0);
             string sParam = llList2String(lParts, 1);
-            if (sCmd == "UPDATE")
+            if (sCmd == "UPDATE") {
                 // someone just clicked the upgrade button on their collar.
+                if (g_iDone) {
+                    g_iDone = FALSE;
+                    llSetTimerEvent(30.0);
+                }  
+                llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
                 llWhisper(g_initChannel,"-.. ---"); //tell collar we are here and to send the pin 
-            else if (sCmd == "ready") {
+            } else if (sCmd == "ready") {
                 // person clicked "Yes I want to update" on the collar menu.
                 // the script pin will be in the param
                 g_iPin = (integer)sParam;     
@@ -226,16 +242,18 @@ default {
                 // remove the script pin, and delete himself.
                 string sMyVersion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyVersion);
-                SetFloatText();
+               // llSetFloatText();
+                llSetText("DONE!\n \n████████100%████████", <1,1,1>, 1.0);
                 llParticleSystem([]);
-                llSetTimerEvent(2.0);
+                g_iDone = TRUE;
+                llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
+                llSetTimerEvent(10.0);
             }
         }
     }
     timer() {
-        llSetTimerEvent(0);
-        llSay(0,"Installation finshed, I am not needed anymore...\nBye bye");
-       // llDie();
+        if (g_iDone) llResetScript();
+        if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
     }
     
     on_rez(integer iStartParam) {

@@ -63,6 +63,8 @@
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
+integer INSTALLION_DONE = 98751;
+
 
 integer g_iTalkChannel;
 key g_kRCPT;
@@ -74,16 +76,31 @@ integer g_iLine;
 key g_kLineID;
 integer g_iListener;
 
+float g_iItemCounter;
+float g_iTotalItems;
+
+
+string StatusBar(float fCount) {
+    fCount = 100*(fCount/g_iTotalItems);
+    string sCount = ((string)((integer)fCount))+"%";
+    if (fCount < 10) sCount = "░░"+sCount;
+    else if (fCount < 45) sCount = "░"+sCount;
+    else if (fCount < 100) sCount = "█"+sCount;
+    string sStatusBar = "░░░░░░░░░░░░░░░░░░░░";
+    integer i = (integer)(fCount/5);
+    do { i--;
+        sStatusBar = "█"+llGetSubString(sStatusBar,0,-2);
+    } while (i>0);
+    return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
+}
+
 SetStatus(string sName) {
     // use card name, item type, and item name to set a nice 
     // text status message
-    list lCardParts = llParseString2List(g_sCard, ["_"], []);
-    string sBundle = llList2String(lCardParts, 2);
-    string sMsg = llDumpList2String([
-        "Doing Bundle: " + sBundle,
-        "Doing Item: " + sName
-    ], "\n");
+    g_iItemCounter++;
+    string sMsg = "Installing: " + sName+ "\n \n" +StatusBar(g_iItemCounter);
     llSetText(sMsg, <1,1,1>, 1.0);
+    if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
 debug(string sMsg) {
@@ -92,6 +109,9 @@ debug(string sMsg) {
 
 default
 {   
+    state_entry() {
+        g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;    
+    }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == DO_BUNDLE) {
             debug("doing bundle: " + sStr);
@@ -110,6 +130,7 @@ default
             // get the first line of the card
             g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
         }
+        if (iNum == INSTALLION_DONE) llResetScript();
     }
     
     dataserver(key kID, string sData) {
@@ -131,8 +152,9 @@ default
             } else {
                 debug("finished bundle: " + g_sCard);
                 // all done reading the card. send link msg to main script saying we're done.
+                
                 llListenRemove(g_iListener);
-                llSetText("", <1,1,1>, 1.0);
+                
                 llMessageLinked(LINK_SET, BUNDLE_DONE, llDumpList2String([g_iTalkChannel, g_kRCPT, g_sCard, g_iPin, g_sMode], "|"), "");
             }
         }
