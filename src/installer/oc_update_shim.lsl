@@ -92,8 +92,10 @@ Check4Core5Script() {
     string sScriptName;
     do { i--;
         sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
-        if (~llListFindList(g_lCore5Scripts,[sScriptName])) {
+        integer index = llListFindList(g_lCore5Scripts,[sScriptName]);
+        if (~index) {
             llMessageLinked(LINK_ALL_OTHERS,LOADPIN,sScriptName,"");
+            g_lCore5Scripts = llDeleteSubList(g_lCore5Scripts,index,index);
             return;
         }
     } while (i);
@@ -107,7 +109,10 @@ default {
         string sName;
         do { i--;
             sName = llGetInventoryName(INVENTORY_SCRIPT,i);
-            g_lScripts += sName;
+            if (~llListFindList(g_lCore5Scripts,[sName])) {
+                if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
+                    llRemoveInventory(sName);
+            } else g_lScripts += sName;
         } while (i);
         debug(llDumpList2String(g_lScripts, "|"));
         // listen on the start param channel
