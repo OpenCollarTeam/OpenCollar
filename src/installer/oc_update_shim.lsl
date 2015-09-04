@@ -71,6 +71,8 @@ list g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list g_lSettings;
 
+integer g_iIsUpdate;
+
 // list of deprecated tokens to remove from previous collar scripts
 list g_lDeprecatedSettingTokens = ["collarversion"];
 
@@ -104,6 +106,7 @@ Check4Core5Script() {
 default {
     state_entry() {
         g_iStartParam = llGetStartParameter();
+        if (g_iStartParam < 0 ) g_iIsUpdate = TRUE;
         // build script list
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
         string sName;
@@ -184,7 +187,7 @@ default {
             //debug("responding: " + response);
             llRegionSayTo(kID, iChannel, sResponse);     
         } else if (sMsg == "Core5Done") Check4Core5Script();
-        else if (llSubStringIndex(sMsg, "DONE") == 0) {
+        else if (llSubStringIndex(sMsg, "DONE") == 0 && g_iIsUpdate) {
             //restore settings 
             integer n;
             integer iStop = llGetListLength(g_lSettings); 
@@ -208,8 +211,10 @@ default {
             llSetRemoteScriptAccessPin(0);
             // celebrate
             llOwnerSay("Update complete!");
-            //reboot scripts
-            llMessageLinked(5,CMD_OWNER,"reboot --f",llGetOwner());
+            if (g_iIsUpdate) {
+                //reboot scripts
+                llMessageLinked(5,CMD_OWNER,"reboot --f",llGetOwner());
+            }
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }

@@ -97,6 +97,7 @@ integer BUNDLE_DONE = 98750;
 integer INSTALLION_DONE = 98751;
 
 integer g_iDone;
+integer g_iIsUpdate;
 
 string g_sVersion;
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
@@ -163,6 +164,7 @@ default {
         llListen(g_initChannel, "", "", "");
         // set all scripts except self to not running
         // also build list of all bundles
+        list lBundleNumbers;
         integer i = llGetInventoryNumber(INVENTORY_ALL);
         do { i--;
             string sName = llGetInventoryName(INVENTORY_ALL, i);
@@ -176,9 +178,12 @@ default {
                 if (!llSubStringIndex(sName, "BUNDLE_")) {
                     list lParts = llParseString2List(sName, ["_"], []);
                     g_lBundles += [sName, llList2String(lParts, -1)];
+                    lBundleNumbers += llList2List(lParts,1,1);
                 }
             }
         } while (i);
+        if (~llListFindList(lBundleNumbers,["23"]) || ~llListFindList(lBundleNumbers,["42"])
+            || ~llListFindList(lBundleNumbers,["00"])) g_iIsUpdate = TRUE;
         g_lBundles = llListSort(g_lBundles,2,TRUE);
         SetFloatText();
         llParticleSystem([]);
@@ -219,6 +224,8 @@ default {
                 g_iPin = (integer)sParam;     
                 g_kCollarKey = kID;
                 g_iSecureChannel = (integer)llFrand(-2000000000 + 1);
+                if(g_iSecureChannel == 0) g_iSecureChannel = -1234567;
+                if (!g_iIsUpdate) g_iSecureChannel = -g_iSecureChannel;
                 llListen(g_iSecureChannel, "", g_kCollarKey, "");
                 llRemoteLoadScriptPin(g_kCollarKey, g_sShim, g_iPin, TRUE, g_iSecureChannel);  
             }                
@@ -252,8 +259,8 @@ default {
         }
     }
     timer() {
+        //if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
         if (g_iDone) llResetScript();
-        if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
     }
     
     on_rez(integer iStartParam) {
