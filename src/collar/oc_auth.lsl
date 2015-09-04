@@ -126,6 +126,7 @@ list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
 key REQUEST_KEY;
+integer g_iFirstRun;
 
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
@@ -603,6 +604,7 @@ default {
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
+        else g_iFirstRun = TRUE;
       /*  if (g_iProfiled){
             llScriptProfiler(1);
            // Debug("profiling restarted");
@@ -656,7 +658,10 @@ default {
                 else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
             } else if (llToLower(sStr) == "settings=sent") {
-                if (llGetListLength(g_lOwner) && !llGetStartParameter()) SayOwners();
+                if (llGetListLength(g_lOwner) && g_iFirstRun) {
+                    SayOwners();
+                    g_iFirstRun = FALSE;
+                }
             }
         } else if (iNum == AUTH_REQUEST) //The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
