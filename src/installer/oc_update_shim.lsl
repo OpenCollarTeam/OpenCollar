@@ -187,24 +187,26 @@ default {
             //debug("responding: " + response);
             llRegionSayTo(kID, iChannel, sResponse);     
         } else if (sMsg == "Core5Done") Check4Core5Script();
-        else if (llSubStringIndex(sMsg, "DONE") == 0 && g_iIsUpdate) {
+        else if (!llSubStringIndex(sMsg, "DONE")){
             //restore settings 
-            integer n;
-            integer iStop = llGetListLength(g_lSettings); 
-            list lDeprecatedSplitSettingTokenForTest;
-            for (n = 0; n < iStop; n++) {
-                string sSetting = llList2String(g_lSettings, n);
-                //Look through deprecated settings to see if we should ignore any...
-                // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
-                lDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(sSetting,["="],[]),0,0);
-
-                if (llListFindList(g_lDeprecatedSettingTokens,lDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
-                    debug("SP - Saving :"+sSetting);
-                } else {
-                    //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
-                     //remove it if it's somehow persistent still
-                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(lDeprecatedSplitSettingTokenForTest,0), "");
+            if (g_iIsUpdate) {
+                integer n;
+                integer iStop = llGetListLength(g_lSettings); 
+                list lDeprecatedSplitSettingTokenForTest;
+                for (n = 0; n < iStop; n++) {
+                    string sSetting = llList2String(g_lSettings, n);
+                    //Look through deprecated settings to see if we should ignore any...
+                    // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
+                    lDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(sSetting,["="],[]),0,0);
+    
+                    if (llListFindList(g_lDeprecatedSettingTokens,lDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
+                        debug("SP - Saving :"+sSetting);
+                    } else {
+                        //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
+                         //remove it if it's somehow persistent still
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(lDeprecatedSplitSettingTokenForTest,0), "");
+                    }
                 }
             }
             // remove the script pin
