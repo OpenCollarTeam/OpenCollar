@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 150902.1                              //
+//                           System - 150904.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="3.8.24";
+string g_sCollarVersion="4.0.0";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -140,8 +140,14 @@ integer g_iUpdateHandle;
 key g_kUpdaterOrb;
 integer g_iUpdateFromMenu;
 
-string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~version";
 key github_version_request;
+string g_sDistributor;
+string g_sDistCard = ".distributor";
+string url_check = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~distributor";
+key g_kDistCheck;
+integer g_iOffDist;
+key g_kNCkey;
+string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~version";
 string news_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~news";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
@@ -208,6 +214,10 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
+
 OptionsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/options.html Options]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
@@ -232,12 +242,14 @@ AppsMenu(key kID, integer iAuth) {
 }
 
 UpdateConfirmMenu() {
-    Dialog(g_kWearer, "\n\nWARNING: You are using a 3.9 API OpenCollar Updater!\n\nThis will only work if using OpenCollar Updater 3.999 and overrides all 4.0 features.\n\nNote: Some App Installers use a similar mechanism to install plugins. Make sure they are indicated as 4.0 compatible on the packaging.\n\nDo you really want to continue?", ["Yes","No"], ["Cancel"], 0, CMD_WEARER, "UpdateConfirmMenu");
+    Dialog(g_kWearer, "\nINSTALLATION REQUEST PENDING:\n\nAn update or app installer is requesting permission to continue. Installation progress can be observed above the installer box and it will also tell you when it's done.\n\nShall we continue and start with the installation?", ["Yes","No"], ["Cancel"], 0, CMD_WEARER, "UpdateConfirmMenu");
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar API: 4.0\nOpenCollar Beta: "+g_sCollarVersion+"\n\nSystem Integrity: Perfect.";
-    if (JB()=="") sPrompt="\nOpenCollar API: 4.0\nOpenCollar Beta: "+g_sCollarVersion+"\n\nSystem Integrity: Unstable!";
+    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: "+"["+NameURI(g_sDistributor)+" Official Distributor]";
+    if (!g_iOffDist) { sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: This device has been jailbroken.";
+        if ((key)g_sDistributor) sPrompt += "\nDistributed by "+NameURI(g_sDistributor)+".";
+    }
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -249,7 +261,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\nOC4 Performance Branch:\n\n- Main Menu -\n\n⚠ THIS SYSTEM IS NOT PRODUCTION READY ⚠";
+    string sPrompt = "\nOpenCollar "+g_sCollarVersion;
     if(!g_iLatestVersion) sPrompt+="\n\nI'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -333,8 +345,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sCmd == "jailbreak" && kID == g_kWearer) {
-        if (JB())
-            Dialog(kID,"This process is irreversible. Do you wish to proceed?", ["Yes","Cancel"],[],0,iNum,"JB");
+        if (g_iOffDist)
+            Dialog(kID,"\nThis process is irreversible. Do you wish to proceed?", ["Yes","No","Cancel"],[],0,iNum,"JB");
         else
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"This %DEVICETYPE% has already been jailbroken.",kID);
     } else if (sCmd == "news"){
@@ -374,8 +386,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion;
-        if (JB()) sVersion = "\n\nOpenCollar API: 4.0\nOpenCollar Beta: " + g_sCollarVersion + "\n\nSystem Integrity: Perfect.\n";
-        else sVersion =  "\n\nOpenCollar API: 4.0\nOpenCollar Beta: " + g_sCollarVersion + "\n\nSystem Integrity: Unstable!\n";
+        if (g_iOffDist) sVersion= "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ["+NameURI(g_sDistributor)+" Official Distributor]";
+        else { sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: This device has been jailbroken.";
+             if ((key)g_sDistributor) sVersion += " Distributed by "+NameURI(g_sDistributor)+".";}
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_ROOT,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
@@ -423,10 +436,12 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-string JB(){
-    integer i=llGetInventoryNumber(6);if(i){i--;string s=llGetInventoryName(6,i);
-    do{if(llGetInventoryCreator(s)=="4da2b231-87e1-45e4-a067-05cf3a5027ea")
-    return s;i--;s=llGetInventoryName(6,i);}while(i+1);}return"";
+JB(){
+    integer i=llGetInventoryNumber(7);if(i){i--;string s=llGetInventoryName
+    (7,i);do{if(s==g_sDistCard){if(llGetInventoryCreator(s)==
+    "4da2b231-87e1-45e4-a067-05cf3a5027ea")g_iOffDist=1;else {g_iOffDist=0;
+    g_sDistributor=llGetInventoryCreator(s);}g_kNCkey=llGetNotecardLine(s,0);
+    return;}i--;s=llGetInventoryName(7,i);}while(i+1);}
 }
 
 BuildLockElementList() {//EB
@@ -481,7 +496,7 @@ RebuildMenu() {
 
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    g_iWaitRebuild = TRUE;SafeX();
+    g_iWaitRebuild = TRUE;SafeX();JB();
     llSetTimerEvent(1);
 }
 
@@ -568,7 +583,7 @@ default
                 } else if (sMenu == "UpdateConfirmMenu"){
                     if (sMessage=="Yes") StartUpdate();
                     else {
-                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Installation canceled.",kAv);
+                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Installation cancelled.",kAv);
                         return;
                     }
                 } else if (sMenu == "Options") {
@@ -595,10 +610,13 @@ default
                     }
                     OptionsMenu(kAv,iAuth);
                 } else if (sMenu =="JB") {
-                    if (sMessage == "Do it!") {
-                        if (llGetInventoryType(JB())==6) llRemoveInventory(JB());
-                        if (llGetInventoryType(JB())==-1)
+                    if (sMessage == "Yes") {
+                        if (llGetInventoryType(g_sDistCard)==7) llRemoveInventory(g_sDistCard);
+                        if (llGetInventoryType(g_sDistCard)==-1) {
+                            g_sDistributor = "";
+                            g_iOffDist = 0;
                             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%DEVICETYPE% has been jailbroken.",kAv);
+                        }
                     } else
                         llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Jailbreak sequence aborted.",kAv);
                 }
@@ -639,7 +657,7 @@ default
     changed(integer iChange) {
         if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
-            g_iWaitRebuild = TRUE;
+            g_iWaitRebuild = TRUE;JB();
             llSetTimerEvent(1.0);
         }
         if (iChange & CHANGED_OWNER) llResetScript();
@@ -657,6 +675,13 @@ default
                 Debug("profiling restarted");
             }
         }*/
+    }
+    dataserver(key kRequestID, string sData) {
+        if (g_kNCkey == kRequestID) {
+            if ((key)sData) g_sDistributor = sData;
+            if (sData != "" && g_iOffDist)
+                g_kDistCheck = llHTTPRequest(url_check, [HTTP_METHOD, "GET", HTTP_BODY_MAXLENGTH, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
+        }
     }
     attach(key kID) {
         if (g_iLocked) {
@@ -688,6 +713,9 @@ default
                     llMessageLinked(LINK_ROOT,NOTIFY,"0"+news,g_kWearer);
                     g_sLastNewsTime = this_news_time;
                 }
+            } else if (id == g_kDistCheck) {
+                if(~llSubStringIndex(body,g_sDistributor))g_iOffDist=1;
+                else g_iOffDist=0;
             }
         }
     }
