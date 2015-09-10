@@ -349,6 +349,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     g_kSetStyleUser=kID;
                     g_iSetStyleAuth=iNum;
                     llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
+                    llMessageLinked(LINK_ROOT,601,"themes "+sElement,g_kWearer);
                     g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
                 } else if (g_kStylesCardUUID) StyleMenu(kID,iNum);
                 else {
@@ -647,10 +648,7 @@ default {
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
                             if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                             else g_iLeashParticle = FALSE;
-<<<<<<< HEAD
                             //llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
-=======
->>>>>>> 73b647ac316379aa3040ab7cf35e631008190f22
                             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
                             UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                             return;
@@ -695,10 +693,7 @@ default {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
                     if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                     else g_iLeashParticle = FALSE;
-<<<<<<< HEAD
                     //llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
-=======
->>>>>>> 73b647ac316379aa3040ab7cf35e631008190f22
                     llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
                     UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
                 //} else {

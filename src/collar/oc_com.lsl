@@ -469,6 +469,7 @@ default {
             if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
+                llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
                 Notify(g_kWearer,"You used your safeword, your owners will be notified you did.",FALSE);
                 NotifyOwners("Your sub " + g_sWearerName + " has used the safeword. Please check on their well-being in case further care is required.","");
                 return;
