@@ -213,10 +213,9 @@ default {
             llSetRemoteScriptAccessPin(0);
             // celebrate
             llOwnerSay("Update complete!");
-            if (g_iIsUpdate) {
+            if (g_iIsUpdate)
                 //reboot scripts
                 llMessageLinked(5,CMD_OWNER,"reboot --f",llGetOwner());
-            }
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }
