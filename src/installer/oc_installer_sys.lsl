@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 150914.1                        //
+//                       Installer System - 150914.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -129,7 +129,7 @@ ReadVersionLine() {
 }
 
 SetFloatText() {
-    llSetText("Developer's Exclusive\nVersion "+g_sVersion, <1,1,1>, 1.0);
+    llSetText("OpenCollar Installer\n\nFull Version "+g_sVersion, <1,1,1>, 1.0);
 }
 
 Particles(key kTarget) {
