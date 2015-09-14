@@ -243,18 +243,18 @@ RemAttached(key keyID, integer iAuth,string sFolders) {
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "remattached");
 }
 
-string WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
-    string sOutput;
+WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
+    string sAttach ="@attachallover:"+sStr+"=force,attachallover:"+g_sPathPrefix+"/.core/=force";
     string sPrePath;
     list lTempSplit = llParseString2List(sStr,["/"],[]);
     lTempSplit = llList2List(lTempSplit,0,llGetListLength(lTempSplit) -2);
     sPrePath = llDumpList2String(lTempSplit,"/");
-    if (g_sPathPrefix + "/" == sPrePath)
-        sOutput = "@remoutfit=force,detach=force,attachallover:"+sStr+"=force,attachallover:"+g_sPathPrefix+"/.core/=force";
-    else
-        sOutput = "@remoutfit=force,detach=force,attachallover:"+sStr+"=force,attachallover:"+g_sPathPrefix+"/.core/=force,attachallover:"+sPrePath+"/.core/=force";
+    if (g_sPathPrefix + "/" != sPrePath) 
+        sAttach += ",attachallover:"+sPrePath+"/.core/=force";
    // Debug("rlv:"+sOutput);
-    return sOutput;
+    llOwnerSay("@remoutfit=force,detach=force");
+    llSleep(1.5); // delay for SSA
+    llOwnerSay(sAttach);
 }
 
 doRestrictions(){
@@ -636,7 +636,8 @@ default {
                         g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                         llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
                     } else if (sMessage == "WEAR")
-                        llOwnerSay(WearFolder(g_sCurrentPath));
+                        //llOwnerSay(WearFolder(g_sCurrentPath));
+                        WearFolder(g_sCurrentPath);
                     else if (sMessage != "") {
                         g_sCurrentPath += sMessage + "/";
                         if (sMenu == "multimatch") g_sCurrentPath = sMessage;
@@ -664,8 +665,9 @@ default {
                 llMessageLinked(LINK_ROOT,NOTIFY,"0"+"That outfit couldn't be found in #RLV/"+g_sPathPrefix,kID);
             } else { // we got a match
                 if (llSubStringIndex(sMsg,",") < 0) {
-                    llOwnerSay(WearFolder(sMsg));
+                   // llOwnerSay(WearFolder(sMsg));
                     g_sCurrentPath = sMsg;
+                    WearFolder(g_sCurrentPath);
                     //llOwnerSay("@attachallover:"+g_sPathPrefix+"/.core/=force");
                     llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Loading outfit #RLV/"+sMsg,kID);
                 } else {
