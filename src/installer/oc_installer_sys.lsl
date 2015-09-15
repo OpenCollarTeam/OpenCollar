@@ -159,7 +159,7 @@ default {
     state_entry() {
         llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
         llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
-        llSetTimerEvent(30.0);
+        llSetTimerEvent(300.0);
         ReadVersionLine();
         llListen(g_initChannel, "", "", "");
         // set all scripts except self to not running
@@ -214,7 +214,7 @@ default {
                 // someone just clicked the upgrade button on their collar.
                 if (g_iDone) {
                     g_iDone = FALSE;
-                    llSetTimerEvent(30.0);
+                    //llSetTimerEvent(30.0);
                 }  
                 llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
                 llWhisper(g_initChannel,"-.. ---"); //tell collar we are here and to send the pin 
@@ -249,18 +249,18 @@ default {
                 // remove the script pin, and delete himself.
                 string sMyVersion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyVersion);
-               // llSetFloatText();
-                llSetText("DONE!\n \n████████100%████████", <1,1,1>, 1.0);
+                llSetText("DONE!\n \n████████100%████████", <0,1,0>, 1.0);
                 llParticleSystem([]);
                 g_iDone = TRUE;
                 llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
-                llSetTimerEvent(10.0);
+                llSetTimerEvent(15.0);
             }
         }
     }
     timer() {
-        //if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
         if (g_iDone) llResetScript();
+        llSetTimerEvent(300);
+        if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
     }
     
     on_rez(integer iStartParam) {
