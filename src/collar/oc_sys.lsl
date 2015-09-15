@@ -246,10 +246,9 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: "+"["+NameURI(g_sDistributor)+" Official Distributor]";
-    if (!g_iOffDist) { sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: This device has been jailbroken.";
-        if ((key)g_sDistributor) sPrompt += "\nDistributed by "+NameURI(g_sDistributor)+".";
-    }
+    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
+    if (g_iOffDist) sPrompt += "["+NameURI(g_sDistributor)+" Official Distributor]";
+    else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
@@ -385,10 +384,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             UpdateConfirmMenu(); 
         }
     } else if (sCmd == "version") {
-        string sVersion;
-        if (g_iOffDist) sVersion= "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ["+NameURI(g_sDistributor)+" Official Distributor]";
-        else { sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: This device has been jailbroken.";
-             if ((key)g_sDistributor) sVersion += " Distributed by "+NameURI(g_sDistributor)+".";}
+        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
+        if (g_iOffDist) sVersion += "["+NameURI(g_sDistributor)+" Official Distributor]";
+        else sVersion += "Unverified.";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_ROOT,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
@@ -439,9 +437,9 @@ string GetTimestamp() { // Return a string of the date and time
 JB(){
     integer i=llGetInventoryNumber(7);if(i){i--;string s=llGetInventoryName
     (7,i);do{if(s==g_sDistCard){if(llGetInventoryCreator(s)==
-    "4da2b231-87e1-45e4-a067-05cf3a5027ea")g_iOffDist=1;else {g_iOffDist=0;
-    g_sDistributor=llGetInventoryCreator(s);}g_kNCkey=llGetNotecardLine(s,0);
-    return;}i--;s=llGetInventoryName(7,i);}while(i+1);}
+    "4da2b231-87e1-45e4-a067-05cf3a5027ea"){g_iOffDist=1;g_kNCkey=
+    llGetNotecardLine(s,0);}else g_iOffDist=0;return;}i--;s=
+    llGetInventoryName(7,i);}while(i+1);}
 }
 
 BuildLockElementList() {//EB
@@ -678,9 +676,10 @@ default
     }
     dataserver(key kRequestID, string sData) {
         if (g_kNCkey == kRequestID) {
-            if ((key)sData) g_sDistributor = sData;
-            if (sData != "" && g_iOffDist)
-                g_kDistCheck = llHTTPRequest(url_check, [HTTP_METHOD, "GET", HTTP_BODY_MAXLENGTH, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
+            g_sDistributor = sData;
+            if (sData == "") g_iOffDist = 0;
+            if (g_iOffDist)
+                g_kDistCheck = llHTTPRequest(url_check, [HTTP_METHOD, "GET", 2, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
         }
     }
     attach(key kID) {
@@ -715,7 +714,7 @@ default
                 }
             } else if (id == g_kDistCheck) {
                 if(~llSubStringIndex(body,g_sDistributor))g_iOffDist=1;
-                else g_iOffDist=0;
+                else {g_sDistributor="";g_iOffDist=0;}
             }
         }
     }
