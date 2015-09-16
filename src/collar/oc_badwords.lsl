@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 150902.1                             //
+//                          Badwords - 150915.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -160,20 +160,14 @@ string WordPrompt() {
 }
 
 MenuBadwords(key kID, integer iNum){
-    list lButtons = ["Penance", "Add", "Remove", "Animation", "Sound", "Clear"];
-    if (g_iIsEnabled) lButtons += ["OFF"];
-    else lButtons += ["ON"];
+    list lButtons = ["Add", "Remove", "Clear", "Penance", "Animation", "Sound"];
+    if (g_iIsEnabled) lButtons += "OFF";
+    else lButtons += "ON";
+    lButtons += "Stop";
     string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\n";
-    sText+= "\nBad Words: " + llDumpList2String(g_lBadWords, ", ");
-    sText+= "\nBad Word Anim: " + g_sBadWordAnim;
+    sText+= "\n" + llList2CSV(g_lBadWords) + "\n";
     sText+= "\nPenance: " + g_sPenance;
-    sText+= "\nBad Word Sound: " + g_sBadWordSound;
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");
-}
-
-ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nAre you sure you want to delete the Badwords App?\n";
-    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbadwords");
 }
 
 ParseAnimList(string sStr) {
@@ -198,9 +192,12 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
         MenuBadwords(kID, iNum);
     } else if (sStr == "rm badwords") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
-        else ConfirmDeleteMenu(kID, iNum);
+        else Dialog(kID, "\nAre you sure you want to delete the Badwords App?\n", ["Yes","No"], [], 0, iNum,"rmbadwords");
     } else if (llToLower(sCommand)=="badwords"){
-        if (iNum != CMD_OWNER) return;
+        if (iNum != CMD_OWNER) {
+            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            return;
+        }
         sCommand = llToLower(llList2String(lParams, 1));
         if (sCommand == "add") {  //support owner adding words
             list lNewBadWords = llDeleteSubList(lParams, 0, 1);
@@ -238,7 +235,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
                     if (g_iDefaultAnim) sName = "~shock";
                     else sName = llList2String(g_lAnims,0);
                 }
-                if (~llListFindList(g_lAnims,[sName])) {
+                if (~llListFindList(g_lAnims,[sName]) || g_iDefaultAnim) {
                     g_sBadWordAnim = sName;
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"animation=" + g_sBadWordAnim, "");
                     llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Punishment animation for bad words is now '" + g_sBadWordAnim + "'.",kID);
@@ -339,6 +336,14 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"words","");
             llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The list of bad words has been cleared.",kID);
             if (remenu) MenuBadwords(kID,iNum);
+        } else if (sCommand == "stop") {
+            if (g_iHasSworn) {
+                if(g_sBadWordSound != g_sNoSound) llStopSound();
+                llMessageLinked(LINK_ANIM, ANIM_STOP, g_sBadWordAnim, "");
+                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Badword punishment stopped.",kID);
+                g_iHasSworn = FALSE;
+            }
+            if (remenu) MenuBadwords(kID,iNum);
         }
         ListenControl();
     }
@@ -351,7 +356,7 @@ default {
     }
 
     state_entry() {
-       // llSetMemoryLimit(40960);
+        llSetMemoryLimit(40960);
         g_kWearer = llGetOwner();
         g_sBadWordAnim = "~shock";
         g_sBadWordSound = "Default" ;
