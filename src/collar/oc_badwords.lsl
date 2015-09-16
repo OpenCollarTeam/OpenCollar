@@ -356,7 +356,7 @@ default {
     }
 
     state_entry() {
-        llSetMemoryLimit(40960);
+        //llSetMemoryLimit(40960);
         g_kWearer = llGetOwner();
         g_sBadWordAnim = "~shock";
         g_sBadWordSound = "Default" ;
