@@ -140,18 +140,25 @@ default
         if (kID == g_kLineID) {
             if (sData != EOF) {
                 // process bundle line
-                list lParts = llParseString2List(sData, ["|"], []);
-                string sType = llList2String(lParts, 0);
-                string sName = llList2String(lParts, 1);
-                key kUUID;
-                string sMsg;
+                sData = llStringTrim(sData, STRING_TRIM);
+                if (sData == "") { //skip blank line
+                    g_iLine++ ;
+                    g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
+                }
+                else {
+                    list lParts = llParseString2List(sData, ["|"], []);
+                    string sType = llStringTrim(llList2String(lParts, 0), STRING_TRIM);
+                    string sName = llStringTrim(llList2String(lParts, 1), STRING_TRIM);
+                    key kUUID;
+                    string sMsg;
                 
-                SetStatus(sName);
+                    SetStatus(sName);
                 
-                kUUID = llGetInventoryKey(sName);
-                sMsg = llDumpList2String([sType, sName, kUUID, g_sMode], "|");
-                debug("querying: " + sMsg);             
-                llRegionSayTo(g_kRCPT, g_iTalkChannel, sMsg);
+                    kUUID = llGetInventoryKey(sName);
+                    sMsg = llDumpList2String([sType, sName, kUUID, g_sMode], "|");
+                    debug("querying: " + sMsg);             
+                    llRegionSayTo(g_kRCPT, g_iTalkChannel, sMsg);
+                }
             } else {
                 debug("finished bundle: " + g_sCard);
                 // all done reading the card. send link msg to main script saying we're done.
