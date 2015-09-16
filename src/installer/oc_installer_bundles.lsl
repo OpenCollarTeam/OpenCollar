@@ -80,7 +80,7 @@ float g_iItemCounter;
 float g_iTotalItems;
 
 
-string StatusBar(float fCount) {
+StatusBar(float fCount) {
     fCount = 100*(fCount/g_iTotalItems);
     string sCount = ((string)((integer)fCount))+"%";
     if (fCount < 10) sCount = "░░"+sCount;
@@ -91,15 +91,17 @@ string StatusBar(float fCount) {
     do { i--;
         sStatusBar = "█"+llGetSubString(sStatusBar,0,-2);
     } while (i>0);
-    return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
+    llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
+    //return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
 }
 
 SetStatus(string sName) {
     // use card name, item type, and item name to set a nice 
     // text status message
     g_iItemCounter++;
-    string sMsg = "Installing: " + sName+ "\n \n" +StatusBar(g_iItemCounter);
+    string sMsg = "Installing: " + sName+ "\n \n \n";
     llSetText(sMsg, <1,1,1>, 1.0);
+    StatusBar(g_iItemCounter);
     if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
@@ -110,6 +112,7 @@ debug(string sMsg) {
 default
 {   
     state_entry() {
+        llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,"", <1,1,1>, 1.0]);
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;    
     }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
