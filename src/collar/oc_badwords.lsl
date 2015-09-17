@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 150915.1                             //
+//                          Badwords - 150917.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //

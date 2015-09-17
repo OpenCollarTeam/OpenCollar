@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 150914.2                        //
+//                       Installer System - 150917.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -65,7 +65,7 @@
 // install or remove each.
 
 // This script also does a little bit of magic to ensure that the updater's
-// version number always matches the contents of the ".version" card.
+// version number always matches the contents of the "~version" card.
 
 
 key g_kVersionID;
@@ -122,9 +122,9 @@ Debug(string str) {
 }
 
 ReadVersionLine() {
-    // try to keep object's version in sync with ".version" notecard.
-    if (llGetInventoryType(".version") == INVENTORY_NOTECARD) {
-        g_kVersionID = llGetNotecardLine(".version", 0);
+    // try to keep object's version in sync with "~version" notecard.
+    if (llGetInventoryType("~version") == INVENTORY_NOTECARD) {
+        g_kVersionID = llGetNotecardLine("~version", 0);
     }
 }
 
@@ -269,7 +269,7 @@ default {
 
     changed(integer iChange) {
     // Resetting on inventory change ensures that the bundle list is
-    // kept current, and that the .version card is re-read if it changes.
+    // kept current, and that the ~version card is re-read if it changes.
         if (iChange & CHANGED_INVENTORY)  llResetScript();
     }
 
