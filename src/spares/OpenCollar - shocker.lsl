@@ -146,13 +146,6 @@ DialogHelp(key kID, integer iAuth)
     llMessageLinked(LINK_ROOT, NOTIFY, "0"+sMsg, kID);
 }
 
-string right(string sSrc, string sDivider)
-{
-    integer iIndex = llSubStringIndex( sSrc, sDivider );
-    if(~iIndex) return llDeleteSubString( sSrc, 0, iIndex + llStringLength(sDivider) - 1);
-    return sSrc;
-}
-
 Shock(integer time, key kID)
 {
     if (time > 0)
@@ -333,6 +326,7 @@ default
                     if (sMsg != UPMENU) UserCommand(iAuth,"shocker sound " + sMsg, kAv, TRUE);
                     else UserCommand(iAuth,"shocker", kAv, FALSE);
                 }
+                //else if (sMenu == "help" && sMsg == "Ok") UserCommand(iAuth,"shocker", kAv, FALSE);
             }
         }
         else if (iNum == DIALOG_TIMEOUT)
