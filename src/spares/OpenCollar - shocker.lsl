@@ -143,8 +143,7 @@ DialogHelp(key kID, integer iAuth)
     sMsg += "%PREFIX% shocker sound <sound name>\n    make sure the sound is inside the %DEVICETYPE%.\n";
 
     //Dialog(kID, sMsg, ["Ok"], [], 0, iAuth,"help");
-    //llMessageLinked(LINK_ROOT, NOTIFY, "0"+sMsg, kID);
-    llMessageLinked(LINK_ROOT, POPUP_HELP, sMsg, kID);
+    llMessageLinked(LINK_ROOT, NOTIFY, "0"+sMsg, kID);
 }
 
 string right(string sSrc, string sDivider)
