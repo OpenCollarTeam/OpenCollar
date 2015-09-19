@@ -167,6 +167,8 @@ Debug(string sStr) {
 }
 */
 
+integer time;
+
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
 }
@@ -299,10 +301,10 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         }
     }
     //Debug("chat prompt:"+sThisChat);
-
     integer iChan=llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
+    llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
     //send dialog to viewer
     if (llGetListLength(lMenuItems+lUtilityButtons)){
         list lNavButtons;
@@ -310,9 +312,9 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons, lNavButtons), iChan);
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
+    llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
     //set dialog timeout
-    //llSetTimerEvent(g_iReapeat);
-
+    llSetTimerEvent(g_iReapeat);
     integer ts = llGetUnixTime() + g_iTimeOut;
 
     //write entry in tracking list
@@ -527,10 +529,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum <= -9000) {
-            g_iLED = TRUE;
-            llSetTimerEvent(0.11);
-        }
         if (iNum == FIND_AGENT) {
             //Debug("FIND_AGENT:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
@@ -721,18 +719,6 @@ default {
     }
 
     timer() {
-        if (g_iLED) {
-            if (!g_iLED_On) g_iLED_On = TRUE;
-            else {
-                g_iLED_On = FALSE;
-                g_iLED = FALSE;
-            }
-            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
-            if (!g_iLED) llSetTimerEvent(g_iReapeat);
-        } else if (g_iLED_On) {
-            g_iLED_On = FALSE;
-            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
-        }
         CleanList();
         //if list is empty after that, then stop timer
         if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails)) {

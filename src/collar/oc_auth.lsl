@@ -129,7 +129,6 @@ key REQUEST_KEY;
 integer g_iFirstRun;
 
 integer g_iLEDLink;
-integer g_iLED_On;
 
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
@@ -629,7 +628,8 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
-            llSetTimerEvent(0.11);
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+            llSetTimerEvent(0.22);
             integer iAuth = Auth(kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
@@ -678,12 +678,14 @@ default {
                 }
             }
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
-            llSetTimerEvent(0.11);
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+            llSetTimerEvent(0.22);
             llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
-                llSetTimerEvent(0.11);
+                llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+                llSetTimerEvent(0.22);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -798,12 +800,8 @@ default {
     }
     
     timer () {
-        if (!g_iLED_On) g_iLED_On = TRUE;
-        else {
-            g_iLED_On = FALSE;
-            llSetTimerEvent(0);
-        }
-        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
+        llSetTimerEvent(0.0);
     }
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();

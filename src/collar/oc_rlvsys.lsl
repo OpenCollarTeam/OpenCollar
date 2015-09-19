@@ -139,7 +139,6 @@ integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
 
 integer g_iLEDLink;
-integer g_iLED_On;
 
 /*
 integer g_iProfiled;
@@ -442,7 +441,8 @@ default {
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
-                llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.11);
+                llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+                llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
@@ -514,7 +514,8 @@ default {
                 }
             }
         } else if (g_iRlvActive) {
-            llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.11);
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
+            llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
                 list lCommands=llParseString2List(llToLower(sStr),[","],[]);
@@ -594,12 +595,8 @@ default {
     }
     
     no_sensor() {
-        if (!g_iLED_On) g_iLED_On = TRUE;
-        else {
-            g_iLED_On = FALSE;
-            llSensorRemove();
-        }
-        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
+        llSensorRemove();
     }
     
     timer() {
