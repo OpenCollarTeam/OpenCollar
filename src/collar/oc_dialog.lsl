@@ -135,6 +135,10 @@ integer g_iSensorTimeout;
 integer g_iSelectAviMenu; //added to show URIs in menus june 2015 Otto(garvin.twine)
 integer g_iColorMenu;
 
+integer g_iLEDLink;
+integer g_iLED_On;
+integer g_iLED;
+
 list g_lColors = [
 "Red",<1.00000, 0.00000, 0.00000>,
 "Green",<0.00000, 1.00000, 0.00000>,
@@ -165,6 +169,15 @@ Debug(string sStr) {
 
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
+}
+
+integer FindLED() {
+    integer i = llGetNumberOfPrims();
+    do { 
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_dialog"))
+            return i;
+    } while (i-- > 1);
+    return llGetLinkNumber();
 }
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
@@ -298,7 +311,8 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
     //set dialog timeout
-    llSetTimerEvent(g_iReapeat);
+    //llSetTimerEvent(g_iReapeat);
+
     integer ts = llGetUnixTime() + g_iTimeOut;
 
     //write entry in tracking list
@@ -437,7 +451,6 @@ dequeueSensor() {
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
-
 }
 
 default {
@@ -452,6 +465,7 @@ default {
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
         llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
+        g_iLEDLink = FindLED();
         //Debug("Starting");
     }
 
@@ -513,6 +527,10 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if (iNum <= -9000) {
+            g_iLED = TRUE;
+            llSetTimerEvent(0.11);
+        }
         if (iNum == FIND_AGENT) {
             //Debug("FIND_AGENT:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
@@ -703,12 +721,26 @@ default {
     }
 
     timer() {
+        if (g_iLED) {
+            if (!g_iLED_On) g_iLED_On = TRUE;
+            else {
+                g_iLED_On = FALSE;
+                g_iLED = FALSE;
+            }
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+            if (!g_iLED) llSetTimerEvent(g_iReapeat);
+        } else if (g_iLED_On) {
+            g_iLED_On = FALSE;
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+        }
         CleanList();
         //if list is empty after that, then stop timer
         if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails)) {
             //Debug("no active dialogs, stopping timer");
             g_iSelectAviMenu = FALSE;
             llSetTimerEvent(0.0);
+            g_iLED_On = FALSE;
+            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
         }
     }
 

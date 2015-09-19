@@ -128,6 +128,9 @@ integer g_iMenuStride = 3;
 key REQUEST_KEY;
 integer g_iFirstRun;
 
+integer g_iLEDLink;
+integer g_iLED_On;
+
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
 
@@ -157,6 +160,15 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     } else { //we've not already given this user a menu. append to list
         g_lMenuIDs += [kID, kMenuID, sName];
     }
+}
+
+integer FindLED() {
+    integer i = llGetNumberOfPrims();
+    do { 
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_auth"))
+            return i;
+    } while (i-- > 1);
+    return llGetLinkNumber();
 }
 
 FetchAvi(integer iAuth, string sType, string sName, key kAv) {
@@ -611,11 +623,13 @@ default {
         }*/
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
+        g_iLEDLink =  FindLED();
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
+            llSetTimerEvent(0.11);
             integer iAuth = Auth(kID, FALSE);
             if ( kID == g_kWearer && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
@@ -663,11 +677,13 @@ default {
                     g_iFirstRun = FALSE;
                 }
             }
-        } else if (iNum == AUTH_REQUEST) //The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
+        } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
+            llSetTimerEvent(0.11);
             llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
-        else if (iNum == DIALOG_RESPONSE) {
+        } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
+                llSetTimerEvent(0.11);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
@@ -715,6 +731,7 @@ default {
             }
         } else if (iNum == FIND_AGENT) { //reply from add-by-name or add-from-menu (via FetchAvi dialog)
             if (kID == REQUEST_KEY) {
+                llSetTimerEvent(0.11);
                 //Debug ("FindAgent: "+ sStr);
                 list params = llParseString2List(sStr, ["|"], []);
                 if (llList2String(params, 0) == g_sSettingToken) {
@@ -779,7 +796,15 @@ default {
             }
         }
     }
-
+    
+    timer () {
+        if (!g_iLED_On) g_iLED_On = TRUE;
+        else {
+            g_iLED_On = FALSE;
+            llSetTimerEvent(0);
+        }
+        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+    }
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
 /*

@@ -138,6 +138,9 @@ key g_kSitTarget=NULL_KEY;
 integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
 
+integer g_iLEDLink;
+integer g_iLED_On;
+
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -166,6 +169,15 @@ DoMenu(key kID, integer iAuth){
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
     //Debug("Made menu.");
+}
+
+integer FindLED() {
+    integer i = llGetNumberOfPrims();
+    do { 
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_rlv"))
+            return i;
+    } while (i-- > 1);
+    return llGetLinkNumber();
 }
 
 rebakeSourceRestrictions(key kSource){
@@ -384,6 +396,7 @@ default {
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         //Debug("Starting");
+        g_iLEDLink = FindLED();
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -425,16 +438,11 @@ default {
             llMessageLinked(LINK_ALL_OTHERS, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum <= CMD_WEARER && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
-        else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") {
-            if (g_iRlvActive==TRUE) {
-                llSleep(2);
-                llMessageLinked(LINK_ALL_OTHERS, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_ALL_OTHERS, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
-            }
-        } else if (iNum == DIALOG_RESPONSE) {
+        else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
+                llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.11);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
@@ -506,6 +514,7 @@ default {
                 }
             }
         } else if (g_iRlvActive) {
+            llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.11);
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
                 list lCommands=llParseString2List(llToLower(sStr),[","],[]);
@@ -583,7 +592,16 @@ default {
             } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         }
     }
-
+    
+    no_sensor() {
+        if (!g_iLED_On) g_iLED_On = TRUE;
+        else {
+            g_iLED_On = FALSE;
+            llSensorRemove();
+        }
+        llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
+    }
+    
     timer() {
         if (g_iWaitRelay) {
             if (g_iWaitRelay < 2) {
