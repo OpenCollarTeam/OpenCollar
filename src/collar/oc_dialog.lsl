@@ -136,8 +136,6 @@ integer g_iSelectAviMenu; //added to show URIs in menus june 2015 Otto(garvin.tw
 integer g_iColorMenu;
 
 integer g_iLEDLink;
-integer g_iLED_On;
-integer g_iLED;
 
 list g_lColors = [
 "Red",<1.00000, 0.00000, 0.00000>,
@@ -166,8 +164,6 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
-
-integer time;
 
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -304,6 +300,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     integer iChan=llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
+    //LED ON
     llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
     //send dialog to viewer
     if (llGetListLength(lMenuItems+lUtilityButtons)){
@@ -312,6 +309,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons, lNavButtons), iChan);
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
+    //LED OFF
     llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
     //set dialog timeout
     llSetTimerEvent(g_iReapeat);
@@ -725,8 +723,6 @@ default {
             //Debug("no active dialogs, stopping timer");
             g_iSelectAviMenu = FALSE;
             llSetTimerEvent(0.0);
-            g_iLED_On = FALSE;
-            llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,g_iLED_On]);
         }
     }
 
