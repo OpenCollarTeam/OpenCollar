@@ -319,7 +319,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)

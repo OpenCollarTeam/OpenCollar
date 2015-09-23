@@ -96,7 +96,7 @@ integer CMD_WEARER                  = 503;
 //integer CMD_BLOCKED               = 520;
 
 integer NOTIFY                     = 1002;
-integer SAY                        = 1004;
+//integer SAY                        = 1004;
 integer REBOOT                     = -1000;
 integer LINK_DIALOG                = 3;
 integer LINK_RLV                   = 4;
@@ -471,7 +471,6 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //     Debug((string)iSender + "|" + (string)iNum + "|" + sStr + "|" + (string)kID);
-        if (iNum == NOTIFY || iNum == SAY) return;
         if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if(iNum == RLV_OFF)

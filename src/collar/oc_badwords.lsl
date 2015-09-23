@@ -365,7 +365,6 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //Debug("Got message:"+(string)iNum+" "+sStr);
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (kID == g_kWearer || iNum == CMD_OWNER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+g_sSubMenu, "");

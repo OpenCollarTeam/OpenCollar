@@ -261,7 +261,6 @@ default{
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(iSender, MENUNAME_RESPONSE, "Main|Kidnap", "");
         else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
             if (iNum == CMD_SAFEWORD && g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Kidnap Mode deactivated.", g_kWearer);

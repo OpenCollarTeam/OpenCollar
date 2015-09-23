@@ -96,7 +96,7 @@ integer LM_SETTING_RESPONSE =  2002;
 integer LM_SETTING_DELETE   =  2003;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
 //integer LINK_RLV            = 4;
@@ -519,7 +519,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);

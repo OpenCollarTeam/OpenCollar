@@ -79,7 +79,7 @@ integer CMD_EVERYONE = 504;
 
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
-integer SAY = 1004;
+//integer SAY = 1004;
 
 integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
@@ -517,8 +517,7 @@ default
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
-        else if (iNum == MENUNAME_RESPONSE) {
+        if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"
             list lParams = llParseString2List(sStr, ["|"], []);
             string sName = llList2String(lParams, 0);

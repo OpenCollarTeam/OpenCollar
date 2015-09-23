@@ -74,7 +74,7 @@ integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY                = 1002;
-integer SAY                   = 1004;
+//integer SAY                   = 1004;
 integer REBOOT                = -1000;
 integer LINK_DIALOG           = 3;
 integer LINK_RLV              = 4;
@@ -684,7 +684,6 @@ default {
         }
     }
     link_message(integer iSender, integer iNum, string sMessage, key kMessageID){
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sMessage, kMessageID, FALSE);
         else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
             g_lButtons = [] ; // flush submenu buttons

@@ -66,7 +66,7 @@ integer CMD_WEARER = 503;
 
 //integer POPUP_HELP          = 1001;
 integer NOTIFY              = 1002;
-integer SAY                 = 1004;
+//integer SAY                 = 1004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
 //integer LINK_RLV            = 4;
@@ -425,7 +425,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sMessage, key kMessageID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == CMD_PARTICLE) {
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash") {

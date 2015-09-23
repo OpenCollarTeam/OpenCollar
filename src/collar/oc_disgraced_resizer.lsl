@@ -95,7 +95,7 @@ integer CMD_WEARER = 503;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 //integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 //integer LM_SETTING_RESPONSE = 2002;
@@ -348,7 +348,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)

@@ -112,7 +112,7 @@ integer CMD_RELAY_SAFEWORD          = 511;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY                     = 1002;
-integer SAY                        = 1004;
+//integer SAY                        = 1004;
 integer REBOOT                     = -1000;
 integer LINK_DIALOG                = 3;
 integer LINK_RLV                   = 4;
@@ -534,7 +534,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + RESTRICTION_BUTTON, "");
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|Force Sit", "");

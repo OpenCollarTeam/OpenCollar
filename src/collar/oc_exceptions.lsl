@@ -143,7 +143,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
 integer LINK_RLV            = 4;
@@ -463,7 +463,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
