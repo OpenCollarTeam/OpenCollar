@@ -67,6 +67,8 @@ integer CMD_WEARER = 503;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
+integer NOTIFY_OWNERS=1003;
+integer SAY = 1004;
 integer LINK_SAVE = 5;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
@@ -120,7 +122,6 @@ list MRSBUN = []; // blatant monty python reference - list of those who do not l
 string SPAMSWITCH = "verbose"; // lowercase chat-command token
 
 key g_kWearer;
-//string g_sScript;
 string g_sSettingToken = "dialog_";
 string g_sGlobalToken = "global_";
 integer g_iListenChan=1;
@@ -128,6 +129,7 @@ string g_sPrefix;
 string g_sDeviceType = "collar";
 string g_sDeviceName;
 string g_sWearerName;
+list g_lOwners;
 
 list g_lSensorDetails;
 integer g_bSensorLock;
@@ -152,7 +154,7 @@ list g_lColors = [
 ];
 
 /*
-integer g_iProfiled;
+integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to
@@ -167,6 +169,69 @@ Debug(string sStr) {
 
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
+}
+
+string SubstitudeVars(string sMsg) {
+        if (sMsg == "%NOACCESS%") {
+            sMsg = "Access denied.";
+            jump next ;
+        }
+        if (~llSubStringIndex(sMsg, "%PREFIX%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
+        if (~llSubStringIndex(sMsg, "%CHANNEL%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
+        if (~llSubStringIndex(sMsg, "%DEVICETYPE%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
+        if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+        @next;
+        return sMsg;
+}
+
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    if ((key)kID){
+        sMsg = SubstitudeVars(sMsg);
+        string sObjectName = llGetObjectName();
+        if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
+        if (kID == g_kWearer) llOwnerSay(sMsg);
+        else {
+            if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+            else llInstantMessage(kID, sMsg);
+            if (iAlsoNotifyWearer) llOwnerSay(sMsg);
+        }
+        llSetObjectName(sObjectName);
+    }//else Debug("something went wrong in Notify, Msg: \""+sMsg+"\" is missing an ID to be sent to.");
+}
+
+NotifyOwners(string sMsg, string comments) {
+    integer n;
+    integer iStop = llGetListLength(g_lOwners);
+    for (n = 0; n < iStop; n += 2) {
+        key kAv = (key)llList2String(g_lOwners, n);
+        if (comments=="ignoreNearby") {
+            //we don't want to bother the owner if he/she is right there, so check distance
+            vector vOwnerPos = (vector)llList2String(llGetObjectDetails(kAv, [OBJECT_POS]), 0);
+            if (vOwnerPos == ZERO_VECTOR || llVecDist(vOwnerPos, llGetPos()) > 20.0) {//vOwnerPos will be ZERO_VECTOR if not in sim
+                //Debug("notifying " + (string)kAv);
+                //Debug("Sending notify to "+(string)kAv);
+                Notify(kAv, sMsg,FALSE);
+            //} else {
+                //Debug("Not sending notify to "+(string)kAv);
+            }
+        } else {
+            //Debug("Sending notify to "+(string)kAv);
+            Notify(kAv, sMsg,FALSE);
+        }
+    }
+}
+
+Say(string sMsg, integer iWhisper) {
+    sMsg = SubstitudeVars(sMsg);
+    string sObjectName = llGetObjectName();
+    llSetObjectName("");
+    if (iWhisper) llWhisper(0,"/me "+sMsg);
+    else llSay(0, sMsg);
+    llSetObjectName(sObjectName);
 }
 
 integer FindLED() {
@@ -255,14 +320,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     } else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
     else  lButtons = lMenuItems;
     //Debug("buttons:"+llDumpList2String(lButtons,","));
-    if (~llSubStringIndex(sPrompt, "%PREFIX%"))
-        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%PREFIX%"], []), g_sPrefix);
-    if (~llSubStringIndex(sPrompt, "%CHANNEL%"))
-        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%CHANNEL%"], []), (string)g_iListenChan);
-    if (~llSubStringIndex(sPrompt, "%DEVICETYPE%"))
-        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%DEVICETYPE%"], []), g_sDeviceType);
-    if (~llSubStringIndex(sPrompt, "%WEARERNAME%"))
-        sPrompt = llDumpList2String(llParseStringKeepNulls((sPrompt = "") + sPrompt, ["%WEARERNAME%"], []), g_sWearerName);
+    sPrompt = SubstitudeVars(sPrompt);
     //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
     integer iPromptlen=GetStringBytes(sPrompt);
     string sThisPrompt;
@@ -663,11 +721,16 @@ default {
             } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
+            else if (sToken == "auth_owner")
+                g_lOwners = llParseString2List(sValue, [","], []);
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == NOTIFY)    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
+        else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
+        else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {
