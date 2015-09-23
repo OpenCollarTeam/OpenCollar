@@ -419,7 +419,7 @@ SaveFolder(string sStr) {
         g_lToCheck=llDeleteSubList(g_lToCheck,-1,-1);
         QueryFolders("save");
     } else {
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Current outfit has been saved.",g_kAsyncMenuUser);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Current outfit has been saved.",g_kAsyncMenuUser);
         //Notify(g_kAsyncMenuUser,"Current outfit has been saved.", TRUE);
         g_sCurrentFolder="";
         if (g_iAsyncMenuRequested) {
@@ -497,7 +497,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         SetAsyncMenu(kID, iNum);
         g_sFolderType = "searchbrowse";
         string sPattern = llDeleteSubString(sStr,0, 4);
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Searching folder containing string \"" + sPattern + "\" for browsing.",g_kWearer);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Searching folder containing string \"" + sPattern + "\" for browsing.",g_kWearer);
         searchSingle(sPattern);
     } else if (sStr=="save") {
         g_sCurrentFolder = "";
@@ -510,7 +510,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         integer i = 0; integer n = llGetListLength(g_lOutfit);
         for (; i < n; ++i)
             llMessageLinked(LINK_RLV,RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Saved outfit has been restored.",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Saved outfit has been restored.",kID);
         //if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
     } else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&") {
         g_kAsyncMenuUser = kID;
@@ -574,7 +574,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     }
                     llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMessage+"=force", NULL_KEY);
                     addToHistory(sMessage);
-                    llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMessage,kAv);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMessage,kAv);
                 } else if (sMenu == "RootActions") {
                     if (sMessage == UPMENU) {
                         SetAsyncMenu(kAv, iAuth); QueryFolders("browse");
@@ -584,18 +584,18 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     else if (sMessage == lockUnsharedButton(0, 0)) {
                         if (g_iUnsharedLocks & 0x1) {
                             updateUnsharedLocks(0x0, 0x1);
-                            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing unshared items is no longer forbidden.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing unshared items is no longer forbidden.",kAv);
                         } else {
                             updateUnsharedLocks(0x1, 0x0);
-                            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing unshared items is forbidden.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing unshared items is forbidden.",kAv);
                         }
                     } else if (sMessage == lockUnsharedButton(1, 0)) {
                         if (g_iUnsharedLocks & 0x2) {
                             updateUnsharedLocks(0x0, 0x2);
-                            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing unshared items is no longer forbidden.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing unshared items is no longer forbidden.",kAv);
                         } else {
                             updateUnsharedLocks(0x2, 0x0);
-                            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing unshared items is forbidden.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing unshared items is forbidden.",kAv);
                         }
                     }
                     RootActionsMenu(kAv, iAuth);
@@ -627,61 +627,61 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 } else if (sMenu == "FolderActions") {
                     if (sMessage == ADD) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachover:" + g_sCurrentFolder + "=force", NULL_KEY);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now adding "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now adding "+g_sCurrentFolder,kAv);
                     } else if (sMessage == REPLACE) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attach:" + g_sCurrentFolder + "=force", NULL_KEY);
                         addToHistory(g_sCurrentFolder);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now attaching "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now attaching "+g_sCurrentFolder,kAv);
                     } else if (sMessage == DETACH) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "detach:" + g_sCurrentFolder + "=force", NULL_KEY);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now detaching "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now detaching "+g_sCurrentFolder,kAv);
                     } else if (sMessage == ADD_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachallover:" + g_sCurrentFolder + "=force", NULL_KEY);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now adding everything in "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now adding everything in "+g_sCurrentFolder,kAv);
                     } else if (sMessage == REPLACE_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now attaching everything in "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now attaching everything in "+g_sCurrentFolder,kAv);
                     } else if (sMessage == DETACH_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "detachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now detaching everything in "+g_sCurrentFolder,kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now detaching everything in "+g_sCurrentFolder,kAv);
                     } else if (sMessage == lockFolderButton(0x00, 0, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x01, 0x10);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " is forbidden (this overrides parent exceptions).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " is forbidden (this overrides parent exceptions).",kAv);
                     } else if (sMessage == lockFolderButton(0x00,1, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x02, 0x20);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " is forbidden (this overrides parent exceptions).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " is forbidden (this overrides parent exceptions).",kAv);
                     } else if (sMessage == lockFolderButton(0x00, 2, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x04, 0x40);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " or its subfolders is forbidden (this overrides parent exceptions).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " or its subfolders is forbidden (this overrides parent exceptions).",kAv);
                     } else if (sMessage == lockFolderButton(0x00, 3, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x08, 0x80);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " or its subfolders is forbidden (this overrides parent exceptions).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " or its subfolders is forbidden (this overrides parent exceptions).",kAv);
                     } else if (sMessage == lockFolderButton(0x0F, 0, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x10, 0x01);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).",kAv);
                     } else if (sMessage == lockFolderButton(0x0F, 1, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x20, 0x02);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " is exceptionally allowed (this overrides parent locks).",kAv);
                     } else if (sMessage == lockFolderButton(0x0F,2, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x40, 0x04);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " or its subfolders is exceptionally allowed (this overrides parent locks).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now wearing "+g_sCurrentFolder+ " or its subfolders is exceptionally allowed (this overrides parent locks).",kAv);
                     } else if (sMessage == lockFolderButton(0x0F,3, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0x80, 0x08);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " or its subfolders is exceptionally allowed (this overrides parent locks).",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now removing "+g_sCurrentFolder+ " or its subfolders is exceptionally allowed (this overrides parent locks).",kAv);
                     } else if (sMessage == lockFolderButton(0xFFFF,0, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0, 0x11);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now there is no restriction or exception on wearing "+g_sCurrentFolder+ ".",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now there is no restriction or exception on wearing "+g_sCurrentFolder+ ".",kAv);
                     } else if (sMessage == lockFolderButton(0xFFFF,1, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0, 0x22);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ ".",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ ".",kAv);
                     } else if (sMessage == lockFolderButton(0xFFFF,2, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0, 0x44);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now there is no restriction or exception on wearing "+g_sCurrentFolder+ " and its subfolders.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now there is no restriction or exception on wearing "+g_sCurrentFolder+ " and its subfolders.",kAv);
                     } else if (sMessage == lockFolderButton(0xFFFF,3, 0)) {
                         updateFolderLocks(g_sCurrentFolder, 0, 0x88);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ " and its subfolders.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ " and its subfolders.",kAv);
                     } else if (llGetSubString(sMessage, 0, 0) == "(")
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"%NOACCESS%",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS%",kAv);
                     if (sMessage != UPMENU) { addToHistory(g_sCurrentFolder); llSleep(1.0);} //time for command to take effect so that we see the result in menu
                     //Return to browse menu
                     if (llGetSubString(g_sFolderType, 0, 14) == "history_actions" && sMessage != "Browse") {HistoryMenu(kAv, iAuth); return;}
@@ -729,7 +729,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 FolderActionsMenu(iState, g_kAsyncMenuUser, g_iAsyncMenuAuth);
             } else if (g_sFolderType=="save") SaveFolder(sMsg);
             else if (llGetSubString(g_sFolderType,0,5)=="search") {
-                if (sMsg=="") llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMsg+"No folder found.",g_kAsyncMenuUser);
+                if (sMsg=="") llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg+"No folder found.",g_kAsyncMenuUser);
                 else if (llGetSubString(g_sFolderType,6,-1)=="browse") {
                     g_sCurrentFolder = sMsg;
                     QueryFolders("browse");
@@ -760,7 +760,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                                 }
                             }
                             if(found=="") {
-                                 llMessageLinked(LINK_ROOT,NOTIFY,"0"+g_sNextsearch+" subfolder not found",g_kAsyncMenuUser);
+                                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+g_sNextsearch+" subfolder not found",g_kAsyncMenuUser);
                                  return;
                             } else sMsg=g_sBuildpath+"/"+found;
                             g_sNextsearch="";
@@ -775,7 +775,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                         }
                         llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(g_sFolderType,6,-1)+":"+sMsg+"=force", NULL_KEY);
                         addToHistory(sMsg);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg,g_kAsyncMenuUser);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now "+llGetSubString(g_sFolderType,6,11)+"ing "+sMsg,g_kAsyncMenuUser);
                     }
                 }
                 if (g_lSearchList!=[]) handleMultiSearch();

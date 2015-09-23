@@ -354,14 +354,14 @@ SetTexture(string sIn, key kIn) {
         else L_RIBBON_TEX = sIn;
         if (GetSetting("R_TextureID")) g_sParticleTextureID = GetSetting("R_TextureID");
         if (kIn) 
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);
     }
     else if (g_sParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
         else L_CLASSIC_TEX = sIn;
         if (GetSetting("C_TextureID")) g_sParticleTextureID = GetSetting("C_TextureID");
-        if (kIn) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Leash texture set to " + L_CLASSIC_TEX,kIn);
-    } else  if (kIn) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Leash texture set to " + g_sParticleTexture,kIn);
+        if (kIn) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Leash texture set to " + L_CLASSIC_TEX,kIn);
+    } else  if (kIn) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Leash texture set to " + g_sParticleTexture,kIn);
     //Debug("particleTextureID= " + (string)g_sParticleTextureID);
     //Debug("activeleashpoints= " + (string)g_iLeashActive);
     if (g_iLeashActive) {
@@ -452,16 +452,16 @@ default {
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
             if (llToLower(sMessage) == "leash configure") {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
-                else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kMessageID);
+                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
             } else if (sMessage == "menu "+SUBMENU) {
                 if(iNum == CMD_OWNER || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
-                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kMessageID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
                     llMessageLinked(LINK_THIS, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             } else if (llToLower(sMessage) == "particle reset") {
                 g_lSettings = []; // clear current settings
-                if (kMessageID) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID);
+                if (kMessageID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "all", "");
                 GetSettings(TRUE);
             }
@@ -559,19 +559,19 @@ default {
                         if (g_vLeashSize.x < 0.04 && g_vLeashSize.y < 0.04) {
                             g_vLeashSize.x = 0.04 ;
                             g_vLeashSize.y = 0.04 ;
-                            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The leash won't get much smaller.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The leash won't get much smaller.",kAv);
                         }
                     } else if (sButton == "Heavier") {
                         g_vLeashGravity.z -= 0.1;
                         if (g_vLeashGravity.z < -3.0) {
                             g_vLeashGravity.z = -3.0;
-                            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"That's the heaviest it can be.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"That's the heaviest it can be.",kAv);
                         }
                     } else if (sButton == "Lighter") {
                         g_vLeashGravity.z += 0.1;
                         if (g_vLeashGravity.z > 0.0) {
                             g_vLeashGravity.z = 0.0 ;
-                            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"It can't get any lighter now.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"It can't get any lighter now.",kAv);
                         }
                     }
                     SaveSettings(L_GRAVITY, Float2String(g_vLeashGravity.z), TRUE,0,"");

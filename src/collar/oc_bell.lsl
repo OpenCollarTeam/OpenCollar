@@ -174,11 +174,6 @@ BellMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");
 }
 
-ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
-    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbell");
-}
-
 SetBellElementAlpha() {
     if (g_iHide) return ;
     //loop through stored links, setting color if element type is bell
@@ -259,14 +254,14 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             g_fVolume=(float)n/10;
             llPlaySound(g_kCurrentBellSound,g_fVolume);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "vol=" + (string)llFloor(g_fVolume*10), "");
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Bell volume set to "+(string)n,kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Bell volume set to "+(string)n,kID);
         } else if (sToken=="show" || sToken=="hide") {
             if (sToken=="show") {
                 g_iBellShow=TRUE;
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The bell is now visible.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell is now visible.",kID);
             } else  {
                 g_iBellShow=FALSE;
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The bell is now invisible.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell is now invisible.",kID);
             }
             SetBellElementAlpha();
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "show=" + (string)g_iBellShow, "");
@@ -276,9 +271,9 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                     g_iBellOn=iNum;
                     if (!g_iHasControl) llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
-                    llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The bell rings now.",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell rings now.",kID);
                 }
-            } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sToken=="off") {
             if ((g_iBellOn>0)&&(iNum!=CMD_GROUP)) {
                 g_iBellOn=0;
@@ -287,22 +282,22 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                     g_iHasControl=FALSE;
                 }
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The bell is now quiet.",kID);
-            } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell is now quiet.",kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sToken=="nextsound") {
             g_iCurrentBellSound++;
             if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;
             g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
             llPlaySound(g_kCurrentBellSound,g_fVolume);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "sound=" + (string)g_iCurrentBellSound, "");
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Bell sound changed, now using "+(string)(g_iCurrentBellSound+1)+" of "+(string)g_iBellSoundCount+".",kID);
         } else if (sToken=="ring") {
             g_fNextRing=llGetTime()+1.0;
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         }
     } else if (sStr == "rm bell") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
-        else ConfirmDeleteMenu(kID, iNum);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else  Dialog(kID,"\nAre you sure you want to delete the "+g_sSubMenu+" App?\n", ["Yes","No"], [], 0, iNum,"rmbell");
     }
     //Debug("command executed");
 }
@@ -367,9 +362,9 @@ default {
                 } else if (sMenuType == "rmbell") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAV);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAV);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAV);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAV);
                 }
                 BellMenu(kAV, iAuth);
             }
@@ -440,7 +435,7 @@ default {
                 g_fNextTouch = llGetTime()+10.0;
                 g_kLastToucher = toucher;
                 llPlaySound(g_kCurrentBellSound,g_fVolume);
-                llMessageLinked(LINK_ROOT,SAY,"1"+ "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on %WEARERNAME%'s %DEVICETYPE%.","");
+                llMessageLinked(LINK_DIALOG,SAY,"1"+ "secondlife:///app/agent/"+(string)toucher+"/about plays with the trinket on %WEARERNAME%'s %DEVICETYPE%.","");
             }
         }
     }

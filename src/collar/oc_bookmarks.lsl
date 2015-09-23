@@ -140,11 +140,6 @@ DoMenu(key keyID, integer iAuth) {
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "bookmarks");
 }
 
-ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
-    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmbookmarks");
-}
-
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     // So commands can accept a value
@@ -154,21 +149,21 @@ UserCommand(integer iNum, string sStr, key kID) {
             //only owner and wearer may reset
             llResetScript();
     } else if (sStr == "rm bookmarks") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
-        else ConfirmDeleteMenu(kID, iNum);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else Dialog(kID,"\nAre you sure you want to delete the "+g_sSubMenu+" App?\n", ["Yes","No"], [], 0, iNum,"rmbookmarks");
     }else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
         if (iNum==CMD_GROUP)
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
     } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {           if (iNum==CMD_GROUP){
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         }
 //grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0)
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"This destination name is already taken",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This destination name is already taken",kID);
             else {
                 string slurl = FormatRegionName();
                 addDestination(sAdd, slurl, kID);
@@ -184,28 +179,28 @@ You can enter:
         }
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " remove") - 1) == PLUGIN_CHAT_CMD + " remove") { //grab partial string match to capture destination name
         if (iNum==CMD_GROUP)
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else if (llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_CMD + " remove"), -1), STRING_TRIM);
             if (llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID);
             } else {
                 integer iIndex;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + sDel, "");
                 iIndex = llListFindList(g_lVolatile_Destinations, [sDel]);
                 g_lVolatile_Destinations = llDeleteSubList(g_lVolatile_Destinations, iIndex, iIndex);
                 g_lVolatile_Slurls = llDeleteSubList(g_lVolatile_Slurls, iIndex, iIndex);
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Removed destination " + sDel,kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Removed destination " + sDel,kID);
             }
         } else
             Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum,"RemoveMenu");
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
         if (iNum==CMD_GROUP)
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else PrintDestinations(kID);
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD) - 1) == PLUGIN_CHAT_CMD) {
         if (iNum==CMD_GROUP)
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
         if (llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
@@ -242,7 +237,7 @@ You can enter:
                 //old hud command compatibility: 'o:176382.800000/261210.900000/3503.276000=force'
                 //if (llSubStringIndex(sCmd,"o:") == 0) llMessageLinked(LINK_SET, RLV_CMD, "tpt"+sCmd, kID);// (enable this to support hud forcetp.  disabled now since rlvtp still does this
                 //else
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The bookmark '" + sCmd + "' has not been found in the %DEVICETYPE% of %WEARERNAME%.",kID);
             } else if(found > 1)
                 Dialog(kID, "More than one matching bookmark was found in the %DEVICETYPE% of %WEARERNAME%.\nChoose a bookmark to teleport to.", matchedBookmarks, [UPMENU], 0, iNum,"choose bookmark");
             else  //exactly one matching LM found, so use it
@@ -250,19 +245,19 @@ You can enter:
         }
         //Can't find in list, lets try find substring matches
         else
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"I didn't understand your command.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"I didn't understand your command.",kID);
     }
 }
 
 addDestination(string sMessage, string sLoc, key kID) {
     if (llGetListLength(g_lVolatile_Destinations)+llGetListLength(g_lDestinations) >= 45 ) {
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"The maximum number 45 bookmars is already reached.",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The maximum number 45 bookmars is already reached.",kID);
         return;
     }
     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sMessage + "=" + sLoc, "");
     g_lVolatile_Destinations += sMessage;
     g_lVolatile_Slurls += sLoc;
-    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Added destination " + sMessage + " with a location of: " + sLoc,kID);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Added destination " + sMessage + " with a location of: " + sLoc,kID);
 }
 
 string FormatRegionName() {
@@ -388,7 +383,7 @@ PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations 
     for(; i < iLength; i++) {
         sMsg += llList2String(g_lDestinations, i) + "~" + llList2String(g_lDestinations_Slurls, i) + "\n";
         if (llStringLength(sMsg) >1000) {
-             llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMsg,kID);
+             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg,kID);
              sMsg = "";
         }
     }
@@ -396,11 +391,11 @@ PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations 
     for(i = 0; i < iLength; i++) {
         sMsg += llList2String(g_lVolatile_Destinations, i) + "~" + llList2String(g_lVolatile_Slurls, i) + "\n";
         if (llStringLength(sMsg) >1000) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMsg,kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg,kID);
             sMsg = "";
         }
     }
-    llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMsg,kID);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg,kID);
 }
 
 default {
@@ -533,9 +528,9 @@ default {
                 } else if (sMenuType == "rmbookmarks") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 } else if(~llListFindList(PLUGIN_BUTTONS, [sMessage])) {
                     if(sMessage == "SAVE")
                         UserCommand(iAuth, PLUGIN_CHAT_CMD + " save", kAv);

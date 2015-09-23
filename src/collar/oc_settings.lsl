@@ -242,7 +242,7 @@ PrintSettings(key kID) {
     }
     lOut += [sOld];
     while (llGetListLength(lOut)) {
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+llList2String(lOut, 0), kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+llList2String(lOut, 0), kID);
         //Notify(kID, llList2String(lOut, 0), TRUE);
         lOut = llDeleteSubList(lOut, 0, 0);
     }
@@ -274,7 +274,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
         if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
     } else if (sStr == "reboot" || sStr == "reboot --f") {
         if (g_iRebootConfirmed || sStr == "reboot --f") {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
             llSetTimerEvent(2.0);
@@ -284,7 +284,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
         }
     } else if (sStr == "show storage") {
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"To hide the storage prim again type:\n%PREFIX% hide storage\n",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"To hide the storage prim again type:\n%PREFIX% hide storage\n",kID);
     } else if (sStr == "hide storage")
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
     else if (sStr == "runaway") llSetTimerEvent(2.0);
@@ -396,7 +396,7 @@ default {
             if (llList2String(lMenuParams,1) == "Yes") {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
-            } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Reboot aborted.",kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Reboot aborted.",kID);
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
