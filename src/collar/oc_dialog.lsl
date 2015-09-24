@@ -233,7 +233,7 @@ Say(string sMsg, integer iWhisper) {
 integer FindLED() {
     integer i = llGetNumberOfPrims();
     do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_dialog"))
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED~dialog"))
             return i;
     } while (i-- > 1);
     return llGetLinkNumber();
