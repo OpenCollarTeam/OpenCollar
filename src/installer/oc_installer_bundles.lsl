@@ -102,7 +102,7 @@ SetStatus(string sName) {
     string sMsg = "Installing: " + sName+ "\n \n \n";
     llSetText(sMsg, <1,1,1>, 1.0);
     StatusBar(g_iItemCounter);
-    if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
+    //if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
 debug(string sMsg) {
