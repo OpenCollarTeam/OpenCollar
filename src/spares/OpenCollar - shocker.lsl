@@ -13,7 +13,7 @@ integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;  // new for safeword
 
-integer POPUP_HELP = 1001;
+//integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 integer SAY = 1004;
@@ -143,15 +143,15 @@ DialogHelp(key kID, integer iAuth)
     sMsg += "%PREFIX% shocker sound <sound name>\n    make sure the sound is inside the %DEVICETYPE%.\n";
 
     //Dialog(kID, sMsg, ["Ok"], [], 0, iAuth,"help");
-    llMessageLinked(LINK_ROOT, NOTIFY, "0"+sMsg, kID);
+    llMessageLinked(LINK_DIALOG, NOTIFY, "0"+sMsg, kID);
 }
 
 Shock(integer time, key kID)
 {
     if (time > 0)
     {
-        //llMessageLinked(LINK_ROOT, NOTIFY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.", kID);
-        llMessageLinked(LINK_ROOT, SAY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.","");
+        //llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.", kID);
+        llMessageLinked(LINK_DIALOG, SAY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.","");
         if (g_sShockSound != g_sNoSound)
         {
             if (g_sShockSound == DEFAULT) llLoopSound( g_sDefaultSound, 1.0 );
@@ -165,8 +165,8 @@ Shock(integer time, key kID)
     }
     else if (g_iShock == TRUE)
     {
-        //llMessageLinked(LINK_ROOT, NOTIFY, "1"+"shocker off.", kID);
-        llMessageLinked(LINK_ROOT, SAY, "1"+"shocker off.", "");
+        //llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"shocker off.", kID);
+        llMessageLinked(LINK_DIALOG, SAY, "1"+"shocker off.", "");
         llSetTimerEvent(0);
         Stop();
     }
@@ -191,7 +191,7 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
     if (sStr == "menu "+g_sSubMenu || sStr == "shocker")
     {
         if (iAuth == CMD_OWNER) DialogShocker(kID, iAuth);
-        else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Sorry, only the Owner can punish pet.", kID);
+        else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Sorry, only the Owner can punish pet.", kID);
     }
     else if (iAuth == CMD_OWNER)
     {
@@ -212,11 +212,11 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
                 if (~llListFindList(g_lAnims,[sAnim])) g_sShockAnim = sAnim;
                 else
                 {
-                    llMessageLinked(LINK_ROOT, NOTIFY,"0"+sAnim+" is not a valid animation name.",kID);
+                    llMessageLinked(LINK_DIALOG, NOTIFY,"0"+sAnim+" is not a valid animation name.",kID);
                     g_sShockAnim = DEFAULT;
                 }
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sScript + "anim=" + g_sShockAnim, "");
-                llMessageLinked(LINK_ROOT, NOTIFY,"0"+"Punishment anim for shocker is now '"+g_sShockAnim+"'.",kID);
+                llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"Punishment anim for shocker is now '"+g_sShockAnim+"'.",kID);
             }
             else DialogSelectAnim(kID, iAuth);
         }
@@ -225,15 +225,15 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
             string sSound = llStringTrim(sValue, STRING_TRIM);
             if (sSound)
             {
-                if (sSound == g_sNoSound) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Punishment will be silently.",kID);
+                if (sSound == g_sNoSound) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Punishment will be silently.",kID);
                 else if (llGetInventoryType(sSound) != INVENTORY_SOUND)
                 {
-                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+sSound+" is not a valid sound name.",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sSound+" is not a valid sound name.",kID);
                     sSound = DEFAULT ;
                 }
                 g_sShockSound = sSound;
                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sScript+"sound="+g_sShockSound, "");
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Punishment sound for shocker is now '"+g_sShockSound+"'.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Punishment sound for shocker is now '"+g_sShockSound+"'.",kID);
             }
             else DialogSelectSound(kID, iAuth);
         }
