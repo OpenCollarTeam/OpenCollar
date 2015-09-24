@@ -315,14 +315,14 @@ default {
                     Dialog(g_kCmdGiver, "\nChoose a partner:\n", [sTmpName], ["BACK"], 0, iNum, "sensor");
                 } else {       //no name given.
                     if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
-                        llMessageLinked(LINK_ROOT, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
                     } else {               //else set partner to commander
                         g_kPartner = g_kCmdGiver;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         //added to stop eventual still going animations
                         StopAnims();
                         GetPartnerPermission();
-                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
                     }
                 }
             } else if (sStr == "menu "+g_sSubMenu || sStr == "couples") CoupleAnimMenu(kID, iNum);
@@ -335,7 +335,7 @@ default {
                     g_iVerbose = TRUE;
                     llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "verbose", "");
                 }
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -400,8 +400,8 @@ default {
                         StopAnims();
                         string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                         GetPartnerPermission();
-                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Offering to "+ sCommand +" "+ g_sPartnerName + ".",g_kWearer);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% would like to give you a " + sCommand + ". Click [Yes] to accept.",g_kPartner);
                     }
                 } else if (sMenu == "timer") {
                     //Debug("Response from timer menu"+sStr);
@@ -409,12 +409,12 @@ default {
                     else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                         g_fTimeOut = (float)((integer)sMessage);
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=" + (string)g_fTimeOut, "");
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
                     } else if (sMessage == "ENDLESS") {
                         g_fTimeOut = 0.0;
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=0.0", "");
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type %PREFIX% stop couples to stop them again.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type %PREFIX% stop couples to stop them again.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
                     }
                 }
@@ -455,13 +455,13 @@ default {
         llRegionSayTo(g_kPartner,g_iLMChannel,(string)g_kPartner+"bootoff");
         llStartAnimation(g_sDomAnim);
         g_iListener = llListen(g_iStopChan, "", g_kPartner, g_sStopString);
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"If you would like to stop the animation early, say /" + (string)g_iStopChan + g_sStopString + " to stop.",g_kPartner);
 
         string sText = llList2String(g_lAnimSettings, g_iCmdIndex * 4 + 3);
         if (sText != "" && g_iVerbose) {
             sText = StrReplace(sText,"_PARTNER_",g_sPartnerName);
             sText = StrReplace(sText,"_SELF_","%WEARERNAME%");
-            llMessageLinked(LINK_ROOT,SAY,"0"+sText,"");
+            llMessageLinked(LINK_DIALOG,SAY,"0"+sText,"");
         }
         if (g_fTimeOut > 0.0) g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
         else g_iAnimTimeout=0;
@@ -477,9 +477,9 @@ default {
             integer iLength = llGetListLength(lParams);
             if (iLength == 4 || iLength == 5) {
                 if (!llGetInventoryType(llList2String(lParams, 1)) == INVENTORY_ANIMATION){
-                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine1 + ": animation '" + llList2String(lParams, 1) + "' is not present.  Skipping.",g_kWearer);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine1 + ": animation '" + llList2String(lParams, 1) + "' is not present.  Skipping.",g_kWearer);
                 } else if (!llGetInventoryType(llList2String(lParams, 2)) == INVENTORY_ANIMATION){
-                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine2 + ": animation '" + llList2String(lParams, 2) + "' is not present.  Skipping.",g_kWearer);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+CARD1 + " line " + (string)g_iLine2 + ": animation '" + llList2String(lParams, 2) + "' is not present.  Skipping.",g_kWearer);
                 } else {
                     integer iIndex = llListFindList(g_lAnimCmds, llList2List(lParams, 0, 0));
                     if (~iIndex) {
@@ -513,7 +513,7 @@ default {
                 g_iPermissionTimeout=0;
                 MoveToPartner();
             } else {
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Sorry, but the request timed out.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sorry, but the request timed out.",kID);
             }
         }
     }

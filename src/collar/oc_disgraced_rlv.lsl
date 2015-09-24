@@ -112,7 +112,7 @@ integer CMD_RELAY_SAFEWORD          = 511;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY                     = 1002;
-integer SAY                        = 1004;
+//integer SAY                        = 1004;
 integer REBOOT                     = -1000;
 integer LINK_DIALOG                = 3;
 integer LINK_RLV                   = 4;
@@ -206,8 +206,8 @@ DoTerminalCommand(string sMessage, key kID) {
     list lCommands = llParseString2List(sMessage, [sCRLF], []);
     sMessage = llDumpList2String(lCommands, ",");
     llMessageLinked(LINK_RLV,RLV_CMD,sMessage,"vdTerminal");
-    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Your command(s) were sent to %WEARERNAME%'s RL-Viewer:\n" + sMessage, kID);
-    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about" + " has changed your rlv restrictions.", g_kWearer);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your command(s) were sent to %WEARERNAME%'s RL-Viewer:\n" + sMessage, kID);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about" + " has changed your rlv restrictions.", g_kWearer);
 }
 
 OutfitsMenu(key kID, integer iAuth) {
@@ -345,9 +345,9 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     //restrictions command handling
     if (iNum==CMD_WEARER) {
         if (sStr == RESTRICTIONS_CHAT_COMMAND || sLowerStr == "sit" || sLowerStr == TERMINAL_CHAT_COMMAND) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS%",kID);
         } else if (sLowerStr == "menu force sit" || sStr == "menu " + RESTRICTION_BUTTON || sStr == "menu " + TERMINAL_BUTTON){
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS%",kID);
             llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
         }
         return;
@@ -366,138 +366,138 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         g_bSendRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_send","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Send IMs is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Send IMs is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ send ims" || sLowerStr == "forbid sendim"){
         g_bSendRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_send=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Send IMs is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Send IMs is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ read ims" || sLowerStr == "allow readim"){
         g_bReadRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_read","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Read IMs is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Read IMs is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ read ims" || sLowerStr == "forbid readim"){
         g_bReadRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_read=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Read IMs is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Read IMs is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ hear" || sLowerStr == "allow hear"){
         g_bHearRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_hear","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Hear is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Hear is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ hear" || sLowerStr == "forbid hear"){
         g_bHearRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_hear=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Hear IMs is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Hear IMs is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ touch" || sLowerStr == "allow touch"){
         g_bTouchRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_touch","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Touch is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Touch is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ touch" || sLowerStr == "forbid touch"){
         g_bTouchRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_touch=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Touch restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Touch restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ stray" || sLowerStr == "allow stray"){
         g_bStrayRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_stray","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Stray is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Stray is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ stray" || sLowerStr == "forbid stray"){
         g_bStrayRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_stray=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Stray is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Stray is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
         //2015-04-10 added Otto
     } else if (sLowerStr == "restrictions ☐ stand" || sLowerStr == "allow stand"){
         g_bStrayRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_stand","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Stand up is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Stand up is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ stand" || sLowerStr == "forbid stand"){
         g_bStrayRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_stand=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Stand up is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Stand up is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);     
     } else if (sLowerStr == "restrictions ☐ talk" || sLowerStr == "allow talk"){
         g_bTalkRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_talk","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Talk is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Talk is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ talk" || sLowerStr == "forbid talk"){
         g_bTalkRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_talk=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Talk is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Talk is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ rummage" || sLowerStr == "allow rummage"){
         g_bRummageRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_rummage","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Rummage is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Rummage is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ rummage" || sLowerStr == "forbid rummage"){
         g_bRummageRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_rummage=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Rummage is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Rummage is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☐ dress" || sLowerStr == "allow dress"){
         g_bDressRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_dress","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Dress is un-restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Dress is un-restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions ☒ dress" || sLowerStr == "forbid dress"){
         g_bDressRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_dress=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Ability to Dress is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Ability to Dress is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions un-dazzle" || sLowerStr == "undazzle"){
         g_bBlurredRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_blurred","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Vision is clear",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vision is clear",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions dazzle" || sLowerStr == "dazzle"){
         g_bBlurredRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_blurred=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Vision is restricted",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vision is restricted",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions un-daze" || sLowerStr == "undaze"){
         g_bDazedRestricted=FALSE;
         llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_dazed","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Clarity is restored",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Clarity is restored",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "restrictions daze" || sLowerStr == "daze"){
         g_bDazedRestricted=TRUE;
         llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"restrictions_dazed=1","");
         doRestrictions();
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Confusion is imposed",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Confusion is imposed",kID);
         if (bFromMenu) RestrictionsMenu(kID,iNum);
     } else if (sLowerStr == "stand" || sLowerStr == "standnow"){
         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Get Up!",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Get Up!",kID);
         llSleep(0.5);
         if (bFromMenu) UserCommand(iNum, "menu force sit", kID, TRUE);
     } else if (sLowerStr == "menu force sit" || sLowerStr == "sit" || sLowerStr == "sitnow"){
@@ -534,7 +534,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + RESTRICTION_BUTTON, "");
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|Force Sit", "");
@@ -606,7 +605,7 @@ default {
                     else if (sMessage == "Sit Back Down!") {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Sit back down, and stay there!",kID);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit back down, and stay there!",kID);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
                         llSleep(0.5);
                         UserCommand(iAuth, "menu force sit", kID, TRUE);
@@ -614,7 +613,7 @@ default {
                     else {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Sit down, and stay there!",kID);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit down, and stay there!",kID);
                         g_kLastForcedSeat=(key)sMessage;
                         g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
@@ -662,14 +661,14 @@ default {
         }
         else if (iChan == g_iFolderRLVSearch) {
             if (sMsg == "") {
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"That outfit couldn't be found in #RLV/"+g_sPathPrefix,kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"That outfit couldn't be found in #RLV/"+g_sPathPrefix,kID);
             } else { // we got a match
                 if (llSubStringIndex(sMsg,",") < 0) {
                    // llOwnerSay(WearFolder(sMsg));
                     g_sCurrentPath = sMsg;
                     WearFolder(g_sCurrentPath);
                     //llOwnerSay("@attachallover:"+g_sPathPrefix+"/.core/=force");
-                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Loading outfit #RLV/"+sMsg,kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading outfit #RLV/"+sMsg,kID);
                 } else {
                     string sPrompt = "\nPick one!";
                     list lFolderMatches = llParseString2List(sMsg,[","],[]);

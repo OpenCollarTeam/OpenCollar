@@ -95,7 +95,7 @@ integer CMD_WEARER = 503;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 //integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 //integer LM_SETTING_RESPONSE = 2002;
@@ -198,10 +198,10 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
     if (llGetNumberOfPrims()<2) {
         vSize = llList2Vector(g_lPrimStartSizes,0);
         if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
             return;
         } else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
             return;
         } else llSetScale(fScale * vSize); // not linked prim
     } else {
@@ -212,15 +212,15 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
                 vPrimScale = llList2Vector(g_lPrimStartSizes, (iPrimIndex  - 1)*2);
 
                 if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale)) {
-                    llMessageLinked(LINK_ROOT,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
                     return;
                 } else if (MinMaxScaled(fScale * vPrimScale, fScale)) {
-                    llMessageLinked(LINK_ROOT,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
                     return;
                 }
             }
         }
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Scaling started, please wait ...",kAV);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Scaling started, please wait ...",kAV);
         g_iSizedByScript = TRUE;
         for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
             vPrimScale = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2);
@@ -232,7 +232,7 @@ ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
         }
         g_iScaleFactor = iScale;
         g_iSizedByScript = TRUE;
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
     }
 }
 
@@ -307,35 +307,30 @@ DoMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,g_sSubMenu);
 }
 
-ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nAre you sure you want to delete the resizer script?\n";
-    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmresizer");
-}
-
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sValue = llToLower(llList2String(lParams, 1));
     if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu) {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         } else DoMenu(kID, iNum);
     } else if (sStr == "appearance") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else DoMenu(kID, iNum);
     } else if (sStr == "rotation") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else RotMenu(kID, iNum);
     } else if (sStr == "position") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else PosMenu(kID, iNum);
     } else if (sStr == "size") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else SizeMenu(kID, iNum);
     } else if (sStr == "rm resizer") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
-        else ConfirmDeleteMenu(kID, iNum);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else Dialog(kID, "\nAre you sure you want to delete the resizer script?\n", ["Yes","No"], [], 0, iNum,"rmresizer");
     }
 }
 
@@ -353,7 +348,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
@@ -389,7 +383,7 @@ default {
                         else if (sMessage == "▁") g_fNudge=g_fSmallNudge;
                         else if (sMessage == "▁ ▂") g_fNudge=g_fMediumNudge;
                         else if (sMessage == "▁ ▂ ▃") g_fNudge=g_fLargeNudge;
-                    } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
                     PosMenu(kAv, iAuth);
                 } else if (sMenuType == ROTMENU) {
                     if (sMessage == UPMENU) {
@@ -402,7 +396,7 @@ default {
                         else if (sMessage == "right ↷") AdjustRot(<0, 0, -g_fRotNudge>);
                         else if (sMessage == "tilt left ↙") AdjustRot(<-g_fRotNudge, 0, 0>);
                         else if (sMessage == "tilt down ↺") AdjustRot(<0, -g_fRotNudge, 0>);
-                    } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, position can only be adjusted while worn",kID);
                     RotMenu(kAv, iAuth);
                 } else if (sMenuType == SIZEMENU) {
                     if (sMessage == UPMENU) {
@@ -414,7 +408,7 @@ default {
                             integer iSizeFactor = llList2Integer(g_lSizeFactors, iMenuCommand);
                             if (iSizeFactor == -1000) {
                                 if (g_iScaleFactor == 100)
-                                    llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Resizing canceled; the %DEVICETYPE% is already at original size.",kID);
+                                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Resizing canceled; the %DEVICETYPE% is already at original size.",kID);
                                 else ScalePrimLoop(100, TRUE, kAv);
                             }
                             else ScalePrimLoop(g_iScaleFactor + iSizeFactor, FALSE, kAv);
@@ -424,9 +418,9 @@ default {
                 } else if (sMenuType == "rmresizer") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT,NOTIFY, "1"+"Removing Resizer script...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Removing Resizer script...\nYou can re-install it with an OpenCollar Updater.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT,NOTIFY, "0"+"Removing Resizer script aborted.", kAv);
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Removing Resizer script aborted.", kAv);
                 }
             }
         }

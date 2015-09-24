@@ -69,7 +69,7 @@ integer CMD_EVERYONE         = 504;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
 //integer LINK_RLV            = 4;
@@ -183,7 +183,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
         if (g_iOn && iAuth > g_iLastRank) //only change text if commander has same or greater auth
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
         else if (sAction == "on") {
             g_iLastRank = iAuth;
             g_iOn = TRUE;
@@ -219,7 +219,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         }
         ShowHideText();
     } else if (sStr == "rm titler") {
-            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kAv);
+            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kAv);
             else ConfirmDeleteMenu(kAv, iAuth);
     }
 }
@@ -251,7 +251,6 @@ default{
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //Debug("Link Message Event");
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -299,9 +298,9 @@ default{
                 } else if (sMenuType == "rmtitler") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
             } else if (iNum == DIALOG_TIMEOUT) {
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

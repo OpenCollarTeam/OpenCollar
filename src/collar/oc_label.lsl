@@ -74,7 +74,7 @@ integer CMD_WEARER           = 503;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 //integer LINK_RLV = 4;
@@ -442,7 +442,7 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
 UserCommand(integer iAuth, string sStr, key kAv) {
     string sLowerStr = llToLower(sStr);
     if (sStr == "rm label") {
-        if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kAv);
+        if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kAv);
         else ConfirmDeleteMenu(kAv, iAuth);
     } else if (iAuth == CMD_OWNER) {
         if (sLowerStr == "menu label" || sLowerStr == "label") {
@@ -485,7 +485,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
                 if (llStringLength(g_sLabelText) > g_iCharLimit) {
                     string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
-                    llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
+                    llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
                 }
             }
             SetLabel();
@@ -494,9 +494,9 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
         if (sStr=="menu "+g_sSubMenu) {
             llMessageLinked(LINK_ROOT, iAuth, "menu "+g_sParentMenu, kAv);
-            llMessageLinked(LINK_ROOT, NOTIFY, "0"+"%NOACCESS%", kAv);
+            llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"%NOACCESS%", kAv);
         } else if (sCommand=="labeltext" || sCommand == "labelfont" || sCommand == "labelcolor" || sCommand == "labelshow")
-            llMessageLinked(LINK_ROOT, NOTIFY, "0"+"%NOACCESS%", kAv);
+            llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"%NOACCESS%", kAv);
     }
 }
 
@@ -520,7 +520,6 @@ default
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -599,9 +598,9 @@ default
                 } else if (sMenuType == "rmlabel") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_ROOT, LINK_DIALOG, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                    } else llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
             } else if (iNum == DIALOG_TIMEOUT) {
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

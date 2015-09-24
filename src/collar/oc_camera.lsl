@@ -82,7 +82,7 @@ integer CMD_WEARER = 503;
 integer CMD_SAFEWORD = 510;  // new for safeword
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
@@ -303,7 +303,7 @@ ChatCamParams(integer iChannel, key kID) {
     if (iChannel)
         llRegionSayTo(kID, iChannel, sPosLine);                    
     else
-        llMessageLinked(LINK_ROOT,NOTIFY,"1"+sPosLine,kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sPosLine,kID);
 }
 
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
@@ -318,19 +318,19 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
         if (sValue == "")//they just said *cam.  give menu
             CamMenu(kID, iNum);
         else if (!(llGetPermissions() & PERMISSION_CONTROL_CAMERA))
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else if (g_iLastNum && iNum > g_iLastNum)
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.",kID);
         else if (sValue == "clear") {
             ClearCam();
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Cleared camera settings.", kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Cleared camera settings.", kID);
         } else if (sValue == "freeze") {
             LockCam();
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Freezing current camera position.", kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Freezing current camera position.", kID);
             g_iLastNum = iNum;                    
             SaveSetting("freeze");                          
         } else if (sValue == "mouselook") {
-            llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Enforcing mouselook.", kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Enforcing mouselook.", kID);
             g_iLastNum = iNum; 
             llMessageLinked(LINK_RLV, RLV_CMD, "camdistmax:0=n", "camera");                   
             SaveSetting("mouselook");                          
@@ -341,17 +341,17 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                 CamMode(sValue);
                 g_iLastNum = iNum;
                 llMessageLinked(LINK_RLV, RLV_CMD, "camunlock=n", "camera");
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Set " + sValue + " camera mode.", kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Set " + sValue + " camera mode.", kID);
                 SaveSetting(sValue);
             } else
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Invalid camera mode: " + sValue, kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid camera mode: " + sValue, kID);
         }
     } else if (sCommand == "camto") {
         if (!g_iLastNum || iNum <= g_iLastNum) {
             CamFocus((vector)sValue, (rotation)sValue2);
             g_iLastNum = iNum;                    
         } else
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.", kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.", kID);
     } else if (sCommand == "camdump") {
         g_iBroadChan = (integer)sValue;
         integer g_fReapeat = (integer)sValue2;
@@ -362,7 +362,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             llSetTimerEvent(g_fReapeat);
         }
     } else if (sStr == "rm camera") {
-            if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else ConfirmDeleteMenu(kID, iNum);
     } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
         ClearCam();
@@ -390,7 +390,6 @@ default {
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         //only respond to owner, secowner, group, wearer
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR) {
@@ -433,9 +432,9 @@ default {
                 } else if (sMenuType == "rmcamera") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }                      
             }
         } else if (iNum == DIALOG_TIMEOUT) {

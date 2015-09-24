@@ -344,19 +344,19 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             g_iRLVOn = FALSE;
             setRlvState();
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV disabled.",g_kWearer);
-        } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sStr == "clear") {
-        if (iNum == CMD_WEARER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+        if (iNum == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
         else SafeWord();
     } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
-        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
         else {
             if ((integer)llGetSubString(sStr,-2,-1)) {
                 g_iMaxViewerChecks = (integer)llGetSubString(sStr,-2,-1);
-                llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Next time RLV is turned on or the %DEVICETYPE% attached with RLV turned on, there will be "+(string)g_iMaxViewerChecks+" extra handshake attempts before disabling RLV.", kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Next time RLV is turned on or the %DEVICETYPE% attached with RLV turned on, there will be "+(string)g_iMaxViewerChecks+" extra handshake attempts before disabling RLV.", kID);
                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken + "handshakes="+(string)g_iMaxViewerChecks, "");
-            } else llMessageLinked(LINK_ROOT,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
         }
     }  else if (sStr=="show restrictions") {
         string sOut="You are being restricted by the following objects";
@@ -369,7 +369,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
             numRestrictions -= 2;
         }
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
     }
 }
 
@@ -559,12 +559,12 @@ default {
                         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
                         if (llSubStringIndex(sCom,"tpto")==0) {
                             if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
+                                if ((key)kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
                                 return;
                             }
                         } else if (sStr=="unsit=force") {
                             if (~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) llMessageLinked(LINK_ROOT,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
+                                if ((key)kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
                                 return;
                             }
                         }
@@ -618,14 +618,14 @@ default {
                     if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                     else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
                 }
-                if (!llGetStartParameter()) llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV ready!",g_kWearer);
+                if (!llGetStartParameter()) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV ready!",g_kWearer);
             }
         } else {
             if (g_iCheckCount++ < g_iMaxViewerChecks) {
                 llOwnerSay("@versionnew=293847");
                // if (g_iCheckCount==2) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
-                llMessageLinked(LINK_ROOT, NOTIFY, "0"+"\n\nUnable to confirm that your viewer does support RLV, RLV will be disabled in your %DEVICETYPE%. You can enable it again in the RLV menu or by typing: %PREFIX% rlv on\n", g_kWearer);
+                llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nUnable to confirm that your viewer does support RLV, RLV will be disabled in your %DEVICETYPE%. You can enable it again in the RLV menu or by typing: %PREFIX% rlv on\n", g_kWearer);
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);
                 g_iCheckCount=0;

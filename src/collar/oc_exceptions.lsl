@@ -143,7 +143,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
-integer SAY = 1004;
+//integer SAY = 1004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
 integer LINK_RLV            = 4;
@@ -207,7 +207,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 
 Menu(key kID, string sWho, integer iAuth) {
     if (!g_iRLVOn) {
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
         llMessageLinked(LINK_RLV, iAuth, "menu RLV", kID);
         return;
     }
@@ -219,7 +219,7 @@ Menu(key kID, string sWho, integer iAuth) {
 ExMenu(key kID, string sWho, integer iAuth) {
     //Debug("ExMenu for :"+sWho);
     if (!g_iRLVOn) {
-        llMessageLinked(LINK_ROOT,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
         llMessageLinked(LINK_RLV, iAuth, "menu RLV", kID);
         return;
     }
@@ -336,7 +336,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     string sLower = llToLower(sStr);
     if (iNum != CMD_OWNER) {
         if (sLower == "ex" || sLower == "menu exceptions") {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_RLV, iNum, "menu rlv", kID);
         }
         return;
@@ -380,10 +380,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         sLower = llToLower(sWho);
         // preventing from getting owners and trusted messed up in the "other" list
         if (~llListFindList(g_lOwners, [sWho])) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Owners, unless you use terminal.",kID);
             jump nextwho;
         } else if (~llListFindList(g_lSecOwners, [sWho])) {
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You cannot set exceptions for "+sWhoName + " different from other Trusted, unless you use terminal.",kID);
             jump nextwho;
         }
         // okay, now we have a key for sWho (if avatar) & they are in g_lNames - this will deliver all settings to the right places
@@ -463,7 +463,6 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == NOTIFY || iNum == SAY) return;
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
