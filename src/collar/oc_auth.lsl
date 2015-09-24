@@ -164,7 +164,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 integer FindLED() {
     integer i = llGetNumberOfPrims();
     do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_auth"))
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED~auth"))
             return i;
     } while (i-- > 1);
     return llGetLinkNumber();

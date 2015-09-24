@@ -173,7 +173,7 @@ DoMenu(key kID, integer iAuth){
 integer FindLED() {
     integer i = llGetNumberOfPrims();
     do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"~led_rlv"))
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED~rlv"))
             return i;
     } while (i-- > 1);
     return llGetLinkNumber();
