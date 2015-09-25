@@ -370,7 +370,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {
-                    string sLinkType=LinkType(iLinkCount, "no"+sCommand);
+                    string sLinkType=LinkType(iLinkCount, "nohide");
                     if (sLinkType == sElement || sElement==g_sDeviceType) {
                         if (!g_iCollarHidden || sElement == g_sDeviceType ) {
                             //don't change things if collar is set hidden, unless we're doing the hiding now
@@ -381,13 +381,13 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                                 if (~iGlowsIndex) {  //if it had a glow, restore it, otherwise don't
                                     float fGlow = (float)llList2String(g_lGlows, iGlowsIndex+1);
                                     llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, fGlow]);
-                                } else  llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex);  //remove glow from list
+                                }
                             } else {  //save glow and switch it off if it is now hidden
                                 float fGlow = llList2Float(llGetLinkPrimitiveParams(iLinkCount,[PRIM_GLOW,0]),0) ;
                                 if (fGlow > 0) {  //if it glows, store glow
                                     if (~iGlowsIndex) g_lGlows = llListReplaceList(g_lGlows,[fGlow],iGlowsIndex+1,iGlowsIndex+1) ;
                                     else g_lGlows += [iLinkCount, fGlow];
-                                }
+                                } else if (~iGlowsIndex) g_lGlows = llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex+1); //remove glow from list
                                 llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
                             }
                         }
