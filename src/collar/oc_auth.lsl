@@ -225,7 +225,7 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
-RemovePerson(string sName, string sToken, key kCmdr) {
+RemovePerson(string sName, string sToken, key kCmdr, integer iPromoted) {
     //where "lPeople" is a 2-strided list in form key,name
     //looks for strides identified by "name", removes them if found, and returns the list
     //also handles notifications so as to reduce code duplication in the link message event
@@ -259,17 +259,14 @@ RemovePerson(string sName, string sToken, key kCmdr) {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You no longer own yourself.\n",kCmdr);
                     else
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% does no longer own themselves.\n",kCmdr);
-                } else
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your access to %WEARERNAME%'s %DEVICETYPE% has been revoked.",kID);
+                } 
             }
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(llList2Key(lPeople,iNumPeople*2))+" removed from " + sToken + " list.",kCmdr);
+            if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(llList2Key(lPeople,iNumPeople*2))+" removed from " + sToken + " list.",kCmdr);
             lPeople = llDeleteSubList(lPeople, iNumPeople*2, iNumPeople*2+1);
             iFound=TRUE;
         }
     }
     if (iFound){
-        // string sOldToken=sToken;
-         //if (sToken == "secowner") sOldToken+="s";
         if (llGetListLength(lPeople)>0)
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         else
@@ -339,12 +336,11 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         if (kPerson != g_kWearer) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Building relationship...",g_kWearer);
             if (sToken == "owner") {
-                if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv);
-                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You belong to "+NameURI(kPerson)+" now!",g_kWearer);
+                if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv, TRUE);
+                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
                 llPlaySound("1ec0f327-df7f-9b02-26b2-8de6bae7f9d5",1.0);
             } else if (sToken == "trust") {
-                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv);
+                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
                 llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
             }
@@ -360,8 +356,6 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         }
         if (sToken == "trust")
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [http://www.opencollar.at/intro.html here] what that means!\n",kPerson);
-       // string sOldToken=sToken;
-       // if (sToken == "secowner") sOldToken+="s";
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         if (sToken=="owner") {
@@ -520,7 +514,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if (sTmpName=="") RemPersonMenu(kID, sAction, iNum);
         else {
-            RemovePerson(sTmpName, sAction, kID);
+            RemovePerson(sTmpName, sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID,FALSE));
         }
      } else if (sCommand == "group") {
