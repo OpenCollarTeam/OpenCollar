@@ -339,13 +339,11 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         integer iRemainingChatLen;
         while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
             if(iRemainingChatLen<1015) {
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+sThisChat,kRecipient);
-                //Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
+                Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
                 sThisChat="";
             } else {
                 string sMessageChunk=TruncateString(sPrompt,1015);
-                llMessageLinked(LINK_ROOT,NOTIFY,"0"+sMessageChunk,kRecipient);
-                //Notify(kRecipient,sMessageChunk,FALSE);
+                Notify(kRecipient,sMessageChunk,FALSE);
                 sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
             }
         }
@@ -477,10 +475,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (sValue == "off") {
             if (~i) return; // already in list
             MRSBUN += [kID];
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Verbose Feature activated for you.",kID);
+            Notify(kID,"Verbose Feature activated for you.",FALSE);
         } else if (~i) {
             MRSBUN = llDeleteSubList(MRSBUN, i, i);
-            llMessageLinked(LINK_ROOT,NOTIFY,"0"+"Verbose Feature de-activated for you.",kID);
+            Notify(kID,"Verbose Feature de-activated for you.",FALSE);
         } else return; // not in list to start with
         if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
         else llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
@@ -624,12 +622,26 @@ default {
                             lRemovedAgents = llDeleteSubList(lRemovedAgents,0,0);
                         }
                     }
-                    llMessageLinked(LINK_ROOT,NOTIFY, "0" + findNotify, kRCPT);
+                    Notify(kRCPT,findNotify,FALSE);
                     llMessageLinked(LINK_ALL_OTHERS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kRCPT+"|"+(string)iAuth+"|"+TYPE+"|BACK", kID);
                 } else {
                     //Debug("Found avatars:"+llDumpList2String(agentList,","));
                     g_iSelectAviMenu = TRUE;
                     ClearUser(kRCPT);
+                    
+                    // sort agentlist by distance
+                    vector myPos = llList2Vector(llGetObjectDetails(g_kWearer,[OBJECT_POS]),0);
+                    list agent_dist ;
+                    numAgents = llGetListLength(agentList)+1;
+                    while(numAgents--) {
+                        key agent = llList2Key(agentList,numAgents);
+                        float dist = llVecDist(myPos,llList2Vector(llGetObjectDetails(agent,[OBJECT_POS]),0));
+                        agent_dist += [dist,agent];
+                    }
+                    agentList = llList2ListStrided(llDeleteSubList(llListSort(agent_dist,2,TRUE),0,0),0,-1,2);
+                    agent_dist = [];
+                    //***********
+                    
                     Dialog(kRCPT, "\nChoose the person you like to add:\n", agentList, [UPMENU], 0, kID, -1, iAuth, "getavi_|"+REQ+"|"+TYPE); //iDigits==-1 means dialog should calculate numbered dialogs
                 }
             //} else {
