@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 150902.1                              //
+//                           Camera - 151001.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Medea Destiny, //
 //  littlemousy, Romka Swallowtail et al.                                   //

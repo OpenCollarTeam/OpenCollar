@@ -21,9 +21,10 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer Bundles - 150917.1                       //
+//                       Installer Bundles - 151001.1                       //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Garvin Twine   //
+//  and Romka Swallowtail                                                   //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
