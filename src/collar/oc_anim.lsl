@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 151001.1                             //
+//                          Animator - 151006.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -183,7 +183,7 @@ AnimMenu(key kID, integer iAuth) {
 }
 
 PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
-    string sPrompt = "\n[http://www.opencollar.at/animations.html#pose Pose]\n\nCurrently playing: ";
+    string sPrompt = "\n[http://www.opencollar.at/animations.html Pose]\n\nCurrently playing: ";
     if (g_sCurrentPose == "")sPrompt += "-\n";
     else sPrompt += g_sCurrentPose +"\n";
 
