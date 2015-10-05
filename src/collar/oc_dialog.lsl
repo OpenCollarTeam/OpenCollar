@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 151001.1                              //
+//                           Dialog - 151005.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -632,7 +632,7 @@ default {
                     // sort agentlist by distance
                     vector myPos = llList2Vector(llGetObjectDetails(g_kWearer,[OBJECT_POS]),0);
                     list agent_dist ;
-                    numAgents = llGetListLength(agentList)+1;
+                    numAgents = llGetListLength(agentList);
                     while(numAgents--) {
                         key agent = llList2Key(agentList,numAgents);
                         float dist = llVecDist(myPos,llList2Vector(llGetObjectDetails(agent,[OBJECT_POS]),0));
