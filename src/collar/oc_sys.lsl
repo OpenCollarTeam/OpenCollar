@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151001.1                              //
+//                           System - 151005.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -214,8 +214,8 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-string NameURI(key kID){
-    return "secondlife:///app/agent/"+(string)kID+"/about";
+string NameGroupURI(string sStr){
+    return "secondlife:///app/"+sStr+"/inspect";
 }
 
 OptionsMenu(key kID, integer iAuth) {
@@ -247,7 +247,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
-    if (g_iOffDist) sPrompt += "["+NameURI(g_sDistributor)+" Official Distributor]";
+    if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
@@ -385,7 +385,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
-        if (g_iOffDist) sVersion += "["+NameURI(g_sDistributor)+" Official Distributor]";
+        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
         else sVersion += "Unverified.";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
@@ -712,7 +712,7 @@ default
                     g_sLastNewsTime = this_news_time;
                 }
             } else if (id == g_kDistCheck) {
-                if(~llSubStringIndex(body,g_sDistributor))g_iOffDist=1;
+                if(~llSubStringIndex(body,llGetSubString(g_sDistributor,-36,-1))) g_iOffDist=1;
                 else {g_sDistributor="";g_iOffDist=0;}
             }
         }
