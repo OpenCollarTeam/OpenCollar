@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151005.1                              //
+//                           System - 151006.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,7 +57,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="151001.1";
+string g_sCollarVersion="4.0.0";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -246,7 +246,7 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
+    string sPrompt="\nOpenCollar™ Version: "+g_sCollarVersion+"\n\nOrigin: ";
     if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
@@ -260,7 +260,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\nOpenCollar "+g_sCollarVersion;
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html OpenCollar™ Main Menu]";
     if(!g_iLatestVersion) sPrompt+="\n\nI'm outdated, please update me!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -384,7 +384,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             UpdateConfirmMenu(); 
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\n\nOrigin: ";
+        string sVersion = "\n\nOpenCollar™ Version: "+g_sCollarVersion+"\n\nOrigin: ";
         if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
         else sVersion += "Unverified.";
         if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
