@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//      Disgraced RLV - 151001.1         .*' /  .*' ; .*`- +'  `*'          //
+//      Disgraced RLV - 151006.1         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -145,7 +145,7 @@ integer SENSORDIALOG               = -9003;
 
 key g_kLastForcedSeat;
 string g_sLastForcedSeat;
-string g_sTerminalText = "\n[http://www.opencollar.at/rlv.html#terminal RLV Command Terminal]\n\nType one command per line without \"@\" sign.\n\n>_";
+string g_sTerminalText = "\n[http://www.opencollar.at/rlv.html#terminal RLV Command Terminal]\n\nType one command per line without \"@\" sign.";
 
 /*
 integer g_iProfiled=1;
