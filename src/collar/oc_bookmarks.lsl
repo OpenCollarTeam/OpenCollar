@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 151001.1                            //
+//                          Bookmarks - 151006.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -399,6 +399,10 @@ PrintDestinations(key kID) {  // On inventory change, re-read our ~destinations 
 }
 
 default {
+    on_rez(integer iStart) {
+        ReadDestinations();
+    }
+    
     state_entry() {
         g_kWearer = llGetOwner();  // store key of wearer
         ReadDestinations(); //Grab our presets
