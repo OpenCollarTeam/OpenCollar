@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151007.1                          //
+//                         Communicator - 151007.2                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -337,7 +337,10 @@ default {
        // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = NameURI(g_kWearer);
-        g_sDeviceName = llGetObjectName();
+        //g_sDeviceName = llGetObjectName();
+        g_sDeviceName = llGetObjectDesc();
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
         g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
         //inlined single use getOwnerChannel function
