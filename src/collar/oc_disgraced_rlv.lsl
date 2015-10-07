@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//      Disgraced RLV - 151006.1         .*' /  .*' ; .*`- +'  `*'          //
+//      Disgraced RLV - 151007.1         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -145,7 +145,7 @@ integer SENSORDIALOG               = -9003;
 
 key g_kLastForcedSeat;
 string g_sLastForcedSeat;
-string g_sTerminalText = "\n[http://www.opencollar.at/rlv.html#terminal RLV Command Terminal]\n\nType one command per line without \"@\" sign.";
+string g_sTerminalText = "\n[http://www.opencollar.at/rlv.html RLV Command Terminal]\n\nType one command per line without \"@\" sign.";
 
 /*
 integer g_iProfiled=1;
@@ -173,7 +173,7 @@ Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer i
 }
 
 RestrictionsMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/rlv.html#restrictions Restrictions]";
+    string sPrompt = "\n[http://www.opencollar.at/rlv.html Restrictions]";
     list lMyButtons;
     
     if (g_bSendRestricted) lMyButtons += "☐ Send IMs";
@@ -219,7 +219,7 @@ OutfitsMenu(key kID, integer iAuth) {
 }
 
 FolderMenu(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[http://www.opencollar.at/folders.html#outfits Outfits]";
+    string sPrompt = "\n[http://www.opencollar.at/outfits.html Outfits]";
     sPrompt += "\n\nCurrent Path = "+g_sCurrentPath;
     list lMyButtons = llParseString2List(sFolders,[","],[""]);
     lMyButtons = llListSort(lMyButtons, 1, TRUE);
@@ -237,7 +237,7 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
 }
 
 RemAttached(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[http://www.opencollar.at/folders.html#outfits Outfits]";
+    string sPrompt = "\n[http://www.opencollar.at/outfits.html Outfits]";
     sPrompt += "\n\nRemove Attachment by Name";
     list lMyButtons = llParseString2List(sFolders,[","],[""]);
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "remattached");

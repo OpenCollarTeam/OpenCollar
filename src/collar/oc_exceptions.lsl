@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Exceptions - 151001.1                            //
+//                         Exceptions - 151007.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Medea Destiny, Garvin Twine, littlemousy,               //
@@ -212,7 +212,7 @@ Menu(key kID, string sWho, integer iAuth) {
         return;
     }
     list lButtons = ["Owner", "Trusted"];
-    string sPrompt = "\n[http://www.opencollar.at/rlv.html#exceptions Exceptions]\n\nSet execptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
+    string sPrompt = "\n[http://www.opencollar.at/rlv.html Exceptions]\n\nSet execptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "main");
 }
 
