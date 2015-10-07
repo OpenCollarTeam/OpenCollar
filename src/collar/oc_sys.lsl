@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151007.2                              //
+//                           System - 151007.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -246,11 +246,11 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar™ Version: "+g_sCollarVersion+"\nOrigin: ";
+    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\nOrigin: ";
     if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
-    if(!g_iLatestVersion) sPrompt+="\n\nUpdate available!";
+    if(!g_iLatestVersion) sPrompt+="\n\n[http://www.opencollar.at/updates.html Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     string sNewsButton="☐ News";
@@ -260,8 +260,8 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/main-menu.html OpenCollar™ Main Menu]";
-    if(!g_iLatestVersion) sPrompt+="\n\nI'm outdated, please update me!";
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html OpenCollar™\tMain Menu]";
+    if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
@@ -384,10 +384,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             UpdateConfirmMenu(); 
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar™ Version: "+g_sCollarVersion+"\nOrigin: ";
+        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\nOrigin: ";
         if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]\n";
-        else sVersion += "Unverified.\n";
-        if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!\n";
+        else sVersion += "Unverified\n";
+        if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
