@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151007.2                          //
+//                         Communicator - 151007.3                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -230,7 +230,8 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDevice Name command help:\n%PREFIX% device name [newname|reset]\n";
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
             } else if (sCmdOptions == "reset") {
-                g_sDeviceName = sObjectName;
+                g_sDeviceName = llGetObjectDesc();
+                if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
                 sMessage = "The device name is reset to \""+g_sDeviceName+"\".";
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
@@ -339,6 +340,7 @@ default {
         g_sWearerName = NameURI(g_kWearer);
         //g_sDeviceName = llGetObjectName();
         g_sDeviceName = llGetObjectDesc();
+        if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
         g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
