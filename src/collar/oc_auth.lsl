@@ -456,26 +456,26 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             integer iLength = llGetListLength(g_lOwner);
             string sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lOwner, --iLength) + " (" + llList2String(g_lOwner,  --iLength) + ")";
+                sOutput += "\n" + NameURI(llList2String(g_lOwner, iLength-=2));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Owners: "+sOutput,kID);
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Owners: none",kID);
             iLength = llGetListLength(g_lTempOwner);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lTempOwner, --iLength) + " (" + llList2String(g_lTempOwner,  --iLength) + ")";
+                sOutput += "\n" + NameURI(llList2String(g_lTempOwner, iLength-=2));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Temporary Owner: "+sOutput,kID);
             iLength = llGetListLength(g_lTrust);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lTrust, --iLength) + " (" + llList2String(g_lTrust, --iLength) + ")";
+                sOutput += "\n" + NameURI(llList2String(g_lTrust, iLength-=2));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Trusted: "+sOutput,kID);
             iLength = llGetListLength(g_lBlock);
             sOutput="";
             while (iLength)
-                sOutput += "\n" + llList2String(g_lBlock, --iLength) + " (" + llList2String(g_lBlock, --iLength) + ")";
+                sOutput += "\n" + NameURI(llList2String(g_lBlock, iLength-=2));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Blocked: "+sOutput,kID);
-            if (g_sGroupName) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: "+g_sGroupName,kID);
-            if (g_kGroup) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group Key: "+(string)g_kGroup,kID);
+            //if (g_sGroupName) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: "+g_sGroupName,kID);
+            if (g_kGroup) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: "+NameURI(g_kGroup),kID);
             sOutput="closed";
             if (g_iOpenAccess) sOutput="open";
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public Access: "+ sOutput,kID);
