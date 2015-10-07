@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151006.1                              //
+//                           System - 151007.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -246,7 +246,7 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar™ Version: "+g_sCollarVersion+"\n\nOrigin: ";
+    string sPrompt="\nOpenCollar™ Version: "+g_sCollarVersion+"\nOrigin: ";
     if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
@@ -384,10 +384,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             UpdateConfirmMenu(); 
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar™ Version: "+g_sCollarVersion+"\n\nOrigin: ";
-        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
-        else sVersion += "Unverified.";
-        if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!";
+        string sVersion = "\n\nOpenCollar™ Version: "+g_sCollarVersion+"\nOrigin: ";
+        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]\n";
+        else sVersion += "Unverified.\n";
+        if(!g_iLatestVersion) sVersion+="\nI'm outdated, please update me!\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     } else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
