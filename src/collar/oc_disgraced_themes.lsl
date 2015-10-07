@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 151001.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 151007.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -645,8 +645,8 @@ default {
                             g_sStylesNotecardReadType="processing";
                             g_sCurrentTheme = sData;
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
-                            if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
-                            else g_iLeashParticle = FALSE;
+                           // if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
+                           // else g_iLeashParticle = FALSE;
                             //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
                             UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
@@ -655,8 +655,8 @@ default {
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
                     } else {
                         if (g_sStylesNotecardReadType=="processing"){
-                           //Debug("[good line]:"+sData);
-                           //Debug("iLeash="+(string)iLeashParticle);
+                          // Debug("[good line]:"+sData);
+                          // Debug("iLeash="+(string)g_iLeashParticle);
                             //do what the notecard says
                             list lParams = llParseStringKeepNulls(sData,["~"],[]);
                             string element = llStringTrim(llList2String(lParams,0),STRING_TRIM);
@@ -664,11 +664,11 @@ default {
                             {
                                 if (~llSubStringIndex(element,"particle")) {
                                    // Debug("[good line]:"+sData);
-                                    llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
+                                    llMessageLinked(LINK_THIS, CMD_WEARER, "particle reset", "");
                                     integer i;
                                     for (; i < llGetListLength(lParams); i=i+2) {
                                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
-                                        llMessageLinked(LINK_SAVE, LM_SETTING_RESPONSE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
+                                        llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                     }
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
@@ -690,8 +690,8 @@ default {
                 } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
             } else {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
-                    if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
-                    else g_iLeashParticle = FALSE;
+                   // if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
+                   // else g_iLeashParticle = FALSE;
                     //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
                     UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
