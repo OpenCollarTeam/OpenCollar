@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 151007.2                            //
+//                         RLV System - 151008.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -173,7 +173,7 @@ DoMenu(key kID, integer iAuth){
 integer FindLED() {
     integer i = llGetNumberOfPrims();
     do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED~rlv"))
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED-R"))
             return i;
     } while (i-- > 1);
     return llGetLinkNumber();

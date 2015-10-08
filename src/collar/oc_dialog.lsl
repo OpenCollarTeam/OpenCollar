@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 151007.2                              //
+//                           Dialog - 151008.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -233,7 +233,7 @@ Say(string sMsg, integer iWhisper) {
 integer FindLED() {
     integer i = llGetNumberOfPrims();
     do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED~dialog"))
+        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED-D"))
             return i;
     } while (i-- > 1);
     return llGetLinkNumber();
