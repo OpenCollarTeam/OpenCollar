@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 151007.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 151008.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -664,9 +664,9 @@ default {
                             {
                                 if (~llSubStringIndex(element,"particle")) {
                                    // Debug("[good line]:"+sData);
-                                    llMessageLinked(LINK_THIS, CMD_WEARER, "particle reset", "");
+                                   // llMessageLinked(LINK_THIS, CMD_WEARER, "particle reset", "");
                                     integer i;
-                                    for (; i < llGetListLength(lParams); i=i+2) {
+                                    for (i=1; i < llGetListLength(lParams); i=i+2) {
                                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                         llMessageLinked(LINK_THIS, LM_SETTING_RESPONSE, "particle_"+llList2String(lParams,i)+"="+ llList2String(lParams,i+1), "");
                                     }

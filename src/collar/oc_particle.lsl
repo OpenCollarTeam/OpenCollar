@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 151001.1                             //
+//                          Particle - 151008.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -463,7 +463,8 @@ default {
                 if (kMessageID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Leash-settings restored to %DEVICETYPE% defaults.",kMessageID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "all", "");
                 GetSettings(TRUE);
-            }
+            } else if (llToLower(sMessage) == "theme particle sent")
+                GetSettings(TRUE);
         } else if (iNum == MENUNAME_REQUEST && sMessage == PARENTMENU)
             llMessageLinked(iSender, MENUNAME_RESPONSE, PARENTMENU + "|" + SUBMENU, "");
         else if (iNum == DIALOG_RESPONSE) {
