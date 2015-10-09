@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 // Based on OpenCollar - takeme 3.980
-// Compatible with OpenCollar API   3.9
+// Compatible with OpenCollar API 4.0
 // and/or minimum Disgraced Version 1.3.2
 
 key     g_kWearer;

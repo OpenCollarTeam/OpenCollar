@@ -50,7 +50,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-// Compatible with OpenCollar API   4.0
+// Compatible with OpenCollar API 4.0
 // and/or minimum Disgraced Version 2.x
 
 //menu setup

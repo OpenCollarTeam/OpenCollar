@@ -53,7 +53,7 @@
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
-// Compatible with OpenCollar API   3.9
+// Compatible with OpenCollar API 4.0
 // and/or minimum Disgraced Version 2.1.0
 
 string g_sSubMenu = "Size/Position";

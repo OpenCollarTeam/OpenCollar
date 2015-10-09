@@ -54,7 +54,7 @@
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
 // OpenCollar - styles is derivative of Virtual Disgrace - Paint
-// Compatible with OpenCollar API   3.9
+// Compatible with OpenCollar API 4.0
 // and/or minimum Disgraced Version 1.9.7
 
 list g_lElements;  //list of element types, built on script start.  Changed event restarts script on link set change
