@@ -455,7 +455,6 @@ Menu(key kID, integer iAuth, string sMode)
             sPrompt+="\n\nYou have pending requests.";
             lButtons+=["Pending"];
         }
-        //lButtons+=["Access Lists", "MinMode", "Help"];
         lButtons+=["Access Lists", "MinMode"];
         sPrompt+="\n\nMake a choice:";
     }
@@ -859,19 +858,14 @@ default {
                         llMessageLinked(LINK_RLV, iAuth,"show restrictions", kAv);
                         Menu(kAv, iAuth, "Main");
                     }
-                    //else if (sMsg=="Help")
-                    //{
-                    //    llGiveInventory(kAv,"OpenCollar Guide");
-                    //    Menu(kAv, iAuth, "Main");
-                    //}
                     else
                     {
-                        string sCmd = "relay ";
-                        if (sMenuType == "MinMode") sCmd += "minmode ";                        
                         sMsg = llToLower(sMsg);
-                        if (llSubStringIndex(sMsg,"☐ ")==0) sCmd += llDeleteSubString(sMsg,0,1) + " on";
-                        if (llSubStringIndex(sMsg,"☒ ")==0) sCmd += llDeleteSubString(sMsg,0,1) + " off";
-                        UserCommand(iAuth, sCmd, kAv);                        
+                        if (llSubStringIndex(sMsg,"☐ ")==0) sMsg = llDeleteSubString(sMsg,0,1) + " on";
+                        if (llSubStringIndex(sMsg,"☒ ")==0) sMsg = llDeleteSubString(sMsg,0,1) + " off";
+                        if (sMenuType == "MinMode") sMsg = "relay minmode " + sMsg;
+                        else sMsg = "relay " + sMsg;
+                        UserCommand(iAuth, sMsg, kAv);
                         Menu(kAv, iAuth, sMenuType);
                     }                    
                 }
