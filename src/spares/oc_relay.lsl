@@ -848,7 +848,7 @@ default {
                     else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
                     else if (sMsg=="Grabbed by")
                     {
-                        llMessageLinked(LINK_SET, iAuth,"showrestrictions",kAv);
+                        llMessageLinked(LINK_SET, iAuth,"show restrictions",kAv);
                         Menu(kAv, iAuth);
                     }
                     else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
