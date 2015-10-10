@@ -51,25 +51,36 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+string g_sParentMenu = "Apps";
+string g_sSubMenu = "Relay";
+
 integer RELAY_CHANNEL = -1812221819;
 integer g_iRlvListener;
 
 //MESSAGE MAP
-//integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-//integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
-//integer COMMAND_EVERYONE = 504;
-integer COMMAND_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
-integer COMMAND_SAFEWORD = 510;
-integer COMMAND_RELAY_SAFEWORD = 511;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+integer CMD_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
+integer CMD_SAFEWORD = 510;
+integer CMD_RELAY_SAFEWORD = 511;
+
+integer NOTIFY = 1002;
+
+integer LINK_DIALOG = 3;
+integer LINK_RLV = 4;
+integer LINK_SAVE = 5;
+integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
-                            //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//str must be in form of "token=value"
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
-integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE = 2003;//delete token from DB
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the httpdb
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -85,37 +96,26 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string g_sParentMenu = "Apps";
-string g_sSubMenu = "Relay";
-
 string UPMENU = "BACK";
-
-string ALL = " ALL";
+string ALL = "ALL";
 
 key g_kWearer;
 
-key g_kMenuID;
-key g_kMinModeMenuID;
-key g_kAuthMenuID;
-key g_kListMenuID;
-key g_kListID;
+list g_lMenuIDs;
+integer g_iMenuStride = 3;
 
 integer g_iGarbageRate = 60; //garbage collection rate
 
-list g_lSources=[];
-//list users=[];
-list g_lTempWhiteList=[];
-list g_lTempBlackList=[];
-list g_lTempUserWhiteList=[];
-list g_lTempUserBlackList=[];
-list g_lObjWhiteList=[];
-list g_lObjBlackList=[];
-list g_lAvWhiteList=[]; // keys stored as string since strings is what you get when restoring settings
-list g_lAvBlackList=[]; // same here (this fixes issue 1253)
-list g_lObjWhiteListNames=[];
-list g_lObjBlackListNames=[];
-list g_lAvWhiteListNames=[];
-list g_lAvBlackListNames=[];
+list g_lSources;
+
+list g_lTempTrustObj;
+list g_lTempBlockObj;
+list g_lTempTrustUser;
+list g_lTempBlockUser;
+list g_lTrustObj; // 2-strided list uuid,name
+list g_lBlockObj; // 2-strided list uuid,name
+list g_lTrustAv; // keys stored as string since strings is what you get when restoring settings
+list g_lBlockAv; // same here (this fixes issue 1253)
 
 integer g_iRLV=FALSE;
 list g_lQueue=[];
@@ -123,22 +123,16 @@ integer QSTRIDES=3;
 integer g_iListener=0;
 integer g_iAuthPending = FALSE;
 integer g_iRecentSafeword;
-string g_sListType;
 
 //relay specific message map
 integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
 
-//collar owners, secowners and blacklist caching
-//string g_sOwnerssToken = "owner";
-//string g_sSecOwnerssToken = "secowners";
-//string g_sBlackListsToken = "blacklist";
-string CTYPE = "collar";
-string WEARERNAME;
-list g_lCollarOwnersList;
-list g_lCollarSecOwnersList;
-list g_lCollarBlackList;
-
+//collar Owners, TempOwners, Trusts and Blocks caching
+list g_lOwner;
+list g_lTempOwner;
+list g_lTrust;
+list g_lBlock;
 
 //settings
 integer g_iMinBaseMode = 0;
@@ -151,13 +145,12 @@ integer g_iLandMode = 1;
 integer g_iPlayMode = 0;
 
 key g_kDebugRcpt = NULL_KEY; // recipient key for relay chat debugging (useful since you cannot eavesdrop llRegionSayTo)
-string g_sScript;
 
 /*
 integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to 
+    //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
         g_iProfiled=1;
@@ -167,25 +160,15 @@ Debug(string sStr) {
 }
 */
 
-key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
-{
-    key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
-    //Debug("Made menu.");
-    return kID;
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+    key kMenuID = llGenerateKey();
+    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
 
 // Sanitizes a key coming from the outside, so that only valid
 // keys are returned, and invalid ones are mapped to NULL_KEY
@@ -227,52 +210,53 @@ string Mode2String(integer iMin)
     return sOut;
 }
 
-SaveSettings()
+/*
+SaveTrustObj()
 {
-    string sNewSettings= g_sScript + "settings=mode:"
-        +(string)(512 * g_iMinPlayMode + 256 * g_iMinLandMode + 128 * g_iMinSafeMode + 32 * g_iMinBaseMode
+    if (llGetListLength(g_lTrustObj) > 0)
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvrelay_trustobj=" + llDumpList2String(g_lTrustObj,","), "");
+    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvrelay_trustobj", "");
+}
+
+SaveBlockObj()
+{
+    if (llGetListLength(g_lBlockObj) > 0)
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvrelay_blockobj=" + llDumpList2String(g_lBlockObj,","), "");
+    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvrelay_blockobj", "");
+}
+*/
+SaveTrustAv()
+{
+    if (llGetListLength(g_lTrustAv) > 0)
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvrelay_trustav=" + llDumpList2String(g_lTrustAv,","), "");
+    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvrelay_trustav", "");
+}
+
+SaveBlockAv()
+{
+    if (llGetListLength(g_lBlockAv) > 0)
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvrelay_blockav="+llDumpList2String(g_lBlockAv,",") , "");
+    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvrelay_blockav", "");
+}
+
+UpdateMode(integer iMode)
+{
+    g_iBaseMode = iMode        & 3;
+    g_iSafeMode = (iMode >> 2) & 1;
+    g_iLandMode = (iMode >> 3) & 1;
+    g_iPlayMode = (iMode >> 4) & 1;
+    g_iMinBaseMode = (iMode >> 5) & 3;
+    g_iMinSafeMode = (iMode >> 7) & 1;
+    g_iMinLandMode = (iMode >> 8) & 1;
+    g_iMinPlayMode = (iMode >> 9) & 1;
+}
+
+SaveMode()
+{
+    string sMode = (string)(512 * g_iMinPlayMode + 256 * g_iMinLandMode + 128 * g_iMinSafeMode + 32 * g_iMinBaseMode
         + 16 * g_iPlayMode + 8 * g_iLandMode + 4 * g_iSafeMode + g_iBaseMode);
-//    if ( g_lObjWhiteList != [] ) sNewSettings+=",objwhitelist:"+llDumpList2String(g_lObjWhiteList,"/");
-//    if ( g_lObjBlackList != [] ) sNewSettings+=",objblacklist:"+llDumpList2String(g_lObjBlackList,"/");
-    if ( g_lAvWhiteList != [] ) sNewSettings+=",avwhitelist:"+llDumpList2String(g_lAvWhiteList,"/")
-        +",avwhitelistnames:"+llDumpList2String(g_lAvWhiteListNames,"/");
-    if ( g_lAvBlackList != [] ) sNewSettings+=",avblacklist:"+llDumpList2String(g_lAvBlackList,"/")
-        +",avblacklistnames:"+llDumpList2String(g_lAvBlackListNames,"/");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, sNewSettings, "");
+    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvrelay_mode=" + sMode, "");
 }
-
-UpdateSettings(string sSettings)
-{
-    list lArgs = llParseString2List(sSettings,[","],[]);
-    integer i;
-    for (i=0;i<(lArgs!=[]);++i)
-    {
-        list setting=llParseString2List(llList2String(lArgs,i),[":"],[]);
-        string var=llList2String(setting,0);
-        list vals=llParseString2List(llList2String(setting,1),["/"],[]);
-        if (var=="mode")
-        {
-            integer iMode=llList2Integer(setting,1);
-            g_iBaseMode = iMode        & 3;
-            g_iSafeMode = (iMode >> 2) & 1;
-            g_iLandMode = (iMode >> 3) & 1;
-            g_iPlayMode = (iMode >> 4) & 1;
-            g_iMinBaseMode = (iMode >> 5) & 3;
-            g_iMinSafeMode = (iMode >> 7) & 1;
-            g_iMinLandMode = (iMode >> 8) & 1;
-            g_iMinPlayMode = (iMode >> 9) & 1;
-        }
-//        else if (var=="objwhitelist") g_lObjWhiteList=vals;
-//        else if (var=="objblacklist") g_lObjBlackList=vals;
-//        else if (var=="objwhitelistnames") g_lObjWhiteListNames=vals;
-//        else if (var=="objblacklistnames") g_lObjBlackListNames=vals;
-        else if (var=="avwhitelist") g_lAvWhiteList=vals;
-        else if (var=="avblacklist") g_lAvBlackList=vals;
-        else if (var=="avwhitelistnames") g_lAvWhiteListNames=vals;
-        else if (var=="avblacklistnames") g_lAvBlackListNames=vals;
-    }
-}
-
 
 integer Auth(key object, key user)
 {
@@ -281,14 +265,14 @@ integer Auth(key object, key user)
     //object auth
     integer iSourceIndex=llListFindList(g_lSources,[object]);
     if (~iSourceIndex) {}
-    else if (~llListFindList(g_lTempBlackList+g_lObjBlackList,[object])) return -1;
-    else if (~llListFindList(g_lAvBlackList,[(string)kOwner])) return -1;
-    else if (~llListFindList(g_lCollarBlackList,[(string)kOwner])) return -1;
+    else if (~llListFindList(g_lTempBlockObj+g_lBlockObj,[object])) return -1;
+    else if (~llListFindList(g_lBlockAv,[(string)kOwner])) return -1;
+    else if (~llListFindList(g_lBlock,[(string)kOwner])) return -1;
     else if (g_iBaseMode==3) {}
     else if (g_iLandMode && llGetOwnerKey(object)==llGetLandOwnerAt(llGetPos())) {}
-    else if (~llListFindList(g_lTempWhiteList+g_lObjWhiteList,[object])) {}
-    else if (~llListFindList(g_lAvWhiteList,[(string)kOwner])) {}
-    else if (~llListFindList(g_lCollarOwnersList+g_lCollarSecOwnersList,[(string)kOwner])) {}
+    else if (~llListFindList(g_lTempTrustObj+g_lTrustObj,[object])) {}
+    else if (~llListFindList(g_lTrustAv,[(string)kOwner])) {}
+    else if (~llListFindList(g_lOwner+g_lTrust+g_lTempOwner,[(string)kOwner])) {}
 //    else if (g_iBaseMode==1) return -1; we should not block playful in restricted mode
     else iAuth=0;
     //user auth
@@ -297,11 +281,11 @@ integer Auth(key object, key user)
 //        if (~iSource_iIndex&&user==(key)llList2String(users,iSource_iIndex)) {}
 //        else if (user==g_kLastUser) {}
 //        else
-        if (~llListFindList(g_lAvBlackList+g_lTempUserBlackList,[user])) return -1;
-        else if (~llListFindList(g_lCollarBlackList,[(string)user])) return -1;
+        if (~llListFindList(g_lBlockAv+g_lTempBlockUser,[user])) return -1;
+        else if (~llListFindList(g_lBlock,[(string)user])) return -1;
         else if (g_iBaseMode == 3) {}
-        else if (~llListFindList(g_lAvWhiteList+g_lTempUserWhiteList,[user])) {}
-        else if (~llListFindList(g_lCollarOwnersList+g_lCollarSecOwnersList,[(string)user])) {}
+        else if (~llListFindList(g_lTrustAv+g_lTempTrustUser,[user])) {}
+        else if (~llListFindList(g_lOwner+g_lTrust+g_lTempOwner,[(string)user])) {}
 //        else if (g_iBaseMode==1) return -1;
         else return 0;
     }
@@ -309,12 +293,9 @@ integer Auth(key object, key user)
     return iAuth;
 }
 
-string Name(key id) // return DisplayName + LegacyName or URI if avatar not in region
+string Name(key id)
 {
-    string sName = llGetDisplayName(id)+"("+llKey2Name(id)+")";
-    //if (sName == "()") sName = "secondlife:///app/agent/"+(string)id+"/completename";
-    if (sName == "()") sName = "secondlife:///app/agent/"+(string)id+"/about";
-    return sName;
+    return "secondlife:///app/agent/"+(string)id+"/inspect";
 }
 
 Dequeue()
@@ -335,18 +316,19 @@ Dequeue()
         g_lQueue = llDeleteSubList(g_lQueue, 0, QSTRIDES-1);
     }
     g_lQueue=[sCurIdent,kCurID,sCommand]+g_lQueue;
-    list lButtons=["Yes","No","Trust Object","Ban Object","Trust Owner","Ban Owner"];
+    list lButtons=["Yes","No","Trust Object","Block Object","Trust Owner","Block Owner"];
     string sOwner=Name(llGetOwnerKey(kCurID)) ;
     string sPrompt=llKey2Name(kCurID)+", owned by "+sOwner+" wants to control your viewer.";
     if (llGetSubString(sCommand,0,6)=="!x-who/")
     {
-        key kUser = SanitizeKey(llGetSubString(sCommand,7,42));        
-        lButtons+=["Trust User","Ban User"];
+        key kUser = SanitizeKey(llGetSubString(sCommand,7,42));
+        lButtons+=["Trust User","Block User"];
         sPrompt+="\n" + Name(kUser) + " is currently using this device.";
     }
     sPrompt+="\n\nDo you want to allow this?";
     g_iAuthPending = TRUE;
-    g_kAuthMenuID = Dialog(g_kWearer, sPrompt, lButtons, [], 0, COMMAND_WEARER); // should be enough to dequeue...
+
+    Dialog(g_kWearer, sPrompt, lButtons, [], 0, CMD_WEARER, "AuthMenu");
 }
 
 
@@ -363,7 +345,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         list lSubArgs = llParseString2List(sCom,["="],[]);
         string sVal = llList2String(lSubArgs,1);
         string sAck = "ok";
-        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
+        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_RLV,RLV_CMD,"clear",kID);
         else if (sCom == "!version") sAck = "1100";
         else if (sCom == "!implversion") sAck = "OpenCollar 3.9";
         else if (sCom == "!x-orgversions") sAck = "ORG=0003/who=001";
@@ -379,11 +361,11 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         }//probably an ill-formed command, not answering
         else if ((!llSubStringIndex(sCom,"@version"))||(!llSubStringIndex(sCom,"@get"))||(!llSubStringIndex(sCom,"@findfolder"))) //(IsChannelCmd(sCom))
         {
-            if ((integer)sVal) llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
+            if ((integer)sVal) llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
             else sAck="ko";
         }
         else if (g_iPlayMode&&llGetSubString(sCom,0,0)=="@"&&sVal!="n"&&sVal!="add")
-            llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID);
+            llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(sCom,1,-1), kID);
         else if (!iAuthed)
         {
             if (iGotWho) return "!x-who/"+(string)kWho+"|"+llDumpList2String(llList2List(lCommands,i,-1),"|");
@@ -393,9 +375,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         {
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
-            {
-                llMessageLinked(LINK_SET,RLV_CMD,sBehav+"="+sVal,kID);
-            }
+                llMessageLinked(LINK_RLV,RLV_CMD,sBehav+"="+sVal,kID);
             else sAck="ko";
         }
         else
@@ -422,12 +402,12 @@ SafeWord()
 {
     if (g_iSafeMode)
     {
-        llMessageLinked(LINK_SET, COMMAND_RELAY_SAFEWORD, "","");
+        llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "","");
         llOwnerSay("You have safeworded");
-        g_lTempBlackList=[];
-        g_lTempWhiteList=[];
-        g_lTempUserBlackList=[];
-        g_lTempUserWhiteList=[];
+        g_lTempBlockObj=[];
+        g_lTempTrustObj=[];
+        g_lTempBlockUser=[];
+        g_lTempTrustUser=[];
         integer i;
         for (i=0;i<(g_lSources!=[]);++i)
         {
@@ -438,10 +418,8 @@ SafeWord()
         refreshRlvListener();
         llSetTimerEvent(30.);
     }
-    else
-    {
-        llOwnerSay("Sorry, safewording is disabled now!");
-    }
+    else llOwnerSay("Sorry, safewording is disabled now!");
+
 }
 
 //----Menu functions section---//
@@ -476,7 +454,7 @@ Menu(key kID, integer iAuth)
     lButtons+=["Access Lists", "MinMode"];
     sPrompt+="\n\nMake a choice:";
 
-    g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
 MinModeMenu(key kID, integer iAuth)
@@ -490,129 +468,110 @@ MinModeMenu(key kID, integer iAuth)
     if (g_iMinSafeMode) lButtons+=["☒ Safeword"];
     else lButtons+=["☐ Safeword"];
     sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed to go under.\n(owner only)";
-    g_kMinModeMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~MinMode");
 }
 
-ListsMenu(key kID, integer iAuth)
+AccessList(key kID, integer iAuth)
 {
-    string sPrompt="\n\nWhat list do you want to remove items from?";
-    list lButtons=["Trusted Object","Banned Object","Trusted Avatar","Banned Avatar",UPMENU];
-    sPrompt+="\n\nMake a choice:";
-    g_kListMenuID = Dialog(kID, sPrompt, lButtons, [], 0, iAuth);
+    list lButtons=[];
+    string sPrompt = "\nAccess Lists: ";
+
+    if (llGetListLength(g_lTrustObj) > 0) lButtons+=["Trust Objects"];
+    if (llGetListLength(g_lBlockObj) > 0) lButtons+=["Block Objects"];
+
+    if (llGetListLength(g_lTrustAv) > 0) lButtons+=["Trust Avatars"];
+    if (llGetListLength(g_lBlockAv) > 0) lButtons+=["Block Avatars"];
+
+    if (lButtons == []) sPrompt += "all empty.";
+    else sPrompt += "\n\nWhat list do you want to remove items from?\n\nMake a choice:";
+
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Access~List");
 }
 
-PListsMenu(key kID, string sMsg, integer iAuth)
+ListsMenu(key kID, string sMsg, integer iAuth)
 {
-    list lOList;
-    list lOListNames;
+    list lButtons;
     string sPrompt;
-    if (sMsg==UPMENU)
+    if (sMsg == "Trust Objects")
     {
-        Menu(kID, iAuth);
-        return;
+        lButtons = llList2ListStrided(llDeleteSubList(g_lTrustObj,0,0), 0, -1, 2);
+        sPrompt = "\n\nWhat object do you want to stop trusting?";
     }
-    else if (sMsg=="Trusted Object")
+    else if (sMsg == "Block Objects")
     {
-        lOList=g_lObjWhiteList;
-        lOListNames=g_lObjWhiteListNames;
-        sPrompt="\n\nWhat object do you want to stop trusting?";
-        if (lOListNames == []) sPrompt+="\n\nNo object in list.";
-        else  sPrompt+="\n\nObserve chat for the list.";
+        lButtons = llList2ListStrided(llDeleteSubList(g_lBlockObj,0,0), 0, -1, 2);
+        sPrompt = "\n\nWhat object do you want not to block anymore?";
     }
-    else if (sMsg=="Banned Object")
+    else if (sMsg == "Trust Avatars")
     {
-        lOList=g_lObjBlackList;
-        lOListNames=g_lObjBlackListNames;
-        sPrompt="\n\nWhat object do you want not to ban anymore?";
-        if ( lOListNames == []) sPrompt+="\n\nNo object in list.";
-        else sPrompt+="\n\nObserve chat for the list.";
+        lButtons = g_lTrustAv;
+        sPrompt = "\n\nWhat avatar do you want to stop trusting?";
     }
-    else if (sMsg=="Trusted Avatar")
+    else if (sMsg == "Block Avatars")
     {
-        lOList=g_lAvWhiteList;
-        lOListNames=g_lAvWhiteListNames;
-        sPrompt="\n\nWhat avatar do you want to stop trusting?";
-        if (lOListNames == []) sPrompt+="\n\nNo avatar in list.";
-        else sPrompt+="\n\nObserve chat for the list.";
-    }
-    else if (sMsg=="Banned Avatar")
-    {
-        lOList=g_lAvBlackList;
-        lOListNames=g_lAvBlackListNames;
-        sPrompt="\n\nWhat avatar do you want not to ban anymore?";
-        if (lOListNames == []) sPrompt+="\n\nNo avatar in list.";
-        else sPrompt+="\n\nObserve chat for the list.";
+        lButtons = g_lBlockAv;
+        sPrompt = "\n\nWhat avatar do you want not to block anymore?";
     }
     else return;
-    g_sListType=sMsg;
-
-    list lButtons=[ALL];
-    
-    integer i;
-    for (i=0;i<(lOList!=[]);++i)
-    {
-        lButtons+=(string)(i+1);
-        //Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i)+", "+llList2String(lOList,i), FALSE );
-        Notify(kID, (string)(i+1)+": "+llList2String(lOListNames,i), FALSE );
-    }
-    
-    sPrompt+="\n\nMake a choice:";
-    g_kListID = Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth);
+    sPrompt += "\n\nMake a choice:";
+    Dialog(kID, sPrompt, [ALL]+lButtons, [UPMENU], -1, iAuth, "Remove~"+sMsg);
 }
 
-RemListItem(string sMsg, integer iAuth)
+RemoveList(string sMsg, integer iAuth, string sListType)
 {
-    integer i=((integer) sMsg) -1;
-    if (g_sListType=="Banned Avatar")
+    integer i;
+    if (sListType == "Block Avatars")
     {
-        if (sMsg==ALL) {g_lAvBlackList=[];g_lAvBlackListNames=[];return;}
-        if  (i<(g_lAvBlackList!=[]))
+        if (sMsg == ALL) g_lBlockAv = [];
+        else
         {
-            g_lAvBlackList=llDeleteSubList(g_lAvBlackList,i,i);
-            g_lAvBlackListNames=llDeleteSubList(g_lAvBlackListNames,i,i);
+            i = llListFindList(g_lBlockAv,[sMsg]);
+            if (i!=-1) g_lBlockAv = llDeleteSubList(g_lBlockAv,i,i);
         }
+        SaveBlockAv();
     }
-    else if (g_sListType=="Banned Object")
+    else if (sListType == "Block Objects")
     {
-        if (sMsg==ALL) {g_lObjBlackList=[];g_lObjBlackListNames=[];return;}
-        if  (i<(g_lObjBlackList!=[]))
+        if (sMsg == ALL) g_lBlockObj = [];
+        else
         {
-            g_lObjBlackList=llDeleteSubList(g_lObjBlackList,i,i);
-            g_lObjBlackListNames=llDeleteSubList(g_lObjBlackListNames,i,i);
+            i = llListFindList(g_lBlockObj,[sMsg]);
+            if (i!=-1) g_lBlockObj = llDeleteSubList(g_lBlockObj,i-1,i);
         }
+        //SaveBlockObj();
     }
-    else if (iAuth==COMMAND_WEARER && g_iMinBaseMode > 0)
+    else if (iAuth==CMD_WEARER && g_iMinBaseMode > 0)
     {
         llOwnerSay("Sorry, your owner does not allow you to remove trusted sources.");
+        return;
     }
-    else if (g_sListType=="Trusted Object")
+    else if (sListType == "Trust Objects")
     {
-        if (sMsg==ALL) {g_lObjWhiteList=[];g_lObjWhiteListNames=[];return;}
-        if  (i<(g_lObjWhiteList!=[]))
+        if (sMsg == ALL) g_lTrustObj = [];
+        else
         {
-            g_lObjWhiteList=llDeleteSubList(g_lObjWhiteList,i,i);
-            g_lObjWhiteListNames=llDeleteSubList(g_lObjWhiteListNames,i,i);
+            i = llListFindList(g_lTrustObj,[sMsg]);
+            if (i!=-1) g_lTrustObj = llDeleteSubList(g_lTrustObj,i-1,i);
         }
+        //SaveTrustObj();
     }
-    else if (g_sListType=="Trusted Avatar")
+    else if (sListType == "Trust Avatars")
     {
-        if (sMsg==ALL) {g_lAvWhiteList=[];g_lAvWhiteListNames=[];return;}
-        if  (i<(g_lAvWhiteList!=[]))
+        if (sMsg == ALL) g_lTrustAv = [];
+        else
         {
-            g_lAvWhiteList=llDeleteSubList(g_lAvWhiteList,i,i);
-            g_lAvWhiteListNames=llDeleteSubList(g_lAvWhiteListNames,i,i);
+            i = llListFindList(g_lTrustAv,[sMsg]);
+            if (i!=-1) g_lTrustAv = llDeleteSubList(g_lTrustAv,i,i);
         }
+        SaveTrustAv();
     }
-    SaveSettings();
 }
 
 refreshRlvListener()
 {
     llListenRemove(g_iRlvListener);
-    if (g_iRLV && g_iBaseMode && !g_iRecentSafeword)
-        g_iRlvListener = llListen(RELAY_CHANNEL, "", NULL_KEY, "");
+    if (g_iRLV && g_iBaseMode && !g_iRecentSafeword) g_iRlvListener = llListen(RELAY_CHANNEL, "", NULL_KEY, "");
 }
-
 
 CleanQueue()
 {
@@ -652,46 +611,43 @@ CleanQueue()
     Dequeue();
 }
 
-// returns TRUE if it was a user command, FALSE if it is a LM from another subsystem
-integer UserCommand(integer iNum, string sStr, key kID)
+UserCommand(integer iNum, string sStr, key kID)
 {
-    if (iNum<COMMAND_OWNER || iNum>COMMAND_WEARER) return FALSE;
-    if (llSubStringIndex(sStr,"relay") && sStr != "menu "+g_sSubMenu) return TRUE;
-    if (iNum == COMMAND_OWNER && sStr == "runaway")
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (llSubStringIndex(sStr,"relay") && sStr != "menu "+g_sSubMenu) return;
+    if (iNum == CMD_OWNER && sStr == "runaway")
     {
-        g_lCollarOwnersList = g_lCollarSecOwnersList = g_lCollarBlackList = [];
-        return TRUE;
+        g_lOwner = g_lTrust = g_lBlock = [];
+        return;
     }
     if (!g_iRLV)
     {
-        Notify(kID, "RLV features are now disabled in this " + CTYPE + ". You can enable those in RLV submenu. Opening it now.", FALSE);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.", kID);
         llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
     }
     else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") MinModeMenu(kID, iNum);
-    else if (iNum!=COMMAND_OWNER&&kID!=g_kWearer)
-        Notify(kID, "Sorry, only the wearer of the " + CTYPE + " or their owner can change the relay options.", FALSE);
+    else if (iNum!=CMD_OWNER&&kID!=g_kWearer) llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%",kID);
     else if (sStr=="safeword") SafeWord();
     else if (sStr=="getdebug")
     {
         g_kDebugRcpt = kID;
-        Notify(kID, "Relay messages will be forwarded to "+llKey2Name(kID)+".", TRUE);
-
-        return TRUE;
+        llMessageLinked(LINK_DIALOG, NOTIFY, "1Relay messages will be forwarded to "+Name(kID)+".", kID);
+        return;
     }
     else if (sStr=="stopdebug")
     {
         g_kDebugRcpt = NULL_KEY;
-        Notify(kID, "Relay messages will not forwarded anymore.", TRUE);
-        return TRUE;
+        llMessageLinked(LINK_DIALOG, NOTIFY, "1Relay messages will not forwarded anymore.", kID);
+        return;
     }
     else if (sStr=="pending")
     {
         if (g_lQueue != []) Dequeue();
         else llOwnerSay("No pending relay request for now.");
     }
-    else if (sStr=="access") ListsMenu(kID, iNum);
-    else if (iNum == COMMAND_OWNER && !llSubStringIndex(sStr,"minmode"))
+    else if (sStr=="access") AccessList(kID, iNum);
+    else if (iNum == CMD_OWNER && !llSubStringIndex(sStr,"minmode"))
     {
         sStr=llGetSubString(sStr,8,-1);
         integer iOSuccess = 0;
@@ -739,11 +695,11 @@ integer UserCommand(integer iNum, string sStr, key kID)
         }
         if (!iOSuccess)
         {
-            Notify(kID, WEARERNAME+"'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), TRUE);
-            SaveSettings();
+            llMessageLinked(LINK_DIALOG, NOTIFY, "1%WEARERNAME%'s relay minimal authorized mode is successfully set to: "+Mode2String(TRUE), kID);
+            SaveMode();
             refreshRlvListener();
         }
-        else Notify(kID, "Unknown relay mode.", FALSE);
+        else llMessageLinked(LINK_DIALOG, NOTIFY,"0Unknown relay mode.", kID);
     }
     else
     {
@@ -791,36 +747,34 @@ integer UserCommand(integer iNum, string sStr, key kID)
             }
             else iWSuccess = 3;
         }
-        if (!iWSuccess) Notify(kID, "Your relay mode is successfully set to: "+Mode2String(FALSE), TRUE);
-        else if (iWSuccess == 1) Notify(kID, "Minimal mode previously set by owner does not allow this setting. Change it or have it changed first.", TRUE);
-        else if (iWSuccess == 2) Notify(kID, "Your relay is being locked by at least one object, you cannot disable it or enable safewording now.", TRUE);
-        else if (iWSuccess == 3) Notify(kID, "Invalid command, please read the manual.", FALSE);
-        SaveSettings();
+        if (!iWSuccess) llMessageLinked(LINK_DIALOG, NOTIFY, "1Your relay mode is successfully set to: "+Mode2String(FALSE), kID);
+
+        else if (iWSuccess == 1)  llMessageLinked(LINK_DIALOG, NOTIFY, "1Minimal mode previously set by owner does not allow this setting. Change it or have it changed first.", kID);
+        else if (iWSuccess == 2)  llMessageLinked(LINK_DIALOG, NOTIFY, "1Your relay is being locked by at least one object, you cannot disable it or enable safewording now.", kID);
+        else if (iWSuccess == 3)  llMessageLinked(LINK_DIALOG, NOTIFY, "0Invalid command, please read the manual.", kID);
+        SaveMode();
         refreshRlvListener();
     }
-    return TRUE;
 }
 
 default {
     on_rez(integer iNum) {
-        llResetScript();
+        if (llGetOwner() != g_kWearer) llResetScript();
     }
 
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
-        g_sScript = "rlvrelay_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llKey2Name(g_kWearer);  //quick and dirty default, will get replaced by value from settings
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
         //Debug("Starting");
     }
 
-    link_message(integer iSender_iNum, integer iNum, string sStr, key kID )
+    link_message(integer iLink, integer iNum, string sStr, key kID )
     {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum==CMD_ADDSRC)
         {
@@ -831,39 +785,26 @@ default {
             integer i= llListFindList(g_lSources,[kID]);
             if (~i) g_lSources=llDeleteSubList(g_lSources,i,i);
         }
-        else if (UserCommand(iNum, sStr, kID)) return;
         else if (iNum == LM_SETTING_RESPONSE)
-        {   //this is tricky since our db value contains equals signs
-            //split string on both comma and equals sign
-            //first see if this is the token we care about
+        {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sScript + "settings") UpdateSettings(sValue);
-            else if (sToken == "Global_CType") CTYPE = sValue;
-            else if (sToken == "Global_WearerName") WEARERNAME = sValue;
-            else if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
+            if (sToken == "rlvrelay_mode") UpdateMode((integer)sValue);
+            else if (sToken=="rlvrelay_trustav") g_lTrustAv = llParseString2List(sValue, [","], []);
+            else if (sToken=="rlvrelay_blockav") g_lBlockAv = llParseString2List(sValue, [","], []);
+           // else if (sToken=="rlvrelay_trustobj") g_lTrustObj = llParseString2List(sValue, [","], []);
+           // else if (sToken=="rlvrelay_blockobj") g_lBlockObj = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_owner") g_lOwner = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_tempowner") g_lTempOwner = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_trust") g_lTrust = llParseString2List(sValue, [","], []);
+            else if (sToken == "auth_block") g_lBlock = llParseString2List(sValue, [","], []);
         }
-        else if (iNum == LM_SETTING_SAVE)
-        {   //this is tricky since our db sValue contains equals signs
-            //split string on both comma and equals sign
-            //first see if this is the sToken we care about
-            list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            if (sToken == "auth_owner") g_lCollarOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_secowners") g_lCollarSecOwnersList = llParseString2List(sValue, [","], []);
-            else if (sToken == "auth_blacklist") g_lCollarBlackList = llParseString2List(sValue, [","], []);
-        }
-        // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_OFF)
         {
             g_iRLV=FALSE;
             refreshRlvListener();
         }
-        // rlvon -> we have to turn the menu on again
         else if (iNum == RLV_ON)
         {
             g_iRLV=TRUE;
@@ -876,28 +817,35 @@ default {
         }
         else if (iNum == DIALOG_RESPONSE)
         {
-            if (~llListFindList([g_kMenuID, g_kMinModeMenuID, g_kListMenuID, g_kListID, g_kAuthMenuID], [kID]))
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex)
             {
+                string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = llList2Key(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
                 integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = llList2Integer(lMenuParams, 3);
-                if (kID==g_kMenuID || kID == g_kMinModeMenuID)
+
+                if (llSubStringIndex(sMenu,"Menu~")==0)
                 {
+                    string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
+
                     llSetTimerEvent(g_iGarbageRate);
                     integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "☐ Safeword", "☒ Safeword","☐ Playful","☒ Playful","☐ Land","☒ Land"],[sMsg]);
-                    if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
-                    else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
-                    else if (~iIndex)
+                    if (~iIndex)
                     {
                         string sInternalCommand = "relay ";
-                        if (kID == g_kMinModeMenuID) sInternalCommand += "minmode ";
+                        if (sMenuType == "MinMode") sInternalCommand += "minmode ";
                         sInternalCommand += llList2String(["auto","ask","restricted","off","safeword","safeword on","safeword off","playful on", "playful off","land on","land off"],iIndex);
                         UserCommand(iAuth, sInternalCommand, kAv);
-                        if (kID == g_kMinModeMenuID) MinModeMenu(kAv, iAuth);
+                        if (sMenuType == "MinMode") MinModeMenu(kAv, iAuth);
                         else Menu(kAv, iAuth);
                     }
+                    else if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
+                    else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
                     else if (sMsg=="Grabbed by")
                     {
                         llMessageLinked(LINK_SET, iAuth,"showrestrictions",kAv);
@@ -911,29 +859,31 @@ default {
                     }
                     else if (sMsg==UPMENU)
                     {
-                        if (kID == g_kMenuID) llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
+                        if (sMenuType=="Main") llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
                         else Menu(kAv, iAuth);
                     }
                 }
-                else if (kID==g_kListMenuID)
+                else if (sMenu=="Access~List")
                 {
-                    llSetTimerEvent(g_iGarbageRate);
-                    PListsMenu(kAv,sMsg, iAuth);
-                }
-                else if (kID==g_kListID)
-                {
-                    llSetTimerEvent(g_iGarbageRate);
-                    if (sMsg==UPMENU)
-                    {
-                        ListsMenu(kAv, iAuth);
-                    }
+                    if (sMsg==UPMENU) Menu(kAv, iAuth);
                     else
                     {
-                        RemListItem(sMsg, iAuth);
-                        ListsMenu(kAv, iAuth);
+                        ListsMenu(kAv,sMsg, iAuth);
+                        llSetTimerEvent(g_iGarbageRate);
                     }
                 }
-                else if (kID==g_kAuthMenuID)
+                else if (llSubStringIndex(sMenu,"Remove~")==0)
+                {
+                    if (sMsg==UPMENU) AccessList(kAv, iAuth);
+                    else
+                    {
+                        string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
+                        RemoveList(sMsg, iAuth, sMenuType);
+                        AccessList(kAv, iAuth);
+                    }
+                    llSetTimerEvent(g_iGarbageRate);
+                }
+                else if (sMenu=="AuthMenu")
                 {
                     llSetTimerEvent(g_iGarbageRate);
                     g_iAuthPending = FALSE;
@@ -941,91 +891,95 @@ default {
                     string sCom = llList2String(g_lQueue,2);  //GetQCom(0));
                     key kUser = NULL_KEY;
                     key kOwner = llGetOwnerKey(kCurID);
-                    integer iSave=TRUE;
                     if (llGetSubString(sCom,0,6)=="!x-who/") kUser = SanitizeKey(llGetSubString(sCom,7,42));
                     if (sMsg=="Yes")
                     {
-                        g_lTempWhiteList+=[kCurID];
-                        if (kUser) g_lTempUserWhiteList+=[(string)kUser];
-                        iSave=FALSE;
+                        g_lTempTrustObj+=[kCurID];
+                        if (kUser) g_lTempTrustUser+=[(string)kUser];
                     }
                     else if (sMsg=="No")
                     {
-                        g_lTempBlackList+=[kCurID];
-                        if (kUser) g_lTempUserBlackList+=[(string)kUser];
-                        iSave=FALSE;
+                        g_lTempBlockObj+=[kCurID];
+                        if (kUser) g_lTempBlockUser+=[(string)kUser];
                     }
                     else if (sMsg=="Trust Object")
                     {
-                        if (!~llListFindList(g_lObjWhiteList, [kCurID]))
+                        if (!~llListFindList(g_lTrustObj, [kCurID]))
                         {
-                            g_lObjWhiteList+=[kCurID];
-                            g_lObjWhiteListNames+=[llKey2Name(kCurID)];
+                            g_lTrustObj+=[kCurID,llKey2Name(kCurID)];
+                            //SaveTrustObj();
                         }
                     }
-                    else if (sMsg=="Ban Object")
+                    else if (sMsg=="Block Object")
                     {
-                        if (!~llListFindList(g_lObjBlackList, [kCurID]))
+                        if (!~llListFindList(g_lBlockObj, [kCurID]))
                         {
-                            g_lObjBlackList+=[kCurID];
-                            g_lObjBlackListNames+=[llKey2Name(kCurID)];
+                            g_lBlockObj+=[kCurID,llKey2Name(kCurID)];
+                            //SaveBlockObj();
                         }
                     }
                     else if (sMsg=="Trust Owner")
                     {
-                        if (!~llListFindList(g_lAvWhiteList, [(string)kOwner]))
+                        if (!~llListFindList(g_lTrustAv, [(string)kOwner]))
                         {
-                            g_lAvWhiteList+=[(string)kOwner];
-                            g_lAvWhiteListNames+=[Name(kOwner)];
+                            g_lTrustAv+=[(string)kOwner];
+                            SaveTrustAv();
                         }
                     }
-                    else if (sMsg=="Ban Owner")
+                    else if (sMsg=="Block Owner")
                     {
-                        if (!~llListFindList(g_lAvBlackList, [(string)kOwner]))
+                        if (!~llListFindList(g_lBlockAv, [(string)kOwner]))
                         {
-                            g_lAvBlackList+=[(string)kOwner];
-                            g_lAvBlackListNames+=[Name(kOwner)];
+                            g_lBlockAv+=[(string)kOwner];
+                            SaveBlockAv();
                         }
                     }
                     else if (sMsg=="Trust User")
                     {
-                        if (!~llListFindList(g_lAvWhiteList, [(string)kUser]))
+                        if (!~llListFindList(g_lTrustAv, [(string)kUser]))
                         {
-                            g_lAvWhiteList+=[(string)kUser];
-                            g_lAvWhiteListNames+=[Name(kUser)];
+                            g_lTrustAv+=[(string)kUser];
+                            SaveTrustAv();
                         }
                     }
-                    else if (sMsg=="Ban User")
+                    else if (sMsg=="Block User")
                     {
-                        if (!~llListFindList(g_lAvBlackList, [(string)kUser]))
+                        if (!~llListFindList(g_lBlockAv, [(string)kUser]))
                         {
-                            g_lAvBlackList+=[(string)kUser];
-                            g_lAvBlackListNames+=[Name(kUser)];
+                            g_lBlockAv+=[(string)kUser];
+                            SaveBlockAv();
                         }
                     }
-                    if (iSave) SaveSettings();
                     CleanQueue();
                 }
             }
         }
         else if (iNum == DIALOG_TIMEOUT)
         {
-            if (kID == g_kAuthMenuID)
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            if (~iMenuIndex)
             {
-                g_iAuthPending = FALSE;
-                llOwnerSay("Relay authorization dialog expired. You can make it appear again with command \"<prefix>relay pending\".");
+                if (llList2String(g_lMenuIDs, iMenuIndex+1) == "AuthMenu")
+                {
+                    g_iAuthPending = FALSE;
+                    llOwnerSay("Relay authorization dialog expired. You can make it appear again with command \"<prefix>relay pending\".");
+                }
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
             }
         }
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     listen(integer iChan, string who, key kID, string sMsg)
     {
-//        if (llGetSubString(sMsg,-43,-1)==","+(string)g_kWearer+",!pong") //sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
-//        {llOwnerSay("Forwarding "+sMsg+" to rlvmain");
-//            llMessageLinked(LINK_SET, COMMAND_RLV_RELAY, sMsg, kID);
+        /*
+        if (llGetSubString(sMsg,-43,-1)==","+(string)g_kWearer+",!pong") 
+        {   //sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
+            llOwnerSay("Forwarding "+sMsg+" to rlvmain");
+            llMessageLinked(LINK_SET, CMD_RLV_RELAY, sMsg, kID);
             // send the ping to rlvmain to manage restrictions of this old source
-//        }
-/*        else if (llStringLength(sMsg)> 700)
+        }
+        else if (llStringLength(sMsg)> 700)
         { //too long command, will make the relay crash in ask mode
             sMsg="";
             llOwnerSay("Dropping a too long command from " + llKey2Name(kID)+". Maybe a malicious device?. Relay frozen for the next 20s.");
@@ -1033,9 +987,10 @@ default {
             refreshRlvListener();
             llSetTimerEvent(30.);
             return;
-        }*/
-//        else
-//        { //in other cases we analyze the command here
+        }
+        else
+        { //in other cases we analyze the command here
+        */
         list lArgs=llParseString2List(sMsg,[","],[]);
         sMsg = "";  // free up memory in case of large messages
         if ((lArgs!=[])!=3) return;
@@ -1046,7 +1001,7 @@ default {
         else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "To relay: "+sIdent+","+sMsg);
         if (sMsg == "!pong")
         {//sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
-            llMessageLinked(LINK_SET, COMMAND_RLV_RELAY, "ping,"+(string)g_kWearer+",!pong", kID);
+            llMessageLinked(LINK_SET, CMD_RLV_RELAY, "ping,"+(string)g_kWearer+",!pong", kID);
             return;
         }
         lArgs = [];  // free up memory in case of large messages
@@ -1073,8 +1028,8 @@ default {
 //                key kOldUser = NULL_KEY;
 //                if (llGetSubString(sMsg,0,6)=="!x-who/") kOldUser=SanitizeKey(llGetSubString(llList2String(g_lQueue, 2),7,42));
                 llOwnerSay("Relay queue saturated. Dropping all requests from oldest source ("+ llKey2Name(kOldestId) +").");
-                g_lTempBlackList+=[kOldestId];
-//                if (kUser) g_lTempUserBlackList+=[kUser];
+                g_lTempBlockObj+=[kOldestId];
+//                if (kUser) g_lTempBlockUser+=[kUser];
                 CleanQueue();
 //                llOwnerSay("Used memory after cleaning queue: "+(string)(llGetMemoryLimit() -llGetUsedMemory()));
 //                g_iRecentSafeword = TRUE;
@@ -1102,15 +1057,15 @@ default {
             key kID = llList2Key(g_lSources,i);
             vector vObjPos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
             if (vObjPos == <0, 0, 0> || llVecDist(vObjPos, vMyPos) > 100) // 100: max shout distance
-                llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
+                llMessageLinked(LINK_RLV,RLV_CMD,"clear",kID);
         }
         llSetTimerEvent(g_iGarbageRate);
-        g_lTempBlackList=[];
-        g_lTempWhiteList=[];
+        g_lTempBlockObj=[];
+        g_lTempTrustObj=[];
         if (g_lSources == [])
         { //dont clear already authorized users before done with current session
-            g_lTempUserBlackList=[];
-            g_lTempUserWhiteList=[];
+            g_lTempBlockUser=[];
+            g_lTempTrustUser=[];
         }
     }
 /*
