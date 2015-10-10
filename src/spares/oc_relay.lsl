@@ -839,12 +839,12 @@ default {
                 integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = llList2Integer(lMenuParams, 3);
 
+                llSetTimerEvent(g_iGarbageRate);
+                    
                 if (llSubStringIndex(sMenu,"Menu~")==0)
                 {
                     string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
 
-                    llSetTimerEvent(g_iGarbageRate);
-                    
                     if (sMsg==UPMENU)
                     {
                         if (sMenuType=="Main") llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
@@ -872,11 +872,7 @@ default {
                 else if (sMenu=="Access~List")
                 {
                     if (sMsg==UPMENU) Menu(kAv, iAuth, "Main");
-                    else
-                    {
-                        ListsMenu(kAv,sMsg, iAuth);
-                        llSetTimerEvent(g_iGarbageRate);
-                    }
+                    else ListsMenu(kAv,sMsg, iAuth);
                 }
                 else if (llSubStringIndex(sMenu,"Remove~")==0)
                 {
@@ -887,11 +883,9 @@ default {
                         RemoveList(sMsg, iAuth, sMenuType);
                         AccessList(kAv, iAuth);
                     }
-                    llSetTimerEvent(g_iGarbageRate);
                 }
                 else if (sMenu=="AuthMenu")
                 {
-                    llSetTimerEvent(g_iGarbageRate);
                     g_iAuthPending = FALSE;
                     key kCurID=llList2String(g_lQueue,1); //GetQObj(0);
                     string sCom = llList2String(g_lQueue,2);  //GetQCom(0));
