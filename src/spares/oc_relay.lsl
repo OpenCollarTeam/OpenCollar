@@ -428,8 +428,6 @@ Menu(key kID, integer iAuth, string sMode)
     string sPrompt = "\nwww.opencollar.at/relay";
     list lButtons ;
     
-    llOwnerSay(sMode);
-    
     if (sMode == "Main")
     {    
         sPrompt += "\n\nCurrent mode is: " + Mode2String(FALSE);
