@@ -852,11 +852,11 @@ default {
                         Menu(kAv, iAuth);
                     }
                     else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
-                    else if (sMsg=="Help")
-                    {
-                        llGiveInventory(kAv,"OpenCollar Guide");
-                        Menu(kAv, iAuth);
-                    }
+                    //else if (sMsg=="Help")
+                    //{
+                    //    llGiveInventory(kAv,"OpenCollar Guide");
+                    //    Menu(kAv, iAuth);
+                    //}
                     else if (sMsg==UPMENU)
                     {
                         if (sMenuType=="Main") llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
