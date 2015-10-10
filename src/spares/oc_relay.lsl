@@ -423,52 +423,60 @@ SafeWord()
 }
 
 //----Menu functions section---//
-Menu(key kID, integer iAuth)
+Menu(key kID, integer iAuth, string sMode)
 {
-    string sPrompt = "\nwww.opencollar.at/relay\n\nCurrent mode is: " + Mode2String(FALSE);
-    list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iBaseMode,g_iBaseMode);
-    if (g_lSources != []) lButtons = llDeleteSubList(lButtons,0,0);
-    if (g_iPlayMode) lButtons+=["☒ Playful"];
-    else lButtons+=["☐ Playful"];
-    if (g_iLandMode) lButtons+=["☒ Land"];
-    else lButtons+=["☐ Land"];
-    if (g_lSources!=[])
-    {
-        sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";
-        if (g_lSources==[1]) sPrompt+="."; // Note: only list LENGTH is compared here
-        else sPrompt+="s.";
-        lButtons+=["Grabbed by"];
-        if (g_iSafeMode) lButtons+=["Safeword"];
+    string sPrompt = "\nwww.opencollar.at/relay";
+    list lButtons ;
+    
+    llOwnerSay(sMode);
+    
+    if (sMode == "Main")
+    {    
+        sPrompt += "\n\nCurrent mode is: " + Mode2String(FALSE);
+        lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iBaseMode,g_iBaseMode);
+        if (g_lSources != []) lButtons = llDeleteSubList(lButtons,0,0);
+        if (g_iPlayMode) lButtons+=["☒ Playful"];
+        else lButtons+=["☐ Playful"];
+        if (g_iLandMode) lButtons+=["☒ Land"];
+        else lButtons+=["☐ Land"];
+        if (g_lSources!=[])
+        {
+            sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";
+            if (g_lSources==[1]) sPrompt+="."; // Note: only list LENGTH is compared here
+            else sPrompt+="s.";
+            lButtons+=["Grabbed by"];
+            if (g_iSafeMode) lButtons+=["Safeword"];
+        }
+        else if (kID == g_kWearer)
+        {
+            if (g_iSafeMode) lButtons+=["☒ Safeword"];
+            else lButtons+=["☐ Safeword"];
+        }
+        if (g_lQueue!=[])
+        {
+            sPrompt+="\n\nYou have pending requests.";
+            lButtons+=["Pending"];
+        }
+        //lButtons+=["Access Lists", "MinMode", "Help"];
+        lButtons+=["Access Lists", "MinMode"];
+        sPrompt+="\n\nMake a choice:";
     }
-    else if (kID == g_kWearer)
+    else if (sMode == "MinMode")
     {
-        if (g_iSafeMode) lButtons+=["☒ Safeword"];
+        sPrompt += "\n\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);    
+        lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iMinBaseMode,g_iMinBaseMode);
+    
+        if (g_iMinPlayMode) lButtons+=["☒ Playful"];
+        else lButtons+=["☐ Playful"];
+        if (g_iMinLandMode) lButtons+=["☒ Land"];
+        else lButtons+=["☐ Land"];
+        if (g_iMinSafeMode) lButtons+=["☒ Safeword"];
         else lButtons+=["☐ Safeword"];
+        sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed to go under.\n(owner only)";
     }
-    if (g_lQueue!=[])
-    {
-        sPrompt+="\n\nYou have pending requests.";
-        lButtons+=["Pending"];
-    }
-    //lButtons+=["Access Lists", "MinMode", "Help"];
-    lButtons+=["Access Lists", "MinMode"];
-    sPrompt+="\n\nMake a choice:";
-
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
-}
-
-MinModeMenu(key kID, integer iAuth)
-{
-    list lButtons = llDeleteSubList(["Off", "Restricted", "Ask", "Auto"],g_iMinBaseMode,g_iMinBaseMode);
-    string sPrompt = "\nwww.opencollar.at/relay\n\nCurrent minimal authorized relay mode is: " + Mode2String(TRUE);
-    if (g_iMinPlayMode) lButtons+=["☒ Playful"];
-    else lButtons+=["☐ Playful"];
-    if (g_iMinLandMode) lButtons+=["☒ Land"];
-    else lButtons+=["☐ Land"];
-    if (g_iMinSafeMode) lButtons+=["☒ Safeword"];
-    else lButtons+=["☐ Safeword"];
-    sPrompt+="\n\nChoose a new minimal mode the wearer won't be allowed to go under.\n(owner only)";
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~MinMode");
+    else return;
+    
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~"+sMode);
 }
 
 AccessList(key kID, integer iAuth)
@@ -513,7 +521,9 @@ ListsMenu(key kID, string sMsg, integer iAuth)
         sPrompt = "\n\nWhat avatar do you want not to block anymore?";
     }
     else return;
+
     sPrompt += "\n\nMake a choice:";
+
     Dialog(kID, sPrompt, [ALL]+lButtons, [UPMENU], -1, iAuth, "Remove~"+sMsg);
 }
 
@@ -573,6 +583,7 @@ refreshRlvListener()
     if (g_iRLV && g_iBaseMode && !g_iRecentSafeword) g_iRlvListener = llListen(RELAY_CHANNEL, "", NULL_KEY, "");
 }
 
+
 CleanQueue()
 {
     //clean newly iNumed events, while preserving the order of arrival for every device
@@ -625,8 +636,8 @@ UserCommand(integer iNum, string sStr, key kID)
         llMessageLinked(LINK_DIALOG, NOTIFY, "0RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.", kID);
         llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
     }
-    else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
-    else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") MinModeMenu(kID, iNum);
+    else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum, "Main");
+    else if ((sStr=llGetSubString(sStr,6,-1))=="minmode") Menu(kID, iNum, "MinMode");
     else if (iNum!=CMD_OWNER&&kID!=g_kWearer) llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%",kID);
     else if (sStr=="safeword") SafeWord();
     else if (sStr=="getdebug")
@@ -700,6 +711,7 @@ UserCommand(integer iNum, string sStr, key kID)
             refreshRlvListener();
         }
         else llMessageLinked(LINK_DIALOG, NOTIFY,"0Unknown relay mode.", kID);
+
     }
     else
     {
@@ -763,6 +775,7 @@ default {
     }
 
     state_entry() {
+
         g_kWearer = llGetOwner();
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
@@ -834,38 +847,39 @@ default {
                     string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
 
                     llSetTimerEvent(g_iGarbageRate);
-                    integer iIndex=llListFindList(["Auto","Ask","Restricted","Off","Safeword", "☐ Safeword", "☒ Safeword","☐ Playful","☒ Playful","☐ Land","☒ Land"],[sMsg]);
-                    if (~iIndex)
+                    
+                    if (sMsg==UPMENU)
                     {
-                        string sInternalCommand = "relay ";
-                        if (sMenuType == "MinMode") sInternalCommand += "minmode ";
-                        sInternalCommand += llList2String(["auto","ask","restricted","off","safeword","safeword on","safeword off","playful on", "playful off","land on","land off"],iIndex);
-                        UserCommand(iAuth, sInternalCommand, kAv);
-                        if (sMenuType == "MinMode") MinModeMenu(kAv, iAuth);
-                        else Menu(kAv, iAuth);
+                        if (sMenuType=="Main") llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
+                        else Menu(kAv, iAuth, "Main");
                     }
                     else if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
                     else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
+                    else if (sMsg=="MinMode") Menu(kAv, iAuth, "MinMode");
                     else if (sMsg=="Grabbed by")
                     {
-                        llMessageLinked(LINK_SET, iAuth,"showrestrictions",kAv);
-                        Menu(kAv, iAuth);
+                        llMessageLinked(LINK_RLV, iAuth,"show restrictions", kAv);
+                        Menu(kAv, iAuth, "Main");
                     }
-                    else if (sMsg=="MinMode") MinModeMenu(kAv, iAuth);
-                    else if (sMsg=="Help")
+                    //else if (sMsg=="Help")
+                    //{
+                    //    llGiveInventory(kAv,"OpenCollar Guide");
+                    //    Menu(kAv, iAuth, "Main");
+                    //}
+                    else
                     {
-                        llGiveInventory(kAv,"OpenCollar Guide");
-                        Menu(kAv, iAuth);
-                    }
-                    else if (sMsg==UPMENU)
-                    {
-                        if (sMenuType=="Main") llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
-                        else Menu(kAv, iAuth);
-                    }
+                        string sCmd = "relay ";
+                        if (sMenuType == "MinMode") sCmd += "minmode ";                        
+                        sMsg = llToLower(sMsg);
+                        if (llSubStringIndex(sMsg,"☐ ")==0) sCmd += llDeleteSubString(sMsg,0,1) + " on";
+                        if (llSubStringIndex(sMsg,"☒ ")==0) sCmd += llDeleteSubString(sMsg,0,1) + " off";
+                        UserCommand(iAuth, sCmd, kAv);                        
+                        Menu(kAv, iAuth, sMenuType);
+                    }                    
                 }
                 else if (sMenu=="Access~List")
                 {
-                    if (sMsg==UPMENU) Menu(kAv, iAuth);
+                    if (sMsg==UPMENU) Menu(kAv, iAuth, "Main");
                     else
                     {
                         ListsMenu(kAv,sMsg, iAuth);
@@ -972,7 +986,7 @@ default {
 
     listen(integer iChan, string who, key kID, string sMsg)
     {
-        /*
+/*
         if (llGetSubString(sMsg,-43,-1)==","+(string)g_kWearer+",!pong") 
         {   //sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
             llOwnerSay("Forwarding "+sMsg+" to rlvmain");
@@ -980,7 +994,7 @@ default {
             // send the ping to rlvmain to manage restrictions of this old source
         }
         else if (llStringLength(sMsg)> 700)
-        { //too long command, will make the relay crash in ask mode
+        {   //too long command, will make the relay crash in ask mode
             sMsg="";
             llOwnerSay("Dropping a too long command from " + llKey2Name(kID)+". Maybe a malicious device?. Relay frozen for the next 20s.");
             g_iRecentSafeword=TRUE;
@@ -990,7 +1004,7 @@ default {
         }
         else
         { //in other cases we analyze the command here
-        */
+*/
         list lArgs=llParseString2List(sMsg,[","],[]);
         sMsg = "";  // free up memory in case of large messages
         if ((lArgs!=[])!=3) return;
