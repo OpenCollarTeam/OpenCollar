@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 151008.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 151011.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -74,6 +74,7 @@ key g_kTextureCardUUID;  //UUID of textures notecard, used to determine when it 
 string g_sTextureCard;  //stores name of current textures card.  Might be "textures" or ="textures_custom", set in BuildTexturesList()
 key g_kTexturesNotecardRead;  //key of the dataserver request for notecard read
 string g_sCurrentTheme;
+integer g_iThemesReady;
 
 list g_lMenuIDs;  //menu information
 integer g_iMenuStride=3;
@@ -351,8 +352,13 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
                     llMessageLinked(LINK_ROOT,601,"themes "+sElement,g_kWearer);
                     g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
-                } else if (g_kStylesCardUUID) StyleMenu(kID,iNum);
-                else {
+                } else if (g_kStylesCardUUID) {
+                    if (g_iThemesReady) StyleMenu(kID,iNum);
+                    else {
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
+                        llMessageLinked(LINK_ROOT, iNum, "options", kID);
+                    }
+                } else {
                     llMessageLinked(LINK_ROOT, iNum, "options", kID);
                     llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX%looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
@@ -695,7 +701,8 @@ default {
                     //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
                     UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
-                //} else {
+                } else {
+                    g_iThemesReady = TRUE;
                     //Debug(llDumpList2String(g_lStyles,","));
                 }
             }
