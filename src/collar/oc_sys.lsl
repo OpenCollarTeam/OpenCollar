@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151008.1                              //
+//                           System - 151011.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -135,7 +135,7 @@ integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iKidnapMenu=FALSE;
 
-integer g_iUpdateChan = -7483214;
+integer g_iUpdateChan = -7483213;
 integer g_iUpdateHandle;
 key g_kUpdaterOrb;
 integer g_iUpdateFromMenu;

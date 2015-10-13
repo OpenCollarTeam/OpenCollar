@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 150917.1                        //
+//                       Installer System - 151013.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -70,7 +70,7 @@
 
 key g_kVersionID;
 
-integer g_initChannel = -7483214;
+integer g_initChannel = -7483213;
 integer g_iSecureChannel;
 
 // store the script pin here when we get it from the collar.
@@ -98,6 +98,12 @@ integer INSTALLION_DONE = 98751;
 
 integer g_iDone;
 integer g_iIsUpdate;
+
+string g_sInfoCard = ".info";
+string g_sInfoText;
+string g_sInfoURL;
+key g_kInfoID;
+integer g_iLine;
 
 string g_sVersion;
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
@@ -129,7 +135,7 @@ ReadVersionLine() {
 }
 
 SetFloatText() {
-    llSetText("OpenCollar Installer\n\nFull Version "+g_sVersion, <1,1,1>, 1.0);
+    llSetText("App Installer\n\n "+g_sVersion, <1,1,1>, 1.0);
 }
 
 Particles(key kTarget) {
@@ -187,6 +193,8 @@ default {
         g_lBundles = llListSort(g_lBundles,2,TRUE);
         SetFloatText();
         llParticleSystem([]);
+        if (llGetInventoryType(g_sInfoCard) == INVENTORY_NOTECARD)
+            g_kInfoID = llGetNotecardLine(g_sInfoCard,0);
     }
     touch_start(integer iNumber) {
         if (llDetectedKey(0) != llGetOwner()) return;
@@ -253,6 +261,9 @@ default {
                 llParticleSystem([]);
                 g_iDone = TRUE;
                 llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
+                llSleep(1);
+                llLoadURL(llGetOwner(),"For more info go here:",g_sInfoURL);
+                llOwnerSay(g_sInfoText);
                 llSetTimerEvent(15.0);
             }
         }
@@ -286,5 +297,14 @@ default {
                 lNameParts += [sData];
             llSetObjectName(llDumpList2String(lNameParts, " - "));
         }
+        if (kID == g_kInfoID) {
+            if (sData != EOF) {
+                g_iLine++;
+                if (g_iLine == 1) g_sInfoURL = sData;
+                else g_sInfoText += "\n"+sData;
+                g_kInfoID = llGetNotecardLine(g_sInfoCard,g_iLine);
+            } else g_iLine = 0;
+        }
+                    
     }
 }
