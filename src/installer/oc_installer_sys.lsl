@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 151013.1                        //
+//                       Installer System - 151013.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -65,10 +65,10 @@
 // install or remove each.
 
 // This script also does a little bit of magic to ensure that the updater's
-// version number always matches the contents of the "~version" card.
+// name always matches the contents of the ".name" card.
 
 
-key g_kVersionID;
+key g_kNameID;
 
 integer g_initChannel = -7483213;
 integer g_iSecureChannel;
@@ -105,7 +105,8 @@ string g_sInfoURL;
 key g_kInfoID;
 integer g_iLine;
 
-string g_sVersion;
+string g_sName;
+string g_sObjectType;
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string sName) {
@@ -127,15 +128,15 @@ Debug(string str) {
     // llOwnerSay(llGetScriptName() + ": " + str);
 }
 
-ReadVersionLine() {
-    // try to keep object's version in sync with "~version" notecard.
-    if (llGetInventoryType("~version") == INVENTORY_NOTECARD) {
-        g_kVersionID = llGetNotecardLine("~version", 0);
+ReadName() {
+    // try to keep object's name in sync with ".name" notecard.
+    if (llGetInventoryType(".name") == INVENTORY_NOTECARD) {
+        g_kNameID = llGetNotecardLine(".name", 0);
     }
 }
 
 SetFloatText() {
-    llSetText("App Installer\n\n "+g_sVersion, <1,1,1>, 1.0);
+    llSetText(g_sObjectType+"\n\n "+g_sName, <1,1,1>, 1.0);
 }
 
 Particles(key kTarget) {
@@ -166,7 +167,7 @@ default {
         llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
         llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
         llSetTimerEvent(300.0);
-        ReadVersionLine();
+        ReadName();
         llListen(g_initChannel, "", "", "");
         // set all scripts except self to not running
         // also build list of all bundles
@@ -253,10 +254,10 @@ default {
             g_iBundleIndex += 2;
             if (g_iBundleIndex < iCount) DoBundle();
             else {
-                // tell the shim to restore settings, set version, 
+                // tell the shim to restore settings, set name, 
                 // remove the script pin, and delete himself.
-                string sMyVersion = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
-                llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyVersion);
+                string sMyName = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
+                llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyName);
                 llSetText("DONE!\n \n████████100%████████", <0,1,0>, 1.0);
                 llParticleSystem([]);
                 g_iDone = TRUE;
@@ -280,22 +281,18 @@ default {
 
     changed(integer iChange) {
     // Resetting on inventory change ensures that the bundle list is
-    // kept current, and that the ~version card is re-read if it changes.
+    // kept current, and that the .name card is re-read if it changes.
         if (iChange & CHANGED_INVENTORY)  llResetScript();
     }
 
     dataserver(key kID, string sData) {
-        if (kID == g_kVersionID) {
-            // make sure that object version matches this card.
-            g_sVersion = sData;
+        if (kID == g_kNameID) {
+            // make sure that object name matches this card.
+            list lNameParts = llParseString2List(sData, [" - "], []);
+            llSetObjectName(sData);
+            g_sName = llList2String(lNameParts,1);
+            g_sObjectType = llList2String(lNameParts,0);
             SetFloatText();
-            list lNameParts = llParseString2List(llGetObjectName(), [" - "], []);
-            integer iLength = llGetListLength(lNameParts);
-            if (iLength == 2)
-                lNameParts = llListReplaceList(lNameParts, [sData], 1, 1);
-            else if (iLength == 1)
-                lNameParts += [sData];
-            llSetObjectName(llDumpList2String(lNameParts, " - "));
         }
         if (kID == g_kInfoID) {
             if (sData != EOF) {
