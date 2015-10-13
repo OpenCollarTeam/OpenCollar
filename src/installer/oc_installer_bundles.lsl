@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer Bundles - 151001.1                       //
+//                       Installer Bundles - 151013.1                       //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Garvin Twine   //
 //  and Romka Swallowtail                                                   //
@@ -102,7 +102,8 @@ SetStatus(string sName) {
     g_iItemCounter++;
     string sMsg = "Installing: " + sName+ "\n \n \n";
     llSetText(sMsg, <1,1,1>, 1.0);
-    StatusBar(g_iItemCounter);
+    if (g_iTotalItems < 2) StatusBar(0.5);
+    else StatusBar(g_iItemCounter);
     //if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
