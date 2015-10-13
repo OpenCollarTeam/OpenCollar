@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 151013.2                        //
+//                       Installer System - 151013.3                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -263,7 +263,7 @@ default {
                 g_iDone = TRUE;
                 llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
                 llSleep(1);
-                llLoadURL(llGetOwner(),"For more info go here:",g_sInfoURL);
+                llLoadURL(llGetOwner(),"\nVisit our website for manual pages and release notes!\n",g_sInfoURL);
                 llOwnerSay(g_sInfoText);
                 llSetTimerEvent(15.0);
             }
