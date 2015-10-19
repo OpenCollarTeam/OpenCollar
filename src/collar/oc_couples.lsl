@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 151006.1                              //
+//                          Couples - 151019.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -325,7 +325,8 @@ default {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Offering to " + sCommand + " " + g_sPartnerName + ".",g_kWearer);
                     }
                 }
-            } else if (sStr == "menu "+g_sSubMenu || sStr == "couples") CoupleAnimMenu(kID, iNum);
+            } else if (llToLower(sStr) == "stop couples") StopAnims();
+            else if (sStr == "menu "+g_sSubMenu || sStr == "couples") CoupleAnimMenu(kID, iNum);
             else if (sCommand == "couples" && sValue == "verbose") {
                 sValue = llToLower(llList2String(lParams, 2));
                 if (sValue == "off"){
