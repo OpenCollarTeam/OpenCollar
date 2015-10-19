@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 151008.1                              //
+//                           Dialog - 151019.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -726,6 +726,7 @@ default {
             } else if (sToken == g_sGlobalToken+"WearerName") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
+                else g_sWearerName = sValue;
             } else if (sToken == g_sGlobalToken+"prefix"){
                 if (sValue != "") g_sPrefix=sValue;
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
