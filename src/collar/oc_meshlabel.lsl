@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 151007.1                            //
+//                         Mesh Label - 151021.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2015 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -122,10 +122,10 @@ string g_sScrollText;
 list g_lLabelLinks ;
 
 integer g_iScroll = FALSE;
-integer g_iShow = TRUE;
+integer g_iShow;
 vector g_vColor = <1,1,1>;
 
-string g_sLabelText = "OpenCollar";
+string g_sLabelText = "";
 string g_sSettingToken = "label_";
 //string g_sGlobalToken = "global_";
 
@@ -351,10 +351,14 @@ default
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
-        SetLabel();
+        //SetLabel();
     }
 
     on_rez(integer iNum) {
+        if (g_kWearer != llGetOwner()) {
+            g_sLabelText = "";
+            SetLabel();
+        }
         llResetScript();
     }
 
