@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 151001.1                             //
+//                          Badwords - 151024.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -52,6 +52,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+string g_sAppVersion = "¹⁵¹⁰²⁴⋅¹";
+
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -62,7 +64,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
-
+integer APPOVERRIDE = 777;
 integer NOTIFY = 1002;
 integer SAY = 1004;
 integer REBOOT = -1000;
@@ -164,7 +166,7 @@ MenuBadwords(key kID, integer iNum){
     if (g_iIsEnabled) lButtons += "OFF";
     else lButtons += "ON";
     lButtons += "Stop";
-    string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\n";
+    string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\t"+g_sAppVersion+"\n";
     sText+= "\n" + llList2CSV(g_lBadWords) + "\n";
     sText+= "\nPenance: " + g_sPenance;
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");
@@ -325,11 +327,13 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
             g_iIsEnabled = 1;
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"on=1", "");
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Use of bad words will now be punished.",kID);
+            llMessageLinked(LINK_THIS, APPOVERRIDE, g_sSubMenu, "on");
             if (remenu) MenuBadwords(kID,iNum);
         } else if(sCommand == "off") {
             g_iIsEnabled = 0;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on","");
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Use of bad words will not be punished.",kID);
+            llMessageLinked(LINK_THIS, APPOVERRIDE, g_sSubMenu, "off");
             if (remenu) MenuBadwords(kID,iNum);
         } else if(sCommand == "clear") {
             g_lBadWords = [];
@@ -420,8 +424,9 @@ default {
                 } else if (sMenu == "rmbadwords") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu+"|"+g_sSubMenu, "");
+                        llMessageLinked(LINK_THIS, APPOVERRIDE, g_sSubMenu, "off");
                         llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
-                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
                 }
             }

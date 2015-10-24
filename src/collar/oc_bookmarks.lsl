@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 151006.1                            //
+//                          Bookmarks - 151024.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -51,6 +51,8 @@
 //         github.com/OpenCollar/opencollar/tree/master/src/collar          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sAppVersion = "¹⁵¹⁰²⁴⋅¹";
 
 string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
@@ -135,7 +137,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 DoMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/bookmarks.html Bookmarks]\n\nTake me away, gumby!";
+    string sPrompt = "\n[http://www.opencollar.at/bookmarks.html Bookmarks]\t"+g_sAppVersion+"\n\nTake me away, gumby!";
     list lMyButtons = PLUGIN_BUTTONS + g_lDestinations + g_lVolatile_Destinations;
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "bookmarks");
 }
