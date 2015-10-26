@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151011.1                              //
+//                           System - 151025.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -58,6 +58,7 @@
 //on listen, send submenu link message
 
 string g_sCollarVersion="4.0.0";
+string g_sFancyVersion="⁴⋅⁰⋅⁰";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -260,7 +261,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/main-menu.html OpenCollar™\tMain Menu]";
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R]\t\t"+g_sFancyVersion+"\ns u b m i s s i o n  s e t  f r e e™";
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
