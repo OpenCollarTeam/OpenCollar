@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 151013.3                        //
+//                       Installer System - 151026.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -68,8 +68,9 @@
 // name always matches the contents of the ".name" card.
 
 
-key g_kNameID;
+integer g_iInstallOnRez = FALSE; // TRUE initiates right away on rez
 
+key g_kNameID;
 integer g_initChannel = -7483213;
 integer g_iSecureChannel;
 
@@ -162,6 +163,13 @@ Particles(key kTarget) {
     ]);
 }
 
+InitiateInstallation() {
+    integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),2,7)) + 1111);
+    if (iChan > -10000) iChan -= 30000;
+    llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
+    llWhisper(iChan,(string)llGetOwner()+":.- ... -.-"+(string)llGetKey());
+}
+
 default {
     state_entry() {
         llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
@@ -196,17 +204,16 @@ default {
         llParticleSystem([]);
         if (llGetInventoryType(g_sInfoCard) == INVENTORY_NOTECARD)
             g_kInfoID = llGetNotecardLine(g_sInfoCard,0);
+        if (g_iInstallOnRez) InitiateInstallation();
     }
+    
     touch_start(integer iNumber) {
         if (llDetectedKey(0) != llGetOwner()) return;
         if (g_iDone) {
             g_iDone = FALSE;
             llSetTimerEvent(30.0);
         }
-        integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),2,7)) + 1111);
-        if (iChan > -10000) iChan -= 30000;
-        llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
-        llWhisper(iChan,(string)llGetOwner()+":.- ... -.-"+(string)llGetKey());
+        InitiateInstallation();
     }
     
     listen(integer iChannel, string sName, key kID, string sMsg) {
