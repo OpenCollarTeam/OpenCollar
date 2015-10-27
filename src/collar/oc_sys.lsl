@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151025.1                              //
+//                           System - 151027.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -134,7 +134,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
-integer g_iKidnapMenu=FALSE;
+integer g_iCaptureMenu=FALSE;
 
 integer g_iUpdateChan = -7483213;
 integer g_iUpdateHandle;
@@ -261,13 +261,13 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R]\t\t"+g_sFancyVersion+"\ns u b m i s s i o n  s e t  f r e e™";
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R]\ns u b m i s s i o n  s e t  f r e e™\t\t"+g_sFancyVersion;
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+=" ";
-    if (g_iKidnapMenu) lStaticButtons+="Kidnap";
+    if (g_iCaptureMenu) lStaticButtons+="Capture";
     else lStaticButtons+="Looks";
    // else lStaticButtons+=" ";
     lStaticButtons+=["Leash"];
@@ -488,7 +488,7 @@ RebuildMenu() {
     //Debug("Rebuild Menu");
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
-    g_iKidnapMenu=FALSE;
+    g_iCaptureMenu=FALSE;
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
@@ -534,7 +534,7 @@ default
                 }
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
-            else if (sStr=="Main|Kidnap") g_iKidnapMenu=TRUE;
+            else if (sStr=="Main|Capture") g_iCaptureMenu=TRUE;
             else if (sStr=="Options|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
