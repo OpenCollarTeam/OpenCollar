@@ -1,28 +1,71 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                            OpenCollar - customizer                             //
-//                                 version 3.995                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free™ //
-// ------------------------------------------------------------------------------ //
-//                    github.com/OpenCollar/OpenCollarUpdater                     //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                          Customizer - 151027.1                           //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
+//  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//         github.com/OpenCollar/opencollar/tree/master/src/spares          //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
-string g_sParentMenu = "Appearance";
+
+string g_sParentMenu = "Apps";
 string g_sSubMenu = "Customizer";
 
-string CTYPE = "collar";
-
 //MESSAGE MAP
-integer COMMAND_NOAUTH = 0;
-integer COMMAND_OWNER = 500;
-integer COMMAND_SECOWNER = 501;
-integer COMMAND_GROUP = 502;
-integer COMMAND_WEARER = 503;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+
+integer NOTIFY = 1002;
+integer LINK_DIALOG = 3;
+
+integer LINK_SAVE = 5;
+integer REBOOT = -1000;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -39,6 +82,12 @@ string RESET = "RESET";
 
 key g_kWearer;
 
+integer g_iTexture = FALSE;
+integer g_iColor = FALSE;
+integer g_iHide = FALSE;
+integer g_iShine = FALSE;
+integer g_iGlow = FALSE;
+
 list g_lElementsList;
 list g_lParams;
 
@@ -48,11 +97,6 @@ list g_lCurrentParam ;
 list g_lMenuIDs;//3-strided list of kAv, dialogid, menuname
 integer g_iMenuStride = 3;
 
-integer g_iTexture = FALSE;
-integer g_iColor = FALSE;
-integer g_iHide = FALSE;
-integer g_iShine = FALSE;
-integer g_iGlow = FALSE;
 
 /*
 integer g_iProfiled=TRUE;
@@ -71,7 +115,7 @@ Debug(string sStr) {
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType)
 {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kRCPT]);
@@ -80,39 +124,12 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     else g_lMenuIDs = llListReplaceList(g_lMenuIDs, lAddMe, iMenuIndex, iMenuIndex + g_iMenuStride - 1);
 }
 
-Notify(key kAv, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kAv == g_kWearer) llOwnerSay(sMsg);
-    else
-    {
-        if (llGetAgentSize(kAv) != ZERO_VECTOR) llRegionSayTo(kAv,0,sMsg);
-        else llInstantMessage(kAv, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
-}
-
 ElementMenu(key kAv, integer iPage, integer iAuth)
 {
     BuildElementsList();
-    string sPrompt = "\nChange the Elements descriptions, "+CTYPE+".\nSelect an element from the list";
-
+    string sPrompt = "\nChange the Elements descriptions, %DEVICETYPE%.\nSelect an element from the list";
     list lButtons = llListSort(g_lElementsList, 1, TRUE);
-
     Dialog(kAv, sPrompt, lButtons, [REMOVE,RESET,UPMENU], iPage, iAuth, "ElementMenu");
-}
-
-GetParam(list params)
-{
-    if ( ~llListFindList(params,["notexture"]) ) g_iTexture = FALSE;
-    else g_iTexture = TRUE;
-    if ( ~llListFindList(params,["nocolor"]) ) g_iColor = FALSE;
-    else g_iColor = TRUE;
-    if ( ~llListFindList(params,["nohide"]) ) g_iHide = FALSE;
-    else g_iHide = TRUE;
-    if ( ~llListFindList(params,["noshine"]) ) g_iShine = FALSE;
-    else g_iShine = TRUE;
-    if ( ~llListFindList(params,["noglow"]) ) g_iGlow = FALSE;
-    else g_iGlow = TRUE;
 }
 
 CustomMenu(key kAv, integer iPage, integer iAuth)
@@ -133,27 +150,42 @@ CustomMenu(key kAv, integer iPage, integer iAuth)
     Dialog(kAv, sPrompt, lButtons, [SAVE, UPMENU], iPage, iAuth, "CustomMenu");
 }
 
+GetParam(list params)
+{
+    if ( ~llListFindList(params,["notexture"]) ) g_iTexture = FALSE;
+    else g_iTexture = TRUE;
+    if ( ~llListFindList(params,["nocolor"]) ) g_iColor = FALSE;
+    else g_iColor = TRUE;
+    if ( ~llListFindList(params,["noshine"]) ) g_iShine = FALSE;
+    else g_iShine = TRUE;
+    if ( ~llListFindList(params,["noglow"]) ) g_iGlow = FALSE;
+    else g_iGlow = TRUE;
+    if ( ~llListFindList(params,["nohide"]) ) g_iHide = FALSE;
+    else g_iHide = TRUE;
+}
+
 string ChangeParam(list params)
 {
-    integer iTexture = llListFindList(params,["notexture"]);
-    if (g_iTexture && iTexture!=-1) params = llDeleteSubList(params,iTexture,iTexture);
-    else if (!g_iTexture && iTexture==-1) params += ["notexture"];
+    integer i;
+    i = llListFindList(params,["notexture"]);
+    if (g_iTexture && i!=-1) params = llDeleteSubList(params,i,i);
+    else if (!g_iTexture && i==-1) params += ["notexture"];
 
-    integer iColor = llListFindList(params,["nocolor"]);
-    if (g_iColor && iColor!=-1) params = llDeleteSubList(params,iColor,iColor);
-    else if (!g_iColor && iColor==-1) params += ["nocolor"];
+    i = llListFindList(params,["nocolor"]);
+    if (g_iColor && i!=-1) params = llDeleteSubList(params,i,i);
+    else if (!g_iColor && i==-1) params += ["nocolor"];
 
-    integer iHide = llListFindList(params,["nohide"]);
-    if (g_iHide && iHide!=-1) params = llDeleteSubList(params,iHide,iHide);
-    else if (!g_iHide && iHide==-1) params += ["nohide"];
+    i = llListFindList(params,["noshine"]);
+    if (g_iShine && i!=-1) params = llDeleteSubList(params,i,i);
+    else if (!g_iShine && i==-1) params += ["noshine"];
 
-    integer iShine = llListFindList(params,["noshine"]);
-    if (g_iShine && iShine!=-1) params = llDeleteSubList(params,iShine,iShine);
-    else if (!g_iShine && iShine==-1) params += ["noshine"];
+    i = llListFindList(params,["noglow"]);
+    if (g_iGlow && i!=-1) params = llDeleteSubList(params,i,i);
+    else if (!g_iGlow && i==-1) params += ["noglow"];
 
-    integer iGlow = llListFindList(params,["noglow"]);
-    if (g_iGlow && iGlow!=-1) params = llDeleteSubList(params,iGlow,iGlow);
-    else if (!g_iGlow && iGlow==-1) params += ["noglow"];
+    i = llListFindList(params,["nohide"]);
+    if (g_iHide && i!=-1) params = llDeleteSubList(params,i,i);
+    else if (!g_iHide && i==-1) params += ["nohide"];
 
     return llDumpList2String(params,"~");
 }
@@ -171,11 +203,7 @@ SaveCurrentParam(string sElement)
 
 ResetScripts()
 {
-    if (llGetInventoryType("OpenCollar - hide") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - hide");
-    if (llGetInventoryType("OpenCollar - texture") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - texture");
-    if (llGetInventoryType("OpenCollar - color") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - color");
-    if (llGetInventoryType("OpenCollar - shininess") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - shininess");
-    if (llGetInventoryType("OpenCollar - glow") == INVENTORY_SCRIPT) llResetOtherScript("OpenCollar - glow");
+    if (llGetInventoryType("oc_themes") == INVENTORY_SCRIPT) llResetOtherScript("oc_themes");
 }
 
 BuildElementsList()
@@ -199,20 +227,20 @@ BuildElementsList()
     } while (count-- > 2) ;
 }
 
-UserCommand(integer iAuth, string sStr, key kAv )
+UserCommand(integer iAuth, string sStr, key kID )
 {
-    if (iAuth > COMMAND_WEARER || iAuth < COMMAND_OWNER) return ; // sanity check
+    if (iAuth > CMD_WEARER || iAuth < CMD_OWNER) return ; // sanity check
 
     if (sStr == "menu " + g_sSubMenu)
     {
         //someone asked for our menu
         //give this plugin's menu to id
-        if (kAv!=g_kWearer && iAuth!=COMMAND_OWNER)
+        if (kID!=g_kWearer && iAuth!=CMD_OWNER)
         {
-            Notify(kAv,"You are not allowed to change the "+CTYPE+"'s appearance.", FALSE);
-            llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS%.", kID);
+            llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kID);
         }
-        else ElementMenu(kAv, 0, iAuth);
+        else ElementMenu(kID, 0, iAuth);
     }
 }
 
@@ -232,10 +260,10 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
     {
-        if (iNum <= COMMAND_WEARER && iNum >= COMMAND_OWNER) UserCommand(iNum, sStr, kID);
+        if (iNum <= CMD_WEARER && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         }
         else if (iNum == DIALOG_RESPONSE)
         {
@@ -248,29 +276,29 @@ default
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                //remove stride from g_lMenuIDs
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+
+                string sMenuType = llList2String(g_lMenuIDs, iMenuIndex+1);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
 
                 if (sMenuType == "ElementMenu")
                 {
                     if (sMessage == UPMENU)
                     {
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                        llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                     }
                     else if (sMessage == RESET)
                     {
                         ResetScripts();
-                        llMessageLinked(LINK_THIS, iAuth, "Load Defaults", kID);
+                        llMessageLinked(LINK_SAVE, iAuth, "load", kAv);
                         g_sCurrentElement = "";
                         ElementMenu(kAv, iPage, iAuth);
                     }
                     else if (sMessage == REMOVE)
                     {
                         ResetScripts();
-                        llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SAVE, iAuth, "load", kAv);
+                        llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                         llRemoveInventory(llGetScriptName());
                     }
                     else if (~llListFindList(g_lElementsList, [sMessage]))
@@ -317,12 +345,7 @@ default
         else if (iNum == DIALOG_TIMEOUT)
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex != -1)
-            {
-                //remove stride from g_lMenuIDs
-                //we have to subtract from the index because the dialog id comes in the middle of the stride
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-            }
+            if (iMenuIndex != -1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
         }
     }
 
