@@ -21,10 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Customizer - 151027.1                           //
+//                          Customizer - 151027.2                           //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
-//  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
+//  Copyright (c) 2014 - 2015 Romka Swallowtail et al.                      //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
