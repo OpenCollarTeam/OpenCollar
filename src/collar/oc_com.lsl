@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151007.3                          //
+//                         Communicator - 151029.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -219,8 +219,8 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 g_sPrefix = sValue;
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
             }
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n%WEARERNAME%'s prefix is \"%PREFIX%\".\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu.\nSay '\"%PREFIX% help\" for a list of chat commands.",kID);
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n%WEARERNAME%'s prefix is \"%PREFIX%\".\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu.\nSay '\"%PREFIX% help\" for a list of chat commands.",kID);
         }
         else if (sCommand == "device" && sValue == "name") {
             string sMessage;
