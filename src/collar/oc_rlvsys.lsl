@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 151008.1                            //
+//                         RLV System - 151028.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -361,15 +361,16 @@ UserCommand(integer iNum, string sStr, key kID) {
     }  else if (sStr=="show restrictions") {
         string sOut="You are being restricted by the following objects";
         integer numRestrictions=llGetListLength(g_lRestrictions);
+        if (!numRestrictions) sOut="You are not restricted.";
         while (numRestrictions){
-            key kSource=(key)llList2String(g_lRestrictions,numRestrictions);
+            key kSource=(key)llList2String(g_lRestrictions,numRestrictions-2);
             if ((key)kSource)
-                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1);
             else
-                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions+1);
+                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1);
             numRestrictions -= 2;
         }
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOut,kID);//Notify(kID,sOut,FALSE);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOut,kID);
     }
 }
 
