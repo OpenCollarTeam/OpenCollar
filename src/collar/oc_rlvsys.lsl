@@ -347,8 +347,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sStr == "clear") {
-        if (iNum == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
-        else SafeWord();
+        if (iNum == CMD_OWNER) SafeWord();
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
     } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
         if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
         else {
