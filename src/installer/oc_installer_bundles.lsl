@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer Bundles - 151013.1                       //
+//                       Installer Bundles - 151106.1                       //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Garvin Twine   //
 //  and Romka Swallowtail                                                   //
@@ -83,6 +83,7 @@ float g_iTotalItems;
 
 StatusBar(float fCount) {
     fCount = 100*(fCount/g_iTotalItems);
+    if (fCount > 100) fCount = 100;
     string sCount = ((string)((integer)fCount))+"%";
     if (fCount < 10) sCount = "░░"+sCount;
     else if (fCount < 45) sCount = "░"+sCount;
@@ -101,6 +102,7 @@ SetStatus(string sName) {
     // text status message
     g_iItemCounter++;
     string sMsg = "Installing: " + sName+ "\n \n \n";
+    if (g_sMode == "DEPRECATED") sMsg = "Removing: " + sName+ "\n \n \n";
     llSetText(sMsg, <1,1,1>, 1.0);
     if (g_iTotalItems < 2) StatusBar(0.5);
     else StatusBar(g_iItemCounter);
@@ -126,7 +128,7 @@ default
             g_kRCPT = (key)llList2String(lParts, 1);
             g_sCard = llList2String(lParts, 2);
             g_iPin = (integer)llList2String(lParts, 3);
-            g_sMode = llList2String(lParts, 4); // either INSTALL or REMOVE
+            g_sMode = llList2String(lParts, 4); // either REQUIRED or DEPRECATED
             g_iLine = 0;
             llListenRemove(g_iListener);
             g_iListener = llListen(g_iTalkChannel, "", g_kRCPT, "");
