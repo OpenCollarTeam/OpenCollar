@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151008.1                           //
+//                          Authorizer - 151107.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -67,6 +67,8 @@ integer g_iGroupEnabled = FALSE;
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
 integer g_iRunawayDisable=0;
+
+string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
 
 list g_lQueryId; //5 strided list of dataserver/http request: key, uuid, requestType, kAv, remenu.  For AV name/group name  lookups
 integer g_iQueryStride=5;
@@ -338,11 +340,11 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
             if (sToken == "owner") {
                 if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv, TRUE);
                 if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
-                llPlaySound("1ec0f327-df7f-9b02-26b2-8de6bae7f9d5",1.0);
+                llPlaySound(g_sDrop,1.0);
             } else if (sToken == "trust") {
                 if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
-                llPlaySound("def49973-5aa6-b79d-8c0e-2976d5b6d07a",1.0);
+                llPlaySound(g_sDrop,1.0);
             }
         }
         if (sToken == "owner") {
