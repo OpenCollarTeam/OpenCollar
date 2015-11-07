@@ -1,16 +1,55 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                             OpenCollar - rlvcmd                                //
-//                                 version 3.980                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2014  Individual Contributors and OpenCollar - submission set free. //
-// ------------------------------------------------------------------------------ //
-//                    github.com/OpenCollar/OpenCollarUpdater                     //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                            rlvcmd - 151107.1                             //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
+//  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//         github.com/OpenCollar/opencollar/tree/master/src/spares          //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
 //RLV Commands (from RLVa sourcecode - rlvhandler.h v1.4.10)
 // @getstatus:[<option>][;<separator>] * Examples  : @getstatus=123 ; @getstatus:tp=123 ; @getstatus:tp;|=123 ; @getstatus:;|=123
@@ -18,18 +57,18 @@
 
 
 //****Actions****//
-// @unsit=force                                                 - Checked: 2010-03-18 (RLVa-1.2.0c) | Modified: RLVa-0.2.0g
+// @unsit=force             - Checked: 2010-03-18 (RLVa-1.2.0c) | Modified: RLVa-0.2.0g
 // @remattach=force         - force detach all attachments points
-// @detachme=force           <--pulls off collar           - Checked: 2010-09-04 (RLVa-1.2.1c) | Modified: RLVa-1.2.1c
+// @detachme=force           <--pulls off collar   - Checked: 2010-09-04 (RLVa-1.2.1c) | Modified: RLVa-1.2.1c
 //****Actions w/ textbox****//
-// @setgroup:<uuid|name>=force                  - Checked: 2011-03-28 (RLVa-1.4.1a) | Added: RLVa-1.3.0f
+// @setgroup:<uuid|name>=force          - Checked: 2011-03-28 (RLVa-1.4.1a) | Added: RLVa-1.3.0f
 // @sit:<option>=force
-// @tpto:<option>=force                                 - Checked: 2011-03-28 (RLVa-1.3.0f) | Modified: RLVa-1.3.0f
+// @tpto:<option>=force                 - Checked: 2011-03-28 (RLVa-1.3.0f) | Modified: RLVa-1.3.0f
 
 //****Wearables****//
-// @remattach:<attachpt>=force                   - force detach single attachment point
-// @detach:<attachpt>=n|y - RLV_LOCK_ADD and RLV_LOCK_REMOVE locks an attachment *point*
-// @detach[:<option>]=force                             - Checked: 2010-08-30 (RLVa-1.2.1c) | Modified: RLVa-1.2.1c
+// @remattach:<attachpt>=force          - force detach single attachment point
+// @detach:<attachpt>=n|y               - RLV_LOCK_ADD and RLV_LOCK_REMOVE locks an attachment *point*
+// @detach[:<option>]=force             - Checked: 2010-08-30 (RLVa-1.2.1c) | Modified: RLVa-1.2.1c
 // @remattach[:<option>]=force
 // @remoutfit[:<option>]=force
 //****Wearables w/ textbox****//
@@ -49,16 +88,16 @@
 // @getinvworn[:<path>]=<channel>
 
 //****Info Gather****//
-// @getgroup=<channel>                                  - Checked: 2011-03-28 (RLVa-1.4.1a) | Added: RLVa-1.3.0f
-// @getsitid=<channel>                                  - Checked: 2010-03-09 (RLVa-1.2.0a) | Modified: RLVa-1.2.0a
-// @getstatus=<channel>                            - Checked: 2010-04-07 (RLVa-1.2.0d) | Modified: RLVa-1.1.0f
-// @getstatusall=<channel>                         - Checked: 2010-04-07 (RLVa-1.2.0d) | Modified: RLVa-1.1.0f
-// @version=<channel>                                   - Checked: 2010-03-27 (RLVa-1.4.0a)
-// @versionnew=<channel>                                - Checked: 2010-03-27 (RLVa-1.4.0a) | Added: RLVa-1.2.0b
-// @versionnum=<channel>                                - Checked: 2010-03-27 (RLVa-1.4.0a) | Added: RLVa-1.0.4b
+// @getgroup=<channel>                  - Checked: 2011-03-28 (RLVa-1.4.1a) | Added: RLVa-1.3.0f
+// @getsitid=<channel>                  - Checked: 2010-03-09 (RLVa-1.2.0a) | Modified: RLVa-1.2.0a
+// @getstatus=<channel>                 - Checked: 2010-04-07 (RLVa-1.2.0d) | Modified: RLVa-1.1.0f
+// @getstatusall=<channel>              - Checked: 2010-04-07 (RLVa-1.2.0d) | Modified: RLVa-1.1.0f
+// @version=<channel>                   - Checked: 2010-03-27 (RLVa-1.4.0a)
+// @versionnew=<channel>                - Checked: 2010-03-27 (RLVa-1.4.0a) | Added: RLVa-1.2.0b
+// @versionnum=<channel>                - Checked: 2010-03-27 (RLVa-1.4.0a) | Added: RLVa-1.0.4b
 
 //****Commandline Search****//
-// @getcommand:<option>=<channel>               - Checked: 2010-12-11 (RLVa-1.2.2c) | Added: RLVa-1.2.2c
+// @getcommand:<option>=<channel>       - Checked: 2010-12-11 (RLVa-1.2.2c) | Added: RLVa-1.2.2c
 
 
 
@@ -211,19 +250,20 @@ list g_lChat = [
 list g_lDisabled; //we will log our disabled here
 string g_lOwnerSpecifics;
 
-string  SUBMENU_BUTTON              = "RLVcmd"; // Name of the submenu
-string  COLLAR_PARENT_MENU          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string  g_sSubMenu    = "RLVcmd"; // Name of the submenu
+string  g_sParentMenu = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
+string  g_sScript = "RLVcmd_";                             // part of script name used for settings
 
 key     g_kMenuID;                              // menu handler
 key     g_kMenuIDEnablements;                              // menu handler
 key     g_kMenuIDOther;
 key     g_kWearer;                              // key of the current wearer to reset only on owner changes
 key     g_kClicker;                             //capture clicker IDs
-string  g_sScript                   = "RLVcmd_";                             // part of script name used for settings
-string CTYPE                        = "collar";    // designer can set in notecard to appropriate word for their item
+
 integer g_iRlvOn = FALSE;
 integer g_iRlvaOn = FALSE;
 integer g_iListenerHandle;
+
 list g_lListeners;
 key g_kRlvCommand;
 
@@ -232,7 +272,7 @@ list g_lStoredCommand = []; //and a list to queue stored commands (these expire)
 
 list g_lRlvCommandHistory; //history of commands
 integer g_iListenerChannel;
-string WEARERNAME;
+
 integer g_iExceptionsChannel = 98726392; //channel to listen for exceptions
 
 string TICKED = "☒ ";
@@ -241,110 +281,108 @@ string UNTICKED = "☐ ";
 // OpenCollar MESSAGE MAP
 
 // messages for authenticating users
-// integer COMMAND_NOAUTH = 0; // for reference, but should usually not be in use inside plugins
-//integer COMMAND_NOAUTH             = 0;
-integer COMMAND_OWNER              = 500;
-integer COMMAND_SECOWNER           = 501;
-//integer COMMAND_GROUP              = 502;
-integer COMMAND_WEARER             = 503;
-integer COMMAND_EVERYONE           = 504;
-//integer COMMAND_RLV_RELAY          = 507;
-integer COMMAND_SAFEWORD           = 510;
-//integer COMMAND_RELAY_SAFEWORD     = 511;
-//integer COMMAND_BLACKLIST          = 520;
+
+integer CMD_OWNER              = 500;
+//integer CMD_TRUST            = 501;
+//integer CMD_GROUP            = 502;
+integer CMD_WEARER             = 503;
+//integer CMD_EVERYONE           = 504;
+//integer CMD_RLV_RELAY          = 507;
+integer CMD_SAFEWORD           = 510;
+//integer CMD_RELAY_SAFEWORD     = 511;
+//integer CMD_BLACKLIST          = 520;
 // added for timer so when the sub is locked out they can use postions
-//integer COMMAND_WEARERLOCKEDOUT    = 521;
+//integer CMD_WEARERLOCKEDOUT    = 521;
 
-//integer ATTACHMENT_REQUEST         = 600;
-//integer ATTACHMENT_RESPONSE        = 601;
-//integer ATTACHMENT_FORWARD         = 610;
+//integer ATTACHMENT_REQUEST     = 600;
+//integer ATTACHMENT_RESPONSE    = 601;
+//integer ATTACHMENT_FORWARD     = 610;
 
-//integer WEARERLOCKOUT              = 620; // turns on and off wearer lockout
+//integer WEARERLOCKOUT          = 620; // turns on and off wearer lockout
 
 // integer SEND_IM = 1000; deprecated.  each script should send its own IMs now.
 // This is to reduce even the tiny bit of lag caused by having IM slave scripts
 //integer POPUP_HELP                 = 1001;
 
 // messages for storing and retrieving values from settings store
-//integer LM_SETTING_SAVE            = 2000; // scripts send messages on this channel to have settings saved to settings store
+//integer LM_SETTING_SAVE        = 2000; // scripts send messages on this channel to have settings saved to settings store
 //                                            str must be in form of "token=value"
-//integer LM_SETTING_REQUEST         = 2001; // when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE        = 2002; // the settings script will send responses on this channel
-integer LM_SETTING_DELETE          = 2003; // delete token from settings store
-//integer LM_SETTING_EMPTY           = 2004; // sent by settings script when a token has no value in the settings store
+//integer LM_SETTING_REQUEST     = 2001; // when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_RESPONSE    = 2002; // the settings script will send responses on this channel
+//integer LM_SETTING_DELETE      = 2003; // delete token from settings store
+//integer LM_SETTING_EMPTY       = 2004; // sent by settings script when a token has no value in the settings store
 //integer LM_SETTING_REQUEST_NOCACHE = 2005;
 
 // messages for creating OC menu structure
-integer MENUNAME_REQUEST           = 3000;
-integer MENUNAME_RESPONSE          = 3001;
-integer MENUNAME_REMOVE            = 3003;
+integer MENUNAME_REQUEST        = 3000;
+integer MENUNAME_RESPONSE       = 3001;
+//integer MENUNAME_REMOVE         = 3003;
 
 // messages for RLV commands
-integer RLV_CMD                    = 6000;
-integer RLV_REFRESH                = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR                  = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION                = 6003; // RLV Plugins can recieve the used rl viewer version upon receiving this message..
-integer RLVA_VERSION               = 6004;
-integer RLV_OFF                    = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-integer RLV_ON                     = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-integer RLV_QUERY                  = 6102; //query from a script asking if RLV is currently functioning
-integer RLV_RESPONSE               = 6103; //reply to RLV_QUERY, with "ON" or "OFF" as the message
+integer RLV_CMD                 = 6000;
+integer RLV_REFRESH             = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR               = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION             = 6003; // RLV Plugins can recieve the used rl viewer version upon receiving this message..
+integer RLVA_VERSION            = 6004;
+integer RLV_OFF                 = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+integer RLV_ON                  = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+integer RLV_QUERY               = 6102; //query from a script asking if RLV is currently functioning
+integer RLV_RESPONSE            = 6103; //reply to RLV_QUERY, with "ON" or "OFF" as the message
 
 // messages for poses and couple anims
-//integer ANIM_START                 = 7000; // send this with the name of an anim in the string part of the message to play the anim
-//integer ANIM_STOP                  = 7001; // send this with the name of an anim in the string part of the message to stop the anim
-//integer CPLANIM_PERMREQUEST        = 7002; // id should be av's key, str should be cmd name "hug", "kiss", etc
-//integer CPLANIM_PERMRESPONSE       = 7003; // str should be "1" for got perms or "0" for not.  id should be av's key
-//integer CPLANIM_START              = 7004; // str should be valid anim name.  id should be av
-//integer CPLANIM_STOP               = 7005; // str should be valid anim name.  id should be av
+//integer ANIM_START              = 7000; // send this with the name of an anim in the string part of the message to play the anim
+//integer ANIM_STOP               = 7001; // send this with the name of an anim in the string part of the message to stop the anim
+//integer CPLANIM_PERMREQUEST     = 7002; // id should be av's key, str should be cmd name "hug", "kiss", etc
+//integer CPLANIM_PERMRESPONSE    = 7003; // str should be "1" for got perms or "0" for not.  id should be av's key
+//integer CPLANIM_START           = 7004; // str should be valid anim name.  id should be av
+//integer CPLANIM_STOP            = 7005; // str should be valid anim name.  id should be av
 
 // messages to the dialog helper
-integer DIALOG                     = -9000;
-integer DIALOG_RESPONSE            = -9001;
-integer DIALOG_TIMEOUT             = -9002;
+integer DIALOG                  = -9000;
+integer DIALOG_RESPONSE         = -9001;
+integer DIALOG_TIMEOUT          = -9002;
 
-//integer FIND_AGENT                   = -9005; // to look for agent(s) in region with a (optional) search string
+//integer FIND_AGENT              = -9005; // to look for agent(s) in region with a (optional) search string
 //key REQUEST_KEY;
 
-//integer TIMER_EVENT                = -10000; // str = "start" or "end". For start, either "online" or "realtime".
+//integer TIMER_EVENT             = -10000; // str = "start" or "end". For start, either "online" or "realtime".
 
-//integer UPDATE                     = 10001;  // for child prim scripts (currently none in 3.8, thanks to LSL new functions)
+//integer UPDATE                  = 10001;  // for child prim scripts (currently none in 3.8, thanks to LSL new functions)
 
 // For other things that want to manage showing/hiding keys.
-//integer KEY_VISIBLE                = -10100;
-//integer KEY_INVISIBLE              = -10100;
+//integer KEY_VISIBLE             = -10100;
+//integer KEY_INVISIBLE           = -10100;
 
-//integer COMMAND_PARTICLE           = 20000;
-//integer COMMAND_LEASH_SENSOR       = 20001;
+//integer CMD_PARTICLE            = 20000;
+//integer CMD_LEASH_SENSOR        = 20001;
 
 //chain systems
-//integer LOCKMEISTER                = -8888;
-//integer LOCKGUARD                  = -9119;
+//integer LOCKMEISTER             = -8888;
+//integer LOCKGUARD               = -9119;
 
 //rlv relay chan
-//integer RLV_RELAY_CHANNEL          = -1812221819;
+//integer RLV_RELAY_CHANNEL       = -1812221819;
 
 // menu option to go one step back in menustructure
-string  UPMENU                     = "BACK"; // when your menu hears this, give the parent menu
+string  UPMENU = "BACK"; // when your menu hears this, give the parent menu
 
+integer NOTIFY      = 1002;
+integer REBOOT      = -1000;
+integer LINK_DIALOG = 3;
+integer LINK_RLV    = 4;
+integer LINK_SAVE   = 5;
 
 //Debug(string sMsg) { llOwnerSay(llGetScriptName() + " [DEBUG]: " + sMsg);}
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
-{
-    if (kID == g_kWearer) llOwnerSay(sMsg);
-    else {
-        if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
-        else llInstantMessage(kID, sMsg);
-        if (iAlsoNotifyWearer) llOwnerSay(sMsg);
-    }
+Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
+    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
-                    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
+    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
 
@@ -373,7 +411,7 @@ integer FindCommandType(string sCommand)     //this is really inefficient, need 
 
 DoMenu(key keyID, integer iAuth)
 {
-    string sPrompt = "\n" + SUBMENU_BUTTON;
+    string sPrompt = "\n" + g_sSubMenu;
     list lMyButtons;
     if(g_iRlvOn) {
         sPrompt += " Enabled.  Press CMD to enter a command.  Press HELP for a list of commands\n\n" +
@@ -432,30 +470,30 @@ ProcessCommand(key kID, string sCommand, integer iCommandType, string sParam1, s
     } else if(iCommandType == 2) {
         if(sParam1) { RlvCmd("@" + sCommand + ":" + sParam1 + "=force"); return; } //if we have param1, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                 "\n@" + sCommand + ":[option]=force\n\n"+sHelp, [], [], 0, COMMAND_OWNER);
+                 "\n@" + sCommand + ":[option]=force\n\n"+sHelp, [], [], 0, CMD_OWNER);
         g_lStoredCommand += [(string)kID + "~" + sCommand + "~" + (string)iCommandType + "~" + sParam1 + "~" + sParam2];
     } else if(iCommandType == 3) {
         if(sParam1) { RlvCmd("@" + sCommand + ":" + sParam1 + "=" + (string)iRandom); return; } //if we have param1, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                 "\n@" + sCommand + ":[option]=force\n\n"+sHelp, [], [], 0, COMMAND_OWNER);
+                 "\n@" + sCommand + ":[option]=force\n\n"+sHelp, [], [], 0, CMD_OWNER);
         g_lStoredCommand += [(string)kID + "~" + sCommand + "~" + (string)iCommandType + "~" + sParam1 + "~" + sParam2];
     } else if(iCommandType == 4) {
         if((sParam1 != "") && (sParam2 != "")) { RlvCmd("@" + sCommand + ":" + sParam1 + "=" + sParam2); return; } //if we have param1&2, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                "\n@" + sCommand + ":[attachpt/option]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, COMMAND_OWNER);
+                "\n@" + sCommand + ":[attachpt/option]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, CMD_OWNER);
         g_lStoredCommand += [(string)kID + "~" + sCommand + "~" + (string)iCommandType + "~" + sParam1 + "~" + sParam2];
     } else if(iCommandType == 5) {
         if((sParam1 != "") && (sParam2 != "")) { RlvCmd("@" + sCommand + ":" + sParam1 + "=" + sParam2); return; } //if we have param1&2, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                 "\n@" + sCommand + ":[channel]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, COMMAND_OWNER);
+                 "\n@" + sCommand + ":[channel]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, CMD_OWNER);
     } else if(iCommandType == 6) {
         if((sParam1 != "") && (sParam2 != "")) { RlvCmd("@" + sCommand + ":" + sParam1 + "=" + sParam2); return; } //if we have param1&2, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                 "\n@" + sCommand + ":[params]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, COMMAND_OWNER);
+                 "\n@" + sCommand + ":[params]=[y/n]\n\n"+sHelp+"\n(please enter two words separated by space)", [], [], 0, CMD_OWNER);
     } else if(iCommandType == 7) {
         if(sParam1) { RlvCmd("@" + sCommand + ":" + sParam1 + "=force"); return; } //if we have param1, we're good, if not, pop up textbox
         g_kRlvTextboxCommand = Dialog(kID,
-                 "\n@" + sCommand + "=[y/n]\n\n"+sHelp, [], [], 0, COMMAND_OWNER);
+                 "\n@" + sCommand + "=[y/n]\n\n"+sHelp, [], [], 0, CMD_OWNER);
         g_lStoredCommand += [(string)kID + "~" + sCommand + "~" + (string)iCommandType + "~" + sParam1 + "~" + sParam2];
     }
 }
@@ -489,32 +527,33 @@ RlvCmd(string sStr)
 
 OutCommand (string sCommand) {
     sCommand = llGetSubString(sCommand,1,-1); //strip off @
-    llMessageLinked(LINK_SET, RLV_CMD, sCommand, g_kClicker);
+    llMessageLinked(LINK_RLV, RLV_CMD, sCommand, g_kClicker);
 }
 
-integer UserCommand(integer iNum, string sStr, key kID, integer remenu)
+UserCommand(integer iAuth, string sStr, key kID, integer remenu)
 {
+    if (iAuth != CMD_OWNER) return ;
+
     sStr = llToLower(sStr);
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 1); //rlv command
     string sParam1 = llList2String(lParams, 2); //param 1
     string sParam2 = llList2String(lParams, 3); //param 2
     lParams = []; //clean
-    string sMainButton = llToLower(SUBMENU_BUTTON);
-    if(!(iNum >= COMMAND_OWNER && iNum <= COMMAND_OWNER)) {
-        return FALSE;
-    } else if((g_iRlvOn == FALSE) && (llSubStringIndex(sStr, sMainButton) == 0)) {
-        Notify(kID, "RLV is off in " + WEARERNAME + "'s " + CTYPE + ".  Please enable RLV before using this plugin", FALSE);
-        return FALSE;
+    string sMainButton = llToLower(g_sSubMenu);
+
+    if((g_iRlvOn == FALSE) && (llSubStringIndex(sStr, sMainButton) == 0)) {
+        Notify(kID, "RLV is off in %WEARERNAME%'s %DEVICETYPE%.  Please enable RLV before using this plugin", FALSE);
+        return ;
     } else if(sStr == sMainButton || sStr == "menu " + sMainButton) {
         //an authorized user requested the plugin menu by typing the menus chat command
-        DoMenu(kID, iNum);
+        DoMenu(kID, iAuth);
     }  else if(sStr == sMainButton + " reset") {
         llResetScript();
     }  else if((llSubStringIndex(sStr, sMainButton) == 0) && (llGetSubString(sCommand, 0, 0) == "@"))  {
         //sStr = llStringTrim(llDeleteSubString(sStr,0,llStringLength(sMainButton)),STRING_TRIM);
         //if (llSubStringIndex(sStr,"@") == 0) { //rlv commands need to start with @
-        Notify(kID, "Sending RLV command " + sCommand + " to " + WEARERNAME + "'s " + CTYPE, FALSE);
+        Notify(kID, "Sending RLV command " + sCommand + " to %WEARERNAME%'s %DEVICETYPE%", FALSE);
         g_lRlvCommandHistory += [sStr];
         g_kClicker = kID;
         RlvCmd(sStr);
@@ -524,29 +563,26 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu)
         if(llListFindList(g_lEnablements, [sCommand]) >= 0) {
             iToken = llListFindList(g_lEnablements, [sCommand]);
             ProcessCommand(kID, llList2String(g_lEnablements, iToken), 7, sParam1, sParam2);
-            return TRUE;
+            return ;
         }  else if(llListFindList(g_lChat, [sCommand]) >= 0) {
             iToken = llListFindList(g_lChat, [sCommand]);
             ProcessCommand(kID, llList2String(g_lChat, iToken), llList2Integer(g_lChat, iToken + 1), sParam1, sParam2);
-            return TRUE;
+            return ;
         }  else if(llListFindList(g_lGatherInfo, [sCommand]) >= 0) {
             iToken = llListFindList(g_lGatherInfo, [sCommand]);
             ProcessCommand(kID, llList2String(g_lGatherInfo, iToken), llList2Integer(g_lGatherInfo, iToken + 1), sParam1, sParam2);
-            return TRUE;
+            return ;
         }  else if(llListFindList(g_lWearables, [sCommand]) >= 0) {
             iToken = llListFindList(g_lWearables, [sCommand]);
             ProcessCommand(kID, llList2String(g_lWearables, iToken), llList2Integer(g_lWearables, iToken + 1), sParam1, sParam2);
-            return TRUE;
+            return ;
         }  else if(llListFindList(g_lActions, [sCommand]) >= 0) {
             iToken = llListFindList(g_lActions, [sCommand]);
             ProcessCommand(kID, llList2String(g_lActions, iToken), llList2Integer(g_lActions, iToken + 1), sParam1, sParam2);
-            return TRUE;
+            return ;
         }  else {Notify(kID, "Invalid command", FALSE);} //TODO - Use GETCOMMAND to match partial string
-    } 
-    if(remenu) {
-        DoMenu(kID, iNum);
     }
-    return TRUE;
+    if(remenu) DoMenu(kID, iAuth);
 }
 
 string StringHistorySnippet()
@@ -567,14 +603,11 @@ string StringHistorySnippet()
 default {
 
     state_entry() {
-        g_sScript = llStringTrim(llList2String(llParseString2List(llGetScriptName(), ["-"], []), 1), STRING_TRIM) + "_";
         g_kWearer = llGetOwner();
-        WEARERNAME = llGetDisplayName(g_kWearer);
-        if(WEARERNAME == "???" || WEARERNAME == "") { WEARERNAME = llKey2Name(g_kWearer); }  //sanity check, fallback if necessary
     }
 
     on_rez(integer iParam) {
-        if(llGetOwner() != g_kWearer)  { llResetScript(); }
+        if(llGetOwner() != g_kWearer) llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -589,7 +622,7 @@ default {
                 }
             }
             lStatus = [];
-            DoMenuEnablements(g_kClicker, COMMAND_OWNER);
+            DoMenuEnablements(g_kClicker, CMD_OWNER);
         } else if(iChan == g_iListenerChannel) {
             Notify(g_kClicker, sMsg, FALSE);
         }
@@ -607,41 +640,25 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-        key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
-        string sMessage = llList2String(lMenuParams, 1); // button label
-        integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
-        integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-        // llOwnerSay(sStr+" | "+(string)iNum+ "|"+(string)kID);
-        if(iNum == MENUNAME_REQUEST && sStr == COLLAR_PARENT_MENU) {
+        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             // our parent menu requested to receive buttons, so send ours
-            llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + SUBMENU_BUTTON, "");
-        } else if(iNum == RLV_ON) {
-            g_iRlvOn = TRUE;
-        } else if(iNum == RLV_OFF) {
-            g_iRlvOn = FALSE;
-        } else if(iNum == RLVA_VERSION) {
-            g_iRlvaOn = TRUE;
-        } else if((iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_DELETE)
-                  && llSubStringIndex(sStr, "Global_WearerName") == 0) {
-            integer iInd = llSubStringIndex(sStr, "=");
-            string sValue = llGetSubString(sStr, iInd + 1, -1);
-            //We have a broadcasted change to WEARERNAME to work with
-            if(iNum == LM_SETTING_RESPONSE) { WEARERNAME = sValue; }
-            else {
-                g_kWearer = llGetOwner();
-                WEARERNAME = llGetDisplayName(g_kWearer);
-                if(WEARERNAME == "???" || WEARERNAME == "") { WEARERNAME == llKey2Name(g_kWearer); }
-            }
-        } else if(iNum == COMMAND_SAFEWORD) {
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+        } else if(iNum == RLV_ON) g_iRlvOn = TRUE;
+        else if(iNum == RLV_OFF) g_iRlvOn = FALSE;
+        else if(iNum == RLVA_VERSION) g_iRlvaOn = TRUE;
+        else if(iNum == CMD_SAFEWORD) {
             // Safeword has been received, release any restricitions that should be released
-        } else if(UserCommand(iNum, sStr, kID, FALSE)) {
-            // do nothing more if TRUE
         } else if(iNum == DIALOG_RESPONSE) {
+            list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
+            key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
+            string sMessage = llList2String(lMenuParams, 1); // button label
+            integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+            integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
             if(kID == g_kMenuID) {
                 if(sMessage == UPMENU) {
                     //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                 } else if(sMessage == "CMD") {
                     g_kClicker = kAv;
                     g_kRlvCommand = Dialog(kAv, StringHistorySnippet(), [], [], 0, iAuth);
@@ -664,7 +681,7 @@ default {
                 } else if(llSubStringIndex(sMessage, "@") == 0)  {
                     sMessage = llStringTrim(sMessage, STRING_TRIM);
                     g_lRlvCommandHistory += [sMessage];
-                    Notify(kAv, "Sending RLV command " + sMessage + " to " + WEARERNAME + "'s " + CTYPE, FALSE);
+                    Notify(kAv, "Sending RLV command " + sMessage + " to %WEARERNAME%'s %DEVICETYPE%", FALSE);
                     g_kClicker = kAv;
                     RlvCmd(sMessage);
                     g_kRlvCommand = Dialog(kAv, StringHistorySnippet(), [], [], 0, iAuth);
@@ -675,7 +692,7 @@ default {
             } else if(kID == g_kMenuIDEnablements) {
                 if(sMessage == UPMENU) {
                     //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                 } else if(llSubStringIndex(sMessage, UNTICKED) >= 0) {
                     string sStr = llGetSubString(sMessage, llStringLength(UNTICKED), llStringLength(sMessage));
                     g_kClicker = kAv;
@@ -689,7 +706,7 @@ default {
             } else if(kID == g_kRlvTextboxCommand) {
                 if((sMessage == UPMENU) || (llStringTrim(sMessage, STRING_TRIM) == "")) {
                     //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                 }
                 if(sMessage == "") { DoMenu(kAv, iAuth); return; }
                 list lParams = llParseString2List(sMessage, [" "], []);
@@ -711,7 +728,7 @@ default {
             } else if(kID == g_kMenuIDOther) {
                 if((sMessage == UPMENU) || (llStringTrim(sMessage, STRING_TRIM) == "")) {
                     //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                 }
                 ProcessCommand(kAv, sMessage, FindCommandType(sMessage), "", "");
             }
