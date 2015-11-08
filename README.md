@@ -18,7 +18,7 @@ At the moment this repository is separated into resources, source code and web q
         > sounds: Sounds as .wav and .aup binaries.
         > textures: Images as .png and .xcf binaries.
 
-    > src: Source code of the OpeCollar role play device.
+    > src: Source code of the OpenCollar role play device.
 
         > ao: The source code for the animation overrider.
         > collar: The source code for the collar device.
