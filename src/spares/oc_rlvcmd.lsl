@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            rlvcmd - 151107.1                             //
+//                            rlvcmd - 151108.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -389,22 +389,19 @@ key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integ
 integer FindCommandType(string sCommand)     //this is really inefficient, need one function to do this
 {
     integer iToken;
-    if(llListFindList(g_lEnablements, [sCommand]) >= 0) {
-        iToken = llListFindList(g_lEnablements, [sCommand]);
-        iToken = llList2Integer(g_lEnablements, iToken + 1);
-    }  else if(llListFindList(g_lChat, [sCommand]) >= 0) {
+    if(llListFindList(g_lChat, [sCommand]) >= 0) {
         iToken = llListFindList(g_lChat, [sCommand]);
         iToken = llList2Integer(g_lChat, iToken + 1);
-    }  else if(llListFindList(g_lGatherInfo, [sCommand]) >= 0) {
+    } else if(llListFindList(g_lGatherInfo, [sCommand]) >= 0) {
         iToken = llListFindList(g_lGatherInfo, [sCommand]);
         iToken = llList2Integer(g_lGatherInfo, iToken + 1);
-    }  else if(llListFindList(g_lWearables, [sCommand]) >= 0) {
+    } else if(llListFindList(g_lWearables, [sCommand]) >= 0) {
         iToken = llListFindList(g_lWearables, [sCommand]);
         iToken = llList2Integer(g_lWearables, iToken + 1);
-    }  else if(llListFindList(g_lActions, [sCommand]) >= 0) {
+    } else if(llListFindList(g_lActions, [sCommand]) >= 0) {
         iToken = llListFindList(g_lActions, [sCommand]);
         iToken = llList2Integer(g_lActions, iToken + 1);
-    }  else {} //TODO - Use GETCOMMAND to match partial string|tpto|
+    } else {} //TODO - Use GETCOMMAND to match partial string|tpto|
     return iToken;
 }
 
@@ -508,15 +505,17 @@ RlvCmd(string sStr)
     string sCommand = sStr;
     if(llSubStringIndex(sStr, "=") >= 0) {
         start = llSubStringIndex(sStr, "=") + 1;
-        if(llSubStringIndex(sStr, ";") >= 0) {
-            end = llSubStringIndex(sStr, ";") - 1;
-        } else { end = llStringLength(sStr); }
+        if(llSubStringIndex(sStr, ";") >= 0) end = llSubStringIndex(sStr, ";") - 1;
+        else end = llStringLength(sStr);
     }
     sStr = llGetSubString(sStr, start, end);
     start = 0;
     end = llStringLength(sStr) - 1;
     for(start; start <= end; ++start) { //run through this number list to make sure each character is numeric
-        if(isInteger(llGetSubString(sStr, start, start)) != 1) { OutCommand(sCommand); return; } //something left in here isn't an integer, send the full command
+        if(isInteger(llGetSubString(sStr, start, start)) != 1) {
+            OutCommand(sCommand);
+            return;
+        } //something left in here isn't an integer, send the full command
     }
     llSetTimerEvent(20);
     g_iListenerChannel = (integer)sStr;
@@ -548,9 +547,9 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
     } else if(sStr == sMainButton || sStr == "menu " + sMainButton) {
         //an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iAuth);
-    }  else if(sStr == sMainButton + " reset") {
+    } else if(sStr == sMainButton + " reset") {
         llResetScript();
-    }  else if((llSubStringIndex(sStr, sMainButton) == 0) && (llGetSubString(sCommand, 0, 0) == "@"))  {
+    } else if((llSubStringIndex(sStr, sMainButton) == 0) && (llGetSubString(sCommand, 0, 0) == "@"))  {
         //sStr = llStringTrim(llDeleteSubString(sStr,0,llStringLength(sMainButton)),STRING_TRIM);
         //if (llSubStringIndex(sStr,"@") == 0) { //rlv commands need to start with @
         Notify(kID, "Sending RLV command " + sCommand + " to %WEARERNAME%'s %DEVICETYPE%", FALSE);
@@ -558,29 +557,29 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
         g_kClicker = kID;
         RlvCmd(sStr);
         //}
-    }  else if(llSubStringIndex(sStr, sMainButton) == 0) {
+    } else if(llSubStringIndex(sStr, sMainButton) == 0) {
         integer iToken;
         if(llListFindList(g_lEnablements, [sCommand]) >= 0) {
             iToken = llListFindList(g_lEnablements, [sCommand]);
             ProcessCommand(kID, llList2String(g_lEnablements, iToken), 7, sParam1, sParam2);
             return ;
-        }  else if(llListFindList(g_lChat, [sCommand]) >= 0) {
+        } else if(llListFindList(g_lChat, [sCommand]) >= 0) {
             iToken = llListFindList(g_lChat, [sCommand]);
             ProcessCommand(kID, llList2String(g_lChat, iToken), llList2Integer(g_lChat, iToken + 1), sParam1, sParam2);
             return ;
-        }  else if(llListFindList(g_lGatherInfo, [sCommand]) >= 0) {
+        } else if(llListFindList(g_lGatherInfo, [sCommand]) >= 0) {
             iToken = llListFindList(g_lGatherInfo, [sCommand]);
             ProcessCommand(kID, llList2String(g_lGatherInfo, iToken), llList2Integer(g_lGatherInfo, iToken + 1), sParam1, sParam2);
             return ;
-        }  else if(llListFindList(g_lWearables, [sCommand]) >= 0) {
+        } else if(llListFindList(g_lWearables, [sCommand]) >= 0) {
             iToken = llListFindList(g_lWearables, [sCommand]);
             ProcessCommand(kID, llList2String(g_lWearables, iToken), llList2Integer(g_lWearables, iToken + 1), sParam1, sParam2);
             return ;
-        }  else if(llListFindList(g_lActions, [sCommand]) >= 0) {
+        } else if(llListFindList(g_lActions, [sCommand]) >= 0) {
             iToken = llListFindList(g_lActions, [sCommand]);
             ProcessCommand(kID, llList2String(g_lActions, iToken), llList2Integer(g_lActions, iToken + 1), sParam1, sParam2);
             return ;
-        }  else {Notify(kID, "Invalid command", FALSE);} //TODO - Use GETCOMMAND to match partial string
+        } else {Notify(kID, "Invalid command", FALSE);} //TODO - Use GETCOMMAND to match partial string
     }
     if(remenu) DoMenu(kID, iAuth);
 }
@@ -653,7 +652,7 @@ default {
             list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
             string sMessage = llList2String(lMenuParams, 1); // button label
-            integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+            //integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
             integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
             if(kID == g_kMenuID) {
                 if(sMessage == UPMENU) {
@@ -691,46 +690,49 @@ default {
                 }
             } else if(kID == g_kMenuIDEnablements) {
                 if(sMessage == UPMENU) {
-                    //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
-                } else if(llSubStringIndex(sMessage, UNTICKED) >= 0) {
-                    string sStr = llGetSubString(sMessage, llStringLength(UNTICKED), llStringLength(sMessage));
+                    DoMenu(kAv, iAuth);
+                } else {
                     g_kClicker = kAv;
-                    RlvCmd("@" + sStr + "=n");
-                } else if(llSubStringIndex(sMessage, TICKED) >= 0) {
-                    string sStr = llGetSubString(sMessage, llStringLength(TICKED), llStringLength(sMessage));
-                    g_kClicker = kAv;
-                    RlvCmd("@" + sStr + "=y");
+                    string sStr;
+                    if (llSubStringIndex(sMessage, UNTICKED) >= 0) {
+                        sStr = llGetSubString(sMessage,llStringLength(UNTICKED),llStringLength(sMessage))+"=n" ;
+                    } else if(llSubStringIndex(sMessage, TICKED) >= 0) {
+                        sStr = llGetSubString(sMessage, llStringLength(TICKED), llStringLength(sMessage))+"=y";
+                    }
+                    RlvCmd("@" + sStr);
+                    llSetTimerEvent(20);
+                    g_iListenerHandle = llListen(g_iExceptionsChannel, "", llGetOwner(), "");
+                    OutCommand("@getstatusall" + "=" + (string)g_iExceptionsChannel);
+                    g_lListeners += [g_iListenerHandle];
                 }
-                DoMenu(kAv, iAuth);
             } else if(kID == g_kRlvTextboxCommand) {
                 if((sMessage == UPMENU) || (llStringTrim(sMessage, STRING_TRIM) == "")) {
-                    //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
-                }
-                if(sMessage == "") { DoMenu(kAv, iAuth); return; }
-                list lParams = llParseString2List(sMessage, [" "], []);
-                integer i = 0;
-                integer x = llGetListLength(g_lStoredCommand) - 1;
-                for(; x >= i; --x) {
-                    if(llSubStringIndex(llList2String(g_lStoredCommand, x), (string)kAv) >= 0) {
-                        list lPieces = llParseStringKeepNulls(llList2String(g_lStoredCommand, x), ["~"], []);
-                        ProcessCommand( //ProcessCommand(key kID,string sCommand,integer iCommandType,string sParam1,string sParam2) {
+                    DoMenu(kAv, iAuth);
+                } else if(sMessage == "") DoMenu(kAv, iAuth);
+                else {
+                    list lParams = llParseString2List(sMessage, [" "], []);
+                    integer i = 0;
+                    integer x = llGetListLength(g_lStoredCommand) - 1;
+                    for(; x >= i; --x) {
+                        if(llSubStringIndex(llList2String(g_lStoredCommand, x), (string)kAv) >= 0) {
+                            list lPieces = llParseStringKeepNulls(llList2String(g_lStoredCommand, x), ["~"], []);
+                            ProcessCommand( //ProcessCommand(key kID,string sCommand,integer iCommandType,string sParam1,string sParam2) {
                                 llList2Key(lPieces, 0),
                                 llList2String(lPieces, 1),
                                 llList2Integer(lPieces, 2),
                                 llList2String(lParams, 0), //from our message box
                                 llList2String(lParams, 1)
-                        ); //
+                            ); //
+                        }
                     }
+                    DoMenu(kAv, iAuth);
                 }
-                DoMenu(kAv, iAuth);
             } else if(kID == g_kMenuIDOther) {
                 if((sMessage == UPMENU) || (llStringTrim(sMessage, STRING_TRIM) == "")) {
-                    //give av the parent menu
-                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
+                    DoMenu(kAv, iAuth);
+                } else {
+                    ProcessCommand(kAv, sMessage, FindCommandType(sMessage), "", "");
                 }
-                ProcessCommand(kAv, sMessage, FindCommandType(sMessage), "", "");
             }
         }
     }
