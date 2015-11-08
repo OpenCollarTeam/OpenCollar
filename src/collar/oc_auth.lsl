@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151107.1                           //
+//                          Authorizer - 151108.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -325,27 +325,23 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+sName+" is Owner! Remove them as owner before you block them.\n",kAv);
                 return;
             }
-        } else
-            return;
-
+        } else return;
         if (! ~llListFindList(lPeople, [(string)kPerson])) { //owner is not already in list.  add him/her
             lPeople += [(string)kPerson, sName];
-            if (kPerson == g_kWearer) g_iVanilla = TRUE;
+            if (kPerson == g_kWearer && sToken == "owner") g_iVanilla = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kPerson)+" is already registered as "+sToken+".",kAv);
             return;
         }
-        if (kPerson != g_kWearer) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Building relationship...",g_kWearer);
-            if (sToken == "owner") {
-                if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv, TRUE);
-                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
-                llPlaySound(g_sDrop,1.0);
-            } else if (sToken == "trust") {
-                if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
-                llPlaySound(g_sDrop,1.0);
-            }
+        if (kPerson != g_kWearer) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Building relationship...",g_kWearer);
+        if (sToken == "owner") {
+            if (~llListFindList(g_lTrust,[(string)kPerson])) RemovePerson(sName, "trust", kAv, TRUE);
+            if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
+            llPlaySound(g_sDrop,1.0);
+        } else if (sToken == "trust") {
+            if (~llListFindList(g_lBlock,[(string)kPerson])) RemovePerson(sName, "block", kAv, TRUE);
+            if (kPerson != g_kWearer) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Looks like "+NameURI(kPerson)+" is someone you can trust!",g_kWearer);
+            llPlaySound(g_sDrop,1.0);
         }
         if (sToken == "owner") {
             if (kPerson == g_kWearer) {
@@ -602,7 +598,6 @@ RunAway() {
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway finished.",g_kWearer);
     llResetScript();
 }
-
 
 default {
     on_rez(integer iParam) {
