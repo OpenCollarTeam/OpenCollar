@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 151025.1                           //
+//                         Update Shim - 151110.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -130,7 +130,7 @@ default {
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
             string sType = llList2String(lParts, 0);
-            string sName = llList2String(lParts, 1);
+            sName = llList2String(lParts, 1);
             key kUUID = (key)llList2String(lParts, 2);
             string sMode = llList2String(lParts, 3);
             string sCmd;
@@ -188,6 +188,12 @@ default {
             llRegionSayTo(kID, iChannel, sResponse);     
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
+            g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
+            integer i=5;
+            do {
+                sName = llList2String(g_lCore5Scripts,i);
+                if (llGetInventoryType(sName) == INVENTORY_SCRIPT) llRemoveInventory(sName);
+            }  while (i-->=0);
             //restore settings 
             if (g_iIsUpdate) {
                 integer n;
