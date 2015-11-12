@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 151106.1                            //
+//                         RLV System - 151112.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -514,7 +514,12 @@ default {
                     g_lMenu = llDeleteSubList(g_lMenu, iIndex, iIndex);
                 }
             }
-        } else if (g_iRlvActive) {
+        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
+            integer iPin = (integer)llFrand(99999.0)+1;
+            llSetRemoteScriptAccessPin(iPin);
+            llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
+        } else if (iNum == REBOOT && sStr == "reboot") llResetScript(); 
+        else if (g_iRlvActive) {
             llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
             if (iNum == RLV_CMD) {
@@ -587,11 +592,7 @@ default {
                     if (kID==g_kSitter) llOwnerSay("@"+"sit:"+(string)g_kSitTarget+"=force");  //if we stored a sitter, sit on it
                     rebakeSourceRestrictions(kID);
                 }
-        } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
-                integer iPin = (integer)llFrand(99999.0)+1;
-                llSetRemoteScriptAccessPin(iPin);
-                llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-            } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+            }
         }
     }
     
