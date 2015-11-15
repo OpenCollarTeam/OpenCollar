@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151029.1                          //
+//                         Communicator - 151115.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -438,8 +438,8 @@ default {
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
             sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
-            if (kID == g_kWearer && llToLower(sMsg) == "test integrity") {
-                llOwnerSay("Starting Core5Scripts integrity test...");
+            if (kID == g_kWearer && llToLower(sMsg) == "verify") {
+                llOwnerSay("Verifying core integrity...");
                 llMessageLinked(LINK_ALL_OTHERS,INTEGRITY,"","");
                 llSetTimerEvent(2);
                 return;
@@ -517,22 +517,22 @@ default {
             if (!~llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i+1,i+1)))
                 sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + " not found!";
             else if (~llListFindList(g_lCore5Scripts,llList2List(g_lFoundCore5Scripts,i,i+1)))
-                lTemp += "(correct)";
-            else lTemp += "(WRONG)";
+                lTemp += "(verified)";
+            else lTemp += "(corrupted)";
             i = i + 2;
         } while (i<=10);
         i = llGetLinkNumber();
-        if (i != 1) sMessage += "\n"+"LinkedPrim Nr. "+(string)i+" - oc_com\t(WRONG)";
-        if (sMessage == "" && !~llListFindList(lTemp,["(WRONG)"])) {
-            sMessage = "\n\nIntegrity Test Passed!\n";
+        if (i != 1) sMessage += "\n"+"Link number: "+(string)i+" ⟶ oc_com\t(corrupted)";
+        if (sMessage == "" && !~llListFindList(lTemp,["(corrupted)"])) {
+            sMessage = "Core is optimal!";
             lTemp = [];
             g_lFoundCore5Scripts = [];
         } else {
-            sMessage = "\n\nIntegrity Test Failed:\n"+sMessage;
-            if (i == 1) sMessage += "\n"+"LinkedPrim Nr. "+(string)i+" - oc_com\t(correct)";
+            sMessage = "\n\nCore corruption detected:\n"+sMessage;
+            if (i == 1) sMessage += "\n"+"Link number: "+(string)i+" ⟶ oc_com\t(verified)";
         }
         while (g_lFoundCore5Scripts) {
-            sMessage += "\n"+"LinkedPrim Nr. "+ llList2String(g_lFoundCore5Scripts,0)+" - "+llList2String(g_lFoundCore5Scripts,1)+"\t "+llList2String(lTemp,0);
+            sMessage += "\n"+"Link number: "+ llList2String(g_lFoundCore5Scripts,0)+" ⟶ "+llList2String(g_lFoundCore5Scripts,1)+"\t "+llList2String(lTemp,0);
             g_lFoundCore5Scripts = llDeleteSubList(g_lFoundCore5Scripts,0,1);
             lTemp = llDeleteSubList(lTemp,0,0);
         }
