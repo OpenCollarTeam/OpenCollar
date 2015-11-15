@@ -70,6 +70,7 @@ integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
 integer LINK_SAVE = 5;
+integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
@@ -740,6 +741,7 @@ default {
         else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {

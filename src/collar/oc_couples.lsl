@@ -120,6 +120,7 @@ integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV  = 4;
 integer LINK_SAVE = 5;
+integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -428,6 +429,7 @@ default {
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == INTEGRITY) llMessageLinked(iLink,iNum,llGetScriptName(),"");
     }
     not_at_target() {
         llTargetRemove(g_iTargetID);

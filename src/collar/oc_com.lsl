@@ -128,6 +128,9 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
+list g_lCore5Scripts = [2,"oc_auth",3,"oc_dialog",4,"oc_rlvsys",5,"oc_settings",6,"oc_anim",6,"oc_couples"];
+list g_lFoundCore5Scripts;
+integer INTEGRITY = -1050;
 /*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -324,7 +327,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                         g_iTouchNotify = TRUE;
                     }
                 }
-            }
+            } 
         }
     }
 } 
@@ -434,8 +437,15 @@ default {
             else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
+            sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
+            if (kID == g_kWearer && llToLower(sMsg) == "test integrity") {
+                llOwnerSay("Starting Core5Scripts integrity test...");
+                llMessageLinked(LINK_ALL_OTHERS,INTEGRITY,"","");
+                llSetTimerEvent(2);
+                return;
+            }
             //Debug("Got comand "+sMsg);
-            llMessageLinked(LINK_AUTH, CMD_ZERO, llStringTrim(sMsg,STRING_TRIM_HEAD), kID);
+            llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kID);
         }
     }
 
@@ -481,6 +491,7 @@ default {
         } //needed to be the same ID that send earlier pings or pongs
         else if (iNum == AUTH_REPLY) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == INTEGRITY) g_lFoundCore5Scripts += [iSender,sStr];
     }
 
     touch_start(integer iNum) {
@@ -495,7 +506,39 @@ default {
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
     }
-
+    
+    timer() {
+        llSetTimerEvent(0);
+        string sMessage;
+        integer i;
+        list lTemp;
+        g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2,TRUE);
+        do { 
+            if (!~llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i+1,i+1)))
+                sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + " not found!";
+            else if (~llListFindList(g_lCore5Scripts,llList2List(g_lFoundCore5Scripts,i,i+1)))
+                lTemp += "(correct)";
+            else lTemp += "(WRONG)";
+            i = i + 2;
+        } while (i<=10);
+        i = llGetLinkNumber();
+        if (i != 1) sMessage += "\n"+"LinkedPrim Nr. "+(string)i+" - oc_com\t(WRONG)";
+        if (sMessage == "" && !~llListFindList(lTemp,["(WRONG)"])) {
+            sMessage = "\n\nIntegrity Test Passed!\n";
+            lTemp = [];
+            g_lFoundCore5Scripts = [];
+        } else {
+            sMessage = "\n\nIntegrity Test Failed:\n"+sMessage;
+            if (i == 1) sMessage += "\n"+"LinkedPrim Nr. "+(string)i+" - oc_com\t(correct)";
+        }
+        while (g_lFoundCore5Scripts) {
+            sMessage += "\n"+"LinkedPrim Nr. "+ llList2String(g_lFoundCore5Scripts,0)+" - "+llList2String(g_lFoundCore5Scripts,1)+"\t "+llList2String(lTemp,0);
+            g_lFoundCore5Scripts = llDeleteSubList(g_lFoundCore5Scripts,0,1);
+            lTemp = llDeleteSubList(lTemp,0,0);
+        }
+        llOwnerSay(sMessage);
+    }
+    
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
 /*

@@ -105,6 +105,7 @@ integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
+integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
@@ -126,7 +127,6 @@ integer g_iAOChannel = -782690;
 string g_sSettingToken = "anim_";
 //string g_sGlobalToken = "global_";
 key g_kWearer;
-
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
@@ -578,6 +578,7 @@ default {
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == INTEGRITY) llMessageLinked(iLink,iNum,llGetScriptName(),"");
     }
 
     changed(integer iChange) {

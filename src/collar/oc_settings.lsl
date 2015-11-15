@@ -89,6 +89,7 @@ integer LM_SETTING_EMPTY = 2004;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer LINK_DIALOG = 3;
+integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
@@ -401,7 +402,7 @@ default {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-        }
+        } else if (iNum == INTEGRITY) llMessageLinked(iLink,iNum,llGetScriptName(),"");
     }
 
     timer() {
