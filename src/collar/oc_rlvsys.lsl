@@ -88,6 +88,7 @@ integer CMD_RELAY_SAFEWORD = 511;
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 integer LINK_DIALOG = 3;
+integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LINK_SAVE = 5;
@@ -519,6 +520,7 @@ default {
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript(); 
+        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
         else if (g_iRlvActive) {
             llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
