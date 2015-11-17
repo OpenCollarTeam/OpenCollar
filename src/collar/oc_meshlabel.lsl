@@ -172,7 +172,8 @@ SetColor() {
         integer iLink = llList2Integer(g_lLabelLinks,i);
         float fAlpha = llList2Float(llGetLinkPrimitiveParams( iLink,[PRIM_COLOR,ALL_SIDES]),1);
         llSetLinkPrimitiveParamsFast(iLink, [PRIM_COLOR, ALL_SIDES, g_vColor, fAlpha]);
-    } while (i++ < llGetListLength(g_lLabelLinks));
+        i=i+1;
+    } while (i < llGetListLength(g_lLabelLinks));
 }
 // find all 'Label' prims, count and store it's link numbers for fast work SetLabel() and timer
 integer LabelsCount() {

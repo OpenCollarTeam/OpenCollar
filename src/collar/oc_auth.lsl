@@ -164,15 +164,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     }
 }
 
-integer FindLED() {
-    integer i = llGetNumberOfPrims();
-    do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED-A"))
-            return i;
-    } while (i-- > 1);
-    return llGetLinkNumber();
-}
-
 FetchAvi(integer iAuth, string sType, string sName, key kAv) {
     if (sName == "") sName = " ";
     string out = llDumpList2String(["getavi_", g_sSettingToken, kAv, iAuth, sType, sName], "|");
@@ -614,7 +605,7 @@ default {
         }*/
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
-        g_iLEDLink =  FindLED();
+        g_iLEDLink = llGetLinkNumber();
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 

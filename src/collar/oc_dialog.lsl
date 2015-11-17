@@ -231,15 +231,6 @@ Say(string sMsg, integer iWhisper) {
     llSetObjectName(sObjectName);
 }
 
-integer FindLED() {
-    integer i = llGetNumberOfPrims();
-    do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED-D"))
-            return i;
-    } while (i-- > 1);
-    return llGetLinkNumber();
-}
-
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
     //calculate page start and end
@@ -518,7 +509,7 @@ default {
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
         llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
-        g_iLEDLink = FindLED();
+        g_iLEDLink = llGetLinkNumber();
         //Debug("Starting");
     }
 
