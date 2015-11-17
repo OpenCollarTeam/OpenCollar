@@ -171,15 +171,6 @@ DoMenu(key kID, integer iAuth){
     //Debug("Made menu.");
 }
 
-integer FindLED() {
-    integer i = llGetNumberOfPrims();
-    do { 
-        if (~llSubStringIndex(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0),"LED-R"))
-            return i;
-    } while (i-- > 1);
-    return llGetLinkNumber();
-}
-
 rebakeSourceRestrictions(key kSource){
     //Debug("rebakeSourceRestrictions "+(string)kSource);
     integer iSourceIndex=llListFindList(g_lRestrictions,[kSource]);
@@ -397,7 +388,7 @@ default {
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         //Debug("Starting");
-        g_iLEDLink = FindLED();
+        g_iLEDLink = llGetLinkNumber();
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
