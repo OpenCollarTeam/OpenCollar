@@ -122,7 +122,7 @@ integer ELEMENT_NOSHINY     =  4;
 integer ELEMENT_NOGLOW      =  8;
 //integer ELEMENT_NOHIDE      = 16;
 
-list g_lShiny = ["none","low","medium","high"];
+list g_lShiny = ["none","low","medium","high","specular"];
 list g_lHide = ["Hide","Show"];
 list g_lGlows;
 list g_lGlow = ["none",0.0,"low",0.1,"medium",0.2,"high",0.4,"veryHigh",0.8];
@@ -411,7 +411,10 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     while (iLinkCount-- > 2) {
                         string sLinkType=LinkType(iLinkCount, "no"+sCommand);
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
+                            if (iShiny < 4 )
+                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)NULL_KEY, <1,1,0>,<0,0,0>,0.0,<1,1,1>,0,0,PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
+                            else
+                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)TEXTURE_BLANK, <1,1,0>,<0,0,0>,0.0,<1,1,1>,80,2]);
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
