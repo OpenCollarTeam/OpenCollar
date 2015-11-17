@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 151116.1                           //
+//                         Update Shim - 151117.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -67,8 +67,6 @@ list g_lScripts;
 
 list g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
 
-list g_lToDelete = ["old script"]; //define items to be removed at the end in this list, use only lower letters!
-
 // list where we'll record all the settings and local settings we're sent, for replay later.
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list g_lSettings;
@@ -105,17 +103,6 @@ Check4Core5Script() {
     } while (i);
 }
 
-DeleteMatch(string sToDelete) {
-    integer i;
-    string sCheckMatch = llToLower(sToDelete);
-    do {
-        if (~llSubStringIndex(sCheckMatch,llList2String(g_lToDelete,i))) {
-            if (llGetInventoryType(sToDelete) != INVENTORY_NONE)
-                llRemoveInventory(sToDelete);
-        }
-    } while (i++ < llGetListLength(g_lToDelete));
-}
-
 default {
     state_entry() {
         g_iStartParam = llGetStartParameter();
@@ -143,7 +130,7 @@ default {
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
             string sType = llList2String(lParts, 0);
-            sName = llList2String(lParts, 1);
+            string sName = llList2String(lParts, 1);
             key kUUID = (key)llList2String(lParts, 2);
             string sMode = llList2String(lParts, 3);
             string sCmd;
@@ -201,12 +188,6 @@ default {
             llRegionSayTo(kID, iChannel, sResponse);     
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
-            g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
-            integer i=5;
-            do {
-                sName = llList2String(g_lCore5Scripts,i);
-                if (llGetInventoryType(sName) == INVENTORY_SCRIPT) llRemoveInventory(sName);
-            }  while (i-->=0);
             //restore settings 
             if (g_iIsUpdate) {
                 integer n;
@@ -230,11 +211,6 @@ default {
             }
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
-            //clean up possible "Old Scripts" and other crap
-            i = llGetInventoryNumber(INVENTORY_ALL);
-            do { i--;
-                DeleteMatch(llGetInventoryName(INVENTORY_ALL,i));
-            } while (i);
             // celebrate
             llOwnerSay("Installation complete!");
             if (g_iIsUpdate)

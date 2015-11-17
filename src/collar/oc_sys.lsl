@@ -57,8 +57,8 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="4.0.12";
-string g_sFancyVersion="⁴⋅⁰⋅¹²";
+string g_sCollarVersion="4.0.13";
+string g_sFancyVersion="⁴⋅⁰⋅¹³";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
@@ -341,12 +341,6 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fix") {
         if (kID == g_kWearer){
-            list lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
-            integer i=5;
-            do {
-                sStr = llList2String(lCore5Scripts,i);
-                if (llGetInventoryType(sStr) == INVENTORY_SCRIPT) llRemoveInventory(sStr);
-            } while (i-->=0);
             RebuildMenu();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
