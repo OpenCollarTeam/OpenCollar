@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 151110.1                           //
+//                         Update Shim - 151116.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -67,6 +67,8 @@ list g_lScripts;
 
 list g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim","oc_couples"];
 
+list g_lToDelete = ["old script"]; //define items to be removed at the end in this list, use only lower letters!
+
 // list where we'll record all the settings and local settings we're sent, for replay later.
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list g_lSettings;
@@ -101,6 +103,17 @@ Check4Core5Script() {
             return;
         }
     } while (i);
+}
+
+DeleteMatch(string sToDelete) {
+    integer i;
+    string sCheckMatch = llToLower(sToDelete);
+    do {
+        if (~llSubStringIndex(sCheckMatch,llList2String(g_lToDelete,i))) {
+            if (llGetInventoryType(sToDelete) != INVENTORY_NONE)
+                llRemoveInventory(sToDelete);
+        }
+    } while (i++ < llGetListLength(g_lToDelete));
 }
 
 default {
@@ -217,6 +230,11 @@ default {
             }
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
+            //clean up possible "Old Scripts" and other crap
+            i = llGetInventoryNumber(INVENTORY_ALL);
+            do { i--;
+                DeleteMatch(llGetInventoryName(INVENTORY_ALL,i));
+            } while (i);
             // celebrate
             llOwnerSay("Installation complete!");
             if (g_iIsUpdate)
