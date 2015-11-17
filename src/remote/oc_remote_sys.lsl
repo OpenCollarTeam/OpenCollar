@@ -253,7 +253,8 @@ AddSubMenu() {
             sName = llGetSubString(sName,0,iSpaceIndex-1);
         lButtons += [sName];*/
         lButtons += llList2Key(g_lNewSubIDs,index);
-    } while (index++ < llGetListLength(g_lNewSubIDs));
+        index=index+1;
+    } while (index < llGetListLength(g_lNewSubIDs));
     Dialog(g_kWearer, sPrompt, lButtons, ["ALL",UPMENU], -1,"AddSubMenu");
 }
 
@@ -512,7 +513,8 @@ default
                             ManageMenu(kID);
                             return;
                         }
-                    } while (i++ < llGetListLength(g_lNewSubIDs));
+                        i=i+1;
+                    } while (i < llGetListLength(g_lNewSubIDs));
                     g_lNewSubIDs = [];
                     ManageMenu(kID);
                 }
@@ -529,7 +531,8 @@ default
         integer i;
         do {
             llRegionSayTo(llDetectedKey(i),g_iRLVRelayChannel,"locator,"+(string)llDetectedKey(i)+",!version");
-        } while (i++ < iNumber);
+            i=i+1;
+        } while (i < iNumber);
         llSetTimerEvent(2.0);
     }
     no_sensor(){
