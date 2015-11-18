@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 151117.1                            //
+//                         Mesh Label - 151118.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2015 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -172,8 +172,7 @@ SetColor() {
         integer iLink = llList2Integer(g_lLabelLinks,i);
         float fAlpha = llList2Float(llGetLinkPrimitiveParams( iLink,[PRIM_COLOR,ALL_SIDES]),1);
         llSetLinkPrimitiveParamsFast(iLink, [PRIM_COLOR, ALL_SIDES, g_vColor, fAlpha]);
-        i=i+1;
-    } while (i < llGetListLength(g_lLabelLinks));
+    } while (++i < llGetListLength(g_lLabelLinks));
 }
 // find all 'Label' prims, count and store it's link numbers for fast work SetLabel() and timer
 integer LabelsCount() {
