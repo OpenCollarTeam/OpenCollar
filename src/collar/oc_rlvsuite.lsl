@@ -636,20 +636,20 @@ default {
                     else if (sMessage == "Sit Back Down!") {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit back down, and stay there!",kID);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit back down, and stay there!",kAv);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
                         llSleep(0.5);
-                        UserCommand(iAuth, "menu force sit", kID, TRUE);
+                        UserCommand(iAuth, "menu force sit", kAv, TRUE);
                     } else if (sMessage == "Get Up!") UserCommand(iAuth, "stand", kAv, TRUE);
                     else {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit down, and stay there!",kID);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit down, and stay there!",kAv);
                         g_kLastForcedSeat=(key)sMessage;
                         g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
                         llSleep(0.5);
-                        UserCommand(iAuth, "menu force sit", kID, TRUE);
+                        UserCommand(iAuth, "menu force sit", kAv, TRUE);
                     } 
                 } else if (sMenu == "terminal") {
                         if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
