@@ -169,6 +169,7 @@ Debug(string sStr) {
 */
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuName) {
+    if (kID == "" || kID == NULL_KEY) return; // sanitize NULL_KEYS 
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
@@ -608,7 +609,7 @@ default {
                     g_iStrictMode = (integer)sValue;
                     SaveSettings("Strict", sValue, FALSE,0,"");
                   //  SaveDefaultSettings("Strict", sValue);
-                  //  ConfigureMenu(kMessageID, iAuth);
+                    ConfigureMenu(kMessageID, iAuth);
                 } else if (sToken == "turn") {
                     g_iTurnMode = (integer)sValue;
                     SaveSettings("Turn", sValue, FALSE,0,"");
@@ -616,7 +617,7 @@ default {
                 }
             } else if (sToken == "strictAuthError") {
                 g_iStrictMode = TRUE;
-                //ConfigureMenu(kMessageID, (integer)sValue);
+                ConfigureMenu(kMessageID, (integer)sValue);
             }
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent")
