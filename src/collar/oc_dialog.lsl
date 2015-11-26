@@ -578,6 +578,7 @@ default {
                 //fixme: REQ(params[1]),
                 string REQ = llList2String(lParams, 1);   //name of script that sent the message
                 key kRCPT = llGetOwnerKey((key)llList2String(lParams, 2));  //key of requesting user
+                if (kRCPT == NULL_KEY) return; // sanitize NULL_KEY kRCPT 
                 integer iAuth = (integer)llList2String(lParams, 3);   //auth of requesting user
                 string TYPE = llList2String(lParams, 4);  //type field, returned in the response to help calling script track the nature of the search
                 string find = llList2String(lParams, 5);  //find string.. only return avatars whose neames start with this string
@@ -655,6 +656,7 @@ default {
             //Debug("DIALOG:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
+            if (kRCPT == NULL_KEY) return; // sanitize NULL_KEY kRCPT 
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
             if (~iIndex) {
                 if (llKey2Name(kRCPT)=="") { //if recipient is not in the sim.  Inlined single use InSim(kRCPT) function
