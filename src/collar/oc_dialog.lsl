@@ -440,7 +440,7 @@ CleanList() {
         }
     }
     if (g_iSensorTimeout>iNow){ //sensor took too long to return.  Ignore it, and do the next in the list
-        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,3);
+        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,1);
         if (llGetListLength(g_lSensorDetails)>0) dequeueSensor();
     }
 }
@@ -480,7 +480,7 @@ UserCommand(integer iNum, string sStr, key kID) {
 dequeueSensor() {
     //get sStr of first set of sensor details, unpack it and run the apropriate sensor
     //Debug((string)llGetListLength(g_lSensorDetails));
-    list lParams = llParseStringKeepNulls(llList2String(g_lSensorDetails,2), ["|"], []);
+    list lParams = llParseStringKeepNulls(llList2String(g_lSensorDetails,0), ["|"], []);
     //sensor information is encoded in the first 5 fields of the lButtons list, ready to feed to the sensor command,
     list lSensorInfo = llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []);
 /*    Debug("Running sensor with\n"+
@@ -515,10 +515,10 @@ default {
 
     sensor(integer num_detected){
         //get sensot request info from list
-        list lSensorInfo=llList2List(g_lSensorDetails,0,3);
-        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,3);
+        list lSensorInfo=llList2List(g_lSensorDetails,0,1);
+        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,1);
 
-        list lParams=llParseStringKeepNulls(llList2String(lSensorInfo,2), ["|"], []);
+        list lParams=llParseStringKeepNulls(llList2String(lSensorInfo,0), ["|"], []);
         list lButtons = llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []);
         //sensor information is encoded in the first 5 fields of the lButtons list, we've run the sensor so we don't need that now.
         //6th field is "find" information
@@ -532,10 +532,9 @@ default {
             lButtons += llDetectedKey(i);
             if (bReturnFirstMatch){ //if we're supposed to be finding the first match,
                 if (llSubStringIndex(llToLower(llDetectedName(i)),llToLower(sFind))==0){ //if they match, send it back as a dialogresponse without popping the dialog
-                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
+                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,1));
                     //if we have more sensors to run, run another one now, else unlock subsys and quite
-                    if (llGetListLength(g_lSensorDetails) > 0)
-                        dequeueSensor();
+                    if (llGetListLength(g_lSensorDetails) > 0) dequeueSensor();
                     else g_bSensorLock=FALSE;
                     g_iSelectAviMenu = FALSE;
                     return;
@@ -546,24 +545,22 @@ default {
         string sButtons=llDumpList2String(lButtons,"`");
         lParams=llListReplaceList(lParams,[sButtons],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
+        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,1));
         //if we have more sensors to run, run another one now, else unlock subsys and quite
-        if (llGetListLength(g_lSensorDetails) > 0)
-            dequeueSensor();
+        if (llGetListLength(g_lSensorDetails) > 0) dequeueSensor();
         else g_bSensorLock=FALSE;
     }
 
     no_sensor() {
-        list lSensorInfo=llList2List(g_lSensorDetails,0,3);
-        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,3);
+        list lSensorInfo=llList2List(g_lSensorDetails,0,1);
+        g_lSensorDetails=llDeleteSubList(g_lSensorDetails,0,1);
 
-        list lParams=llParseStringKeepNulls(llList2String(lSensorInfo,2), ["|"], []);
+        list lParams=llParseStringKeepNulls(llList2String(lSensorInfo,0), ["|"], []);
         lParams=llListReplaceList(lParams,[""],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
+        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,1));
         //if we have more sensors to run, run another one now, else unlock subsys and quit
-        if (llGetListLength(g_lSensorDetails) > 0)
-            dequeueSensor();
+        if (llGetListLength(g_lSensorDetails) > 0) dequeueSensor();
         else {
             g_iSelectAviMenu = FALSE;
             g_bSensorLock=FALSE;
@@ -645,7 +642,7 @@ default {
             //test for locked sensor subsystem
             //if subsys locked, do nothing
             //if subsys open, run sensor with first set of details in the list, and set timeout
-            g_lSensorDetails+=[iSender, iNum, sStr, kID];
+            g_lSensorDetails+=[sStr, kID];
             if (! g_bSensorLock){
                 g_bSensorLock=TRUE;
                 dequeueSensor();
@@ -656,7 +653,7 @@ default {
             //Debug("DIALOG:"+sStr);
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
-            if (kRCPT == NULL_KEY) return; // sanitize NULL_KEY kRCPT 
+            if (kRCPT == NULL_KEY) return; // sanitize NULL_KEY kRCPT
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
             if (~iIndex) {
                 if (llKey2Name(kRCPT)=="") { //if recipient is not in the sim.  Inlined single use InSim(kRCPT) function
