@@ -554,53 +554,40 @@ default
                     else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
                     else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
                     else if (sMessage == "☐ Show") {
-                        UserCommand(iAuth, "labelshow 1", kAv);
+                        UserCommand(iAuth, "label on", kAv);
                         MainMenu(kAv, iAuth);
                     } else if (sMessage == "☒ Show") {
-                        UserCommand(iAuth, "labelshow 0", kAv);
+                        UserCommand(iAuth, "label off", kAv);
                         MainMenu(kAv, iAuth);
                     } else if (sMessage == "☐ Scroll") {
-                        UserCommand(iAuth, "labelscroll 1", kAv);
+                        UserCommand(iAuth, "label scroll on", kAv);
                         MainMenu(kAv, iAuth);
                     } else if (sMessage == "☒ Scroll") {
-                        UserCommand(iAuth, "labelscroll 0", kAv);
+                        UserCommand(iAuth, "label scroll off", kAv);
                         MainMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "color") {
-                    list lMenuParams = llParseString2List(sStr, ["|"], []);
-                    key kAv = (key)llList2String(lMenuParams, 0);
-                    string sMessage = llList2String(lMenuParams, 1);
-                    integer iPage = (integer)llList2String(lMenuParams, 2);
-                    integer iAuth = (integer)llList2String(lMenuParams, 3);
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                     else {
-                        UserCommand(iAuth, "labelcolor "+sMessage, kAv);
+                        UserCommand(iAuth, "label color "+sMessage, kAv);
                         ColorMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "font") {
-                    list lMenuParams = llParseString2List(sStr, ["|"], []);
-                    key kAv = (key)llList2String(lMenuParams, 0);
-                    string sMessage = llList2String(lMenuParams, 1);
-                    integer iPage = (integer)llList2String(lMenuParams, 2);
-                    integer iAuth = (integer)llList2String(lMenuParams, 3);
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
                     else {
-                        UserCommand(iAuth, "labelfont " + sMessage, kAv);
+                        UserCommand(iAuth, "label font " + sMessage, kAv);
                         FontMenu(kAv, iAuth);
                     }
                 } else if (sMenuType == "textbox") {// TextBox response, extract values
-                    list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                    key kAv = (key)llList2String(lMenuParams, 0);
-                    string sMessage = llList2String(lMenuParams, 1);
-                    integer iAuth = (integer)llList2String(lMenuParams, 3);
                     if (sMessage != " ") UserCommand(iAuth, "label " + sMessage, kAv);
-                    llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sSubMenu, kAv);
+                    UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmlabel") {
                     if (sMessage == "Yes") {
+                        if (g_sScrollText) UserCommand(iAuth, "label scroll off", kAv);
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_ROOT, LINK_DIALOG, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+g_sSubMenu+" App remains installed.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             } else if (iNum == DIALOG_TIMEOUT) {
                 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
