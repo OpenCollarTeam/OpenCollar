@@ -197,7 +197,7 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     }
     if (sType == "touchstart") {
         llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kToucher);
-        if (g_iTouchNotify && kToucher!=g_kWearer) 
+        if (g_iTouchNotify && kToucher!=g_kWearer)
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your %DEVICETYPE%.\n",g_kWearer);
     }
 }
@@ -282,21 +282,26 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 llListenRemove(g_iPrivateListener);
                 g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Now listening on channel " + (string)g_iPrivateListenChan + ".",kID);
-                if (g_iPublicListenChan) //save setting along with the state of thepublic listener (messy!)
+                if (g_iPublicListenChan) { //save setting along with the state of thepublic listener (messy!)
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
-                else
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+                } else {
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+                }
             } else if (iNewChan == 0) { //enable public listener
                 g_iPublicListenChan = TRUE;
                 llListenRemove(g_iPublicListener);
                 g_iPublicListener = llListen(0, "", NULL_KEY, "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You enabled the public channel listener.\nTo disable it use -1 as channel command.",kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
             } else if (iNewChan == -1) {  //disable public listener
                 g_iPublicListenChan = FALSE;
                 llListenRemove(g_iPublicListener);
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You disabled the public channel listener.\nTo enable it use 0 as channel command, remember you have to do this on your channel /" +(string)g_iPrivateListenChan,kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+                llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
             }
         } else if (kID == g_kWearer) {
             if (sCommand == "safeword") {
@@ -304,6 +309,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                     g_sSafeWord = sValue; // llList2String(lParams, 1);
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You set a new safeword: " + g_sSafeWord + ".",g_kWearer);
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
+                    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                 } else
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord + ".",g_kWearer);
             }
@@ -327,10 +333,10 @@ UserCommand(key kID, integer iAuth, string sStr) {
                         g_iTouchNotify = TRUE;
                     }
                 }
-            } 
+            }
         }
     }
-} 
+}
 
 default {
     on_rez(integer iParam) {
@@ -399,7 +405,7 @@ default {
      //message structure:   llGetOwner()|LMV2|RequestPoint|anchor_name
                 if(g_iLeashPrim)
                     llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string)llGetLinkKey(g_iLeashPrim));
-                else 
+                else
                     llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string) llGetKey());
             }
             return;
@@ -506,14 +512,14 @@ default {
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
     }
-    
+
     timer() {
         llSetTimerEvent(0);
         string sMessage;
         integer i;
         list lTemp;
         g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2,TRUE);
-        do { 
+        do {
             if (!~llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i+1,i+1)))
                 sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + " not found!";
             else if (~llListFindList(g_lCore5Scripts,llList2List(g_lFoundCore5Scripts,i,i+1)))
@@ -538,7 +544,7 @@ default {
         }
         llOwnerSay(sMessage);
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
 /*
