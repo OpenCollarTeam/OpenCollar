@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151115.1                          //
+//                         Communicator - 151129.2                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -213,7 +213,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
     if (iAuth == CMD_OWNER || kID == g_kWearer) {  //handle changing prefix and channel from owner
         if (sCommand == "prefix") {
             if (sValue == "") {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n%WEARERNAME%'s prefix is \"%PREFIX%\"",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n",kID);
                 return;
             } else if (sValue == "reset") {
                 g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
@@ -223,7 +223,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
             }
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n%WEARERNAME%'s prefix is \"%PREFIX%\".\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu.\nSay '\"%PREFIX% help\" for a list of chat commands.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu or say '\"%PREFIX% help\" for a list of chat commands.\n",kID);
         }
         else if (sCommand == "device" && sValue == "name") {
             string sMessage;
@@ -281,7 +281,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 g_iPrivateListenChan =  iNewChan;
                 llListenRemove(g_iPrivateListener);
                 g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Now listening on channel " + (string)g_iPrivateListenChan + ".",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Now listening on channel " + (string)g_iPrivateListenChan,kID);
                 if (g_iPublicListenChan) { //save setting along with the state of thepublic listener (messy!)
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
@@ -307,11 +307,11 @@ UserCommand(key kID, integer iAuth, string sStr) {
             if (sCommand == "safeword") {
                 if(llStringTrim(sValue, STRING_TRIM) != "") {
                     g_sSafeWord = sValue; // llList2String(lParams, 1);
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You set a new safeword: " + g_sSafeWord + ".",g_kWearer);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You set a new safeword: " + g_sSafeWord,g_kWearer);
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                 } else
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord + ".",g_kWearer);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
             }
             else if (sCommand == "busted") {
                 if (sValue == "on") {
