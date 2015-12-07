@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Shocker - 150924.1                             //
+//                           Shocker - 151207.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Romka Swallowtail                             //
 // ------------------------------------------------------------------------ //
@@ -81,6 +81,7 @@ integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+integer MENUNAME_REMOVE = 3003;
 
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
@@ -237,6 +238,12 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
 {
     if (iAuth > CMD_WEARER || iAuth < CMD_OWNER) return; // sanity check
 
+    if (llToLower(sStr) == "rm shocker") {
+        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else  Dialog(kID,"\nAre you sure you want to delete the "+g_sSubMenu+" App?\n", ["Yes","No","Cancel"], [], 0, iAuth,"rmshocker");
+        return;
+    }
+
     if (sStr == "menu "+g_sSubMenu || sStr == "shocker")
     {
         if (iAuth == CMD_OWNER) DialogShocker(kID, iAuth);
@@ -244,17 +251,17 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu)
     }
     else if (iAuth == CMD_OWNER)
     {
-        list lParams = llParseString2List(sStr, [" "], []);        
+        list lParams = llParseString2List(sStr, [" "], []);
         if (llList2String(lParams,0) != "shocker") return;
         if (llGetListLength(lParams) < 2) return;
-        
+
         string sCommand = llList2String(lParams, 1);
         string sValue = llList2String(lParams, 2);
 
         if (sCommand == "help") DialogHelp(kID, iAuth);
         else if (sCommand == "animation")
         {
-            Stop();             
+            Stop();
             string sAnim = llStringTrim(sValue, STRING_TRIM);
             if (sAnim)
             {
@@ -374,6 +381,13 @@ default
                 {
                     if (sMsg != UPMENU) UserCommand(iAuth,"shocker sound " + sMsg, kAv, TRUE);
                     else UserCommand(iAuth,"shocker", kAv, FALSE);
+                }
+                else if (sMenu == "rmshocker") {
+                    if (sMsg == "Yes") {
+                        llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
                 //else if (sMenu == "help" && sMsg == "Ok") UserCommand(iAuth,"shocker", kAv, FALSE);
             }
