@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Relay - 151207.1                               //
+//                           Relay - 151207.2                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -54,7 +54,7 @@
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Relay";
 
-string g_sAppVersion = "¹⁵¹²⁰³⋅¹";
+string g_sAppVersion = "¹⁵¹²⁰⁷⋅²";
 
 integer RELAY_CHANNEL = -1812221819;
 integer g_iRlvListener;
@@ -960,6 +960,10 @@ default {
                     CleanQueue();
                 } else if (sMenu == "rmrelay") {
                     if (sMsg == "Yes") {
+                        integer i;
+                        for (i=0;i<(g_lSources!=[]);++i)
+                            sendrlvr("release", llList2Key(g_lSources, i), "!release", "ok");
+                        UserCommand(500, "relay off", kAv);
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
                         llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
