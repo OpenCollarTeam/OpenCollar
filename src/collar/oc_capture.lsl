@@ -93,6 +93,7 @@ integer DIALOG_TIMEOUT      = -9002;
 list    g_lTempOwners;                   // locally stored list of temp owners
 integer g_iRiskyOn     = FALSE;     // true means captor confirms, false means wearer confirms
 integer g_iCaptureOn        = FALSE;     // on/off toggle for the app.  Switching off clears tempowner list
+integer g_iCaptureInfo = TRUE;
 string  g_sSettingToken     = "capture_";
 //string  g_sGlobalToken      = "global_";
 
@@ -198,7 +199,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             return;
         } else if (sStrLower == "capture on") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);
-            if (g_iRiskyOn) {
+            if (g_iRiskyOn && g_iCaptureInfo) {
                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
                 llSetTimerEvent(900.0);
             }
@@ -224,7 +225,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             g_iRiskyOn = TRUE;
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% is vulnerable now...",kID);
-            if (g_iCaptureOn){
+            if (g_iCaptureOn && g_iCaptureInfo){
                  llSetTimerEvent(900.0);
                  llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
                 }
@@ -233,6 +234,19 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             g_iRiskyOn = FALSE;
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capturing will require consent first.",kID);
             llSetTimerEvent(0.0);
+        } else if (sStrLower == "capture info on") {
+            g_iCaptureInfo = TRUE;
+            llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"\"Capture me\" announcements during risky mode are now enabled.", kID);
+            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"info","");
+            if (g_iRiskyOn && g_iCaptureOn) {
+                llSetTimerEvent(900.0);
+                llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+            }
+        } else if (sStrLower == "capture info off") {
+            g_iCaptureInfo = FALSE;
+            if (g_iRiskyOn && g_iCaptureOn) llSetTimerEvent(0);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\"Capture me\" announcements during risky mode are now disabled.", kID);
+            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"info=0","");
         }
         if (remenu) CaptureMenu(kID, iNum);
     }
@@ -279,6 +293,7 @@ default{
             if (sToken == g_sSettingToken+"capture") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
             else if (sToken == g_sSettingToken+"risky") g_iRiskyOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
+            else if (sToken == g_sSettingToken+"info") g_iCaptureInfo = (integer)sValue;
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -319,13 +334,13 @@ default{
     }
 
     timer() {
-        llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+        if(g_iCaptureInfo) llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
     }
 
     changed(integer iChange) {
         if (iChange & CHANGED_TELEPORT) {
             if (llGetListLength(g_lTempOwners) == 0) {
-                if (g_iRiskyOn && g_iCaptureOn) {
+                if (g_iRiskyOn && g_iCaptureOn && g_iCaptureInfo) {
                     llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
                     llSetTimerEvent(900.0);
                 }
