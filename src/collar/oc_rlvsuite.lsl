@@ -327,16 +327,20 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         OutfitsMenu(kID, iNum);
         return;
     } else if (llSubStringIndex(sStr,"wear ") == 0) {
-        sLowerStr = llDeleteSubString(sStr,0,llStringLength("wear ")-1);
-        if (sLowerStr) { //we have a folder to try find...
-            llSetTimerEvent(g_iTimeOut);
-            g_iListener = llListen(g_iFolderRLVSearch, "", llGetOwner(), "");
-            g_kMenuClicker = kID;
-            if (g_iRlvaOn) {
-                llOwnerSay("@findfolders:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
-            }
-            else {
-                llOwnerSay("@findfolder:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
+        if (g_iDressRestricted)
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Oops! Outfits can't be worn while the ability to dress is restricted.",kID);
+        else {
+            sLowerStr = llDeleteSubString(sStr,0,llStringLength("wear ")-1);
+            if (sLowerStr) { //we have a folder to try find...
+                llSetTimerEvent(g_iTimeOut);
+                g_iListener = llListen(g_iFolderRLVSearch, "", llGetOwner(), "");
+                g_kMenuClicker = kID;
+                if (g_iRlvaOn) {
+                    llOwnerSay("@findfolders:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
+                }
+                else {
+                    llOwnerSay("@findfolder:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
+                }
             }
         }
         if (bFromMenu) OutfitsMenu(kID, iNum);
