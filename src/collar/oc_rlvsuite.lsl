@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 151121.1            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 151208.2            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -526,7 +526,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sLowerStr == "stand" || sLowerStr == "standnow"){
         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
-        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Get Up!",kID);
+        //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is allowed to stand once again.\n",kID);
         llSleep(0.5);
         if (bFromMenu) UserCommand(iNum, "menu force sit", kID, TRUE);
         return;
@@ -535,13 +535,13 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         string sButton;
         string sitPrompt;
         if (agentInfo & AGENT_SITTING)
-            sButton="Get Up!`BACK";
+            sButton="[Get up]`BACK";
         else {
             vector avPos=llGetPos();
             list lastSeatInfo=llGetObjectDetails(g_kLastForcedSeat, [OBJECT_POS]);
             vector lastSeatPos=(vector)llList2String(lastSeatInfo,0);
             if (llVecDist(avPos,lastSeatPos)<20){
-                sButton="Sit Back Down!`BACK";
+                sButton="[Sit back]`BACK";
                 sitPrompt="\nLast forced to sit on "+g_sLastForcedSeat+"\n";
             } else 
                 sButton="BACK";
@@ -637,18 +637,18 @@ default {
                 if (sMenu == "restrictions") UserCommand(iAuth, "restrictions "+sMessage,kAv,TRUE);   
                 else if (sMenu == "sensor") {
                     if (sMessage=="BACK") llMessageLinked(LINK_RLV, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
-                    else if (sMessage == "Sit Back Down!") {
+                    else if (sMessage == "[Sit back]") {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit back down, and stay there!",kAv);
+                        //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo restrict %WEARERNAME% from standing up again, type: /%CHANNEL%%PREFIX% forbid stand\n",kAv);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
                         llSleep(0.5);
                         UserCommand(iAuth, "menu force sit", kAv, TRUE);
-                    } else if (sMessage == "Get Up!") UserCommand(iAuth, "stand", kAv, TRUE);
+                    } else if (sMessage == "[Get up]") UserCommand(iAuth, "stand", kAv, TRUE);
                     else {
                         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
                         llSleep(0.5);
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Sit down, and stay there!",kAv);
+                        //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo restrict %WEARERNAME% from standing up, type: /%CHANNEL%%PREFIX% forbid stand\n",kAv);
                         g_kLastForcedSeat=(key)sMessage;
                         g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
                         llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
