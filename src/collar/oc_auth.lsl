@@ -250,9 +250,9 @@ RemovePerson(string sName, string sToken, key kCmdr, integer iPromoted) {
                 if (sToken == "owner" && kID == g_kWearer) {
                     g_iVanilla = FALSE;
                     if (kCmdr == g_kWearer)
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You no longer own yourself.\n",kCmdr);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kCmdr);
                     else
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% does no longer own themselves.\n",kCmdr);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% does no longer own themselves.\n",kCmdr);
                 } 
             }
             if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(llList2Key(lPeople,iNumPeople*2))+" removed from " + sToken + " list.",kCmdr);
@@ -350,7 +350,7 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         if (sToken=="owner") {
             g_lOwner = lPeople;
-            if (llGetListLength(g_lOwner)>2) SayOwners();
+            if (llGetListLength(g_lOwner)>2 || kPerson != g_kWearer) SayOwners();
         }
         else if (sToken=="trust") g_lTrust = lPeople;
         else if (sToken=="tempowner") g_lTempOwner = lPeople;
