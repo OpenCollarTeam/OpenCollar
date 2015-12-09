@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 151208.2            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 151208.6            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -526,6 +526,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sLowerStr == "stand" || sLowerStr == "standnow"){
         llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
+        UserCommand(iNum, "allow stand", kID, FALSE);
         //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is allowed to stand once again.\n",kID);
         llSleep(0.5);
         if (bFromMenu) UserCommand(iNum, "menu force sit", kID, TRUE);
@@ -616,6 +617,7 @@ default {
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID,FALSE);
         else if (iNum == RLV_ON) {
             g_iRlvOn = TRUE;
+            if (g_iStandRestricted) UserCommand(500, "allow stand", "", FALSE);
             doRestrictions();
         } else if (iNum == RLV_OFF) {
             g_iRlvOn = FALSE;
@@ -646,14 +648,19 @@ default {
                         UserCommand(iAuth, "menu force sit", kAv, TRUE);
                     } else if (sMessage == "[Get up]") UserCommand(iAuth, "stand", kAv, TRUE);
                     else {
-                        llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
-                        llSleep(0.5);
-                        //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo restrict %WEARERNAME% from standing up, type: /%CHANNEL%%PREFIX% forbid stand\n",kAv);
-                        g_kLastForcedSeat=(key)sMessage;
-                        g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
-                        llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
-                        llSleep(0.5);
-                        UserCommand(iAuth, "menu force sit", kAv, TRUE);
+                        if ((llGetAgentInfo(g_kWearer)&AGENT_SITTING) && g_iStandRestricted) {
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is currently restricted from standing up. Type /%CHANNEL%%PREFIX% allow stand or press [Get up].\n",kAv);
+                            UserCommand(iAuth, "menu force sit", kAv, TRUE);
+                        } else {
+                            llMessageLinked(LINK_RLV,RLV_CMD,"unsit=force","vdRestrict");
+                            llSleep(0.5);
+                            //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo restrict %WEARERNAME% from standing up, type: /%CHANNEL%%PREFIX% forbid stand\n",kAv);
+                            g_kLastForcedSeat=(key)sMessage;
+                            g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
+                            llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sMessage+"=force","vdRestrict");
+                            llSleep(0.5);
+                            UserCommand(iAuth, "menu force sit", kAv, TRUE);
+                        }
                     } 
                 } else if (sMenu == "terminal") {
                         if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
