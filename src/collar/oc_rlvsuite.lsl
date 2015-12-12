@@ -681,7 +681,7 @@ default {
                         WearFolder(g_sCurrentPath);
                     else if (sMessage != "") {
                         g_sCurrentPath += sMessage + "/";
-                        if (sMenu == "multimatch") g_sCurrentPath = sMessage;
+                        if (sMenu == "multimatch") g_sCurrentPath = sMessage + "/";
                         llSetTimerEvent(g_iTimeOut);
                         g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                         llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
