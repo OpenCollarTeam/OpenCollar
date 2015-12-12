@@ -165,8 +165,8 @@ Debug(string sStr) {
 
 Dialog(key kRCPT, string sPrompt, list lButtons, list lUtilityButtons, integer iPage, integer iAuth, string sMenuID) {
     key kMenuID = llGenerateKey();
-    if (sMenuID == "sensor")
-        llMessageLinked(LINK_DIALOG, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI +"|"+llDumpList2String(lButtons, "`")+"|" + (string)iAuth, kMenuID);
+    if (sMenuID == "sensor" || sMenuID == "find")
+        llMessageLinked(LINK_DIALOG, SENSORDIALOG, (string)kRCPT +"|"+sPrompt+"|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI+"`"+llDumpList2String(lUtilityButtons,"`")+"|"+llDumpList2String(lButtons,"`")+"|" + (string)iAuth, kMenuID);
     else
         llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lButtons, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
@@ -203,6 +203,7 @@ SitMenu(key kID, integer iAuth) {
     }
     Dialog(kID, sitPrompt+"\nChoose a seat:\n", [sButton], [], 0, iAuth, "sensor");
 }
+
 
 RestrictionsMenu(key keyID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/rlv.html Restrictions]";
@@ -597,7 +598,10 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
                 if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","vdRestrict");
                 g_iSitting = TRUE;
                 llSleep(0.5);
-            } else SitMenu(kID, iNum);
+            } else {
+                Dialog(kID, "", [""], [sLowerStr,"1"], 0, iNum, "find");
+                return;
+            }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS%",kID);
         if (bFromMenu) SitMenu(kID, iNum);
         return;
@@ -694,7 +698,8 @@ default {
                     else if (sMessage == "☐ strict") UserCommand(iAuth, "forbid stand",kAv, FALSE);
                     else UserCommand(iAuth, "sit "+sMessage, kAv, FALSE);
                     UserCommand(iAuth, "menu force sit", kAv, TRUE);
-                } else if (sMenu == "terminal") {
+                } else if (sMenu == "find") UserCommand(iAuth, "sit "+sMessage, kAv, FALSE);
+                else if (sMenu == "terminal") {
                     if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
                     if (g_iMenuCommand) llMessageLinked(LINK_RLV, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
                 } else if (sMenu == "folder" || sMenu == "multimatch") {
