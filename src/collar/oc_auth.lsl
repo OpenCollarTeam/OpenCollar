@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151117.1                           //
+//                          Authorizer - 151212.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -297,6 +297,9 @@ AddUniquePerson(key kPerson, string sName, string sToken, key kAv) {
                 return;
             } else if (~llListFindList(g_lOwner,[(string)kPerson])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+sName+" is already Owner! You should really trust them.\n",kAv);
+                return;
+            } else if (kPerson==g_kWearer) {
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+sName+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL%%PREFIX% vanilla on\n",kAv);
                 return;
             }
         } else if (sToken=="tempowner") {
