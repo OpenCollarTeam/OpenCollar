@@ -57,8 +57,8 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="4.0.17";
-string g_sFancyVersion="⁴⋅⁰⋅¹⁷";
+string g_sCollarVersion="4.1.0";
+string g_sFancyVersion="⁴⋅¹⋅⁰";
 integer g_iLatestVersion=TRUE;
 
 key g_kWearer;
