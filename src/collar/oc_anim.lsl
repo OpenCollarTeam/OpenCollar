@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 151115.1                             //
+//                          Animator - 151216.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -73,7 +73,6 @@ list g_lPoseMoveAnimationPrefix = ["~walk_","~run_"];
 key g_kDataID;  //uuid of notecard read request
 integer g_iLine = 0;  //records progress through notecard
 list g_lAnimScalars;  //a 3-strided list in form animname,scalar,delay
-integer g_iAdjustment = 0;  //heightfix on/off
 
 string g_sCurrentPose = "";
 integer g_iLastRank = 0;  //in this integer, save the rank of the person who posed the av, according to message map.  0 means unposed
@@ -83,7 +82,9 @@ list g_lAnimButtons;  // initialized in state_entry for OpenSim compatibility (=
 
 integer g_iAnimLock = FALSE;
 integer g_iPosture;  //posture lock on/off
-
+string g_sHeightAdjustment = "none"; // none, -1, -2 for lower and +1, +2 for higher
+integer g_iHasAdjustment;
+list g_lHeightAdjustments = ["-1","-2","+1","+2"];
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -185,11 +186,14 @@ AnimMenu(key kID, integer iAuth) {
 PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
     string sPrompt = "\n[http://www.opencollar.at/animations.html Pose]\n\nCurrently playing: ";
     if (g_sCurrentPose == "")sPrompt += "-\n";
-    else sPrompt += g_sCurrentPose +"\n";
-
-    list lUtilityButtons=["STOP", "BACK"];
-
-    Dialog(kID, sPrompt, g_lPoseList, lUtilityButtons, iPage, iAuth, "Pose");
+    string sActivePose = g_sCurrentPose;
+    if (~llListFindList(g_lHeightAdjustments,[llGetSubString(sActivePose,-2,-1)]))
+        sActivePose = llGetSubString(sActivePose,0,-3)+" ("+llGetSubString(sActivePose,-2,-1)+")";
+    sPrompt += sActivePose +"\n";
+    //sPrompt += "Current Height Adjustment: "+ g_sHeightAdjustment + "\n";
+    list lStaticButtons = ["STOP", "BACK"];
+    if (g_iHasAdjustment) lStaticButtons = ["↑", "↓"] + lStaticButtons;
+    Dialog(kID, sPrompt, g_lPoseList, lStaticButtons, iPage, iAuth, "Pose");
 }
 
 PoseMoveMenu(key kID, integer iPage, integer iAuth) {
@@ -315,12 +319,16 @@ CreateAnimList() {
     g_lPoseList=[];
     g_lOtherAnims =[];
     g_iNumberOfAnims = llGetInventoryNumber(INVENTORY_ANIMATION);
+    g_iHasAdjustment = FALSE;
     string sName;
     integer i;
     do { sName = llGetInventoryName(INVENTORY_ANIMATION, i);
-        if (sName != "" && llSubStringIndex(sName,"~")) g_lPoseList+=[sName];
-        else if (!llSubStringIndex(sName,"~")) g_lOtherAnims+=sName;
-    } while (g_iNumberOfAnims > i++);
+        if (sName != "" && llSubStringIndex(sName,"~")) {
+            if (!~llListFindList(g_lHeightAdjustments,[llGetSubString(sName,-2,-1)]))
+                g_lPoseList+=[sName];
+            else if (llGetSubString(sName,-2,-1) == "+1") g_iHasAdjustment = TRUE;
+        } else if (!llSubStringIndex(sName,"~")) g_lOtherAnims+=sName;
+    } while (g_iNumberOfAnims > ++i);
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
 
@@ -426,7 +434,14 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Only owners or the wearer can change antislide settings.",g_kWearer);
     } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
         if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
-            if (g_sCurrentPose != "") llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
+            llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
+            if (g_sHeightAdjustment == "none" && ~llListFindList(g_lHeightAdjustments,[llGetSubString(sStr,-2,-1)]))
+                sStr = llGetSubString(sStr,0,-3);
+            else if (g_sHeightAdjustment != "none" && !~llListFindList(g_lHeightAdjustments,[llGetSubString(sStr,-2,-1)])) {
+                if (llGetInventoryType(sStr + g_sHeightAdjustment) == INVENTORY_ANIMATION)
+                    sStr = sStr + g_sHeightAdjustment;
+            } else if (g_sHeightAdjustment != "none" && llGetSubString(sStr,-2,-1) != g_sHeightAdjustment) 
+                sStr = llGetSubString(sStr,0,-3) + g_sHeightAdjustment;
             g_sCurrentPose = sStr;
             g_iLastRank = iNum;
             llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
@@ -517,6 +532,7 @@ default {
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
                     llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
                 } else if (sToken == "animlock") g_iAnimLock = (integer)sValue;
+                else if (sToken == "heightadjustment") g_sHeightAdjustment  = sValue;
                 else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
                 else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
                 else if (sToken == "PoseMoveRun") g_sPoseMoveRun = sValue;
@@ -554,7 +570,35 @@ default {
                     }
                 } else if (sMenuType == "Pose") {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
-                    else {
+                    else if (sMessage == "↑") {
+                        if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
+                            if (g_sHeightAdjustment == "+2") 
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum up.", kAv);
+                            else {//if (g_sCurrentPose != "") {
+                                g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment + 1);
+                                if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
+                                else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
+                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
+                                UserCommand(iAuth, g_sCurrentPose, kAv);
+                            } 
+                        } else if (g_sCurrentPose != "") 
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
+                        PoseMenu(kAv, iPage, iAuth);
+                    } else if (sMessage == "↓") {
+                        if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
+                            if (g_sHeightAdjustment == "-2") 
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum down.", kAv);
+                            else {//if (g_sCurrentPose != "") {
+                                g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment - 1);
+                                if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
+                                else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
+                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
+                                UserCommand(iAuth, g_sCurrentPose, kAv);
+                            } 
+                        } else if (g_sCurrentPose != "") 
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
+                        PoseMenu(kAv, iPage, iAuth);                        
+                    } else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
                         else UserCommand(iAuth, sMessage, kAv);
                         PoseMenu(kAv, iPage, iAuth);
