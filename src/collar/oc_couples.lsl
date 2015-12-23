@@ -240,6 +240,7 @@ StopAnims() {
 
 // Calmly walk up to your partner and face them. Does not position the avatar precicely
 MoveToPartner() {
+    if(llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_RLV, RLV_CMD, "unsit=force", "couples");
     list partnerDetails = llGetObjectDetails(g_kPartner, [OBJECT_POS, OBJECT_ROT]);
     vector partnerPos = llList2Vector(partnerDetails, 0);
     rotation partnerRot = llList2Rot(partnerDetails, 1);
