@@ -25,7 +25,6 @@ key    g_kSubID;
 list   g_lAgents;                //  list of AV's to ping
 
 //  Notecard reading bits
-
 string  g_sCard = ".subs";
 key     g_kCardID = NULL_KEY;
 key     g_kLineID;
@@ -77,8 +76,8 @@ key    g_kRemovedSubID;
 key    g_kOwner;
 
 //  three strided list of avkey, dialogid, and menuname
-list    g_lMenuIDs;
-integer g_iMenuStride = 3;
+key    g_kMenuID;
+string g_sMenuType;
 
 integer g_iScanRange        = 20;
 integer g_iRLVRelayChannel  = -1812221819;
@@ -163,9 +162,8 @@ RemoveSub(key kID) {
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, string sMenuType) {
     key kID = llGenerateKey();
     llMessageLinked(LINK_SET,DIALOG,(string)kRCPT+"|"+sPrompt+"|"+(string)iPage+"|"+llDumpList2String(lChoices,"`")+"|"+llDumpList2String(lUtilityButtons,"`"),kID);
-    integer index = llListFindList(g_lMenuIDs, [kID]);
-    if (~index) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kID, sMenuType], index, index - 1 + g_iMenuStride);
-    else g_lMenuIDs += [kRCPT, kID, sMenuType];
+    g_kMenuID = kID;
+    g_sMenuType = sMenuType;
 }
 
 ManageMenu() {// Single page menu
@@ -334,21 +332,17 @@ default
         } else if (iNum == SEND_CMD_SUB) SendCmd(kID, sStr);
         else if (iNum == SEND_CMD_ALL_SUBS) SendAllCmd(sStr);
         else if (iNum == SUBMENU && sStr == "Main") MainMenu();
-        else if (iNum == DIALOG_RESPONSE) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex == -1) return;
+        else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
+
 //              got a menu response meant for us.  pull out values
             list    lParams = llParseString2List(sStr, ["|"], []);
                     //kID         = (key)llList2String(lParams, 0);
             string  sMessage    = llList2String(lParams, 1);
-            integer iPage       = (integer)llList2String(lParams, 2);
-            string  sMenuType   = llList2String(g_lMenuIDs, iMenuIndex + 1);
-            integer i;
-//              remove stride from menuids
-//              we have to subtract from the index because the dialog id comes in the middle of the stride
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            //integer iPage       = (integer)llList2String(lParams, 2);
 
-            if (sMenuType == "ManageMenu") {
+            integer i;
+
+            if (g_sMenuType == "ManageMenu") {
                 if (sMessage == UPMENU) {
                     MainMenu();
                     return;
@@ -403,7 +397,7 @@ default
                     } else llOwnerSay("Nothing to print here, you need to add subs to the HUD first.");
                     ManageMenu();
                 }
-            } else if (sMenuType == "RemoveSubMenu") {
+            } else if (g_sMenuType == "RemoveSubMenu") {
                 integer index = llListFindList(g_lSubs, [(key)sMessage]);
                 if (sMessage == UPMENU) ManageMenu();
                 else if (sMessage == "Yes") {
@@ -414,12 +408,12 @@ default
                     g_kRemovedSubID = (key)llList2String(g_lSubs, index);
                     ConfirmSubRemove(g_kRemovedSubID);
                 }
-            } else if (sMenuType == "PickSubMenu") {
+            } else if (g_sMenuType == "PickSubMenu") {
                 integer index = llListFindList(g_lSubs, [(key)sMessage]);
                 if (sMessage == UPMENU) MainMenu();
                 else if (sMessage == g_sAllSubs) SendAllCmd(g_sPendingCmd);
                 else if (~index) SendCmd(llList2Key(g_lSubs, index), g_sPendingCmd);
-            } else if (sMenuType == "Main") {
+            } else if (g_sMenuType == "Main") {
                 if (sMessage == "MANAGE") ManageMenu();
                 else if (sMessage == "Collar") PickSubCmd("menu");
                 else if (sMessage == "Cage") {
@@ -432,11 +426,11 @@ default
                 else PickSubCmd(llToLower(sMessage));
             }
 
-            else if (sMenuType == "QuickLeash") {
+            else if (g_sMenuType == "QuickLeash") {
                 if (sMessage == "STOP") PickSubCmd("unleash");
                 else if (sMessage == "Follow") PickSubCmd("follow me");
                 else PickSubCmd(llToLower(sMessage));
-            } else if (sMenuType == "CageMenu") {
+            } else if (g_sMenuType == "CageMenu") {
                 if (sMessage == UPMENU) {
                     MainMenu();
                     g_lCageVictims = [];
@@ -448,7 +442,7 @@ default
                     else llOwnerSay("You do not have a Cage in your HUD's inventory, unable to perform caging.");
                     g_lCageVictims = [];
                 }
-            } else if (sMenuType == "AddSubMenu") {
+            } else if (g_sMenuType == "AddSubMenu") {
                 if (sMessage == UPMENU) {
                     ManageMenu();
                     g_lNewSubIDs = [];
@@ -479,11 +473,6 @@ default
                     ManageMenu();
                 }
             }
-        }
-        else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex == -1) return;
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         }
     }
 
