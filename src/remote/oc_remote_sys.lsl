@@ -141,7 +141,7 @@ SendAllCmd(string sCmd) {
 
 AddSub(key kID) {
     if (~llListFindList(g_lSubs,[kID])) return;
-    if (kID!="") {//don't register any unrecognised
+    if (kID != NULL_KEY) {//don't register any unrecognised
         g_lSubs+=[kID];//Well we got here so lets add them to the list.
         llOwnerSay("\n\n"+NameURI(kID)+" has been registered.\n");//Tell the owner we made it.
     }
@@ -515,12 +515,10 @@ default
                     if (~index) {//  if line contains equal sign
                         string sName = llToLower(llStringTrim(llGetSubString(sData, 0, index - 1),STRING_TRIM));
                         string sValue = llStringTrim(llGetSubString(sData, index + 1, -1),STRING_TRIM);
-                        if (sName == "subid") g_kSubID = sValue;
+                        if (sName == "subid") AddSub((key)sValue);
                     }
                 }
-                if (g_kSubID!="")
-                    AddSub(g_kSubID);
-                }
+            }
             g_kLineID = llGetNotecardLine(g_sCard, ++g_iLineNr);//  read the next line
         }
     }
