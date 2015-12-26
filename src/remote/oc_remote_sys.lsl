@@ -494,7 +494,7 @@ default
     timer() {
         //Debug ("timer expired" + (string)llGetListLength(g_lCageVictims));
         if (llGetListLength(g_lCageVictims)) CageMenu();
-        if (llGetListLength(g_lNewSubIDs)) AddSubMenu();
+        else if (llGetListLength(g_lNewSubIDs)) AddSubMenu();
         else llOwnerSay("No one is not found");
         llSetTimerEvent(0);
         g_lAgents = [];
