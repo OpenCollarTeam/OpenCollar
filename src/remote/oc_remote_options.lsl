@@ -222,8 +222,8 @@ DoReset() {   // -- Reset the entire HUD back to default
 default
 {
     state_entry() {
-        llSleep(1.0);
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu + "|" + g_sSubMenu1, "");
+        //llSleep(1.0);
+        //llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
     }
 
     attach(key kAttached) {
@@ -243,7 +243,7 @@ default
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu + "|" + g_sSubMenu1, "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
         else if (iNum == SUBMENU && sStr == g_sHudMenu) {
             g_sCurrentMenu = g_sHudMenu;
             string sPrompt = "\nCustomize your Owner HUD!\n\nwww.opencollar.at/ownerhud";
@@ -321,7 +321,7 @@ default
                         lButtons = ["Orange","Yellow","Pink","Purple","Sky Blue","Light Green","Cyan","Mint"];
                         g_kMenuID = Dialog(kID, sPrompt, lButtons, [UPMENU], iPage);
                     }
-                } else if (g_sCurrentMenu == g_sSubMenu2) {   
+                } else if (g_sCurrentMenu == g_sSubMenu2) {
                     if (sButton == UPMENU)
                         llMessageLinked(LINK_SET, SUBMENU, g_sHudMenu, kID);
                     else if (sButton == "Menu") {
@@ -463,7 +463,7 @@ default
             }
         }
     }
-    
+
     changed(integer iChange)
     {
         if (iChange & CHANGED_OWNER) {
