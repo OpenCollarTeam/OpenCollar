@@ -86,7 +86,7 @@ FindButtons() { // collect buttons names
     g_lButtons = [" ", " "] ;
     integer i;
     for (i=2; i<llGetNumberOfPrims()+1; i++) {
-        g_lButtons += [llGetLinkName(i)];
+        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
     }
 }
 
