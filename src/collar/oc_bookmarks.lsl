@@ -58,7 +58,6 @@ string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
-integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 key webLookup;
 
@@ -404,7 +403,7 @@ default {
     on_rez(integer iStart) {
         ReadDestinations();
     }
-    
+
     state_entry() {
         g_kWearer = llGetOwner();  // store key of wearer
         ReadDestinations(); //Grab our presets
