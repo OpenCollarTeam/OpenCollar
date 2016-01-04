@@ -83,10 +83,12 @@ key Dialog(key kRcpt, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 FindButtons() { // collect buttons names
+    g_lPrimOrder = [0, 1];
     g_lButtons = [" ", " "] ;
     integer i;
     for (i=2; i<llGetNumberOfPrims()+1; i++) {
         g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+        g_lPrimOrder += i ;
     }
 }
 
@@ -309,9 +311,6 @@ OrderButton(string sButton)
 
 default
 {
-    on_rez(integer n) {
-        FindButtons(); // collect buttons names
-    }
 
     state_entry() {
         //llSleep(1.0);
@@ -363,7 +362,7 @@ default
             } else if (g_sCurrentMenu == g_sOrderMenu) {
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if (sButton == "Confirm") {
-                    g_lPrimOrder = [0,1,2,3,4,5,6];
+                    FindButtons();
                     llOwnerSay("Order position reset to default.");
                     DefinePosition();
                 } else if (sButton == "Cancel") g_sCurrentMenu = g_sOrderMenu;
