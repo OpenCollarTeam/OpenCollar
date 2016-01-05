@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 151216.1                             //
+//                          Animator - 160103.2                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -572,23 +572,23 @@ default {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else if (sMessage == "↑") {
                         if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if (g_sHeightAdjustment == "+2") 
+                            if ((integer)g_sHeightAdjustment > 0 && llGetInventoryType(llGetSubString(g_sCurrentPose,0,-3)+(string)((integer)g_sHeightAdjustment+1)) != INVENTORY_ANIMATION)        
                                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum up.", kAv);
-                            else {//if (g_sCurrentPose != "") {
+                            else { 
                                 g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment + 1);
                                 if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
                                 else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
                                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
                                 UserCommand(iAuth, g_sCurrentPose, kAv);
-                            } 
+                            }  
                         } else if (g_sCurrentPose != "") 
                             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
                         PoseMenu(kAv, iPage, iAuth);
                     } else if (sMessage == "↓") {
                         if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if (g_sHeightAdjustment == "-2") 
+                            if ((integer)g_sHeightAdjustment <= 0 && llGetInventoryType(llGetSubString(g_sCurrentPose,0,-3)+(string)((integer)g_sHeightAdjustment-1)) != INVENTORY_ANIMATION)        
                                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum down.", kAv);
-                            else {//if (g_sCurrentPose != "") {
+                            else {                              
                                 g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment - 1);
                                 if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
                                 else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
@@ -609,7 +609,8 @@ default {
                         if (sMessage == "ON") UserCommand(iAuth, "antislide on", kAv);
                         else if (sMessage == "OFF") UserCommand(iAuth, "antislide off", kAv);
                         else if (llGetSubString(sMessage,2,-1) == "none" ) UserCommand(iAuth, "antislide none", kAv);
-                        else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
+                        else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) 
+                            UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
                         PoseMoveMenu(kAv,iNum,iAuth);
                     }
                 }
