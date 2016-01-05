@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160105.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160105.2       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -90,7 +90,7 @@ vector g_vColor = <1,1,1>;
 key g_kMenuID;
 string g_sCurrentMenu;
 list g_lButtons ; // buttons names for Order menu
-list g_lPrimOrder = [0, 1, 2, 3, 4, 5, 6];
+list g_lPrimOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 //  List must always start with '0','1'
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
