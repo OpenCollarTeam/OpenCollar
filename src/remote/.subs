@@ -1,7 +1,0 @@
-# You need to add the name and Key of each person you wish to add to the hud.
-# The subname can be shortened to a name you like
-# The subid is their Key which can be obtained from their profile
-# This only adds the names to your hud, it does not mean you have access to their collar
-# Empty lines and lines beginning with '#' are ignored
-subname =  
-subid = 
