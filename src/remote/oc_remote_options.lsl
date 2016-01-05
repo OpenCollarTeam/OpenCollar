@@ -277,8 +277,7 @@ DoMenu(string sMenu) {
         sPrompt += "and select a color under the menu you wish.\n";
         lButtons = ["colormenu please"];
     }
-
-    if (sMenu == g_sHudMenu) { // Main
+    else if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
         lButtons = ["Horizontal","Vertical","RESET",g_sOrderMenu];
         if (g_kStylesCardUUID) lButtons += [g_sTextureMenu];
@@ -381,7 +380,7 @@ default
                     return;
                 }
             } else if (g_sCurrentMenu == g_sTintMenu) {
-                if (sButton == UPMENU) g_sCurrentMenu = g_sTextureMenu;
+                if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if ((vector)sButton) {
                     g_vColor = (vector)sButton;
                     llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
