@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 151231.3       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160105.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -102,6 +102,17 @@ integer g_iOldPos;
 integer g_iNewPos;
 integer g_iTintable = FALSE;
 
+
+// themes
+string g_sStylesCard=".buttons";
+key g_kStylesNotecardRead;
+key g_kStylesCardUUID;
+string g_sStylesNotecardReadType;
+integer g_iStylesNotecardLine;
+string g_sCurrentTheme;
+integer g_iThemesReady;
+list g_lStyles;
+
 //**************************
 
 key Dialog(key kRcpt, string sPrompt, list lChoices, list lUtilityButtons, integer iPage) {
@@ -111,7 +122,7 @@ key Dialog(key kRcpt, string sPrompt, list lChoices, list lUtilityButtons, integ
     return kID;
 }
 
-FindButtons() { // collect buttons names
+FindButtons() { // collect buttons names & links
     g_lPrimOrder = [0, 1];
     g_lButtons = [" ", " "] ;
     integer i;
@@ -127,61 +138,24 @@ PlaceTheButton(float fYoff, float fZoff) {
         llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i), [PRIM_POSITION, <0.0, fYoff * (i - 1), fZoff * (i - 1)>]);
 }
 
-DoStyle(string sStyle) {
+BuildStylesList() {
+    g_lStyles=[];
+    if(llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) {
+        g_kStylesCardUUID=llGetInventoryKey(g_sStylesCard);
+        g_iStylesNotecardLine=0;
+        g_sStylesNotecardReadType="initialize";
+        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
+    } else g_kStylesCardUUID = "";
 
-    list lWhiteTintTex  = ["8408646f-2d35-3938-cba9-0808a12fcb80",
-                         "eb1f670d-c34f-23cb-3beb-f859c3c0278e",
-                         "a81b25f9-5ab1-dd02-5740-eb06ca5bf219",
-                         "1ff141eb-a448-b5c3-942d-6531b5c9d047",
-                         "cf5b070b-f672-9488-81a4-945243ebb47d",
-                         "a9245dc2-cca1-861e-c2da-e3cb071fb7a1"];
+}
 
-    list lGraySquareTex = ["0744de1c-a3bd-47db-b20f-2cb7b93a3ff1",
-                         "09b69dd4-eb80-e2de-7dba-70c8337d283c",
-                         "e9a16c40-7561-5a69-f834-f2f613fde10a",
-                         "d6835f43-2477-d638-e203-8a22daee09fb",
-                         "c72aef83-a0f0-fece-be02-295473986e79",
-                         "68ad78d3-8e7b-4025-d8b1-98560aa31123"];
-
-    list lGrayCircleTex = ["428f1dfc-251c-b204-da66-000082bee96f",
-                         "6df113f7-c667-106b-e276-31dc1be37513",
-                         "e856db47-1017-6bc8-69be-525945fbdb08",
-                         "92087a5d-5009-5993-fed9-0274bfacd899",
-                         "2a35bdf7-9744-aedf-ff60-5a49b04c356d",
-                         "6b1a404f-db40-1aa2-7080-b4ab4235b963"];
-
-    list lBlueTex        = ["fe7844f7-1179-5ba1-eb46-d44d3bed5837",
-                         "7d5ebb11-b3e2-4353-231b-c898c5645872",
-                         "2c52eb24-26a0-5110-089a-570b1602aaaa",
-                         "520ae188-c472-ab7b-b1c6-d0fe53698c57",
-                         "599c0404-5b79-a292-1c4f-83b655a81b43",
-                         "db24ef0e-ca57-9f8c-ee1a-28fec74619ad"];
-
-    list lRedTex         = ["4d61335b-2b3d-e3d2-a6b9-e3fba73f9f8e",
-                         "917d6349-a01b-1c1e-7c49-1b889fd81217",
-                         "c4ffeb2c-e779-b062-e254-b7afc9ca629e",
-                         "d3a0b432-fbb6-44bd-4019-4fe75f17d2c4",
-                         "d1684d22-627e-1370-987e-95e23c8a81a8",
-                         "b75a0443-8f80-3889-f21d-8e895a34b2c0"];
-//  Upon a texture change we should also reset the 'tint'
-
-    list textures;
-    if (sStyle == "White") textures = lWhiteTintTex;
-    if (sStyle == "Gray Square") textures = lGraySquareTex;
-    if (sStyle == "Gray Circle") textures = lGrayCircleTex;
-    if (sStyle == "Blue Circle") textures = lBlueTex;
-    if (sStyle == "Red Circle") textures = lRedTex;
-
-    if (sStyle == "White") g_iTintable = TRUE;
-    else g_iTintable = FALSE;
-
-    if (g_iTintable) llSetLinkPrimitiveParamsFast(LINK_SET, [PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
-    else llSetLinkPrimitiveParamsFast(LINK_SET, [PRIM_COLOR, ALL_SIDES, <1,1,1>, 1.0]);
-
-    integer iPrimNum = 5;
-    integer i = 0;
-    do llSetLinkPrimitiveParamsFast(i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(textures,i), <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-    while((++i)<=iPrimNum);
+DoStyle(string style) {
+    if (~llListFindList(g_lStyles,[style])) {
+        g_sStylesNotecardReadType=style;
+        g_iStylesNotecardLine=0;
+        llOwnerSay("Applying the "+style+" theme...");
+        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
+    }
 }
 
 DoHide() {
@@ -275,20 +249,16 @@ DoMenu(string sMenu) {
         sMenu = g_sHudMenu;
         lUtils = [];
     }
-    else if (sMenu == g_sHudMenu) { // Main
-        sPrompt = "\nCustomize your Remote!";
-        lButtons = ["Horizontal","Vertical","RESET",g_sOrderMenu,g_sTextureMenu];
-    }
     else if (sMenu == g_sTextureMenu) { // textures
-        sPrompt = "\nThis is the menu for styles.\n";
-        sPrompt += "Selecting one of these options will\n";
-        sPrompt += "change the color of the HUD buttons.\n";
-        if (g_iTintable)
-           sPrompt += "\nTint will allow you to change the HUD color\nto various shades via the '" + g_sTintMenu + "' menu.\n";
-        else
-            sPrompt += "\nIf [White] is selected, an extra menu named '" + g_sTintMenu +"' will appear in this menu.\n";
-        lButtons = ["White","Gray Square","Gray Circle","Blue Circle","Red Circle"];
-        if (g_iTintable) lButtons += [g_sTintMenu];
+        if (g_iThemesReady) {
+            sPrompt = "\nThis is the menu for styles.\n";
+            sPrompt += "Selecting one of these options will\n";
+            sPrompt += "change the color of the HUD buttons.\n";
+            lButtons = g_lStyles;
+        } else {
+            llOwnerSay("Themes still loading...");
+            sMenu = g_sHudMenu;
+        }
     }
     else if (sMenu == g_sOrderMenu) { // Order
         sPrompt = "\nThis is the order menu, simply select the\n";
@@ -306,6 +276,12 @@ DoMenu(string sMenu) {
         sPrompt += "If you don't see a color you enjoy, simply edit\n";
         sPrompt += "and select a color under the menu you wish.\n";
         lButtons = ["colormenu please"];
+    }
+    else if (sMenu == g_sHudMenu) { // Main
+        sPrompt = "\nCustomize your Remote!";
+        lButtons = ["Horizontal","Vertical","RESET",g_sOrderMenu];
+        if (g_kStylesCardUUID) lButtons += [g_sTextureMenu];
+        lButtons += [g_sTintMenu];
     }
     g_sCurrentMenu = sMenu;
     g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, lUtils, 0);
@@ -340,11 +316,10 @@ OrderButton(string sButton)
 
 default
 {
-
     state_entry() {
         //llSleep(1.0);
         FindButtons(); // collect buttons names
-        DoStyle("White");
+        BuildStylesList();
         DoHide();
         DefinePosition();
         llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
@@ -375,7 +350,6 @@ default
             //kID = (key)llList2String(lParams, 0);
             string sButton = llList2String(lParams, 1);
             //integer iPage = (integer)llList2String(lParams, 2);
-
             if (g_sCurrentMenu == g_sHudMenu) {   // -- Inside the 'Options' menu, or 'submenu'
                 // If we press the 'Back' and we are inside the Options menu, go back to OwnerHUD menu
                 if (sButton == UPMENU) {
@@ -387,7 +361,10 @@ default
             } else if (g_sCurrentMenu == g_sTextureMenu) {// -- Inside the 'Texture' menu, or 'submenu1'
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if (sButton == g_sTintMenu) g_sCurrentMenu = g_sTintMenu;
-                else  DoStyle(sButton);
+                else {
+                    DoStyle(sButton);
+                    return;
+                }
             } else if (g_sCurrentMenu == g_sOrderMenu) {
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if (sButton == "Confirm") {
@@ -403,7 +380,7 @@ default
                     return;
                 }
             } else if (g_sCurrentMenu == g_sTintMenu) {
-                if (sButton == UPMENU) g_sCurrentMenu = g_sTextureMenu;
+                if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if ((vector)sButton) {
                     g_vColor = (vector)sButton;
                     llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
@@ -423,9 +400,55 @@ default
         }
     }
 
-    changed(integer iChange)
-    {
+    changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_LINK) llResetScript();
+        if (iChange & CHANGED_INVENTORY) {
+            if (llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
+        }
+    }
+
+    dataserver(key kID, string sData) {
+        if (kID == g_kStylesNotecardRead) {
+            if (sData != EOF) {
+                sData = llStringTrim(sData,STRING_TRIM);
+                if (sData!="" && llSubStringIndex(sData,"#") != 0) {
+                    if (llGetSubString(sData,0,0) == "[") {
+                        sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
+                        sData = llStringTrim(sData,STRING_TRIM);
+                        if (g_sStylesNotecardReadType=="initialize") {  //reading notecard to determine style names
+                            g_lStyles += sData;
+                        } else if (sData==g_sStylesNotecardReadType) {  //we just found our section
+                            g_sStylesNotecardReadType="processing";
+                            g_sCurrentTheme = sData;
+                        } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
+                            llOwnerSay("Applied!");
+                            DoMenu(g_sTextureMenu);
+                            return;
+                        }
+                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+                    } else {
+                        if (g_sStylesNotecardReadType=="processing") {
+                            //do what the notecard says
+                            list lParams = llParseStringKeepNulls(sData,["~"],[]);
+                            integer link = (integer)llStringTrim(llList2String(lParams,0),STRING_TRIM);
+                            if (link > 0) {
+                                sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
+                                if (sData != "" && sData != ",")
+                                    llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0, PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
+                            }
+                        }
+                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+                    }
+                } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+            } else {
+                if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
+                    llOwnerSay("Applied!");
+                    DoMenu(g_sTextureMenu);
+                } else {
+                    g_iThemesReady = TRUE;
+                }
+            }
+        }
     }
 }
