@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160105.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160106.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,14 +98,12 @@ integer CMD_UPDATE    = 10001;
 string UPMENU          = "BACK";
 
 string g_sListPartners  = "List";
-string g_sRemovePartner    = "Remove";
-//string list   = "Reload Menu";
-string g_sScanPartners     = "Add";
-string g_sLoadCard     = "Load";
-string g_sPrintPartners    = "Print";
-string g_sAllPartners      = "ALL";
+string g_sRemovePartner = "Remove";
+string g_sAllPartners = "ALL";
+string g_sAddPartners = "Add";
 
-list g_lMainMenuButtons = ["MANAGE","Collar","Rezzers","Pose","RLV","Sit","Stand","Leash"];//,"HUD Style"];
+list g_lMainMenuButtons = [g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
+
 list g_lMenus ;
 
 key    g_kRemovedPartnerID;
@@ -205,12 +203,6 @@ MainMenu(){
     if (g_iUpdateAvailable) sPrompt += "\n\nThere is an update available @ [http://maps.secondlife.com/secondlife/Boulevard/50/211/23 The Temple]";
     list lButtons = g_lMainMenuButtons + g_lMenus;
     Dialog(g_kOwner, sPrompt, lButtons, [], 0, g_sMainMenu);
-}
-
-ManageMenu() {
-    string sPrompt = "\nClick \"Add\" to register your partners!";
-    list lButtons = [g_sScanPartners,g_sListPartners,g_sRemovePartner,g_sLoadCard,g_sPrintPartners];
-    Dialog(g_kOwner, sPrompt, lButtons, [UPMENU], 0, "ManageMenu");
 }
 
 RezzerMenu() {
@@ -375,11 +367,12 @@ default {
             list    lParams = llParseString2List(sStr, ["|"], []);
             string  sMessage    = llList2String(lParams, 1);
             integer i;
-            if (g_sMenuType == "ManageMenu") {
-                if (sMessage == UPMENU) {
-                    MainMenu();
-                    return;
-                } else if (sMessage == g_sListPartners) { //Lets List out partners
+            if (g_sMenuType == "Main") {
+                if (sMessage == "Collar Menu") PickPartnerCmd("menu");
+                else if (sMessage == "Rez") RezzerMenu();
+                else if (sMessage == g_sRemovePartner) RemovePartnerMenu();
+                else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
+                else if (sMessage == g_sListPartners) { //Lets List out partners
                     //list lTemp;
                     string sText ="\nI'm currently managing:\n";
                     integer iPartnerCount = llGetListLength(g_lPartners);
@@ -396,17 +389,8 @@ default {
                         if (iPartnerCount == 1) sText = llGetSubString(sText,0,-3);
                     } else sText += "nobody";
                     llOwnerSay(sText);
-                    ManageMenu(); //return to ManageMenu
-                } else if (sMessage == g_sRemovePartner) RemovePartnerMenu();
-                else if (sMessage == g_sLoadCard) {
-                    if (llGetInventoryType(g_sCard) != INVENTORY_NOTECARD) {
-                        llOwnerSay("\n\nThe" + g_sCard +" card couldn't be found in my inventory.\n");
-                        return;
-                    }
-                    g_iLineNr = 0;
-                    g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
-                    ManageMenu();
-                } else if (sMessage == g_sScanPartners) {
+                    MainMenu();
+                } else if (sMessage == g_sAddPartners) {
                      // Ping for auth OpenCollars in the parcel
                      list lAgents = llGetAgentList(AGENT_LIST_PARCEL, []); //scan for who is in the parcel
                      llOwnerSay("Scanning for collars where you have access to.");
@@ -422,25 +406,14 @@ default {
                         }
                     }
                     llSetTimerEvent(2.0);
-                } else if (sMessage == g_sPrintPartners) {
-                    if (llGetListLength(g_lPartners)) {
-                        string sPrompt = "\n\nEverything below this line can be copied & pasted into a notecard called \".partners\" for backup:\n";
-                        llOwnerSay(sPrompt);
-                        sPrompt = "\n";
-                        for (i=0; i < llGetListLength(g_lPartners); i++) {
-                            sPrompt+= "\nid = " + llList2String(g_lPartners, i);
-                        }
-                        llOwnerSay(sPrompt);
-                    } else llOwnerSay("Nothing to print, you need to add someone first.");
-                    ManageMenu();
-                }
+                } else PickPartnerCmd(llToLower(sMessage));
             } else if (g_sMenuType == "RemovePartnerMenu") {
                 integer index = llListFindList(g_lPartners, [(key)sMessage]);
-                if (sMessage == UPMENU) ManageMenu();
+                if (sMessage == UPMENU) MainMenu();
                 else if (sMessage == "Yes") {
                     RemovePartner(g_kRemovedPartnerID);
-                    ManageMenu();
-                } else if (sMessage == "No") ManageMenu();
+                    MainMenu();
+                } else if (sMessage == "No") MainMenu();
                 else if (~index) {
                     g_kRemovedPartnerID = (key)llList2String(g_lPartners, index);
                     ConfirmPartnerRemove(g_kRemovedPartnerID);
@@ -450,15 +423,6 @@ default {
                 if (sMessage == UPMENU) MainMenu();
                 else if (sMessage == g_sAllPartners) SendAllCmd(g_sPendingCmd);
                 else if (~index) SendCmd(llList2Key(g_lPartners, index), g_sPendingCmd);
-            } else if (g_sMenuType == "Main") {
-                if (sMessage == "MANAGE") ManageMenu();
-                else if (sMessage == "Collar") PickPartnerCmd("menu");
-                else if (sMessage == "Rezzers") RezzerMenu();
-                else if (sMessage == "HUD Style") llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
-                else if (sMessage == "Sit" || sMessage == "Stand") PickPartnerCmd(llToLower(sMessage)+"now");
-                else if (sMessage == "Leash") PickPartnerCmd("leashmenu");
-                else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
-                else PickPartnerCmd(llToLower(sMessage));
             } else if (g_sMenuType == "UpdateConfirmMenu") {
                 if (sMessage=="Yes") StartUpdate();
                 else {
@@ -495,7 +459,7 @@ default {
                 } else if ((key)sMessage)
                     AddPartner(sMessage);
                 g_lNewPartnerIDs = [];
-                ManageMenu();
+                MainMenu();
             }
         }
     }
