@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160105.2       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160107.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -82,7 +82,9 @@ list g_lAttachPoints = [
     ATTACH_HUD_CENTER_2
     ];
 
-float g_fGap = 0.002; // This is the space between buttons
+float g_fGap = 0.001; // This is the space between buttons
+float g_Yoff = 0.002; // space between buttons and screen top/bottom border
+float g_Zoff = 0.04; // space between buttons and screen left/right border
 
 // Variables
 
@@ -90,7 +92,7 @@ vector g_vColor = <1,1,1>;
 key g_kMenuID;
 string g_sCurrentMenu;
 list g_lButtons ; // buttons names for Order menu
-list g_lPrimOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+list g_lPrimOrder ;
 //  List must always start with '0','1'
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
@@ -100,8 +102,8 @@ integer g_iHidden = FALSE;
 integer g_iSPosition = 69; // Nuff'said =D
 integer g_iOldPos;
 integer g_iNewPos;
-integer g_iTintable = FALSE;
 
+integer g_iColumn = 0;
 
 // themes
 string g_sStylesCard=".buttons";
@@ -112,6 +114,7 @@ integer g_iStylesNotecardLine;
 string g_sCurrentTheme;
 integer g_iThemesReady;
 list g_lStyles;
+
 
 //**************************
 
@@ -133,14 +136,38 @@ FindButtons() { // collect buttons names & links
 }
 
 PlaceTheButton(float fYoff, float fZoff) {
-    integer i = 2;
-    for (; i < llGetListLength(g_lPrimOrder); ++i)
-        llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i), [PRIM_POSITION, <0.0, fYoff * (i - 1), fZoff * (i - 1)>]);
+    integer i;
+    integer n = llGetListLength(g_lPrimOrder);
+    vector pos;
+    vector size = llGetScale();
+    for (i=2; i < n; ++i) {
+        if (g_iColumn==0) {  // Line
+            if (g_iLayout) pos = <0,0,fZoff*(i-1)>; // vertical
+            else pos = <0,fYoff*(i-1),0>; // horisontal
+        } else if (g_iColumn==1) { // Column
+            if (g_iLayout) { // vertical
+                if (i <= (n/2)) pos = <0,0,fYoff*(i-1)>; // 1st half
+                else pos = <0,fYoff,fZoff*(i-1-n/2)>;    // 2nd half
+            } else { // horisontal
+                if (i <= (n/2)) pos = <0,fYoff*(i-1),0>; // 1st half
+                else pos = <0,fYoff*(i-1-n/2),fZoff>;    // 2nd half
+            }
+        } else if (g_iColumn==2) { // Alternate
+            if (g_iLayout) { // vertical
+                if (i&1) pos = <0,0,fYoff*(i/2)>;   // even
+                else pos = <0,fYoff,fZoff*(i/2-1)>; // odd
+            } else { // horisontal
+                if (i&1) pos = <0,fYoff*(i/2),0>;   // even
+                else pos = <0,fYoff*(i/2-1),fZoff>; // odd
+            }
+        }
+        llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,pos]); //,PRIM_SIZE,size]);
+    }
 }
 
 BuildStylesList() {
     g_lStyles=[];
-    if(llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) {
+    if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) {
         g_kStylesCardUUID=llGetInventoryKey(g_sStylesCard);
         g_iStylesNotecardLine=0;
         g_sStylesNotecardReadType="initialize";
@@ -165,31 +192,22 @@ DoHide() {
 
 DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
+    vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
     if (iPosition != g_iSPosition) {
-        // Set up the six root prim locations which all other posistions are based from
-       /* list lRootOffsets = [
-            <0.0,  0.02, -0.04>,    // Top right        (Position 0)
-            <0.0,  0.00, -0.04>,    // Top middle       (Position 1)
-            <0.0, -0.02, -0.04>,    // Top left         (Position 2)
-            <0.0,  0.02,  0.10>,    // Bottom right     (Position 3)
-            <0.0,  0.00,  0.07>,    // Bottom middle    (Position 4)
-            <0.0, -0.02,  0.07>];   // Bottom left      (Position 5)*/
-        //llSetPos((vector)llList2String(RootOffsets, Position)); // Position the Root Prim on screen
+        vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
+        if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z ;
+        if (iPosition==2||iPosition==5) offset.y = -offset.y ;
+        llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
     if (!g_iHidden) { // -- Fixes Issue 615: HUD forgets hide setting on relog.
         vector size = llGetScale();
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
-        if (g_iLayout == 0 || iPosition == 1 || iPosition == 4) {// Horizontal + top and bottom are always horizontal
-            if (iPosition == 2 || iPosition == 5) // Left side needs to push buttons right
-                fYoff = fYoff * -1;
-            fZoff = 0.0;
-        } else {// Vertical
-            if (iPosition == 0 || iPosition == 2)  // Top needs push buttons down
-                fZoff = fZoff * -1;
-            fYoff = 0.0;
-        }
+        if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
+        if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
+        if (iPosition == 1 || iPosition == 4) g_iLayout = 0;
+
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
 }
@@ -229,13 +247,14 @@ DoMenu(string sMenu) {
     list lButtons;
     list lUtils = [UPMENU];
 
-    if (sMenu == "Horizontal") {
-        g_iLayout = 0;
+    if (sMenu == "Horizontal >" || sMenu == "Vertical >") {
+        g_iLayout = !g_iLayout;
         DefinePosition();
         sMenu = g_sHudMenu;
     }
-    else if (sMenu == "Vertical") {
-        g_iLayout = 69;
+    else if (sMenu == "Alternate >" || sMenu == "Column >" || sMenu == "Line >") {
+        g_iColumn++;
+        if (g_iColumn > 2) g_iColumn = 0;
         DefinePosition();
         sMenu = g_sHudMenu;
     }
@@ -279,7 +298,15 @@ DoMenu(string sMenu) {
     }
     else if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
-        lButtons = ["Horizontal","Vertical","RESET",g_sOrderMenu];
+
+        if (g_iLayout) lButtons = ["Vertical >"];
+        else lButtons = ["Horizontal >"];
+
+        if (g_iColumn==2) lButtons += ["Alternate >"];
+        if (g_iColumn==1) lButtons += ["Column >"];
+        if (g_iColumn==0) lButtons += ["Line >"];
+
+        lButtons += ["RESET",g_sOrderMenu];
         if (g_kStylesCardUUID) lButtons += [g_sTextureMenu];
         lButtons += [g_sTintMenu];
     }
