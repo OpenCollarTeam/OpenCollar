@@ -126,11 +126,11 @@ key Dialog(key kRcpt, string sPrompt, list lChoices, list lUtilityButtons, integ
 }
 
 FindButtons() { // collect buttons names & links
-    g_lPrimOrder = [0, 1];
-    g_lButtons = [" ", " "] ;
+    g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for texture
+    g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
     for (i=2; i<llGetNumberOfPrims()+1; i++) {
-        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
         g_lPrimOrder += i ;
     }
 }
@@ -185,12 +185,8 @@ DoStyle(string style) {
     }
 }
 
-DoHide() {
-//  This moves the child prims under the root prim to hide them
-    llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
-}
-
 DefinePosition() {
+    if (!llGetAttached()) return;
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
@@ -201,13 +197,15 @@ DefinePosition() {
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
-    if (!g_iHidden) { // -- Fixes Issue 615: HUD forgets hide setting on relog.
+
+    if (g_iHidden) { 
+        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
+    } else {
         vector size = llGetScale();
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
         if (iPosition == 1 || iPosition == 4) g_iLayout = 0;
-
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
 }
@@ -262,7 +260,7 @@ DoMenu(string sMenu) {
     if (sMenu == "RESET") {
         sPrompt = "\nConfirm reset of the entire HUD.\n\n";
         sPrompt += "!!!!!! W A R N I N G !!!!!!";
-        sPrompt += "\nAll Subs not saved in '.subs' notecard will be removed from Subs list!\n";
+        sPrompt += "\nAll Subs not saved in '.partners' notecard will be removed from Subs list!\n";
         sPrompt += "\nAre You sure?";
         lButtons = ["Confirm","Cancel"];
         sMenu = g_sHudMenu;
@@ -347,7 +345,6 @@ default
         //llSleep(1.0);
         FindButtons(); // collect buttons names
         BuildStylesList();
-        DoHide();
         DefinePosition();
         llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
@@ -416,13 +413,8 @@ default
             DoMenu(g_sCurrentMenu);
         } else if (iNum == CMD_TOUCH) {
             if (sStr == "hide") {
-                if (g_iHidden) {
-                    g_iHidden = !g_iHidden;
-                    DefinePosition();
-                } else {
-                    g_iHidden = !g_iHidden;
-                    DoHide();
-                }
+                g_iHidden = !g_iHidden;
+                DefinePosition();
             }
         }
     }
@@ -458,7 +450,8 @@ default
                         if (g_sStylesNotecardReadType=="processing") {
                             //do what the notecard says
                             list lParams = llParseStringKeepNulls(sData,["~"],[]);
-                            integer link = (integer)llStringTrim(llList2String(lParams,0),STRING_TRIM);
+                            string sButton = llStringTrim(llList2String(lParams,0),STRING_TRIM);
+                            integer link = llListFindList(g_lButtons,[sButton]);
                             if (link > 0) {
                                 sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
                                 if (sData != "" && sData != ",")
