@@ -1,17 +1,18 @@
-# Format: LinkNr~<texture_id>
-# Example: 2~f3ec1052-6ec4-04ba-d752-937a4d837bf8
+# Format: ButtonName~<texture_id>
+# Example: Menu~f3ec1052-6ec4-04ba-d752-937a4d837bf8
 # Below is the order of the default remote, link number and feature.
 # The names of the button feature has to be replaced with the texture uuid.
+# The root prim is used to Minimize, this does not have to fit the actual prim name, but that's the only exception
 
-1~Minimize
-2~Menu
-3~Bookmarks
-4~Favorite
-5~Outfits
-6~Pose
-7~Couples
-8~Sit
-9~Stand
-10~Leash
-11~Unleash
-12~Yank
+Minimize~<texture_id>
+Menu~<texture_id>
+Picture~<texture_id>
+Bookmarks~<texture_id>
+Outfits~<texture_id>
+Pose~<texture_id>
+Couples~<texture_id>
+Sit~<texture_id>
+Stand~<texture_id>
+Leash~<texture_id>
+Unleash~<texture_id>
+Yank~<texture_id>
