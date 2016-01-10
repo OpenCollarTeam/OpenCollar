@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160110.2        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160110.3        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,7 +53,7 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160109.2";
+string g_sVersion = "160110.3";
 string g_sFancyVersion = "¹⁶⁰¹⁰⁸⋅¹";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
@@ -86,7 +86,7 @@ integer g_iPicturePrim;
 string g_sPictureID;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
-string g_sTextureALL;
+string g_sTextureALL ="c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc";
 
 //  MESSAGE MAP
 integer CMD_TOUCH            = 100;
@@ -98,8 +98,6 @@ integer SUBMENU              = 3002;
 integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
 integer DIALOG_TIMEOUT       = -9002;
-
-integer CMD_UPDATE    = 10001;
 
 string UPMENU          = "BACK";
 
@@ -175,10 +173,10 @@ SendCollarCommand(string sCmd) {
         llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID), g_sActivePartnerID+":"+sCmd);
     else if (g_sActivePartnerID == "ALL") {
         integer i = llGetListLength(g_lPartnersInSim);
-        do {
+         while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
             string sPartnerID = llList2String(g_lPartnersInSim,--i);
             llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID),sPartnerID+":"+sCmd);
-        } while (i);
+        }
     }
 }
 
@@ -258,7 +256,7 @@ list BuildObjectList() {
 
 NextPartner(integer iDirection, integer iTouch) {
     g_lPartnersInSim = PartnersInSim();
-    if (iDirection) {
+    if ((llGetListLength(g_lPartnersInSim) > 1) && iDirection) {
         integer index = llListFindList(g_lPartnersInSim,[g_sActivePartnerID])+iDirection;
         if (index >= llGetListLength(g_lPartnersInSim)) index = 0;
         else if (index < 0) index = llGetListLength(g_lPartnersInSim)-1;
@@ -301,12 +299,7 @@ default {
     }
     
     touch_start(integer iNum) {
-        key kID = llDetectedKey(0);
-        if ((llGetAttached() == 0)&& (kID==g_kOwner)) {// Dont do anything if not attached to the HUD
-            llMessageLinked(LINK_THIS, CMD_UPDATE, "Update", kID);
-            return;
-        }
-        if (kID == g_kOwner) {
+        if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {// Dont do anything if not attached to the HUD
 //          I made the root prim the "menu" prim, and the button action default to "menu."
             string sButton = (string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]);
             if (~llSubStringIndex(sButton,"remote"))
@@ -492,7 +485,7 @@ default {
     object_rez(key kID) {
         llSleep(0.5); // make sure object is rezzed and listens
         if (g_sActivePartnerID == "ALL") 
-            llRegionSayTo(kID,g_iRezChannel,llDumpList2String(PartnersInSim(),","));
+            llRegionSayTo(kID,g_iRezChannel,llDumpList2String(llDeleteSubList(PartnersInSim(),0,0),","));
         else 
             llRegionSayTo(kID,g_iRezChannel,g_sActivePartnerID);
     }
