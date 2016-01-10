@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160110.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160110.2        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -162,11 +162,11 @@ integer InSim(key kID) {
 list PartnersInSim() {
     list lTemp;
     integer i = llGetListLength(g_lPartners);
-    do {
+     while (i) {
         string sTemp = llList2String(g_lPartners,--i);
         if (InSim(sTemp))
             lTemp += sTemp;
-    } while (i);
+    }
     return ["ALL"]+lTemp;
 }
 
