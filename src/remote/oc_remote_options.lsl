@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160107.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160110.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -69,7 +69,6 @@ string g_sParentMenu  = "Main";
 string g_sHudMenu     = "HUD Style";
 string g_sTextureMenu = "Textures";
 string g_sOrderMenu   = "Order";
-string g_sTintMenu    = "Tint";
 
 list g_lAttachPoints = [
     ATTACH_HUD_TOP_RIGHT,
@@ -85,7 +84,7 @@ list g_lAttachPoints = [
 float g_fGap = 0.001; // This is the space between buttons
 float g_Yoff = 0.002; // space between buttons and screen top/bottom border
 float g_Zoff = 0.04; // space between buttons and screen left/right border
-
+ 
 // Variables
 
 vector g_vColor = <1,1,1>;
@@ -114,6 +113,7 @@ integer g_iStylesNotecardLine;
 string g_sCurrentTheme;
 integer g_iThemesReady;
 list g_lStyles;
+integer g_iFistStart;
 
 
 //**************************
@@ -129,9 +129,9 @@ FindButtons() { // collect buttons names & links
     g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for texture
     g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
-    for (i=2; i<llGetNumberOfPrims()+1; i++) {
+    for (i=2; i<llGetNumberOfPrims()+1; ++i) {
         g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
-        g_lPrimOrder += i ;
+        g_lPrimOrder += i;
     }
 }
 
@@ -180,32 +180,31 @@ DoStyle(string style) {
     if (~llListFindList(g_lStyles,[style])) {
         g_sStylesNotecardReadType=style;
         g_iStylesNotecardLine=0;
-        llOwnerSay("Applying the "+style+" theme...");
+       // llOwnerSay("Applying the "+style+" theme...");
         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
     }
 }
 
 DefinePosition() {
-    if (!llGetAttached()) return;
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iSPosition) {
+    if (iPosition != g_iSPosition) {     
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z ;
         if (iPosition==2||iPosition==5) offset.y = -offset.y ;
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
-
-    if (g_iHidden) { 
+    if (g_iHidden)  // -- Fixes Issue 615: HUD forgets hide setting on relog.
         llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
-    } else {
+    else {
         vector size = llGetScale();
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
         if (iPosition == 1 || iPosition == 4) g_iLayout = 0;
+
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
 }
@@ -227,17 +226,6 @@ DoButtonOrder() {   // -- Set the button order and reset display
     DefinePosition();
 }
 
-DoReset() {   // -- Reset the entire HUD back to default
-    integer i = llGetInventoryNumber(INVENTORY_SCRIPT) -1;
-    string sScript;
-    do {
-        sScript = llGetInventoryName(INVENTORY_SCRIPT,i);
-        if (sScript != llGetScriptName() && sScript != "")
-            llResetOtherScript(sScript);
-    } while (--i > 0);
-
-    llResetScript();
-}
 
 DoMenu(string sMenu) {
 
@@ -255,16 +243,6 @@ DoMenu(string sMenu) {
         if (g_iColumn > 2) g_iColumn = 0;
         DefinePosition();
         sMenu = g_sHudMenu;
-    }
-
-    if (sMenu == "RESET") {
-        sPrompt = "\nConfirm reset of the entire HUD.\n\n";
-        sPrompt += "!!!!!! W A R N I N G !!!!!!";
-        sPrompt += "\nAll Subs not saved in '.partners' notecard will be removed from Subs list!\n";
-        sPrompt += "\nAre You sure?";
-        lButtons = ["Confirm","Cancel"];
-        sMenu = g_sHudMenu;
-        lUtils = [];
     }
     else if (sMenu == g_sTextureMenu) { // textures
         if (g_iThemesReady) {
@@ -286,13 +264,7 @@ DoMenu(string sMenu) {
             integer pos = llList2Integer(g_lPrimOrder,i);
             lButtons += llList2List(g_lButtons,pos,pos);
         }
-        lUtils = ["RESET",UPMENU];
-    }
-    else if (sMenu == g_sTintMenu) { // Tint
-        sPrompt = "\nSelect the color you wish to tint the HUD.\n";
-        sPrompt += "If you don't see a color you enjoy, simply edit\n";
-        sPrompt += "and select a color under the menu you wish.\n";
-        lButtons = ["colormenu please"];
+        lUtils = ["Reset",UPMENU];
     }
     else if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
@@ -304,9 +276,8 @@ DoMenu(string sMenu) {
         if (g_iColumn==1) lButtons += ["Column >"];
         if (g_iColumn==0) lButtons += ["Line >"];
 
-        lButtons += ["RESET",g_sOrderMenu];
+        lButtons += ["Reset",g_sOrderMenu];
         if (g_kStylesCardUUID) lButtons += [g_sTextureMenu];
-        lButtons += [g_sTintMenu];
     }
     g_sCurrentMenu = sMenu;
     g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, lUtils, 0);
@@ -317,16 +288,8 @@ OrderButton(string sButton)
     g_sCurrentMenu = g_sOrderMenu;
     list lButtons;
     string sPrompt;
-
-    if (sButton == "RESET") {
-        sPrompt = "\nConfirm reset of the button order to default.\n\n";
-        lButtons = ["Confirm","Cancel"];
-        g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, [], 0);
-        return;
-    } else {
-        integer iTemp = llListFindList(g_lButtons,[sButton]);
-        g_iOldPos = llListFindList(g_lPrimOrder, [iTemp]);
-    }
+    integer iTemp = llListFindList(g_lButtons,[sButton]);
+    g_iOldPos = llListFindList(g_lPrimOrder, [iTemp]);
 
     sPrompt = "\nSelect the new position for swap with "+sButton+"\n\n";
     integer i;
@@ -343,11 +306,13 @@ default
 {
     state_entry() {
         //llSleep(1.0);
+        g_iFistStart = TRUE;
         FindButtons(); // collect buttons names
         BuildStylesList();
         DefinePosition();
-        llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
+       // llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
+        DoStyle(llList2String(g_lStyles,0));
     }
 
     attach(key kAttached) {
@@ -379,35 +344,29 @@ default
                 if (sButton == UPMENU) {
                     llMessageLinked(LINK_SET, SUBMENU, g_sParentMenu, kID);
                     return;
-                } else if (sButton == "Confirm") DoReset();
-                else if (sButton == "Cancel") g_sCurrentMenu = g_sHudMenu;
+                } else if (sButton == "Reset") {
+                    llOwnerSay("Resetting the HUD-Style to the default.");
+                    llResetScript();
+                } else if (sButton == "Cancel") g_sCurrentMenu = g_sHudMenu;
                 else g_sCurrentMenu = sButton;
             } else if (g_sCurrentMenu == g_sTextureMenu) {// -- Inside the 'Texture' menu, or 'submenu1'
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
-                else if (sButton == g_sTintMenu) g_sCurrentMenu = g_sTintMenu;
                 else {
                     DoStyle(sButton);
                     return;
                 }
             } else if (g_sCurrentMenu == g_sOrderMenu) {
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
-                else if (sButton == "Confirm") {
+                else if (sButton == "Reset") {
                     FindButtons();
                     llOwnerSay("Order position reset to default.");
                     DefinePosition();
-                } else if (sButton == "Cancel") g_sCurrentMenu = g_sOrderMenu;
-                else if (llSubStringIndex(sButton,":") >= 0) { // Jess's nifty parsing trick for the menus
+                } else if (llSubStringIndex(sButton,":") >= 0) { // Jess's nifty parsing trick for the menus
                     g_iNewPos = llList2Integer(llParseString2List(sButton,[":"],[]),1);
                     DoButtonOrder();
                 } else {
                     OrderButton(sButton);
                     return;
-                }
-            } else if (g_sCurrentMenu == g_sTintMenu) {
-                if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
-                else if ((vector)sButton) {
-                    g_vColor = (vector)sButton;
-                    llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
                 }
             }
             DoMenu(g_sCurrentMenu);
@@ -441,8 +400,9 @@ default
                             g_sStylesNotecardReadType="processing";
                             g_sCurrentTheme = sData;
                         } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
-                            llOwnerSay("Applied!");
-                            DoMenu(g_sTextureMenu);
+                           // llOwnerSay("Applied!");
+                            if (!g_iFistStart) DoMenu(g_sTextureMenu);
+                            g_iFistStart = FALSE;
                             return;
                         }
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
@@ -454,8 +414,12 @@ default
                             integer link = llListFindList(g_lButtons,[sButton]);
                             if (link > 0) {
                                 sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-                                if (sData != "" && sData != ",")
-                                    llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0, PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
+                                if (sData != "" && sData != ",") {
+                                    if (sButton == "Picture") 
+                                        llMessageLinked(LINK_SET, 111, sData, "");
+                                    else 
+                                        llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0, PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
+                                }
                             }
                         }
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
@@ -463,9 +427,15 @@ default
                 } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
             } else {
                 if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
-                    llOwnerSay("Applied!");
-                    DoMenu(g_sTextureMenu);
+                   // llOwnerSay("Applied!");
+                    if (!g_iFistStart) {
+                        DoMenu(g_sTextureMenu);
+                        g_iFistStart = FALSE;
+                    }
                 } else {
+                    if (g_iFistStart) {
+                        DoStyle(llList2String(g_lStyles,0));
+                    }
                     g_iThemesReady = TRUE;
                 }
             }
