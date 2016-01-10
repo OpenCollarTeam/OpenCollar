@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160106.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160110.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,13 +53,15 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160105.1";
-string g_sFancyVersion = "¹⁶⁰¹⁰⁵⋅¹";
+string g_sVersion = "160109.2";
+string g_sFancyVersion = "¹⁶⁰¹⁰⁸⋅¹";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
-list g_lPartners = [];
+list g_lPartners;
 list g_lNewPartnerIDs;
+list g_lPartnersInSim; 
+string g_sActivePartnerID = "ALL"; //either an UUID or "ALL"
 
 //  list of hud channel handles we are listening for, for building lists
 list g_lListeners;
@@ -79,8 +81,12 @@ integer g_iChannel = 7;
 key g_kUpdater;
 integer g_iUpdateChan = -7483210;
 
-//  save cmd here while we give the sub menu to decide who to send it to
-string g_sPendingCmd;
+integer g_iHidden;
+integer g_iPicturePrim;
+string g_sPictureID;
+key g_kPicRequest;
+string g_sMetaFind = "<meta name=\"imageid\" content=\"";
+string g_sTextureALL;
 
 //  MESSAGE MAP
 integer CMD_TOUCH            = 100;
@@ -102,7 +108,7 @@ string g_sRemovePartner = "Remove";
 string g_sAllPartners = "ALL";
 string g_sAddPartners = "Add";
 
-list g_lMainMenuButtons = [g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
+list g_lMainMenuButtons = [" ◄ ","ALL"," ► ",g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
 
 list g_lMenus ;
 
@@ -115,9 +121,7 @@ string g_sMenuType;
 
 integer g_iScanRange        = 20;
 integer g_iRLVRelayChannel  = -1812221819;
-integer g_iCageChannel      = -987654321;
-list    g_lCageVictims;
-key     g_kVictimID;
+integer g_iRezChannel      = -987654321;
 string  g_sRezObject;
 
 
@@ -133,11 +137,13 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
-string NameURI(key kID) {
-    return "secondlife:///app/agent/"+(string)kID+"/about";
+string NameURI(string sID) {
+    if ((key)sID)
+        return "secondlife:///app/agent/"+sID+"/about";
+    else return sID;
 }
 
-integer getPersonalChannel(key kID) {
+integer PersonalChannel(key kID) {
     integer iChan = -llAbs((integer)("0x"+llGetSubString((string)kID,2,7)) + 1111);
     if (iChan > -10000) iChan -= 30000;
     return iChan;
@@ -153,41 +159,46 @@ integer InSim(key kID) {
     return (llGetAgentSize(kID) != ZERO_VECTOR);
 }
 
-SendCmd(key kID, string sCmd) {
-    if (InSim(kID)) {
-        llRegionSayTo(kID,getPersonalChannel(kID), (string)kID + ":" + sCmd);
-    } else {
-        llOwnerSay(NameURI(kID)+" is not in this region.");
-        //PickPartnerMenu(sCmd);
+list PartnersInSim() {
+    list lTemp;
+    integer i = llGetListLength(g_lPartners);
+    do {
+        string sTemp = llList2String(g_lPartners,--i);
+        if (InSim(sTemp))
+            lTemp += sTemp;
+    } while (i);
+    return ["ALL"]+lTemp;
+}
+
+SendCollarCommand(string sCmd) {
+    if ((key)g_sActivePartnerID)
+        llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID), g_sActivePartnerID+":"+sCmd);
+    else if (g_sActivePartnerID == "ALL") {
+        integer i = llGetListLength(g_lPartnersInSim);
+        do {
+            string sPartnerID = llList2String(g_lPartnersInSim,--i);
+            llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID),sPartnerID+":"+sCmd);
+        } while (i);
     }
 }
 
-SendAllCmd(string sCmd) {
-    integer i;
-    for (; i < llGetListLength(g_lPartners); i++) {
-        key kID = (key)llList2String(g_lPartners, i);
-        if (kID != g_kOwner && InSim(kID)) //Don't expose out-of-sim partners
-            SendCmd(kID, sCmd);
+AddPartner(string sID) {
+    if (~llListFindList(g_lPartners,[sID])) return;
+    if ((key)sID != NULL_KEY) {//don't register any unrecognised
+        g_lPartners+=[sID];//Well we got here so lets add them to the list.
+        llOwnerSay("\n\n"+NameURI(sID)+" has been registered.\n");//Tell the owner we made it.
     }
 }
 
-AddPartner(key kID) {
-    if (~llListFindList(g_lPartners,[kID])) return;
-    if (kID != NULL_KEY) {//don't register any unrecognised
-        g_lPartners+=[kID];//Well we got here so lets add them to the list.
-        llOwnerSay("\n\n"+NameURI(kID)+" has been registered.\n");//Tell the owner we made it.
-    }
-}
-
-RemovePartner(key kID) {
-    integer index = llListFindList(g_lPartners,[kID]);
+RemovePartner(string sID) {
+    integer index = llListFindList(g_lPartners,[sID]);
     if (~index) {
         g_lPartners=llDeleteSubList(g_lPartners,index,index);
-        if (InSim(kID)) {
-            SendCmd(kID, "rm owner "+(string)g_kOwner); // 4.0 command
-            SendCmd(kID, "rm trust "+(string)g_kOwner); // 4.0 command
+        if (InSim(sID)) {
+            llRegionSayTo(sID,PersonalChannel(sID),sID+":rm owner");
+            llRegionSayTo(sID,PersonalChannel(sID),sID+":rm trust");
         }
-        llOwnerSay(NameURI(kID)+" has been removed from your Owner HUD.");
+        llOwnerSay(NameURI(sID)+" has been removed from your Reomte HUD.");
     }
 }
 
@@ -200,25 +211,14 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 
 MainMenu(){
     string sPrompt = "\n[http://www.opencollar.at/remote.html OpenCollar Remote] "+g_sFancyVersion;
+    sPrompt += "\n\nActive Partner:\n\t"+NameURI(g_sActivePartnerID);
     if (g_iUpdateAvailable) sPrompt += "\n\nThere is an update available @ [http://maps.secondlife.com/secondlife/Boulevard/50/211/23 The Temple]";
     list lButtons = g_lMainMenuButtons + g_lMenus;
     Dialog(g_kOwner, sPrompt, lButtons, [], 0, g_sMainMenu);
 }
 
 RezzerMenu() {
-    Dialog(g_kOwner, "\nMake your choice!\n\nWhen done you will be presented with a list of avatars who can be sat on the thingy.", BuildObjectList(),["BACK"],0,"RezzerMenu");
-}
-
-PickPartnerMenu(string sCmd) { // Multi-page menu
-    string sPrompt = "\nWho will receive the \""+sCmd+"\" command?";
-    list lButtons;
-    integer i;
-    for (; i < llGetListLength(g_lPartners); i++) {
-        if (InSim(llList2Key(g_lPartners,i))) //only show partners you can give commands to
-            lButtons += [llList2String(g_lPartners, i)];
-    }
-    if (!llGetListLength(lButtons)) lButtons = ["-"];
-    Dialog(g_kOwner, sPrompt, lButtons, [g_sAllPartners,UPMENU], -1,"PickPartnerMenu");
+    Dialog(g_kOwner, "\nMake your choice!\n\nChoosen Partner for this Object will be:\n\t"+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
 }
 
 RemovePartnerMenu() {
@@ -228,31 +228,6 @@ RemovePartnerMenu() {
 ConfirmPartnerRemove(key kID) {
     string sPrompt = "\nAre you sure you want to remove "+NameURI(kID)+"?\n\nNOTE: This will also revoke your access rights.";
     Dialog(g_kOwner, sPrompt, ["Yes", "No"], [UPMENU], 0,"RemovePartnerMenu");
-}
-
-PickPartnerCmd(string sCmd) {
-    integer iLength = llGetListLength(g_lPartners);
-    if (!iLength) {
-        llOwnerSay("\n\nAdd someone first! I'm not currently managing anyone.\n\nwww.opencollar.at/remote\n");
-        return;
-    }
-    list lNearbyPartners;
-    integer i;
-    while (i < iLength) {
-        key kTemp = llList2Key(g_lPartners,i);
-        if (InSim(kTemp))
-            lNearbyPartners += kTemp;
-        i++;
-    }
-    iLength = llGetListLength(lNearbyPartners);
-    if (iLength > 1) {
-        g_sPendingCmd = sCmd;
-        PickPartnerMenu(sCmd);
-    } else if (iLength == 1) {
-        SendCmd(llList2Key(lNearbyPartners,0), sCmd);
-    } else
-        llOwnerSay("\n\nNone of your partners are nearby.\n");
-    lNearbyPartners = [];
 }
 
 AddPartnerMenu() {
@@ -265,11 +240,6 @@ AddPartnerMenu() {
         lButtons += llList2Key(g_lNewPartnerIDs,index);
     } while (++index < llGetListLength(g_lNewPartnerIDs));
     Dialog(g_kOwner, sPrompt, lButtons, ["ALL",UPMENU], -1,"AddPartnerMenu");
-}
-
-RezMenu() {
-    string sPrompt = "\nHere is a list of avatars with active RLV relays.\n\nNOTE: If a relay with \"ask mode\" is used they will still have to confirm to be captured.";
-    Dialog(g_kOwner, sPrompt, g_lCageVictims, [UPMENU], -1,"RezMenu");
 }
 
 StartUpdate() {
@@ -286,6 +256,30 @@ list BuildObjectList() {
     return lRezObjects;
 }
 
+NextPartner(integer iDirection, integer iTouch) {
+    g_lPartnersInSim = PartnersInSim();
+    if (iDirection) {
+        integer index = llListFindList(g_lPartnersInSim,[g_sActivePartnerID])+iDirection;
+        if (index >= llGetListLength(g_lPartnersInSim)) index = 0;
+        else if (index < 0) index = llGetListLength(g_lPartnersInSim)-1;
+        g_sActivePartnerID = llList2String(g_lPartnersInSim,index);
+    } else g_sActivePartnerID = "ALL";
+    if ((key)g_sActivePartnerID)
+        g_kPicRequest = llHTTPRequest("http://world.secondlife.com/resident/"+g_sActivePartnerID,[HTTP_METHOD,"GET"],"");
+    else if (g_sActivePartnerID == "ALL")
+        if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
+    if(iTouch) llOwnerSay("New Active Partner is "+NameURI(g_sActivePartnerID));
+}
+
+integer PicturePrim() {
+    integer i = llGetNumberOfPrims();
+    do {
+        if (~llSubStringIndex((string)llGetLinkPrimitiveParams(i, [PRIM_DESC]),"Picture"))
+            return i;
+    } while (--i>1);
+    return 0;
+}
+
 default {
     state_entry() {
         g_kOwner = llGetOwner();
@@ -295,12 +289,13 @@ default {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
             g_kCardID = llGetInventoryKey(g_sCard);
         }
-        g_iListener=llListen(getPersonalChannel(g_kOwner),"",NULL_KEY,""); //lets listen here
+        g_iListener=llListen(PersonalChannel(g_kOwner),"",NULL_KEY,""); //lets listen here
         SetCmdListener();
-
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
+        g_iPicturePrim = PicturePrim();
         //Debug("started.");
     }
+    
     on_rez(integer iStart) {
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~remote", [HTTP_METHOD, "GET"],"");
     }
@@ -313,11 +308,12 @@ default {
         }
         if (kID == g_kOwner) {
 //          I made the root prim the "menu" prim, and the button action default to "menu."
-            string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
-            if (llSubStringIndex(sButton,"remote")>=0)
+            string sButton = (string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]);
+            if (~llSubStringIndex(sButton,"remote"))
                 llMessageLinked(LINK_SET, CMD_TOUCH,"hide","");
             else if (sButton == "Menu") MainMenu();
-            else PickPartnerCmd(llToLower(sButton));
+            else if (~llSubStringIndex(sButton,"Picture")) NextPartner(1,TRUE);
+            else SendCollarCommand(llToLower(sButton));
         }
     }
 
@@ -338,7 +334,7 @@ default {
             else if (llToLower(sMessage) == "help")
                 llOwnerSay("\n\nThe manual page can be found [http://www.opencollar.at/remote.html here].\n");
             else if (sMessage == "reset") llResetScript();
-        } else if (iChannel == getPersonalChannel(g_kOwner) && llGetOwnerKey(kID) == g_kOwner) {
+        } else if (iChannel == PersonalChannel(g_kOwner) && llGetOwnerKey(kID) == g_kOwner) {
             if (sMessage == "-.. --- / .... ..- -..") {
                 g_kUpdater = kID;
                 Dialog(g_kOwner, "\nINSTALLATION REQUEST PENDING:\n\nAn update or app installer is requesting permission to continue. Installation progress can be observed above the installer box and it will also tell you when it's done.\n\nShall we continue and start with the installation?", ["Yes","No"], ["Cancel"], 0, "UpdateConfirmMenu");
@@ -346,10 +342,7 @@ default {
         } else if (llGetSubString(sMessage, 36, 40)==":pong") {
             if (!~llListFindList(g_lNewPartnerIDs, [llGetOwnerKey(kID)]) && !~llListFindList(g_lPartners, [llGetOwnerKey(kID)]))
                 g_lNewPartnerIDs += [llGetOwnerKey(kID)];
-        } else if (iChannel == g_iRLVRelayChannel && llGetSubString(sMessage,0,6) == "locator") {
-            if (!~llListFindList(g_lCageVictims, [llGetOwnerKey(kID)])) //prevents double names of avis with more than 1 relay active
-                g_lCageVictims += [llGetOwnerKey(kID)];
-        }
+        } 
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -363,15 +356,18 @@ default {
             lParams = [];
         }
         else if (iNum == SUBMENU && sStr == "Main") MainMenu();
-        else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
-            list    lParams = llParseString2List(sStr, ["|"], []);
-            string  sMessage    = llList2String(lParams, 1);
+        else if (iNum == 111) {
+            g_sTextureALL = sStr;
+            if (g_sActivePartnerID == "ALL") 
+                llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
+        } else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
+            list lParams = llParseString2List(sStr, ["|"], []);
+            string sMessage = llList2String(lParams, 1);
             integer i;
             if (g_sMenuType == "Main") {
-                if (sMessage == "Collar Menu") PickPartnerCmd("menu");
+                if (sMessage == "Collar Menu") SendCollarCommand("menu");
                 else if (sMessage == "Rez") RezzerMenu();
                 else if (sMessage == g_sRemovePartner) RemovePartnerMenu();
-                else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
                 else if (sMessage == g_sListPartners) { //Lets List out partners
                     //list lTemp;
                     string sText ="\nI'm currently managing:\n";
@@ -397,18 +393,28 @@ default {
                      integer iChannel;
                      for (i=0; i < llGetListLength(lAgents); ++i) {//build a list of who to scan
                         kID = llList2Key(lAgents,i);
-                        if (kID != g_kOwner) {
+                        if (kID != g_kOwner && llListFindList(g_lPartners,[(string)kID]) == -1) {
                             if (llGetListLength(g_lListeners) < 60) { // lets not cause "too many listen" error
-                                iChannel = getPersonalChannel(kID);
+                                iChannel = PersonalChannel(kID);
                                 g_lListeners += [llListen(iChannel, "", "", "" )] ;
                                 llRegionSayTo(kID, iChannel, (string)kID+":ping");
                             }
                         }
                     }
                     llSetTimerEvent(2.0);
-                } else PickPartnerCmd(llToLower(sMessage));
+                } else if (sMessage == " ◄ ") {
+                    NextPartner(-1,FALSE);
+                    MainMenu();
+                } else if (sMessage == " ► ") {
+                    NextPartner(1,FALSE);
+                    MainMenu();
+                } else if (sMessage == "ALL") {
+                    g_sActivePartnerID = "ALL";
+                    NextPartner(0,FALSE);
+                    MainMenu(); 
+                } else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
             } else if (g_sMenuType == "RemovePartnerMenu") {
-                integer index = llListFindList(g_lPartners, [(key)sMessage]);
+                integer index = llListFindList(g_lPartners, [sMessage]);
                 if (sMessage == UPMENU) MainMenu();
                 else if (sMessage == "Yes") {
                     RemovePartner(g_kRemovedPartnerID);
@@ -418,11 +424,6 @@ default {
                     g_kRemovedPartnerID = (key)llList2String(g_lPartners, index);
                     ConfirmPartnerRemove(g_kRemovedPartnerID);
                 }
-            } else if (g_sMenuType == "PickPartnerMenu") {
-                integer index = llListFindList(g_lPartners, [(key)sMessage]);
-                if (sMessage == UPMENU) MainMenu();
-                else if (sMessage == g_sAllPartners) SendAllCmd(g_sPendingCmd);
-                else if (~index) SendCmd(llList2Key(g_lPartners, index), g_sPendingCmd);
             } else if (g_sMenuType == "UpdateConfirmMenu") {
                 if (sMessage=="Yes") StartUpdate();
                 else {
@@ -433,21 +434,9 @@ default {
                     if (sMessage == UPMENU) MainMenu();
                     else { 
                         g_sRezObject = sMessage;
-                        llOwnerSay("Scanning for possible \"victims\" within "+(string)g_iScanRange+"m with RLV Relay to sit on your "+g_sRezObject);
-                        llSensor("","",AGENT,g_iScanRange,PI);
+                        if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT)
+                            llRezObject(g_sRezObject,llGetPos() + <2, 2, 0>, ZERO_VECTOR, llGetRot(), 0);
                     }
-                } else if (g_sMenuType == "RezMenu") {
-                if (sMessage == UPMENU) {
-                    MainMenu();
-                    g_lCageVictims = [];
-                    return;
-                } else {
-                    g_kVictimID = (key)sMessage;
-                    if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT)
-                        llRezObject(g_sRezObject,llGetPos() + <3, 3, 1>, ZERO_VECTOR, llGetRot(), 0);
-                    else llOwnerSay("\n\nUnable to perform action:\n\nYou do not have any items loaded in your remote.\n");
-                    g_lCageVictims = [];
-                }
             } else if (g_sMenuType == "AddPartnerMenu") {
                 if (sMessage == "ALL") {
                     i=0;
@@ -464,24 +453,10 @@ default {
         }
     }
 
-    sensor(integer iNumber) {
-        g_lCageVictims = [];
-        g_lListeners += [llListen(g_iRLVRelayChannel,"","","")];
-        integer i;
-        do {
-            llRegionSayTo(llDetectedKey(i),g_iRLVRelayChannel,"locator,"+(string)llDetectedKey(i)+",!version");
-        } while (++i < iNumber);
-        llSetTimerEvent(2.0);
-    }
-    no_sensor(){
-        llOwnerSay("nobody found");
-    }
-
 //  clear things after ping
     timer() {
         //Debug ("timer expired" + (string)llGetListLength(g_lCageVictims));
-        if (llGetListLength(g_lCageVictims)) RezMenu();
-        else if (llGetListLength(g_lNewPartnerIDs)) AddPartnerMenu();
+        if (llGetListLength(g_lNewPartnerIDs)) AddPartnerMenu();
         else llOwnerSay("No one is not found");
         llSetTimerEvent(0);
         integer n = llGetListLength(g_lListeners);
@@ -497,12 +472,7 @@ default {
                 return;
             } else if (sData != "") {//  if we are not working with a blank line
                 if (llSubStringIndex(sData, "#")) {//  if the line does not begin with a comment
-                    integer index = llSubStringIndex(sData, "=");//  find first equal sign
-                    if (~index) {//  if line contains equal sign
-                        string sName = llToLower(llStringTrim(llGetSubString(sData, 0, index - 1),STRING_TRIM));
-                        string sValue = llStringTrim(llGetSubString(sData, index + 1, -1),STRING_TRIM);
-                        if (sName == "id") AddPartner((key)sValue);
-                    }
+                    if ((key)sData) AddPartner(sData);
                 }
             }
             g_kLineID = llGetNotecardLine(g_sCard, ++g_iLineNr);//  read the next line
@@ -513,14 +483,20 @@ default {
         if (kRequestID == g_kWebLookup && iStatus == 200)  {
             if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
+        } else if (kRequestID == g_kPicRequest) {
+            integer iMetaPos =  llSubStringIndex(sBody, g_sMetaFind) + llStringLength(g_sMetaFind);
+            if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES,  llGetSubString(sBody, iMetaPos, iMetaPos + 35),<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         }
     }
     
     object_rez(key kID) {
         llSleep(0.5); // make sure object is rezzed and listens
-        llRegionSayTo(kID,g_iCageChannel,"fetch"+(string)g_kVictimID);
+        if (g_sActivePartnerID == "ALL") 
+            llRegionSayTo(kID,g_iRezChannel,llDumpList2String(PartnersInSim(),","));
+        else 
+            llRegionSayTo(kID,g_iRezChannel,g_sActivePartnerID);
     }
-
+    
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryKey(g_sCard) != g_kCardID) {
