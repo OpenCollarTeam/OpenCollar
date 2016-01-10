@@ -266,7 +266,7 @@ DoMenu(string sMenu) {
         }
         lUtils = ["Reset",UPMENU];
     }
-    else if (sMenu == g_sHudMenu) { // Main
+    if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
 
         if (g_iLayout) lButtons = ["Vertical >"];
