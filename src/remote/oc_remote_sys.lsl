@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160111.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160112.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,7 +53,7 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160111.1";
+string g_sVersion = "160112.1";
 string g_sFancyVersion = "¹⁶⁰¹⁰⁸⋅¹";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
@@ -136,9 +136,8 @@ string NameURI(string sID) {
     else return sID; //this way we can use the function also for "ALL" and dont need a special case for that everytime
 }
 
-integer PersonalChannel(key kID, integer iOffset) {
-    integer iChan = -llAbs((integer)("0x"+llGetSubString((string)kID,2,7)) + iOffset);
-    if (iChan > -10000) iChan -= 30000;
+integer PersonalChannel(string sID, integer iOffset) {
+    integer iChan = -llAbs((integer)("0x"+llGetSubString(sID,-7,-1)) + iOffset);
     return iChan;
 }
 
@@ -160,12 +159,12 @@ list PartnersInSim() {
 
 SendCollarCommand(string sCmd) {
     if ((key)g_sActivePartnerID)
-        llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,1111), g_sActivePartnerID+":"+sCmd);
+        llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
     else if (g_sActivePartnerID == g_sAllPartners) {
         integer i = llGetListLength(g_lPartnersInSim);
          while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
             string sPartnerID = llList2String(g_lPartnersInSim,--i);
-            llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,1111),sPartnerID+":"+sCmd);
+            llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
         }
     }
 }
@@ -183,8 +182,8 @@ RemovePartner(string sID) {
     if (~index) {
         g_lPartners=llDeleteSubList(g_lPartners,index,index);
         if (InSim(sID)) {
-            llRegionSayTo(sID,PersonalChannel(sID,1111),sID+":rm owner");
-            llRegionSayTo(sID,PersonalChannel(sID,1111),sID+":rm trust");
+            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm owner");
+            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm trust");
         }
         llOwnerSay(NameURI(sID)+" has been removed from your Reomte HUD.");
     }
@@ -262,7 +261,7 @@ default {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
             g_kCardID = llGetInventoryKey(g_sCard);
         }
-        g_iListener=llListen(PersonalChannel(g_kOwner,1111),"","",""); //lets listen here
+        g_iListener=llListen(PersonalChannel(g_kOwner,0),"","",""); //lets listen here
         g_iCmdListener = llListen(g_iChannel,"",g_kOwner,"");
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         g_iPicturePrim = PicturePrim();
@@ -303,7 +302,7 @@ default {
             else if (llToLower(sMessage) == "help")
                 llOwnerSay("\n\nThe manual page can be found [http://www.opencollar.at/remote.html here].\n");
             else if (sMessage == "reset") llResetScript();
-        } else if (iChannel == PersonalChannel(g_kOwner,1111) && llGetOwnerKey(kID) == g_kOwner) {
+        } else if (iChannel == PersonalChannel(g_kOwner,0) && llGetOwnerKey(kID) == g_kOwner) {
             if (sMessage == "-.. --- / .... ..- -..") {
                 g_kUpdater = kID;
                 Dialog(g_kOwner, "\nINSTALLATION REQUEST PENDING:\n\nAn update or app installer is requesting permission to continue. Installation progress can be observed above the installer box and it will also tell you when it's done.\n\nShall we continue and start with the installation?", ["Yes","No"], ["Cancel"], 0, "UpdateConfirmMenu");
@@ -365,7 +364,7 @@ default {
                         kID = llList2Key(lAgents,--i);
                         if (kID != g_kOwner && !~llListFindList(g_lPartners,[(string)kID])) {
                             if (llGetListLength(g_lListeners) < 60) {//Only 65 listens can simultaneously be open in any single script (SL wiki)
-                                iChannel = PersonalChannel(kID,1111);
+                                iChannel = PersonalChannel(kID,0);
                                 g_lListeners += [llListen(iChannel, "", "", "" )] ;
                                 llRegionSayTo(kID, iChannel, (string)kID+":ping");
                             } else i=0;
