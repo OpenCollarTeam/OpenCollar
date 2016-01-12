@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 151024.1                            //
+//                          Bookmarks - 160112.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -58,6 +58,7 @@ string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
+integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 key webLookup;
 
@@ -102,6 +103,7 @@ integer REBOOT                     = -1000;
 integer LINK_DIALOG                = 3;
 integer LINK_RLV                   = 4;
 integer LINK_SAVE                  = 5;
+integer LINK_UPDATE                = -10;
 integer LM_SETTING_SAVE            = 2000;
 integer LM_SETTING_RESPONSE        = 2002;
 integer LM_SETTING_DELETE          = 2003;
@@ -353,7 +355,7 @@ ReadDestinations() {  // On inventory change, re-read our ~destinations notecard
     key kAv;
    // webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks",
        //[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards
@@ -403,7 +405,7 @@ default {
     on_rez(integer iStart) {
         ReadDestinations();
     }
-
+    
     state_entry() {
         g_kWearer = llGetOwner();  // store key of wearer
         ReadDestinations(); //Grab our presets
@@ -547,6 +549,10 @@ default {
                 } else if(~llListFindList(g_lDestinations + g_lVolatile_Destinations, [sMessage]))
                     UserCommand(iAuth, PLUGIN_CHAT_CMD + " " + sMessage, kAv);
             }
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs

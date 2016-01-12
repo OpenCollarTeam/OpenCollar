@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//          Resizer - 151007.1           .*' /  .*' ; .*`- +'  `*'          //
+//          Resizer - 160112.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -103,6 +103,7 @@ integer NOTIFY = 1002;
 //integer LM_SETTING_EMPTY = 2004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
+integer LINK_UPDATE = -10;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
@@ -431,7 +432,8 @@ default {
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
             }
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == LINK_UPDATE && sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     timer() {

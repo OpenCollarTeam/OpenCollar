@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 151117.1                            //
+//                         RLV System - 160112.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -88,10 +88,11 @@ integer CMD_RELAY_SAFEWORD = 511;
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
 integer LINK_DIALOG = 3;
+integer LINK_SAVE = 5;
+integer LINK_UPDATE = -10;
 integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
-integer LINK_SAVE = 5;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -378,17 +379,20 @@ default {
         g_iViewerCheck=FALSE;
         g_iRLVOn=FALSE;
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
+        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
     }
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+        //llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+        //llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         //Debug("Starting");
         g_iLEDLink = llGetLinkNumber();
+        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -511,7 +515,13 @@ default {
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript(); 
-        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
+        else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_SAVE") {
+                LINK_SAVE = iSender;
+                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+            } else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
+        } else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
         else if (g_iRlvActive) {
             llSetLinkPrimitiveParamsFast(g_iLEDLink,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
@@ -632,12 +642,10 @@ default {
             }
         }
     }
-    changed(integer change) {
-        if (change & CHANGED_OWNER) {
-            llResetScript();
-        }
+    changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) llResetScript();
         //re make rlv restrictions after teleport or region change, because SL seems to be losing them
-        if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {   //if we teleported, or changed regions
+        if (iChange & CHANGED_TELEPORT || iChange & CHANGED_REGION) {   //if we teleported, or changed regions
             //re make rlv restrictions after teleport or region change, because SL seems to be losing them
             integer numBaked=llGetListLength(g_lBaked);
             while (numBaked--){

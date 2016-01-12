@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 151115.1                             //
+//                          Settings - 160112.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -89,6 +89,7 @@ integer LM_SETTING_EMPTY = 2004;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer LINK_DIALOG = 3;
+integer LINK_UPDATE = -10;
 integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
@@ -297,6 +298,7 @@ default {
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
         g_iLineNr = 0;
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -307,6 +309,7 @@ default {
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
             llSleep(0.5); // brief wait for others to reset
+            llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
             SendValues();
         } else llResetScript();
     }
@@ -375,7 +378,7 @@ default {
         }
     }
 
-    link_message(integer iLink, integer iNum, string sStr, key kID) {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || kID == g_kWearer) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
             //save the token, value
@@ -401,8 +404,11 @@ default {
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
-            llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-        } else if (iNum == INTEGRITY) llMessageLinked(iLink,iNum,llGetScriptName(),"");
+            llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
+        } else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     timer() {

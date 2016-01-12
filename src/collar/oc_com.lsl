@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 151129.2                          //
+//                         Communicator - 160112.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -85,6 +85,7 @@ integer NOTIFY_OWNERS=1003;
 integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
 integer LINK_SAVE = 5;
+integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
@@ -355,8 +356,9 @@ default {
         g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
         //inlined single use getOwnerChannel function
-        g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
-        if (g_iHUDChan > -10000) g_iHUDChan -= 30000;
+       // g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
+       // if (g_iHUDChan > -10000) g_iHUDChan -= 30000;
+        g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,-7,-1)));
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iPublicListener = llListen(0, "", NULL_KEY, "");
@@ -488,6 +490,10 @@ default {
             ClearUser(kRCPT, TRUE);
             g_lTouchRequests += [kID, kRCPT, iFlags, iAuth];
             if (g_iNeedsPose) llStartAnimation(g_sPOSE_ANIM);
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
+            else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == TOUCH_CANCEL) {
             integer iIndex = llListFindList(g_lTouchRequests, [kID]);
             if (~iIndex) {

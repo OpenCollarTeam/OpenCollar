@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160103.2                             //
+//                          Animator - 160112.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -106,6 +106,7 @@ integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
+integer LINK_UPDATE = -10;
 integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
@@ -468,6 +469,7 @@ default {
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
+        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
         //Debug("Starting");
     }
 
@@ -496,12 +498,12 @@ default {
         else llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS);
     }
 
-    link_message(integer iLink, integer iNum, string sStr, key kID) {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == ANIM_START) StartAnim(sStr);
         else if (iNum == ANIM_STOP) StopAnim(sStr);
         else if (iNum == MENUNAME_REQUEST && sStr == "Main") {
-            llMessageLinked(iLink, MENUNAME_RESPONSE, "Main|Animations", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, "Main|Animations", "");
             llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Animations", "");
         } else if (iNum == MENUNAME_RESPONSE) {
             if (llSubStringIndex(sStr, "Animations|")==0) {
@@ -518,7 +520,7 @@ default {
                 g_sCurrentPose = "";
             }
         } else if (iNum == ANIM_LIST_REQUEST)
-            llMessageLinked(iLink,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
+            llMessageLinked(iSender,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -572,23 +574,23 @@ default {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else if (sMessage == "↑") {
                         if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if ((integer)g_sHeightAdjustment > 0 && llGetInventoryType(llGetSubString(g_sCurrentPose,0,-3)+(string)((integer)g_sHeightAdjustment+1)) != INVENTORY_ANIMATION)        
+                            if (g_sHeightAdjustment == "+2") 
                                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum up.", kAv);
-                            else { 
+                            else {//if (g_sCurrentPose != "") {
                                 g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment + 1);
                                 if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
                                 else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
                                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
                                 UserCommand(iAuth, g_sCurrentPose, kAv);
-                            }  
+                            } 
                         } else if (g_sCurrentPose != "") 
                             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
                         PoseMenu(kAv, iPage, iAuth);
                     } else if (sMessage == "↓") {
                         if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if ((integer)g_sHeightAdjustment <= 0 && llGetInventoryType(llGetSubString(g_sCurrentPose,0,-3)+(string)((integer)g_sHeightAdjustment-1)) != INVENTORY_ANIMATION)        
+                            if (g_sHeightAdjustment == "-2") 
                                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum down.", kAv);
-                            else {                              
+                            else {//if (g_sCurrentPose != "") {
                                 g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment - 1);
                                 if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
                                 else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
@@ -609,8 +611,7 @@ default {
                         if (sMessage == "ON") UserCommand(iAuth, "antislide on", kAv);
                         else if (sMessage == "OFF") UserCommand(iAuth, "antislide off", kAv);
                         else if (llGetSubString(sMessage,2,-1) == "none" ) UserCommand(iAuth, "antislide none", kAv);
-                        else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) 
-                            UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
+                        else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
                         PoseMoveMenu(kAv,iNum,iAuth);
                     }
                 }
@@ -621,15 +622,19 @@ default {
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
-            llMessageLinked(iLink, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
+            llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
+            else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) llMessageLinked(iLink,iNum,llGetScriptName(),"");
+        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_TELEPORT) RefreshAnim();
-
         if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
             g_lAnimScalars = [];
             g_iLine = 0;
