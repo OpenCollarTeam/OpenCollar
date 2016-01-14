@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160110.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160114.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -84,12 +84,14 @@ list g_lAttachPoints = [
 float g_fGap = 0.001; // This is the space between buttons
 float g_Yoff = 0.002; // space between buttons and screen top/bottom border
 float g_Zoff = 0.04; // space between buttons and screen left/right border
- 
+
 // Variables
 
 vector g_vColor = <1,1,1>;
 key g_kMenuID;
 string g_sCurrentMenu;
+string g_sCurrentTheme;
+list g_lStyles;
 list g_lButtons ; // buttons names for Order menu
 list g_lPrimOrder ;
 //  List must always start with '0','1'
@@ -103,18 +105,6 @@ integer g_iOldPos;
 integer g_iNewPos;
 
 integer g_iColumn = 0;
-
-// themes
-string g_sStylesCard=".buttons";
-key g_kStylesNotecardRead;
-key g_kStylesCardUUID;
-string g_sStylesNotecardReadType;
-integer g_iStylesNotecardLine;
-string g_sCurrentTheme;
-integer g_iThemesReady;
-list g_lStyles;
-integer g_iFistStart;
-
 
 //**************************
 
@@ -165,23 +155,67 @@ PlaceTheButton(float fYoff, float fZoff) {
     }
 }
 
-BuildStylesList() {
-    g_lStyles=[];
-    if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) {
-        g_kStylesCardUUID=llGetInventoryKey(g_sStylesCard);
-        g_iStylesNotecardLine=0;
-        g_sStylesNotecardReadType="initialize";
-        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
-    } else g_kStylesCardUUID = "";
-
-}
 
 DoStyle(string style) {
-    if (~llListFindList(g_lStyles,[style])) {
-        g_sStylesNotecardReadType=style;
-        g_iStylesNotecardLine=0;
-       // llOwnerSay("Applying the "+style+" theme...");
-        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
+
+    list lTextures = [
+    "[ Dark ]",
+    "Minimize~e1482c7e-8609-fcb0-56d8-18c3c94d21c0",
+    "Menu~f3ec1052-6ec4-04ba-d752-937a4d837bf8",
+    "Picture~c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc",
+    "Bookmarks~193208ce-18e5-45f2-19ed-0ea1cbbf46ca",
+    "Outfits~3803dc3a-ef14-3ea9-f267-d2fe7e090935",
+    "Pose~3aa04a68-d1ed-dc0f-c80d-d2f9134ec630",
+    "Couples~17fc7b38-9d1e-3646-956d-85ed96a977d9",
+    "Sit~114ff31f-1887-0771-a414-7b65387fc6c0",
+    "Stand~05ff2266-08ce-4408-1488-ba2c984ff674",
+    "Leash~b0c44ba4-ec7f-8cc6-7c26-44efa4bcd89c",
+    "Unleash~7bcbf3a4-6bd4-329b-d1dc-87b422bb50cc",
+    "Yank~c3343ece-30ae-5168-0cc2-b89f670b6826",
+    "[ Light ]",
+    "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
+    "Menu~52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96",
+    "Picture~1ac086de-3201-e526-e986-2e67d9de9202",
+    "Bookmarks~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
+    "Outfits~2e1d6be8-a2ba-a7bd-244c-ce13fcd545a4",
+    "Pose~5afb4534-79a2-8763-5321-c2f3f204682b",
+    "Couples~38f0da26-b51c-477f-9071-bea17a6a3dac",
+    "Sit~4c5553b8-e3e1-f10f-8e8c-c9b3c6361954",
+    "Stand~faa9824b-414e-97d9-91a6-db4ef08ba3eb",
+    "Leash~752f586b-a110-b951-4c9e-23beb0f97d2f",
+    "Unleash~2aeecb18-8ca3-b64a-3e47-42ba5322198d",
+    "Yank~50f5c540-d0bb-00b0-ce6c-23eb7b70bfa4"
+    ];
+
+    integer i;
+    while (i < llGetListLength(lTextures)) {
+        string sData = llStringTrim(llList2String(lTextures,i),STRING_TRIM);
+        if (sData!="" && llSubStringIndex(sData,"#") != 0) {
+            if (llGetSubString(sData,0,0) == "[") {
+                sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
+                sData = llStringTrim(sData,STRING_TRIM);
+                if (style=="initialize") {  //reading notecard to determine style names
+                    g_lStyles += sData;
+                } else if (sData==style) {  //we just found our section
+                    style="processing";
+                    g_sCurrentTheme = sData;
+                } else if (style=="processing") {  //we just found the start of the next section, we're
+                    return;
+                }
+            } else if (style=="processing") {
+                list lParams = llParseStringKeepNulls(sData,["~"],[]);
+                string sButton = llStringTrim(llList2String(lParams,0),STRING_TRIM);
+                integer link = llListFindList(g_lButtons,[sButton]);
+                if (link > 0) {
+                    sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
+                    if (sData != "" && sData != ",") {
+                        if (sButton == "Picture") llMessageLinked(LINK_SET, 111, sData, "");
+                        else llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0, PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
+                    }
+                }
+            }
+        }
+        i++;
     }
 }
 
@@ -189,7 +223,7 @@ DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iSPosition) {     
+    if (iPosition != g_iSPosition) {
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z ;
         if (iPosition==2||iPosition==5) offset.y = -offset.y ;
@@ -245,15 +279,10 @@ DoMenu(string sMenu) {
         sMenu = g_sHudMenu;
     }
     else if (sMenu == g_sTextureMenu) { // textures
-        if (g_iThemesReady) {
-            sPrompt = "\nThis is the menu for styles.\n";
-            sPrompt += "Selecting one of these options will\n";
-            sPrompt += "change the color of the HUD buttons.\n";
-            lButtons = g_lStyles;
-        } else {
-            llOwnerSay("Themes still loading...");
-            sMenu = g_sHudMenu;
-        }
+        sPrompt = "\nThis is the menu for styles.\n";
+        sPrompt += "Selecting one of these options will change the theme of the HUD buttons.\n\n";
+        sPrompt += "Current Theme is: " + g_sCurrentTheme;
+        lButtons = g_lStyles;
     }
     else if (sMenu == g_sOrderMenu) { // Order
         sPrompt = "\nThis is the order menu, simply select the\n";
@@ -268,16 +297,9 @@ DoMenu(string sMenu) {
     }
     if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
-
-        if (g_iLayout) lButtons = ["Vertical >"];
-        else lButtons = ["Horizontal >"];
-
-        if (g_iColumn==2) lButtons += ["Alternate >"];
-        if (g_iColumn==1) lButtons += ["Column >"];
-        if (g_iColumn==0) lButtons += ["Line >"];
-
-        lButtons += ["Reset",g_sOrderMenu];
-        if (g_kStylesCardUUID) lButtons += [g_sTextureMenu];
+        lButtons = llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;
+        lButtons += llList2List(["Line >","Column >","Alternate >"], g_iColumn,g_iColumn) ;
+        lButtons += ["Reset",g_sOrderMenu,g_sTextureMenu];
     }
     g_sCurrentMenu = sMenu;
     g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, lUtils, 0);
@@ -306,13 +328,13 @@ default
 {
     state_entry() {
         //llSleep(1.0);
-        g_iFistStart = TRUE;
         FindButtons(); // collect buttons names
-        BuildStylesList();
         DefinePosition();
+        DoStyle("initialize");
+        DoStyle(llList2String(g_lStyles, 0));
        // llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
         llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
-        DoStyle(llList2String(g_lStyles,0));
+
     }
 
     attach(key kAttached) {
@@ -351,10 +373,7 @@ default
                 else g_sCurrentMenu = sButton;
             } else if (g_sCurrentMenu == g_sTextureMenu) {// -- Inside the 'Texture' menu, or 'submenu1'
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
-                else {
-                    DoStyle(sButton);
-                    return;
-                }
+                else DoStyle(sButton);
             } else if (g_sCurrentMenu == g_sOrderMenu) {
                 if (sButton == UPMENU) g_sCurrentMenu = g_sHudMenu;
                 else if (sButton == "Reset") {
@@ -381,64 +400,5 @@ default
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_LINK) llResetScript();
-        if (iChange & CHANGED_INVENTORY) {
-            if (llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
-        }
-    }
-
-    dataserver(key kID, string sData) {
-        if (kID == g_kStylesNotecardRead) {
-            if (sData != EOF) {
-                sData = llStringTrim(sData,STRING_TRIM);
-                if (sData!="" && llSubStringIndex(sData,"#") != 0) {
-                    if (llGetSubString(sData,0,0) == "[") {
-                        sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
-                        sData = llStringTrim(sData,STRING_TRIM);
-                        if (g_sStylesNotecardReadType=="initialize") {  //reading notecard to determine style names
-                            g_lStyles += sData;
-                        } else if (sData==g_sStylesNotecardReadType) {  //we just found our section
-                            g_sStylesNotecardReadType="processing";
-                            g_sCurrentTheme = sData;
-                        } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
-                           // llOwnerSay("Applied!");
-                            if (!g_iFistStart) DoMenu(g_sTextureMenu);
-                            g_iFistStart = FALSE;
-                            return;
-                        }
-                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
-                    } else {
-                        if (g_sStylesNotecardReadType=="processing") {
-                            //do what the notecard says
-                            list lParams = llParseStringKeepNulls(sData,["~"],[]);
-                            string sButton = llStringTrim(llList2String(lParams,0),STRING_TRIM);
-                            integer link = llListFindList(g_lButtons,[sButton]);
-                            if (link > 0) {
-                                sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-                                if (sData != "" && sData != ",") {
-                                    if (sButton == "Picture") 
-                                        llMessageLinked(LINK_SET, 111, sData, "");
-                                    else 
-                                        llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0, PRIM_COLOR, ALL_SIDES, g_vColor, 1.0]);
-                                }
-                            }
-                        }
-                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
-                    }
-                } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
-            } else {
-                if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
-                   // llOwnerSay("Applied!");
-                    if (!g_iFistStart) {
-                        DoMenu(g_sTextureMenu);
-                        g_iFistStart = FALSE;
-                    }
-                } else {
-                    if (g_iFistStart) {
-                        DoStyle(llList2String(g_lStyles,0));
-                    }
-                    g_iThemesReady = TRUE;
-                }
-            }
-        }
     }
 }
