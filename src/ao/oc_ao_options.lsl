@@ -1,24 +1,54 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                             OpenCollarAO - Options                             //
-//                                 version 3.960                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
-
-// HudOptions (Alexei Maven + Jessenia Mocha) 
-// This script could be used to position all HUDs quite easy.  Please remember this is Open Source 
-// Thus you need to Credit Open Collar / Alexei Maven / Jessenia Mocha + Keep it full perm and not sell it! =)
-
-// This script was intended to make the Sub AO as customizable as possible for the user.
-// The second goal was to make it easy for the developers to make new add-ons, and minimize script changes.
-// The code in this script reflects the two above goals. There is a reason for every line. 
-
-// Start Jess's OC modified menu injection
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//       _   ___     __            __  ___  _                               //
+//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
+//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
+//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
+//                                             /___/                        //
+//                                                                          //
+//                                        _                                 //
+//                                        \`*-.                             //
+//                                         )  _`-.                          //
+//                                        .  : `. .                         //
+//                                        : _   '  \                        //
+//                                        ; *` _.   `*-._                   //
+//                                        `-.-'          `-.                //
+//                                          ;       `       `.              //
+//                                          :.       .        \             //
+//                                          . \  .   :   .-'   .            //
+//                                          '  `+.;  ;  '      :            //
+//                                          :  '  |    ;       ;-.          //
+//                                          ; '   : :`-:     _.`* ;         //
+//        AO Options - 150603.1          .*' /  .*' ; .*`- +'  `*'          //
+//                                       `*-*   `*-*  `*-*'                 //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//           github.com/OpenCollar/opencollar/tree/master/src/ao            //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
 // -- HUD Message Map
 integer MENUNAME_RESPONSE = 3001;
