@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160112.1                             //
+//                          Animator - 160114.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -107,7 +107,6 @@ integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
-integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
@@ -629,7 +628,6 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     changed(integer iChange) {

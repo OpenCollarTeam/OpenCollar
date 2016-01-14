@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 160112.1                              //
+//                           Dialog - 160114.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -71,7 +71,6 @@ integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
 integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
-integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
@@ -737,7 +736,6 @@ default {
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_DIALOG","");
         } else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {

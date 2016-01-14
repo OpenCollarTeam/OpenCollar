@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160112.1                          //
+//                         Communicator - 160114.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -129,9 +129,10 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 
-list g_lCore5Scripts = [2,"oc_auth",3,"oc_dialog",4,"oc_rlvsys",5,"oc_settings",6,"oc_anim",6,"oc_couples"];
+list g_lCore5Scripts = ["LINK_AUTH","oc_auth","LINK_DIALOG","oc_dialog","LINK_RLV","oc_rlvsys","LINK_SAVE","oc_settings","LINK_ANIM","oc_anim","LINK_ANIM","oc_couples"];
 list g_lFoundCore5Scripts;
-integer INTEGRITY = -1050;
+list g_lWrongRootScripts;
+integer g_iVerify;
 /*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -348,22 +349,17 @@ default {
        // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = NameURI(g_kWearer);
-        //g_sDeviceName = llGetObjectName();
         g_sDeviceName = llGetObjectDesc();
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
         g_sPrefix = llToLower(llGetSubString(llKey2Name(g_kWearer), 0,1));
         //Debug("Default prefix: " + g_sPrefix);
-        //inlined single use getOwnerChannel function
-       // g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111);
-       // if (g_iHUDChan > -10000) g_iHUDChan -= 30000;
         g_iHUDChan = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,-7,-1)));
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iPublicListener = llListen(0, "", NULL_KEY, "");
         g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-        //g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", NULL_KEY, (string)g_kWearer + "collar");
         g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", "", "");
         //garvin attachments listener
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
@@ -448,8 +444,18 @@ default {
             sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
             if (kID == g_kWearer && llToLower(sMsg) == "verify") {
                 llOwnerSay("Verifying core integrity...");
-                llMessageLinked(LINK_ALL_OTHERS,INTEGRITY,"","");
+                llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
                 llSetTimerEvent(2);
+                g_iVerify = TRUE;
+                g_lWrongRootScripts = [];
+                string sName;
+                integer i = llGetListLength(g_lCore5Scripts) -1;
+                do {
+                    sName = llList2String(g_lCore5Scripts,i);
+                    if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
+                        g_lWrongRootScripts += sName;
+                    i = i - 2;
+                } while (i>0);
                 return;
             }
             //Debug("Got comand "+sMsg);
@@ -494,6 +500,7 @@ default {
             if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
             else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
+            if (g_iVerify && sStr != "LINK_REQUEST") g_lFoundCore5Scripts += [sStr,iSender];
         } else if (iNum == TOUCH_CANCEL) {
             integer iIndex = llListFindList(g_lTouchRequests, [kID]);
             if (~iIndex) {
@@ -503,7 +510,6 @@ default {
         } //needed to be the same ID that send earlier pings or pongs
         else if (iNum == AUTH_REPLY) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) g_lFoundCore5Scripts += [iSender,sStr];
     }
 
     touch_start(integer iNum) {
@@ -521,33 +527,40 @@ default {
 
     timer() {
         llSetTimerEvent(0);
+        g_iVerify = FALSE;
         string sMessage;
+        if (g_lWrongRootScripts) {
+            sMessage = "\nFalse root prim placement:\n";
+            do {
+                sMessage += llList2String(g_lWrongRootScripts,0);
+                g_lWrongRootScripts =  llDeleteSubList(g_lWrongRootScripts,0,0);
+            } while (g_lWrongRootScripts);
+        }
+        if(sMessage) sMessage += "\n";
         integer i;
-        list lTemp;
-        g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2,TRUE);
+        integer index;
+        list lTemp = ["Missing Scripts:"];
         do {
-            if (!~llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i+1,i+1)))
-                sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + " not found!";
-            else if (~llListFindList(g_lCore5Scripts,llList2List(g_lFoundCore5Scripts,i,i+1)))
-                lTemp += "(verified)";
-            else lTemp += "(corrupted)";
+            index = llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i,i));
+            if (index == -1) {
+                if (llSubStringIndex(sMessage,llList2String(g_lCore5Scripts,i+1)) == -1)
+                    lTemp += [llList2String(g_lCore5Scripts,i+1)];
+            } else
+                sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + "\t(Link# "+llList2String(g_lFoundCore5Scripts,index+1)+")";
             i = i + 2;
-        } while (i<=10);
+        } while (i<10);
         i = llGetLinkNumber();
-        if (i != 1) sMessage += "\n"+"Link number: "+(string)i+" ⟶ oc_com\t(corrupted)";
-        if (sMessage == "" && !~llListFindList(lTemp,["(corrupted)"])) {
+        if (i != 1) sMessage += "\noc_com\t(not in root prim!)";
+        if (llSubStringIndex(sMessage,"False") == -1 && llGetListLength(lTemp) == 1) {
             sMessage = "Core is optimal!";
             lTemp = [];
             g_lFoundCore5Scripts = [];
         } else {
-            sMessage = "\n\nCore corruption detected:\n"+sMessage;
-            if (i == 1) sMessage += "\n"+"Link number: "+(string)i+" ⟶ oc_com\t(verified)";
+            if (llGetListLength(lTemp) ==1) lTemp = [];
+            sMessage = "\n\nCore corruption detected:\n"+ llDumpList2String(lTemp,"\n")+sMessage;
+            if (i == 1) sMessage += "\noc_com\t(root)";
         }
-        while (g_lFoundCore5Scripts) {
-            sMessage += "\n"+"Link number: "+ llList2String(g_lFoundCore5Scripts,0)+" ⟶ "+llList2String(g_lFoundCore5Scripts,1)+"\t "+llList2String(lTemp,0);
-            g_lFoundCore5Scripts = llDeleteSubList(g_lFoundCore5Scripts,0,1);
-            lTemp = llDeleteSubList(lTemp,0,0);
-        }
+        g_lFoundCore5Scripts = [];
         llOwnerSay(sMessage);
     }
 

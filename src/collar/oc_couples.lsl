@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 160112.1                              //
+//                          Couples - 160114.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -121,7 +121,6 @@ integer LINK_DIALOG = 3;
 integer LINK_RLV  = 4;
 integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
-integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -434,7 +433,6 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
     not_at_target() {
         llTargetRemove(g_iTargetID);

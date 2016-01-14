@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 150112.1                           //
+//                          Authorizer - 151214.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -93,7 +93,6 @@ integer LINK_DIALOG         = 3;
 integer LINK_RLV            = 4;
 integer LINK_SAVE           = 5;
 integer LINK_UPDATE = -10;
-integer INTEGRITY = -1050;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -748,7 +747,6 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_AUTH","");
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
     }
 
     http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup

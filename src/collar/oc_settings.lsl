@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160112.1                             //
+//                          Settings - 160114.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -90,7 +90,6 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer LINK_DIALOG = 3;
 integer LINK_UPDATE = -10;
-integer INTEGRITY = -1050;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
@@ -408,7 +407,7 @@ default {
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
-        } else if (iNum == INTEGRITY) llMessageLinked(iSender,iNum,llGetScriptName(),"");
+        }
     }
 
     timer() {
