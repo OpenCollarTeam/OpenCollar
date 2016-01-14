@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 151027.1                        //
+//                       Installer System - 160112.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -73,6 +73,7 @@ integer g_iInstallOnRez = FALSE; // TRUE initiates right away on rez
 key g_kNameID;
 integer g_initChannel = -7483213;
 integer g_iSecureChannel;
+string g_sBuildVersion;
 
 // store the script pin here when we get it from the collar.
 integer g_iPin;
@@ -164,10 +165,9 @@ Particles(key kTarget) {
 }
 
 InitiateInstallation() {
-    integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),2,7)) + 1111);
-    if (iChan > -10000) iChan -= 30000;
+    integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
     llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
-    llWhisper(iChan,(string)llGetOwner()+":.- ... -.-"+(string)llGetKey());
+    llWhisper(iChan,(string)llGetOwner()+":.- ... -.-|"+g_sBuildVersion+"|"+(string)llGetKey());
 }
 
 default {
@@ -233,7 +233,7 @@ default {
                     //llSetTimerEvent(30.0);
                 }  
                 llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
-                llWhisper(g_initChannel,"-.. ---"); //tell collar we are here and to send the pin 
+                llWhisper(g_initChannel,"-.. ---|"+g_sBuildVersion); //tell collar we are here and to send the pin 
             } else if (sCmd == "ready") {
                 // person clicked "Yes I want to update" on the collar menu.
                 // the script pin will be in the param
@@ -277,10 +277,7 @@ default {
         }
     }
     timer() {
-        if (g_iDone) {
-            g_iDone = FALSE;
-            SetFloatText();
-        }
+        if (g_iDone) llResetScript();
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
     }
@@ -298,6 +295,13 @@ default {
     dataserver(key kID, string sData) {
         if (kID == g_kNameID) {
             // make sure that object name matches this card.
+            integer index = llSubStringIndex(sData,"&");
+            g_sBuildVersion = llStringTrim(llGetSubString(sData,index+1,-1),STRING_TRIM);
+            if ((float)g_sBuildVersion == 0.0 && g_sBuildVersion != "AppInstall") {
+                llOwnerSay("Invalid .name notecard, please fix!");
+                return;
+            }
+            sData = llStringTrim(llGetSubString(sData,0, index-1),STRING_TRIM);
             list lNameParts = llParseString2List(sData, [" - "], []);
             llSetObjectName(sData);
             g_sName = llList2String(lNameParts,1);

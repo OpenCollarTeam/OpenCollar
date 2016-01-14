@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 151001.1                               //
+//                           Leash - 160112.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -79,6 +79,7 @@ integer REBOOT                = -1000;
 integer LINK_DIALOG           = 3;
 integer LINK_RLV              = 4;
 integer LINK_SAVE             = 5;
+integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE       = 2000;
 integer LM_SETTING_REQUEST    = 2001;
 integer LM_SETTING_RESPONSE   = 2002;
@@ -786,7 +787,11 @@ default {
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);                        
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+        } else if (iNum == LINK_UPDATE) {
+            if (sMessage == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sMessage == "LINK_RLV") LINK_RLV = iSender;
+            else if (sMessage == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
     }
 

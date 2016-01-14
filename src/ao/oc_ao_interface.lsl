@@ -46,16 +46,18 @@ debug(string sMessage)
 //=
 //= returns      : Channel number to be used
 //===============================================================================
+/*
 integer GetOwnerChannel(key kOwner, integer iOffset) {
     integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
     if (iChan > 0) iChan=iChan*(-1);
     if (iChan > -10000) iChan -= 30000;
     return iChan;
 }
-
+*/
 init() {
     g_kObjectID = llGetKey();
-    g_iObjectchannel = GetOwnerChannel(g_kWearer,1111);
+    //g_iObjectchannel = GetOwnerChannel(g_kWearer,1111);
+    g_iObjectchannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
     //listen first to the full interfaceChannel and start to ping every 10 secs for a collar
     llListenRemove(g_iListenHandle);
     g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");

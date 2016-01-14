@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 151117.1                              //
+//                           System - 160112.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,9 +57,10 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="4.1.0";
-string g_sFancyVersion="⁴⋅¹⋅⁰";
+string g_sCollarVersion="4.2.0";
+string g_sFancyVersion="⁴⋅²⋅⁰";
 integer g_iLatestVersion=TRUE;
+float g_fBuildVersion = 160112.1;
 
 key g_kWearer;
 
@@ -86,6 +87,7 @@ integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
+integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -144,12 +146,12 @@ integer g_iUpdateFromMenu;
 key github_version_request;
 string g_sDistributor;
 string g_sDistCard = ".distributor";
-string url_check = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~distributor";
+string url_check = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~distributor";
 key g_kDistCheck;
 integer g_iOffDist;
 key g_kNCkey;
-string version_check_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~version";
-string news_url = "https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~news";
+string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~version";
+string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~news";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
@@ -304,7 +306,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "options") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
     } else if (sStr == "contact") {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         g_kCurrentUser = kID;
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "menuto") {
@@ -381,8 +383,13 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (!llSubStringIndex(sStr,".- ... -.-")) { 
         if (kID == g_kWearer) {
-            g_kUpdaterOrb = (key)llGetSubString(sStr,10,-1);
-            UpdateConfirmMenu(); 
+            list lTemp = llParseString2List(sStr,["|"],[]);
+            if (llList2Float(lTemp,1) <= g_fBuildVersion && llList2String(lTemp,1) != "AppInstall") {
+                llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Installation aborted. The version you are trying to install is deprecated. ",g_kWearer);
+            } else {
+                g_kUpdaterOrb = (key)llGetSubString(sStr,-36,-1);
+                UpdateConfirmMenu(); 
+            }
         }
     } else if (sCmd == "version") {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\nOrigin: ";
@@ -390,7 +397,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else sVersion += "Unverified\n";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
-    } else if (sCmd == "objectversion") {
+    }/* else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
         // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
         integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
@@ -402,7 +409,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
         llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
-    }
+    }*/
 }
 
 string GetTimestamp() { // Return a string of the date and time
@@ -546,6 +553,10 @@ default
                 //only remove if it's there
                 if (gutiIndex != -1) g_lAppsButtons = llDeleteSubList(g_lAppsButtons, gutiIndex, gutiIndex);
             } else if (child == "Size/Position") g_lResizeButtons = [];
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == DIALOG_RESPONSE) {
             //Debug("Menu response");
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -657,6 +668,7 @@ default
 
     changed(integer iChange) {
         if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
+            llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             g_iWaitRebuild = TRUE;JB();
             llSetTimerEvent(1.0);
@@ -669,7 +681,10 @@ default
                 SetLockElementAlpha(); // update hide elements
             }
         }
-        if (iChange & CHANGED_LINK) BuildLockElementList(); // need rebuils lockelements list
+        if (iChange & CHANGED_LINK) {
+            llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
+            BuildLockElementList(); // need rebuils lockelements list
+        }
      /*  if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
@@ -724,11 +739,19 @@ default
 
     listen(integer channel, string name, key id, string message) {
         if (llGetOwnerKey(id) == g_kWearer) {   //collar and updater have to have the same Owner else do nothing!
-            list lTemp = llParseString2List(message, [","],[]);
+            list lTemp = llParseString2List(message, ["|"],[]);
             string sCommand = llList2String(lTemp, 0);
-            if( message == "-.. ---") {
-                g_iWillingUpdaters++;
-                g_kUpdaterOrb = id;
+            string sOption = llList2String(lTemp, 1);
+            if(sCommand == "-.. ---") {
+                if (sOption == "AppInstall" || (float)sOption >= g_fBuildVersion) {
+                    g_iWillingUpdaters++;
+                    g_kUpdaterOrb = id;
+                } else {
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Installation aborted. The version you are trying to install is deprecated. ",g_kWearer);
+                    llSetTimerEvent(0);
+                    g_iWaitUpdate = FALSE;
+                    llListenRemove(g_iUpdateHandle);
+                }
             }
         }
     }
@@ -738,7 +761,7 @@ default
             g_iWaitUpdate = FALSE;
             llListenRemove(g_iUpdateHandle);
             if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
-                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
