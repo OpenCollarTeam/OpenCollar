@@ -1,24 +1,54 @@
-////////////////////////////////////////////////////////////////////////////////////
-// ------------------------------------------------------------------------------ //
-//                             OpenCollarAO - Options                             //
-//                                 version 3.960                                  //
-// ------------------------------------------------------------------------------ //
-// Licensed under the GPLv2 with additional requirements specific to Second Life® //
-// and other virtual metaverse environments.  ->  www.opencollar.at/license.html  //
-// ------------------------------------------------------------------------------ //
-// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
-// ------------------------------------------------------------------------------ //
-////////////////////////////////////////////////////////////////////////////////////
-
-// HudOptions (Alexei Maven + Jessenia Mocha) 
-// This script could be used to position all HUDs quite easy.  Please remember this is Open Source 
-// Thus you need to Credit Open Collar / Alexei Maven / Jessenia Mocha + Keep it full perm and not sell it! =)
-
-// This script was intended to make the Sub AO as customizable as possible for the user.
-// The second goal was to make it easy for the developers to make new add-ons, and minimize script changes.
-// The code in this script reflects the two above goals. There is a reason for every line. 
-
-// Start Jess's OC modified menu injection
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//       _   ___     __            __  ___  _                               //
+//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
+//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
+//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
+//                                             /___/                        //
+//                                                                          //
+//                                        _                                 //
+//                                        \`*-.                             //
+//                                         )  _`-.                          //
+//                                        .  : `. .                         //
+//                                        : _   '  \                        //
+//                                        ; *` _.   `*-._                   //
+//                                        `-.-'          `-.                //
+//                                          ;       `       `.              //
+//                                          :.       .        \             //
+//                                          . \  .   :   .-'   .            //
+//                                          '  `+.;  ;  '      :            //
+//                                          :  '  |    ;       ;-.          //
+//                                          ; '   : :`-:     _.`* ;         //
+//        AO Options - 150603.1          .*' /  .*' ; .*`- +'  `*'          //
+//                                       `*-*   `*-*  `*-*'                 //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//           github.com/OpenCollar/opencollar/tree/master/src/ao            //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
 // -- HUD Message Map
 integer MENUNAME_RESPONSE = 3001;
@@ -98,43 +128,22 @@ DoPosition(float yOff, float zOff)
 }
 
 DoTextures(string _style)
-{   // -- Texture Settings by Jessenia Mocha
+{
     // -- Texture UUID's [ Root, Power, Sit, Menu ]
-    list _blue        = ["fe7844f7-1179-5ba1-eb46-d44d3bed5837",
-                         "b666c23b-a75a-e5b6-fd26-c17fbe921121",
-                         "cb4ea616-6478-3f8d-2207-4daee93a01c3",
-                         "7d5ebb11-b3e2-4353-231b-c898c5645872"];
+    list _dark=["e1482c7e-8609-fcb0-56d8-18c3c94d21c0","e630e9e0-799e-6acc-e066-196cca7b37d4","251b2661-235e-b4d8-0c75-248b6bdf6675","f3ec1052-6ec4-04ba-d752-937a4d837bf8"];
     
-    list _red         = ["4d61335b-2b3d-e3d2-a6b9-e3fba73f9f8e",
-                         "202d091c-e6fb-533d-9cfe-19e098d883c6",
-                         "4ba67464-ae2b-7271-8445-de393a551eba",
-                         "917d6349-a01b-1c1e-7c49-1b889fd81217"];
-
-    list _graysquare  = ["0744de1c-a3bd-47db-b20f-2cb7b93a3ff1",
-                         "ffbc0c09-7741-015a-37cb-67e1d6c15111",
-                         "dd4832fb-9583-7b50-aacc-6b80e7508ddb",
-                         "09b69dd4-eb80-e2de-7dba-70c8337d283c"];
-
-    list _graycircle  = ["428f1dfc-251c-b204-da66-000082bee96f",
-                         "47ae23a3-e9e7-e045-3a65-5389f2038b9f",
-                         "b7db4e46-443d-6da7-246b-4b9a1d9a16ca",
-                         "6df113f7-c667-106b-e276-31dc1be37513"];
-                         
-    list _whitetint   = ["8408646f-2d35-3938-cba9-0808a12fcb80",
-                         "cc3bb8fd-8ccd-18a1-b570-e7d3fbbda5e7",
-                         "d95be5fe-1a7a-2b44-3713-948135054822",
-                         "eb1f670d-c34f-23cb-3beb-f859c3c0278e"];
+    list _light=["b59f9932-5de4-fc23-b5aa-2ab46d22c9a6","42d4d624-ca72-1c74-0045-f782d7409061","349340c5-0045-c32d-540e-52b6fb77af55","52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96"];
                          
     // -- Texture lists complete    
     llOwnerSay("Setting texture scheme to :: \""+_style+"\""); // -- More for debugging than anything else
     
     
     // -- If we don't select "White" as the style, remove tintable flag and reset AOcolors
-    if(_style != "White") 
+    /*if(_style != "White") 
     {
         tintable = FALSE; // -- Turn off tint
         llSetLinkPrimitiveParams(LINK_SET,[PRIM_COLOR, ALL_SIDES, <1,1,1>, 1.0]);
-    }
+    }*/
 
     // -- Get the actual texture setting ready
     // integer _primNum = llGetNumberOfPrims(); // -- Yes this can be used, however, since the textures are hard-coded, no point.
@@ -142,50 +151,24 @@ DoTextures(string _style)
     integer _i = 0;
     texture = _style;
     
-    if(_style == "Gray Square")
+    if(_style == "Dark")
     {
         do
         {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graysquare,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
+            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_dark,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
         }
         while((++_i)<=_primNum);    
         
     }
-    else if(_style == "Gray Circle")
+    else if(_style == "Light")
     {
         do
         {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_graycircle,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
+            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_light,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
         }
-        while((++_i)<=_primNum);        
+        while((++_i)<=_primNum);
     }
-    else if(_style == "Red")
-    {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_red,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
-        }
-        while((++_i)<=_primNum);        
-    } 
-    else if(_style == "Blue")
-    {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_blue,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
-        }
-        while((++_i)<=_primNum);        
-    }
-    else if(_style == "White")
-    {
-        do
-        {
-            llSetLinkPrimitiveParams(_i+1,[PRIM_TEXTURE, ALL_SIDES, llList2String(_whitetint,_i), <1.0, 1.0, 0.0>, <0.0, 0.0, 0.0>, 0.0]);
-        }
-        while((++_i)<=_primNum);        
-    }
-
 }
-
 DoHide()
 {   // This moves the child prims under the root prim to hide them
     llSetLinkPrimitiveParams(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0,  0.0>]);
@@ -542,8 +525,8 @@ default
                         // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                     
                         list buttons = [];
-                        buttons += ["Gray Square"];
-                        buttons += ["Gray Circle"];
+                        buttons += ["Dark"];
+                        buttons += ["Light"];
                         buttons += ["Blue"];
                         buttons += ["Red"];
                         buttons += ["White"];
@@ -585,11 +568,11 @@ default
                     {   // -- If we press the '^' and we are inside the Texture menu, go back to Options menu
                         llMessageLinked(LINK_SET, SUBMENU, submenu, id);
                     }
-                    else if(response == "Gray Square")
+                    else if(response == "Dark")
                     {
                         DoTextures(response);
                     }
-                    else if(response == "Gray Circle")
+                    else if(response == "Light")
                     {
                         DoTextures(response);
                     }
