@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160114.2       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160115.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,13 +98,14 @@ list g_lPrimOrder ;
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
 
-integer g_iLayout = 0;
+integer g_iLayout = 0; // 0 - Horisontal, 1 - Vertical
 integer g_iHidden = FALSE;
 integer g_iSPosition = 69; // Nuff'said =D
 integer g_iOldPos;
 integer g_iNewPos;
-
-integer g_iColumn = 0;
+integer g_iColumn = 0;  // 0 - Column, 1 - Alternate
+integer g_iRows = 1;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
+integer g_iMaxRows = 4; // maximal Rows in Columns
 
 //**************************
 
@@ -131,33 +132,12 @@ PlaceTheButton(float fYoff, float fZoff) {
     vector pos ;
     integer i;
     for (i=1; i < n; ++i) {
-        if (g_iColumn==0) {  // Line
-            if (!g_iLayout) pos = <0,fYoff*i,0>;
-            else pos = <0,0,fZoff*i>;
-        } else if (g_iColumn==1) { // Column2
-            if (!g_iLayout) {
-                if (i < (n/2)) pos = <0,fYoff*(i),0>; // 1
-                else pos = <0,fYoff*(i-n/2),fZoff>;   // 2
-            } else {
-                if (i < (n/2)) pos = <0,0,fZoff*(i)>; // 1
-                else pos = <0,fYoff,fZoff*(i-n/2)>;   // 2
-            }
-        } else if (g_iColumn==2) { // Alternate2
-            if (!g_iLayout) pos = <0, fYoff*(i/2), fZoff*(i-(i/2)*2)>;
-            else  pos = <0, fYoff*(i-(i/2)*2), fZoff*(i/2)>;
-        } else if (g_iColumn==3) { // Column3
-            if (!g_iLayout) {
-                if (i < n/3) pos = <0,fYoff*i,0>; // 1
-                else if (i >= n/3 && i < (n/3)*2) pos = <0,fYoff*(i-(n/3)),fZoff>; // 2
-                else pos = <0,fYoff*(i-(n/3)*2),fZoff*2>; // 3
-            } else {
-                if (i < n/3) pos = <0,0,fZoff*i>; // 1
-                else if (i >= n/3 && i < (n/3)*2) pos = <0,fYoff,fZoff*(i-(n/3))>; // 2
-                else pos = <0,fYoff*2,fZoff*(i-(n/3)*2)>; // 3
-            }
-        } else if (g_iColumn==4) { // Alternate3
-            if (!g_iLayout) pos = <0, fYoff*(i/3), fZoff*(i-(i/3)*3)>;
-            else pos = <0, fYoff*(i-(i/3)*3), fZoff*(i/3)>;
+        if (g_iColumn == 0) { // Column
+            if (!g_iLayout) pos = <0, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
+            else pos = <0, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
+        } else if (g_iColumn == 1) { // Alternate
+            if (!g_iLayout) pos = <0, fYoff*(i/g_iRows), fZoff*(i-(i/g_iRows)*g_iRows)>;
+            else  pos = <0, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
         }
         llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i),[PRIM_POSITION,pos]);
     }
@@ -233,8 +213,8 @@ DefinePosition() {
 //  Allows manual repositioning, without resetting it, if needed
     if (iPosition != g_iSPosition) {
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
-        if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z ;
-        if (iPosition==2||iPosition==5) offset.y = -offset.y ;
+        if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
+        if (iPosition==2||iPosition==5) offset.y = -offset.y;
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
@@ -274,16 +254,20 @@ DoMenu(string sMenu) {
     string sPrompt;
     list lButtons;
     list lUtils = [UPMENU];
-    list lColumns = ["Line >","Column2 >","Alternate2 >","Column3 >","Alternate3 >"];
 
     if (sMenu == "Horizontal >" || sMenu == "Vertical >") {
         g_iLayout = !g_iLayout;
         DefinePosition();
         sMenu = g_sHudMenu;
     }
-    else if (~llListFindList(lColumns, [sMenu])) {
-        g_iColumn++;
-        if (g_iColumn >= llGetListLength(lColumns)) g_iColumn = 0;
+    else if (sMenu == "Columns >" || sMenu == "Alternate >") {
+        g_iColumn = !g_iColumn;
+        DefinePosition();
+        sMenu = g_sHudMenu;
+    }
+    else if (llSubStringIndex(sMenu,"Rows")==0) {
+        g_iRows++;
+        if (g_iRows > g_iMaxRows) g_iRows = 1;
         DefinePosition();
         sMenu = g_sHudMenu;
     }
@@ -306,8 +290,9 @@ DoMenu(string sMenu) {
     if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
         lButtons = llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;
-        lButtons += llList2List(lColumns, g_iColumn,g_iColumn) ;
-        lButtons += ["Reset",g_sOrderMenu,g_sTextureMenu];
+        lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;
+        lButtons += ["Rows "+(string)g_iRows] ;
+        lButtons += [g_sOrderMenu,g_sTextureMenu,"Reset"];
     }
     g_sCurrentMenu = sMenu;
     g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, lUtils, 0);
