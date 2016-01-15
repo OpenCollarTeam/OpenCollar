@@ -124,6 +124,7 @@ FindButtons() { // collect buttons names & links
         g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
         g_lPrimOrder += i;
     }
+    g_iMaxRows = llFloor(llSqrt(llGetListLength(g_lButtons)-1));
 }
 
 PlaceTheButton(float fYoff, float fZoff) {
