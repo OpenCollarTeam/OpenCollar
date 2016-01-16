@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//        AO Options - 150603.1          .*' /  .*' ; .*`- +'  `*'          //
+//        AO Options - 160116.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -103,8 +103,12 @@ key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer p
 
 
 // Start HUD Options 
-list attachPoints = [ATTACH_HUD_TOP_RIGHT, ATTACH_HUD_TOP_CENTER, ATTACH_HUD_TOP_LEFT, 
-                     ATTACH_HUD_BOTTOM_RIGHT, ATTACH_HUD_BOTTOM, ATTACH_HUD_BOTTOM_LEFT];
+list attachPoints = [ATTACH_HUD_TOP_RIGHT,
+                    ATTACH_HUD_TOP_CENTER,
+                    ATTACH_HUD_TOP_LEFT,
+                    ATTACH_HUD_BOTTOM_RIGHT,
+                    ATTACH_HUD_BOTTOM,
+                    ATTACH_HUD_BOTTOM_LEFT];
 
 list primOrder = [0,1,2,3,4]; // -- List must always start with '0','1' 
 // -- 0:Spacer, 1:Root, 2:Power, 3:Sit Anywhere, 4:Menu
@@ -135,7 +139,7 @@ DoTextures(string _style)
     list _light=["b59f9932-5de4-fc23-b5aa-2ab46d22c9a6","42d4d624-ca72-1c74-0045-f782d7409061","349340c5-0045-c32d-540e-52b6fb77af55","52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96"];
                          
     // -- Texture lists complete    
-    llOwnerSay("Setting texture scheme to :: \""+_style+"\""); // -- More for debugging than anything else
+   // llOwnerSay("Setting texture scheme to :: \""+_style+"\""); // -- More for debugging than anything else
     
     
     // -- If we don't select "White" as the style, remove tintable flag and reset AOcolors
@@ -177,6 +181,8 @@ DoHide()
 DefinePosition()                
 {    
     integer Position = llListFindList(attachPoints, [llGetAttached()]);
+    vector size = llGetScale();
+
     if(Position != SPosition) // Allows manual repositioning, without resetting it, if needed
     {
         // Set up the six root prim locations which all other posistions are based from
@@ -193,7 +199,7 @@ DefinePosition()
     }
     if(!Hidden) // -- Fixes Issue 615: HUD forgets hide setting on relog.
     {
-        float yOff = 0.037; float zOff = 0.037; // This is the space between buttons     
+        float yOff = 0.052; float zOff = 0.052; // This is the space between buttons     
                                                                                                    
         if (Layout == 0 || Position == 1 || Position == 4) // Horizontal + top and bottom are always horizontal
         {         
@@ -313,8 +319,8 @@ default
     {
         if (c & CHANGED_OWNER) // Nice way to do this and not break everything in here
         {
-            DoTextures("White");
-            llGiveInventory(llGetOwner(),"OpenCollar SubAO Help Image");
+            //DoTextures("White");
+           // llGiveInventory(llGetOwner(),"OpenCollar SubAO Help Image");
             llResetScript();
         }
         else if (c & CHANGED_COLOR)
@@ -363,15 +369,17 @@ default
             string text = "\nThis menu sets your HUD options.\n";
             text += "[Horizontal] sets the button layout to Horizontal.\n\n";
             text += "[Vertical] sets the button layout to Vertical.\n\n";
-            text += "[Textures] opens a sub menu to choose button texture.\n\n";
+          //  text += "[Textures] opens a sub menu to choose button texture.\n\n";
             text += "[Order] opens the sub menus to reorder the buttons.\n\n";
+            text += "[Dark] or [Light] chooses a dark or light button texture.\n\n";
             //text += "[Reset] Resets ALL custom HUD settings.\n";
             
             list buttons = [];
             buttons += ["Horizontal"];   
             buttons += ["Vertical"]; 
-            buttons += ["Textures"];
+            //buttons += ["Textures"];
             buttons += ["Order"];
+            buttons += ["Dark","Light"];
             //buttons += [" "];
             //buttons += ["Reset"];
             //buttons += [" "];
@@ -503,6 +511,7 @@ default
                     if(response == UPMENU)
                     {   // If we press the '^' and we are inside the Options menu, go back to OwnerHUD menu
                         llMessageLinked(LINK_THIS, CMD_OWNER, "ZHAO_MENU", id);
+                        return;
                     }
                     else if(response == "Horizontal")
                     {
@@ -514,28 +523,28 @@ default
                         Layout = 69;  // Because we love 69!
                         DefinePosition();
                     }
-                    else if(response == "Textures")
+                  /*  else if(response == "Textures")
                     {
                         currentmenu = submenu1;
                         string text = "This is the menu for styles.\n";
                         text += "Selecting one of these options will\n";
                         text += "change the color of the HUD buttons.\n";
-                        if(tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
-                        if(!tintable)text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
+                      //  if(tintable) text+="Tint will allow you to change the HUD color\nto various shades via the 'Tint' menu.\n";
+                      //  if(!tintable)text += "If [White] is selected, an extra menu named 'Tint' will appear in this menu.\n";
                         // -- text += "This menu will time out in " + (string)timeout + " seconds.";
                     
                         list buttons = [];
                         buttons += ["Dark"];
                         buttons += ["Light"];
-                        buttons += ["Blue"];
-                        buttons += ["Red"];
-                        buttons += ["White"];
-                        if(tintable) buttons += ["Tint"," "," "];
+                       // buttons += ["Blue"];
+                       // buttons += ["Red"];
+                       // buttons += ["White"];
+                       // if(tintable) buttons += ["Tint"," "," "];
                         
                         list utility = [UPMENU];
                     
                         menuid = Dialog(id, text, buttons, utility, page);
-                    }
+                    }*/
                     else if(response == "Order")
                     {
                         currentmenu = submenu2;
@@ -559,7 +568,10 @@ default
                         list utility = [UPMENU];
                         
                         menuid = Dialog(id, text, buttons, utility, page);
+                        return;
                     }
+                    else DoTextures(response);
+                    llMessageLinked(LINK_THIS, SUBMENU, submenu, id);
                 }
                 
                 if(currentmenu == submenu1)
@@ -777,14 +789,14 @@ default
             }
         }
         
-        else if(num == DIALOG_TIMEOUT)
+     /*   else if(num == DIALOG_TIMEOUT)
         {
             if(id == menuid)
             {
                 llInstantMessage(llGetOwner(),"Menu timed out!");                
             }
         }
-        
+        */
         else if(str == "hide")
         {     
             if(!AOLock) 
