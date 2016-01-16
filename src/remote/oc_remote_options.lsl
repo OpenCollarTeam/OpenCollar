@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160115.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160116.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,6 +98,7 @@ list g_lPrimOrder ;
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
 
+integer g_iVertical = FALSE;  // can be vertical?
 integer g_iLayout = 0; // 0 - Horisontal, 1 - Vertical
 integer g_iHidden = FALSE;
 integer g_iSPosition = 69; // Nuff'said =D
@@ -226,7 +227,8 @@ DefinePosition() {
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
-        if (iPosition == 1 || iPosition == 4) g_iLayout = 0;
+        if (iPosition == 1 || iPosition == 4) { g_iLayout = 0; g_iVertical = FALSE;}
+        else g_iVertical = TRUE;
 
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
@@ -267,7 +269,10 @@ DoMenu(string sMenu) {
         sMenu = g_sHudMenu;
     }
     else if (llSubStringIndex(sMenu,"Rows")==0) {
-        g_iRows++;
+        integer n = llGetListLength(g_lPrimOrder)-1;        
+        do {
+            g_iRows++;            
+        } while ((((float)n/g_iRows)-(n/g_iRows)) != 0 );    
         if (g_iRows > g_iMaxRows) g_iRows = 1;
         DefinePosition();
         sMenu = g_sHudMenu;
@@ -290,9 +295,11 @@ DoMenu(string sMenu) {
     }
     if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
-        lButtons = llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;
-        lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;
-        lButtons += ["Rows "+(string)g_iRows] ;
+        lButtons = ["Rows: "+(string)g_iRows] ;        
+        if (g_iRows > 1) lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;    
+        else lButtons += [" - "] ;
+        if (g_iVertical) lButtons += llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;    
+        else lButtons += [" - "] ;
         lButtons += [g_sOrderMenu,g_sTextureMenu,"Reset"];
     }
     g_sCurrentMenu = sMenu;
