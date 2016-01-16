@@ -166,7 +166,7 @@ DoTextures(string style) {
             if (llGetSubString(sData,0,0) == "[") {
                 sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
                 sData = llStringTrim(sData,STRING_TRIM);
-                if (style=="initialize") {  //reading notecard to determine style names
+                if (style=="initialize") {  //reading list to determine style names
                     g_lStyles += sData;
                 } else if (sData==style) {  //we just found our section
                     style="processing";
@@ -253,15 +253,11 @@ MainMenu(key id) {
     string text = "\nThis menu sets your HUD options.\n";
     text += "[Horizontal] sets the button layout to Horizontal.\n";
     text += "[Vertical] sets the button layout to Vertical.\n";
-    //text += "[Textures] opens a sub menu to choose button.\n";
     text += "[Order] opens the sub menus to reorder the buttons.\n";
     text += "[Dark] or [Light] chooses a dark or light button.\n";
-    //text += "[Reset] Resets ALL custom HUD settings.\n";
 
     list buttons = ["Horizontal","Vertical","Order"];
     buttons += g_lStyles;
-    //buttons += ["Reset"];
-    //buttons += [" "];
     g_kMenuID = Dialog(id, text, buttons, [UPMENU], 0);
 }
 
@@ -333,11 +329,10 @@ default {
             list menuparams = llParseString2List(str, ["|"], []);
             id = (key)llList2String(menuparams, 0);
             string response = llList2String(menuparams, 1);
-            integer page = (integer)llList2String(menuparams, 2);
+            //integer page = (integer)llList2String(menuparams, 2);
 
-            if (g_sCurrentMenu == g_sHudMenu) { // -- Inside the 'Options' menu, or 'g_sHudMenu'
+            if (g_sCurrentMenu == g_sHudMenu) {
                 if (response == UPMENU) {
-                    // If we press the '^' and we are inside the Options menu, go back to OwnerHUD menu
                     //llMessageLinked(LINK_THIS, CMD_OWNER, "ZHAO_MENU", id);
                     llMessageLinked(LINK_THIS, CMD_OWNER, "OCAO_MENU", id);
                     return;
@@ -345,7 +340,7 @@ default {
                     g_iLayout = 0;
                     DefinePosition();
                 } else if (response == "Vertical") {
-                    g_iLayout = 69;  // Because we love 69!
+                    g_iLayout = 1;
                     DefinePosition();
                 } else if (response == g_sOrderMenu) {
                     OrderMenu(id);
@@ -353,7 +348,6 @@ default {
                 } else if (~llListFindList(g_lStyles,[response])) DoTextures(response);
                 MainMenu(id);
             } else if (g_sCurrentMenu == g_sOrderMenu) {
-                // -- Inside the 'Order' menu, or 'g_sOrderMenu'
                 if (response == UPMENU) MainMenu(id);
                 else if (response == "Reset") {
                     FindButtons();
