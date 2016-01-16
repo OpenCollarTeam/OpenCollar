@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                        ZHAO Interface - 160116.1                         //
+//                        ZHAO Interface - 160116.2                         //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Alex Carpenter,              //
@@ -251,7 +251,7 @@ DoFirstMenu(key id, integer page)
     list utility = [];
     list buttons = ["AO Menu","Collar Menu","Couples","Pose","Sits","Ground Sits","Reset","HUD Style","Help"];
     
-    Dialog(id, "\nSubmissive AO Quickmenu", buttons, utility, page, QUICKMENU);
+    Dialog(id, "\n[http://www.opencollar.at/ao.html OpenCollar AO]", buttons, utility, page, QUICKMENU);
 //llSay(0,"Done Making quickmenu for: "+(string)id); 
     
 }
@@ -268,7 +268,7 @@ DoMenu(key id, integer page)
 //llSay(0,"Making menu for: "+(string)id);
     if(llGetAttached())
     { // -- If we're attached... ANYWHERE, display the menu
-        prompt = "Please select an option:\n";
+        prompt = "\nPlease select an option:\n";
         //new for locking feature 
         if (isLocked) mainMenu += [UNLOCK];
         else mainMenu += [LOCK];
@@ -603,7 +603,7 @@ default {
                             animSets += [ notecardName ];
                         }
                         //llListenControl(listenHandle, TRUE);
-                        string text = "Select the notecard to load:";
+                        string text = "\nSelect the notecard to load:";
                         
                         Dialog(_id, text, animSets, [], 0, "SetsMenu");
                         listenState = 1;
@@ -612,7 +612,7 @@ default {
                     {
                         // Pick stand times
                         listenState = 2;
-                        string text = "Select stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
+                        string text = "\nSelect stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
                         
                         Dialog(_id, text, ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"], [UPMENU], 0, "StandTimesMenu");
     
