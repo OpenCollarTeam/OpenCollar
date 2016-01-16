@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160114.1                             //
+//                          Animator - 160116.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -559,7 +559,7 @@ default {
                     else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using a Submissive AO or an AO Link script in their normal AO.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their normal AO.", kAv);
                         AOMenu(kAv, iAuth);
                     } else {
                         if (sMessage== "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
