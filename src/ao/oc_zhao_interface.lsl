@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                        ZHAO Interface - 150518.1                         //
+//                        ZHAO Interface - 160116.1                         //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Alex Carpenter,              //
@@ -223,7 +223,7 @@ Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page,
 
     list newstride = [rcpt, id, menu];
     
-    integer index = llListFindList(menuids, [id]);
+    integer index = llListFindList(menuids, [rcpt]);
     if (index == -1)
     {
         menuids += newstride;
@@ -722,7 +722,8 @@ default {
             // if it's greater than 0, we know it's for us (this script)
             if (menuindex != -1)
             {
-                llInstantMessage(llGetOwner(),"SubAO Menu has timed out. Pressing a menu entry will not do anything.");
+               // llInstantMessage(llGetOwner(),"SubAO Menu has timed out. Pressing a menu entry will not do anything.");
+               menuids = llDeleteSubList(menuids,menuindex-1,menuindex + menustride - 2);
             }
         }    
     }
@@ -753,7 +754,7 @@ default {
                     ToggleSitAnywhere();
                 }
             }
-            else if (llSubStringIndex(button,"Sub")>=0)
+            else if (llSubStringIndex(button,"ao")>=0)
             {   // The Hide Button
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"hide",NULL_KEY);
                 llSleep(1); 
