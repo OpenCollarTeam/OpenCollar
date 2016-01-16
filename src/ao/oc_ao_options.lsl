@@ -186,7 +186,7 @@ DefinePosition()
     if(Position != SPosition) // Allows manual repositioning, without resetting it, if needed
     {
         // Set up the six root prim locations which all other posistions are based from
-        list RootOffsets = [   
+        /*list RootOffsets = [   
         <0.0,  0.02, -0.04>,    // Top right        (Position 0)
         <0.0,  0.00, -0.04>,    // Top middle       (Position 1)
         <0.0, -0.02, -0.04>,    // Top left         (Position 2)
@@ -194,7 +194,7 @@ DefinePosition()
         <0.0,  0.00,  0.07>,   // Bottom middle    (Position 4)
         <0.0, -0.02,  0.07>];  // Bottom left      (Position 5)
     
-        llSetPos((vector)llList2String(RootOffsets, Position)); // Position the Root Prim on screen 
+        llSetPos((vector)llList2String(RootOffsets, Position)); */// Position the Root Prim on screen 
         SPosition = Position;           
     }
     if(!Hidden) // -- Fixes Issue 615: HUD forgets hide setting on relog.
