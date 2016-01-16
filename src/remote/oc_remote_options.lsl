@@ -223,7 +223,6 @@ DefinePosition() {
     if (g_iHidden)  // -- Fixes Issue 615: HUD forgets hide setting on relog.
         llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
     else {
-        vector size = llGetScale();
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
