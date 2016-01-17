@@ -351,7 +351,7 @@ Notify(key id, string msg, integer alsoNotifyWearer) {
     if (id == Owner) {
         llOwnerSay(msg);
     } else {
-        llInstantMessage(id,msg);
+        llRegionSayTo(id,0,msg);
         if (alsoNotifyWearer) {
             llOwnerSay(msg);
         }
@@ -738,7 +738,6 @@ default {
                 llMessageLinked(LINK_THIS, COMMAND_NOAUTH, "OCAO_MENU", Owner);
                 return;
             }
-            
             string button = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
             
             string message = "";
@@ -754,7 +753,7 @@ default {
                     ToggleSitAnywhere();
                 }
             }
-            else if (llSubStringIndex(button,"ao")>=0)
+            else if (llSubStringIndex(llToLower(button),"ao")>=0)
             {   // The Hide Button
                 llMessageLinked(LINK_SET, COMMAND_OWNER,"hide",NULL_KEY);
                 llSleep(1); 
