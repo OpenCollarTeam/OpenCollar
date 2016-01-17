@@ -213,7 +213,7 @@ DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iSPosition) {
+    if (iPosition != g_iSPosition && iPosition != -1) { //do this only when attached to the hud 
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
         if (iPosition==2||iPosition==5) offset.y = -offset.y;
