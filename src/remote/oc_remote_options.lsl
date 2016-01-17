@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160117.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160117.2       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,14 +98,14 @@ list g_lPrimOrder ;
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
 
-integer g_iVertical = FALSE;  // can be vertical?
-integer g_iLayout = 0; // 0 - Horisontal, 1 - Vertical
+integer g_iVertical = TRUE;  // can be vertical?
+integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 integer g_iHidden = FALSE;
 integer g_iSPosition = 69; // Nuff'said =D
 integer g_iOldPos;
 integer g_iNewPos;
-integer g_iColumn = 0;  // 0 - Column, 1 - Alternate
-integer g_iRows = 1;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
+integer g_iColumn = 1;  // 0 - Column, 1 - Alternate
+integer g_iRows = 3;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
 integer g_iMaxRows = 4; // maximal Rows in Columns
 
 //**************************
@@ -219,7 +219,7 @@ DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iSPosition && iPosition != -1) { //do this only when attached to the hud 
+    if (iPosition != g_iSPosition) {
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
         if (iPosition==2||iPosition==5) offset.y = -offset.y;
@@ -233,7 +233,7 @@ DefinePosition() {
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
         if (iPosition == 1 || iPosition == 4) { g_iLayout = 0; g_iVertical = FALSE;}
-        else g_iVertical = TRUE;
+        else { g_iLayout = 1; g_iVertical = TRUE; }
 
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
