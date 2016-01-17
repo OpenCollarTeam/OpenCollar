@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//        AO Options - 160116.1          .*' /  .*' ; .*`- +'  `*'          //
+//        AO Options - 160117.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -131,7 +131,7 @@ FindButtons() { // collect buttons names & links
     g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
     for (i=2; i<llGetNumberOfPrims()+1; ++i) {
-        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
+        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
         g_lPrimOrder += i;
     }
 }
