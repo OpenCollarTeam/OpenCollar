@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160116.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160117.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -155,10 +155,13 @@ DoStyle(string style) {
     "Picture~c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc",
     "Bookmarks~193208ce-18e5-45f2-19ed-0ea1cbbf46ca",
     "Outfits~3803dc3a-ef14-3ea9-f267-d2fe7e090935",
-    "Pose~3aa04a68-d1ed-dc0f-c80d-d2f9134ec630",
-    "Couples~17fc7b38-9d1e-3646-956d-85ed96a977d9",
+    "Folders~42cb5244-b62d-1403-07d2-97424ac3cf22",
+    "Restrictions~5ae1f0c0-deee-cc28-7352-7edd7f110cb5",
     "Sit~114ff31f-1887-0771-a414-7b65387fc6c0",
     "Stand~05ff2266-08ce-4408-1488-ba2c984ff674",
+    "Couples~17fc7b38-9d1e-3646-956d-85ed96a977d9",
+    "Follow~b0665013-787d-8c5a-a2a8-362efaf54ca5",
+    "Pose~3aa04a68-d1ed-dc0f-c80d-d2f9134ec630",
     "Leash~b0c44ba4-ec7f-8cc6-7c26-44efa4bcd89c",
     "Unleash~7bcbf3a4-6bd4-329b-d1dc-87b422bb50cc",
     "Yank~c3343ece-30ae-5168-0cc2-b89f670b6826",
@@ -168,10 +171,13 @@ DoStyle(string style) {
     "Picture~1ac086de-3201-e526-e986-2e67d9de9202",
     "Bookmarks~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
     "Outfits~2e1d6be8-a2ba-a7bd-244c-ce13fcd545a4",
-    "Pose~5afb4534-79a2-8763-5321-c2f3f204682b",
-    "Couples~38f0da26-b51c-477f-9071-bea17a6a3dac",
+    "Folders~90fde3f4-14d9-7420-f2a8-5a9cd9cd7cad",
+    "Restrictions~72e036ec-9df6-c7da-2356-8438ca0cb1e4",
     "Sit~4c5553b8-e3e1-f10f-8e8c-c9b3c6361954",
     "Stand~faa9824b-414e-97d9-91a6-db4ef08ba3eb",
+    "Couples~38f0da26-b51c-477f-9071-bea17a6a3dac",
+    "Follow~0bd11e22-2e82-a49a-f9ad-9af6bf70eb70",
+    "Pose~5afb4534-79a2-8763-5321-c2f3f204682b",
     "Leash~752f586b-a110-b951-4c9e-23beb0f97d2f",
     "Unleash~2aeecb18-8ca3-b64a-3e47-42ba5322198d",
     "Yank~50f5c540-d0bb-00b0-ce6c-23eb7b70bfa4"
