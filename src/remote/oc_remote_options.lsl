@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160117.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160117.2       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,14 +98,14 @@ list g_lPrimOrder ;
 //  0:Spacer, 1:Root, 2:Menu, 3:Couples, 4:Bookmarks, 5:Leash, 6:Beckon
 //  Spacer serves to even up the list with actual link numbers
 
-integer g_iVertical = FALSE;  // can be vertical?
-integer g_iLayout = 0; // 0 - Horisontal, 1 - Vertical
+integer g_iVertical = TRUE;  // can be vertical?
+integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
 integer g_iHidden = FALSE;
 integer g_iSPosition = 69; // Nuff'said =D
 integer g_iOldPos;
 integer g_iNewPos;
-integer g_iColumn = 0;  // 0 - Column, 1 - Alternate
-integer g_iRows = 1;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
+integer g_iColumn = 1;  // 0 - Column, 1 - Alternate
+integer g_iRows = 3;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
 integer g_iMaxRows = 4; // maximal Rows in Columns
 
 //**************************
@@ -168,8 +168,8 @@ DoStyle(string style) {
     "[ Light ]",
     "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
     "Menu~52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96",
-    "Picture~1ac086de-3201-e526-e986-2e67d9de9202",
-    "Bookmarks~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
+    "Picture~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
+    "Bookmarks~1ac086de-3201-e526-e986-2e67d9de9202",
     "Outfits~2e1d6be8-a2ba-a7bd-244c-ce13fcd545a4",
     "Folders~90fde3f4-14d9-7420-f2a8-5a9cd9cd7cad",
     "Restrictions~72e036ec-9df6-c7da-2356-8438ca0cb1e4",
@@ -233,7 +233,7 @@ DefinePosition() {
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
         if (iPosition == 1 || iPosition == 4) { g_iLayout = 0; g_iVertical = FALSE;}
-        else g_iVertical = TRUE;
+        else { g_iLayout = 1; g_iVertical = TRUE; }
 
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
