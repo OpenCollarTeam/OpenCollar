@@ -196,13 +196,13 @@ DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    /* if (iPosition != g_iPosition) {
+    if (iPosition != g_iPosition && iPosition != -1) { //do this only when attached to the hud
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
         if (iPosition==2||iPosition==5) offset.y = -offset.y;
         llSetPos(offset); // Position the Root Prim on screen
         g_iPosition = iPosition;
-    } */
+    }
     if (g_iHidden) llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION,<1,0,0>]);
     else {
         float fYoff = size.y + g_fGap;
@@ -238,6 +238,7 @@ DetermineColors() {
     g_vAOoffcolor.x = g_vAOoncolor.x/2;
     g_vAOoffcolor.y = g_vAOoncolor.y/2;
     g_vAOoffcolor.z = g_vAOoncolor.z/2;
+    DoStatus();
 }
 
 DoStatus() {
@@ -282,8 +283,9 @@ default {
         if (change & CHANGED_OWNER) llResetScript();
         else if (change & CHANGED_LINK) llResetScript();
         else if (change & CHANGED_COLOR) {
-            DetermineColors(); // -- If we change color because of tint, we need to set the new g_vAOoffcolor!
-            DoStatus();
+            if (llGetColor(0) != g_vAOoncolor) { //If we change color because of tint, we need to set the new g_vAOoffcolor!
+                DetermineColors();
+            }
         }
     }
 
@@ -302,7 +304,7 @@ default {
         DefinePosition();
         DoTextures("initialize");
         DoTextures(llList2String(g_lStyles, 0));
-        DoStatus();
+        DetermineColors();
         //llSleep(1.0);
         //llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
     }
