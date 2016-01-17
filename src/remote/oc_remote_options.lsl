@@ -216,6 +216,7 @@ DoStyle(string style) {
 }
 
 DefinePosition() {
+    if (llGetAttached()==0) return; // do nothing if not attached or ressed on ground
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
