@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Garble - 151107.1                             //
+//                            Garble - 170117.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -67,6 +67,7 @@ integer REBOOT = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV    = 4;
 integer LINK_SAVE   = 5;
+integer LINK_UPDATE = -10;
 
 // messages for storing and retrieving values in the settings script
 integer LM_SETTING_SAVE = 2000;
@@ -226,6 +227,11 @@ default {
 
         }
         else if (iNum == LM_SETTING_EMPTY && sMsg == "garble_Binder") release();
+        else if (iNum == LINK_UPDATE) {
+            if (sMsg == "LINK_DIALOG") LINK_DIALOG = iLink;
+            else if (sMsg == "LINK_RLV") LINK_RLV = iLink;
+            else if (sMsg == "LINK_SAVE") LINK_SAVE = iLink;
+        } else if (iNum == REBOOT && sMsg == "reboot") llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {

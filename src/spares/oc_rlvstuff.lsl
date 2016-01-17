@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          RLV Stuff - 151107.1                            //
+//                          RLV Stuff - 160117.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail et al.  //
@@ -140,6 +140,7 @@ integer REBOOT  = -1000;
 integer LINK_DIALOG = 3;
 integer LINK_RLV    = 4;
 integer LINK_SAVE   = 5;
+integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -470,14 +471,14 @@ default {
         }
     }
 
-    link_message(integer iLink, integer iNum, string sStr, key kID) {
+    link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|Sit", "");
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|Travel", "");
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
-            llMessageLinked(iLink, MENUNAME_RESPONSE, g_sParentMenu + "|View", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Sit", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Travel", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|View", "");
         }
         else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, "");
         else if (iNum == LM_SETTING_RESPONSE) {
@@ -581,8 +582,11 @@ default {
             //remove stride from g_lMenuIDs
             //we have to subtract from the index because the dialog id comes in the middle of the stride
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-        }
-        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == LINK_UPDATE) {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
+        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
 /*

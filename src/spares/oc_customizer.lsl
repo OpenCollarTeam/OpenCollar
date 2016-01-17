@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Customizer - 151027.2                           //
+//                          Customizer - 160117.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Romka Swallowtail et al.                      //
 // ------------------------------------------------------------------------ //
@@ -62,8 +62,8 @@ integer CMD_WEARER = 503;
 
 integer NOTIFY = 1002;
 integer LINK_DIALOG = 3;
-
 integer LINK_SAVE = 5;
+integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 
 integer MENUNAME_REQUEST = 3000;
@@ -345,6 +345,11 @@ default
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+        }
+        else if (iNum == LINK_UPDATE)
+        {
+            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         }
     }
 
