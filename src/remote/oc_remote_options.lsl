@@ -268,10 +268,13 @@ DoMenu(string sMenu) {
         sMenu = g_sHudMenu;
     }
     else if (llSubStringIndex(sMenu,"Rows")==0) {
-        integer n = llGetListLength(g_lPrimOrder)-1;        
+        // this feature is not mandatory, it just passes uneven rows.
+        // for the simple can use only g_iRows++;
+        integer n = llGetListLength(g_lPrimOrder)-1;
         do {
             g_iRows++;            
-        } while ((((float)n/g_iRows)-(n/g_iRows)) != 0 );    
+        } while ((n/g_iRows)*(n/(n/g_iRows)) != n); 
+        //
         if (g_iRows > g_iMaxRows) g_iRows = 1;
         DefinePosition();
         sMenu = g_sHudMenu;
