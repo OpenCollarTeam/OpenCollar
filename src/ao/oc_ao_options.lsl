@@ -112,6 +112,8 @@ integer g_iAOPower = TRUE; // -- Power will always be on when scripts are reset 
 integer g_iAOSit = FALSE;
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
+string g_sDarkLock = "e633ced3-2327-4288-8d4f-7cc530be0faa";
+string g_sLightLock = "8aadf1ed-63d1-2bc5-174b-7c074f676b88";
 
 list g_lStyles;
 string g_sTexture; // current style
@@ -315,11 +317,17 @@ default {
                 g_iHidden = TRUE;
                 g_iAOLock = TRUE;
                 DefinePosition();
+                integer iLink = llListFindList(g_lButtons,["Minimize"]);
+                if (g_sTexture == "Dark") 
+                    llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sDarkLock, <1,1,0>, ZERO_VECTOR, 0]);
+                else if (g_sTexture == "Light")
+                    llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sLightLock, <1,1,0>, ZERO_VECTOR, 0]);
             } else if (str == UNLOCK) {
                 // Un-Collapse the HUD and set AOLOCK so the button works again
                 g_iHidden = FALSE;
                 g_iAOLock = FALSE;
                 DefinePosition();
+                DoTextures(g_sTexture);
             } else if (str == SITANYON) g_iAOSit = TRUE;
             else if (str == SITANYOFF) g_iAOSit = FALSE;
             else if (str == AOOFF) g_iAOPower = FALSE;
