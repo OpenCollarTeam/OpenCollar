@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160112.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160118.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,8 +53,8 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160112.1";
-string g_sFancyVersion = "¹⁶⁰¹⁰⁸⋅¹";
+string g_sVersion = "160118.1";
+string g_sFancyVersion = "¹⁶⁰¹¹⁸⋅¹";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -118,6 +118,9 @@ string g_sMenuType;
 
 string  g_sRezObject;
 
+string g_sPersonal;
+float g_fTimer;
+
 /*integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -158,15 +161,19 @@ list PartnersInSim() {
 }
 
 SendCollarCommand(string sCmd) {
-    if ((key)g_sActivePartnerID)
-        llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
-    else if (g_sActivePartnerID == g_sAllPartners) {
-        integer i = llGetListLength(g_lPartnersInSim);
-         while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
-            string sPartnerID = llList2String(g_lPartnersInSim,--i);
-            llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
+    g_lPartnersInSim = PartnersInSim();
+    integer i = llGetListLength(g_lPartnersInSim);
+    if (i > 1) {
+        if ((key)g_sActivePartnerID)
+            llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
+        else if (g_sActivePartnerID == g_sAllPartners) {
+            integer i = llGetListLength(g_lPartnersInSim);
+             while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
+                string sPartnerID = llList2String(g_lPartnersInSim,--i);
+                llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
+            }
         }
-    }
+    } else llOwnerSay("None of your managed partners is nearby.");
 }
 
 AddPartner(string sID) {
@@ -189,9 +196,9 @@ RemovePartner(string sID) {
     }
 }
 
-Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, string sMenuType) {
+Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, string sMenuType) {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_SET,DIALOG,(string)kRCPT+"|"+sPrompt+"|"+(string)iPage+"|"+llDumpList2String(lChoices,"`")+"|"+llDumpList2String(lUtilityButtons,"`"),kID);
+    llMessageLinked(LINK_SET,DIALOG,(string)g_kOwner+"|"+sPrompt+"|"+(string)iPage+"|"+llDumpList2String(lChoices,"`")+"|"+llDumpList2String(lUtilityButtons,"`"),kID);
     g_kMenuID = kID;
     g_sMenuType = sMenuType;
 }
@@ -201,7 +208,7 @@ MainMenu(){
     sPrompt += "\n\nActive Partner:\n\t"+NameURI(g_sActivePartnerID);
     if (g_iUpdateAvailable) sPrompt += "\n\nThere is an update available @ [http://maps.secondlife.com/secondlife/Boulevard/50/211/23 The Temple]";
     list lButtons = g_lMainMenuButtons + g_lMenus;
-    Dialog(g_kOwner, sPrompt, lButtons, [], 0, g_sMainMenu);
+    Dialog(sPrompt, lButtons, [], 0, g_sMainMenu);
 }
 
 AddPartnerMenu() {
@@ -211,7 +218,7 @@ AddPartnerMenu() {
     do {
         lButtons += llList2Key(g_lNewPartnerIDs,index);
     } while (++index < llGetListLength(g_lNewPartnerIDs));
-    Dialog(g_kOwner, sPrompt, lButtons, [g_sAllPartners,UPMENU], -1,"AddPartnerMenu");
+    Dialog(sPrompt, lButtons, [g_sAllPartners,UPMENU], -1,"AddPartnerMenu");
 }
 
 StartUpdate() {
@@ -240,7 +247,10 @@ NextPartner(integer iDirection, integer iTouch) {
         g_kPicRequest = llHTTPRequest("http://world.secondlife.com/resident/"+g_sActivePartnerID,[HTTP_METHOD,"GET"],"");
     else if (g_sActivePartnerID == g_sAllPartners)
         if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-    if(iTouch) llOwnerSay("New Active Partner is "+NameURI(g_sActivePartnerID));
+    if(iTouch) {
+        if (llGetListLength(g_lPartnersInSim) < 2) llOwnerSay("There is nobody nearby at the moment.");
+        else llOwnerSay("New Active Partner is "+NameURI(g_sActivePartnerID));
+    }
 }
 
 integer PicturePrim() {
@@ -265,10 +275,11 @@ default {
         g_iCmdListener = llListen(g_iChannel,"",g_kOwner,"");
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         g_iPicturePrim = PicturePrim();
-        NextPartner(0,1);
+        NextPartner(0,0);
     }
     
     on_rez(integer iStart) {
+        llResetTime();
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~remote", [HTTP_METHOD, "GET"],"");
     }
     
@@ -280,10 +291,26 @@ default {
                 llMessageLinked(LINK_SET, CMD_TOUCH,"hide","");
             else if (sButton == "Menu") MainMenu();
             else if (~llSubStringIndex(sButton,"Picture")) NextPartner(1,TRUE);
+            else if (sButton == "Personal") g_fTimer = llGetTime();
             else SendCollarCommand(llToLower(sButton));
         }
     }
-
+    touch_end(integer iNum) {
+        if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {
+            if ((string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]) == "Personal") {
+                if (llGetTime()-g_fTimer < 1.5) {
+                    if (g_sPersonal) SendCollarCommand(llToLower(g_sPersonal));
+                    else llDialog(g_kOwner, "\nThis is your personal button which has not been configured yet. Close this menu by clicking the \"OK\' button then click on the HUD button again but keep your finger pushed down on the mouse button for 3 seconds. This will bring a Text Box where you can enter the collar-command for the collar you wish to set this button to.",["OK"],-32345); //info menu, needs not to be listened or reacted to
+                } else {
+                    string sPrompt = "\nPlease type here the collar command you wish this button to execute and press submit.";
+                    if (g_sPersonal) sPrompt += "\nCurrent command: "+g_sPersonal;
+                    Dialog(sPrompt,[],[],0,"textbox");
+                }
+                llResetTime();
+            }
+        }
+    }
+    
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == g_iChannel) {
             list lParams = llParseString2List(sMessage, [" "], []);
@@ -305,7 +332,7 @@ default {
         } else if (iChannel == PersonalChannel(g_kOwner,0) && llGetOwnerKey(kID) == g_kOwner) {
             if (sMessage == "-.. --- / .... ..- -..") {
                 g_kUpdater = kID;
-                Dialog(g_kOwner, "\nINSTALLATION REQUEST PENDING:\n\nAn update or app installer is requesting permission to continue. Installation progress can be observed above the installer box and it will also tell you when it's done.\n\nShall we continue and start with the installation?", ["Yes","No"], ["Cancel"], 0, "UpdateConfirmMenu");
+                Dialog("\nINSTALLATION REQUEST PENDING:\n\nAn update or app installer is requesting permission to continue. Installation progress can be observed above the installer box and it will also tell you when it's done.\n\nShall we continue and start with the installation?", ["Yes","No"], ["Cancel"], 0, "UpdateConfirmMenu");
             }
         } else if (llGetSubString(sMessage, 36, 40)==":pong") {
             if (!~llListFindList(g_lNewPartnerIDs, [llGetOwnerKey(kID)]) && !~llListFindList(g_lPartners, [(string)llGetOwnerKey(kID)]))
@@ -334,9 +361,9 @@ default {
             if (g_sMenuType == "Main") {
                 if (sMessage == "Collar Menu") SendCollarCommand("menu");
                 else if (sMessage == "Rez")
-                    Dialog(g_kOwner, "\nMake your choice!\n\nChoosen Partner for this Object will be:\n\t"+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
+                    Dialog("\nMake your choice!\n\nChoosen Partner for this Object will be:\n\t"+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
                 else if (sMessage == g_sRemovePartner)
-                    Dialog(g_kOwner, "\nWho would you like to remove?\n\nNOTE: This will also revoke your access rights.", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
+                    Dialog("\nWho would you like to remove?\n\nNOTE: This will also revoke your access rights.", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
                 else if (sMessage == g_sListPartners) {
                     string sText ="\nI'm currently managing:\n";
                     integer iPartnerCount = llGetListLength(g_lPartners);
@@ -391,7 +418,7 @@ default {
                 } else if (sMessage == "No") MainMenu();
                 else if (~index) {
                     g_kRemovedPartnerID = (key)llList2String(g_lPartners, index);
-                    Dialog(g_kOwner, "\nAre you sure you want to remove "+NameURI(g_kRemovedPartnerID)+"?\n\nNOTE: This will also revoke your access rights.", ["Yes", "No"], [UPMENU], 0,"RemovePartnerMenu");
+                    Dialog("\nAre you sure you want to remove "+NameURI(g_kRemovedPartnerID)+"?\n\nNOTE: This will also revoke your access rights.", ["Yes", "No"], [UPMENU], 0,"RemovePartnerMenu");
                 }
             } else if (g_sMenuType == "UpdateConfirmMenu") {
                 if (sMessage=="Yes") StartUpdate();
@@ -418,6 +445,12 @@ default {
                     AddPartner(sMessage);
                 g_lNewPartnerIDs = [];
                 MainMenu();
+            } else if (g_sMenuType == "textbox") {
+                if (llStringTrim(sMessage,STRING_TRIM)) {
+                    g_sPersonal = llStringTrim(sMessage,STRING_TRIM);
+                    llOwnerSay("You have programmed your personal button with: \""+g_sPersonal+"\".");
+                } else if (g_sPersonal) llOwnerSay("You have not entered anything, the button remains to: \""+g_sPersonal+"\".");
+                else llOwnerSay("You have not entered anything, the button remains unprogrammed.");
             }
         }
     }
