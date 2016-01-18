@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//        AO Options - 160117.1          .*' /  .*' ; .*`- +'  `*'          //
+//        AO Options - 160118.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -118,14 +118,18 @@ string g_sLightLock = "8aadf1ed-63d1-2bc5-174b-7c074f676b88";
 list g_lStyles;
 string g_sTexture; // current style
 
-string g_sCurrentMenu;
-key g_kMenuID;
+list g_lMenuIDs;
+integer g_iMenuStride=3;
 
-key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page) {
+Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page, string menu)
+{
     key id = llGenerateKey();
     llMessageLinked(LINK_THIS, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page +
  "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
-    return id;
+
+    integer index = llListFindList(g_lMenuIDs, [rcpt]);
+    if (~index) g_lMenuIDs = llListReplaceList(g_lMenuIDs,[rcpt,id,menu],index,index+g_iMenuStride-1);
+    else g_lMenuIDs += [rcpt,id,menu];
 }
 
 FindButtons() { // collect buttons names & links
@@ -252,7 +256,6 @@ DoStatus() {
 }
 
 MainMenu(key id) {
-    g_sCurrentMenu = g_sHudMenu;
     string text = "\nThis menu sets your HUD options.\n";
     text += "[Horizontal] sets the button layout to Horizontal.\n";
     text += "[Vertical] sets the button layout to Vertical.\n";
@@ -261,11 +264,10 @@ MainMenu(key id) {
 
     list buttons = ["Horizontal","Vertical","Order"];
     buttons += g_lStyles;
-    g_kMenuID = Dialog(id, text, buttons, [UPMENU], 0);
+    Dialog(id, text, buttons, [UPMENU], 0, g_sHudMenu);
 }
 
 OrderMenu(key id) {
-    g_sCurrentMenu = g_sOrderMenu;
     string text = "This is the order menu, simply select the\n";
     text += "button which you want to re-order.\n\n";
     integer i;
@@ -274,7 +276,7 @@ OrderMenu(key id) {
         integer pos = llList2Integer(g_lPrimOrder,i);
         buttons += llList2List(g_lButtons,pos,pos);
     }
-    g_kMenuID = Dialog(id, text, buttons, ["Reset",UPMENU], 0);
+    Dialog(id, text, buttons, ["Reset",UPMENU], 0, g_sOrderMenu);
 }
 
 
@@ -320,7 +322,7 @@ default {
                 g_iAOLock = TRUE;
                 DefinePosition();
                 integer iLink = llListFindList(g_lButtons,["Minimize"]);
-                if (g_sTexture == "Dark") 
+                if (g_sTexture == "Dark")
                     llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sDarkLock, <1,1,0>, ZERO_VECTOR, 0]);
                 else if (g_sTexture == "Light")
                     llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sLightLock, <1,1,0>, ZERO_VECTOR, 0]);
@@ -335,13 +337,19 @@ default {
             else if (str == AOOFF) g_iAOPower = FALSE;
             else if (str == AOON) g_iAOPower = TRUE;
             DoStatus();
-        } else if (num == DIALOG_RESPONSE && id == g_kMenuID) {
+        } else if (num == DIALOG_RESPONSE) {
+            integer index = llListFindList(g_lMenuIDs, [id]);
+            if (index == -1) return;
+
             list menuparams = llParseString2List(str, ["|"], []);
             id = (key)llList2String(menuparams, 0);
             string response = llList2String(menuparams, 1);
             //integer page = (integer)llList2String(menuparams, 2);
+            
+            string sMenu = llList2String(g_lMenuIDs,index+1);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs,index-1,index-2+g_iMenuStride);
 
-            if (g_sCurrentMenu == g_sHudMenu) {
+            if (sMenu == g_sHudMenu) {
                 if (response == UPMENU) {
                     //llMessageLinked(LINK_THIS, CMD_OWNER, "ZHAO_MENU", id);
                     llMessageLinked(LINK_THIS, CMD_OWNER, "OCAO_MENU", id);
@@ -357,7 +365,7 @@ default {
                     return;
                 } else if (~llListFindList(g_lStyles,[response])) DoTextures(response);
                 MainMenu(id);
-            } else if (g_sCurrentMenu == g_sOrderMenu) {
+            } else if (sMenu == g_sOrderMenu) {
                 if (response == UPMENU) MainMenu(id);
                 else if (response == "Reset") {
                     FindButtons();
@@ -369,7 +377,6 @@ default {
                     DoButtonOrder();
                     OrderMenu(id);
                 } else {
-                    g_sCurrentMenu = g_sOrderMenu;
                     list lButtons;
                     string sPrompt;
                     integer iTemp = llListFindList(g_lButtons,[response]);
@@ -382,10 +389,14 @@ default {
                             lButtons +=[llList2String(g_lButtons,iTemp)+":"+(string)i];
                         }
                     }
-                    g_kMenuID = Dialog(id, sPrompt, lButtons, [UPMENU], 0);
+                    Dialog(id, sPrompt, lButtons, [UPMENU], 0, g_sOrderMenu);
                 }
             }
-        } else if (str == "hide" && !g_iAOLock) {
+        } else if (num == DIALOG_TIMEOUT) {
+            integer index = llListFindList(g_lMenuIDs, [id]);
+            if (~index) g_lMenuIDs = llDeleteSubList(g_lMenuIDs,index-1,index-2+g_iMenuStride);
+        }
+        else if (str == "hide" && !g_iAOLock) {
             // This disables the hide button when locked
             g_iHidden = !g_iHidden;
             DefinePosition();
