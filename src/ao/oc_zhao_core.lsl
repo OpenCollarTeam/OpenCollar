@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          ZHAO Core - 140423.1                            //
+//                          ZHAO Core - 160117.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2014 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Medea Destiny,               //
@@ -368,7 +368,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "BACK";
+string UPMENU = "AO menu";//"BACK";
 
 list menuids;//three strided list of avkey, dialogid, and menuname
 integer menustride = 3;
@@ -899,13 +899,12 @@ default {
                 menuids = llDeleteSubList(menuids, menuindex - 1, menuindex - 2 + menustride);
                 if(menutype == MULTIANIM)
                 {
-
                     if ( listenState == 1 ) {
                         // Dialog enhancement - Fennec Wind
                         // Note that this is within one 'overrides' entry
                         if(_message == UPMENU)
                         {
-                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            llMessageLinked(LINK_THIS, 503, "ZHAO_MENU", _id);
                             return;
                         }
                         curSitAnim = findMultiAnim( sittingIndex, (integer)_message - 1 );
@@ -921,7 +920,7 @@ default {
                         // Note that this is within one 'overrides' entry
                         if(_message == UPMENU)
                         {
-                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            llMessageLinked(LINK_THIS, 503, "ZHAO_MENU", _id);
                             return;
                         }
                         curWalkAnim = findMultiAnim( walkingIndex, (integer)_message - 1 );
@@ -937,7 +936,7 @@ default {
                         // Note that this is within one 'overrides' entry
                         if(_message == UPMENU)
                         {
-                            llMessageLinked(LINK_THIS, 0, "ZHAO_MENU", _id);
+                            llMessageLinked(LINK_THIS, 503, "ZHAO_MENU", _id);
                             return;
                         }
                         curGsitAnim = findMultiAnim( sitgroundIndex, (integer)_message - 1 );
@@ -980,7 +979,8 @@ default {
             // if it's greater than 0, we know it's for us (this script)
             if (menuindex != -1)
             {
-                llInstantMessage(llGetOwner(),"SubAO Menu has timed out. Pressing a menu entry will not do anything.");
+                //llInstantMessage(llGetOwner(),"SubAO Menu has timed out. Pressing a menu entry will not do anything.");
+                menuids = llDeleteSubList(menuids,menuindex-1,menuindex + menustride - 2);
             }
            
         }
