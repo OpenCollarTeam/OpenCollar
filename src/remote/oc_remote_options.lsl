@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160117.2       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160119.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -223,6 +223,8 @@ DefinePosition() {
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
         if (iPosition==2||iPosition==5) offset.y = -offset.y;
+        if (iPosition==1||iPosition==4) { g_iLayout = 0; g_iVertical = FALSE;}
+        else { g_iLayout = 1; g_iVertical = TRUE; }        
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
@@ -232,9 +234,6 @@ DefinePosition() {
         float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
         if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
         if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
-        if (iPosition == 1 || iPosition == 4) { g_iLayout = 0; g_iVertical = FALSE;}
-        else { g_iLayout = 1; g_iVertical = TRUE; }
-
         PlaceTheButton(fYoff, fZoff); // Does the actual placement
     }
 }
