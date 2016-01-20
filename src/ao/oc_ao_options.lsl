@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//        AO Options - 160118.1          .*' /  .*' ; .*`- +'  `*'          //
+//        AO Options - 160120.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -256,12 +256,7 @@ DoStatus() {
 }
 
 MainMenu(key id) {
-    string text = "\nThis menu sets your HUD options.\n";
-    text += "[Horizontal] sets the button layout to Horizontal.\n";
-    text += "[Vertical] sets the button layout to Vertical.\n";
-    text += "[Order] opens the sub menus to reorder the buttons.\n";
-    text += "[Dark] or [Light] chooses a dark or light button.\n";
-
+    string text = "\nCustomize your AO!";
     list buttons = ["Horizontal","Vertical","Order"];
     buttons += g_lStyles;
     Dialog(id, text, buttons, [UPMENU], 0, g_sHudMenu);

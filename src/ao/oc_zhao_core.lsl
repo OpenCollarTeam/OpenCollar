@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          ZHAO Core - 160117.1                            //
+//                          ZHAO Core - 160120.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2014 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Medea Destiny,               //
@@ -353,7 +353,7 @@ integer haveWalkingAnim = FALSE;            // Hack to get it so we face the rig
 integer sitOverride = TRUE;                 // Whether we're overriding sit or not
 
 integer standOverride = TRUE;                 // Whether we're overriding stand or not
-integer typingOverrideOn = TRUE;            // Whether we're overriding typing or not
+integer typingOverrideOn = FALSE;            // Whether we're overriding typing or not
 /// Sit Anywhere mod by Marcus Gray
 /// just one var to overrider stands... let's see how this works out 0o
 integer sitAnywhereOn = FALSE;
@@ -368,7 +368,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU = "AO menu";//"BACK";
+string UPMENU = "BACK";
 
 list menuids;//three strided list of avkey, dialogid, and menuname
 integer menustride = 3;
@@ -397,8 +397,7 @@ integer g_iJustRezed;
 
 
 key g_kSetDefault; //menu id for setting  default notecard.
-string helpNotecard = "OpenCollar AO Guide"; //we need these two here now as well for the above.
-string license = "OpenCollar AO License";
+
 // CODE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -643,7 +642,7 @@ doMultiAnimMenu(key _id, integer _animIndex, string _animType, string _currentAn
         animNames = "\n\nNo overrides have been configured.";
     }
     
-    string text = "Select the " + _animType + " animation to use:\n\nCurrently: " + _currentAnim + animNames + "\n"; 
+    string text = "\nSelected \""+_animType+"\" animation: " + _currentAnim + "\n" + animNames + "\n"; 
     list utility = [UPMENU];
     key menuid = Dialog(_id, text, buttons, utility, 0);
     
@@ -818,10 +817,10 @@ askDefault() //added to provide a menu to ask for default notecard and
     for ( i = 0; i < n; i++ ) 
     {
         string notecardName = llGetInventoryName( INVENTORY_NOTECARD, i );
-        if ( notecardName != helpNotecard && notecardName != license)
+        if (notecardName != ".license")
         animSets += [ notecardName ];
     }
-    g_kSetDefault = Dialog(Owner, "New or reset AO. Please pick your default animation set.", animSets, [], 0);
+    g_kSetDefault = Dialog(Owner, "\nYou are wearing me for the first time!\n\nWhich set do you want me to load?", animSets, [], 0);
 
 }
 // STATE
@@ -1393,6 +1392,6 @@ default {
     
     changed (integer change)
     {
-        if(change&CHANGED_OWNER) askDefault();
+        if(change&CHANGED_OWNER) llResetScript();
     }
 }

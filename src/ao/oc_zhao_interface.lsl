@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                        ZHAO Interface - 160119.1                         //
+//                        ZHAO Interface - 160120.1                         //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2015 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Alex Carpenter,              //
@@ -126,9 +126,7 @@
 // integer disabled = FALSE;//used to prevent manually turning AO on when collar has turned it off
 // key disabler;//the key of th eobject that turned us off.  will be needed for a workaround later
 
-// Help notecard
-string helpNotecard = "OpenCollar AO Guide";
-string license = "OpenCollar AO License";
+string fancyVersion = "⁶⋅⁰⋅⁰";
 
 // How long before flipping stand animations
 integer standTimeDefault = 30;
@@ -220,14 +218,14 @@ DoMenu(key id, integer page) {
     list lButtons;
     string prompt;
     if(llGetAttached()) { // -- If we're attached... ANYWHERE, display the menu
-        prompt = "\nPlease select an option:\n";
+        prompt = "\n[http://www.opencollar.at/ao.html OpenCollar AO]\t"+fancyVersion;
         //new for locking feature 
         if (isLocked) lButtons += [UNLOCK];
         else lButtons += [LOCK];
-        lButtons += ["Collar Menu","HUD Style",
+        lButtons += ["Collar Menu","Load",
                     "Sits","Ground Sits","Walks",
                     "Sits "+Checkbox(sitOverride),"Typing "+Checkbox(typingOverrideOn),"Stand Time",
-                    "Next Stand","Shuffle "+Checkbox(randomStands),"Load"];
+                    "Next Stand","Shuffle "+Checkbox(randomStands),"HUD Style"];
     } else { // Else, if we're not attached, we must be updating and therefore only display the update menu
         lButtons = ["Load"];
         prompt = "\nCustomization:\n\n1. Take a notecard set from the AO contents\n2. List your animations in the corresponding lines\n3. Give the notecard a new name\n4. Drop the notecard into the AO contents\n5. Also drop the animations you listed inside\n6. Click the Load button to select your new set\n7. Error? Check for typos or missing anims\n\nNote: Moving animations in bulk could cause some to go missing in the ether. Don't drop more than half a dozen at once, wait two seconds, then drop the next batch.\n\nwww.opencollar.at/ao";
@@ -416,14 +414,14 @@ default {
                         // Build a list of notecard names and present them in a dialog box
                         for ( i = 0; i < n; i++ ) {
                             string notecardName = llGetInventoryName( INVENTORY_NOTECARD, i );
-                            if ( notecardName != helpNotecard && notecardName != license)
+                            if (notecardName != ".license")
                             animSets += [ notecardName ];
                         }
-                        string text = "\nSelect the notecard to load:";
+                        string text = "\nSelect a set to load:";
                         Dialog(_id, text, animSets, [], 0, "SetsMenu");
                     } else if ( _message == "Stand Time" ) {
                         string text = "\nSelect stand cycle time (in seconds). \n\nSelect '0' to turn off stand auto-cycling.";
-                        Dialog(_id, text, ["0", "5", "10", "15", "20", "30", "40", "60", "90", "120", "180", "240"], [UPMENU], 0, "StandTimesMenu");
+                        Dialog(_id, text, ["0", "5", "10", "20", "30", "40", "60", "90", "120", "180", "240"], [UPMENU], 0, "StandTimesMenu");
     
                     } else if ( _message == LOCK) {
                         // -- Tell the options menu if we're locked or unlocked
