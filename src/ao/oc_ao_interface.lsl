@@ -103,7 +103,7 @@ init() {
     //we dont know what was changed in the collar so lets starts fresh with our cache
     g_kCollarID = NULL_KEY;
     g_iCollarIntegration = FALSE; // -- 3.381 to avoid double message on login
-    llWhisper(g_iInterfaceChannel, "OpenCollar?");
+    llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
     g_iCounter = 0;
     llSetTimerEvent(30.0);
 }
@@ -242,7 +242,7 @@ default
                     llListenRemove(g_iListenHandle);
                     g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
                     g_iCounter = 0;
-                    llWhisper(g_iInterfaceChannel, "OpenCollar?");
+                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
                     llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
                 }
             }
@@ -252,10 +252,10 @@ default
                     g_kCollarID = NULL_KEY;
                     llListenRemove(g_iListenHandle);
                     g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
-                    llWhisper(g_iInterfaceChannel, "OpenCollar?");
+                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
                     llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
             } else  // -- We need to continue to ask if the collar is there
-                llWhisper(g_iInterfaceChannel, "OpenCollar?");
+                llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
         }
     }
 }
