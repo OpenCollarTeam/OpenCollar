@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160120.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160120.2        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,8 +53,8 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160118.1";
-string g_sFancyVersion = "¹⁶⁰¹¹⁸⋅¹";
+string g_sVersion = "6.0.0";
+string g_sFancyVersion = "⁶⋅⁰⋅⁰";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -200,15 +200,15 @@ Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, strin
 }
 
 MainMenu(){
-    string sPrompt = "\n[http://www.opencollar.at/remote.html OpenCollar Remote] "+g_sFancyVersion;
-    sPrompt += "\n\nActive Partner:\n\t"+NameURI(g_sActivePartnerID);
-    if (g_iUpdateAvailable) sPrompt += "\n\nThere is an update available @ [http://maps.secondlife.com/secondlife/Boulevard/50/211/23 The Temple]";
+    string sPrompt = "\n[http://www.opencollar.at/remote.html OpenCollar Remote]\t"+g_sFancyVersion;
+    sPrompt += "\n\nActive Partner: "+NameURI(g_sActivePartnerID);
+    if (g_iUpdateAvailable) sPrompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     list lButtons = g_lMainMenuButtons + g_lMenus;
     Dialog(sPrompt, lButtons, [], 0, g_sMainMenu);
 }
 
 RezMenu() {
-    Dialog("\nMake your choice!\n\nChoosen Partner for this Object will be:\n\t"+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
+    Dialog("\nRez something!\n\nActive Partner: "+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
 }
 
 AddPartnerMenu() {
@@ -350,9 +350,9 @@ default {
                 else if (sMessage == "Rez")
                     RezMenu();
                 else if (sMessage == g_sRemovePartner)
-                    Dialog("\nWho would you like to remove?\n\nNOTE: This will also revoke your access rights.", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
+                    Dialog("\nWho would you like to remove?\n\nNOTE: This will also revoke your access rights.\n", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
                 else if (sMessage == g_sListPartners) {
-                    string sText ="\nI'm currently managing:\n";
+                    string sText ="\n\nI'm currently managing: ";
                     integer iPartnerCount = llGetListLength(g_lPartners);
                     if (iPartnerCount) {
                         i=0;
@@ -365,13 +365,13 @@ default {
                         } while (++i < iPartnerCount-1);
                         if (iPartnerCount>1)sText += " and "+NameURI(llList2Key(g_lPartners,i));
                         if (iPartnerCount == 1) sText = llGetSubString(sText,0,-3);
-                    } else sText += "nobody";
+                    } else sText += "nobody :(";
                     llOwnerSay(sText);
                     MainMenu();
                 } else if (sMessage == g_sAddPartners) {
                      // Ping for auth OpenCollars in the parcel
                      list lAgents = llGetAgentList(AGENT_LIST_PARCEL, []); //scan for who is in the parcel
-                     llOwnerSay("Scanning for new collars, you have access to.");
+                     llOwnerSay("Scanning for collar access....");
                      integer iChannel;
                      i =  llGetListLength(lAgents);
                      do {
@@ -438,7 +438,7 @@ default {
 
     timer() {
         if (llGetListLength(g_lNewPartnerIDs)) AddPartnerMenu();
-        else llOwnerSay("No new Collar, you have access to was found.");
+        else llOwnerSay("\n\nYou currently don't have access to any nearby collars. Requirements to add partners are to either have them captured or their collar is set to public or they have you listed as an owner or trust role. www.opencollar.at/remote\n");
         llSetTimerEvent(0);
         integer n = llGetListLength(g_lListeners);
         while (n--)
@@ -449,7 +449,7 @@ default {
     dataserver(key kRequestID, string sData) {
         if (kRequestID == g_kLineID) {
             if (sData == EOF) { //  notify the owner
-                llOwnerSay(g_sCard+" card loaded.");
+                //llOwnerSay(g_sCard+" card loaded.");
                 return;
             } else if ((key)sData) // valid lines contain only a valid UUID which is a key
                 AddPartner(sData); 

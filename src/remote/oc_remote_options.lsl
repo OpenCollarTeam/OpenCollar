@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160119.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160120.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -67,7 +67,7 @@ integer DIALOG_TIMEOUT    = -9002;
 string UPMENU         = "BACK";
 string g_sParentMenu  = "Main";
 string g_sHudMenu     = "HUD Style";
-string g_sTextureMenu = "Textures";
+string g_sTextureMenu = "Theme";
 string g_sOrderMenu   = "Order";
 
 list g_lAttachPoints = [
@@ -151,36 +151,42 @@ DoStyle(string style) {
     list lTextures = [
     "[ Dark ]",
     "Minimize~e1482c7e-8609-fcb0-56d8-18c3c94d21c0",
+    "Picture~4fb4a7fe-733b-fae7-810d-81e6784bc3c3",
     "Menu~f3ec1052-6ec4-04ba-d752-937a4d837bf8",
-    "Picture~c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc",
-    "Bookmarks~193208ce-18e5-45f2-19ed-0ea1cbbf46ca",
-    "Outfits~3803dc3a-ef14-3ea9-f267-d2fe7e090935",
+    "Couples~2a25fbfb-c2d3-e718-df84-9dcd175d5881",
+    "Favorite~c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc",
+    "Bookmarks~3677746b-5bff-65bc-486f-a4ee01d1ef0d",
+    "Restrictions~554bd266-018e-b577-72af-23f05d67e4a7",
+    "Outfits~a04c713c-0531-024e-148b-8afbaa8eb816",
     "Folders~42cb5244-b62d-1403-07d2-97424ac3cf22",
-    "Restrictions~5ae1f0c0-deee-cc28-7352-7edd7f110cb5",
-    "Sit~114ff31f-1887-0771-a414-7b65387fc6c0",
-    "Stand~05ff2266-08ce-4408-1488-ba2c984ff674",
-    "Couples~17fc7b38-9d1e-3646-956d-85ed96a977d9",
-    "Follow~b0665013-787d-8c5a-a2a8-362efaf54ca5",
-    "Pose~3aa04a68-d1ed-dc0f-c80d-d2f9134ec630",
     "Leash~b0c44ba4-ec7f-8cc6-7c26-44efa4bcd89c",
     "Unleash~7bcbf3a4-6bd4-329b-d1dc-87b422bb50cc",
     "Yank~c3343ece-30ae-5168-0cc2-b89f670b6826",
+    "Sit~114ff31f-1887-0771-a414-7b65387fc6c0",
+    "Stand~05ff2266-08ce-4408-1488-ba2c984ff674",
+    "Rez~d5c985f6-a0cf-68a3-cc68-a5cd144f6200",
+    "Pose~b2893dc1-2d38-5819-c8b1-6b7e931daad2",
+    "Stop~88ea147b-939d-6462-adba-3c38cc0642f8",
+    "Hudmenu~682cca8f-f1fe-f70e-f804-0a52a7838ddc",
     "[ Light ]",
     "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
+    "Picture~86517d37-d251-06aa-0d57-127853f193b9",
     "Menu~52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96",
-    "Picture~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
-    "Bookmarks~1ac086de-3201-e526-e986-2e67d9de9202",
-    "Outfits~2e1d6be8-a2ba-a7bd-244c-ce13fcd545a4",
+    "Couples~dca287df-f0eb-1537-c903-ae29b76ef2fe",
+    "Favorite~1bf5c34f-3831-2ebb-e3aa-3e5b3a924e5d",
+    "Bookmarks~7d2a1943-ed4c-03b6-cdfe-90c03cc0a0a6",
+    "Restrictions~05a38041-0c12-1966-e99a-61a11bc598b1",
+    "Outfits~989b40c1-ba13-1d99-fd7d-5e4a72ccc837",
     "Folders~90fde3f4-14d9-7420-f2a8-5a9cd9cd7cad",
-    "Restrictions~72e036ec-9df6-c7da-2356-8438ca0cb1e4",
-    "Sit~4c5553b8-e3e1-f10f-8e8c-c9b3c6361954",
-    "Stand~faa9824b-414e-97d9-91a6-db4ef08ba3eb",
-    "Couples~38f0da26-b51c-477f-9071-bea17a6a3dac",
-    "Follow~0bd11e22-2e82-a49a-f9ad-9af6bf70eb70",
-    "Pose~5afb4534-79a2-8763-5321-c2f3f204682b",
     "Leash~752f586b-a110-b951-4c9e-23beb0f97d2f",
     "Unleash~2aeecb18-8ca3-b64a-3e47-42ba5322198d",
-    "Yank~50f5c540-d0bb-00b0-ce6c-23eb7b70bfa4"
+    "Yank~50f5c540-d0bb-00b0-ce6c-23eb7b70bfa4",
+    "Sit~4c5553b8-e3e1-f10f-8e8c-c9b3c6361954",
+    "Stand~faa9824b-414e-97d9-91a6-db4ef08ba3eb",
+    "Rez~2a284c71-6c96-b0fd-9415-963e4bca9ca0",
+    "Pose~c48d0e15-db82-9799-c3e3-882d9669bca4",
+    "Stop~fcb2ccd6-5ebe-dc16-5002-618601b66500",
+    "Hudmenu~79f42937-65fb-8c3b-5a06-8f9d9cf21234"
     ];
 
     integer i;
@@ -285,9 +291,7 @@ DoMenu(string sMenu) {
         sMenu = g_sHudMenu;
     }
     else if (sMenu == g_sTextureMenu) { // textures
-        sPrompt = "\nThis is the menu for styles.\n";
-        sPrompt += "Selecting one of these options will change the theme of the HUD buttons.\n\n";
-        sPrompt += "Current Theme is: " + g_sCurrentTheme;
+        sPrompt = "\nCurrent button theme: " + g_sCurrentTheme;
         lButtons = g_lStyles;
     }
     else if (sMenu == g_sOrderMenu) { // Order
