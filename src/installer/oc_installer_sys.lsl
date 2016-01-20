@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 160112.1                        //
+//                       Installer System - 160120.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -72,8 +72,11 @@ integer g_iInstallOnRez = FALSE; // TRUE initiates right away on rez
 
 key g_kNameID;
 integer g_initChannel = -7483213;
+//integer g_initChannel = -7483220; channel for AO SIX
+//integer g_initChannel = -7483210; channel for Remote HUD SIX
 integer g_iSecureChannel;
 string g_sBuildVersion;
+
 
 // store the script pin here when we get it from the collar.
 integer g_iPin;
@@ -167,13 +170,19 @@ Particles(key kTarget) {
 InitiateInstallation() {
     integer iChan = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
     llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
+    //llPlaySound("3409e593-20ab-fd34-82b3-6ecfdefc0207",1.0); //ao
+    //llPlaySound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b",1.0); //remote hud
     llWhisper(iChan,(string)llGetOwner()+":.- ... -.-|"+g_sBuildVersion+"|"+(string)llGetKey());
+    //llWhisper(iChan,"-.. --- / .- ---"); AO command
+    //llWhisper(iChan,"-.. --- / .... ..- -.."); Remote HUD command
 }
 
 default {
     state_entry() {
         llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
         llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
+        //llPreloadSound("3409e593-20ab-fd34-82b3-6ecfdefc0207"); // ao
+       // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
         llSetTimerEvent(300.0);
         ReadName();
         llListen(g_initChannel, "", "", "");
