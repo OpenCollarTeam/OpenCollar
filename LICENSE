@@ -1,8 +1,8 @@
-==============================================================
-License Terms for the OpenCollar™ Role Play Device | 2015-10-09
---------------------------------------------------------------
+License Terms for the OpenCollar™ Role Play Device | 2016-01-20
+
 raw.githubusercontent.com/OpenCollar/opencollar/master/LICENSE
-==============================================================
+
+--------------------------------------------------------------
 
 Preamble and Introduction
 
@@ -162,14 +162,21 @@ Contents available under these terms and conditions.
        (https://creativecommons.org/licenses/by-sa/4.0/legalcode)
        and must remain FULL PERMS.
 
-    c. The default Leash Post is derivative work by Wendy
+    c. The default Leash Post is a derivative work by Wendy
        Starfall based on an assembly design concept by Lulu
        Pink. It is licensed under a Creative Commons
        Attribution-ShareAlike 4.0 International Public License
        (https://creativecommons.org/licenses/by-sa/4.0/legalcode)
        and must remain FULL PERMS.
 
-    d. RESTRICTING THE MODIFY PERMISSION ON OPENCOLLAR
+    d. The default Graphical User Interfaces for the OpenCollar AO
+       and the OpenCollar Remote are derivative works by Wendy
+       Starfall based on an assembly design concept by Alexei Maven
+       and Jessenia Mocha. They are licensed under a Creative
+       Commons Attribution-ShareAlike 4.0 International Public License
+       (https://creativecommons.org/licenses/by-sa/4.0/legalcode).
+
+    e. RESTRICTING THE MODIFY PERMISSION ON OPENCOLLAR
        SCRIPTED ITEMS THAT YOU INTEND TO DISTRIBUTE, WILL
        BREAK CORE FUNCTIONALITY LIKE PLUGIN MANAGEMENT,
        CUSTOMIZATION FEATURES, AND EXPANDABILITY AS WELL AS
@@ -193,7 +200,7 @@ Contents available under these terms and conditions.
           iii. In all cases a verbatim copy of this License
                Addendum must be included, all contents must
                remain under the same license terms as stated
-               in § 3a/b/c and all OpenCollar scripts must
+               in § 3a/b/c/d and all OpenCollar scripts must
                remain under the GNU General Public License,
                version 2.
 
@@ -225,25 +232,34 @@ Contents available under these terms and conditions.
        International Public License
        (https://creativecommons.org/licenses/by-sa/4.0/legalcode)
        and must remain FULL PERMS.
+    
+    e. The button textures in default graphical user interfaces
+       for the OpenCollar AO and the OpenCollar Remote were
+       created by Wendy Starfall, are licensed under a
+       Creative Commons Attribution-ShareAlike 4.0
+       International Public License
+       (https://creativecommons.org/licenses/by-sa/4.0/legalcode)
+       and must remain FULL PERMS.
 
-    e. The OpenCollar logo and "Bleeding Heart" symbol are
+    f. The OpenCollar logo and "Bleeding Heart" symbol are
        trademark and property of their respective owners and
-       may not be used without prior, explicit and formally
-       written permission.
+       may not be used without express permission.
 
 
 § 5.) Animations:
 
     a. To the best of Our knowledge, the animations included
-       in Default OpenCollar which were created by Damien
-       Fate, Dyonis Blanc, Indika Herbst, Roenik Newell and
-       Solari Hayashida are in the public domain and may be
-       used without restriction.
+       in Default OpenCollar and the OpenCollar AO which were
+       created by Damien Fate, Dyonis Blanc, Indika Herbst,
+       Roenik Newell, Solari Hayashida, Darien Caldwell, Whinge
+       Languish, Twitch Misfit and Antoinette Lioncourt are in the
+       Public Domain and may be used without restriction.
 
-    b. The animations created by Arcane Gothly, Ilse
-       Mannonen, Marine Kelley, Nadja Gufler and Nandana Singh
-       must remain FULL PERMS and attribution (e.g. this
-       License Addendum) must be included.
+    b. The animations created by Arcane Gothly, Ilse Mannonen,
+       Marine Kelley, Nadja Gufler, Nandana Singh, Creamy Cooljoke,
+       Stephe Ehrler, Garvin Twine, Madison McHenry must remain
+       FULL PERMS and attribution (e.g. this License Addendum) must
+       be included.
 
     c. The walk motions by Vanish Firecaster must remain FULL
        PERMS and include attribution to the original Author.
@@ -253,7 +269,9 @@ Contents available under these terms and conditions.
     d. The animations created by Wendy Starfall and which are
        either derivative works of Linda Kellie Henson's
        resource or original creation, as well as the
-       animations created by Toy Wylie are licensed under a
+       animations created by Toy Wylie, Vasa Vella, including
+       uploaded animations by those creatores from uploaders
+       MissSpoken and OpenCollar Organiser are licensed under a
        Creative Commons Attribution-ShareAlike 4.0
        International Public License
        (https://creativecommons.org/licenses/by-sa/4.0/legalcode)
@@ -355,7 +373,7 @@ Contents available under these terms and conditions.
 
 --------------------------------------------------------------
 
-This text was last edited on October 09, 2015. We reserve the
+This text was last edited on January 20, 2016. We reserve the
 right to update or modify this License Addendum at any time.
 
 OpenCollar can be contacted at www.opencollar.at
