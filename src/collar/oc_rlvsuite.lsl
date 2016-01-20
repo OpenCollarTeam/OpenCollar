@@ -104,7 +104,7 @@ key     g_kWearer;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER                   = 500;
-//integer CMD_TRUSTED = 501;
+integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER                  = 503;
 //integer CMD_EVERYONE = 504;
@@ -609,11 +609,11 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     } else if (sLowerStr == "clear") {
         releaseRestrictions();
         return;
+    } else if (!llSubStringIndex(sLowerStr, "hudtpto:") && (iNum == CMD_OWNER || iNum == CMD_TRUSTED)) {
+        if (g_iRlvOn) llMessageLinked(LINK_RLV,RLV_CMD,llGetSubString(sLowerStr,3,-1),"");
     }
     if (bFromMenu) RestrictionsMenu(kID,iNum);
 }
-
-
 
 default {
 

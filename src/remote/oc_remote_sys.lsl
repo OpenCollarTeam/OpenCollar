@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160118.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160120.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -98,28 +98,24 @@ integer SUBMENU              = 3002;
 integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
 integer DIALOG_TIMEOUT       = -9002;
+integer CMD_REMOTE           = 10000;
 
 string UPMENU          = "BACK";
-
 string g_sListPartners  = "List";
 string g_sRemovePartner = "Remove";
 string g_sAllPartners = "ALL";
 string g_sAddPartners = "Add";
 
 list g_lMainMenuButtons = [" ◄ ",g_sAllPartners," ► ",g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
-
 list g_lMenus;
+key    g_kMenuID;
+string g_sMenuType;
 
 key    g_kRemovedPartnerID;
 key    g_kOwner;
 
-key    g_kMenuID;
-string g_sMenuType;
-
 string  g_sRezObject;
 
-string g_sPersonal;
-float g_fTimer;
 
 /*integer g_iProfiled=1;
 Debug(string sStr) {
@@ -279,7 +275,6 @@ default {
     }
     
     on_rez(integer iStart) {
-        llResetTime();
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~remote", [HTTP_METHOD, "GET"],"");
     }
     
@@ -291,26 +286,11 @@ default {
                 llMessageLinked(LINK_SET, CMD_TOUCH,"hide","");
             else if (sButton == "Menu") MainMenu();
             else if (~llSubStringIndex(sButton,"Picture")) NextPartner(1,TRUE);
-            else if (sButton == "Personal") g_fTimer = llGetTime();
+            else if (sButton == "bookmarks") llMessageLinked(LINK_THIS,0,"bookmarks menu","");
             else SendCollarCommand(llToLower(sButton));
         }
     }
-    touch_end(integer iNum) {
-        if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {
-            if ((string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]) == "Personal") {
-                if (llGetTime()-g_fTimer < 1.5) {
-                    if (g_sPersonal) SendCollarCommand(llToLower(g_sPersonal));
-                    else llDialog(g_kOwner, "\nThis is your personal button which has not been configured yet. Close this menu by clicking the \"OK\' button then click on the HUD button again but keep your finger pushed down on the mouse button for 3 seconds. This will bring a Text Box where you can enter the collar-command for the collar you wish to set this button to.",["OK"],-32345); //info menu, needs not to be listened or reacted to
-                } else {
-                    string sPrompt = "\nPlease type here the collar command you wish this button to execute and press submit.";
-                    if (g_sPersonal) sPrompt += "\nCurrent command: "+g_sPersonal;
-                    Dialog(sPrompt,[],[],0,"textbox");
-                }
-                llResetTime();
-            }
-        }
-    }
-    
+
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == g_iChannel) {
             list lParams = llParseString2List(sMessage, [" "], []);
@@ -350,6 +330,7 @@ default {
             }
             lParams = [];
         } else if (iNum == SUBMENU && sStr == "Main") MainMenu();
+        else if (iNum == CMD_REMOTE) SendCollarCommand(sStr);
         else if (iNum == 111) {
             g_sTextureALL = sStr;
             if (g_sActivePartnerID == g_sAllPartners) 
@@ -445,13 +426,7 @@ default {
                     AddPartner(sMessage);
                 g_lNewPartnerIDs = [];
                 MainMenu();
-            } else if (g_sMenuType == "textbox") {
-                if (llStringTrim(sMessage,STRING_TRIM)) {
-                    g_sPersonal = llStringTrim(sMessage,STRING_TRIM);
-                    llOwnerSay("You have programmed your personal button with: \""+g_sPersonal+"\".");
-                } else if (g_sPersonal) llOwnerSay("You have not entered anything, the button remains to: \""+g_sPersonal+"\".");
-                else llOwnerSay("You have not entered anything, the button remains unprogrammed.");
-            }
+            } 
         }
     }
 
