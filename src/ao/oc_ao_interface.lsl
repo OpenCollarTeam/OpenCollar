@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       AO Interface - 160112.1         .*' /  .*' ; .*`- +'  `*'          //
+//       AO Interface - 160119.2         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -66,12 +66,13 @@ integer COLLAR_INT_REQ = 610;
 integer COLLAR_INT_REP = 611;
 integer g_iCollarIntegration;
 key g_kWearer;
-key g_kObjectID;
 string g_sSeparator = "|";
-list g_lAuthList; //strided list [uuid, auth]
 integer g_iCounter;
 key g_kCollarID;
 string g_sMessageType; // how the collar sends a Message" "RequestReply", "CollarCommand"
+string g_sPendingCmd;
+
+integer g_iUpdateChannel = -7483220;
 
 debug(string sMessage)
 {
@@ -95,19 +96,22 @@ integer GetOwnerChannel(key kOwner, integer iOffset) {
 }
 */
 init() {
-    g_kObjectID = llGetKey();
-    //g_iObjectchannel = GetOwnerChannel(g_kWearer,1111);
     g_iObjectchannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
     //listen first to the full interfaceChannel and start to ping every 10 secs for a collar
     llListenRemove(g_iListenHandle);
     g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
     //we dont know what was changed in the collar so lets starts fresh with our cache
-    g_lAuthList = [];
     g_kCollarID = NULL_KEY;
     g_iCollarIntegration = FALSE; // -- 3.381 to avoid double message on login
     llWhisper(g_iInterfaceChannel, "OpenCollar?");
     g_iCounter = 0;
     llSetTimerEvent(30.0);
+}
+
+StartUpdate(key kID) {
+    integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
+    llSetRemoteScriptAccessPin(pin);
+    llRegionSayTo(kID, -7483220, "ready|" + (string)pin );
 }
 
 default
@@ -134,35 +138,22 @@ default
         //debug("LinkMsg: " + str);
         if (iNum == COLLAR_INT_REQ)  {
             if (g_kCollarID != NULL_KEY) {
-                if (sStr == "CollarOn") {
+                if (sStr == "CollarOn")
                     g_iCollarIntegration = TRUE;
-                    g_lAuthList = [];
-                } else if (sStr == "CollarOff") {
+                else if (sStr == "CollarOff")
                     g_iCollarIntegration = FALSE;
-                    g_lAuthList = [];
-                }
-            } else if (g_kCollarID == NULL_KEY) {
-                if (sStr == "CollarOff") {
+            } else if (sStr == "CollarOff")
                     g_iCollarIntegration = FALSE;
-                    g_lAuthList = [];
-                }
-            }
             //send back if we know the g_kCollarID (means if != NULL_KEY we are able to interact fully
             llMessageLinked(LINK_THIS, COLLAR_INT_REP, sStr, g_kCollarID);
         } else if (iNum == CMD_TO_COLLAR) {
             llRegionSayTo(g_kWearer,g_iObjectchannel, sStr);
         } else if (iNum == CMD_ZERO) {
             if (g_iCollarIntegration) {
-                integer index = llListFindList(g_lAuthList, [(string)kID]);
-                if ( index == -1) {
-                    llRegionSayTo(g_kWearer,g_iInterfaceChannel, "0|" + sStr + g_sSeparator + (string)kID + g_sSeparator + (string)g_kObjectID);
-                } else {
-                    string auth = llList2String(g_lAuthList, index + 1);
-                    llMessageLinked(LINK_THIS, (integer)auth, sStr, kID);
-                }
-            } else {
+                llRegionSayTo(g_kWearer,g_iInterfaceChannel,"AuthRequest|"+(string)kID);
+                g_sPendingCmd =  sStr;
+            } else 
                 llMessageLinked(LINK_THIS, CMD_OWNER, sStr, kID);
-            }
         } else if (iNum == CMD_AUTH && sStr == "ZHAO_RESET") {
             llSleep(2); // -- Don't reset immediately, ensure the Interface is ready for us
             llResetScript();
@@ -183,43 +174,48 @@ default
             return;
         } else if (sMessage == "OpenCollar=No") { //Collar said it got detached
             g_kCollarID = NULL_KEY;
-            g_lAuthList = [];
             llListenRemove(g_iListenHandle);
             g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
             llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
             return;
+        } else if (llUnescapeURL(sMessage) == "SAFEWORD") {
+            llMessageLinked(LINK_THIS, CMD_COLLAR, "safeword", "");
+            llSay(0,llUnescapeURL(sMessage));
+            return;
+        } else if (sMessage == "-.. --- / .- ---") {
+            StartUpdate(kID);
+            return;
         }
-        //g_sMessageType + SEPARATOR + (string)num + SEPARATOR + msg + SEPARATOR + (string)id SEPARATOR + g_kObjectID
-        integer index = llSubStringIndex(sMessage, g_sSeparator);
-        g_sMessageType = llGetSubString(sMessage, 0, index - 1);
+        //CollarCommand|iAuth|Command|UUID
+        //AuthReply|UUID|iAuth
+        list lParams = llParseString2List(sMessage,["|"],[]);
+        string sMessageType = llList2String(lParams,0);
+        integer iAuth;
         debug(g_sMessageType);
-        if (g_sMessageType == "RequestReply") {
-            key checkID = (key)llGetSubString(sMessage, llStringLength(sMessage) - 36, -1);
-            debug("IDcheck= " + (string)checkID);
-            if (checkID != g_kObjectID) {//if this isnt my id then the message was not for me
-                return;
+        if (g_sMessageType == "AuthReply") {
+            iAuth = llList2Integer(lParams,2);
+            if (g_sPendingCmd) {
+                llMessageLinked(LINK_THIS, iAuth, g_sPendingCmd, llList2Key(lParams,1));
+                g_sPendingCmd = "";
             }
-            //cut off my own id, no more needed
-            sMessage = llGetSubString(sMessage, 0, llStringLength(sMessage) - 38);
+        } else if (sMessageType == "CollarCommand") {
+            iAuth = llList2Integer(lParams,1);
+            if (iAuth)
+                llMessageLinked(LINK_THIS, iAuth, llList2String(lParams,2), llList2Key(lParams,3));
         }
-        //cut off the message type
-        sMessage = llGetSubString(sMessage, index + 1, -1);
         debug(sMessage);
-        //check if we get a auth request at all here
+/*        //check if we get a auth request at all here
         index = llSubStringIndex(sMessage, g_sSeparator);
-        integer iAuth = (integer)llGetSubString(sMessage, 0, index - 1);
+        iAuth = llList2Integer(lTemp,0);
+        llOwnerSay(sMessage);
         if (iAuth)  {//auth has to be an integer > 0 else it cannot be a collar message
-            sMessage = llGetSubString(sMessage, index + 1, -1);
+            sMessage = llList2String(lTemp,1);
+            llMessageLinked(LINK_THIS,iAuth,sMessage,llList2Key(lTemp,2);
             index = llSubStringIndex(sMessage, g_sSeparator);
             string sCommand = llGetSubString(sMessage, 0, index - 1);
             //Collar tells me owners have changed reset my g_lAuthList
             if (iAuth == CMD_COLLAR) {
-                if (sCommand == "OwnerChange")
-                    g_lAuthList = [];
-                else if (sCommand == "safeword")
-                    llMessageLinked(LINK_THIS, iAuth, sMessage, "");
-                else
-                    llMessageLinked(LINK_THIS, iAuth, sMessage, "");
+                llMessageLinked(LINK_THIS, iAuth, sMessage, "");
             } else {
                 list parts = llParseStringKeepNulls(sMessage, ["|"], []);
                 key kUUID = "";
@@ -230,7 +226,7 @@ default
                 g_lAuthList += [kUUID, (string)iAuth];
                 llMessageLinked(LINK_THIS, iAuth, sCommand, kUUID);
             }
-        }
+        }*/
     }
     
     timer() {
