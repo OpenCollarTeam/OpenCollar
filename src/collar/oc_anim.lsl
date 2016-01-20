@@ -257,7 +257,7 @@ integer SetPosture(integer iOn, key kCommander) {
 }
 
 MessageAOs(string sONOFF){ //send string as "ON"  / "OFF" saves 2 llToUpper
-    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarComand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+sONOFF, g_kWearer);
+    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+sONOFF, g_kWearer);
     llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STAND"+sONOFF);
     llRegionSayTo(g_kWearer,-8888,(string)g_kWearer+"boot"+llToLower(sONOFF)); //for Firestorm AO
 }
@@ -490,7 +490,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) {  //we were just detached.  clear the anim list and tell the ao to play stands again.
-            llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,(string)EXT_CMD_COLLAR + "|ZHAO_STANDON", g_kWearer);
+            llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDON", g_kWearer);
             llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
             g_lAnims = [];
         }
