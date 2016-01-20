@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160120.2        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160120.3        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -169,7 +169,7 @@ SendCollarCommand(string sCmd) {
                 llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
             }
         }
-    } else llOwnerSay("None of your managed partners is nearby.");
+    } else llOwnerSay("None of your partners are in range.");
 }
 
 AddPartner(string sID) {
