@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160120.3        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160121.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -86,7 +86,7 @@ integer g_iPicturePrim;
 string g_sPictureID;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
-string g_sTextureALL ="c5f69d7e-13ad-30dc-cd81-7509e5bdf9bc";
+string g_sTextureALL ="4fb4a7fe-733b-fae7-810d-81e6784bc3c3";
 
 //  MESSAGE MAP
 integer CMD_TOUCH            = 100;
@@ -201,18 +201,18 @@ Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, strin
 
 MainMenu(){
     string sPrompt = "\n[http://www.opencollar.at/remote.html OpenCollar Remote]\t"+g_sFancyVersion;
-    sPrompt += "\n\nActive Partner: "+NameURI(g_sActivePartnerID);
+    sPrompt += "\n\nSelected Partner: "+NameURI(g_sActivePartnerID);
     if (g_iUpdateAvailable) sPrompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     list lButtons = g_lMainMenuButtons + g_lMenus;
     Dialog(sPrompt, lButtons, [], 0, g_sMainMenu);
 }
 
 RezMenu() {
-    Dialog("\nRez something!\n\nActive Partner: "+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
+    Dialog("\nRez something!\n\nSelected Partner: "+NameURI(g_sActivePartnerID), BuildObjectList(),["BACK"],0,"RezzerMenu");
 }
 
 AddPartnerMenu() {
-    string sPrompt = "\nChoose who you want to manage:";
+    string sPrompt = "\nWho would you like to add?\n";
     list lButtons;
     integer index;
     do {
@@ -249,7 +249,7 @@ NextPartner(integer iDirection, integer iTouch) {
         if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
     if(iTouch) {
         if (llGetListLength(g_lPartnersInSim) < 2) llOwnerSay("There is nobody nearby at the moment.");
-        else llOwnerSay("New Active Partner is "+NameURI(g_sActivePartnerID));
+        else llOwnerSay("\n\nSelected Partner: "+NameURI(g_sActivePartnerID)+"\n");
     }
 }
 
