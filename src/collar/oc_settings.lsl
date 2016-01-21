@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160114.1                             //
+//                          Settings - 160115.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -60,6 +60,9 @@ string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
 key g_kLineID;
 key g_kCardID = NULL_KEY; //needed for change event check if no .settings card is in the inventory
+list g_lThemes = ["texture","glow","shiny","color"];
+key g_kLoadFromWeb;
+key g_kURLLoadRequest;
 key g_kWearer;
 
 //string g_sSettingToken = "settings_";
@@ -190,6 +193,7 @@ list Add2OutList(list lIn) {
         sValue = llList2String(lIn, i + 1);
         //sGroup = SplitToken(sToken, 0);
         sGroup = llToUpper(SplitToken(sToken, 0));
+        if (~llListFindList(g_lThemes,[llToLower(sGroup)])) jump next;
         sToken = SplitToken(sToken, 1);
         integer bIsSplit = FALSE ;
         integer iAddedLength = llStringLength(sBuffer) + llStringLength(sValue)
@@ -217,6 +221,7 @@ list Add2OutList(list lIn) {
                 sBuffer = "" ;
             }
         }
+        @next;
     }
     // If there's anything left in the buffer, flush it to output.
     if ( llStringLength(sBuffer) ) lOut += [sBuffer] ;
@@ -249,6 +254,59 @@ PrintSettings(key kID) {
     }
 }
 
+LoadSetting(string sData, integer iLine) {
+    string sID;
+    string sToken;
+    string sValue;
+    integer i;
+    if (iLine == 0 && g_sSplitLine != "" ) {
+        sData = g_sSplitLine ;
+        g_sSplitLine = "" ;
+    }
+    if (iLine) {
+        // first we can filter out & skip blank lines & remarks
+        sData = llStringTrim(sData, STRING_TRIM_HEAD);
+        if (sData == "" || llGetSubString(sData, 0, 0) == "#") return;
+        // check for "continued" line pieces
+        if (llStringLength(g_sSplitLine)) {
+            sData = g_sSplitLine + sData ;
+            g_sSplitLine = "" ;
+        }
+        if (llGetSubString(sData,-1,-1) == g_sDelimiter) {
+            g_sSplitLine = llDeleteSubString(sData,-1,-1) ;
+            return;
+        }
+        i = llSubStringIndex(sData, "=");
+        sID = llGetSubString(sData, 0, i - 1);
+        sData = llGetSubString(sData, i + 1, -1);
+        if (~llSubStringIndex(llToLower(sID), "_")) return;
+        else if (~llListFindList(g_lThemes,[sID])) return; 
+        sID = llToLower(sID)+"_";
+        list lData = llParseString2List(sData, ["~"], []);
+        for (i = 0; i < llGetListLength(lData); i += 2) {
+            sToken = llList2String(lData, i);
+            sValue = llList2String(lData, i + 1);
+            if (sValue != "") {
+                if (sID == "auth_") { //if we have auth, can only be the below, else we dont care
+                    sToken = llToLower(sToken);
+                    if (~llListFindList(["block","trust","owner"],[sToken])) {
+                        list lTest = llParseString2List(sValue,[","],[]);
+                        list lOut;
+                        integer n;
+                        do {//sanity check for valid entries
+                            if (llList2Key(lTest,n)) //if this is not a valid key, it's useless
+                                lOut += llList2List(lTest,n,n+1);
+                            n = n+2;
+                        } while (n < llGetListLength(lTest));
+                        sValue = llDumpList2String(lOut,",");
+                    } 
+                }
+                g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
+            }
+        }    
+    }
+}
+
 SendValues() {
     //Debug("Sending all settings");
     //loop through and send all the settings
@@ -270,9 +328,22 @@ SendValues() {
 UserCommand(integer iAuth, string sStr, key kID) {
     sStr = llToLower(sStr);
     if (sStr == "settings") PrintSettings(kID);
-    else if (sStr == "load") {
-        g_iLineNr = 0;
-        if (llGetInventoryKey(g_sCard)) g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
+    else if (!llSubStringIndex(sStr,"load")) {
+        if (iAuth == CMD_OWNER) {
+            if (llSubStringIndex(sStr,"load url") == 0 && iAuth == CMD_OWNER) {
+                string sURL = llList2String(llParseString2List(sStr,[" "],[]),2);
+                if (!llSubStringIndex(sURL,"http")) {
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Querying "+sURL+" to load your settings.",kID);
+                    g_kURLLoadRequest = kID;
+                    g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
+                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid url like: http://pastebin.com/raw/EFgr3HPK",kID);
+            } else if (sStr == "load card") {
+                if (llGetInventoryKey(g_sCard)) {
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading "+g_sCard+".",kID);
+                    g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
+                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
+            }
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sStr == "reboot" || sStr == "reboot --f") {
         if (g_iRebootConfirmed || sStr == "reboot --f") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
@@ -313,70 +384,41 @@ default {
         } else llResetScript();
     }
 
-    dataserver(key id, string data) {
-        if (id == g_kLineID) {
-            string sID;
-            string sToken;
-            string sValue;
-            integer i;
-            if (data == EOF && g_sSplitLine != "" ) {
-                data = g_sSplitLine ;
-                g_sSplitLine = "" ;
-            }
-            if (data != EOF) {
-                // first we can filter out & skip blank lines & remarks
-                data = llStringTrim(data, STRING_TRIM_HEAD);
-                if (data == "" || llGetSubString(data, 0, 0) == "#") jump nextline;
-                // check for "continued" line pieces
-                if ( llStringLength(g_sSplitLine) ) {
-                    data = g_sSplitLine + data ;
-                    g_sSplitLine = "" ;
-                }
-                if ( llGetSubString( data, -1, -1) == g_sDelimiter ) {
-                    g_sSplitLine = llDeleteSubString( data, -1, -1) ;
-                    jump nextline ;
-                }
-                i = llSubStringIndex(data, "=");
-                sID = llGetSubString(data, 0, i - 1);
-                data = llGetSubString(data, i + 1, -1);
-                if (~llSubStringIndex(llToLower(sID), "_")) jump nextline ;
-                //sID += "-";
-                sID = llToLower(sID)+"_";
-                list lData = llParseString2List(data, ["~"], []);
-                for (i = 0; i < llGetListLength(lData); i += 2) {
-                    sToken = llList2String(lData, i);
-                    sValue = llList2String(lData, i + 1);
-                    if (sValue != "") { //if no value, nothing to do
-                        if (sID == "auth_") { //if we have auth, can only be the below, else we dont care
-                            sToken = llToLower(sToken);
-                            if (~llListFindList(["block","trust","owner"],[sToken])) {
-                                list lTest = llParseString2List(sValue,[","],[]);
-                                list lOut;
-                                integer n;
-                                do {//sanity check for valid entries
-                                    if (llList2Key(lTest,n)) {//if this is not a valid key, it's useless
-                                        lOut += llList2List(lTest,n,n+1);
-                                    }
-                                    n = n+2;
-                                } while (n < llGetListLength(lTest));
-                                sValue = llDumpList2String(lOut,",");
-                            } 
-                        }
-                        g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
-                    }
-                }
-                @nextline;
-                g_iLineNr++;
+    dataserver(key kID, string sData) {
+        if (kID == g_kLineID) {
+            if (sData != EOF) {
+                LoadSetting(sData,++g_iLineNr);
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
             } else {
-                // wait a sec before sending settings, in case other scripts are
-                // still resetting.
-                llSleep(2.0);
+                g_iLineNr = 0;
+                LoadSetting(sData,g_iLineNr);
+                llSetTimerEvent(1.0);
                 SendValues();
             }
         }
     }
-
+    
+    http_response(key kID, integer iStatus, list lMeta, string sBody) {
+        if (kID ==  g_kLoadFromWeb) {
+            if (iStatus == 200) {
+                list lLoadSettings = llParseString2List(sBody,["\n"],[]);
+                if (lLoadSettings) {
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading settings from url provided.",g_kURLLoadRequest);
+                    integer i;
+                    string sSetting;
+                    do {
+                        sSetting = llList2String(lLoadSettings,0);
+                        i = llGetListLength(lLoadSettings);
+                        lLoadSettings = llDeleteSubList(lLoadSettings,0,0);
+                        LoadSetting(sSetting,i);
+                    } while (i);
+                    SendValues();
+                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
+        }
+        g_kURLLoadRequest = "";
+    }
+    
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || kID == g_kWearer) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
@@ -426,7 +468,7 @@ default {
                     g_kCardID = llGetInventoryKey(g_sCard);
                 }
             } else {
-                llSleep(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
+                llSetTimerEvent(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
                 SendValues();
             }
         }
