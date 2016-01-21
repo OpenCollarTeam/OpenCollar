@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160115.1                             //
+//                          Settings - 160121.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -60,7 +60,7 @@ string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
 key g_kLineID;
 key g_kCardID = NULL_KEY; //needed for change event check if no .settings card is in the inventory
-list g_lThemes = ["texture","glow","shiny","color"];
+list g_lThemes = ["texture","glow","shininess","color"];
 key g_kLoadFromWeb;
 key g_kURLLoadRequest;
 key g_kWearer;
@@ -97,6 +97,7 @@ integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
+string g_sSampleURL = "http://pastebin.com/raw/EFgr3HPK";
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
@@ -327,7 +328,7 @@ SendValues() {
 
 UserCommand(integer iAuth, string sStr, key kID) {
     sStr = llToLower(sStr);
-    if (sStr == "settings") PrintSettings(kID);
+    if (sStr == "print settings") PrintSettings(kID);
     else if (!llSubStringIndex(sStr,"load")) {
         if (iAuth == CMD_OWNER) {
             if (llSubStringIndex(sStr,"load url") == 0 && iAuth == CMD_OWNER) {
@@ -337,9 +338,9 @@ UserCommand(integer iAuth, string sStr, key kID) {
                     g_kURLLoadRequest = kID;
                     g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid url like: http://pastebin.com/raw/EFgr3HPK",kID);
-            } else if (sStr == "load card") {
+            } else if (sStr == "load card" || sStr == "load") {
                 if (llGetInventoryKey(g_sCard)) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading "+g_sCard+".",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: %CHANNEL%%PREFIX% load url <url>\n\nwww.opencollar.at/settings\n",kID);
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
             }
@@ -401,19 +402,23 @@ default {
     http_response(key kID, integer iStatus, list lMeta, string sBody) {
         if (kID ==  g_kLoadFromWeb) {
             if (iStatus == 200) {
-                list lLoadSettings = llParseString2List(sBody,["\n"],[]);
-                if (lLoadSettings) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading settings from url provided.",g_kURLLoadRequest);
-                    integer i;
-                    string sSetting;
-                    do {
-                        sSetting = llList2String(lLoadSettings,0);
-                        i = llGetListLength(lLoadSettings);
-                        lLoadSettings = llDeleteSubList(lLoadSettings,0,0);
-                        LoadSetting(sSetting,i);
-                    } while (i);
-                    SendValues();
-                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
+                if (lMeta)
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid URL, you need to provide a raw text file like this: "+g_sSampleURL,g_kURLLoadRequest);
+                else {
+                    list lLoadSettings = llParseString2List(sBody,["\n"],[]);
+                    if (lLoadSettings) {
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading settings from url provided.",g_kURLLoadRequest);
+                        integer i;
+                        string sSetting;
+                        do {
+                            sSetting = llList2String(lLoadSettings,0);
+                            i = llGetListLength(lLoadSettings);
+                            lLoadSettings = llDeleteSubList(lLoadSettings,0,0);
+                            LoadSetting(sSetting,i);
+                        } while (i);
+                        SendValues();
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
+                }
             } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
         }
         g_kURLLoadRequest = "";
