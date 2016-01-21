@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160116.1                             //
+//                          Animator - 160121.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -256,9 +256,9 @@ integer SetPosture(integer iOn, key kCommander) {
     }
 }
 
-MessageAOs(string sONOFF){ //send string as "ON"  / "OFF" saves 2 llToUpper
-    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STAND"+sONOFF, g_kWearer);
-    llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STAND"+sONOFF);
+MessageAOs(string sONOFF, string sWhat){ //send string as "ON"  / "OFF" saves 2 llToUpper
+    llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_"+sWhat+sONOFF, g_kWearer);
+    llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_"+sWhat+sONOFF);
     llRegionSayTo(g_kWearer,-8888,(string)g_kWearer+"boot"+llToLower(sONOFF)); //for Firestorm AO
 }
 
@@ -279,7 +279,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
             if (llGetListLength(g_lAnims)) UnPlayAnim(llList2String(g_lAnims, 0));
             g_lAnims = [sAnim] + g_lAnims;  //this way, g_lAnims[0] is always the currently playing anim
             PlayAnim(sAnim);
-            MessageAOs("OFF");
+            MessageAOs("OFF","STAND");
         }
     } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -305,7 +305,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
             UnPlayAnim(sAnim);
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
-            else MessageAOs("ON");
+            else MessageAOs("ON","STAND");
         }
     } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
@@ -396,8 +396,9 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sCommand == "ao") {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
-        else if (sValue == "off") MessageAOs("OFF");
-        else if (sValue == "on") MessageAOs("ON");
+        else if (sValue == "off" || sValue == "on")
+            MessageAOs(llToUpper(sValue),"AO");
+        //else if (sValue == "on") MessageAOs("ON");
         //doesnt work as it should, needs adjustment in AO
         /*} else if (sValue == "lock") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_LOCK|"+(string)kID, g_kWearer);
         else if (sValue == "unlock") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_UNLOCK|"+(string)kID, g_kWearer);
@@ -490,8 +491,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) {  //we were just detached.  clear the anim list and tell the ao to play stands again.
-            llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_STANDON", g_kWearer);
-            llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_STANDON");
+            MessageAOs("ON","STAND");
             g_lAnims = [];
         }
         else llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS);
