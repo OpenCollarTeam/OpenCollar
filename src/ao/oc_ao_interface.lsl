@@ -160,7 +160,15 @@ default
     }
     
     listen(integer iChannel, string sName, key kID, string sMessage) {
-        //debug("Listen: " + sMessage);
+        //debug("Listen: " + sMessage);        
+        if (sMessage == "OpenCollar=No" && kID == g_kCollarID) { //Collar said it got detached
+            g_iCollarIntegration = FALSE;
+            g_kCollarID = NULL_KEY;
+            //llListenRemove(g_iListenHandle);
+            //g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
+           // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
+            return;
+        }        
         //do nothing if wearer isnt owner of the object
         if (llGetOwnerKey(kID) != g_kWearer) return;
         //Collar announces itself
@@ -171,13 +179,6 @@ default
            // g_iListenHandle = llListen(g_iInterfaceChannel, "", g_kCollarID, "");
             //llMessageLinked(LINK_THIS, COLLAR_INT, sMessage, "");
            // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOn", "");
-            return;
-        } else if (sMessage == "OpenCollar=No") { //Collar said it got detached
-            g_iCollarIntegration = FALSE;
-            g_kCollarID = NULL_KEY;
-            //llListenRemove(g_iListenHandle);
-            //g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
-           // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
             return;
         } else if (llUnescapeURL(sMessage) == "SAFEWORD") {
             llMessageLinked(LINK_THIS, CMD_COLLAR, "safeword", "");

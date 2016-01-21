@@ -194,6 +194,7 @@ integer g_iMenuStride = 3;
 string MENU = "DoMenu";
 string QUICKMENU = "FirstMenu";
 
+key g_kCollarID;
 
 // CODE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -500,10 +501,11 @@ default {
             //or from the object that disabled us
             //this is needed because the collar sends a ZHAO_STANDON message when it detaches
             //but because it's no longer rezzed, llgetownerkey doesn't work
-            if (llGetOwnerKey(_id) == g_kWearer) {
+            if (llGetOwnerKey(_id) == g_kWearer || _id == g_kCollarID) {
                 list params = llParseString2List(_message, ["|"], []);
                 string command = llList2String(params, 0);
                 string userID = llList2String(params, 1);
+                g_kCollarID = _id; // store collar id
                 if (_message == "ZHAO_PAUSE")
                     llMessageLinked(LINK_THIS, COMMAND_COLLAR, _message, NULL_KEY);
                 else if (_message == "ZHAO_UNPAUSE")
