@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     Remote Bookmarks - 160120.2       .*' /  .*' ; .*`- +'  `*'          //
+//     Remote Bookmarks - 160121.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
@@ -154,7 +154,7 @@ You can enter:
                 llOwnerSay("Removed destination " + sDel);
             }
         } else
-            Dialog("Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0,"RemoveMenu");
+            Dialog("\nSelect a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0,"RemoveMenu");
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
         PrintDestinations();
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD) - 1) == PLUGIN_CHAT_CMD) {
@@ -326,7 +326,7 @@ PrintDestinations() {  // On inventory change, re-read our ~destinations notecar
     integer i;
     integer iLength = llGetListLength(g_lDestinations);
     string sMsg;
-    sMsg += "\n\nThe below can be copied and pasted into the " + g_sCard + " notecard. The format should follow:\n\ndestination name~region name(123,123,123)\n\n";
+    sMsg += "\n\nEverything below this line can be copied & pasted into a notecard called \""+g_sCard+"\" for backup:\n\n";
     for(; i < iLength; i++) {
         sMsg += llList2String(g_lDestinations, i) + "~" + llList2String(g_lDestinations_Slurls, i) + "\n";
         if (llStringLength(sMsg) >1000) {
