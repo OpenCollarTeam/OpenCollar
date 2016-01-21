@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     Remote Bookmarks - 160121.1       .*' /  .*' ; .*`- +'  `*'          //
+//     Remote Bookmarks - 160121.2       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
@@ -397,8 +397,11 @@ default {
                       + "/" + (string)((integer)global_pos.z);
             //Debug("Global position : "+(string)pos_str);
             // Pass command to main
+            string sPos = "/"+(string)((integer)g_vLocalPos.x)
+                        + "/"+(string)((integer)g_vLocalPos.y)
+                        + "/"+(string)((integer)g_vLocalPos.z);
             llMessageLinked(LINK_THIS,CMD_REMOTE, "hudtpto:" + pos_str + "=force","");
-            llMapDestination(g_sRegion, g_vLocalPos, ZERO_VECTOR);
+            llOwnerSay("Follow your Partner(s) right way by clicking here: secondlife:///app/teleport/"+g_sRegion+sPos);
         }
         if(kID == g_kDataID) {
             list split;
