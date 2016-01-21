@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       AO Interface - 160120.1         .*' /  .*' ; .*`- +'  `*'          //
+//       AO Interface - 160121.1         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -62,8 +62,8 @@ integer CMD_OWNER = 500;
 //integer CMD_GROUP = 502;
 //integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
-integer COLLAR_INT_REQ = 610;
-integer COLLAR_INT_REP = 611;
+//integer COLLAR_INT_REQ = 610;
+//integer COLLAR_INT_REP = 611;
 integer g_iCollarIntegration;
 key g_kWearer;
 string g_sSeparator = "|";
@@ -96,11 +96,7 @@ integer GetOwnerChannel(key kOwner, integer iOffset) {
 }
 */
 init() {
-    g_iObjectchannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
-    //listen first to the full interfaceChannel and start to ping every 10 secs for a collar
-    llListenRemove(g_iListenHandle);
-    g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
-    //we dont know what was changed in the collar so lets starts fresh with our cache
+//we dont know what was changed in the collar so lets starts fresh with our cache
     g_kCollarID = NULL_KEY;
     g_iCollarIntegration = FALSE; // -- 3.381 to avoid double message on login
     llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
@@ -126,6 +122,8 @@ default
         g_kWearer = llGetOwner();
         g_iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
+        g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
+        g_iObjectchannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
         init();
     }
     
@@ -136,7 +134,7 @@ default
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //debug("LinkMsg: " + str);
-        if (iNum == COLLAR_INT_REQ)  {
+     /*   if (iNum == COLLAR_INT_REQ)  {
             if (g_kCollarID != NULL_KEY) {
                 if (sStr == "CollarOn")
                     g_iCollarIntegration = TRUE;
@@ -146,7 +144,8 @@ default
                     g_iCollarIntegration = FALSE;
             //send back if we know the g_kCollarID (means if != NULL_KEY we are able to interact fully
             llMessageLinked(LINK_THIS, COLLAR_INT_REP, sStr, g_kCollarID);
-        } else if (iNum == CMD_TO_COLLAR) {
+        } else */
+        if (iNum == CMD_TO_COLLAR) {
             llRegionSayTo(g_kWearer,g_iObjectchannel, sStr);
         } else if (iNum == CMD_ZERO) {
             if (g_iCollarIntegration) {
@@ -166,17 +165,19 @@ default
         if (llGetOwnerKey(kID) != g_kWearer) return;
         //Collar announces itself
         if (sMessage == "OpenCollar=Yes") {
+            g_iCollarIntegration = TRUE;
             g_kCollarID = kID;
-            llListenRemove(g_iListenHandle);
-            g_iListenHandle = llListen(g_iInterfaceChannel, "", g_kCollarID, "");
+           // llListenRemove(g_iListenHandle);
+           // g_iListenHandle = llListen(g_iInterfaceChannel, "", g_kCollarID, "");
             //llMessageLinked(LINK_THIS, COLLAR_INT, sMessage, "");
-            llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOn", "");
+           // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOn", "");
             return;
         } else if (sMessage == "OpenCollar=No") { //Collar said it got detached
+            g_iCollarIntegration = FALSE;
             g_kCollarID = NULL_KEY;
-            llListenRemove(g_iListenHandle);
-            g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
-            llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
+            //llListenRemove(g_iListenHandle);
+            //g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
+           // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
             return;
         } else if (llUnescapeURL(sMessage) == "SAFEWORD") {
             llMessageLinked(LINK_THIS, CMD_COLLAR, "safeword", "");
@@ -237,23 +238,25 @@ default
                     g_iCounter++;
                     llSetTimerEvent(10.0);
                 } else if (g_iCollarIntegration) {
+                    g_iCollarIntegration = FALSE;
                     llSetTimerEvent(20.0);
-                    g_kCollarID = NULL_KEY;
-                    llListenRemove(g_iListenHandle);
-                    g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
+                //    g_kCollarID = NULL_KEY;
+                 //   llListenRemove(g_iListenHandle);
+                  //  g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
                     g_iCounter = 0;
                     llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
-                    llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
+                   // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
                 }
             }
         } else { // Else, we need to ensure the rest of the hud knows the collar is missing and needs to be refound.
             if (g_iCollarIntegration) {// -- The collar is gone but we think it's still here
-                    llSetTimerEvent(20.0);
-                    g_kCollarID = NULL_KEY;
-                    llListenRemove(g_iListenHandle);
-                    g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
-                    llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
-                    llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
+                g_iCollarIntegration = FALSE;
+                llSetTimerEvent(20.0);
+                g_kCollarID = NULL_KEY;
+                // llListenRemove(g_iListenHandle);
+                //  g_iListenHandle = llListen(g_iInterfaceChannel, "", "", "");
+                llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
+                // llMessageLinked(LINK_THIS, COLLAR_INT_REQ, "CollarOff", "");
             } else  // -- We need to continue to ask if the collar is there
                 llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar?");
         }
