@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160112.1                              //
+//                           System - 160121.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -221,8 +221,8 @@ string NameGroupURI(string sStr){
     return "secondlife:///app/"+sStr+"/inspect";
 }
 
-OptionsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/options.html Options]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
+SettingsMenu(key kID, integer iAuth) {
+    string sPrompt = "\n[http://www.opencollar.at/options.html Settings]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
@@ -235,7 +235,7 @@ OptionsMenu(key kID, integer iAuth) {
         sPrompt +="\nCheck " + STEALTH_OFF + " to hide your collar.";
         lButtons += [STEALTH_OFF];
     }
-    Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Options");
+    Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Settings");
 }
 
 AppsMenu(key kID, integer iAuth) {
@@ -275,7 +275,7 @@ MainMenu(key kID, integer iAuth) {
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+=" ";
-    lStaticButtons+=["Access","Options","Help/About"];
+    lStaticButtons+=["Access","Settings","Help/About"];
     if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
 }
@@ -288,11 +288,11 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (sSubmenu == "main" || sSubmenu == "") MainMenu(kID, iNum);
         else if (sSubmenu == "apps" || sSubmenu=="addons") AppsMenu(kID, iNum);
         else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
-        else if (sSubmenu == "options") {
+        else if (sSubmenu == "settings") {
             if (iNum != CMD_OWNER && iNum != CMD_WEARER) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
                 MainMenu(kID, iNum);
-            } else OptionsMenu(kID, iNum);
+            } else SettingsMenu(kID, iNum);
         }
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
@@ -303,8 +303,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr =="about" || sStr=="help/about") HelpMenu(kID,iNum);
     else if (sStr == "addons" || sStr=="apps") AppsMenu(kID, iNum);
-    else if (sStr == "options") {
-        if (iNum == CMD_OWNER || iNum == CMD_WEARER) OptionsMenu(kID, iNum);
+    else if (sStr == "settings") {
+        if (iNum == CMD_OWNER || iNum == CMD_WEARER) SettingsMenu(kID, iNum);
     } else if (sStr == "contact") {
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         g_kCurrentUser = kID;
@@ -500,7 +500,7 @@ RebuildMenu() {
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
-    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Options", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
 }
 
 init (){
@@ -542,7 +542,7 @@ default
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
             else if (sStr=="Main|Capture") g_iCaptureMenu=TRUE;
-            else if (sStr=="Options|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
+            else if (sStr=="Settings|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
             list lParams = llParseString2List(sStr, ["|"], []);
@@ -598,8 +598,8 @@ default
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Installation cancelled.",kAv);
                         return;
                     }
-                } else if (sMenu == "Options") {
-                     if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SAVE, iAuth,"settings",kAv);
+                } else if (sMenu == "Settings") {
+                     if (sMessage == DUMPSETTINGS) llMessageLinked(LINK_SAVE, iAuth,"print settings",kAv);
                      else if (sMessage == LOADCARD) llMessageLinked(LINK_SAVE, iAuth,sMessage,kAv);
                      else if (sMessage == REFRESH_MENU) {
                          UserCommand(iAuth, sMessage, kAv, TRUE);
@@ -620,7 +620,7 @@ default
                         llMessageLinked(LINK_ROOT, iAuth, llToLower(sMessage), kAv);
                         return;
                     }
-                    OptionsMenu(kAv,iAuth);
+                    SettingsMenu(kAv,iAuth);
                 } else if (sMenu =="JB") {
                     if (sMessage == "Yes") {
                         if (llGetInventoryType(g_sDistCard)==7) llRemoveInventory(g_sDistCard);
