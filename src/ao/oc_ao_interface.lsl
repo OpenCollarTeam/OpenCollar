@@ -69,7 +69,6 @@ key g_kWearer;
 string g_sSeparator = "|";
 integer g_iCounter;
 key g_kCollarID;
-string g_sMessageType; // how the collar sends a Message" "RequestReply", "CollarCommand"
 string g_sPendingCmd;
 
 integer g_iUpdateChannel = -7483220;
@@ -193,8 +192,8 @@ default
         list lParams = llParseString2List(sMessage,["|"],[]);
         string sMessageType = llList2String(lParams,0);
         integer iAuth;
-        debug(g_sMessageType);
-        if (g_sMessageType == "AuthReply") {
+        debug(sMessageType);
+        if (sMessageType == "AuthReply") {
             iAuth = llList2Integer(lParams,2);
             if (g_sPendingCmd) {
                 llMessageLinked(LINK_THIS, iAuth, g_sPendingCmd, llList2Key(lParams,1));
