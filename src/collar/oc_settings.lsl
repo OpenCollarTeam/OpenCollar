@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160121.1                             //
+//                          Settings - 160122.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -97,7 +97,7 @@ integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
-string g_sSampleURL = "http://pastebin.com/raw/EFgr3HPK";
+string g_sSampleURL = "https://goo.gl/l1fauc";
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
@@ -334,10 +334,10 @@ UserCommand(integer iAuth, string sStr, key kID) {
             if (llSubStringIndex(sStr,"load url") == 0 && iAuth == CMD_OWNER) {
                 string sURL = llList2String(llParseString2List(sStr,[" "],[]),2);
                 if (!llSubStringIndex(sURL,"http")) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Querying "+sURL+" to load your settings.",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Fetching settings from "+sURL,kID);
                     g_kURLLoadRequest = kID;
                     g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
-                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid url like: http://pastebin.com/raw/EFgr3HPK",kID);
+                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
             } else if (sStr == "load card" || sStr == "load") {
                 if (llGetInventoryKey(g_sCard)) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: %CHANNEL%%PREFIX% load url <url>\n\nwww.opencollar.at/settings\n",kID);
@@ -403,11 +403,11 @@ default {
         if (kID ==  g_kLoadFromWeb) {
             if (iStatus == 200) {
                 if (lMeta)
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid URL, you need to provide a raw text file like this: "+g_sSampleURL,g_kURLLoadRequest);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid URL. You need to provide a raw text file like this: "+g_sSampleURL,g_kURLLoadRequest);
                 else {
                     list lLoadSettings = llParseString2List(sBody,["\n"],[]);
                     if (lLoadSettings) {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Loading settings from url provided.",g_kURLLoadRequest);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Settings fetched.",g_kURLLoadRequest);
                         integer i;
                         string sSetting;
                         do {
