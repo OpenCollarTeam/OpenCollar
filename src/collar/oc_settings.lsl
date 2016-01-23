@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160122.1                             //
+//                          Settings - 160123.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -302,7 +302,7 @@ LoadSetting(string sData, integer iLine) {
                         sValue = llDumpList2String(lOut,",");
                     } 
                 }
-                g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
+                if (sValue) g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
             }
         }    
     }
