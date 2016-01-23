@@ -184,11 +184,13 @@ RemovePartner(string sID) {
     integer index = llListFindList(g_lPartners,[sID]);
     if (~index) {
         g_lPartners=llDeleteSubList(g_lPartners,index,index);
-        if (InSim(sID)) {
-            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm owner");
-            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm trust");
-        }
+      /*  if (InSim(sID)) {
+            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm owner "+llKey2Name(g_kOwner));
+            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm tempowner "+llKey2Name(g_kOwner));
+            llRegionSayTo(sID,PersonalChannel(sID,0),sID+":rm trust "+llKey2Name(g_kOwner));
+        }*/
         llOwnerSay(NameURI(sID)+" has been removed from your Reomte HUD.");
+        if (sID == g_sActivePartnerID) NextPartner(0,FALSE);
     }
 }
 
