@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160114.1                          //
+//                         Communicator - 160123.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -442,24 +442,26 @@ default {
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
             sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
-            if (kID == g_kWearer && llToLower(sMsg) == "verify") {
-                llOwnerSay("Verifying core integrity...");
-                llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
-                llSetTimerEvent(2);
-                g_iVerify = TRUE;
-                g_lWrongRootScripts = [];
-                string sName;
-                integer i = llGetListLength(g_lCore5Scripts) -1;
-                do {
-                    sName = llList2String(g_lCore5Scripts,i);
-                    if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
-                        g_lWrongRootScripts += sName;
-                    i = i - 2;
-                } while (i>0);
-                return;
+            if (sMsg) {
+                if (kID == g_kWearer && llToLower(sMsg) == "verify") {
+                    llOwnerSay("Verifying core integrity...");
+                    llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
+                    llSetTimerEvent(2);
+                    g_iVerify = TRUE;
+                    g_lWrongRootScripts = [];
+                    string sName;
+                    integer i = llGetListLength(g_lCore5Scripts) -1;
+                    do {
+                        sName = llList2String(g_lCore5Scripts,i);
+                        if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
+                            g_lWrongRootScripts += sName;
+                        i = i - 2;
+                    } while (i>0);
+                    return;
+                }
+                //Debug("Got comand "+sMsg);
+                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kID);
             }
-            //Debug("Got comand "+sMsg);
-            llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kID);
         }
     }
 
