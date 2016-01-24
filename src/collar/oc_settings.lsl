@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160123.1                             //
+//                          Settings - 160124.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -296,10 +296,16 @@ LoadSetting(string sData, integer iLine) {
                         integer n;
                         do {//sanity check for valid entries
                             if (llList2Key(lTest,n)) //if this is not a valid key, it's useless
-                                lOut += llList2List(lTest,n,n+1);
-                            n = n+2;
-                        } while (n < llGetListLength(lTest));
+                                lOut += llList2String(lTest,n);
+                            integer iTest = llGetListLength(lOut);
+                            if (sToken == "owner" &&  iTest == 3)  jump next;
+                            else if (sToken == "trust" &&  iTest == 15)  jump next;
+                            else if (sToken == "block" &&  iTest == 9)  jump next;
+                        } while (++n < llGetListLength(lTest));
+                        @next;
                         sValue = llDumpList2String(lOut,",");
+                        lTest = [];
+                        lOut = [];
                     } 
                 }
                 if (sValue) g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);

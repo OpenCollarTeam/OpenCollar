@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 160124.2                              //
+//                           Dialog - 160124.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -155,7 +155,7 @@ list g_lColors = [
 ];
 
 
-integer g_iProfiled=1;
+/*integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to
@@ -165,7 +165,7 @@ Debug(string sStr) {
         llScriptProfiler(1);
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
+}*/
 
 
 string NameURI(key kID){
@@ -203,7 +203,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 NotifyOwners(string sMsg, string comments) {
     integer n;
     integer iStop = llGetListLength(g_lOwners);
-    for (n = 0; n < iStop; n += 2) {
+    for (; n < iStop; ++n) {
         key kAv = (key)llList2String(g_lOwners, n);
         if (comments=="ignoreNearby") {
             //we don't want to bother the owner if he/she is right there, so check distance
@@ -483,15 +483,15 @@ dequeueSensor() {
     list lParams = llParseStringKeepNulls(llList2String(g_lSensorDetails,2), ["|"], []);
     //sensor information is encoded in the first 5 fields of the lButtons list, ready to feed to the sensor command,
     list lSensorInfo = llParseStringKeepNulls(llList2String(lParams, 3), ["`"], []);
-/*    Debug("Running sensor with\n"+
+  /*  Debug("Running sensor with\n"+
         llList2String(lSensorInfo,0)+"\n"+
         llList2String(lSensorInfo,1)+"\n"+
         (string)llList2Integer(lSensorInfo,2)+"\n"+
         (string)llList2Float(lSensorInfo,3)+"\n"+
         (string)llList2Float(lSensorInfo,4)
-    );
-*/
-    if (llList2Integer(lSensorInfo,2) == AGENT) g_iSelectAviMenu = TRUE;
+    );*/
+
+    if (llList2Integer(lSensorInfo,2) == (integer)AGENT) g_iSelectAviMenu = TRUE;
     else g_iSelectAviMenu = FALSE;
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
@@ -585,7 +585,7 @@ default {
             //test for locked sensor subsystem
             //if subsys locked, do nothing
             //if subsys open, run sensor with first set of details in the list, and set timeout
-            //Debug(sStr);
+           // Debug(sStr);
             g_lSensorDetails+=[iSender, iNum, sStr, kID];
             if (! g_bSensorLock){
                 g_bSensorLock=TRUE;
@@ -595,7 +595,7 @@ default {
         //give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
             //Debug("DIALOG:"+sStr);
-            g_iSelectAviMenu = FALSE;
+            if (iSender != llGetLinkNumber()) g_iSelectAviMenu = FALSE;
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
