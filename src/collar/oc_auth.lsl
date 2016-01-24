@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151214.1                           //
+//                          Authorizer - 151224.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -113,8 +113,8 @@ integer RLV_CMD = 6000;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-
-integer FIND_AGENT = -9005;
+integer SENSORDIALOG = -9003;
+//integer FIND_AGENT = -9005;
 
 //added for attachment auth (garvin)
 integer AUTH_REQUEST = 600;
@@ -128,7 +128,7 @@ integer g_iVanilla; // self-owned wearers
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
-key REQUEST_KEY;
+//key REQUEST_KEY;
 integer g_iFirstRun;
 
 integer g_iLEDLink;
@@ -152,9 +152,12 @@ string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
 }
 
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName, integer iSensor) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    if (iSensor)
+        llMessageLinked(LINK_DIALOG, SENSORDIALOG, (string)kID +"|"+sPrompt+"|0|``"+(string)AGENT+"`10`"+(string)PI+"`"+llList2String(lChoices,0)+"|"+llDumpList2String(lUtilityButtons, "`")+"|" + (string)iAuth, kMenuID);
+    else
+        llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) { //we've alread given a menu to this user.  overwrite their entry
@@ -164,22 +167,10 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     }
 }
 
-FetchAvi(integer iAuth, string sType, string sName, key kAv) {
-    if (sName == "") sName = " ";
-    string out = llDumpList2String(["getavi_", g_sSettingToken, kAv, iAuth, sType, sName], "|");
-    integer i = 0;
-    list src = g_lOwner;
-    if (sType == "tempowner") src += g_lTempOwner;
-    if (sType == "trust") src += g_lTrust;
-    else if (sType == "block") src = g_lBlock;
-    list exclude; // build list of existing-listed keys to exclude from name search
-    for (; i < llGetListLength(src); i += 2) {
-        exclude += [llList2String(src, i)];
-    }
-    if (llGetListLength(exclude))
-        out += "|" + llDumpList2String(exclude, ",");
-    llMessageLinked(LINK_DIALOG, FIND_AGENT, out, REQUEST_KEY = llGenerateKey());
-}
+//FetchAvi(integer iAuth, string sType, string sName, key kAv) {
+//    if (sName == "") sName = " ";
+//    Dialog(kAv, "\nChoose who to add as "+sType+":",[sName],[UPMENU],0,iAuth,"AddAvi"+sType, TRUE);
+//}
 
 AuthMenu(key kAv, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/access.html Access & Authorization]";
@@ -193,7 +184,7 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons +=["Vanilla ☐"];    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
-    Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth");
+    Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
 }
 
 RemPersonMenu(key kID, string sToken, integer iAuth) {
@@ -212,7 +203,7 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
             string sName = llList2String(lPeople,n);
             if (sName) lButtons += [sName];
         }
-        Dialog(kID, sPrompt, lButtons, ["Remove All",UPMENU], -1, iAuth, "remove"+sToken);
+        Dialog(kID, sPrompt, lButtons, ["Remove All",UPMENU], -1, iAuth, "remove"+sToken, FALSE);
     } else {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The list is empty",kID);
         AuthMenu(kID, iAuth);
@@ -471,6 +462,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (g_kGroup) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: secondlife:///app/group/"+(string)g_kGroup+"/about",kID);
             sOutput="closed";
             if (g_iOpenAccess) sOutput="open";
+            llOwnerSay("freememory:"+(string)llGetFreeMemory());
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public Access: "+ sOutput,kID);
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -497,9 +489,9 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
         } else if ((key)sTmpName){
             g_lQueryId+=[llRequestAgentData( sTmpName, DATA_NAME ),sTmpName,sAction, kID, iRemenu];
-            if (iRemenu) FetchAvi(Auth(kID,FALSE), sAction, sTmpName, kID);
+            if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpName],[UPMENU],0,Auth(kID,FALSE),"AddAvi"+sAction, TRUE);
         } else
-            FetchAvi(iNum, sAction, sTmpName, kID);
+            Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpName],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
         string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_kWearer )) {
@@ -576,7 +568,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (g_iRunawayDisable)
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else
-                Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu");
+                Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu",FALSE);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     }
 }
@@ -716,21 +708,11 @@ default {
                     if (sMessage == UPMENU)
                         AuthMenu(kAv, iAuth);
                     else  if (sMessage == "Yes") RunAway();
-                }
-            }
-        } else if (iNum == FIND_AGENT) { //reply from add-by-name or add-from-menu (via FetchAvi dialog)
-            if (kID == REQUEST_KEY) {
-                llSetTimerEvent(0.11);
-                //Debug ("FindAgent: "+ sStr);
-                list params = llParseString2List(sStr, ["|"], []);
-                if (llList2String(params, 0) == g_sSettingToken) {
-                    string sRequestType = llList2String(params, 4);
-                    key kAv = llList2Key(params, 2);
-                    integer iAuth = llList2Integer(params, 3);
-                    key kNewOwner = (key)llList2String(params, 5);
+                } if (llSubStringIndex(sMenu,"AddAvi") == 0) {
+                    key kNewOwner = (key)sMessage;
                     if ((key)kNewOwner)
-                        AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), sRequestType, kAv); //should be safe to uase key2name here, as we added from sensor dialog
-                    else if (llList2String(params, 5) == "BACK")
+                        AddUniquePerson(kNewOwner, llKey2Name(kNewOwner), llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
+                    else if (sMessage == "BACK")
                         AuthMenu(kAv,iAuth);
                 }
             }

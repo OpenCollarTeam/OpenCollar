@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 160114.1                              //
+//                           Dialog - 160124.2                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
@@ -98,7 +98,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
-integer FIND_AGENT = -9005;
+//integer FIND_AGENT = -9005;
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -154,7 +154,7 @@ list g_lColors = [
 "White",<1.00000, 1.00000, 1.00000>
 ];
 
-/*
+
 integer g_iProfiled=1;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -166,7 +166,7 @@ Debug(string sStr) {
     }
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
-*/
+
 
 string NameURI(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -492,6 +492,7 @@ dequeueSensor() {
     );
 */
     if (llList2Integer(lSensorInfo,2) == AGENT) g_iSelectAviMenu = TRUE;
+    else g_iSelectAviMenu = FALSE;
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
@@ -525,14 +526,19 @@ default {
         //6th field is "find" information
         //7th is boolean, 0 for return a dialog, 1 for return the first matching name
         string sFind=llList2String(lButtons,5);
+       //Debug(sFind);
         integer bReturnFirstMatch=llList2Integer(lButtons,6);
         lButtons=[];
-
         integer i;
         for (; i<num_detected;i++){
             lButtons += llDetectedKey(i);
-            if (bReturnFirstMatch){ //if we're supposed to be finding the first match,
-                if (llSubStringIndex(llToLower(llDetectedName(i)),llToLower(sFind))==0){ //if they match, send it back as a dialogresponse without popping the dialog
+            if (bReturnFirstMatch || (sFind != "")) { //if we're supposed to be finding the first match,
+                if (llSubStringIndex(llToLower(llDetectedName(i)),llToLower(sFind))==0 
+                    || llSubStringIndex(llToLower(llGetDisplayName(llDetectedKey(i))),llToLower(sFind))==0 ){ 
+                    if (!bReturnFirstMatch) {
+                        lButtons = [llDetectedKey(i)];
+                        jump next;
+                    }
                     llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
                     //if we have more sensors to run, run another one now, else unlock subsys and quite
                     if (llGetListLength(g_lSensorDetails) > 0)
@@ -541,8 +547,10 @@ default {
                     g_iSelectAviMenu = FALSE;
                     return;
                 }
+                
             }
         }
+        @next;
         //pack buttons back into a ` delimited list, and put it back into lParams
         string sButtons=llDumpList2String(lButtons,"`");
         lParams=llListReplaceList(lParams,[sButtons],3,3);
@@ -572,79 +580,12 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == FIND_AGENT) {
-            //Debug("FIND_AGENT:"+sStr);
-            list lParams = llParseStringKeepNulls(sStr, ["|"], []);
-            if (llList2String(lParams, 0) == "getavi_"){    //identifies a getavi_ request
-                //fixme: REQ(params[1]),
-                string REQ = llList2String(lParams, 1);   //name of script that sent the message
-                key kRCPT = llGetOwnerKey((key)llList2String(lParams, 2));  //key of requesting user
-                integer iAuth = (integer)llList2String(lParams, 3);   //auth of requesting user
-                string TYPE = llList2String(lParams, 4);  //type field, returned in the response to help calling script track the nature of the search
-                string find = llList2String(lParams, 5);  //find string.. only return avatars whose neames start with this string
-                if (find == " ") find = "";
-                list excl = llParseString2List(llList2String(lParams, 6), [","], []); //list of uuids to exclude from the search
-                //list AVIS = [];
-                list agentList = llGetAgentList(AGENT_LIST_PARCEL, []);
-                list lRemovedAgents;
-                integer numAgents = llGetListLength(agentList);
-                while(numAgents--) {
-                    key avId=llList2Key(agentList, numAgents);
-                    string name = llKey2Name(avId);
-                    if ( !~llSubStringIndex(llToLower(name), llToLower(find)) || ~llListFindList(excl,[(string)avId])) {       //if this name does not contain find string or key is in the exclude list
-                        agentList=llDeleteSubList(agentList,numAgents,numAgents); //delete this agent from the list
-                        lRemovedAgents += [avId];
-                    }
-                }
-                numAgents = llGetListLength(agentList);
-                if (!numAgents) {
-                    string findNotify;  //= "Could not find any avatars in this region.";
-                    if (find != "") {
-                        findNotify = "Could not find any avatars starting with \""+find+"\" in this parcel.";
-                        integer n = llGetListLength(excl);
-                        while(n--) { //search 'find' in 'excl' list
-                            if (~llSubStringIndex(llToLower(llKey2Name(llList2Key(excl,n))),llToLower(find))) {
-                                findNotify = "Avatar starting with \""+find+"\" already registered: "+NameURI(llList2Key(excl,n));
-                                n = 0;
-                            }
-                        }
-                    } else {
-                        findNotify = "Could not find any avatars in this parcel besides the one(s) already registered:";
-                        while (llGetListLength(lRemovedAgents)) {
-                            findNotify += " " + NameURI(llList2Key(lRemovedAgents,0));
-                            lRemovedAgents = llDeleteSubList(lRemovedAgents,0,0);
-                        }
-                    }
-                    Notify(kRCPT,findNotify,FALSE);
-                    llMessageLinked(LINK_ALL_OTHERS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kRCPT+"|"+(string)iAuth+"|"+TYPE+"|BACK", kID);
-                } else {
-                    //Debug("Found avatars:"+llDumpList2String(agentList,","));
-                    g_iSelectAviMenu = TRUE;
-                    ClearUser(kRCPT);
-                    
-                    // sort agentlist by distance
-                    vector myPos = llList2Vector(llGetObjectDetails(g_kWearer,[OBJECT_POS]),0);
-                    list agent_dist ;
-                    numAgents = llGetListLength(agentList);
-                    while(numAgents--) {
-                        key agent = llList2Key(agentList,numAgents);
-                        float dist = llVecDist(myPos,llList2Vector(llGetObjectDetails(agent,[OBJECT_POS]),0));
-                        agent_dist += [dist,agent];
-                    }
-                    agentList = llList2ListStrided(llDeleteSubList(llListSort(agent_dist,2,TRUE),0,0),0,-1,2);
-                    agent_dist = [];
-                    //***********
-                    
-                    Dialog(kRCPT, "\nChoose the person you like to add:\n", agentList, [UPMENU], 0, kID, -1, iAuth, "getavi_|"+REQ+"|"+TYPE); //iDigits==-1 means dialog should calculate numbered dialogs
-                }
-            //} else {
-                //Debug(sStr);
-            }
-        } else if (iNum == SENSORDIALOG){
+        if (iNum == SENSORDIALOG){
             //first, store all incoming parameters in a global sensor details list
             //test for locked sensor subsystem
             //if subsys locked, do nothing
             //if subsys open, run sensor with first set of details in the list, and set timeout
+            //Debug(sStr);
             g_lSensorDetails+=[iSender, iNum, sStr, kID];
             if (! g_bSensorLock){
                 g_bSensorLock=TRUE;
@@ -654,6 +595,7 @@ default {
         //give a dialog with the options on the button labels
             //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
             //Debug("DIALOG:"+sStr);
+            g_iSelectAviMenu = FALSE;
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
             integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
@@ -770,14 +712,6 @@ default {
                     else sAnswer = sMessage;
                     g_iColorMenu = FALSE;
                 } else sAnswer = sMessage;
-                if (llSubStringIndex(sExtraInfo,"getavi_|")==0){
-                    //Debug("Getavi response:"+sAnswer);
-                    list lExtraInfo=llParseString2List(sExtraInfo,["|"],[]);    //unpack info for avi dialog
-                    string REQ=llList2String(lExtraInfo,1);   //name of script that originated the request
-                    string TYPE=llList2String(lExtraInfo,2);  //type string sent in initial request by calling script
-
-                    llMessageLinked(LINK_ALL_OTHERS, FIND_AGENT, REQ+"|"+"getavi_"+"|"+(string)kAv+"|"+(string)iAuth+"|"+TYPE+"|"+sAnswer, kMenuID);
-                }
                 if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
                 llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }
