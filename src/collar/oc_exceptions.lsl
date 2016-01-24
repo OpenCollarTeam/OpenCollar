@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Exceptions - 160112.1                            //
+//                         Exceptions - 160124.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Medea Destiny, Garvin Twine, littlemousy,               //
@@ -280,7 +280,7 @@ SetAllExs() {
     integer i;
     string sRLVCmd = "@";
     integer iLength = llGetListLength(g_lSecOwners);
-    for (n = 0; n < iLength; n += 2) {
+    for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lSecOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
             for (i = 0; i<iStop; i++) {
@@ -294,7 +294,7 @@ SetAllExs() {
         }
     }
     iLength = llGetListLength(g_lOwners+g_lTempOwners);
-    for (n = 0; n < iLength; n += 2) {
+    for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lOwners+g_lTempOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
             for (i = 0; i<iStop; i++) {
