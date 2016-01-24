@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       AO Interface - 160121.1         .*' /  .*' ; .*`- +'  `*'          //
+//       AO Interface - 160124.1         .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -181,7 +181,7 @@ default
             return;
         } else if (llUnescapeURL(sMessage) == "SAFEWORD") {
             llMessageLinked(LINK_THIS, CMD_COLLAR, "safeword", "");
-            llSay(0,llUnescapeURL(sMessage));
+            //llSay(0,llUnescapeURL(sMessage));
             return;
         } else if (sMessage == "-.. --- / .- ---") {
             StartUpdate(kID);
