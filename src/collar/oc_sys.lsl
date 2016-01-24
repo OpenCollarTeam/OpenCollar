@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160121.1                              //
+//                           System - 160123.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,10 +57,10 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="160114.3";
-string g_sFancyVersion="¹⁶⁰¹¹⁴⋅³";
+string g_sCollarVersion="160124.1";
+string g_sFancyVersion="¹⁶⁰¹²⁴⋅¹";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160114.3;
+float g_fBuildVersion = 160124.1;
 
 key g_kWearer;
 
@@ -263,7 +263,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R]\ns u b m i s s i o n  s e t  f r e e™\t\t"+g_sFancyVersion;
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R™]\nw w w  .  o p e n c o l l a r  .  a t\t\t"+g_sFancyVersion;
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -392,7 +392,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             }
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+"\nOrigin: ";
+        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+" ("+(string)g_fBuildVersion+")\nOrigin: ";
         if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]\n";
         else sVersion += "Unverified\n";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
