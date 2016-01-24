@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                        ZHAO Interface - 160120.1                         //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2004 - 2015 Francis Chung, Dzonatas Sol, Fennec Wind,     //
+//  Copyright (c) 2004 - 2016 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Alex Carpenter,              //
 //  Romka Swallowtail, Garvin Twine et al.                                  //
 // ------------------------------------------------------------------------ //

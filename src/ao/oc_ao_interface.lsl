@@ -23,7 +23,7 @@
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
-//  Wendy Starfall, littlemousy, Garvin Twine et al.                        //
+//  Wendy Starfall, littlemousy, Garvin Twine, Romka Swallowtail et al.     //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //

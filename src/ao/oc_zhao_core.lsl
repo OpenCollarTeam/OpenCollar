@@ -23,9 +23,9 @@
 //                        |                  ~----~                         //
 //                          ZHAO Core - 160120.1                            //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2004 - 2014 Francis Chung, Dzonatas Sol, Fennec Wind,     //
+//  Copyright (c) 2004 - 2016 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Medea Destiny,               //
-//  Alex Carpenter, Romka Swallowtail et al.                                //
+//  Alex Carpenter, Romka Swallowtail, Garvin Twine et al.                  //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
