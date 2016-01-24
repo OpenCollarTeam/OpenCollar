@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                        ZHAO Interface - 160120.1                         //
+//                        ZHAO Interface - 160124.2                         //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2016 Francis Chung, Dzonatas Sol, Fennec Wind,     //
 //  Ziggy Puff, Nandana Singh, Wendy Starfall, Alex Carpenter,              //
@@ -127,7 +127,7 @@
 // key disabler;//the key of th eobject that turned us off.  will be needed for a workaround later
 
 string fancyVersion = "⁶⋅⁰⋅⁰";
-
+float g_fBuildVersion = 160124.2;
 // How long before flipping stand animations
 integer standTimeDefault = 30;
 
@@ -193,7 +193,8 @@ integer g_iMenuStride = 3;
 // Use any variable name you desire
 string MENU = "DoMenu";
 string QUICKMENU = "FirstMenu";
-
+integer g_iUpdateAvailable;
+key g_kWebLookup;
 key g_kCollarID;
 
 // CODE
@@ -220,6 +221,7 @@ DoMenu(key id, integer page) {
     string prompt;
     if(llGetAttached()) { // -- If we're attached... ANYWHERE, display the menu
         prompt = "\n[http://www.opencollar.at/ao.html OpenCollar AO]\t"+fancyVersion;
+        if (g_iUpdateAvailable) prompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
         //new for locking feature 
         if (isLocked) lButtons += [UNLOCK];
         else lButtons += [LOCK];
@@ -306,6 +308,7 @@ default {
     on_rez( integer iStart ) {
         if (g_kWearer != llGetOwner()) llResetScript();
         if (isLocked) llOwnerSay("@detach=n");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~ao", [HTTP_METHOD, "GET"],"");
     }
 
     link_message(integer sender, integer num, string str, key id) {
@@ -532,7 +535,12 @@ default {
             }
         }
     }
-    
+    http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
+        if (kRequestID == g_kWebLookup && iStatus == 200)  {
+            if ((float)sBody > g_fBuildVersion) g_iUpdateAvailable = TRUE;
+            else g_iUpdateAvailable = FALSE;
+        }
+    }
     attach( key _k ) {
         if ( _k != NULL_KEY ) {
             if( isAttachedToHUD() )
