@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160124.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160124.2        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -347,7 +347,7 @@ default {
                 else if (sMessage == "Rez")
                     RezMenu();
                 else if (sMessage == g_sRemovePartner)
-                    Dialog("\nWho would you like to remove?\n\nNOTE: This will also revoke your access rights.\n", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
+                    Dialog("\nWho would you like to remove?\n", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
                 else if (sMessage == g_sListPartners) {
                     string sText ="\n\nI'm currently managing: ";
                     integer iPartnerCount = llGetListLength(g_lPartners);
@@ -402,7 +402,7 @@ default {
                 } else if (sMessage == "No") MainMenu();
                 else if (~index) {
                     g_kRemovedPartnerID = (key)llList2String(g_lPartners, index);
-                    Dialog("\nAre you sure you want to remove "+NameURI(g_kRemovedPartnerID)+"?\n\nNOTE: This will also revoke your access rights.", ["Yes", "No"], [UPMENU], 0,"RemovePartnerMenu");
+                    Dialog("\nAre you sure you want to remove "+NameURI(g_kRemovedPartnerID)+"?", ["Yes", "No"], [UPMENU], 0,"RemovePartnerMenu");
                 }
             } else if (g_sMenuType == "UpdateConfirmMenu") {
                 if (sMessage=="Yes") StartUpdate();
