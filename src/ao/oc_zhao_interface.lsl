@@ -126,8 +126,8 @@
 // integer disabled = FALSE;//used to prevent manually turning AO on when collar has turned it off
 // key disabler;//the key of th eobject that turned us off.  will be needed for a workaround later
 
-string fancyVersion = "⁶⋅⁰⋅⁰";
-float g_fBuildVersion = 160124.2;
+string fancyVersion = "⁶⋅⁰⋅⁰ ⁽ᴹⱽᴾ⁾";
+float g_fBuildVersion = 160124.3;
 // How long before flipping stand animations
 integer standTimeDefault = 30;
 
