@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160123.1                              //
+//                           System - 160125.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -384,7 +384,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (!llSubStringIndex(sStr,".- ... -.-")) { 
         if (kID == g_kWearer) {
             list lTemp = llParseString2List(sStr,["|"],[]);
-            if (llList2Float(lTemp,1) <= g_fBuildVersion && llList2String(lTemp,1) != "AppInstall") {
+            if (llList2Float(lTemp,1) < g_fBuildVersion && llList2String(lTemp,1) != "AppInstall") {
                 llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Installation aborted. The version you are trying to install is deprecated. ",g_kWearer);
             } else {
                 g_kUpdaterOrb = (key)llGetSubString(sStr,-36,-1);
