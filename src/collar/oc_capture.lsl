@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160125.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160125.2           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -112,17 +112,17 @@ Debug(string sStr) {
 }
 */
 
-string NameURI(key kID){
-    return "secondlife:///app/agent/"+(string)kID+"/about";
+string NameURI(string sID){
+    return "secondlife:///app/agent/"+sID+"/about";
 }
 
-Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName, key kCaptor) {
+Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenu, key kCaptor) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName, kCaptor], iIndex, iIndex + 4);
-    else g_lMenuIDs += [kID, kMenuID, sName, kCaptor];
+    if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sMenu, kCaptor], iIndex, iIndex + 3);
+    else g_lMenuIDs += [kID, kMenuID, sMenu, kCaptor];
     //Debug("Menu:"+sName);
 }
 
@@ -163,8 +163,7 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
     }
     if (!iIsConfirmed) {
         Dialog(g_kWearer, "\nsecondlife:///app/agent/"+sCaptorID+"/about wants to capture you...", ["Allow","Reject"], ["BACK"], 0, CMD_WEARER, "AllowCaptureMenu", sCaptorID);
-    }
-    else {
+    } else {
         llMessageLinked(LINK_SET, CMD_OWNER, "follow " + sCaptorID, sCaptorID);
         llMessageLinked(LINK_SET, CMD_OWNER, "yank", sCaptorID);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You are at "+NameURI(sCaptorID)+"'s whim.",g_kWearer);
@@ -178,12 +177,10 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
-        list lSplit = llParseString2List(sStr, ["~"], []);
-        key kCaptor=(key)llList2String(lSplit,2);
-        string sCaptor=llList2String(lSplit,1);
+        string sCaptorID = llGetSubString(sStr,llSubStringIndex(sStr,"~")+1,-1);
         if (iNum==CMD_OWNER || iNum==CMD_TRUSTED || iNum==CMD_GROUP) { //do nothing, owners get their own menu but cannot capture
         }
-        else Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", kCaptor);
+        else Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", sCaptorID);
     }
     else if (sStrLower == "capture" || sStrLower == "menu capture") {
         if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
@@ -254,7 +251,6 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
 }
 
 default{
-
     state_entry() {
        // llSetMemoryLimit(32768); //2016-01-24 (6034 bytes free)
         g_kWearer = llGetOwner();
@@ -272,7 +268,7 @@ default{
         if (g_sTempOwnerID) return;  //no one can capture if already captured
         if (!g_iCaptureOn) return;  //no one can capture if disabled
         if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could capture %WEARERNAME% if you get a bit closer.",kToucher);
-        else llMessageLinked(LINK_AUTH,CMD_ZERO,"capture TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
+        else llMessageLinked(LINK_AUTH,CMD_ZERO,"capture TempOwner~"+(string)kToucher,kToucher);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -306,8 +302,7 @@ default{
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex+1);
                 key kCaptor=llList2Key(g_lMenuIDs, iMenuIndex + 2);
-                string sCaptor=llList2String(g_lMenuIDs, iMenuIndex + 3);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +2);  //remove stride from g_lMenuIDs
                 if (sMenu=="CaptureMenu") {
                     if (sMessage == "BACK") llMessageLinked(LINK_ROOT, iAuth, "menu Main", kAv);
                     else if (sMessage == "☒ risky") UserCommand(iAuth,"capture risky off",kAv,TRUE);
@@ -330,7 +325,7 @@ default{
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +2);  //remove stride from g_lMenuIDs
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
             else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
