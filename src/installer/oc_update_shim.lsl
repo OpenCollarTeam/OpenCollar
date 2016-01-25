@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 151117.1                           //
+//                         Update Shim - 160125.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -125,7 +125,7 @@ default {
     }
     
     listen(integer iChannel, string sName, key kID, string sMsg) {
-        debug("heard: " + sMsg);
+       // debug("heard: " + sMsg);
         if (llGetOwnerKey(kID) != llGetOwner()) return;
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
@@ -192,20 +192,30 @@ default {
             if (g_iIsUpdate) {
                 integer n;
                 integer iStop = llGetListLength(g_lSettings); 
-                list lDeprecatedSplitSettingTokenForTest;
                 for (n = 0; n < iStop; n++) {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
                     // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
-                    lDeprecatedSplitSettingTokenForTest = llList2List(llParseString2List(sSetting,["="],[]),0,0);
-    
-                    if (llListFindList(g_lDeprecatedSettingTokens,lDeprecatedSplitSettingTokenForTest) < 0) { //If it doesn't exist in our list
+                   // debug("Settings: "+sSetting);
+                    list lTest = llParseString2List(sSetting,["="],[]);
+                    string sToken = llList2String(lTest,0);
+                    if (llListFindList(g_lDeprecatedSettingTokens,[sToken]) == -1) { //If it doesn't exist in our list
+                        if (~llSubStringIndex(sToken,"auth")) { 
+                            lTest = llParseString2List(llGetSubString(sSetting,llSubStringIndex(sSetting,"=")+1,-1),[","],[]);
+                            integer i;
+                            for (;i<llGetListLength(lTest);++i) {
+                                string sValue = llList2String(lTest,i);
+                                if ((key)sValue) {}
+                                else lTest = llDeleteSubList(lTest,i,i);
+                            }
+                            sSetting = sToken+"="+llDumpList2String(lTest,",");
+                        }
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
-                        debug("SP - Saving :"+sSetting);
+                       // debug("SP - Saving :"+sSetting);
                     } else {
                         //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
                          //remove it if it's somehow persistent still
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, llList2String(lDeprecatedSplitSettingTokenForTest,0), "");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, sToken, "");
                     }
                 }
             }
@@ -234,7 +244,7 @@ default {
         if (iNum == LOADPIN) {
             integer iPin =  (integer)llGetSubString(sStr,0,llSubStringIndex(sStr,"@")-1);
             string sScriptName = llGetSubString(sStr,llSubStringIndex(sStr,"@")+1,-1);
-            debug("PrimNr:"+(string)iSender+" - "+sStr);
+           //debug("PrimNr:"+(string)iSender+" - "+sStr);
             if (llGetInventoryType(sScriptName) == INVENTORY_SCRIPT) {
                 llRemoteLoadScriptPin(kID, sScriptName, iPin, TRUE, 825);
                 llRemoveInventory(sScriptName);
