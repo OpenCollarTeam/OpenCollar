@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160124.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160125.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -91,7 +91,7 @@ integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
 
-list    g_lTempOwners;                   // locally stored list of temp owners
+string  g_sTempOwnerID;
 integer g_iRiskyOn     = FALSE;     // true means captor confirms, false means wearer confirms
 integer g_iCaptureOn        = FALSE;     // on/off toggle for the app.  Switching off clears tempowner list
 integer g_iCaptureInfo = TRUE;
@@ -129,7 +129,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 CaptureMenu(key kId, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/capture.html Capture]\n";
     list lMyButtons;
-    if (llGetListLength(g_lTempOwners)) lMyButtons += "Release";
+    if (g_sTempOwnerID) lMyButtons += "Release";
     else {
         if (g_iCaptureOn) lMyButtons += "OFF";
         else lMyButtons += "ON";
@@ -137,15 +137,15 @@ CaptureMenu(key kId, integer iAuth) {
         if (g_iRiskyOn) lMyButtons += "☒ risky";
         else lMyButtons += "☐ risky";
     }
-    if (llGetListLength(g_lTempOwners) > 0)
-        sPrompt += "\n\nCaptureped by: "+NameURI(llList2Key(g_lTempOwners,0));
+    if (g_sTempOwnerID)
+        sPrompt += "\n\nCaptureped by: "+NameURI(g_sTempOwnerID);
     Dialog(kId, sPrompt, lMyButtons, ["BACK"], 0, iAuth, "CaptureMenu", "");
 }
 
 saveTempOwners() {
-    if (llGetListLength(g_lTempOwners)) {
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
-        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner="+llDumpList2String(g_lTempOwners,","), "");
+    if (g_sTempOwnerID) {
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner="+g_sTempOwnerID, "");
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner="+g_sTempOwnerID, "");
     } else {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner=", "");
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "auth_tempowner", "");
@@ -153,7 +153,7 @@ saveTempOwners() {
 }
 
 doCapture(string sCaptorID, integer iIsConfirmed) {
-    if (llGetListLength(g_lTempOwners)) {
+    if (g_sTempOwnerID) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% is already captured, try another time.",sCaptorID);
         return;
     }
@@ -169,7 +169,7 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
         llMessageLinked(LINK_SET, CMD_OWNER, "yank", sCaptorID);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You are at "+NameURI(sCaptorID)+"'s whim.",g_kWearer);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX%restrictions\n/%CHANNEL%%PREFIX%sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the capture, please type: /%CHANNEL%%PREFIX%capture release\n\nHave fun!\n", sCaptorID);
-        g_lTempOwners=[sCaptorID];
+        g_sTempOwnerID = sCaptorID;
         saveTempOwners();
         llSetTimerEvent(0.0);
     }
@@ -195,7 +195,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         //silent fail, no need to do anything more in this case
     }
     else if (llSubStringIndex(sStrLower,"capture")==0) {
-        if (llGetListLength(g_lTempOwners)>0 && kID==g_kWearer) {
+        if (g_sTempOwnerID != "" && kID==g_kWearer) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
             return;
         } else if (sStrLower == "capture on") {
@@ -210,14 +210,14 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             if(g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode deactivated",kID);
             g_iCaptureOn=FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"capture", "");
-            g_lTempOwners=[];
+            g_sTempOwnerID = "";
             saveTempOwners();
             llSetTimerEvent(0.0);
         } else if (sStrLower == "capture release") {
             llMessageLinked(LINK_SET, CMD_OWNER, "unfollow", kID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kID)+" has released you.",g_kWearer);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
-            g_lTempOwners=[];
+            g_sTempOwnerID = "";
             saveTempOwners();
             llSetTimerEvent(0.0);
             return;  //no remenuin case of release
@@ -256,7 +256,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
 default{
 
     state_entry() {
-       //llSetMemoryLimit(32768); //2015-05-06 (4840 bytes free)
+       // llSetMemoryLimit(32768); //2016-01-24 (6034 bytes free)
         g_kWearer = llGetOwner();
         //Debug("Starting");
     }
@@ -268,8 +268,8 @@ default{
     touch_start(integer num_detected) {
         key kToucher = llDetectedKey(0);
         if (kToucher == g_kWearer) return;  //wearer can't capture
-        if (~llListFindList(g_lTempOwners,[(string)kToucher])) return;  //temp owners can't capture
-        if (llGetListLength(g_lTempOwners)) return;  //no one can capture if already captured
+        if (g_sTempOwnerID == kToucher) return;  //temp owners can't capture
+        if (g_sTempOwnerID) return;  //no one can capture if already captured
         if (!g_iCaptureOn) return;  //no one can capture if disabled
         if (llVecDist(llDetectedPos(0),llGetPos()) > 10 ) llMessageLinked(LINK_SET,NOTIFY,"0"+"You could capture %WEARERNAME% if you get a bit closer.",kToucher);
         else llMessageLinked(LINK_AUTH,CMD_ZERO,"capture TempOwner~"+llDetectedName(0)+"~"+(string)kToucher,kToucher);
@@ -279,12 +279,12 @@ default{
         if (iNum == MENUNAME_REQUEST && sStr == "Main") llMessageLinked(iSender, MENUNAME_RESPONSE, "Main|Capture", "");
         else if (iNum == CMD_SAFEWORD || (sStr == "runaway" && iNum == CMD_OWNER)) {
             if (iNum == CMD_SAFEWORD && g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Capture Mode deactivated.", g_kWearer);
-            if (llGetListLength(g_lTempOwners)) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your capture role play with %WEARERNAME% is over.",llList2Key(g_lTempOwners,0));
+            if (g_sTempOwnerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your capture role play with %WEARERNAME% is over.",g_sTempOwnerID);
             g_iCaptureOn=FALSE;
             g_iRiskyOn = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"capture", "");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"risky", "");
-            g_lTempOwners=[];
+            g_sTempOwnerID = "";
             saveTempOwners();
             llSetTimerEvent(0.0);
         } else if (iNum == LM_SETTING_RESPONSE) {
@@ -293,7 +293,7 @@ default{
             string sValue = llList2String(lParams, 1);
             if (sToken == g_sSettingToken+"capture") g_iCaptureOn = (integer)sValue;  // check if any values for use are received
             else if (sToken == g_sSettingToken+"risky") g_iRiskyOn = (integer)sValue;
-            else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []); //store tempowners list
+            else if (sToken == "auth_tempowner") g_sTempOwnerID = sValue; //store tempowner
             else if (sToken == g_sSettingToken+"info") g_iCaptureInfo = (integer)sValue;
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
@@ -345,7 +345,7 @@ default{
 
     changed(integer iChange) {
         if (iChange & CHANGED_TELEPORT) {
-            if (llGetListLength(g_lTempOwners) == 0) {
+            if (g_sTempOwnerID == "") {
                 if (g_iRiskyOn && g_iCaptureOn && g_iCaptureInfo) {
                     llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
                     llSetTimerEvent(900.0);
