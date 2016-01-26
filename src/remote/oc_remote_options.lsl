@@ -133,13 +133,14 @@ PlaceTheButton(float fYoff, float fZoff) {
     integer n = llGetListLength(lPrimOrder);
     vector pos ;
     integer i;
+    float fXoff = 0.01; // small X offset
     for (i=1; i < n; ++i) {
         if (g_iColumn == 0) { // Column
-            if (!g_iLayout) pos = <0, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
-            else pos = <0, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
+            if (!g_iLayout) pos = <fXoff, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
+            else pos = <fXoff, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
         } else if (g_iColumn == 1) { // Alternate
-            if (!g_iLayout) pos = <0, fYoff*(i/g_iRows), fZoff*(i-(i/g_iRows)*g_iRows)>;
-            else  pos = <0, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
+            if (!g_iLayout) pos = <fXoff, fYoff*(i/g_iRows), fZoff*(i-(i/g_iRows)*g_iRows)>;
+            else  pos = <fXoff, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
         }
         llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i),[PRIM_POSITION,pos]);
     }
