@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160125.1                              //
+//                           System - 160127.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -57,10 +57,11 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sCollarVersion="160125.1";
-string g_sFancyVersion="¹⁶⁰¹²⁵⋅¹";
+string g_sDevStage=" RC";
+string g_sCollarVersion="6.0.0";
+string g_sFancyVersion="⁶⋅⁰⋅⁰ ᴿᶜ";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160125.1;
+float g_fBuildVersion = 160127.1;
 
 key g_kWearer;
 
@@ -249,7 +250,7 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+"\nOrigin: ";
+    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+"\nOrigin: ";
     if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
@@ -392,7 +393,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             }
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+" ("+(string)g_fBuildVersion+")\nOrigin: ";
+        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
         if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Official Distributor]\n";
         else sVersion += "Unverified\n";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
