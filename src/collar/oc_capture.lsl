@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160125.2           .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160127.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -138,7 +138,7 @@ CaptureMenu(key kId, integer iAuth) {
         else lMyButtons += "☐ risky";
     }
     if (g_sTempOwnerID)
-        sPrompt += "\n\nCaptureped by: "+NameURI(g_sTempOwnerID);
+        sPrompt += "\n\nCaptured by: "+NameURI(g_sTempOwnerID);
     Dialog(kId, sPrompt, lMyButtons, ["BACK"], 0, iAuth, "CaptureMenu", "");
 }
 
@@ -167,7 +167,7 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
         llMessageLinked(LINK_SET, CMD_OWNER, "follow " + sCaptorID, sCaptorID);
         llMessageLinked(LINK_SET, CMD_OWNER, "yank", sCaptorID);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You are at "+NameURI(sCaptorID)+"'s whim.",g_kWearer);
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%WEARERNAME% is at your mercy.\n\n/%CHANNEL%%PREFIX%menu\n/%CHANNEL%%PREFIX%pose\n/%CHANNEL%%PREFIX%restrictions\n/%CHANNEL%%PREFIX%sit\n/%CHANNEL%%PREFIX%help\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To end the capture, please type: /%CHANNEL%%PREFIX%capture release\n\nHave fun!\n", sCaptorID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\n%WEARERNAME% is at your mercy.\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To relinquish capture access to %WEARERNAME%'s %DEVICETYPE%, please type: /%CHANNEL%%PREFIX% capture release\n\nClick [http://www.opencollar.at/congratulations.html here] for basic instructions.\n", sCaptorID);
         g_sTempOwnerID = sCaptorID;
         saveTempOwners();
         llSetTimerEvent(0.0);
