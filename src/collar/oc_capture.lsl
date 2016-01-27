@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160127.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160127.2           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -164,10 +164,10 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
     if (!iIsConfirmed) {
         Dialog(g_kWearer, "\nsecondlife:///app/agent/"+sCaptorID+"/about wants to capture you...", ["Allow","Reject"], ["BACK"], 0, CMD_WEARER, "AllowCaptureMenu", sCaptorID);
     } else {
-        llMessageLinked(LINK_SET, CMD_OWNER, "follow " + sCaptorID, sCaptorID);
-        llMessageLinked(LINK_SET, CMD_OWNER, "yank", sCaptorID);
+        //llMessageLinked(LINK_SET, CMD_OWNER, "follow " + sCaptorID, sCaptorID);
+        llMessageLinked(LINK_SET, CMD_OWNER, "beckon", sCaptorID);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You are at "+NameURI(sCaptorID)+"'s whim.",g_kWearer);
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\n%WEARERNAME% is at your mercy.\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. To relinquish capture access to %WEARERNAME%'s %DEVICETYPE%, please type: /%CHANNEL%%PREFIX% capture release\n\nClick [http://www.opencollar.at/congratulations.html here] for basic instructions.\n", sCaptorID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\n%WEARERNAME% is at your mercy.\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. Type \"/%CHANNEL%%PREFIX% grab\" to attach a leash or \"/%CHANNEL%%PREFIX% capture release\" to relinquish capture access to %WEARERNAME%'s %DEVICETYPE%.\n\nHave fun! For basic instructions click [http://www.opencollar.at/congratulations.html here].\n", sCaptorID);
         g_sTempOwnerID = sCaptorID;
         saveTempOwners();
         llSetTimerEvent(0.0);
@@ -211,7 +211,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             saveTempOwners();
             llSetTimerEvent(0.0);
         } else if (sStrLower == "capture release") {
-            llMessageLinked(LINK_SET, CMD_OWNER, "unfollow", kID);
+            llMessageLinked(LINK_SET, CMD_OWNER, "unleash", kID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kID)+" has released you.",g_kWearer);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
             g_sTempOwnerID = "";
