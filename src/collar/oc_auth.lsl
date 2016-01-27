@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151224.3                           //
+//                          Authorizer - 151226.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -471,22 +471,25 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
         AuthMenu(kID, iNum);
     } else if (sCommand == "add") { //add a person to a list
-        string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
+        string sTmpID = llList2String(lParams,2); //get full name
         if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
-        } else if ((key)sTmpName){
-            AddUniquePerson(sTmpName, sAction, kID);
-            if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpName],[UPMENU],0,Auth(kID,FALSE),"AddAvi"+sAction, TRUE);
+        } else if ((key)sTmpID){
+            AddUniquePerson(sTmpID, sAction, kID);
+            if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,Auth(kID,FALSE),"AddAvi"+sAction, TRUE);
         } else
-            Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpName],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
+            Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
-        string sTmpName = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
+        string sTmpID = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
-        } else if ((key)sTmpName) {
-            RemovePerson(sTmpName, sAction, kID, FALSE);
+        } else if ((key)sTmpID) {
+            RemovePerson(sTmpID, sAction, kID, FALSE);
+            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID,FALSE));
+        } else if (llToLower(sTmpID) == "remove all") {
+            RemovePerson(sTmpID, sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID,FALSE));
         } else RemPersonMenu(kID, sAction, iNum);
      } else if (sCommand == "group") {
