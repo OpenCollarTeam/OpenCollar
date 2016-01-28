@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160124.1                             //
+//                          Settings - 160127.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -97,7 +97,7 @@ integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
-string g_sSampleURL = "https://goo.gl/l1fauc";
+string g_sSampleURL = "https://goo.gl/uXuN6b";
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
@@ -333,7 +333,7 @@ SendValues() {
 }
 
 UserCommand(integer iAuth, string sStr, key kID) {
-    sStr = llToLower(sStr);
+    //sStr = llToLower(sStr);
     if (sStr == "print settings") PrintSettings(kID);
     else if (!llSubStringIndex(sStr,"load")) {
         if (iAuth == CMD_OWNER) {
@@ -363,7 +363,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
         }
     } else if (sStr == "show storage") {
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"To hide the storage prim again type:\n%PREFIX% hide storage\n",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo hide the storage prim again type:\n\n/%CHANNEL%%PREFIX% hide storage\n",kID);
     } else if (sStr == "hide storage")
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
     else if (sStr == "runaway") llSetTimerEvent(2.0);

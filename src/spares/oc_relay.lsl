@@ -54,7 +54,7 @@
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Relay";
 
-string g_sAppVersion = "¹⁵¹²¹⁸⋅¹";
+string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
 
 integer RELAY_CHANNEL = -1812221819;
 integer SAFETY_CHANNEL = -201818;

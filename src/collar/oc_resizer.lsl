@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//          Resizer - 160112.1           .*' /  .*' ; .*`- +'  `*'          //
+//          Resizer - 160127.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -53,11 +53,10 @@
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
-// Compatible with OpenCollar API 4.0
-// and/or minimum Disgraced Version 2.1.0
+// Compatible with OpenCollar API 6.0
 
 string g_sSubMenu = "Size/Position";
-string g_sParentMenu = "Options";
+string g_sParentMenu = "Settings";
 
 //string g_sDeviceType = "collar";
 

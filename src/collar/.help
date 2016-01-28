@@ -1,5 +1,5 @@
 =======================
-OpenCollar™ Help Card | 2015-10-27
+OpenCollar™ Help Card | 2016-01-27
 =======================
 
 This is only a short version of the manual, explaining the basic usage and lists all chat commands.
@@ -245,8 +245,14 @@ Capture:
 
     # capture on
     # capture off
+    
     # capture risky on
     # capture risky off
+    
+    # capture info on
+    # capture info off
+    
+    # capture release
 
 -------
 Leash:
@@ -379,9 +385,10 @@ Access:
 Options:
 ----------
 
-    # options
-
     # settings
+
+    # print settings
+    # load url <url>
 
     # fix
 
