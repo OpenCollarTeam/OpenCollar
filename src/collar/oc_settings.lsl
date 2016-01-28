@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                          Settings - 160128.1                             //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
+//  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
 //  Wendy Starfall, Medea Destiny, Rebbie, Romka Swallowtail,               //
 //  littlemousy et al.                                                      //

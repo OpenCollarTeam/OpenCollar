@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                       Installer System - 160120.1                        //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, DrakeSystem,       //
+//  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //

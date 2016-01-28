@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                         Communicator - 160123.1                          //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
 //  Romka Swallowtail, Sumi Perl et al.                                     //
 // ------------------------------------------------------------------------ //

@@ -22,7 +22,7 @@
 //       RLV Suite - 160122.1            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2015 Wendy Starfall, littlemousy, Sumi Perl,       //
+//  Copyright (c) 2014 - 2016 Wendy Starfall, littlemousy, Sumi Perl,       //
 //  Garvin Twine, Romka Swallowtail et al.                                  //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //

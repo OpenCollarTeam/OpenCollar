@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                          Couples - 160114.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2004 - 2015 Francis Chung, Ilse Mannonen, Nandana Singh,  //
+//  Copyright (c) 2004 - 2016 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
 //  littlemousy, Romka Swallowtail, Sumi Perl et al.                        //
 // ------------------------------------------------------------------------ //

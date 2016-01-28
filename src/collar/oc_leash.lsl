@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           Leash - 160112.1                               //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Nandana Singh, Lulu Pink, Garvin Twine,       //
+//  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
 //  Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,   //
 //  Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.     //

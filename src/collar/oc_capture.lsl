@@ -22,7 +22,7 @@
 //           Capture - 160127.2           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2015 littlemousy, Sumi Perl, Wendy Starfall,       //
+//  Copyright (c) 2014 - 2016 littlemousy, Sumi Perl, Wendy Starfall,       //
 //  Garvin Twine                                                            //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //

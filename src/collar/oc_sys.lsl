@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160127.1                              //
+//                           System - 160128.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
 //  Sumi Perl et al.                                                        //
 // ------------------------------------------------------------------------ //
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.0.0";
 string g_sFancyVersion="⁶⋅⁰⋅⁰";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160127.3;
+float g_fBuildVersion = 160128.1;
 
 key g_kWearer;
 
@@ -448,7 +448,7 @@ JB(){
     (7,i);do{if(s==g_sDistCard){if(llGetInventoryCreator(s)==
     "4da2b231-87e1-45e4-a067-05cf3a5027ea"){g_iOffDist=1;
     if (llGetInventoryPermMask(g_sDistCard,4)&0x2000){
-    llDialog(g_kWearer, "\nATTENTION:\n\nThe permissions on the .distributor card must be set to ☐Modify ☑Copy ☐Transfer while still in your inventory.\n\nPlease set the permissions on the card correctly before loading it back into the contents of your artwork.\n\nhttp://www.opencollar.at/workshop.html", [], 298479);
+    llDialog(g_kWearer, "\nATTENTION:\n\nThe permissions on the .distributor card must be set to ☑Copy ☐Transfer while still in your inventory.\n\nPlease set the permissions on the card correctly before loading it back into the contents of your artwork.\n\nhttp://www.opencollar.at/workshop.html", [], 298479);
     llRemoveInventory(s);g_iOffDist=0;return;}
     g_kNCkey=llGetNotecardLine(s,0);}else g_iOffDist=0;return;}i--;s=
     llGetInventoryName(7,i);}while(i+1);}

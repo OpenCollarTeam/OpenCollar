@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           Bell - 150112.1                                //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2009 - 2015 Cleo Collins, Nandana Singh, Satomi Ahn,      //
+//  Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
 //  Romka Swallowtail, Garvin Twine et al.                                  //
 // ------------------------------------------------------------------------ //

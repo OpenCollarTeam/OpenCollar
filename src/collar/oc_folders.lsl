@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           Folders - 160112.1                             //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
+//  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, Romka Swallowtail, littlemousy, Sumi Perl,               //
 //  Garvin Twine et al.                                                     //
 // ------------------------------------------------------------------------ //

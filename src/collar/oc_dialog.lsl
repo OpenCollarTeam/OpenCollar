@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           Dialog - 160124.3                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2007 - 2015 Schmobag Hogfather, Nandana Singh,            //
+//  Copyright (c) 2007 - 2016 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
 //  Romka Swallowtail, Garvin Twine et al.                                  //
 // ------------------------------------------------------------------------ //

@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           Titler - 160112.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
 //  Romka Swallowtail et al.                                                //
 // ------------------------------------------------------------------------ //
