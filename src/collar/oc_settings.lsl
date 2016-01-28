@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160127.1                             //
+//                          Settings - 160128.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -333,26 +333,26 @@ SendValues() {
 }
 
 UserCommand(integer iAuth, string sStr, key kID) {
-    //sStr = llToLower(sStr);
-    if (sStr == "print settings") PrintSettings(kID);
-    else if (!llSubStringIndex(sStr,"load")) {
+    string sStrLower = llToLower(sStr);
+    if (sStrLower == "print settings") PrintSettings(kID);
+    else if (!llSubStringIndex(sStrLower,"load")) {
         if (iAuth == CMD_OWNER) {
-            if (llSubStringIndex(sStr,"load url") == 0 && iAuth == CMD_OWNER) {
+            if (llSubStringIndex(sStrLower,"load url") == 0 && iAuth == CMD_OWNER) {
                 string sURL = llList2String(llParseString2List(sStr,[" "],[]),2);
                 if (!llSubStringIndex(sURL,"http")) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Fetching settings from "+sURL,kID);
                     g_kURLLoadRequest = kID;
                     g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
-            } else if (sStr == "load card" || sStr == "load") {
+            } else if (sStrLower == "load card" || sStrLower == "load") {
                 if (llGetInventoryKey(g_sCard)) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: %CHANNEL%%PREFIX% load url <url>\n\nwww.opencollar.at/settings\n",kID);
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-    } else if (sStr == "reboot" || sStr == "reboot --f") {
-        if (g_iRebootConfirmed || sStr == "reboot --f") {
+    } else if (sStrLower == "reboot" || sStrLower == "reboot --f") {
+        if (g_iRebootConfirmed || sStrLower == "reboot --f") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
@@ -361,12 +361,12 @@ UserCommand(integer iAuth, string sStr, key kID) {
             g_kConfirmDialogID = llGenerateKey();
             llMessageLinked(LINK_DIALOG,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
-    } else if (sStr == "show storage") {
+    } else if (sStrLower == "show storage") {
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo hide the storage prim again type:\n\n/%CHANNEL%%PREFIX% hide storage\n",kID);
-    } else if (sStr == "hide storage")
+    } else if (sStrLower == "hide storage")
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
-    else if (sStr == "runaway") llSetTimerEvent(2.0);
+    else if (sStrLower == "runaway") llSetTimerEvent(2.0);
 }
 
 default {
