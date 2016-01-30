@@ -670,7 +670,7 @@ SetState(integer iState) {
         if (!g_iRlvActive || llGetAttached() == 0) {
             string sMsg = g_sPluginTitle + " can not teleport %WEARERNAME% for ";
             if (!g_iRlvActive) sMsg += "RLV was not detected.";
-            else sMsg += "collar seems not attached.";
+            else sMsg += "%DEVICETYPE% seems not attached.";
             Notify(g_kCageOwnerKey, sMsg + " AddOn now disarming itself.", TRUE);
             iState = iDISARMED;
             jump again;

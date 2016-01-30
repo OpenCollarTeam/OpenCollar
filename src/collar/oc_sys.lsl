@@ -230,10 +230,10 @@ SettingsMenu(key kID, integer iAuth) {
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
     if (STEALTH) {
-        sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your collar.";
+        sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your %DEVICETYPE%.";
         lButtons += [STEALTH_ON];
     } else {
-        sPrompt +="\nCheck " + STEALTH_OFF + " to hide your collar.";
+        sPrompt +="\nCheck " + STEALTH_OFF + " to hide your %DEVICETYPE%.";
         lButtons += [STEALTH_OFF];
     }
     Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Settings");
@@ -382,14 +382,14 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
             if (fromMenu) HelpMenu(kID, iNum);
         }
-    } else if (!llSubStringIndex(sStr,".- ... -.-")) { 
+    } else if (!llSubStringIndex(sStr,".- ... -.-")) {
         if (kID == g_kWearer) {
             list lTemp = llParseString2List(sStr,["|"],[]);
             if (llList2Float(lTemp,1) < g_fBuildVersion && llList2String(lTemp,1) != "AppInstall") {
                 llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Installation aborted. The version you are trying to install is deprecated. ",g_kWearer);
             } else {
                 g_kUpdaterOrb = (key)llGetSubString(sStr,-36,-1);
-                UpdateConfirmMenu(); 
+                UpdateConfirmMenu();
             }
         }
     } else if (sCmd == "version") {
@@ -766,7 +766,7 @@ default
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
-            } else StartUpdate();  //update 
+            } else StartUpdate();  //update
            // else UpdateConfirmMenu();  //perform update
         }
         if (g_iWaitRebuild) {
