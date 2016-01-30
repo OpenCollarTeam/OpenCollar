@@ -275,12 +275,12 @@ BuildTexturesList() {
         string sTextureName = llGetInventoryName(INVENTORY_TEXTURE, numInventoryTextures);
         string sShortName=llList2String(llParseString2List(sTextureName, ["~"], []), -1);
         if (!(llGetSubString(sTextureName, 0, 5) == "leash_" || sTextureName == "chain" || sTextureName == "rope")) {  // we want to ignore particle textures, and textures named in the notecard
-            if(llStringLength(sShortName)>23) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
-            else {
-                g_lTextures += sTextureName;
-                g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
-                g_lTextureShortNames+=sShortName;
-            }
+           // if(llStringLength(sShortName)>23) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
+            //else {
+            g_lTextures += sTextureName;
+            g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
+            g_lTextureShortNames+=sShortName;
+           // }
         }
     }
     //after inventory, start reading textures notecard
@@ -361,7 +361,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     }
                 } else {
                     llMessageLinked(LINK_ROOT, iNum, "options", kID);
-                    llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX%looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
+                    llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
