@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Label - 160114.1                               //
+//                           Label - 160201.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -435,7 +435,7 @@ FontMenu(key kID, integer iAuth) {
 }
 
 ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nDo you really want to uninstall the "+g_sSubMenu+" App?\n\nNOTE: This App automatically installs with patches. If you want it back, just run a patch/updater/installer. ❤";
+    string sPrompt = "\nDo you really want to uninstall the "+g_sSubMenu+" App?";
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmlabel");
 }
 

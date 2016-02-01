@@ -50,9 +50,6 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-// Compatible with OpenCollar API 4.0
-// and/or minimum Disgraced Version 2.x
-
 //menu setup
 string  RESTRICTION_BUTTON          = "Restrictions"; // Name of the submenu
 string  RESTRICTIONS_CHAT_COMMAND   = "restrictions";

@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//          Resizer - 160127.1           .*' /  .*' ; .*`- +'  `*'          //
+//          Resizer - 160201.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -53,7 +53,6 @@
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
-// Compatible with OpenCollar API 6.0
 
 string g_sSubMenu = "Size/Position";
 string g_sParentMenu = "Settings";
@@ -330,7 +329,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         else SizeMenu(kID, iNum);
     } else if (sStr == "rm resizer") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nAre you sure you want to delete the resizer App?\n\nNOTE: This App automatically installs with patches. If you want it back, just run a patch/updater/installer. ❤", ["Yes","No","Cancel"], [], 0, iNum,"rmresizer");
+        else Dialog(kID, "\nDo you really want to remove the Resizer?", ["Yes","No","Cancel"], [], 0, iNum,"rmresizer");
     }
 }
 
@@ -418,9 +417,9 @@ default {
                 } else if (sMenuType == "rmresizer") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Resizer App has been removed.", kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Resizer has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Resizer App remains installed.", kAv);
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Resizer remains installed.", kAv);
                 }
             }
         }

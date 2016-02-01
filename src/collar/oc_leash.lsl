@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160112.1                               //
+//                           Leash - 160201.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -200,19 +200,19 @@ ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
     string sCmdGiverURI = NameURI(kCmdGiver);
     string sPrompt;
     string sMessage;
-    if (kCmdGiver == g_kWearer) sPrompt = "%WEARERNAME% wants to ";
+    if (kCmdGiver == g_kWearer) sPrompt = "\n%WEARERNAME% wants to ";
     else sPrompt = sCmdGiverURI + " wants to ";
     if (sType == "LeashTarget") {
         sMessage = "Asking "+NameURI(kAv)+" to accept %WEARERNAME%'s leash.";
         if (kCmdGiver == g_kWearer) sPrompt += "pass you their leash.";
         else sPrompt += "pass you %WEARERNAME%'s leash.";
-        sPrompt += "\nAre you OK with this?";
+        sPrompt += "\n\nAre you OK with this?";
         Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth,"LeashTargetConfirm");
     } else {
         sMessage = "Asking "+NameURI(kAv)+" to accept %WEARERNAME% to follow them.";
         if (kCmdGiver == g_kWearer) sPrompt += "follow you.";
         else sPrompt += " command %WEARERNAME% to follow you.";
-        sPrompt += "\nAre you OK with this?";
+        sPrompt += "\n\nAre you OK with this?";
         Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth,"FollowTargetConfirm");
     }
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kCmdGiver);
@@ -336,9 +336,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // Don't own the object that sent the command
     if (g_bLeashedToAvi && kCmdGiver != kTarget && llGetOwnerKey(kCmdGiver) != kTarget) {
         if (iFollowMode){
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been commanded to follow you.  Say \"%PREFIX%unfollow\" to relase them.", g_kLeashedTo);
+            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been commanded to follow you.  Say \"/%CHANNEL%%PREFIX% unfollow\" to relase them.", g_kLeashedTo);
         } else {
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been leashed to you.  Say \"%PREFIX%unleash\" to unleash them.", g_kLeashedTo);
+            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been leashed to you.  Say \"/%CHANNEL%%PREFIX% unleash\" to unleash them.", g_kLeashedTo);
         }
     }
     return TRUE;

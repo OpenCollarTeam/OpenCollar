@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160112.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160130.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -54,8 +54,6 @@
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
 // OpenCollar - styles is derivative of Virtual Disgrace - Paint
-// Compatible with OpenCollar API 4.0
-// and/or minimum Disgraced Version 1.9.7
 
 list g_lElements;  //list of element types, built on script start.  Changed event restarts script on link set change
 list g_lElementFlags;

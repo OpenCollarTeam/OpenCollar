@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Bell - 150112.1                                //
+//                           Bell - 150201.1                                //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,      //
 //  Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,                  //
@@ -298,7 +298,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
         }
     } else if (sStr == "rm bell") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        else  Dialog(kID,"\nDo you really want to uninstall the "+g_sSubMenu+" App?\n\nNOTE: This App automatically installs with patches. If you want it back, just run a patch/updater/installer. ❤", ["Yes","No","Cancel"], [], 0, iNum,"rmbell");
+        else  Dialog(kID,"\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmbell");
     }
     //Debug("command executed");
 }
