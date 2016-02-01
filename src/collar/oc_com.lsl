@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160123.1                          //
+//                         Communicator - 160201.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -418,8 +418,8 @@ default {
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You used your safeword, your owners will be notified you did.",g_kWearer);
-                llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"Your sub %WEARERNAME% has used the safeword. Please check on their well-being in case further care is required.","");
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You used the safeword, your owners have been notified.",g_kWearer);
+                llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"\n\n%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%'s well-being in case further care is required.\n","");
                 return;
             }
         }
