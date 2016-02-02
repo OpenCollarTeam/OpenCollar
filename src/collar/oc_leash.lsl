@@ -384,6 +384,7 @@ Unleash(key kCmdGiver) {
         string sTargetMess;
         integer bCmdGiverIsAvi=llGetAgentSize(kCmdGiver) != ZERO_VECTOR;
         if (bCmdGiverIsAvi) {
+            g_bLeashedToAvi = llGetAgentSize(g_kLeashedTo) != ZERO_VECTOR; //refresh to check if the leash target is in sim, no need to spam else
             if (kCmdGiver == g_kWearer) { // Wearer is Leasher
                 if (g_bFollowMode) {
                     sWearMess = "You stop following " + sTarget + ".";
