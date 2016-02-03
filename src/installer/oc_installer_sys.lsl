@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 160202.1                        //
+//                       Installer System - 160203.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -224,7 +224,6 @@ default {
         llParticleSystem([]);
         if (llGetInventoryType(g_sInfoCard) == INVENTORY_NOTECARD)
             g_kInfoID = llGetNotecardLine(g_sInfoCard,0);
-        if (g_iInstallOnRez) InitiateInstallation();
     }
     
     touch_start(integer iNumber) {
@@ -298,7 +297,10 @@ default {
         }
     }
     timer() {
-        if (g_iDone) llResetScript();
+        if (g_iDone) {
+            if (g_iInstallOnRez) SetFloatText();
+            else llResetScript();
+        }
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
     }
@@ -328,6 +330,7 @@ default {
             g_sName = llList2String(lNameParts,1);
             g_sObjectType = llList2String(lNameParts,0);
             SetFloatText();
+            if (g_iInstallOnRez) InitiateInstallation();
         }
         if (kID == g_kInfoID) {
             if (sData != EOF) {
