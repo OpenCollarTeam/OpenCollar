@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Titler - 160201.1                              //
+//                           Titler - 160204.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
@@ -173,7 +173,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
         }
         ShowHideText();
-    } else if (sCommand=="titler" && sAction == "box") 
+    } else if (sCommand=="titler" && sAction == "box")
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         g_sText = "";
@@ -234,7 +234,7 @@ default{
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
-                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
+                    llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc]);
                     linkNumber = 0 ; // break while cycle
                 } else {
                     llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
@@ -270,13 +270,13 @@ default{
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);        
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-                if (sMenuType == "main") { 
+                if (sMenuType == "main") {
                     if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
