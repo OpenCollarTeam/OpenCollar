@@ -167,7 +167,7 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
 }
 
 ShinyMenu(key kID, integer iAuth, string sElement) {
