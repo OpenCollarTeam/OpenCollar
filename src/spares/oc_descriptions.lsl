@@ -21,11 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       new themes - 160204.1                              //
+//                     Description Converter - 160205.1                     //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
-//  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
-//  Romka Swallowtail et al.                                                //
+//  Copyright (c) 2016 Romka Swallowtail, Wendy Starfall                    //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -52,11 +50,20 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+// This plugin by Romka Swallowtail automatically adjusts element descriptions
+// to work the exact opposite way than in legacy OpenCollar. That means instead
+// of describing the element to not do something, such as "~nocolor", we do
+// the opposite and only describe "~color" if this element should be colorable.
+
 default {
 
     state_entry() {
-
-        llOwnerSay("Start conversion... ");
+        
+        if (llSubStringIndex(llGetObjectDesc(), "160205.1") != -1) {
+            llSetScriptState(llGetScriptName(), FALSE);
+        }
+        
+        //llOwnerSay("Start conversion... ");
 
         integer iLinkNum = llGetNumberOfPrims()+1;
         while (iLinkNum-- > 2) {
@@ -103,7 +110,7 @@ default {
                 llSetLinkPrimitiveParamsFast(iLinkNum,[PRIM_DESC, description]);
             }
         }
-        llOwnerSay("Conversion done.");
+        //llOwnerSay("Conversion done.");
         llRemoveInventory(llGetScriptName());
     }
 }
