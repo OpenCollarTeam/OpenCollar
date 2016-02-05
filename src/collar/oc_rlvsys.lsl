@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160205.1                            //
+//                         RLV System - 160205.2                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -53,6 +53,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 integer g_iRLVOn = TRUE;
+integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
 integer g_iRlvActive = FALSE;
 integer g_iWaitRelay;
@@ -159,11 +160,18 @@ DoMenu(key kID, integer iAuth){
     key kMenuID = llGenerateKey();
     list lButtons;
     string sPrompt = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
-    if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
-    if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
-    else sPrompt += "\nRLV appears to be disabled in the viewer's preferences.\n\n[ON] attempts another RLV handshake with the viewer.\n\n[OFF] will prevent the %DEVICETYPE% from attempting another \"@versionnew=293847\" handshake at the next login.\n\nNOTE: Turning RLV off here means that it has to be turned on manually once it is activated in the viewer.";
-    if (g_iRLVOn) lButtons += [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
-    else lButtons += [TURNON, TURNOFF];
+    if (g_iRlvActive) {
+        if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
+        if (g_iRlvaVersion) sPrompt += " / RLVa v"+g_sRlvaVersionString;
+    } else if (g_iRLVOff) sPrompt += "\nRLV is turned off.";
+    else {
+        if (g_iRLVOn) sPrompt += "\nThe rlv script is still trying to handshake with the RL-viewer. Just wait another minute and try again.\n\n[ON] restarts the RLV handshake cycle with the viewer.";
+        else sPrompt += "\nRLV appears to be disabled in the viewer's preferences.\n\n[ON] attempts another RLV handshake with the viewer.";
+        sPrompt += "\n\n[OFF] will prevent the %DEVICETYPE% from attempting another \"@versionnew=293847\" handshake at the next login.\n\nNOTE: Turning RLV off here means that it has to be turned on manually once it is activated in the viewer.";
+    }
+    if (g_iRlvActive) lButtons = [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
+    else if (g_iRLVOff) lButtons = [TURNON];
+    else lButtons = [TURNON, TURNOFF];
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
@@ -331,11 +339,14 @@ UserCommand(integer iNum, string sStr, key kID) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Starting RLV...",g_kWearer);
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
+        g_iRLVOff = FALSE;
         setRlvState();
     } else if (sStr == "rlv off") {
         if (iNum == CMD_OWNER) {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
+            llSetTimerEvent(0.0); //in case handshakes still going on stop the timer
             g_iRLVOn = FALSE;
+            g_iRLVOff = TRUE;
             setRlvState();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -483,6 +494,7 @@ default {
             else if (sToken==g_sSettingToken+"handshakes") g_iMaxViewerChecks=(integer)sValue;
             else if (sToken==g_sSettingToken+"on") {
                 g_iRLVOn=(integer)sValue;
+                g_iRLVOff = !g_iRLVOn;
                 setRlvState();
             }
         } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord();
