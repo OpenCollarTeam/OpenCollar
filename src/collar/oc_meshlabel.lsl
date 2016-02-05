@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 160204.1                            //
+//                         Mesh Label - 160201.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -191,7 +191,7 @@ integer LabelsCount() {
         if(sLabel == "MeshLabel") {
             g_lLabelLinks += [0]; // fill list witn nulls
             //change prim description
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label"]);
+            llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
         }
     }
     g_iCharLimit = llGetListLength(g_lLabelLinks) * 6;
@@ -211,7 +211,7 @@ integer LabelsCount() {
         }
     }
     if (!ok) {
-        if (~llSubStringIndex(llGetObjectName(),"Installer") && ~llSubStringIndex(llGetObjectName(),"Updater"))
+        if (~llSubStringIndex(llGetObjectName(),"Installer") && ~llSubStringIndex(llGetObjectName(),"Updater")) 
             return 1;
     }
     return ok;
