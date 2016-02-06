@@ -48,11 +48,11 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//         github.com/OpenCollar/opencollar/tree/master/src/spares          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁵¹⁰²⁴⋅¹";
+string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -167,7 +167,7 @@ MenuBadwords(key kID, integer iNum){
     if (g_iIsEnabled) lButtons += "OFF";
     else lButtons += "ON";
     lButtons += "Stop";
-    string sText= "\n[http://www.opencollar.at/badwords.html Badwords]\t"+g_sAppVersion+"\n";
+    string sText= "\n[http://www.opencollar.at/badwords.html Badwords (unsupported)]\t"+g_sAppVersion+"\n";
     sText+= "\n" + llList2CSV(g_lBadWords) + "\n";
     sText+= "\nPenance: " + g_sPenance;
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");

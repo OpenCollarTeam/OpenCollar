@@ -47,12 +47,14 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//         github.com/OpenCollar/opencollar/tree/master/src/spares          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
 //allows owner to set different camera mode
 //responds to commands from modes list
+
+string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
 
 key g_kWearer;
 integer g_iLastNum;
@@ -253,7 +255,7 @@ LockCam() {
 }
 
 CamMenu(key kID, integer iAuth) {
-    string sPrompt = "\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera\n\nNOTE: Full functionality only on RLV API v2.9 and greater.";
+    string sPrompt = "\n[http://www.opencollar.at/camera.html Camera (unsupported)]\t"+g_sAppVersion+"\n\nCurrent camera mode is " + g_sCurrentMode + ".\n\nwww.opencollar.at/camera\n\nNOTE: Full functionality only on RLV API v2.9 and greater.";
     list lButtons = ["CLEAR","FREEZE","MOUSELOOK"];
     integer n;
     integer stop = llGetListLength(llJson2List(g_sJsonModes)); 
