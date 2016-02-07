@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Undress - 160117.1                              //
+//                          Undress - 160207.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
+//  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
 //  Romka Swallowtail, Sumi Perl, Keiyra Aeon et al.                        //
 // ------------------------------------------------------------------------ //
@@ -54,7 +54,7 @@
 
 //gives menus for clothing and attachment, stripping and locking
 
-string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
@@ -449,7 +449,12 @@ DoUnlockAll()
 UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum > CMD_WEARER || iNum < CMD_OWNER) return; // sanity check
-
+    if (llToLower(sStr) == "rm undress" || llToLower(sStr) == "rm un/dress") {
+        if (iNum == CMD_OWNER || kID == g_kWearer) 
+            Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmundress");
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        return;
+    }
     if (!g_iRLVOn)
     {
         if (~llListFindList(["menu "+g_sSubMenu,"undress","lockall","unlockall"],[sStr]))
@@ -795,6 +800,12 @@ default {
                         if (sMenu == "lockclothing") LockClothMenu(kAv, iAuth);
                         if (sMenu == "lockattachment") LockAttachmentMenu(kAv, iAuth);
                     }
+                } else if (sMenu == "rmundress") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE , g_sParentMenu + "|"+g_sSubMenu, "");
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
         }

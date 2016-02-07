@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          RLV Stuff - 160117.1                            //
+//                          RLV Stuff - 160207.1                            //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
+//  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail et al.  //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -339,8 +339,10 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     if (iNum > CMD_WEARER) return;  //nothing for lower than wearer here
     sStr=llStringTrim(sStr,STRING_TRIM);
     string sStrLower=llToLower(sStr);
-
-    if (sStrLower == "sitmenu" || sStrLower == "menu sit") Menu(kID, iNum, "rlvsit_");
+    if (sStrLower == "rm rlvstuff") {
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else Dialog(kID, "\nDo you really want to uninstall the RLVStuff App?", ["Yes","No","Cancel"], [], 0, iNum,"rmrlvstuff");
+    } else if (sStrLower == "sitmenu" || sStrLower == "menu sit") Menu(kID, iNum, "rlvsit_");
     else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (sStrLower == "rlvtalk" || sStrLower == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (sStrLower == "rlvtouch" || sStrLower == "menu touch") Menu(kID, iNum, "rlvtouch_");
@@ -536,6 +538,17 @@ default {
                         //Debug("Sending \""+"sit:" + sMessage + "=force\" to "+(string)kAv+" with auth "+(string)iAuth);
                         UserCommand(iAuth, "sit:" + sMessage + "=force", kAv, "rlvsit_");
                     }
+                } else if (sMenu == "rmrlvstuff") {
+                    if (sMessage == "Yes") {
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Sit", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Travel", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Talk", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Touch", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Misc", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|View", "");
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"RLVStuff has been removed.", kAv);
+                        if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"RLVStuff remains installed.", kAv);
                 } else {
                     if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMessage == "SitNow") UserCommand(iAuth, "sitnow", kAv, "rlvsit_");
