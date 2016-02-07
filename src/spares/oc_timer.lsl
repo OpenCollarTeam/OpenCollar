@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Timer - 170117.1                              //
+//                            Timer - 160117.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -51,6 +51,8 @@
 //         github.com/OpenCollar/opencollar/tree/master/src/spares          //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
 
 string g_sSubMenu = "Timer";
 string g_sParentMenu = "Apps";
@@ -171,8 +173,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, int
 
 DoMenu(key keyID, integer iAuth) {
     //Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "\n A frozen pizza takes ~12 min to bake.\n";
-    sPrompt+="\n\nwww.opencollar.at/timer";
+    string sPrompt = "\n[http://www.opencollar.at/timer.html Timer (unsupported)]\t"+g_sAppVersion+"\n\nA frozen pizza takes ~12 min to bake.\n";
     list lMyButtons = ["Real Timer","Online Timer"];
 
     sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);

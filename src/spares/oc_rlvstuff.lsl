@@ -51,6 +51,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
+
 string g_sParentMenu = "RLV";
 
 list g_lSettings; //3 strided list of prefix,option,value
@@ -217,7 +219,7 @@ Menu(key kID, integer iAuth, string sMenuName) {
     list lButtons;
 
     n=llListFindList(g_lMenuHelpMap,[sMenuName]);
-    if (~n) sPrompt="\nwww.opencollar.at/"+llList2String(g_lMenuHelpMap,n+1)+"\n";
+    if (~n) sPrompt="\nwww.opencollar.at/"+llList2String(g_lMenuHelpMap,n+1)+"\t"+g_sAppVersion+"\n";
 
     integer iStop = llGetListLength(g_lRLVcmds);
     for (n = 0; n < iStop; n+=g_lRLVcmds_stride) {

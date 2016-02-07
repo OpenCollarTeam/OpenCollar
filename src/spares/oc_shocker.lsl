@@ -50,6 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+
 string g_sSubMenu = "Shocker";
 string g_sParentMenu = "Apps";
 
@@ -151,7 +153,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 DialogShocker(key kID, integer iAuth)
 {
-    string sText = "\nShocker!\n Your pet is naughty? Just punish him/her.\n";
+    string sText = "\nShocker!\t"+g_sAppVersion+"\n\nYour pet is naughty? Just punish him/her.\n";
     sText += "- Chose time to start punishment.\n" ;
     sText += "- 'Quick Help' will give you a brief help how to use shocker.\n";
     Dialog(kID, sText, g_lButtons, [HELP,g_sSetAnim, g_sSetSound,UPMENU],0,iAuth,"shocker");
