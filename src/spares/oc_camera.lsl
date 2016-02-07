@@ -21,10 +21,10 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 160117.1                              //
+//                           Camera - 160207.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Medea Destiny, //
-//  littlemousy, Romka Swallowtail et al.                                   //
+//  Copyright (c) 2011 - 2016 Nandana Singh, Wendy Starfall, Medea Destiny, //
+//  littlemousy, Romka Swallowtail, Garvin Twine et al.                     //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -54,7 +54,7 @@
 //allows owner to set different camera mode
 //responds to commands from modes list
 
-string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
 
 key g_kWearer;
 integer g_iLastNum;
@@ -184,11 +184,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 } 
 
-ConfirmDeleteMenu(key kAv, integer iAuth) {
-    string sPrompt = "\nAre you sure you want to delete the "+g_sSubMenu+" App?\n";
-    Dialog(kAv, sPrompt, ["Yes","No"], [], 0, iAuth,"rmcamera");
-}
-
 CamMode(string sMode) {
     llClearCameraParams();
     llSetCameraParams(lJsonModes(sMode));
@@ -314,9 +309,9 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
     string sCommand = llList2String(lParams, 0);
     string sValue = llList2String(lParams, 1);
     string sValue2 = llList2String(lParams, 2);
-    if (sStr == "menu " + g_sSubMenu) {
+    if (sStr == "menu " + g_sSubMenu)
         CamMenu(kID, iNum);
-    } else if (sCommand == "cam" || sCommand == "camera") {
+    else if (sCommand == "cam" || sCommand == "camera") {
         //Debug("g_iLastNum=" + (string)g_iLastNum);  
         if (sValue == "")//they just said *cam.  give menu
             CamMenu(kID, iNum);
@@ -366,7 +361,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
         }
     } else if (sStr == "rm camera") {
             if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-            else ConfirmDeleteMenu(kID, iNum);
+            else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmcamera");
     } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
         ClearCam();
         llResetScript();
@@ -435,10 +430,10 @@ default {
                 } else if (sMenuType == "rmcamera") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
-                }                      
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                }                    
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

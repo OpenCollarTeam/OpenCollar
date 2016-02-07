@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 160117.1                             //
+//                          Badwords - 160207.1                             //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Lulu Pink, Nandana Singh, Garvin Twine,       //
+//  Copyright (c) 2008 - 2016 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
 //  littlemousy, Karo Weirsider, Nori Ovis, Ray Zopf et al.                 //
 // ------------------------------------------------------------------------ //
@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -195,7 +195,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
         MenuBadwords(kID, iNum);
     } else if (sStr == "rm badwords") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nAre you sure you want to delete the Badwords App?\n", ["Yes","No"], [], 0, iNum,"rmbadwords");
+        else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No", "Cancel"], [], 0, iNum,"rmbadwords");
     } else if (llToLower(sCommand)=="badwords"){
         if (iNum != CMD_OWNER) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -426,9 +426,9 @@ default {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu+"|"+g_sSubMenu, "");
                         llMessageLinked(LINK_THIS, APPOVERRIDE, g_sSubMenu, "off");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Removing "+g_sSubMenu+" App...\nYou can re-install it with an OpenCollar Updater.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Removing "+g_sSubMenu+" App aborted.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
