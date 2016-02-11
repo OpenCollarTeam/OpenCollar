@@ -477,7 +477,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     TextureMenu(kID, 0, iNum, sStr);
                 } else if (! ~iTextureIndex) {  //invalid texture name supplied, send texture menu for this element
                     llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"No texture "+sTextureShortName+" found, please choose one from the menu.",kID);
-                    TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {  //valid element and texture names supplied, apply texture
                     //get key from long name
                     //Debug("Texture command is good:"+sStr);
