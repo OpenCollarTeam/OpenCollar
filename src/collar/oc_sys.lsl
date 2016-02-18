@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160202.1                              //
+//                           System - 160218.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.0.0";
 string g_sFancyVersion="⁶⋅⁰⋅⁰";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160205.1;
+float g_fBuildVersion = 160218.1;
 
 key g_kWearer;
 
@@ -502,6 +502,7 @@ RebuildMenu() {
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
+    llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
 }
 
 init (){
