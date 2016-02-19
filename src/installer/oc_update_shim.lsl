@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 160125.1                           //
+//                         Update Shim - 160219.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -143,7 +143,7 @@ default {
                         sCmd = "GIVE";
                     } else {
                         // it's in our list.  Check UUID.
-                        if (llGetInventoryKey(sName) == kUUID && sName != "oc_sys") {
+                        if (llGetInventoryKey(sName) == kUUID  && kUUID != NULL_KEY && sName != "oc_sys") {
                             // already have script.  skip
                             sCmd = "SKIP";
                         } else {
@@ -155,7 +155,7 @@ default {
                 } else if (sType == "ITEM") {
                     if (llGetInventoryType(sName) != INVENTORY_NONE) {
                         // item exists.  check uuid.
-                        if (llGetInventoryKey(sName) != kUUID) {
+                        if (llGetInventoryKey(sName) != kUUID || kUUID == NULL_KEY) {
                             // mismatch.  delete and report
                             llRemoveInventory(sName);
                             sCmd = "GIVE";
