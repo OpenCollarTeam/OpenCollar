@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160223.1                              //
+//                           System - 160218.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -223,7 +223,7 @@ string NameGroupURI(string sStr){
 }
 
 SettingsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
+    string sPrompt = "\n[http://www.opencollar.at/options.html Settings]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     sPrompt += "\nSelect Themes to customize looks.";
