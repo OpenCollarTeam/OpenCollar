@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160218.1                              //
+//                           System - 160222.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -508,7 +508,7 @@ RebuildMenu() {
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_iWaitRebuild = TRUE;SafeX();JB();
-    llSetTimerEvent(1);
+    llSetTimerEvent(1.0);
 }
 
 StartUpdate(){
@@ -670,10 +670,9 @@ default
 
     changed(integer iChange) {
         if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
-            llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
-            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             g_iWaitRebuild = TRUE;JB();
             llSetTimerEvent(1.0);
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
         }
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_COLOR) {
