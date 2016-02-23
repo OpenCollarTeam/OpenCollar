@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 160122.1            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 160217.1            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -104,7 +104,7 @@ integer CMD_OWNER                   = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER                  = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD                = 510;
 integer CMD_RELAY_SAFEWORD          = 511;
@@ -141,7 +141,7 @@ integer DIALOG                     = -9000;
 integer DIALOG_RESPONSE            = -9001;
 integer DIALOG_TIMEOUT             = -9002;
 integer SENSORDIALOG               = -9003;
-
+integer g_iAuth;
 
 key g_kLastForcedSeat;
 string g_sLastForcedSeat;
@@ -243,9 +243,10 @@ DoTerminalCommand(string sMessage, key kID) {
 
 OutfitsMenu(key kID, integer iAuth) {
     g_kMenuClicker = kID; //on our listen response, we need to know who to pop a dialog for
+    g_iAuth = iAuth;
     g_sCurrentPath = g_sPathPrefix + "/";
     llSetTimerEvent(g_iTimeOut);
-    g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
+    g_iListener = llListen(g_iFolderRLV, "", g_kWearer, "");
     llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
 }
 
@@ -363,7 +364,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
             sLowerStr = llDeleteSubString(sStr,0,llStringLength("wear ")-1);
             if (sLowerStr) { //we have a folder to try find...
                 llSetTimerEvent(g_iTimeOut);
-                g_iListener = llListen(g_iFolderRLVSearch, "", llGetOwner(), "");
+                g_iListener = llListen(g_iFolderRLVSearch, "", g_kWearer, "");
                 g_kMenuClicker = kID;
                 if (g_iRlvaOn) {
                     llOwnerSay("@findfolders:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
@@ -709,13 +710,15 @@ default {
                         lTempSplit = llList2List(lTempSplit,0,llGetListLength(lTempSplit) -2);
                         g_sCurrentPath = llDumpList2String(lTempSplit,"/") + "/";
                         llSetTimerEvent(g_iTimeOut);
-                        g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
+                        g_iAuth = iAuth;
+                        g_iListener = llListen(g_iFolderRLV, "", g_kWearer, "");
                         llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
                     } else if (sMessage == "WEAR") WearFolder(g_sCurrentPath);
                     else if (sMessage != "") {
                         g_sCurrentPath += sMessage + "/";
                         if (sMenu == "multimatch") g_sCurrentPath = sMessage + "/";
                         llSetTimerEvent(g_iTimeOut);
+                        g_iAuth = iAuth;
                         g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                         llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
                     }
@@ -736,7 +739,8 @@ default {
         llSetTimerEvent(0.0);
         //Debug((string)iChan+"|"+sName+"|"+(string)kID+"|"+sMsg);
         if (iChan == g_iFolderRLV) { //We got some folders to process
-            FolderMenu(g_kMenuClicker,CMD_OWNER,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
+            FolderMenu(g_kMenuClicker,g_iAuth,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
+            g_iAuth = CMD_EVERYONE;
         }
         else if (iChan == g_iFolderRLVSearch) {
             if (sMsg == "") {
@@ -750,7 +754,8 @@ default {
                 } else {
                     string sPrompt = "\nPick one!";
                     list lFolderMatches = llParseString2List(sMsg,[","],[]);
-                    Dialog(g_kMenuClicker, sPrompt, lFolderMatches, [UPMENU], 0, CMD_OWNER, "multimatch");
+                    Dialog(g_kMenuClicker, sPrompt, lFolderMatches, [UPMENU], 0, g_iAuth, "multimatch");
+                    g_iAuth = CMD_EVERYONE;
                 }
             }
         }
