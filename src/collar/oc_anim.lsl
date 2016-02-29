@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160127.1                             //
+//                          Animator - 160229.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -355,7 +355,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
-        llResetScript();
+        //llResetScript();
     } else if (sCommand=="posture") {
         if ( sValue=="on") {
             if (iNum<=CMD_WEARER) {
