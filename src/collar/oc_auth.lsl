@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 151226.1                           //
+//                          Authorizer - 160229.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -591,7 +591,7 @@ default {
         //llSetMemoryLimit(65536);
         g_sWearerID = llGetOwner();
         g_iLEDLink = llGetLinkNumber();
-        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_AUTH","");
+        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 
