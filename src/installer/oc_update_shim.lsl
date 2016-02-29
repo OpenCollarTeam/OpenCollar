@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 160219.1                           //
+//                         Update Shim - 160229.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -225,7 +225,7 @@ default {
             llOwnerSay("Installation complete!");
             if (g_iIsUpdate)
                 //reboot scripts
-                llMessageLinked(5,CMD_OWNER,"reboot --f",llGetOwner());
+                llMessageLinked(LINK_ALL_OTHERS,CMD_OWNER,"reboot --f",llGetOwner());
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }
