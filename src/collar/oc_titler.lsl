@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Titler - 160201.1                              //
+//                           Titler - 160301.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
@@ -176,10 +176,11 @@ UserCommand(integer iAuth, string sStr, key kAv) {
     } else if (sCommand=="titler" && sAction == "box") 
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
-        g_sText = "";
+        UserCommand(CMD_OWNER,"title off", g_kWearer);
+       /* g_sText = "";
         g_iOn = FALSE;
         ShowHideText();
-        llResetScript();
+        llResetScript();*/
     } else if (sCommand == "title") {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;

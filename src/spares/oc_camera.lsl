@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 160207.1                              //
+//                           Camera - 160301.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Wendy Starfall, Medea Destiny, //
 //  littlemousy, Romka Swallowtail, Garvin Twine et al.                     //
@@ -364,7 +364,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmcamera");
     } else if ((iNum == CMD_OWNER  || kID == g_kWearer) && sStr == "runaway") {
         ClearCam();
-        llResetScript();
+        //llResetScript();
     }
    // Debug(sCommand+" executed");
 }
@@ -392,7 +392,7 @@ default {
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR) {
             ClearCam();
-            llResetScript();
+            //llResetScript();
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum == LM_SETTING_RESPONSE) {
