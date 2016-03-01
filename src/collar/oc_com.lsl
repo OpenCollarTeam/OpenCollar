@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160228.1                          //
+//                         Communicator - 160301.2                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -448,7 +448,7 @@ default {
             sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
             if (sMsg) {
                 if (kID == g_kWearer && llToLower(sMsg) == "verify") {
-                    llOwnerSay("Verifying core integrity...");
+                    llOwnerSay("Verifying core...");
                     llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
                     llSetTimerEvent(2);
                     g_iVerify = TRUE;
@@ -506,7 +506,11 @@ default {
             if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
             else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-            if (g_iVerify && sStr != "LINK_REQUEST") g_lFoundCore5Scripts += [sStr,iSender];
+            if (sStr != "LINK_REQUEST") {
+                if (!~llListFindList(g_lFoundCore5Scripts,[sStr,iSender]))
+                    g_lFoundCore5Scripts += [sStr,iSender];
+                if (llGetListLength(g_lFoundCore5Scripts) >= 10) llSetTimerEvent(0.1);
+            }
         } else if (iNum == TOUCH_CANCEL) {
             integer iIndex = llListFindList(g_lTouchRequests, [kID]);
             if (~iIndex) {
@@ -533,7 +537,6 @@ default {
 
     timer() {
         llSetTimerEvent(0);
-        g_iVerify = FALSE;
         string sMessage;
         if (g_lWrongRootScripts) {
             sMessage = "\nFalse root prim placement:\n";
@@ -557,17 +560,31 @@ default {
         } while (i<10);
         i = llGetLinkNumber();
         if (i != 1) sMessage += "\noc_com\t(not in root prim!)";
+        string sSaveIntegrity = g_sGlobalToken+"integrity=";
         if (llSubStringIndex(sMessage,"False") == -1 && llGetListLength(lTemp) == 1) {
-            sMessage = "Core is optimal!";
+            g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2, TRUE);
+            if (llListFindList(g_lFoundCore5Scripts,["LINK_ANIM",6,"LINK_AUTH",2,"LINK_DIALOG",3,"LINK_RLV",4,"LINK_SAVE",5])) {
+                sMessage = "All operational!";
+                sSaveIntegrity += "homemade";
+            } else {
+                sMessage = "Optimal conditions!";
+                sSaveIntegrity += "professionally made";
+            }
+            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,sSaveIntegrity,"");
             lTemp = [];
             g_lFoundCore5Scripts = [];
         } else {
             if (llGetListLength(lTemp) ==1) lTemp = [];
             sMessage = "\n\nCore corruption detected:\n"+ llDumpList2String(lTemp,"\n")+sMessage;
             if (i == 1) sMessage += "\noc_com\t(root)";
+            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"integrity","");
         }
         g_lFoundCore5Scripts = [];
-        llOwnerSay(sMessage);
+        if (g_iVerify) {
+            g_iVerify = FALSE;
+            llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,sSaveIntegrity,"");
+            llOwnerSay(sMessage);
+        }
     }
 
     changed(integer iChange) {

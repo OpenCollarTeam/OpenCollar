@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160223.1                              //
+//                           System - 160301.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -58,10 +58,10 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="6.0.2";
-string g_sFancyVersion="⁶⋅⁰⋅²";
+string g_sCollarVersion="6.0.3";
+string g_sFancyVersion="⁶⋅⁰⋅³";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160228.1;
+float g_fBuildVersion = 160229.1;
 
 key g_kWearer;
 
@@ -174,6 +174,7 @@ integer STEALTH;
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
+string g_sIntegrity = "(pending...)";
 
 /*
 integer g_iProfiled=1;
@@ -254,6 +255,7 @@ HelpMenu(key kID, integer iAuth) {
     if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Verified Distributor]";
     else sPrompt += "Unverified";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
+    sPrompt += "\n\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.";
     if(!g_iLatestVersion) sPrompt+="\n\n[http://www.opencollar.at/updates.html Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
@@ -644,7 +646,9 @@ default
                 g_iLocked = (integer)sValue;
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
-            } else if(sToken =="lock_locksound") {
+            } else if (sToken == g_sGlobalToken+"integrity") 
+                g_sIntegrity = sValue;
+            else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
             } else if(sToken =="lock_unlocksound") {
