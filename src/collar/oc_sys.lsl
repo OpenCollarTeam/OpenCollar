@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160301.1                              //
+//                           System - 160303.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.0.3";
 string g_sFancyVersion="⁶⋅⁰⋅³";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160229.1;
+float g_fBuildVersion = 160303.1;
 
 key g_kWearer;
 
@@ -297,6 +297,15 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 MainMenu(kID, iNum);
             } else SettingsMenu(kID, iNum);
         }
+    } else if (sStr == "info") {
+        string sMessage = "\n\nModel: "+llGetObjectName();
+        sMessage += "\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
+        if (g_iOffDist) sMessage += "["+NameGroupURI(g_sDistributor)+" Verified Distributor]";
+        else sMessage += "Unverified";
+        sMessage += "\nUser: "+llGetUsername(g_kWearer);
+        sMessage += "\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
+        sMessage += "\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.\n";
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: "+license_url,kID);
