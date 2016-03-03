@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 160229.1                           //
+//                         Update Shim - 160303.3                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -190,6 +190,7 @@ default {
         else if (!llSubStringIndex(sMsg, "DONE")){
             //restore settings 
             if (g_iIsUpdate) {
+                llMessageLinked(LINK_ALL_OTHERS, -10, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings); 
                 for (n = 0; n < iStop; n++) {
@@ -223,9 +224,11 @@ default {
             llSetRemoteScriptAccessPin(0);
             // celebrate
             llOwnerSay("Installation complete!");
-            if (g_iIsUpdate)
+            if (g_iIsUpdate) {
                 //reboot scripts
+                llSleep(0.5);
                 llMessageLinked(LINK_ALL_OTHERS,CMD_OWNER,"reboot --f",llGetOwner());
+            }
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }
