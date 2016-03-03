@@ -54,7 +54,7 @@
 //allows owner to set different camera mode
 //responds to commands from modes list
 
-string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
+string g_sAppVersion = "¹⁶⁰³⁰¹⋅¹";
 
 key g_kWearer;
 integer g_iLastNum;
