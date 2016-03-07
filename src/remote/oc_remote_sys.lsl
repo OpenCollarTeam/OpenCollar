@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160124.2        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160307.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -184,7 +184,7 @@ RemovePartner(string sID) {
     integer index = llListFindList(g_lPartners,[sID]);
     if (~index) {
         g_lPartners=llDeleteSubList(g_lPartners,index,index);
-        llOwnerSay(NameURI(sID)+" has been removed from your Reomte HUD.");
+        llOwnerSay(NameURI(sID)+" has been removed.");
         if (sID == g_sActivePartnerID) NextPartner(0,FALSE);
     }
 }
