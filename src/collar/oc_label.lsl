@@ -307,7 +307,7 @@ list g_lGlows;
 integer LabelsCount() {
     integer ok = TRUE ;
     g_lLabelLinks = [] ;
-
+    g_lLabelBaseElements = [];
     string sLabel;
     list lTmp;
     integer iLink;
