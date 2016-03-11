@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Label - 160310.1                               //
+//                           Label - 160311.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -111,7 +111,7 @@ integer g_iMenuStride = 3;
 //key g_kColorID;
 
 integer g_iScroll = FALSE;
-integer g_iShow = TRUE;
+integer g_iShow = FALSE;
 vector g_vColor;
 integer g_iHide;
 
