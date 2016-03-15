@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160229.1                           //
+//                          Authorizer - 160315.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -552,14 +552,17 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
     } else if (sMessage == "runaway"){
-        list lButtons=[];
-        string message;//="\nOnly the wearer or an Owner can access this menu";
+       // list lButtons=[];
+      // string message;//="\nOnly the wearer or an Owner can access this menu";
         if (kID == g_sWearerID){  //wearer called for menu
             if (g_iRunawayDisable)
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-            else
+            else {
                 Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu",FALSE);
+                return;
+            }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
     }
 }
 
@@ -696,9 +699,9 @@ default {
                         AuthMenu(kAv, iAuth);
                     else UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
-                    if (sMessage == UPMENU)
-                        AuthMenu(kAv, iAuth);
-                    else  if (sMessage == "Yes") RunAway();
+                    if (sMessage == "Yes") RunAway();
+                    else if (sMessage == UPMENU) AuthMenu(kAv, iAuth);
+                    else if (sMessage == "No") llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway aborted.",kAv);
                 } if (llSubStringIndex(sMenu,"AddAvi") == 0) {
                     if ((key)sMessage)
                         AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
