@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer Bundles - 151106.1                       //
+//                       Installer Bundles - 160320.1                       //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2015 Nandana Singh, Wendy Starfall, Garvin Twine   //
+//  Copyright (c) 2011 - 2016 Nandana Singh, Wendy Starfall, Garvin Twine   //
 //  and Romka Swallowtail                                                   //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -65,7 +65,7 @@
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
 integer INSTALLION_DONE = 98751;
-
+integer g_iDebug = FALSE;
 
 integer g_iTalkChannel;
 key g_kRCPT;
@@ -101,8 +101,11 @@ SetStatus(string sName) {
     // use card name, item type, and item name to set a nice 
     // text status message
     g_iItemCounter++;
-    string sMsg = "Installing: " + sName+ "\n \n \n";
-    if (g_sMode == "DEPRECATED") sMsg = "Removing: " + sName+ "\n \n \n";
+    string sMsg = "Installation in progress...\n \n \n";
+    if (g_iDebug) {
+        sMsg = "Installing: " + sName+ "\n \n \n";
+        if (g_sMode == "DEPRECATED") sMsg = "Removing: " + sName+ "\n \n \n";
+    } 
     llSetText(sMsg, <1,1,1>, 1.0);
     if (g_iTotalItems < 2) StatusBar(0.5);
     else StatusBar(g_iItemCounter);
@@ -155,9 +158,7 @@ default
                     string sName = llStringTrim(llList2String(lParts, 1), STRING_TRIM);
                     key kUUID;
                     string sMsg;
-                
                     SetStatus(sName);
-                
                     kUUID = llGetInventoryKey(sName);
                     sMsg = llDumpList2String([sType, sName, kUUID, g_sMode], "|");
                     debug("querying: " + sMsg);             
