@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 160303.3                           //
+//                         Update Shim - 160319.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -201,7 +201,7 @@ default {
                     list lTest = llParseString2List(sSetting,["="],[]);
                     string sToken = llList2String(lTest,0);
                     if (llListFindList(g_lDeprecatedSettingTokens,[sToken]) == -1) { //If it doesn't exist in our list
-                        if (~llSubStringIndex(sToken,"auth")) { 
+                        if (~llListFindList(["auth_block","auth_trust","auth_owner"],[sToken])) {
                             lTest = llParseString2List(llGetSubString(sSetting,llSubStringIndex(sSetting,"=")+1,-1),[","],[]);
                             integer i;
                             for (;i<llGetListLength(lTest);++i) {
