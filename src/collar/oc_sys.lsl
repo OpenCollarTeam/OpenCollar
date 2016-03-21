@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160321.1                              //
+//                           System - 160321.2                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -253,7 +253,7 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+"\nOrigin: ";
-    if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
+    if (g_iOffDist) sPrompt += NameGroupURI(g_sDistributor)+" [Official]";
     else if (g_sOtherDist) sPrompt += NameGroupURI("agent/"+g_sOtherDist);
     else sPrompt += "Unknown";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
@@ -302,7 +302,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sStr == "info") {
         string sMessage = "\n\nModel: "+llGetObjectName();
         sMessage += "\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sMessage += "["+NameGroupURI(g_sDistributor)+" Original Distributor]";
+        if (g_iOffDist) sMessage += NameGroupURI(g_sDistributor)+" [Official]";
         else if (g_sOtherDist) sMessage += NameGroupURI("agent/"+g_sOtherDist);
         else sMessage += "Unknown";
         sMessage += "\nUser: "+llGetUsername(g_kWearer);
@@ -361,11 +361,11 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             RebuildMenu();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-    } else if (sCmd == "jailbreak" && kID == g_kWearer) {
+    } else if (llToLower(sStr) == "rm seal" && kID == g_kWearer) {
         if (g_iOffDist)
             Dialog(kID,"\nThis process is irreversible. Do you wish to proceed?", ["Yes","No","Cancel"],[],0,iNum,"JB");
         else
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This %DEVICETYPE% has already been jailbroken.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This %DEVICETYPE% has no official seal.",kID);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==CMD_OWNER){
             if (sStr=="news off"){
@@ -408,7 +408,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Original Distributor]\n";
+        if (g_iOffDist) sVersion += NameGroupURI(g_sDistributor)+" [Official]\n";
         else if (g_sOtherDist) sVersion += NameGroupURI("agent/"+g_sOtherDist);
         else sVersion += "Unknown\n";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
@@ -644,10 +644,10 @@ default
                         if (llGetInventoryType(g_sDistCard)==-1) {
                             g_sDistributor = "";
                             g_iOffDist = 0;
-                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% has been jailbroken.",kAv);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The %DEVICETYPE%'s official seal has been removed.",kAv);
                         }
                     } else
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Jailbreak sequence aborted.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The %DEVICETYPE%'s official seal remains intact.",kAv);
                 }
             }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
