@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160320.1                          //
+//                         Communicator - 160321.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -560,7 +560,7 @@ default {
         } while (i<10);
         i = llGetLinkNumber();
         if (i != 1) sMessage += "\noc_com\t(not in root prim!)";
-        string sSaveIntegrity = g_sGlobalToken+"integrity=";
+        string sSaveIntegrity = "intern_integrity=";
         if (llSubStringIndex(sMessage,"False") == -1 && llGetListLength(lTemp) == 1) {
             g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2, TRUE);
             if (llListFindList(g_lFoundCore5Scripts,["LINK_ANIM",6,"LINK_AUTH",2,"LINK_DIALOG",3,"LINK_RLV",4,"LINK_SAVE",5])) {
@@ -578,7 +578,7 @@ default {
             if (llGetListLength(lTemp) ==1) lTemp = [];
             sMessage = "\n\nCore corruption detected:\n"+ llDumpList2String(lTemp,"\n")+sMessage;
             if (i == 1) sMessage += "\noc_com\t(root)";
-            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"integrity","");
+            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_integrity","");
         }
         g_lFoundCore5Scripts = [];
         if (g_iVerify) {

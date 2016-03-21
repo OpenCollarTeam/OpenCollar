@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160303.3                              //
+//                           System - 160321.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.1.3";
 string g_sFancyVersion="⁶⋅¹⋅³";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160320.1;
+float g_fBuildVersion = 160321.1;
 
 key g_kWearer;
 
@@ -146,6 +146,7 @@ integer g_iUpdateFromMenu;
 
 key github_version_request;
 string g_sDistributor;
+string g_sOtherDist;
 string g_sDistCard = ".distributor";
 string url_check = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~distributor";
 key g_kDistCheck;
@@ -252,8 +253,9 @@ UpdateConfirmMenu() {
 
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+"\nOrigin: ";
-    if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Verified Distributor]";
-    else sPrompt += "Unverified";
+    if (g_iOffDist) sPrompt += "["+NameGroupURI(g_sDistributor)+" Official Distributor]";
+    else if (g_sOtherDist) sPrompt += NameGroupURI("agent/"+g_sOtherDist);
+    else sPrompt += "Unknown";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     sPrompt += "\n\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.";
     if(!g_iLatestVersion) sPrompt+="\n\n[http://www.opencollar.at/updates.html Update available!]";
@@ -300,8 +302,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     } else if (sStr == "info") {
         string sMessage = "\n\nModel: "+llGetObjectName();
         sMessage += "\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sMessage += "["+NameGroupURI(g_sDistributor)+" Verified Distributor]";
-        else sMessage += "Unverified";
+        if (g_iOffDist) sMessage += "["+NameGroupURI(g_sDistributor)+" Original Distributor]";
+        else if (g_sOtherDist) sMessage += NameGroupURI("agent/"+g_sOtherDist);
+        else sMessage += "Unknown";
         sMessage += "\nUser: "+llGetUsername(g_kWearer);
         sMessage += "\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
         sMessage += "\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.\n";
@@ -405,8 +408,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Verified Distributor]\n";
-        else sVersion += "Unverified\n";
+        if (g_iOffDist) sVersion += "["+NameGroupURI(g_sDistributor)+" Original Distributor]\n";
+        else if (g_sOtherDist) sVersion += NameGroupURI("agent/"+g_sOtherDist);
+        else sVersion += "Unknown\n";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     }/* else if (sCmd == "objectversion") {
@@ -655,7 +659,7 @@ default
                 g_iLocked = (integer)sValue;
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
-            } else if (sToken == g_sGlobalToken+"integrity") 
+            } else if (sToken == "intern_integrity") 
                 g_sIntegrity = sValue;
             else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
@@ -665,6 +669,7 @@ default
                 else if ((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
             } else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
             else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
+            else if (sToken == "intern_dist") g_sOtherDist = sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
