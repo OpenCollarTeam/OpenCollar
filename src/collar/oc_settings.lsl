@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160321.3                             //
+//                          Settings - 160322.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -343,7 +343,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
             if (llSubStringIndex(sStrLower,"load url") == 0 && iAuth == CMD_OWNER) {
                 string sURL = llList2String(llParseString2List(sStr,[" "],[]),2);
                 if (!llSubStringIndex(sURL,"http")) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Fetching settings from "+sURL,kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Fetching settings from "+sURL,kID);
                     g_kURLLoadRequest = kID;
                     g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
@@ -417,7 +417,7 @@ default {
                 else {
                     list lLoadSettings = llParseString2List(sBody,["\n"],[]);
                     if (lLoadSettings) {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Settings fetched.",g_kURLLoadRequest);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Settings fetched.",g_kURLLoadRequest);
                         integer i;
                         string sSetting;
                         do {
