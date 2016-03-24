@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160321.2                              //
+//                           System - 160324.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -362,9 +362,12 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (llToLower(sStr) == "rm seal" && kID == g_kWearer) {
-        if (g_iOffDist)
-            Dialog(kID,"\nThis process is irreversible. Do you wish to proceed?", ["Yes","No","Cancel"],[],0,iNum,"JB");
-        else
+        if (g_iOffDist) {
+            if (llGetAttached())
+                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Oops! For this to work, please rez your %DEVICETYPE% on the ground and then use the command to remove the seal again.",kID);
+            else
+                Dialog(kID,"\nThis process is irreversible. Do you wish to proceed?", ["Yes","No","Cancel"],[],0,iNum,"JB");
+        } else
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This %DEVICETYPE% has no official seal.",kID);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==CMD_OWNER){
