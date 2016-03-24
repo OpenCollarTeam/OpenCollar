@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Timer - 160117.1                              //
+//                            Timer - 160324.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -282,7 +282,8 @@ UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
             return;
         }
     }
-
+    if (llToLower(sStr) == "rm timer" && (iAuth == CMD_OWNER || kID ==  g_kWearer)) 
+        Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmtimer");
     if (llToLower(sStr) == "timer" || sStr == "menu "+g_sSubMenu) DoMenu(kID, iAuth);
     else if (llGetSubString(sStr, 0, 5) == "timer ") {
         //Debug(sStr);
@@ -526,6 +527,12 @@ default {
             } else if (sMenu == "online") {
                 if (sMsg == UPMENU) DoMenu(kAv, iAuth);
                 else UserCommand(iAuth, "timer online"+sMsg, kAv, TRUE);
+            } else if (sMenu == "rmtimer") {
+                if (sMsg == "Yes") {
+                    llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu+"|"+g_sSubMenu, "");
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
+                } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
