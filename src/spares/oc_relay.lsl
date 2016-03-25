@@ -51,6 +51,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
+integer g_iSmartStrip = FALSE; // Convert @remoutfit to @detachallthis.
+
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Relay";
 
@@ -379,6 +381,9 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed)
         else if ((lSubArgs!=[])==2)
         {
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
+            list lTemp=llParseString2List(sBehav,[":"],[]);
+            if (g_iSmartStrip && llList2String(lTemp,0) == "remoutfit" && sVal == "force")
+                sBehav = "detachallthis:" + llList2String(lTemp,1);
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
                 llMessageLinked(LINK_RLV,RLV_CMD,sBehav+"="+sVal,kID);
             else sAck="ko";
@@ -442,6 +447,8 @@ Menu(key kID, integer iAuth, string sMode)
         else lButtons+=["☐ Playful"];
         if (g_iLandMode) lButtons+=["☒ Land"];
         else lButtons+=["☐ Land"];
+        if (g_iSmartStrip) lButtons+=["☒ SmartStrip"];
+        else lButtons+=["☐ SmartStrip"];
         if (g_lSources!=[])
         {
             sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";
@@ -670,6 +677,8 @@ UserCommand(integer iNum, string sStr, key kID)
         else llOwnerSay("No pending relay request for now.");
     }
     else if (sStr=="access") AccessList(kID, iNum);
+    else if (sStr=="smartstrip on") g_iSmartStrip = TRUE;
+    else if (sStr=="smartstrip off") g_iSmartStrip = FALSE;
     else if (iNum == CMD_OWNER && !llSubStringIndex(sStr,"minmode"))
     {
         sStr=llGetSubString(sStr,8,-1);
