@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+string g_sAppVersion = "¹⋅¹";
 
 string g_sSubMenu = "Timer";
 string g_sParentMenu = "Apps";
@@ -173,7 +173,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, int
 
 DoMenu(key keyID, integer iAuth) {
     //Debug("timeremaning:"+(string)(g_iOnTimeUpAt-g_iOnTime));
-    string sPrompt = "\n[http://www.opencollar.at/timer.html Timer (unsupported)]\t"+g_sAppVersion+"\n\nA frozen pizza takes ~12 min to bake.\n";
+    string sPrompt = "\n[http://www.opencollar.at/timer.html Legacy Timer]\t"+g_sAppVersion+"\n\nA frozen pizza takes ~12 min to bake.\n";
     list lMyButtons = ["Real Timer","Online Timer"];
 
     sPrompt += "\n Online Timer: "+Int2Time(g_iOnSetTime);
