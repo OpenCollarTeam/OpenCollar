@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Relay - 160117.1                               //
+//                           Relay - 160327.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -56,7 +56,7 @@ integer g_iSmartStrip = FALSE; // Convert @remoutfit to @detachallthis.
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Relay";
 
-string g_sAppVersion = "¹⁶⁰¹¹⁷⋅¹";
+string g_sAppVersion = "²⋅⁰";
 
 integer RELAY_CHANNEL = -1812221819;
 integer SAFETY_CHANNEL = -201818;
@@ -435,7 +435,7 @@ SafeWord()
 //----Menu functions section---//
 Menu(key kID, integer iAuth, string sMode)
 {
-    string sPrompt = "\n[http://www.opencollar.at/relay-plugin.html Relay (unsupported)]\t"+g_sAppVersion;
+    string sPrompt = "\n[http://www.opencollar.at/relay-plugin.html Legacy Relay]\t"+g_sAppVersion;
     list lButtons ;
     
     if (sMode == "Main")
@@ -447,8 +447,8 @@ Menu(key kID, integer iAuth, string sMode)
         else lButtons+=["☐ Playful"];
         if (g_iLandMode) lButtons+=["☒ Land"];
         else lButtons+=["☐ Land"];
-        if (g_iSmartStrip) lButtons+=["☒ SmartStrip"];
-        else lButtons+=["☐ SmartStrip"];
+        /*if (g_iSmartStrip) lButtons+=["☒ SmartStrip"];
+        else lButtons+=["☐ SmartStrip"];*/
         if (g_lSources!=[])
         {
             sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" object";

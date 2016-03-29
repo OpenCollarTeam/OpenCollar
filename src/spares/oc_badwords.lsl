@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
+string g_sAppVersion = "¹⋅¹";
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -167,7 +167,7 @@ MenuBadwords(key kID, integer iNum){
     if (g_iIsEnabled) lButtons += "OFF";
     else lButtons += "ON";
     lButtons += "Stop";
-    string sText= "\n[http://www.opencollar.at/badwords.html Badwords (unsupported)]\t"+g_sAppVersion+"\n";
+    string sText= "\n[http://www.opencollar.at/badwords.html Legacy Badwords]\t"+g_sAppVersion+"\n";
     sText+= "\n" + llList2CSV(g_lBadWords) + "\n";
     sText+= "\nPenance: " + g_sPenance;
     Dialog(kID, sText, lButtons, ["BACK"],0, iNum, "BadwordsMenu");

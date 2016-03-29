@@ -54,7 +54,7 @@
 
 //gives menus for clothing and attachment, stripping and locking
 
-string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
+string g_sAppVersion = "¹⋅¹";
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
@@ -250,7 +250,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 MainMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n[http://www.opencollar.at/undress.html Un/dress (unsupported)]\t"+g_sAppVersion+"\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder";
+    string sPrompt = "\n[http://www.opencollar.at/undress.html Legacy Un/dress]\t"+g_sAppVersion+"\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder";
     sPrompt += ", the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
 
     if (g_iAllLocked) sPrompt += "\n all clothes and attachments are currently locked.";
