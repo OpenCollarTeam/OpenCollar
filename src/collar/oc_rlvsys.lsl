@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160320.1                            //
+//                         RLV System - 160330.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -156,7 +156,6 @@ Debug(string sStr) {
 
 DoMenu(key kID, integer iAuth){
     key kMenuID = llGenerateKey();
-    list lButtons;
     string sPrompt = "\n[http://www.opencollar.at/rlv.html Remote Scripted Viewer Controls]\n";
     if (g_iRlvActive) {
         if (g_iRlvVersion) sPrompt += "\nRestrainedLove API: RLV v"+g_sRlvVersionString;
@@ -167,8 +166,17 @@ DoMenu(key kID, integer iAuth){
         else sPrompt += "\nRLV appears to be disabled in the viewer's preferences.\n\n[ON] attempts another RLV handshake with the viewer.";
         sPrompt += "\n\n[OFF] will prevent the %DEVICETYPE% from attempting another \"@versionnew=293847\" handshake at the next login.\n\nNOTE: Turning RLV off here means that it has to be turned on manually once it is activated in the viewer.";
     }
-    if (g_iRlvActive) lButtons = [TURNOFF, CLEAR] + llListSort(g_lMenu, 1, TRUE);
-    else if (g_iRLVOff) lButtons = [TURNON];
+    list lButtons;
+    if (g_iRlvActive) {
+        lButtons = llListSort(g_lMenu, 1, TRUE);
+        integer iRelay = llListFindList(lButtons,["Relay"]);
+        integer iTerminal = llListFindList(lButtons,["Terminal"]);
+        if (~iRelay && ~iTerminal) { //check if there is a Relay registered and replace the Terminal button with it
+            lButtons = llListReplaceList(lButtons,["Relay"],iTerminal,iTerminal);
+            lButtons = llDeleteSubList(lButtons,iRelay,iRelay);
+        }
+        lButtons = [TURNOFF, CLEAR] + lButtons;
+    } else if (g_iRLVOff) lButtons = [TURNON];
     else lButtons = [TURNON, TURNOFF];
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
