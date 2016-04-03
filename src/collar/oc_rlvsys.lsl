@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160330.1                            //
+//                         RLV System - 160403.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -169,10 +169,10 @@ DoMenu(key kID, integer iAuth){
     list lButtons;
     if (g_iRlvActive) {
         lButtons = llListSort(g_lMenu, 1, TRUE);
-        integer iRelay = llListFindList(lButtons,["Relay"]);
+        integer iRelay = llListFindList(lButtons,["Relais"]);
         integer iTerminal = llListFindList(lButtons,["Terminal"]);
         if (~iRelay && ~iTerminal) { //check if there is a Relay registered and replace the Terminal button with it
-            lButtons = llListReplaceList(lButtons,["Relay"],iTerminal,iTerminal);
+            lButtons = llListReplaceList(lButtons,["Relais"],iTerminal,iTerminal);
             lButtons = llDeleteSubList(lButtons,iRelay,iRelay);
         }
         lButtons = [TURNOFF, CLEAR] + lButtons;
