@@ -278,12 +278,12 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 string sMessage= "The %DEVICETYPE% is listening on channel";
                 if (g_iPublicListenChan) sMessage += "s 0 and";
                 sMessage += " "+(string)g_iPrivateListenChan+".";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
             } else if (iNewChan > 0) { //set new channel for private listener
                 g_iPrivateListenChan =  iNewChan;
                 llListenRemove(g_iPrivateListener);
                 g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Now listening on channel " + (string)g_iPrivateListenChan,kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now listening on channel " + (string)g_iPrivateListenChan,kID);
                 if (g_iPublicListenChan) { //save setting along with the state of thepublic listener (messy!)
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
