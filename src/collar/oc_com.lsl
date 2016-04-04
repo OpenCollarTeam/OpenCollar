@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160403.1                          //
+//                         Communicator - 160404.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -225,7 +225,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
             }
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu or say '\"%PREFIX% help\" for a list of chat commands.\n",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu or say '\"%PREFIX% help\" for a list of chat commands.\n",kID);
         }
         else if (sCommand == "device" && sValue == "name") {
             string sMessage;
@@ -246,7 +246,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
             }
-            if (sValue) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+            if (sValue) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
         } else if (sCommand == "name") {
             if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else {
@@ -261,13 +261,13 @@ UserCommand(key kID, integer iAuth, string sStr) {
                     llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");
                     sMessage += g_sWearerName;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
                 } else {
                     string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
                     sMessage=g_sWearerName+"'s new name is ";
                     g_sWearerName = "["+NameURI(g_kWearer)+" "+sNewName+"]";
                     sMessage += g_sWearerName;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+sNewName, "");
                 }
@@ -278,7 +278,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 string sMessage= "The %DEVICETYPE% is listening on channel";
                 if (g_iPublicListenChan) sMessage += "s 0 and";
                 sMessage += " "+(string)g_iPrivateListenChan+".";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
             } else if (iNewChan > 0) { //set new channel for private listener
                 g_iPrivateListenChan =  iNewChan;
                 llListenRemove(g_iPrivateListener);
@@ -295,13 +295,13 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 g_iPublicListenChan = TRUE;
                 llListenRemove(g_iPublicListener);
                 g_iPublicListener = llListen(0, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL%%PREFIX% channel -1\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL%%PREFIX% channel -1\n",kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
             } else if (iNewChan == -1) {  //disable public listener
                 g_iPublicListenChan = FALSE;
                 llListenRemove(g_iPublicListener);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL%%PREFIX% channel 0\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL%%PREFIX% channel 0\n",kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
             }
