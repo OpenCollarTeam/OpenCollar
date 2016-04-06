@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160211.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160406.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -587,7 +587,7 @@ default {
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
                     if (sMessage == "BACK") {
-                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_ROOT, iAuth, "options", kAv);
+                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_ROOT, iAuth, "settings", kAv);
                         else  ElementMenu(kAv, 0, iAuth, sBackMenu);
                     }
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
