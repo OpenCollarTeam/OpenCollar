@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 160114.1                              //
+//                          Couples - 160403.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2016 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -197,7 +197,7 @@ refreshTimer(){
 
 CoupleAnimMenu(key kID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/animations.html Couples]\n\nChoose an animation to play.\n\nAnimations will play ";
-    if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
+    if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
@@ -369,7 +369,7 @@ default {
                         CoupleAnimMenu(kAv, iAuth);
                     } else if (sMessage == TIME_COUPLES) {
                         string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
-                        if(g_fTimeOut == 0) sPrompt += "ENDLESS." ;
+                        if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
                         else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
                         Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth,"timer");
                     } else if (llGetSubString(sMessage,0,6) == "Verbose") {
@@ -411,12 +411,14 @@ default {
                     else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                         g_fTimeOut = (float)((integer)sMessage);
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=" + (string)g_fTimeOut, "");
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
+                        string sPet; 
+                        if (g_fTimeOut > 20.0)  sPet = "(except the \"pet\" sequence) ";
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations "+sPet+"play now for " + (string)llRound(g_fTimeOut) + " seconds.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
                     } else if (sMessage == "ENDLESS") {
                         g_fTimeOut = 0.0;
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=0.0", "");
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations play now forever. Use the menu or type %PREFIX% stop couples to stop them again.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations (except the \"pet\" sequence) play now forever. Use the menu or type \"/%CHANNEL%%PREFIX% stop couples\" to stop them again.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
                     }
                 }
@@ -469,7 +471,10 @@ default {
             sText = StrReplace(sText,"_SELF_","%WEARERNAME%");
             llMessageLinked(LINK_DIALOG,SAY,"0"+sText,"");
         }
-        if (g_fTimeOut > 0.0) g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
+        if (g_fTimeOut > 0.0) {
+            g_iAnimTimeout=llGetUnixTime()+(integer)g_fTimeOut;
+            if (g_sSubAnim == "~good" && g_fTimeOut > 20.0) g_iAnimTimeout = llGetUnixTime()+20;
+        } else if (g_sSubAnim == "~good") g_iAnimTimeout = llGetUnixTime()+20;
         else g_iAnimTimeout=0;
         refreshTimer();
     }
