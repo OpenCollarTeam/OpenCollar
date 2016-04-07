@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160406.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160407.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -355,10 +355,10 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     if (g_iThemesReady) StyleMenu(kID,iNum);
                     else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
-                        llMessageLinked(LINK_ROOT, iNum, "options", kID);
+                        llMessageLinked(LINK_ROOT, iNum, "settings", kID);
                     }
                 } else {
-                    llMessageLinked(LINK_ROOT, iNum, "options", kID);
+                    llMessageLinked(LINK_ROOT, iNum, "settings", kID);
                     llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
@@ -510,7 +510,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             }
         } else {  //anyone else gets an error
             llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%NOACCESS%",kID);
-            llMessageLinked(LINK_ROOT, iNum, "menu " + "options", kID);
+            llMessageLinked(LINK_ROOT, iNum, "menu " + "settings", kID);
         }
     }
 }
