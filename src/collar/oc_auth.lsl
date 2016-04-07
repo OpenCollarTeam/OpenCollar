@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160322.1                           //
+//                          Authorizer - 160407.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -123,6 +123,7 @@ string UPMENU = "BACK";
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
 integer g_iVanilla; // self-owned wearers
+string g_sIceCream = "Yoghurt";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -172,8 +173,8 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☒"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iVanilla) lButtons += ["Vanilla ☒"];    //add wearer as owner
-    else lButtons +=["Vanilla ☐"];    //remove wearer as owner
+    if (g_iVanilla) lButtons += g_sIceCream+" ☒";    //add wearer as owner
+    else lButtons += g_sIceCream+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
@@ -453,7 +454,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sCommand == "vanilla") {
+    } else if (sCommand == "vanilla" || sCommand == llToLower(g_sIceCream)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
                 //g_iVanilla = TRUE;
@@ -681,8 +682,8 @@ default {
                             "Group ☒","group off",
                             "Public ☐","public on",
                             "Public ☒","public off",
-                            "Vanilla ☐","vanilla on",
-                            "Vanilla ☒","vanilla off",
+                            g_sIceCream+" ☐","vanilla on",
+                            g_sIceCream+" ☒","vanilla off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
