@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160310.1                               //
+//                           Leash - 160408.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -274,7 +274,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     }
     if (!CheckCommandAuth(kCmdGiver, iAuth)) return FALSE;
     //if (g_kLeashedTo==kTarget) return TRUE; 
-    if (g_kLeashedTo) DoUnleash();
+    if (g_kLeashedTo) DoUnleash(TRUE);
 
     integer bCmdGiverIsAvi=llGetAgentSize(kCmdGiver) != ZERO_VECTOR;
     integer bTargetIsAvi=llGetAgentSize(kTarget) != ZERO_VECTOR;
@@ -419,18 +419,18 @@ Unleash(key kCmdGiver) {
             }
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sWearMess,g_kWearer);
         }
-        DoUnleash();
+        DoUnleash(TRUE);
     } else
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% is not leashed.",kCmdGiver);
 }
 
-DoUnleash(){
+DoUnleash(integer iDelSettings) {
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     llMessageLinked(LINK_THIS, CMD_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = CMD_EVERYONE;
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
+    if (iDelSettings) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
     ApplyRestrictions();
@@ -635,13 +635,13 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
 
 default {
     on_rez(integer start_param) {
-        DoUnleash();
+        DoUnleash(FALSE);
     }
 
     state_entry() {
         g_kWearer = llGetOwner();
         llMinEventDelay(0.44);
-        DoUnleash();
+        DoUnleash(FALSE);
         //Debug("Starting");
     }
 
@@ -700,7 +700,7 @@ default {
         } else if (iNum == CMD_SAFEWORD) {
             g_iStay = FALSE;
             llReleaseControls();
-            DoUnleash();
+            DoUnleash(TRUE);
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer iInd = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, iInd -1);
@@ -718,7 +718,7 @@ default {
                     list lPoints;
                     if (g_bLeashedToAvi) lPoints = ["collar", "handle"];
                     // if PostedTo object has vanished, clear out the leash settings
-                    if (!llGetObjectPrimCount(kTarget) && !g_bLeashedToAvi) DoUnleash();
+                    if (!llGetObjectPrimCount(kTarget) && !g_bLeashedToAvi) DoUnleash(TRUE);
                     else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints);
                 } else if (sToken == TOK_LENGTH) SetLength((integer)sValue);
                 else if (sToken=="strict"){
@@ -825,7 +825,7 @@ default {
             if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
             else llStopMoveToTarget();
         } else {
-            DoUnleash();
+            DoUnleash(FALSE);
         }
     }
 
