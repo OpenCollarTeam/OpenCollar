@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160407.1                           //
+//                          Authorizer - 160408.2                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -123,7 +123,7 @@ string UPMENU = "BACK";
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
 integer g_iVanilla; // self-owned wearers
-string g_sIceCream = "Yoghurt";
+string g_sFlavor = "Yoghurt";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -173,8 +173,8 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☒"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iVanilla) lButtons += g_sIceCream+" ☒";    //add wearer as owner
-    else lButtons += g_sIceCream+" ☐";    //remove wearer as owner
+    if (g_iVanilla) lButtons += g_sFlavor+" ☒";    //add wearer as owner
+    else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
@@ -454,7 +454,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sCommand == "vanilla" || sCommand == llToLower(g_sIceCream)) {
+    } else if (sCommand == "vanilla" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
                 //g_iVanilla = TRUE;
@@ -564,6 +564,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+    } else if (sCommand == "flavor") {
+        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else if (sAction) {
+            g_sFlavor = llGetSubString(sStr,7,15);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour new flavor is \""+g_sFlavor+"\".\n",kID);
+            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"flavor="+g_sFlavor,"");
+        } else 
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo set a new flavor type:\n%PREFIX% flavor myFlavor\nwhere <myFlavor> can be maximum of 9 letters.\nYour current flavor is \""+g_sFlavor+"\".",kID);
     }
 }
 
@@ -644,6 +652,7 @@ default {
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
                 else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
+                else if (sToken == "flavor") g_sFlavor = sValue;
             } else if (llToLower(sStr) == "settings=sent") {
                 if (llGetListLength(g_lOwner) && g_iFirstRun) {
                     SayOwners();
@@ -682,8 +691,8 @@ default {
                             "Group ☒","group off",
                             "Public ☐","public on",
                             "Public ☒","public off",
-                            g_sIceCream+" ☐","vanilla on",
-                            g_sIceCream+" ☒","vanilla off",
+                            g_sFlavor+" ☐","vanilla on",
+                            g_sFlavor+" ☒","vanilla off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
