@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160408.2                           //
+//                          Authorizer - 160409.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -571,7 +571,6 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour new flavor is \""+g_sFlavor+"\".\n",kID);
             llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"flavor="+g_sFlavor,"");
         } else 
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo set a new flavor type:\n%PREFIX% flavor myFlavor\nwhere <myFlavor> can be maximum of 9 letters.\nYour current flavor is \""+g_sFlavor+"\".",kID);
     }
 }
 
