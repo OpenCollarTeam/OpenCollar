@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160324.1                              //
+//                           System - 160410.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.1.4";
 string g_sFancyVersion="⁶⋅¹⋅⁴";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160409.2;
+float g_fBuildVersion = 160410.1;
 
 key g_kWearer;
 
@@ -138,6 +138,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
 integer g_iCaptureMenu=FALSE;
+integer g_iLooks;
 
 integer g_iUpdateChan = -7483213;
 integer g_iUpdateHandle;
@@ -228,7 +229,8 @@ SettingsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
-    sPrompt += "\nSelect Themes to customize looks.";
+    if (g_iLooks) sPrompt += "\nSelect Looks to customize looks.";
+    else sPrompt += "\nSelect Themes to customize looks.";
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
     if (STEALTH) {
@@ -238,7 +240,9 @@ SettingsMenu(key kID, integer iAuth) {
         sPrompt +="\nCheck " + STEALTH_OFF + " to hide your %DEVICETYPE%.";
         lButtons += [STEALTH_OFF];
     }
-    Dialog(kID, sPrompt, lButtons, [UPMENU, "Themes"], 0, iAuth, "Settings");
+    if (g_iLooks) lButtons += "Looks";
+    else lButtons += "Themes";
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Settings");
 }
 
 AppsMenu(key kID, integer iAuth) {
@@ -275,7 +279,7 @@ MainMenu(key kID, integer iAuth) {
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+=" ";
     if (g_iCaptureMenu) lStaticButtons+="Capture";
-    else lStaticButtons+="Looks";
+    else lStaticButtons+=" ";
    // else lStaticButtons+=" ";
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
@@ -605,7 +609,6 @@ default
                 } else if (sMenu=="Help/About") {
                     //Debug("Help menu response");
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
-                    else if (sMessage == "Looks") llMessageLinked(LINK_ROOT, iAuth, "looks",kAv);
                     else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
                     else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
@@ -632,6 +635,9 @@ default
                         STEALTH = FALSE;
                     } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_ROOT, iAuth, "menu Themes", kAv);
+                        return;
+                    } else if (sMessage == "Looks") {
+                        llMessageLinked(LINK_ROOT, iAuth, "looks",kAv);
                         return;
                     } else if (sMessage == UPMENU) {
                         MainMenu(kAv, iAuth);
@@ -662,8 +668,8 @@ default
                 g_iLocked = (integer)sValue;
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
-            } else if (sToken == "intern_integrity") 
-                g_sIntegrity = sValue;
+            } else if (sToken == "intern_integrity") g_sIntegrity = sValue;
+            else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
             else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
