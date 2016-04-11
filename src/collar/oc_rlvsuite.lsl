@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 160217.1            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 160411.2            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -355,10 +355,18 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     //Debug(sStr);
     //outfits command handling
     if (sLowerStr == "outfits" || sLowerStr == "menu outfits") {
-        OutfitsMenu(kID, iNum);
+        if (g_iRlvaOn) OutfitsMenu(kID, iNum);
+        else {
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry! This feature can't work on RLV and will require a RLVa enabled viewer. The regular \"# Folders\" feature is a good alternative.\n" ,kID);
+            llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
+        }
         return;
     } else if (llSubStringIndex(sStr,"wear ") == 0) {
-        if (g_iDressRestricted)
+        if (!g_iRlvaOn) {
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry! This feature can't work on RLV and will require a RLVa enabled viewer. The regular \"# Folders\" feature is a good alternative.\n" ,kID);
+            if (bFromMenu) llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
+            return;
+        } else if (g_iDressRestricted)
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Oops! Outfits can't be worn while the ability to dress is restricted.",kID);
         else {
             sLowerStr = llDeleteSubString(sStr,0,llStringLength("wear ")-1);
@@ -622,6 +630,8 @@ default {
 
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer) llResetScript();
+        g_iRlvOn = FALSE;
+        g_iRlvaOn = FALSE;
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
