@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160320.1                             //
+//                          Animator - 160411.2                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -82,9 +82,10 @@ list g_lAnimButtons;  // initialized in state_entry for OpenSim compatibility (=
 
 integer g_iAnimLock = FALSE;
 integer g_iPosture;  //posture lock on/off
-string g_sHeightAdjustment = "none"; // none, -1, -2 for lower and +1, +2 for higher
-integer g_iHasAdjustment;
-list g_lHeightAdjustments = ["-1","-2","+1","+2"];
+list g_lHeightAdjustments;
+integer g_iRLVA_ON;
+integer g_iHoverOn = TRUE;
+float g_fHoverIncrement = 0.02;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -113,11 +114,16 @@ integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-
+integer RLV_CMD = 6000;
+integer RLV_OFF = 6100;
+integer RLV_ON  = 6101;
+integer RLVA_VERSION = 6004;
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
 integer ANIM_LIST_REQUEST = 7002;
 integer ANIM_LIST_RESPONSE =7003;
+float g_fHover = 0.0;
+float g_fStandHover = 0.0;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -186,13 +192,29 @@ AnimMenu(key kID, integer iAuth) {
 PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
     string sPrompt = "\n[http://www.opencollar.at/animations.html Pose]\n\nCurrently playing: ";
     if (g_sCurrentPose == "")sPrompt += "-\n";
-    string sActivePose = g_sCurrentPose;
-    if (~llListFindList(g_lHeightAdjustments,[llGetSubString(sActivePose,-2,-1)]))
-        sActivePose = llGetSubString(sActivePose,0,-3)+" ("+llGetSubString(sActivePose,-2,-1)+")";
-    sPrompt += sActivePose +"\n";
+    else {
+        string sActivePose = g_sCurrentPose;
+        if (g_iRLVA_ON && g_iHoverOn) {
+            integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
+            if (~index) {
+                string sAdjustment = llList2String(g_lHeightAdjustments,index+1);
+                if ((float)sAdjustment>0.0) sAdjustment = " (+"+llGetSubString(sAdjustment,0,3)+")";
+                else if ((float)sAdjustment<0.0) sAdjustment = " ("+llGetSubString(sAdjustment,0,4)+")";
+                else sAdjustment = "";
+                sActivePose = g_sCurrentPose+sAdjustment;
+            }
+        }
+        sPrompt += sActivePose +"\n";
+    }
+    if (g_fStandHover!=0.0 && g_iRLVA_ON && g_iHoverOn) {
+        string sAdjustment;
+        if (g_fStandHover>0.0) sAdjustment = "+"+llGetSubString((string)g_fStandHover,0,3);
+        else if (g_fStandHover<0.0) sAdjustment = llGetSubString((string)g_fStandHover,0,4);        
+        sPrompt += "Default Hover = "+(string)sAdjustment;
+    }
     //sPrompt += "Current Height Adjustment: "+ g_sHeightAdjustment + "\n";
     list lStaticButtons = ["STOP", "BACK"];
-    if (g_iHasAdjustment) lStaticButtons = ["↑", "↓"] + lStaticButtons;
+    if (g_iRLVA_ON && g_iHoverOn) lStaticButtons = ["↑", "↓"] + lStaticButtons;
     Dialog(kID, sPrompt, g_lPoseList, lStaticButtons, iPage, iAuth, "Pose");
 }
 
@@ -292,7 +314,16 @@ PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods config
             if (llGetInventoryKey(g_sPoseMoveRun)) llSetAnimationOverride( "Running", g_sPoseMoveRun);
             else if (llGetInventoryKey("~run")) llSetAnimationOverride( "Running", "~run");
         }
-    } else llStartAnimation(sAnim);
+    } else { 
+        if (g_iRLVA_ON && g_iHoverOn) {
+            integer index = llListFindList(g_lHeightAdjustments,[sAnim]);
+            if (~index)
+                llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+llList2String(g_lHeightAdjustments,index+1)+"=force",g_kWearer);
+            else if (g_fStandHover)
+                llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+        }
+        llStartAnimation(sAnim);
+    }
 }
 
 StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAnim to stop it, calls AO as nexessary
@@ -312,21 +343,23 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
 
 UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods configured for each
     if (g_iTweakPoseAO) llResetAnimationOverride("ALL");
-    else llStopAnimation(sAnim);
+    else {
+        if (g_iRLVA_ON && g_iHoverOn) 
+            llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+        llStopAnimation(sAnim);
+    }
 }
 
 CreateAnimList() {
     g_lPoseList=[];
     g_lOtherAnims =[];
     g_iNumberOfAnims = llGetInventoryNumber(INVENTORY_ANIMATION);
-    g_iHasAdjustment = FALSE;
     string sName;
     integer i;
     do { sName = llGetInventoryName(INVENTORY_ANIMATION, i);
         if (sName != "" && llSubStringIndex(sName,"~")) {
-            if (!~llListFindList(g_lHeightAdjustments,[llGetSubString(sName,-2,-1)]))
+            if (!~llListFindList(["-1","-2","+1","+2"],[llGetSubString(sName,-2,-1)]))
                 g_lPoseList+=[sName];
-            else if (llGetSubString(sName,-2,-1) == "+1") g_iHasAdjustment = TRUE;
         } else if (!llSubStringIndex(sName,"~")) g_lOtherAnims+=sName;
     } while (g_iNumberOfAnims > ++i);
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
@@ -435,17 +468,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Only owners or the wearer can change antislide settings.",g_kWearer);
     } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
         if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
-            llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
-            if (g_sHeightAdjustment == "none" && ~llListFindList(g_lHeightAdjustments,[llGetSubString(sStr,-2,-1)]))
-                sStr = llGetSubString(sStr,0,-3);
-            else if (g_sHeightAdjustment != "none" && !~llListFindList(g_lHeightAdjustments,[llGetSubString(sStr,-2,-1)])) {
-                if (llGetInventoryType(sStr + g_sHeightAdjustment) == INVENTORY_ANIMATION)
-                    sStr = sStr + g_sHeightAdjustment;
-            } else if (g_sHeightAdjustment != "none" && llGetSubString(sStr,-2,-1) != g_sHeightAdjustment) 
-                sStr = llGetSubString(sStr,0,-3) + g_sHeightAdjustment;
+            StopAnim(g_sCurrentPose);
             g_sCurrentPose = sStr;
             g_iLastRank = iNum;
-            llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
+            StartAnim(g_sCurrentPose);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
         } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kID);
     } else if ((sStr == "show animator")&&(iNum == CMD_OWNER || kID == g_kWearer)){
@@ -459,6 +485,7 @@ default {
     on_rez(integer iNum) {
         if (iNum == 825) llSetRemoteScriptAccessPin(0);
         if (llGetOwner() != g_kWearer) llResetScript();
+        g_iRLVA_ON = FALSE;
        //if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
     }
 
@@ -524,7 +551,7 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sSettingToken+"") {
+            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "currentpose") {
                     list lAnimParams = llParseString2List(sValue, [","], []);
@@ -532,7 +559,6 @@ default {
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
                     llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
                 } else if (sToken == "animlock") g_iAnimLock = (integer)sValue;
-                else if (sToken == "heightadjustment") g_sHeightAdjustment  = sValue;
                 else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
                 else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
                 else if (sToken == "PoseMoveRun") g_sPoseMoveRun = sValue;
@@ -540,6 +566,14 @@ default {
                 else if (sToken == "PostureRank") g_iLastPostureRank= (integer)sValue;
                 else if (sToken == "PoselockRank") g_iLastPoselockRank= (integer)sValue;
                 else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
+            } else if (llGetSubString(sToken,0,i) == "intern") {
+                sToken = llGetSubString(sToken,i+1,-1);
+                if (sToken == "AllowHover") {
+                    g_iHoverOn = (integer)llGetSubString(sValue,0,0);
+                    g_fHoverIncrement = (float)llGetSubString(sValue,2,-1);
+                    if (g_fHoverIncrement==0.0) g_fHoverIncrement = 0.02;
+                } else if (sToken == "hovers") g_lHeightAdjustments = llParseString2List(sValue,[","],[]);
+                else if (sToken == "standhover") g_fStandHover = (float)sValue;
             }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -570,34 +604,33 @@ default {
                     }
                 } else if (sMenuType == "Pose") {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
-                    else if (sMessage == "↑") {
-                        if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if (g_sHeightAdjustment == "+2") 
-                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum up.", kAv);
-                            else {//if (g_sCurrentPose != "") {
-                                g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment + 1);
-                                if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
-                                else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
-                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
-                                UserCommand(iAuth, g_sCurrentPose, kAv);
-                            } 
-                        } else if (g_sCurrentPose != "") 
-                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
+                    else if (sMessage == "↑" || sMessage == "↓") {
+                        float fNewHover = g_fHoverIncrement;
+                        if (sMessage == "↓") fNewHover = -fNewHover;
+                        if (g_sCurrentPose == "") {
+                            g_fStandHover += fNewHover;
+                            fNewHover = g_fStandHover;
+                            if (g_fStandHover) 
+                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_standhover="+(string)g_fStandHover,"");
+                            else
+                                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_standhover","");
+                            jump next;
+                        }
+                        integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
+                        if (~index) {
+                            fNewHover = fNewHover + llList2Float(g_lHeightAdjustments,index+1);
+                            if (fNewHover)
+                                g_lHeightAdjustments = llListReplaceList(g_lHeightAdjustments,[fNewHover],index+1,index+1);
+                            else
+                                g_lHeightAdjustments = llDeleteSubList(g_lHeightAdjustments,index,index+1);
+                        } else {
+                            fNewHover += g_fStandHover;
+                            g_lHeightAdjustments += [g_sCurrentPose,fNewHover];
+                        }
+                        @next;
+                        llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
+                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
                         PoseMenu(kAv, iPage, iAuth);
-                    } else if (sMessage == "↓") {
-                        if (~llListFindList(g_lHeightAdjustments,[llGetSubString(g_sCurrentPose,-2,-1)]) || llGetInventoryType(g_sCurrentPose+"+1") == INVENTORY_ANIMATION && g_sCurrentPose != "") {
-                            if (g_sHeightAdjustment == "-2") 
-                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This is the maximum down.", kAv);
-                            else {//if (g_sCurrentPose != "") {
-                                g_sHeightAdjustment = (string)((integer)g_sHeightAdjustment - 1);
-                                if ((integer)g_sHeightAdjustment > 0) g_sHeightAdjustment = "+"+g_sHeightAdjustment;
-                                else if ((integer)g_sHeightAdjustment == 0) g_sHeightAdjustment = "none";
-                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"heightadjustment="+g_sHeightAdjustment,"");
-                                UserCommand(iAuth, g_sCurrentPose, kAv);
-                            } 
-                        } else if (g_sCurrentPose != "") 
-                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no height adjustment poses for "+g_sCurrentPose+" in this %DEVICETYPE%.",kAv);
-                        PoseMenu(kAv, iPage, iAuth);                        
                     } else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
                         else UserCommand(iAuth, sMessage, kAv);
@@ -627,6 +660,8 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == RLVA_VERSION) g_iRLVA_ON = TRUE;
+        else if (iNum == RLV_OFF) g_iRLVA_ON = FALSE;
     }
 
     changed(integer iChange) {
