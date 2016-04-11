@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160407.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160410.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -137,6 +137,7 @@ string g_sStylesNotecardReadType;
 list g_lStyles;
 integer g_iStylesNotecardLine;
 integer g_iLeashParticle;
+integer g_iLooks;
 
 //string g_sSettingToken = "themes_";
 string g_sGlobalToken = "global_";
@@ -167,7 +168,14 @@ LooksMenu(key kID, integer iAuth) {
 }
 
 StyleMenu(key kID, integer iAuth) {
-    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", g_lStyles, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    list lButtons;
+    integer i;
+    while (i < llGetListLength(g_lStyles)) {
+        lButtons += llList2List(g_lStyles,i,i);
+        i=i+2;
+    }
+    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    lButtons=[];
 }
 
 ShinyMenu(key kID, integer iAuth, string sElement) {
@@ -340,12 +348,12 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             list lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
             string sElement=llList2String(lParams,1);
-            integer iElementIndex=llListFindList(g_lElements+"ALL"+g_sDeviceType,[sElement]);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
             if (sCommand == "themes" || sStrLower == "menu themes" || sCommand == "styles" || sStrLower == "menu styles") {
-                if (~llListFindList(g_lStyles,[sElement])) {
-                    g_sStylesNotecardReadType=sElement;
-                    g_iStylesNotecardLine=0;
+                integer iElementIndex = llListFindList(g_lStyles,[sElement]);
+                if (~iElementIndex) {
+                    g_sStylesNotecardReadType="processing";
+                    g_iStylesNotecardLine = 1 + llList2Integer(g_lStyles,iElementIndex+1);
                     g_kSetStyleUser=kID;
                     g_iSetStyleAuth=iNum;
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
@@ -355,10 +363,12 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     if (g_iThemesReady) StyleMenu(kID,iNum);
                     else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
-                        llMessageLinked(LINK_ROOT, iNum, "settings", kID);
+                        if (g_iLooks) LooksMenu(kID, iNum);
+                        else llMessageLinked(LINK_ROOT, iNum, "settings", kID);
                     }
                 } else {
-                    llMessageLinked(LINK_ROOT, iNum, "settings", kID);
+                    if (g_iLooks) LooksMenu(kID, iNum);
+                    else llMessageLinked(LINK_ROOT, iNum, "settings", kID);
                     llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             }  else if (sCommand == "looks") LooksMenu(kID,iNum);
@@ -536,6 +546,7 @@ default {
             string sCategory=llGetSubString(sID, 0, i);
             string sToken = llGetSubString(sID, i + 1, -1);
             if (sID == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
+            else if (sID == "intern_looks") g_iLooks = (integer)sValue;
             else if (sCategory == "texture_") {
                 i = llListFindList(g_lTextureDefaults, [sToken]);
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
@@ -581,14 +592,16 @@ default {
                             else g_lMenuIDs += [kID, kTouchID, sMenuType];
                         } else UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
                     }
-                } else if (sMenu == "LooksMenu~menu" && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu",kAv);
+                } else if (sMenu == "LooksMenu~menu" && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"settings",kAv);
                  else {
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
                     if (sMessage == "BACK") {
-                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) llMessageLinked(LINK_ROOT, iAuth, "settings", kAv);
-                        else  ElementMenu(kAv, 0, iAuth, sBackMenu);
+                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) {
+                            if (g_iLooks) LooksMenu(kAv, iAuth);
+                            else llMessageLinked(LINK_ROOT, iAuth, "settings", kAv);
+                        } else  ElementMenu(kAv, 0, iAuth, sBackMenu);
                     }
                     else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
                 }
@@ -651,7 +664,7 @@ default {
                         sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
                         sData = llStringTrim(sData,STRING_TRIM);
                         if (g_sStylesNotecardReadType=="initialize") {  //reading notecard to determine style names
-                            g_lStyles += sData;
+                            g_lStyles += [sData,g_iStylesNotecardLine];
                         } else if (sData==g_sStylesNotecardReadType) {  //we just found our section
                             g_sStylesNotecardReadType="processing";
                             g_sCurrentTheme = sData;
