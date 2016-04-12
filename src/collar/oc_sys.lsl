@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160410.1                              //
+//                           System - 160412.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -129,7 +129,8 @@ string g_sOpenLockPrimName="OpenLock"; // Prim description of elements that shou
 string g_sClosedLockPrimName="ClosedLock"; // Prim description of elements that should be shown when locked
 list g_lClosedLockElements; //to store the locks prim to hide or show //EB
 list g_lOpenLockElements; //to store the locks prim to hide or show //EB
-
+list g_lClosedLockGlows;
+list g_lOpenLockGlows;
 string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
 string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
@@ -507,11 +508,41 @@ SetLockElementAlpha() { //EB
     //loop through stored links, setting alpha if element type is lock
     integer n;
     integer iLinkElements = llGetListLength(g_lOpenLockElements);
-    for (; n < iLinkElements; n++)
+    for (; n < iLinkElements; n++) {
         llSetLinkAlpha(llList2Integer(g_lOpenLockElements,n), !g_iLocked, ALL_SIDES);
+        UpdateGlow(llList2Integer(g_lOpenLockElements,n), !g_iLocked);
+    }
     iLinkElements = llGetListLength(g_lClosedLockElements);
-    for (n=0; n < iLinkElements; n++)
+    for (n=0; n < iLinkElements; n++) {
         llSetLinkAlpha(llList2Integer(g_lClosedLockElements,n), g_iLocked, ALL_SIDES);
+        UpdateGlow(llList2Integer(g_lClosedLockElements,n), g_iLocked);
+    }
+}
+
+UpdateGlow(integer iLink, integer iAlpha) {
+    if (iAlpha == 0) {
+        SavePrimGlow(iLink);
+        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
+    } else RestorePrimGlow(iLink);
+}
+
+SavePrimGlow(integer iLink) {
+    float fGlow = llList2Float(llGetLinkPrimitiveParams(iLink,[PRIM_GLOW,0]),0);
+    list lGlows = g_lClosedLockGlows;
+    if (g_iLocked) lGlows = g_lOpenLockGlows;
+    integer i = llListFindList(lGlows,[iLink]);
+    if (i !=-1 && fGlow > 0) lGlows = llListReplaceList(lGlows,[fGlow],i+1,i+1);
+    if (i !=-1 && fGlow == 0) lGlows = llDeleteSubList(lGlows,i,i+1);
+    if (i == -1 && fGlow > 0) lGlows += [iLink, fGlow];
+    if (g_iLocked) g_lOpenLockGlows = lGlows;
+    else g_lClosedLockGlows = lGlows;
+}
+
+RestorePrimGlow(integer iLink) {
+    list lGlows = g_lOpenLockGlows;
+    if (g_iLocked) lGlows = g_lClosedLockGlows;    
+    integer i = llListFindList(lGlows,[iLink]);
+    if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(lGlows, i+1)]);
 }
 
 RebuildMenu() {
