@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160413.2                           //
+//                          Authorizer - 160413.3                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -514,7 +514,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "group", "");
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "groupname", "");
                 g_iGroupEnabled = FALSE;
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group unset.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group unset.",kID);
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -529,11 +529,11 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (sAction == "on") {
                 g_iOpenAccess = TRUE;
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "public=" + (string) g_iOpenAccess, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your %DEVICETYPE% is open to the public.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The %DEVICETYPE% is open to the public.",kID);
             } else if (sAction == "off") {
                 g_iOpenAccess = FALSE;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "public", "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your %DEVICETYPE% is closed to the public.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The %DEVICETYPE% is closed to the public.",kID);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
@@ -543,12 +543,12 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 g_iLimitRange = TRUE;
                 // as the default is range limit on, we do not need to store anything for this
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "limitrange", "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public access range is limited.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Public access range is limited.",kID);
             } else if (sAction == "off") {
                 g_iLimitRange = FALSE;
                 // save off state for limited range (default is on)
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "limitrange=" + (string) g_iLimitRange, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public access range is simwide.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Public access range is simwide.",kID);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
@@ -751,7 +751,7 @@ default {
                     g_sGroupName = llGetSubString(sBody, iPos + 7, iPos2 - 1);
                 }
             }
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group set to " + g_sGroupName + ".",g_kDialoger);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group set to " + g_sGroupName + ".",g_kDialoger);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
         }
     }
