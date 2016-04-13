@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160408.1                               //
+//                           Leash - 160413.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -464,20 +464,20 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         if (sMessage=="leashmenu" || sMessage == "menu leash"){
             list lButtons;
             if (kMessageID != g_kWearer) lButtons += "Grab";// Only if not the wearer.
-            else lButtons += [" "];
+            else lButtons += ["-"];
             if (g_kLeashedTo != NULL_KEY) {
                 if (g_bFollowMode) lButtons += ["Unfollow"];
                 else lButtons += ["Unleash"];
             }
-            else lButtons += " ";
+            else lButtons += "-";
             if (kMessageID == g_kLeashedTo) lButtons += "Yank";//only if leash holder
-            else lButtons += " ";
+            else lButtons += "-";
             lButtons += ["Follow"];
             lButtons += ["Anchor","Pass"];
             lButtons += ["Length"];
             lButtons += g_lButtons;
 
-            string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n\nLet's go walkies!";
+            string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n\n";
             Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth, "MainDialog");
         } else  if (sComm == "post") {
           //  if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);

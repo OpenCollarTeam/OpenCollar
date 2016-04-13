@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160411.2                             //
+//                          Animator - 160413.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -167,7 +167,7 @@ AnimMenu(key kID, integer iAuth) {
 
     if (g_iAnimLock) {
         sPrompt += " is forbidden to change or stop poses on their own";
-        lButtons = ["☒ AnimLock"];
+        lButtons = ["☑ AnimLock"];
     } else {
         sPrompt += " is allowed to change or stop poses on their own";
         lButtons = ["☐ AnimLock"];
@@ -175,13 +175,13 @@ AnimMenu(key kID, integer iAuth) {
     if (llGetInventoryType("~stiff")==INVENTORY_ANIMATION) {
         if (g_iPosture) {
             sPrompt +=" and has their neck forced stiff.";
-            lButtons += ["☒ Posture"];
+            lButtons += ["☑ Posture"];
         } else {
             sPrompt +=" and can relax their neck.";
             lButtons += ["☐ Posture"];
         }
     }
-    if (g_iTweakPoseAO) lButtons += ["☒ AntiSlide"];
+    if (g_iTweakPoseAO) lButtons += ["☑ AntiSlide"];
     else lButtons += ["☐ AntiSlide"];
 
     lButtons += ["AO Menu", "AO ON", "AO OFF", "Pose"];
@@ -596,9 +596,9 @@ default {
                         AOMenu(kAv, iAuth);
                     } else {
                         if (sMessage== "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
-                        else if (sMessage== "☒ AnimLock") UserCommand(iAuth, "animlock off", kAv);
+                        else if (sMessage== "☑ AnimLock") UserCommand(iAuth, "animlock off", kAv);
                         else if (sMessage== "☐ Posture") UserCommand(iAuth, "posture on", kAv);
-                        else if (sMessage== "☒ Posture") UserCommand(iAuth, "posture off", kAv);
+                        else if (sMessage== "☑ Posture") UserCommand(iAuth, "posture off", kAv);
                         else UserCommand(iAuth, sMessage, kAv);
                         AnimMenu(kAv, iAuth);
                     }

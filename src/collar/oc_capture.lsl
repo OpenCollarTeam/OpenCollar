@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160202.1          .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160413.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -132,7 +132,7 @@ CaptureMenu(key kId, integer iAuth) {
         if (g_iCaptureOn) lMyButtons += "OFF";
         else lMyButtons += "ON";
 
-        if (g_iRiskyOn) lMyButtons += "☒ risky";
+        if (g_iRiskyOn) lMyButtons += "☑ risky";
         else lMyButtons += "☐ risky";
     }
     if (g_sTempOwnerID)
@@ -303,7 +303,7 @@ default{
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +2);  //remove stride from g_lMenuIDs
                 if (sMenu=="CaptureMenu") {
                     if (sMessage == "BACK") llMessageLinked(LINK_ROOT, iAuth, "menu Main", kAv);
-                    else if (sMessage == "☒ risky") UserCommand(iAuth,"capture risky off",kAv,TRUE);
+                    else if (sMessage == "☑ risky") UserCommand(iAuth,"capture risky off",kAv,TRUE);
                     else if (sMessage == "☐ risky") UserCommand(iAuth,"capture risky on",kAv,TRUE);
                     else UserCommand(iAuth,"capture "+sMessage,kAv,TRUE);
                 } else if (sMenu=="AllowCaptureMenu") {  //wearer must confirm when forced is off

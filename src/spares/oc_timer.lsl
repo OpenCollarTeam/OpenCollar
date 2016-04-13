@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Timer - 160324.1                              //
+//                            Timer - 160413.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -187,13 +187,13 @@ DoMenu(key keyID, integer iAuth) {
     if (g_iBoth) lMyButtons += ["☒ combined"];
     else lMyButtons += ["☐ combined"];
 
-    if (g_iUnlockCollar) lMyButtons += ["☒ unlock"];
+    if (g_iUnlockCollar) lMyButtons += ["☑ unlock"];
     else lMyButtons += ["☐ unlock"];
 
-    if (g_iUnleash) lMyButtons += ["☒ unleash"];
+    if (g_iUnleash) lMyButtons += ["☑ unleash"];
     else lMyButtons += ["☐ unleash"];
 
-    if (g_iClearRLVRestions) lMyButtons += ["☒ clear RLV"];
+    if (g_iClearRLVRestions) lMyButtons += ["☑ clear RLV"];
     else lMyButtons += ["☐ clear RLV"];
 
     if (g_iRealRunning || g_iOnRunning) lMyButtons += ["STOP","RESET"];
@@ -303,19 +303,19 @@ UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
             }
         } else if (sMsg == "☒ combined") g_iBoth = FALSE;
         else if (sMsg == "☐ combined") g_iBoth = TRUE;
-        else if (sMsg == "☒ unlock") {
+        else if (sMsg == "☑ unlock") {
             if (iAuth == CMD_OWNER) g_iUnlockCollar = 0;
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sMsg == "☐ unlock") {
             if (iAuth == CMD_OWNER) g_iUnlockCollar = 1;
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        } else if (sMsg == "☒ clear RLV") {
+        } else if (sMsg == "☑ clear RLV") {
             if (iAuth == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else g_iClearRLVRestions = 0;
         } else if (sMsg == "☐ clear RLV") {
             if (iAuth == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             else g_iClearRLVRestions = 1;
-        } else if (sMsg == "☒ unleash") {
+        } else if (sMsg == "☑ unleash") {
             if (iAuth <= g_iWhoCanChangeLeash) g_iUnleash = 0;
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sMsg == "☐ unleash") {

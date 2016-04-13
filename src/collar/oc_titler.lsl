@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Titler - 160301.1                              //
+//                           Titler - 160413.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
@@ -106,7 +106,7 @@ integer g_iMenuStride = 3;
 string SET = "Set Title" ;
 string UP = "↑ Up";
 string DN = "↓ Down";
-string ON = "☒ Show";
+string ON = "☑ Show";
 string OFF = "☐ Show";
 string UPMENU = "BACK";
 float min_z = 0.25 ; // min height

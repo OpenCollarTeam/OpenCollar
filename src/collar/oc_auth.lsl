@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 160409.1                           //
+//                          Authorizer - 160413.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -170,10 +170,10 @@ AuthMenu(key kAv, integer iAuth) {
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
-    else lButtons += ["Group ☒"];    //unset group
-    if (g_iOpenAccess) lButtons += ["Public ☒"];    //set open access
+    else lButtons += ["Group ☑"];    //unset group
+    if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iVanilla) lButtons += g_sFlavor+" ☒";    //add wearer as owner
+    if (g_iVanilla) lButtons += g_sFlavor+" ☑";    //add wearer as owner
     else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
@@ -688,11 +688,11 @@ default {
                             "− Trust","rm trust",
                             "− Block","rm block",
                             "Group ☐","group on",
-                            "Group ☒","group off",
+                            "Group ☑","group off",
                             "Public ☐","public on",
-                            "Public ☒","public off",
+                            "Public ☑","public off",
                             g_sFlavor+" ☐","vanilla on",
-                            g_sFlavor+" ☒","vanilla off",
+                            g_sFlavor+" ☑","vanilla off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];

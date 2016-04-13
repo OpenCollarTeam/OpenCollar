@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Exceptions - 160124.1                            //
+//                         Exceptions - 160413.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Medea Destiny, Garvin Twine, littlemousy,               //
@@ -123,7 +123,7 @@ list g_lDescriptionsOff =[ //descriptions of commands when not exempted.
         ];
 
 string TURNON = "☐";
-string TURNOFF = "☒";
+string TURNOFF = "☑";
 
 integer g_iRLVOn=FALSE;
 integer g_iAuth = 0;

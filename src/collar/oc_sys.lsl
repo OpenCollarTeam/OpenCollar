@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160412.3                              //
+//                           System - 160413.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -168,7 +168,7 @@ string g_sSafeWord="RED";
 //Option Menu variables
 string DUMPSETTINGS = "Print";
 string STEALTH_OFF = "☐ Stealth"; // show the whole device
-string STEALTH_ON = "☒ Stealth"; // hide the whole device
+string STEALTH_ON = "☑ Stealth"; // hide the whole device
 string LOADCARD="Load";
 string REFRESH_MENU = "Fix";
 
@@ -227,18 +227,19 @@ string NameGroupURI(string sStr){
 }
 
 SettingsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
+    string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]";
+    /*sPrompt += "\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
     sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
     sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
     if (g_iLooks) sPrompt += "\nSelect Looks to customize looks.";
-    else sPrompt += "\nSelect Themes to customize looks.";
+    else sPrompt += "\nSelect Themes to customize looks.";*/ 
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
     if (STEALTH) {
-        sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your %DEVICETYPE%.";
+        //sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your %DEVICETYPE%.";
         lButtons += [STEALTH_ON];
     } else {
-        sPrompt +="\nCheck " + STEALTH_OFF + " to hide your %DEVICETYPE%.";
+        //sPrompt +="\nCheck " + STEALTH_OFF + " to hide your %DEVICETYPE%.";
         lButtons += [STEALTH_OFF];
     }
     if (g_iLooks) lButtons += "Looks";
@@ -267,7 +268,7 @@ HelpMenu(key kID, integer iAuth) {
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     string sNewsButton="☐ News";
-    if (g_iNews) sNewsButton="☒ News";
+    if (g_iNews) sNewsButton="☑ News";
     list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
@@ -278,13 +279,12 @@ MainMenu(key kID, integer iAuth) {
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
-    else lStaticButtons+=" ";
+    else lStaticButtons+="-";
     if (g_iCaptureMenu) lStaticButtons+="Capture";
-    else lStaticButtons+=" ";
-   // else lStaticButtons+=" ";
+    else lStaticButtons+="-";
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
-    else lStaticButtons+=" ";
+    else lStaticButtons+="-";
     lStaticButtons+=["Access","Settings","Help/About"];
     if (g_iLocked) Dialog(kID, sPrompt, "UNLOCK"+lStaticButtons, [], 0, iAuth, "Main");
     else Dialog(kID, sPrompt, "LOCK"+lStaticButtons, [], 0, iAuth, "Main");
@@ -644,7 +644,7 @@ default
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
                     else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
                     else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
-                    else if (sMessage=="☒ News")   UserCommand(iAuth, "news off", kAv, TRUE);
+                    else if (sMessage=="☑ News")   UserCommand(iAuth, "news off", kAv, TRUE);
                     else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
                     if (sMessage=="Yes") StartUpdate();
