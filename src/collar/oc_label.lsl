@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Label - 160413.1                               //
+//                           Label - 160413.2                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -515,7 +515,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "text=" + g_sLabelText, "");
                 if (llStringLength(g_sLabelText) > g_iCharLimit) {
                     string sDisplayText = llGetSubString(g_sLabelText, 0, g_iCharLimit-1);
-                    llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Unless your set your label to scroll it will be truncted at "+sDisplayText+".", kAv);
                 }
             }
             SetLabel();
@@ -524,9 +524,9 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string sCommand = llToLower(llList2String(llParseString2List(sStr, [" "], []), 0));
         if (sStr=="menu "+g_sSubMenu) {
             llMessageLinked(LINK_ROOT, iAuth, "menu "+g_sParentMenu, kAv);
-            llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"%NOACCESS%", kAv);
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kAv);
         } else if (sCommand=="labeltext" || sCommand == "labelfont" || sCommand == "labelcolor" || sCommand == "labelshow")
-            llMessageLinked(LINK_ROOT, LINK_DIALOG, "0"+"%NOACCESS%", kAv);
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kAv);
     }
 }
 
