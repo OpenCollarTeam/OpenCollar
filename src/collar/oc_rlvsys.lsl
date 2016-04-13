@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160403.1                            //
+//                         RLV System - 160413.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -645,7 +645,7 @@ default {
                 llOwnerSay("@versionnew=293847");
                // if (g_iCheckCount==2) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
-                llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nRLV appears to be not currently activated in your viewer. There will be no further attempted handshakes \"@versionnew=293847\" until the next time you log in. To permanently turn RLV off, type \"/%CHANNEL%%PREFIX% rlv off\" but keep in mind that you will have to manually enable it if you wish to use it in the future.\n\nwww.opencollar.at/rlv\n", g_kWearer);
+                llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nRLV appears to be not currently activated in your viewer. There will be no further attempted handshakes \"@versionnew=293847\" until the next time you log in. To permanently turn RLV off, type \"/%CHANNEL% %PREFIX% rlv off\" but keep in mind that you will have to manually enable it if you wish to use it in the future.\n\nwww.opencollar.at/rlv\n", g_kWearer);
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);
                 g_iCheckCount=0;

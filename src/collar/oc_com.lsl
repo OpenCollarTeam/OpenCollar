@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 160404.1                          //
+//                         Communicator - 160413.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -295,13 +295,13 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 g_iPublicListenChan = TRUE;
                 llListenRemove(g_iPublicListener);
                 g_iPublicListener = llListen(0, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL%%PREFIX% channel -1\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL% %PREFIX% channel -1\n",kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
             } else if (iNewChan == -1) {  //disable public listener
                 g_iPublicListenChan = FALSE;
                 llListenRemove(g_iPublicListener);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL%%PREFIX% channel 0\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL% %PREFIX% channel 0\n",kID);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
             }

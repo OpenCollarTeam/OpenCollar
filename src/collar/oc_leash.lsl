@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160413.1                               //
+//                           Leash - 160413.2                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -336,9 +336,9 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     // Don't own the object that sent the command
     if (g_bLeashedToAvi && kCmdGiver != kTarget && llGetOwnerKey(kCmdGiver) != kTarget) {
         if (iFollowMode){
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been commanded to follow you.  Say \"/%CHANNEL%%PREFIX% unfollow\" to relase them.", g_kLeashedTo);
+            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been commanded to follow you.  Say \"/%CHANNEL% %PREFIX% unfollow\" to relase them.", g_kLeashedTo);
         } else {
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been leashed to you.  Say \"/%CHANNEL%%PREFIX% unleash\" to unleash them.", g_kLeashedTo);
+            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%WEARERNAME% has been leashed to you.  Say \"/%CHANNEL% %PREFIX% unleash\" to unleash them.", g_kLeashedTo);
         }
     }
     return TRUE;

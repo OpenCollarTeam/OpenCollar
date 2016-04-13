@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Relay - 160327.1                               //
+//                           Relay - 160413.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -1019,7 +1019,7 @@ default {
     listen(integer iChan, string who, key kID, string sMsg)
     {
         if (iChan == SAFETY_CHANNEL) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n⚠ "+who+" detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use "+who+" anyway, type \"/%CHANNEL%%PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL%%PREFIX% rm relay\" to permanently uninstall the internal OpenCollar relay plugin.\n",g_kWearer);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n⚠ "+who+" detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use "+who+" anyway, type \"/%CHANNEL% %PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL% %PREFIX% rm relay\" to permanently uninstall the internal OpenCollar relay plugin.\n",g_kWearer);
             llRegionSayTo(g_kWearer,SAFETY_CHANNEL,"SafetyDenied!");
         }
 /*

@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 160403.3                              //
+//                          Couples - 160413.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2004 - 2016 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
@@ -316,7 +316,7 @@ default {
                     Dialog(g_kCmdGiver, "\nChoose a partner:\n", [sTmpName], ["BACK"], 0, iNum, "sensor");
                 } else {       //no name given.
                     if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL%%PREFIX%" + sCommand + " wen\n", g_kWearer);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand + " Wendy Starfall, for example, you could say:\n\n /%CHANNEL% %PREFIX%" + sCommand + " wen\n", g_kWearer);
                     } else {               //else set partner to commander
                         g_kPartner = g_kCmdGiver;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
@@ -418,7 +418,7 @@ default {
                     } else if (sMessage == "ENDLESS") {
                         g_fTimeOut = 0.0;
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=0.0", "");
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations (except the \"pet\" sequence) play now forever. Use the menu or type \"/%CHANNEL%%PREFIX% stop couples\" to stop them again.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Couple Anmiations (except the \"pet\" sequence) play now forever. Use the menu or type \"/%CHANNEL% %PREFIX% stop couples\" to stop them again.",kAv);
                         CoupleAnimMenu(kAv, iAuth);
                     }
                 }
