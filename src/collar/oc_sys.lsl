@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160413.3                              //
+//                           System - 160413.4                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -112,7 +112,7 @@ string UPMENU = "BACK";
 string GIVECARD = "Help";
 string HELPCARD = ".help";
 string CONTACT = "Contact";
-string LICENSE="License";
+string LICENSE = "License";
 key g_kWebLookup;
 key g_kCurrentUser;
 
@@ -169,11 +169,11 @@ string g_sSafeWord="RED";
 string DUMPSETTINGS = "Print";
 string STEALTH_OFF = "☐ Stealth"; // show the whole device
 string STEALTH_ON = "☑ Stealth"; // hide the whole device
-string LOADCARD="Load";
+string LOADCARD = "Load";
 string REFRESH_MENU = "Fix";
 
 string g_sGlobalToken = "global_";
-integer STEALTH;
+integer g_iStealth;
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
@@ -228,20 +228,10 @@ string NameGroupURI(string sStr){
 
 SettingsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]";
-    /*sPrompt += "\n\n\"" + DUMPSETTINGS + "\" current settings to chat.";
-    sPrompt += "\n\"" +LOADCARD+"\" settings from backup card.";
-    sPrompt += "\n\"Fix\" menus if buttons went missing.\n";
-    if (g_iLooks) sPrompt += "\nSelect Looks to customize looks.";
-    else sPrompt += "\nSelect Themes to customize looks.";*/ 
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
-    if (STEALTH) {
-        //sPrompt +="\nUncheck " + STEALTH_ON + " to reveal your %DEVICETYPE%.";
-        lButtons += [STEALTH_ON];
-    } else {
-        //sPrompt +="\nCheck " + STEALTH_OFF + " to hide your %DEVICETYPE%.";
-        lButtons += [STEALTH_OFF];
-    }
+    if (g_iStealth) lButtons += [STEALTH_ON];
+    else lButtons += [STEALTH_OFF];
     if (g_iLooks) lButtons += "Looks";
     else lButtons += "Themes";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Settings");
@@ -660,10 +650,10 @@ default
                          return;
                     } else if (sMessage == STEALTH_OFF) {
                          llMessageLinked(LINK_ROOT, iAuth,"hide",kAv);
-                         STEALTH = TRUE;
+                         g_iStealth = TRUE;
                     } else if (sMessage == STEALTH_ON) {
                         llMessageLinked(LINK_ROOT, iAuth,"show",kAv);
-                        STEALTH = FALSE;
+                        g_iStealth = FALSE;
                     } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_ROOT, iAuth, "menu Themes", kAv);
                         return;
