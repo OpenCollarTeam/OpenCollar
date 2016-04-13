@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 160201.1                            //
+//                         Mesh Label - 160413.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -249,10 +249,10 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 
 MainMenu(key kID, integer iAuth) {
     list lButtons= [g_sTextMenu, g_sColorMenu, g_sFontMenu];
-    if (g_iShow) lButtons += ["☒ Show"];
+    if (g_iShow) lButtons += ["☑ Show"];
     else lButtons += ["☐ Show"];
 
-    if (g_iScroll) lButtons += ["☒ Scroll"];
+    if (g_iScroll) lButtons += ["☑ Scroll"];
     else lButtons += ["☐ Scroll"];
 
     string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nCustomize the %DEVICETYPE%'s label!";
@@ -402,13 +402,13 @@ default
                     else if (sMessage == "☐ Show") {
                         UserCommand(iAuth, "label on", kAv);
                         MainMenu(kAv, iAuth);
-                    } else if (sMessage == "☒ Show") {
+                    } else if (sMessage == "☑ Show") {
                         UserCommand(iAuth, "label off", kAv);
                         MainMenu(kAv, iAuth);
                     } else if (sMessage == "☐ Scroll") {
                         UserCommand(iAuth, "label scroll on", kAv);
                         MainMenu(kAv, iAuth);
-                    } else if (sMessage == "☒ Scroll") {
+                    } else if (sMessage == "☑ Scroll") {
                         UserCommand(iAuth, "label scroll off", kAv);
                         MainMenu(kAv, iAuth);
                     }
