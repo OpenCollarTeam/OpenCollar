@@ -477,13 +477,13 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             lButtons += ["Length"];
             lButtons += g_lButtons;
 
-            string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n\n";
+            string sPrompt = "\n[http://www.opencollar.at/leash.html Leash]\n";
             if (g_kLeashedTo) {
-                if (g_bFollowMode) sPrompt += "Following: ";
-                else sPrompt += "Leashed to: ";
+                if (g_bFollowMode) sPrompt += "\nFollowing: ";
+                else sPrompt += "\nLeashed to: ";
                 sPrompt += NameURI(g_kLeashedTo);
-            } else if (g_iStay) sPrompt += "%WEARERNAME% can't move on their own.";
-            else sPrompt += "%WEARERNAME% can move freely.";
+            } else if (!g_iStay) sPrompt += "\n%WEARERNAME% can move freely.";
+            if (g_iStay) sPrompt += "\n%WEARERNAME% can't move on their own.";
             Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth, "MainDialog");
         } else  if (sComm == "post") {
           //  if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);
