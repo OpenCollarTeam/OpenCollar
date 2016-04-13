@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Capture - 160413.2          .*' /  .*' ; .*`- +'  `*'          //
+//           Capture - 160413.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 littlemousy, Sumi Perl, Wendy Starfall,       //
@@ -196,7 +196,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         } else if (sStrLower == "capture on") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);
             if (g_iRiskyOn && g_iCaptureInfo) {
-                llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+                llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
                 llSetTimerEvent(900.0);
             }
             g_iCaptureOn=TRUE;
@@ -219,16 +219,16 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         } else if (sStrLower == "capture risky on") {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"risky=1", "");
             g_iRiskyOn = TRUE;
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% is vulnerable now...",kID);
+            //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capturing won't require %WEARERNAME%'s consent. \"/%CHANNEL% %PREFIX% capture info off\" will deactivate \"capture me\" announcements.",kID);
             if (g_iCaptureOn && g_iCaptureInfo){
                  llSetTimerEvent(900.0);
-                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
                 }
         } else if (sStrLower == "capture risky off") {
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"risky", "");
             g_iRiskyOn = FALSE;
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capturing will require consent first.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capturing will require %WEARERNAME%'s consent first.",kID);
             llSetTimerEvent(0.0);
         } else if (sStrLower == "capture info on") {
             g_iCaptureInfo = TRUE;
@@ -236,7 +236,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"info","");
             if (g_iRiskyOn && g_iCaptureOn) {
                 llSetTimerEvent(900.0);
-                llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+                llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
             }
         } else if (sStrLower == "capture info off") {
             g_iCaptureInfo = FALSE;
@@ -333,14 +333,14 @@ default{
     }
 
     timer() {
-        if(g_iCaptureInfo) llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+        if(g_iCaptureInfo) llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
     }
 
     changed(integer iChange) {
         if (iChange & CHANGED_TELEPORT) {
             if (g_sTempOwnerID == "") {
                 if (g_iRiskyOn && g_iCaptureOn && g_iCaptureInfo) {
-                    llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my neck...","");
+                    llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
                     llSetTimerEvent(900.0);
                 }
             }
