@@ -1,0 +1,3 @@
+[ ThemeName ]
+ElementName~<texture_id>,<color_vector>,<shiny_type>,<glow_level>
+Ring~89556747-24cb-43ed-920b-47caed15465f,<1,1,1>,none/low/medium/high/specular,none/low/medium/high/veryHigh
