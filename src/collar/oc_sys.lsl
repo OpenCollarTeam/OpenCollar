@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160413.4                              //
+//                           System - 160418.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -487,9 +487,8 @@ BuildLockElementList() {//EB
     }
 }
 
-SafeX(){if(!(llGetObjectPermMask(1)&0x4000)){llOwnerSay(
-    "\n\nKernel panic - not syncing: Fatal permission in root\n\nSorry, this item cannot run OpenCollar. See ["+license_url+"#3d details]\n");
-    string n=llGetScriptName();integer i=llGetInventoryNumber(10);string s;do{
+SafeX(){if(!(llGetObjectPermMask(1)&0x4000)){string n="";llSetText(n+"\nATTENTION!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰\nThis item does not grant\naccess to its source code.\nIt is not compliant with GNU\nand OpenCollar license terms.\nThe scripts can't run like this!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰",<1,1,0>,1);llOwnerSay("\n\n"+n+"Sorry but this item was not correctly set up to run OpenCollar scripts. If this item with faulty permissions was given or sold to you by "+NameGroupURI("agent/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]))+", please inform them that they are not compliant with GNU and OpenCollar license terms. Details can be seen ["+license_blob+"#L179-L185 here].\n");
+    n=llGetScriptName();integer i=llGetInventoryNumber(10);string s;do{
     i--;s=llGetInventoryName(10,i);if(s!=n)llSetScriptState(s,0);}while(i);llSetScriptState(n,0);}
 }
 
