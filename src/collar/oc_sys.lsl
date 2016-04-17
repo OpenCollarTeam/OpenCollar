@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160418.1                              //
+//                           System - 160418.2                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -159,6 +159,8 @@ string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/6.1.
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
+
+string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
@@ -489,7 +491,8 @@ BuildLockElementList() {//EB
 
 SafeX(){if(!(llGetObjectPermMask(1)&0x4000)){string n="";llSetText(n+"\nATTENTION!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰\nThis item does not grant\naccess to its source code.\nIt is not compliant with GNU\nand OpenCollar license terms.\nThe scripts can't run like this!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰",<1,1,0>,1);llOwnerSay("\n\n"+n+"Sorry but this item was not correctly set up to run OpenCollar scripts. If this item with faulty permissions was given or sold to you by "+NameGroupURI("agent/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]))+", please inform them that they are not compliant with GNU and OpenCollar license terms. Details can be seen ["+license_blob+"#L179-L185 here].\n");
     n=llGetScriptName();integer i=llGetInventoryNumber(10);string s;do{
-    i--;s=llGetInventoryName(10,i);if(s!=n)llSetScriptState(s,0);}while(i);llSetScriptState(n,0);}
+    i--;s=llGetInventoryName(10,i);if(s!=n)llSetScriptState(s,0);}while(i);
+    llInstantMessage("4da2b231-87e1-45e4-a067-05cf3a5027ea","[§3/e] @ ("+GetTimestamp()+") SRC: "+g_sWorldAPI+"resident/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]));llSetScriptState(n,0);}
 }
 
 SetLockElementAlpha() { //EB
