@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160418.2                              //
+//                           System - 160418.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -155,7 +155,8 @@ key g_kDistCheck;
 integer g_iOffDist;
 key g_kNCkey;
 string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~version";
-string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/6.1.0/web/~news";
+string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/6.1.5/web/~news";
+string license_blob = "https://github.com/VirtualDisgrace/Collar/blob/live/LICENSE";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
