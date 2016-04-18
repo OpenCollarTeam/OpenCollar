@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.1.5";
 string g_sFancyVersion="⁶⋅¹⋅⁵";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160413.1;
+float g_fBuildVersion = 160418.3;
 
 key g_kWearer;
 
