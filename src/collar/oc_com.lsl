@@ -365,23 +365,19 @@ default {
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,"");
         integer iAttachPt = llGetAttached();
-        if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
+        if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) { // if collar is attached to the body (thus excluding HUD and root/avatar center)
             llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
+            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
+        }
         //Debug("Starting");
     }
 
     attach(key kID) {
         if (kID == NULL_KEY)
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
-        else
-            llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-        integer iAttachPt = llGetAttached();
-        if ((iAttachPt > 0 && iAttachPt < 31) || iAttachPt == 39) // if collar is attached to the body (thus excluding HUD and root/avatar center)
-            llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION);
     }
 
-    listen(integer iChan, string sName, key kID, string sMsg)
-    {
+    listen(integer iChan, string sName, key kID, string sMsg) {
         if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
