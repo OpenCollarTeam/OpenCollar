@@ -1,5 +1,5 @@
 =======================
-OpenCollar™ Help Card | 2016-02-24
+OpenCollar™ Help Card | 2016-04-18
 =======================
 
 This is only a short version of the manual, explaining the basic usage and lists all chat commands.
@@ -245,13 +245,13 @@ Capture:
 
     # capture on
     # capture off
-    
+
     # capture risky on
     # capture risky off
-    
+
     # capture info on
     # capture info off
-    
+
     # capture release
 
 -------
@@ -288,9 +288,9 @@ RLV:
 
     # rlv on
     # rlv off
-	
-	# rlv handshakes
-	
+
+    # rlv handshakes
+
     # clear
 
 -----------
@@ -379,6 +379,8 @@ Access:
     # public on
     # public off
 
+    # flavor
+
     # vanilla on
     # vanilla off
 
@@ -394,7 +396,7 @@ Settings:
     # load url [url]
 
     # fix
-	# verify
+    # verify
 
     # stealth
     # themes
@@ -413,6 +415,7 @@ Help/About:
     # news off
 
     # version
+    # info
 
     # update
 
