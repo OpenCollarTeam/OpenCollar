@@ -1,5 +1,5 @@
 =======================
-OpenCollar™ Help Card | 2016-04-18
+OpenCollar™ Help Card | 2016-04-20
 =======================
 
 This is only a short version of the manual, explaining the basic usage and lists all chat commands.
@@ -361,6 +361,32 @@ RLV Folders:
 
     # history
 
+--------
+Relay:
+--------
+
+    # relay trusted
+    # relay ask
+    # relay auto
+    
+    # relay lite on
+    # relay lite off
+    
+    # relay smart on
+    # relay smart off
+    
+    # relay land on
+    # relay land off
+    
+    # relay pending
+    
+    # relay access
+    
+    # relay helpless on
+    # relay helpless off
+    
+    # relay safeword
+
 ---------
 Access:
 ---------
@@ -400,6 +426,8 @@ Settings:
 
     # stealth
     # themes
+    
+    # reboot
 
 --------------
 Help/About:
