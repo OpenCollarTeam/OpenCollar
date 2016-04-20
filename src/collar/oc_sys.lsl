@@ -58,10 +58,10 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="6.1.5";
-string g_sFancyVersion="⁶⋅¹⋅⁵";
+string g_sCollarVersion="6.2.0";
+string g_sFancyVersion="⁶⋅²⋅⁰";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160418.3;
+float g_fBuildVersion = 160420.1;
 
 key g_kWearer;
 
@@ -155,7 +155,7 @@ key g_kDistCheck;
 integer g_iOffDist;
 key g_kNCkey;
 string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~version";
-string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/6.1.5/web/~news";
+string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/6.2/web/~news";
 string license_blob = "https://github.com/VirtualDisgrace/Collar/blob/live/LICENSE";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
