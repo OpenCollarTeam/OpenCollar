@@ -369,6 +369,8 @@ Relay:
     # relay ask
     # relay auto
     
+    # relay off
+    
     # relay lite on
     # relay lite off
     
@@ -426,8 +428,6 @@ Settings:
 
     # stealth
     # themes
-    
-    # reboot
 
 --------------
 Help/About:
@@ -446,6 +446,8 @@ Help/About:
     # info
 
     # update
+    
+    # reboot
 
 ==================================
 That's all! Please consult www.opencollar.at for more.
