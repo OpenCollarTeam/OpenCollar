@@ -48,7 +48,7 @@ Channels:
 
 You can also issue commands on channel 1.
 
-    /1[prefix] menu
+    /1 [prefix] menu
 
 Or if you don’t like channel 1 set a different channel.
 
@@ -63,7 +63,7 @@ If you are considerate about lag, you can also turn off the Nearby Chat listener
 
 Too much hassle to always type a slash after all?
 
-    /1[prefix] channel 0
+    /1 [prefix] channel 0
 
 ------------
 Safeword:
@@ -86,7 +86,7 @@ If that’s too hard to remember you can easily change it.
 List of Chat Commands
 ===============
 
-Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles!
+Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles! (NOTE: Wearers have to use the first two letters of their username instead of the hash key.)
 
 -----------------------
 General Commands:
@@ -268,6 +268,9 @@ Leash:
     # follow
     # beckon
     # unfollow
+    
+    # stay
+    # move
 
     # post
 
@@ -299,6 +302,9 @@ Force Sit:
 
     # sit
     # stand
+    
+    # forbid stand
+    # allow stand
 
 ---------
 Outfits:
@@ -427,7 +433,9 @@ Settings:
     # verify
 
     # stealth
+    
     # themes
+    # looks
 
 --------------
 Help/About:
