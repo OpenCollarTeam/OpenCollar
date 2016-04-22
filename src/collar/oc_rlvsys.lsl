@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160419.1                            //
+//                         RLV System - 160422.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -369,15 +369,15 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
         }
     }  else if (sStr=="show restrictions") {
-        string sOut="You are being restricted by the following objects";
+        string sOut="\n\n%WEARERNAME% is restricted by the following sources:\n";
         integer numRestrictions=llGetListLength(g_lRestrictions);
-        if (!numRestrictions) sOut="You are not restricted.";
+        if (!numRestrictions) sOut="There are no restrictions right now.";
         while (numRestrictions){
             key kSource=(key)llList2String(g_lRestrictions,numRestrictions-2);
             if ((key)kSource)
-                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1);
+                sOut+="\n"+llKey2Name((key)kSource)+" ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1)+"\n";
             else
-                sOut+="\nThis %DEVICETYPE%("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1);
+                sOut+="\nThis %DEVICETYPE% ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1)+"\n";
             numRestrictions -= 2;
         }
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOut,kID);

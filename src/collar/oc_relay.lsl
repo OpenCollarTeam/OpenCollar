@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//             Relay - 160420.3          .*' /  .*' ; .*`- +'  `*'          //
+//             Relay - 160422.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
@@ -288,7 +288,7 @@ Dequeue() {
     g_lQueue=[sCurIdent,kCurID,sCommand]+g_lQueue;
     list lButtons=["Yes","Trust Owner","Trust Object","No","Block Owner","Block Object"];
     string sOwner=NameURI(llGetOwnerKey(kCurID)) ;
-    string sPrompt=llKey2Name(kCurID)+", owned by "+sOwner+" wants to control your viewer.";
+    string sPrompt="\n"+llKey2Name(kCurID)+", owned by "+sOwner+" wants to control your viewer.";
     if (llGetSubString(sCommand,0,6)=="!x-who/") {
         key kUser = SanitizeKey(llGetSubString(sCommand,7,42));
         lButtons+=["Trust User","Block User"];
@@ -359,7 +359,8 @@ sendrlvr(string sIdent, key kID, string sCom, string sAck) {
 
 SafeWord() {
     if (!g_iHelpless) {
-        llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "","");
+        llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
+        //llMessageLinked(LINK_RLV, RLV_CMD, "unsit=y,unsit=force", ""); //enable this line to be unseated when safewording
         RelayNotify(g_kWearer,"Mayday!",0);
         g_lTempBlockObj=[];
         g_lTempTrustObj=[];
@@ -770,7 +771,7 @@ default {
             if (~iMenuIndex) {
                 if (llList2String(g_lMenuIDs, iMenuIndex+1) == "AuthMenu") {
                     g_iAuthPending = FALSE;
-                    RelayNotify(g_kWearer,"/me confirmation dialog expired.\n\nYou can make this dialog appear again with command \"%PREFIX% relay pending\".\n",0);
+                    RelayNotify(g_kWearer,"/me confirmation dialog expired.\n\nClicking the \"Pending\" button in the Relay menu will make this dialog appear again.\n",0);
                 }
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
             }
