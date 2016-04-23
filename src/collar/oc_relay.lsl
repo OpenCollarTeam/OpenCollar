@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//             Relay - 160423.1          .*' /  .*' ; .*`- +'  `*'          //
+//             Relay - 160423.2          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
@@ -360,7 +360,7 @@ sendrlvr(string sIdent, key kID, string sCom, string sAck) {
 SafeWord() {
     if (!g_iHelpless) {
         llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
-        RelayNotify(g_kWearer,"Mayday!",0);
+        RelayNotify(g_kWearer,"Restrictions lifted.",0);
         g_lTempBlockObj=[];
         g_lTempTrustObj=[];
         g_lTempBlockUser=[];
@@ -402,7 +402,7 @@ Menu(key kID, integer iAuth) {
     lButtons+=["Pending","Sources","Access Lists"];
     if (g_iHelpless) lButtons+=["☑ Helpless"];
     else lButtons+=["☐ Helpless"];
-    if (!g_iHelpless) lButtons+=["Safeword!"];
+    if (!g_iHelpless) lButtons+=["SAFEWORD"];
     if (g_lSources!=[]) {
         sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" source";
         if (g_lSources==[1]) sPrompt+="."; // Note: only list LENGTH is compared here
@@ -686,7 +686,7 @@ default {
                     if (sMsg==UPMENU) llMessageLinked(LINK_SET,iAuth,"menu "+g_sParentMenu,kAv);
                     else if (sMsg=="Pending") UserCommand(iAuth, "relay pending", kAv);
                     else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
-                    else if (sMsg=="Safeword!") UserCommand(iAuth, "relay safeword", kAv);
+                    else if (sMsg=="SAFEWORD") UserCommand(iAuth, "relay safeword", kAv);
                     else if (sMsg=="Sources") {
                         llMessageLinked(LINK_RLV, iAuth,"show restrictions", kAv);
                         Menu(kAv, iAuth);
