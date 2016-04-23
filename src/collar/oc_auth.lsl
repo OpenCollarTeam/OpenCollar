@@ -123,7 +123,7 @@ string UPMENU = "BACK";
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
 integer g_iVanilla; // self-owned wearers
-string g_sFlavor = "Yoghurt";
+string g_sFlavor = "Vanilla";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
