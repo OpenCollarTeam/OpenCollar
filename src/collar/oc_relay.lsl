@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//             Relay - 160422.1          .*' /  .*' ; .*`- +'  `*'          //
+//             Relay - 160423.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
@@ -360,7 +360,6 @@ sendrlvr(string sIdent, key kID, string sCom, string sAck) {
 SafeWord() {
     if (!g_iHelpless) {
         llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
-        //llMessageLinked(LINK_RLV, RLV_CMD, "unsit=y,unsit=force", ""); //enable this line to be unseated when safewording
         RelayNotify(g_kWearer,"Mayday!",0);
         g_lTempBlockObj=[];
         g_lTempTrustObj=[];

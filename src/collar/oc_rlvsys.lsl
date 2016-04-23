@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160422.1                            //
+//                         RLV System - 160423.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -329,6 +329,7 @@ SafeWord() {
         if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0)
             llMessageLinked(LINK_THIS,RLV_CMD,"clear",kSource);
     }
+    llMessageLinked(LINK_THIS,RLV_CMD,"unsit=force","");
     llMessageLinked(LINK_ALL_OTHERS,RLV_CLEAR,"","");
 }
 // End of book keeping functions
