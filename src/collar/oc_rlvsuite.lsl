@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 160411.2            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 160429.1            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Wendy Starfall, littlemousy, Sumi Perl,       //
@@ -183,12 +183,12 @@ integer CheckLastSit(key kSit) {
 SitMenu(key kID, integer iAuth) {
     integer iSitting=llGetAgentInfo(g_kWearer)&AGENT_SITTING;
     string sButton;
-    string sitPrompt = "Ability to Stand up is ";
+    string sitPrompt = "\nAbility to Stand up is ";
     if (g_iStandRestricted) sitPrompt += "restricted by ";
-    else sitPrompt += "un-restricted\n.";
-    if (g_iStandRestricted == 500) sitPrompt += "Owner\n.";
-    else if (g_iStandRestricted == 501) sitPrompt += "Trusted\n.";
-    else if (g_iStandRestricted == 502) sitPrompt += "Group\n.";
+    else sitPrompt += "un-restricted.\n";
+    if (g_iStandRestricted == 500) sitPrompt += "Owner.\n";
+    else if (g_iStandRestricted == 501) sitPrompt += "Trusted.\n";
+    else if (g_iStandRestricted == 502) sitPrompt += "Group.\n";
 
     if (g_iStandRestricted) sButton = "☑ strict`";
     else sButton = "☐ strict`";
