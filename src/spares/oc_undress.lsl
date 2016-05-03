@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Undress - 160207.1                              //
+//                          Undress - 160503.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -54,12 +54,12 @@
 
 //gives menus for clothing and attachment, stripping and locking
 
-string g_sAppVersion = "¹⋅¹";
+string g_sAppVersion = "¹⋅²";
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
 
-//list g_lChildren = ["Rem Clothing"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
+//list g_lChildren = ["Rem. Clothing"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
 list g_lSubMenus = [];
 string SELECT_CURRENT = "*InFolder";
 string SELECT_RECURS= "*Recursively";
@@ -198,7 +198,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 
 string ALL = " ALL";
-string TICKED = "☒ ";
+string TICKED = "☑ ";
 string UNTICKED = "☐ ";
 
 list g_lMenuIDs;
@@ -250,19 +250,14 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 
 MainMenu(key kID, integer iAuth)
 {
-    string sPrompt = "\n[http://www.opencollar.at/undress.html Legacy Un/dress]\t"+g_sAppVersion+"\n\nNOTE: Many clothes, and almost all mesh, mixes layers and attachments. With a properly set up #RLV folder";
-    sPrompt += ", the SmartStrip option will allow these to be removed automatically. Otherwise, it is recommended to explore the #RLV Folders menu for a smoother un/dressing experience.";
-
-    if (g_iAllLocked) sPrompt += "\n all clothes and attachments are currently locked.";
-    //if (g_iSmartStrip) sPrompt += "\nSmartStrip is on.";
-    //else sPrompt += "\nSmartStrip is off.";
-
+    string sPrompt = "\n[http://www.opencollar.at/undress.html Legacy Un/dress]\t"+g_sAppVersion;
+    if (g_iAllLocked) sPrompt += "\n\nAll clothes and attachments are currently locked.";
     list lButtons;
-    if (!g_iAllLocked) lButtons += ["☐ Lock All","Rem Clothing","Lock Clothing"];
-    else lButtons += ["☒ Lock All"];
-    if (g_iSmartStrip) lButtons += "☒ SmartStrip";
-    else lButtons += "☐ SmartStrip";
-    if (!g_iAllLocked) lButtons += ["Rem Attachment","Lock Attachment"];
+    if (!g_iAllLocked) lButtons += ["☐ Lock All","Lock Clothing","Lock Attach."];
+    else lButtons += ["☑ Lock All"];
+    if (g_iSmartStrip) lButtons += "☑ Smartstrip";
+    else lButtons += "☐ Smartstrip";
+    if (!g_iAllLocked) lButtons += ["Rem. Clothing","Rem. Attach."];
 
     Dialog(kID, sPrompt, lButtons+g_lSubMenus, [UPMENU], 0, iAuth, "Menu");
 }
@@ -284,7 +279,7 @@ ClothingMenu(key kID, string sStr, integer iAuth)
     //str looks like 0110100001111
     //loop through CLOTH_POINTS, look at chaClothingr of str for each
     //for each 1, add capitalized button
-    string sPrompt = "Select an article of clothing to remove.";
+    string sPrompt = "\nSelect an article of clothing to remove.\n";
     list lButtons = [];
     integer iStop = llGetListLength(DETACH_CLOTH_POINTS);
     integer n;
@@ -302,7 +297,7 @@ ClothingMenu(key kID, string sStr, integer iAuth)
 
 LockClothMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Select an article of clothing to un/lock.";
+    string sPrompt = "\nSelect an article of clothing to un/lock.\n";
     list lButtons;
     if (~llListFindList(g_lLockedItems,[ALL])) lButtons += [TICKED+ALL];
     else lButtons += [UNTICKED+ALL];
@@ -332,7 +327,7 @@ QueryAttachments(key kAv, integer iAuth)
 
 LockAttachmentMenu(key kID, integer iAuth)
 {
-    string sPrompt = "Select an attachment to un/lock.";
+    string sPrompt = "\nSelect an attachment to un/lock.\n";
     list lButtons;
 
     if (~llListFindList(g_lLockedAttach,[ALL])) lButtons += [TICKED+ALL];
@@ -356,7 +351,7 @@ DetachMenu(key kID, string sStr, integer iAuth)
     //str looks like 0110100001111
     //loop through CLOTH_POINTS, look at char of str for each
     //for each 1, add capitalized button
-    string sPrompt = "Select an attachment to remove.";
+    string sPrompt = "\nSelect an attachment to remove.\n";
 
     //prevent detaching the collar itself
     integer myattachpoint = llGetAttached();
@@ -750,14 +745,14 @@ default {
                 if (sMenu == "Menu")
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu " + g_sParentMenu, kAv);
-                    else if (sMessage == "Rem Clothing") QueryClothing(kAv, iAuth);
-                    else if (sMessage == "Rem Attachment") QueryAttachments(kAv, iAuth);
+                    else if (sMessage == "Rem. Clothing") QueryClothing(kAv, iAuth);
+                    else if (sMessage == "Rem. Attach.") QueryAttachments(kAv, iAuth);
                     else if (sMessage == "Lock Clothing") LockClothMenu(kAv, iAuth);
-                    else if (sMessage == "Lock Attachment") LockAttachmentMenu(kAv, iAuth);
+                    else if (sMessage == "Lock Attach.") LockAttachmentMenu(kAv, iAuth);
                     else if (sMessage == "☐ Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
-                    else if (sMessage == "☒ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
-                    else if (sMessage == "☐ SmartStrip") { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
-                    else if (sMessage == "☒ SmartStrip") { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
+                    else if (sMessage == "☑ Lock All") { UserCommand(iAuth, "unlockall", kAv); MainMenu(kAv, iAuth); }
+                    else if (sMessage == "☐ Smartstrip") { UserCommand(iAuth, "smartstrip on",kAv); MainMenu(kAv, iAuth);}
+                    else if (sMessage == "☑ Smartstrip") { UserCommand(iAuth, "smartstrip off",kAv); MainMenu(kAv, iAuth);}
                     else if (llListFindList(g_lSubMenus,[sMessage]) != -1) llMessageLinked(LINK_THIS, iAuth, "menu " + sMessage, kAv);
                 }
                 else if (sMenu == "strip")
