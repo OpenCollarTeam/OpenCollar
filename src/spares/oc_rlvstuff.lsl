@@ -21,10 +21,11 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          RLV Stuff - 160503.2                            //
+//                          RLV Stuff - 160503.3                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
-//  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail et al.  //
+//  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail,        //
+//  Garvin Twine et al.                                                     //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -51,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁶⁰⁵⁰³⋅²";
+string g_sAppVersion = "¹⋅⁰";
 
 string g_sParentMenu = "RLV";
 
@@ -94,12 +95,12 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
 ];
 
 list g_lMenuHelpMap = [
-    "rlvstuff","stuff",
-    "rlvtp_","travel",
-    "rlvtalk_","talk",
-    "rlvtouch_","touch",
-    "rlvmisc_","misc",
-    "rlvview_","view\n\nNOTE: This will only work on RLV API v2.9 and greater."
+    "rlvstuff_","Stuff",
+    "rlvtp_","Travel",
+    "rlvtalk_","Talk",
+    "rlvtouch_","Touch",
+    "rlvmisc_","Misc",
+    "rlvview_","View"
 ];
 
 string TURNON = "✔";
@@ -184,7 +185,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
 }
 
 StuffMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nMore rlv options.", ["Misc","Touch","Talk","Travel","View"], [UPMENU], 0, iAuth, "rlvstuff");
+    Dialog(kID, "\n[http://www.opencollar.at/legacy-rlv.html Legacy RLV Stuff]\t"+g_sAppVersion, ["Misc","Touch","Talk","Travel","View"], [UPMENU], 0, iAuth, "rlvstuff");
 }
 
 Menu(key kID, integer iAuth, string sMenuName) {
@@ -201,7 +202,7 @@ Menu(key kID, integer iAuth, string sMenuName) {
     list lButtons;
 
     n=llListFindList(g_lMenuHelpMap,[sMenuName]);
-    if (~n) sPrompt="\nwww.opencollar.at/"+llList2String(g_lMenuHelpMap,n+1)+"\t"+g_sAppVersion+"\n";
+    if (~n) sPrompt="\n[http://www.opencollar.at/legacy-rlv.html Legacy RLV "+llList2String(g_lMenuHelpMap,n+1)+"]\n";
 
     integer iStop = llGetListLength(g_lRLVcmds);
     for (n = 0; n < iStop; n+=g_lRLVcmds_stride) {
@@ -309,7 +310,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     string sStrLower=llToLower(sStr);
     if (sStrLower == "rm rlvstuff") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nDo you really want to uninstall the RLVStuff App?", ["Yes","No","Cancel"], [], 0, iNum,"rmrlvstuff");
+        else Dialog(kID, "\nDo you really want to uninstall Legacy RLV Stuff?", ["Yes","No","Cancel"], [], 0, iNum,"rmrlvstuff");
     } else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (sStrLower == "rlvtalk" || sStrLower == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (sStrLower == "rlvtouch" || sStrLower == "menu touch") Menu(kID, iNum, "rlvtouch_");
@@ -419,10 +420,10 @@ default {
                 if (sMenu == "rmrlvstuff") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Stuff", "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"RLVStuff has been removed.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Legacy RLV Stuff has been removed.", kAv);
                         ClearSettings("");
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"RLVStuff remains installed.", kAv);
+                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Legacy RLV Stuff remains installed.", kAv);
                 } else if (sMenu == "rlvstuff") {
                     if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu "+g_sParentMenu, kAv);
                     else UserCommand(iAuth, "menu "+sMessage, kAv, "");
