@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          RLV Stuff - 160207.1                            //
+//                          RLV Stuff - 160503.2                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail et al.  //
@@ -51,7 +51,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁶⁰²⁰⁷⋅¹";
+string g_sAppVersion = "¹⁶⁰⁵⁰³⋅²";
 
 string g_sParentMenu = "RLV";
 
@@ -60,8 +60,6 @@ list g_lChangedCategories;//list of categories that changed since last saved
 
 integer g_lRLVcmds_stride=4;
 list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
-    "rlvsit_","unsit","Stand","Stand up if seated",
-    "rlvsit_","sittp","Sit","Sit on objects >1.5m away",
     "rlvtp_","tplm","Landmark","Teleport via Landmark",
     "rlvtp_","tploc","Slurl","Teleport via Slurl/Map",
     "rlvtp_","tplure","Lure","Teleport via offers",
@@ -95,16 +93,8 @@ list g_lRLVcmds=[ //4 strided list of menuname,command,prettyname,description
     "rlvview_","camdrawalphamax:1","See","See anything at all"
 ];
 
-//commands take effect immediately and are not stored, like: force sit and force stand
-//4 strided list of menuname,cmd,prettyname,desc
-integer g_lIdmtCmds_stride=4;
-list g_lIdmtCmds = [
-    "rlvsit_","sit","SitNow","Force Sit",
-    "rlvsit_","forceunsit","StandNow","Force Stand"
-];
-
 list g_lMenuHelpMap = [
-    "rlvsit_","sit",
+    "rlvstuff","stuff",
     "rlvtp_","travel",
     "rlvtalk_","talk",
     "rlvtouch_","touch",
@@ -114,16 +104,6 @@ list g_lMenuHelpMap = [
 
 string TURNON = "✔";
 string TURNOFF = "✘";
-
-float g_fScanRange = 20.0;//range we'll scan for scripted objects when doing a force-sit
-
-// Variables used for sit memory function
-string  g_sSitTarget = "";
-integer g_iSitMode;
-integer g_iSitListener;
-float   g_fRestoreDelay = 1.0;
-integer g_iRestoreCount = 0;
-float   g_fPollDelay = 10.0;
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -144,12 +124,12 @@ integer LINK_RLV    = 4;
 integer LINK_SAVE   = 5;
 integer LINK_UPDATE = -10;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved 
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by httpdb script when a token has no value in the db
+integer LM_SETTING_EMPTY = 2004;//sent by setting script when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -175,7 +155,6 @@ integer g_iRLVOn=FALSE;
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
-
 
 /*
 integer g_iProfiled;
@@ -204,6 +183,10 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
+StuffMenu(key kID, integer iAuth) {
+    Dialog(kID, "\nMore rlv options.", ["Misc","Touch","Talk","Travel","View"], [UPMENU], 0, iAuth, "rlvstuff");
+}
+
 Menu(key kID, integer iAuth, string sMenuName) {
     //Debug("Making menu "+sMenuName);
     if (!g_iRLVOn) {
@@ -211,7 +194,6 @@ Menu(key kID, integer iAuth, string sMenuName) {
         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kID);
         return;
     }
-
     //build prompt showing current settings
     //make enable/disable buttons
     integer n;
@@ -248,16 +230,6 @@ Menu(key kID, integer iAuth, string sMenuName) {
             }
         }
     }
-
-    //add immediate commands
-    iStop = llGetListLength(g_lIdmtCmds);
-    for (n = 0; n < iStop; n = n + g_lIdmtCmds_stride) {
-        if (llList2String(g_lIdmtCmds, n)==sMenuName){
-            lButtons += [llList2String(g_lIdmtCmds, n + 2)];
-            sPrompt += "\n" + llList2String(g_lIdmtCmds, n + 2) + " = " + llList2String(g_lIdmtCmds, n + 3);
-        }
-    }
-
     //give an Allow All button
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
@@ -292,19 +264,13 @@ UpdateSettings() {    //build one big string from the settings list, and send to
             sTempRLVValue=llList2String(g_lSettings, n + 2);
             lNewList += [ sTempRLVSetting+ "=" + sTempRLVValue];
             if (sTempRLVValue!="y")lTempSettings+=[sTempRLVSetting,sTempRLVValue];
-            if (sTempRLVSetting=="unsit" && sTempRLVValue=="n") {  //permission to unsit revoked
-                llSetTimerEvent(1.0);  //do timer event now to store name of seat, and start monitoring sitting
-                g_iRestoreCount = 20;
-                g_iSitMode=TRUE;
-                //Debug("Got deny unsit command, re-sit if necessary");
-            }
         }
         //output that string to viewer
         llMessageLinked(LINK_RLV, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
     }
 }
 
-SaveSettings() {    //save to DB
+SaveSettings() {
     list lCategorySettings;
     while (llGetListLength(g_lChangedCategories)) {
         lCategorySettings=[];
@@ -323,7 +289,7 @@ SaveSettings() {    //save to DB
     }
 }
 
-ClearSettings(string _category) { //clear local settings list, delte from settings db
+ClearSettings(string _category) { //clear settings list
     integer numSettings=llGetListLength(g_lSettings);
     while (numSettings) {
         numSettings-=3;
@@ -344,29 +310,13 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     if (sStrLower == "rm rlvstuff") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else Dialog(kID, "\nDo you really want to uninstall the RLVStuff App?", ["Yes","No","Cancel"], [], 0, iNum,"rmrlvstuff");
-    } else if (sStrLower == "sitmenu" || sStrLower == "menu sit") Menu(kID, iNum, "rlvsit_");
-    else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
+    } else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (sStrLower == "rlvtalk" || sStrLower == "menu talk") Menu(kID, iNum, "rlvtalk_");
     else if (sStrLower == "rlvtouch" || sStrLower == "menu touch") Menu(kID, iNum, "rlvtouch_");
     else if (sStrLower == "rlvmisc" || sStrLower == "menu misc") Menu(kID, iNum, "rlvmisc_");
     else if (sStrLower == "rlvview" || sStrLower == "menu view") Menu(kID, iNum, "rlvview_");
-    else if (sStrLower == "sitnow") {
-        if (!g_iRLVOn) {
-            Notify(kID, "RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.", FALSE);
-            llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
-        } else {
-            //give menu of nearby objects that have scripts in them
-            //this assumes that all the objects you may want to force your sub to sit on
-            //have scripts in them
-            string sName="FindSeatMenu";
-            key kMenuID = llGenerateKey();
-            llMessageLinked(LINK_DIALOG, SENSORDIALOG, (string)kID + "|Pick the object on which you want the sub to sit.  If it's not in the list, have the sub move closer and try again.\n|0|``"+(string)(SCRIPTED|PASSIVE)+"`"+(string)g_fScanRange+"`"+(string)PI + "|BACK|" + (string)iNum, kMenuID);
-
-            integer iIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1); //we've alread given a menu to this user.  overwrite their entry
-            else g_lMenuIDs += [kID, kMenuID, sName]; //we've not already given this user a menu. append to list
-        }
-    } else {
+    else if (sStrLower == "rlvstuff" || sStrLower == "menu stuff") StuffMenu(kID, iNum);
+    else {
         //do simple pass through for chat commands
         //since more than one RLV command can come on the same line, loop through them
         list lItems = llParseString2List(sStr, [","], []);
@@ -380,17 +330,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
             string sBehavior = llList2String(llParseString2List(sThisItem, ["="], []), 0);
             integer iBehaviourIndex=llListFindList(g_lRLVcmds, [sBehavior]);
 
-            if (sStr == "standnow") {
-                if (iNum == CMD_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
-                else {
-                    sStr = "unsit=force";
-                    if (GetSetting("rlvsit_","unsit")=="n") sStr = "unsit=y,unsit=force,unsit=n";
-                    g_sSitTarget="";
-                    //Debug("Removing tracked sit target");
-                    llMessageLinked(LINK_RLV, RLV_CMD, sStr, NULL_KEY);
-                }
-            }
-            else if (~iBehaviourIndex) {
+            if (~iBehaviourIndex) {
                 string sCategory=llList2String(g_lRLVcmds,iBehaviourIndex-1);
                 if (llGetSubString(sCategory,-1,-1)=="_"){  //
                     //Debug(sBehavior+" is a behavior that we handle, from the "+sCategory+" category.");
@@ -403,13 +343,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                         SetSetting(sCategory, sOption, sValue);
                     }
                 }
-            } else if (~llListFindList(g_lIdmtCmds,[llList2String(llParseString2List(sThisItem,[":","="],[]),0)])) {
-                //Debug(sBehavior+" is an immediate command that we handle");
-                //filter commands from wearer, if wearer is not owner
-                if (iNum == CMD_WEARER) llOwnerSay("Sorry, but RLV commands may only be given by owner, secowner, or group (if set).");
-                else llMessageLinked(LINK_RLV, RLV_CMD, sStr, NULL_KEY);
-            }
-            else if (sBehavior == "clear" && iNum == CMD_OWNER) ClearSettings("");
+            } else if (sBehavior == "clear" && iNum == CMD_OWNER) ClearSettings("");
             //else Debug("We don't handle "+sBehavior);
         }
 
@@ -427,63 +361,13 @@ default {
     }
 
     state_entry() {
-        //llSetMemoryLimit(65536);  //this script needs to be profiled, and its memory limited
         g_kWearer = llGetOwner();
-        //llSetTimerEvent(1.0);  //timer will be called by recieved settings as necessary
         //Debug("Starting");
     }
 
-    timer() {
-        if (!g_iRLVOn) return;  // Nothing to do if RLV isn't enabled
-        if (GetSetting("rlvsit_","unsit")!="n") {  //we are allowed to stand, so switch off timer and return
-            llSetTimerEvent(0.0);
-            g_sSitTarget = "";
-            //Debug("we are allowed to stand, so switch off timer, remove tracked sit target");
-        } else {  //banned from standing up
-
-            key kSitKey = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
-
-            if (g_iSitMode) {  // Restore mode.  Find the seat and sit in it
-                llSetTimerEvent(g_fRestoreDelay);
-                if (g_sSitTarget == "") {  //If we have no seat, go back to monitoring
-                    g_iSitMode = 0;
-                    //Debug("You weren't sitting on anything");
-                } else if ((string)kSitKey == g_sSitTarget) {   //sat in the right seat, go back to monitoring
-                    g_iSitMode = 0;
-                    //Debug("You're in the right seat, go back to monitoring");
-                } else if (g_iRestoreCount > 0) {  // Count down retries...
-                    llOwnerSay("You should be sitting on " + llKey2Name((key)g_sSitTarget));
-                    g_iRestoreCount--;
-                    string sSittpValue = GetSetting("rlvsit_","sittp");  // Save the value of sittp as we need to temporarily enable it for forcesit
-                    llMessageLinked(LINK_RLV, RLV_CMD, "sittp=y,sit:" + g_sSitTarget + "=force,sittp=" + sSittpValue, NULL_KEY);
-                } else {
-                    llOwnerSay("Couldn't re-seat you on " + llKey2Name((key)g_sSitTarget));
-                    //Debug("Removing tracked sit target");
-                    g_iSitMode = 0;
-                    g_sSitTarget = "";
-                }
-            } else {  //monitoring the sub's sitting activity
-                llSetTimerEvent(g_fPollDelay);
-                if (kSitKey == g_kWearer) {  //store "not sitting down"
-                    g_sSitTarget = "";
-                    //Debug("Not sitting down");
-                } else {
-                    g_sSitTarget = (string)kSitKey; //store ID of your seat.
-                    //Debug("Sitting on " + llKey2Name((key)g_sSitTarget));
-                }
-            }
-        }
-    }
-
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Sit", "");
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Travel", "");
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Talk", "");
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Touch", "");
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Misc", "");
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|View", "");
-        }
+        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|Stuff", "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, "");
         else if (iNum == LM_SETTING_RESPONSE) {
             //this is tricky since our db value contains equals signs
@@ -517,7 +401,7 @@ default {
             g_iRLVOn = TRUE;
             UpdateSettings();
         }
-        else if (iNum == RLV_CLEAR) ClearSettings("");    //clear db and local settings list
+        else if (iNum == RLV_CLEAR) ClearSettings("");    //clear settings list
         else if (iNum == RLV_OFF) g_iRLVOn=FALSE;        // rlvoff -> we have to turn the menu off too
         else if (iNum == RLV_ON) g_iRLVOn=TRUE;        // rlvon -> we have to turn the menu on again
         else if (iNum == DIALOG_RESPONSE) {
@@ -528,67 +412,53 @@ default {
                 string sMessage = llList2String(lMenuParams, 1);
                 integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
-
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-
-                if (sMenu == "FindSeatMenu") {
-                    if (sMessage==UPMENU) Menu(kAv, iAuth, "rlvsit_");
-                    else if ((key) sMessage) {
-                        //Debug("Sending \""+"sit:" + sMessage + "=force\" to "+(string)kAv+" with auth "+(string)iAuth);
-                        UserCommand(iAuth, "sit:" + sMessage + "=force", kAv, "rlvsit_");
-                    }
-                } else if (sMenu == "rmrlvstuff") {
+                if (sMenu == "rmrlvstuff") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Sit", "");
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Travel", "");
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Talk", "");
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Touch", "");
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Misc", "");
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|View", "");
+                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Stuff", "");
                         llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"RLVStuff has been removed.", kAv);
+                        ClearSettings("");
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"RLVStuff remains installed.", kAv);
-                } else {
-                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    else if (sMessage == "SitNow") UserCommand(iAuth, "sitnow", kAv, "rlvsit_");
-                    else if (sMessage == "StandNow") UserCommand(iAuth, "standnow", kAv, "rlvsit_");
-                    else {
-                        //we got a command to enable or disable something, like "Enable LM"
-                        //get the actual command name by looking up the pretty name from the message
-
-                        list lParams = llParseString2List(sMessage, [" "], []);
-                        string sSwitch = llList2String(lParams, 0);
-                        string sCmd = llDumpList2String(llDeleteSubList(lParams,0,0)," ");
-                        integer iIndex = llListFindList(g_lRLVcmds, [sCmd]);
-                        if (sCmd == "All") {
-                            //handle the "Allow All" and "Forbid All" commands
-                            string ONOFF;
-                            //decide whether we need to switch to "y" or "n"
-                            if (sSwitch == TURNOFF) ONOFF = "n";  //enable all functions (ie, remove all restrictions
-                            else if (sSwitch == TURNON) ONOFF = "y";
-
-                            //loop through rlvcmds to create list
-                            string sOut;
-                            integer n;
-                            integer iStop = llGetListLength(g_lRLVcmds);
-                            for (n = 0; n < iStop; n+=g_lRLVcmds_stride) {
-                                if (llList2String(g_lRLVcmds,n)==sMenu){
-                                    if (sOut != "")  sOut += ",";  //prefix all but the first value with a comma, so we have a comma-separated list
-                                    sOut += llList2String(g_lRLVcmds, n+1) + "=" + ONOFF;
-                                }
+                } else if (sMenu == "rlvstuff") {
+                    if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu "+g_sParentMenu, kAv);
+                    else UserCommand(iAuth, "menu "+sMessage, kAv, "");
+                }
+                else if (sMessage == UPMENU) StuffMenu(kAv,iAuth);
+                    //we got a command to enable or disable something, like "Enable LM"
+                    //get the actual command name by looking up the pretty name from the message
+                else {
+                    list lParams = llParseString2List(sMessage, [" "], []);
+                    string sSwitch = llList2String(lParams, 0);
+                    string sCmd = llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+                    integer iIndex = llListFindList(g_lRLVcmds, [sCmd]);
+                    if (sCmd == "All") {
+                        //handle the "Allow All" and "Forbid All" commands
+                        string ONOFF;
+                        //decide whether we need to switch to "y" or "n"
+                        if (sSwitch == TURNOFF) ONOFF = "n";  //enable all functions (ie, remove all restrictions
+                        else if (sSwitch == TURNON) ONOFF = "y";
+                        //loop through rlvcmds to create list
+                        string sOut;
+                        integer n;
+                        integer iStop = llGetListLength(g_lRLVcmds);
+                        for (n = 0; n < iStop; n+=g_lRLVcmds_stride) {
+                            if (llList2String(g_lRLVcmds,n)==sMenu){
+                                if (sOut != "")  sOut += ",";  //prefix all but the first value with a comma, so we have a comma-separated list
+                                sOut += llList2String(g_lRLVcmds, n+1) + "=" + ONOFF;
                             }
-                            UserCommand(iAuth, sOut, kAv, sMenu);
-                        } else if (~iIndex && llList2String(g_lRLVcmds,iIndex-2)==sMenu) {
-                            string sOut = llList2String(g_lRLVcmds, iIndex-1);
-                            sOut += "=";
-                            if (sSwitch == TURNON) sOut += "y";
-                            else if (sSwitch == TURNOFF) sOut += "n";
-                            //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
-                            UserCommand(iAuth, sOut, kAv, sMenu);
                         }
+                        UserCommand(iAuth, sOut, kAv, sMenu);
+                    } else if (~iIndex && llList2String(g_lRLVcmds,iIndex-2)==sMenu) {
+                        string sOut = llList2String(g_lRLVcmds, iIndex-1);
+                        sOut += "=";
+                        if (sSwitch == TURNON) sOut += "y";
+                        else if (sSwitch == TURNOFF) sOut += "n";
+                        //send rlv command out through auth system as though it were a chat command, just to make sure person who said it has proper authority
+                        UserCommand(iAuth, sOut, kAv, sMenu);
                     }
                 }
             }
