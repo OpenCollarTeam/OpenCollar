@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//             Relay - 160423.2          .*' /  .*' ; .*`- +'  `*'          //
+//             Relay - 160510.2          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
@@ -139,10 +139,10 @@ list g_lTrust;
 list g_lBlock;
 
 //settings
-integer g_iMinBaseMode = 0;
-integer g_iMinSafeMode = 1;
-integer g_iMinLandMode = 0;
-integer g_iMinLiteMode = 0;
+integer g_iMinBaseMode = FALSE;
+integer g_iMinHelplessMode = FALSE;
+integer g_iMinLandMode = FALSE;
+integer g_iMinLiteMode = FALSE;
 integer g_iBaseMode = 2;
 integer g_iHelpless = 0;
 integer g_iLandMode = 1;
@@ -223,14 +223,14 @@ UpdateMode(integer iMode) {
     g_iLandMode = (iMode >> 3) & 1;
     g_iLiteMode = (iMode >> 4) & 1;
     g_iMinBaseMode = (iMode >> 5) & 3;
-    g_iMinSafeMode = (iMode >> 7) & 1;
+    g_iMinHelplessMode = (iMode >> 7) & 1;
     g_iMinLandMode = (iMode >> 8) & 1;
     g_iMinLiteMode = (iMode >> 9) & 1;
     g_iSmartStrip = (iMode >> 10) & 1;
 }
 
 SaveMode() {
-    string sMode = (string)(1024 * g_iSmartStrip + 512 * g_iMinLiteMode + 256 * g_iMinLandMode + 128 * g_iMinSafeMode + 32 * g_iMinBaseMode
+    string sMode = (string)(1024 * g_iSmartStrip + 512 * g_iMinLiteMode + 256 * g_iMinLandMode + 128 * g_iMinHelplessMode + 32 * g_iMinBaseMode
         + 16 * g_iLiteMode + 8 * g_iLandMode + 4 * g_iHelpless + g_iBaseMode);
     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"mode=" + sMode, "");
 }
@@ -559,19 +559,20 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
         if (sChangetype=="helpless") {
-            if (sChangevalue == "on") {
-                if (iNum == CMD_OWNER) g_iMinSafeMode = TRUE;
-                if (g_iMinSafeMode == FALSE) iWSuccess = 1;
-                else if (g_lSources!=[]) iWSuccess = 2;
-                else {
-                    sText = "Helplessness imposed.\n\nRestrictions from outside sources can't be cleard with safewording.\n";
-                    g_iHelpless = TRUE;
-                }
+            if (g_lSources!=[]) iWSuccess = 2;
+            else if (sChangevalue == "on") {
+                if (iNum == CMD_OWNER) g_iMinHelplessMode = TRUE;
+                sText = "Helplessness imposed.\n\nRestrictions from outside sources can't be cleard with safewording.\n";
+                g_iHelpless = TRUE;
             } else if (sChangevalue == "off") {
-                if (iNum == CMD_OWNER) g_iMinSafeMode = FALSE;
-                g_iHelpless = FALSE;
-                sText = "Helplessness lifted.\n\nSafewording will clear restrictions from outside sources.\n";
-            } else iWSuccess = 3;
+                if (iNum == CMD_OWNER) g_iMinHelplessMode = FALSE;
+                if (g_iMinHelplessMode == TRUE) iWSuccess = 1;
+                else {
+                    if (iNum == CMD_OWNER) g_iMinHelplessMode = FALSE;
+                    g_iHelpless = FALSE;
+                    sText = "Helplessness lifted.\n\nSafewording will clear restrictions from outside sources.\n";
+                }
+            } //else iWSuccess = 3;
         } else if (llGetSubString(sChangetype,0,4) == "smart") {
             if (sChangevalue == "off") {
                 g_iSmartStrip = FALSE;
@@ -592,7 +593,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if (iNum == CMD_OWNER) g_iMinLandMode = TRUE;
                 sText = "Landowner is trusted.\n\nRLV commands from their objects will be processed without confirmation even on Ask mode.\n";
                 g_iLandMode = TRUE;
-            } else iWSuccess = 3;
+            } //else iWSuccess = 3;
         } else if (sChangetype=="lite") {
             if (sChangevalue == "off") {
                 if (iNum == CMD_OWNER) g_iMinLiteMode = FALSE;
@@ -605,7 +606,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if (iNum == CMD_OWNER) g_iMinLiteMode = TRUE;
                 sText = "Lite option activated.\n\nOnly stripping will happen instantly now. All restrictive requests will require prior confirmation.\n";
                 g_iLiteMode = TRUE;
-            } else iWSuccess = 3;
+            } //else iWSuccess = 3;
         } else {
             list lModes = ["off", "trusted", "ask", "auto"];
             integer iModeType = llListFindList(lModes, [sChangetype]);
@@ -617,7 +618,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     else sText = "/me is offline.";
                     g_iBaseMode = iModeType;
                 } else iWSuccess = 1;
-            } else iWSuccess = 3;
+            } //else iWSuccess = 3;
         }
         if (!iWSuccess) RelayNotify(kID,sText,1);
         else if (iWSuccess == 1)  RelayNotify(kID,"Access denied!",0);
