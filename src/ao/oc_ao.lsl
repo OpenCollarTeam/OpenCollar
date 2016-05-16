@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160515.3          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160515.4          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -50,7 +50,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "⁶⋅⁰";
+string g_sFancyVersion = "⁶⋅¹⋅⁰";
 float g_fBuildVersion = 160515.3;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
@@ -399,16 +399,16 @@ MenuLoad(key kID) {
 }
 
 MenuInterval(key kID) {
-    string sInterval = "none";
-    if (g_iChangeInterval) sInterval = (string)g_iChangeInterval+" seconds.";
-    Dialog(kID, "\nSelect how long (in seconds) before stands switch:\nCurrent Interval: " +sInterval, ["Never","20","30","45","60","90","120","180"], ["BACK"],"Interval");
+    string sInterval = "won't change automatically.";
+    if (g_iChangeInterval) sInterval = "change every "+(string)g_iChangeInterval+" seconds.";
+    Dialog(kID, "\nStands " +sInterval, ["Never","20","30","45","60","90","120","180"], ["BACK"],"Interval");
 }
 
 MenuChooseAnim(key kID, string sAnimState) {
     string sAnim = g_sSitAnywhereAnim;
     if (sAnimState == "Walking") sAnim = g_sWalkAnim;
     else if (sAnimState == "Sitting") sAnim = g_sSitAnim;
-    string sPrompt = "\nPlease choose an animation for "+sAnimState+"\nCurrent anim: "+sAnim;
+    string sPrompt = "\n"+sAnimState+": \""+sAnim+"\"\n";
     g_lAnims2Choose = llListSort(llParseString2List(llJsonGetValue(g_sJson_Anims,[sAnimState]),[","],[]),1,TRUE);
     list lButtons;
     integer iEnd = llGetListLength(g_lAnims2Choose);
@@ -425,7 +425,7 @@ MenuOptions(key kID) {
 }
 
 OrderMenu(key kID) {
-    string sPrompt = "This is the order menu, simply select the\nbutton which you want to re-order.";
+    string sPrompt = "\nWhich button do you want to re-order?";
     integer i;
     list lButtons;
     integer iPos;
@@ -620,7 +620,7 @@ default {
                     if (~llSubStringIndex(sMessage,"☒")) g_iShuffle = FALSE;
                     else g_iShuffle = TRUE;
                     MenuAO(kID);
-                } else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu animations");
+                } else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu");
             } else if (sMenuType == "Load") {
                 if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD) {
                     g_sCard = sMessage;
@@ -690,7 +690,7 @@ default {
                     string sPrompt;
                     integer iTemp = llListFindList(g_lButtons,[sMessage]);
                     g_iOldPos = llListFindList(g_lPrimOrder, [iTemp]);
-                    sPrompt = "\nSelect the new position for swap with "+sMessage+"\n\n";
+                    sPrompt = "\nWhich slot do you want to swap for the "+sMessage+" button.";
                     integer i;
                     for (i=2;i<llGetListLength(g_lPrimOrder);++i) {
                         if (g_iOldPos != i) {
