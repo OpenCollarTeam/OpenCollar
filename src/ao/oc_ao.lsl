@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160515.4          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160517.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160515.3;
+float g_fBuildVersion = 160517.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -65,34 +65,16 @@ integer g_iCardLine;
 key g_kCard;
 integer g_iReady;
 
-list g_lAnimStates = [
-        "Crouching",            //00
-        "CrouchWalking",        //01
-        "Falling Down",         //02 
-        "Flying",               //03
-        "FlyingSlow",           //04
-        "Hovering",             //05
-        "Hovering Down",        //06
-        "Hovering Up",          //07
-        "Jumping",              //08
-        "Landing",              //09
-        "PreJumping",           //10
-        "Running",              //11
-        "Standing",             //12
-        "Sitting",              //13
-        "Sitting on Ground",    //14
-        "Standing Up",          //15
-        "Striding",             //16
-        "Soft Landing",         //17
-        "Taking Off",           //18
-        "Turning Left",         //19
-        "Turning Right",        //20
-        "Walking"               //21
+list g_lAnimStates = [ //http://wiki.secondlife.com/wiki/LlSetAnimationOverride
+        "Crouching","CrouchWalking","Falling Down","Flying","FlyingSlow",
+        "Hovering","Hovering Down","Hovering Up","Jumping","Landing",
+        "PreJumping","Running","Standing","Sitting","Standing Up","Striding",
+        "Soft Landing","Taking Off","Turning Left","Turning Right","Walking"
         ];
 
 string g_sJson_Anims = "{}";
 string g_sJsonNull;
-integer g_iAO_ON = TRUE;
+integer g_iAO_ON;
 integer g_iSitAnimOn;
 string g_sSitAnim;
 integer g_iSitAnywhereOn;
@@ -106,12 +88,8 @@ integer g_iStandPause;
 list g_lMenuIDs;
 list g_lAnims2Choose;
 /*
-integer g_iProfiled;
 Debug(string sStr) {
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
+    llScriptProfiler(1);
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
@@ -129,7 +107,6 @@ integer g_iLayout = 1;
 integer g_iHidden = FALSE;
 integer g_iPosition = 69;
 integer g_iOldPos;
-integer g_iNewPos;
 
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
@@ -145,14 +122,6 @@ FindButtons() { // collect buttons names & links
     for (i=2; i<=llGetNumberOfPrims(); ++i) {
         g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_DESC]);
         g_lPrimOrder += i;
-    }
-}
-
-DoPosition(float yOff, float zOff) {   // Places the buttons
-    integer i;
-    integer LinkCount=llGetListLength(g_lPrimOrder);
-    for (i=2;i<=LinkCount;++i) {
-        llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,<0, yOff*(i-1), zOff*(i-1)>]);
     }
 }
 
@@ -207,13 +176,17 @@ DefinePosition() {
         if (iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_BOTTOM) g_iLayout = 0;
         if (g_iLayout) fYoff = 0;
         else fZoff = 0;
-        DoPosition(fYoff, fZoff);
+        integer i;
+        integer LinkCount=llGetListLength(g_lPrimOrder);
+        for (i=2;i<=LinkCount;++i) {
+            llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,<0, fYoff*(i-1), fZoff*(i-1)>]);
+        }
     }
 }
 
-DoButtonOrder() {   // -- Set the button order and reset display
+DoButtonOrder(integer iNewPos) {   // -- Set the button order and reset display
     integer iOldPos = llList2Integer(g_lPrimOrder,g_iOldPos);
-    integer iNewPos = llList2Integer(g_lPrimOrder,g_iNewPos);
+    iNewPos = llList2Integer(g_lPrimOrder,iNewPos);
     integer i = 2;
     list lTemp = [0,1];
     for(;i<llGetListLength(g_lPrimOrder);++i) {
@@ -224,7 +197,6 @@ DoButtonOrder() {   // -- Set the button order and reset display
     }
     g_lPrimOrder = lTemp;
     g_iOldPos = -1;
-    g_iNewPos = -1;
     DefinePosition();
 }
 
@@ -245,83 +217,62 @@ DoStatus() {
 
 //ao functions
 
-SetAnimOverride(integer iAfterReadCard) {
+SetAnimOverride() {
     llResetAnimationOverride("ALL");
-    integer i;
-    if (g_sSitAnywhereAnim == "") {
-        g_sSitAnywhereAnim = llJsonGetValue(g_sJson_Anims,["Sitting on Ground"]);
-        i = llSubStringIndex(g_sSitAnywhereAnim,",");
-        if (~i) g_sSitAnywhereAnim = llGetSubString(g_sSitAnywhereAnim,0,i-1);
-        else if (g_sSitAnywhereAnim == g_sJsonNull) g_sSitAnywhereAnim = "";
-        if (g_sSitAnywhereAnim) llSetAnimationOverride("Sitting on Ground",g_sSitAnywhereAnim);
-    }
-    if (g_sSitAnim == "") {
-        g_sSitAnim = llJsonGetValue(g_sJson_Anims,["Sitting"]);
-        i = llSubStringIndex(g_sSitAnim,",");
-        if (~i) g_sSitAnim = llGetSubString(g_sSitAnim,0,i-1);
-        else if (g_sSitAnim == g_sJsonNull) g_sSitAnim = "";
-    }
-    if (g_sWalkAnim == "") {
-        g_sWalkAnim = llJsonGetValue(g_sJson_Anims,["Walking"]);
-        i = llSubStringIndex(g_sSitAnim,",");
-        if (~i) g_sWalkAnim = llGetSubString(g_sWalkAnim,0,i-1);
-        else if (g_sWalkAnim == g_sJsonNull) g_sWalkAnim = "";
-    }
-    i = 22;
+    integer i = 22; //llGetListLength(g_lAnimStates);
     string sAnim;
     string sAnimState;
     do {
         sAnimState = llList2String(g_lAnimStates,i);
         if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
             sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
-            if (~llSubStringIndex(sAnim,",")) 
-                sAnim = llList2String(llParseString2List(sAnim,[","],[]),0);
-            else if (sAnim == g_sJsonNull) jump next;
-            if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
-                if (sAnimState != "Sitting" || g_iSitAnimOn) {
-                    if (sAnimState == "Walking" && g_sWalkAnim != "") 
-                        llSetAnimationOverride(sAnimState, g_sWalkAnim);
-                    else if (sAnimState == "Sitting" && g_sSitAnim != "") 
-                        llSetAnimationOverride(sAnimState, g_sSitAnim);
-                    else llSetAnimationOverride(sAnimState, sAnim);
-                }
-            } else llOwnerSay(sAnim+" could not be found.");
+            if (sAnim != g_sJsonNull) {
+                if (sAnimState == "Walking" && g_sWalkAnim != "") 
+                    sAnim = g_sWalkAnim;
+                else if (sAnimState == "Sitting" && g_sSitAnim != "") 
+                    sAnim = g_sSitAnim;
+                else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "") 
+                    sAnim = g_sSitAnywhereAnim;
+                else if (sAnimState == "Standing") 
+                    sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
+                if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
+                        llSetAnimationOverride(sAnimState, sAnim);
+                else llOwnerSay(sAnim+" could not be found.");
+            }
         }
-        @next;
     } while (i--);
     llSetTimerEvent(g_iChangeInterval);
-    if (iAfterReadCard) llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+    llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
 }
 
-SwitchAOAnim(string sAnimState) {
-    string sCurAnim = llGetAnimationOverride(sAnimState);
-    string sTest = llJsonGetValue(g_sJson_Anims, [sAnimState]);
-    list lAnims = llParseString2List(sTest, [","],[]);
+SwitchStand() {
+    string sCurAnim = llGetAnimationOverride("Standing");
+    list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,["Standing"]),["|"],[]);
     integer index;
-    if (g_iShuffle && sAnimState == "Standing") 
-        index = (integer)llFrand(llGetListLength(lAnims));
+    if (g_iShuffle) index = (integer)llFrand(llGetListLength(lAnims));
     else {
         index = llListFindList(lAnims,[sCurAnim]);
         if (index == llGetListLength(lAnims)-1) index = 0;
         else index += 1;
     }
-    if (g_iReady) llSetAnimationOverride(sAnimState, llList2String(lAnims,index));
+    if (g_iReady) llSetAnimationOverride("Standing",llList2String(lAnims,index));
 }
 
 ToggleSitAnywhere() {
-    if (g_iStandPause)
+    if (!g_iAO_ON) llOwnerSay("SitAnywhere is not possible while the AO is turned off.");
+    else if (g_iStandPause)
         llOwnerSay("SitAnywhere is not possible while you are in a collar pose.");
-    else if (g_iAO_ON) {
+    else {
         if (g_iSitAnywhereOn) {
             llSetTimerEvent(g_iChangeInterval);
-            SwitchAOAnim("Standing");
+            SwitchStand();
         } else {
             llSetTimerEvent(0.0);
             llSetAnimationOverride("Standing",g_sSitAnywhereAnim);
         }
         g_iSitAnywhereOn = !g_iSitAnywhereOn;
         DoStatus();
-    } else llOwnerSay("SitAnywhere is not possible while the AO is turned off.");
+    }
 }
 
 Notify(key kID, string sStr, integer iAlsoNotifyWearer) {
@@ -409,7 +360,7 @@ MenuChooseAnim(key kID, string sAnimState) {
     if (sAnimState == "Walking") sAnim = g_sWalkAnim;
     else if (sAnimState == "Sitting") sAnim = g_sSitAnim;
     string sPrompt = "\n"+sAnimState+": \""+sAnim+"\"\n";
-    g_lAnims2Choose = llListSort(llParseString2List(llJsonGetValue(g_sJson_Anims,[sAnimState]),[","],[]),1,TRUE);
+    g_lAnims2Choose = llListSort(llParseString2List(llJsonGetValue(g_sJson_Anims,[sAnimState]),["|"],[]),1,TRUE);
     list lButtons;
     integer iEnd = llGetListLength(g_lAnims2Choose);
     integer i;
@@ -453,11 +404,16 @@ TranslateCollarCMD(integer iAuth,string sCommand, key kID){
             llResetAnimationOverride("Standing");
         } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
-            SwitchAOAnim("Standing");
+            SwitchStand();
         }        
     } else if ((!g_iLocked && iAuth) || (iAuth <= g_iLocked)) {
-        if (~llSubStringIndex(sCommand,"menu")) MenuAO(kID);
-        if (!g_iLocked && !llSubStringIndex(sCommand,"ao")) Command(kID,llGetSubString(sCommand,2,-1));
+        if (~llSubStringIndex(sCommand,"menu")) {
+            if (g_iReady) MenuAO(kID);
+            else {
+                Notify(kID,"Please load a configuration card first!",TRUE);
+                MenuLoad(kID);
+            }
+        } else if (!g_iLocked && !llSubStringIndex(sCommand,"ao")) Command(kID,llGetSubString(sCommand,2,-1));
     }
 }
 
@@ -470,7 +426,7 @@ Command(key kID, string sCommand) {
         MenuLoad(kID);
         return;
     } else if (sCommand == "on") {
-        SetAnimOverride(TRUE);
+        SetAnimOverride();
         g_iAO_ON = TRUE;
         llSetTimerEvent(g_iChangeInterval);
         DoStatus();
@@ -540,6 +496,11 @@ default {
     
     touch_start(integer total_number) {
         if(llGetAttached()) {
+            if (!g_iReady) {
+                MenuLoad(g_kWearer);
+                llOwnerSay("Please load a configuration card first!");
+                return;
+            }
             if (g_iLocked) return;
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
             string sMessage = "";
@@ -614,7 +575,7 @@ default {
                     MenuAO(kID);
                 } else if (sMessage == "Stand Time") MenuInterval(kID);
                 else if (sMessage == "Next Stand") {
-                    SwitchAOAnim("Standing");
+                    SwitchStand();
                     MenuAO(kID);
                 } else if (!llSubStringIndex(sMessage,"Shuffle")) {
                     if (~llSubStringIndex(sMessage,"☒")) g_iShuffle = FALSE;
@@ -627,11 +588,13 @@ default {
                     g_iCardLine = 0;
                     g_sJson_Anims = "{}";
                     g_kCard = llGetNotecardLine(g_sCard, g_iCardLine);
-                } else if (g_iReady && sMessage == "BACK") MenuAO(kID);
-                else {
-                    llOwnerSay("Could not find configuration Notecard: "+sMessage);
-                    MenuLoad(kID);
-                }
+                    return;
+                } else if (g_iReady && sMessage == "BACK") {
+                    MenuAO(kID);
+                    return;
+                } else if (!g_iReady) llOwnerSay("Please load a configuration card first!");
+                else llOwnerSay("Could not find configuration Notecard: "+sMessage);
+                MenuLoad(kID);
             } else if (sMenuType == "Interval") {
                 if (sMessage == "BACK") {
                     MenuAO(kID);
@@ -682,8 +645,7 @@ default {
                     DefinePosition();
                     OrderMenu(kID);
                 } else if (llSubStringIndex(sMessage,":") >= 0) {
-                    g_iNewPos = llList2Integer(llParseString2List(sMessage,[":"],[]),1);
-                    DoButtonOrder();
+                    DoButtonOrder(llList2Integer(llParseString2List(sMessage,[":"],[]),1));
                     OrderMenu(kID);
                 } else {
                     list lButtons;
@@ -705,7 +667,7 @@ default {
     }
     
     timer() {
-        if (g_iAO_ON && g_iChangeInterval) SwitchAOAnim("Standing");
+        if (g_iAO_ON && g_iChangeInterval) SwitchStand();
         integer iLength = llGetListLength(g_lMenuIDs);
         integer n = iLength - 5;
         integer iNow = llGetUnixTime();
@@ -729,11 +691,18 @@ default {
                         sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
                         list lTemp = llParseString2List(sData, ["|"],[]);
                         integer i = llGetListLength(lTemp);
-                        while(i--) { //check if the animation from the notecard is present
+                        while(i--) {
                             if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
                                 lTemp = llDeleteSubList(lTemp,i,i);
                         }
-                        g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,","));
+                        if (sAnimationState == "Sitting on Ground")
+                            g_sSitAnywhereAnim = llList2String(lTemp,0);
+                        else if (sAnimationState == "Sitting")
+                            g_sSitAnim = llList2String(lTemp,0);
+                        else if (sAnimationState == "Walking")
+                            g_sWalkAnim = llList2String(lTemp,0);
+                        else if (sAnimationState != "Standing") lTemp = llList2List(lTemp,0,0);
+                        if (lTemp) g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
                     }     
                 }
                 g_kCard = llGetNotecardLine(g_sCard,++g_iCardLine);
@@ -741,6 +710,8 @@ default {
                 llOwnerSay("Configuration "+g_sCard+" loaded.");
                 g_iCardLine = 0;
                 g_kCard = "";
+                g_iAO_ON = TRUE;
+                DoStatus();
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
             }
         }
@@ -749,7 +720,7 @@ default {
     run_time_permissions(integer iFlag) {
         if (iFlag & PERMISSION_OVERRIDE_ANIMATIONS) {
             g_iReady = TRUE;
-            if (g_iAO_ON) SetAnimOverride(TRUE);
+            if (g_iAO_ON) SetAnimOverride();
         }
     }
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
@@ -759,9 +730,10 @@ default {
         }
     }
     changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY)
-            llOwnerSay("AO's content has changed, remember to reload the configuraton notecard if you changed anything.");
-        else if (iChange & CHANGED_COLOR) {
+        if (iChange & CHANGED_INVENTORY) {
+            if (llGetInventoryNumber(INVENTORY_SCRIPT)==1) //a script added is an update
+                llOwnerSay("AO's content has changed, remember to reload the configuraton notecard if you changed anything.");
+        } else if (iChange & CHANGED_COLOR) {
             if (llGetColor(0) != g_vAOoncolor) DetermineColors();
         } else if (iChange & CHANGED_LINK) llResetScript();
     }
