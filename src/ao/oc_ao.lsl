@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160517.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160517.2          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160517.1;
+float g_fBuildVersion = 160517.2;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -242,7 +242,7 @@ SetAnimOverride() {
         }
     } while (i--);
     llSetTimerEvent(g_iChangeInterval);
-    llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+//    llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
 }
 
 SwitchStand() {
@@ -394,10 +394,11 @@ TranslateCollarCMD(integer iAuth,string sCommand, key kID){
         sCommand = llToLower(llGetSubString(sCommand,5,-1));
     else return;
     if (g_iLocked && sCommand == "unlock") {
-        if (iAuth <= g_iLocked) Command(kID,sCommand);
+        if (iAuth == g_iLocked || iAuth == 500) Command(kID,sCommand);
         else Notify(kID,"Access denied!",FALSE);
     } else if (sCommand == "lock") {
         if (iAuth == 500 || kID == g_kWearer) Command(kID,"lock "+(string)iAuth);
+        else Notify(kID,"Access denied!",FALSE);
     } else if (!llSubStringIndex(sCommand,"stand")) {
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
@@ -406,15 +407,16 @@ TranslateCollarCMD(integer iAuth,string sCommand, key kID){
             g_iStandPause = FALSE;
             SwitchStand();
         }        
-    } else if ((!g_iLocked && iAuth) || (iAuth <= g_iLocked)) {
+    } else if ((!g_iLocked && iAuth) || (iAuth == g_iLocked || iAuth == 500)) {
         if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
             else {
                 Notify(kID,"Please load a configuration card first!",TRUE);
                 MenuLoad(kID);
             }
-        } else if (!g_iLocked && !llSubStringIndex(sCommand,"ao")) Command(kID,llGetSubString(sCommand,2,-1));
-    }
+        } else if (!g_iLocked && !llSubStringIndex(sCommand,"ao"))
+            Command(kID,llGetSubString(sCommand,2,-1));
+    } 
 }
 
 Command(key kID, string sCommand) {
@@ -521,29 +523,26 @@ default {
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == g_iInterfaceChannel) {
             if (llGetOwnerKey(kID) != g_kWearer) return;    
-            if (llUnescapeURL(sMessage) == "SAFEWORD") {
+          /*  if (llUnescapeURL(sMessage) == "SAFEWORD") {
                 if (g_iLocked) {
                     Command(g_kWearer,"unlock");
                     Notify(g_kWearer,"AO unlocked due to safeword usage.",FALSE);
                 }
                 return;
-            } else if (sMessage == "-.. --- / .- ---") {
+            } else */
+            if (sMessage == "-.. --- / .- ---") {
                 StartUpdate(kID);
                 return;
             }
             list lParams = llParseString2List(sMessage,["|"],[]);
             string sMessageType = llList2String(lParams,0);
-            integer iAuth;
             if (sMessageType == "AuthReply") {
-                iAuth = llList2Integer(lParams,2);
                 if (g_sPendingCmd) {
-                    TranslateCollarCMD(iAuth,g_sPendingCmd, llList2Key(lParams,1));
+                    TranslateCollarCMD(llList2Integer(lParams,2),g_sPendingCmd, llList2Key(lParams,1));
                     g_sPendingCmd = "";
                 }
-            } else if (sMessageType == "CollarCommand") {
-                iAuth = llList2Integer(lParams,1);
-                TranslateCollarCMD(iAuth,llList2String(lParams,2), llList2Key(lParams,3));
-            }
+            } else if (sMessageType == "CollarCommand")
+                TranslateCollarCMD(llList2Integer(lParams,1),llList2String(lParams,2), llList2Key(lParams,3));
         } else if (~llListFindList(g_lMenuIDs,[kID, iChannel])) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             string sMenuType = llList2String(g_lMenuIDs, iMenuIndex+4);
@@ -553,6 +552,7 @@ default {
             if (sMenuType == "AO") {
                 if (sMessage == "Cancel") return;
                 else if (sMessage == "-") MenuAO(kID);
+                else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu");
                 else if (g_iLocked && sMessage != "UNLOCK") {
                     Notify(kID,"Unlock the AO first!",FALSE);
                     return;
@@ -581,7 +581,7 @@ default {
                     if (~llSubStringIndex(sMessage,"☒")) g_iShuffle = FALSE;
                     else g_iShuffle = TRUE;
                     MenuAO(kID);
-                } else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu");
+                } 
             } else if (sMenuType == "Load") {
                 if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD) {
                     g_sCard = sMessage;
