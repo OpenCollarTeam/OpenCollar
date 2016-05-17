@@ -448,10 +448,10 @@ TranslateCollarCMD(integer iAuth,string sCommand, key kID){
     } else if (sCommand == "lock") {
         if (iAuth == 500 || kID == g_kWearer) Command(kID,"lock "+(string)iAuth);
     } else if (!llSubStringIndex(sCommand,"stand")) {
-        if (~llSubStringIndex(sCommand,"on")) {
+        if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
             llResetAnimationOverride("Standing");
-        } else if (~llSubStringIndex(sCommand,"off")) {
+        } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
             SwitchAOAnim("Standing");
         }        
