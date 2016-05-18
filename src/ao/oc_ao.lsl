@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160517.2          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160518.6          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -50,8 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160517.2;
+string g_sFancyVersion = "160518.6";//"⁶⋅¹⋅⁰";
+float g_fBuildVersion = 160518.6;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -68,8 +68,8 @@ integer g_iReady;
 list g_lAnimStates = [ //http://wiki.secondlife.com/wiki/LlSetAnimationOverride
         "Crouching","CrouchWalking","Falling Down","Flying","FlyingSlow",
         "Hovering","Hovering Down","Hovering Up","Jumping","Landing",
-        "PreJumping","Running","Standing","Sitting","Standing Up","Striding",
-        "Soft Landing","Taking Off","Turning Left","Turning Right","Walking"
+        "PreJumping","Running","Standing","Sitting","Sitting on Ground","Standing Up",
+        "Striding","Soft Landing","Taking Off","Turning Left","Turning Right","Walking"
         ];
 
 string g_sJson_Anims = "{}";
@@ -94,6 +94,7 @@ Debug(string sStr) {
 }*/
 
 //options
+
 float g_fGap = 0.001; // This is the space between buttons
 float g_Yoff = 0.002; // space between buttons and screen top/bottom border
 float g_Zoff = 0.04; // space between buttons and screen left/right border
@@ -110,8 +111,6 @@ integer g_iOldPos;
 
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
-string g_sDarkLock = "e633ced3-2327-4288-8d4f-7cc530be0faa";
-string g_sLightLock = "8aadf1ed-63d1-2bc5-174b-7c074f676b88";
 
 string g_sTexture = "Dark"; // current style
 
@@ -231,12 +230,12 @@ SetAnimOverride() {
                     sAnim = g_sWalkAnim;
                 else if (sAnimState == "Sitting" && g_sSitAnim != "") 
                     sAnim = g_sSitAnim;
-                else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "") 
+                else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
                     sAnim = g_sSitAnywhereAnim;
                 else if (sAnimState == "Standing") 
                     sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
-                if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
-                        llSetAnimationOverride(sAnimState, sAnim);
+                if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) 
+                    llSetAnimationOverride(sAnimState, sAnim);
                 else llOwnerSay(sAnim+" could not be found.");
             }
         }
@@ -246,6 +245,7 @@ SetAnimOverride() {
 }
 
 SwitchStand() {
+    if (g_iStandPause) return;
     string sCurAnim = llGetAnimationOverride("Standing");
     list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,["Standing"]),["|"],[]);
     integer index;
@@ -389,34 +389,30 @@ OrderMenu(key kID) {
 
 //command handling
 
-TranslateCollarCMD(integer iAuth,string sCommand, key kID){
+TranslateCollarCMD(string sCommand, key kID){
     if (!llSubStringIndex(sCommand,"ZHAO_"))
         sCommand = llToLower(llGetSubString(sCommand,5,-1));
     else return;
-    if (g_iLocked && sCommand == "unlock") {
-        if (iAuth == g_iLocked || iAuth == 500) Command(kID,sCommand);
-        else Notify(kID,"Access denied!",FALSE);
-    } else if (sCommand == "lock") {
-        if (iAuth == 500 || kID == g_kWearer) Command(kID,"lock "+(string)iAuth);
-        else Notify(kID,"Access denied!",FALSE);
-    } else if (!llSubStringIndex(sCommand,"stand")) {
+    if (!llSubStringIndex(sCommand,"stand")) {
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
             llResetAnimationOverride("Standing");
+            if (g_iSitAnywhereOn) {
+                g_iSitAnywhereOn = FALSE;
+                DoStatus();
+            }
         } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
             SwitchStand();
         }        
-    } else if ((!g_iLocked && iAuth) || (iAuth == g_iLocked || iAuth == 500)) {
-        if (~llSubStringIndex(sCommand,"menu")) {
+    } else if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
             else {
                 Notify(kID,"Please load a configuration card first!",TRUE);
                 MenuLoad(kID);
             }
-        } else if (!g_iLocked && !llSubStringIndex(sCommand,"ao"))
-            Command(kID,llGetSubString(sCommand,2,-1));
-    } 
+    } else if (!llSubStringIndex(sCommand,"ao"))
+        Command(kID,llGetSubString(sCommand,2,-1));
 }
 
 Command(key kID, string sCommand) {
@@ -440,21 +436,11 @@ Command(key kID, string sCommand) {
     } else if (sCommand == "unlock") {
         g_iLocked = FALSE;
         llOwnerSay("@detach=y");
-        g_iHidden = FALSE;
-        DefinePosition();
-        DoTextures(g_sTexture);
-        Notify(kID,"AO unlocked!",FALSE);
+        Notify(kID,"AO unlocked!",TRUE);
     } else if (sCommand == "lock") {
-        g_iLocked = (integer)sValue;
+        g_iLocked = TRUE;
         llOwnerSay("@detach=n");
-        g_iHidden = TRUE;
-        DefinePosition();
-        Notify(kID,"AO locked!",FALSE);
-        integer iLink = llListFindList(g_lButtons,["Minimize"]);
-        if (g_sTexture == "Dark")
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sDarkLock, <1,1,0>, ZERO_VECTOR, 0]);
-        else if (g_sTexture == "Light")
-            llSetLinkPrimitiveParamsFast(iLink,[PRIM_TEXTURE, ALL_SIDES, g_sLightLock, <1,1,0>, ZERO_VECTOR, 0]);
+        Notify(kID,"AO locked!",TRUE);
     } else if (sCommand == "menu") MenuAO(kID);
 }
 
@@ -478,7 +464,7 @@ default {
         DetermineColors();
         MenuLoad(g_kWearer);
     }
-    
+
     on_rez(integer iStart) {
         if (g_kWearer != llGetOwner()) llResetScript();
         if (g_iLocked) llOwnerSay("@detach=n");
@@ -486,7 +472,7 @@ default {
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~ao", [HTTP_METHOD, "GET"],"");
         llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
     }
-    
+
     attach(key kID) {
         if (kID == NULL_KEY) llResetAnimationOverride("ALL");
         else if (llGetAttached() <= 30) {
@@ -495,7 +481,7 @@ default {
             llDetachFromAvatar();
         } else DefinePosition();
     }
-    
+
     touch_start(integer total_number) {
         if(llGetAttached()) {
             if (!g_iReady) {
@@ -503,14 +489,13 @@ default {
                 llOwnerSay("Please load a configuration card first!");
                 return;
             }
-            if (g_iLocked) return;
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
             string sMessage = "";
             if (sButton == "Menu") 
                 MenuAO(g_kWearer);
             else if (sButton == "SitAny") {
                 if (!g_iLocked) ToggleSitAnywhere();
-            } else if (llSubStringIndex(llToLower(sButton),"ao")>=0) {   // The Hide Button
+            } else if (llSubStringIndex(llToLower(sButton),"ao")>=0) {
                 g_iHidden = !g_iHidden;
                 DefinePosition();
             } else if (sButton == "Power") {
@@ -519,30 +504,21 @@ default {
             }
         } else if (llDetectedKey(0) == g_kWearer) MenuAO(g_kWearer);
     }
-    
+
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == g_iInterfaceChannel) {
             if (llGetOwnerKey(kID) != g_kWearer) return;    
-          /*  if (llUnescapeURL(sMessage) == "SAFEWORD") {
-                if (g_iLocked) {
-                    Command(g_kWearer,"unlock");
-                    Notify(g_kWearer,"AO unlocked due to safeword usage.",FALSE);
-                }
-                return;
-            } else */
             if (sMessage == "-.. --- / .- ---") {
                 StartUpdate(kID);
                 return;
-            }
+            } //"CollarCommmand|499|ZHAO_STANDON" or "CollarCommmand|iAuth|ZHAO_MENU|commanderID"
             list lParams = llParseString2List(sMessage,["|"],[]);
-            string sMessageType = llList2String(lParams,0);
-            if (sMessageType == "AuthReply") {
-                if (g_sPendingCmd) {
-                    TranslateCollarCMD(llList2Integer(lParams,2),g_sPendingCmd, llList2Key(lParams,1));
-                    g_sPendingCmd = "";
-                }
-            } else if (sMessageType == "CollarCommand")
-                TranslateCollarCMD(llList2Integer(lParams,1),llList2String(lParams,2), llList2Key(lParams,3));
+            if (llList2String(lParams,0) == "CollarCommand") {
+                if (llList2Integer(lParams,1) == 502)
+                    Notify(llList2Key(lParams,3),"Access denied!",FALSE);
+                else
+                    TranslateCollarCMD(llList2String(lParams,2),llList2Key(lParams,3));
+            }
         } else if (~llListFindList(g_lMenuIDs,[kID, iChannel])) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             string sMenuType = llList2String(g_lMenuIDs, iMenuIndex+4);
@@ -553,12 +529,9 @@ default {
                 if (sMessage == "Cancel") return;
                 else if (sMessage == "-") MenuAO(kID);
                 else if (sMessage == "Collar Menu") llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":menu");
-                else if (g_iLocked && sMessage != "UNLOCK") {
-                    Notify(kID,"Unlock the AO first!",FALSE);
-                    return;
-                } else if (~llSubStringIndex(sMessage,"LOCK")) {
-                    g_sPendingCmd = "ZHAO_"+sMessage;
-                    llRegionSayTo(g_kWearer,g_iInterfaceChannel,"AuthRequest|"+(string)kID);
+                else if (~llSubStringIndex(sMessage,"LOCK")) {
+                    Command(kID,llToLower(sMessage));
+                    MenuAO(kID);
                 } else if (sMessage == "HUD Style") MenuOptions(kID);
                 else if (sMessage == "Load") MenuLoad(kID);
                 else if (sMessage == "Sits") MenuChooseAnim(kID,"Sitting");
@@ -641,7 +614,7 @@ default {
                 else if (sMessage == "-") OrderMenu(kID);
                 else if (sMessage == "Reset") {
                     FindButtons();
-                    Notify(kID,"Order position reset to default.",FALSE);
+                    llOwnerSay("Order position reset to default.");
                     DefinePosition();
                     OrderMenu(kID);
                 } else if (llSubStringIndex(sMessage,":") >= 0) {
@@ -665,11 +638,10 @@ default {
             }
         }
     }
-    
+
     timer() {
         if (g_iAO_ON && g_iChangeInterval) SwitchStand();
-        integer iLength = llGetListLength(g_lMenuIDs);
-        integer n = iLength - 5;
+        integer n = llGetListLength(g_lMenuIDs) - 5;
         integer iNow = llGetUnixTime();
         for (n; n>=0; n=n-5) {
             integer iDieTime = llList2Integer(g_lMenuIDs,n+3);
@@ -684,51 +656,55 @@ default {
     dataserver(key kRequest, string sData) {
         if (kRequest == g_kCard) {
             if (sData != EOF) {
-                if (llGetSubString(sData,0,0) == "[") {
-                    string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
-                    if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
-                    if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
-                        sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
-                        list lTemp = llParseString2List(sData, ["|"],[]);
-                        integer i = llGetListLength(lTemp);
-                        while(i--) {
-                            if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
-                                lTemp = llDeleteSubList(lTemp,i,i);
-                        }
-                        if (sAnimationState == "Sitting on Ground")
-                            g_sSitAnywhereAnim = llList2String(lTemp,0);
-                        else if (sAnimationState == "Sitting")
-                            g_sSitAnim = llList2String(lTemp,0);
-                        else if (sAnimationState == "Walking")
-                            g_sWalkAnim = llList2String(lTemp,0);
-                        else if (sAnimationState != "Standing") lTemp = llList2List(lTemp,0,0);
-                        if (lTemp) g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
-                    }     
+                if (llGetSubString(sData,0,0) != "[") jump next;
+                string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
+                if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
+                if (!~llListFindList(g_lAnimStates,[sAnimationState])) jump next;
+                if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
+                    sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
+                    list lTemp = llParseString2List(sData, ["|"],[]);
+                    integer i = llGetListLength(lTemp);
+                    while(i--) {
+                        if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
+                            lTemp = llDeleteSubList(lTemp,i,i);
+                    }
+                    if (sAnimationState == "Sitting on Ground")
+                        g_sSitAnywhereAnim = llList2String(lTemp,0);
+                    else if (sAnimationState == "Sitting")
+                        g_sSitAnim = llList2String(lTemp,0);
+                    else if (sAnimationState == "Walking")
+                        g_sWalkAnim = llList2String(lTemp,0);
+                    else if (sAnimationState != "Standing") lTemp = llList2List(lTemp,0,0);
+                    if (lTemp) g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
                 }
+                @next;
                 g_kCard = llGetNotecardLine(g_sCard,++g_iCardLine);
             } else {
-                llOwnerSay("Configuration "+g_sCard+" loaded.");
+                llOwnerSay("Configuration \""+g_sCard+"\" loaded.");
                 g_iCardLine = 0;
                 g_kCard = "";
+                g_iSitAnywhereOn = FALSE;
                 g_iAO_ON = TRUE;
                 DoStatus();
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
             }
         }
     }
-    
+
     run_time_permissions(integer iFlag) {
         if (iFlag & PERMISSION_OVERRIDE_ANIMATIONS) {
             g_iReady = TRUE;
             if (g_iAO_ON) SetAnimOverride();
         }
     }
+
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
         if (kRequestID == g_kWebLookup && iStatus == 200)  {
             if ((float)sBody > g_fBuildVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
         }
     }
+
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryNumber(INVENTORY_SCRIPT)==1) //a script added is an update
