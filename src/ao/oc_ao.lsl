@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160518.6          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160520.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -50,8 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "160518.6";//"⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160518.6;
+string g_sFancyVersion = "160520.1";//"⁶⋅¹⋅⁰";
+float g_fBuildVersion = 160520.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -60,7 +60,7 @@ integer g_iHUDChannel = -1812221819;
 string g_sPendingCmd;
 
 key g_kWearer;
-string g_sCard;
+string g_sCard = "Girl";
 integer g_iCardLine;
 key g_kCard;
 integer g_iReady;
@@ -73,7 +73,7 @@ list g_lAnimStates = [ //http://wiki.secondlife.com/wiki/LlSetAnimationOverride
         ];
 
 string g_sJson_Anims = "{}";
-string g_sJsonNull;
+string g_sJsonErrors;
 integer g_iAO_ON;
 integer g_iSitAnimOn;
 string g_sSitAnim;
@@ -225,7 +225,7 @@ SetAnimOverride() {
         sAnimState = llList2String(g_lAnimStates,i);
         if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
             sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
-            if (sAnim != g_sJsonNull) {
+            if (!~llSubStringIndex(g_sJsonErrors,sAnim)) {
                 if (sAnimState == "Walking" && g_sWalkAnim != "") 
                     sAnim = g_sWalkAnim;
                 else if (sAnimState == "Sitting" && g_sSitAnim != "") 
@@ -346,6 +346,7 @@ MenuLoad(key kID) {
         sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, --i);
         if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") lButtons += sNotecardName;
     } while (i > 0);
+    if (!llGetListLength(lButtons)) llOwnerSay("No configuration card found!");
     Dialog(kID, sPrompt, llListSort(lButtons,1,TRUE), ["BACK"],"Load");
 }
 
@@ -454,7 +455,7 @@ default {
     state_entry() {
         if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) return;
         g_kWearer = llGetOwner();
-        g_sJsonNull = llUnescapeURL("%EF%B7%90");
+        g_sJsonErrors = llUnescapeURL("%EF%B7%90")+llUnescapeURL("%EF%B7%95")+llUnescapeURL("%EF%B7%97");
         g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
@@ -680,11 +681,16 @@ default {
                 @next;
                 g_kCard = llGetNotecardLine(g_sCard,++g_iCardLine);
             } else {
-                llOwnerSay("Configuration \""+g_sCard+"\" loaded.");
                 g_iCardLine = 0;
                 g_kCard = "";
                 g_iSitAnywhereOn = FALSE;
-                g_iAO_ON = TRUE;
+                if (g_sJson_Anims == "{}") {
+                    llOwnerSay("Configuration \""+g_sCard+"\" is invalid!");
+                    g_iAO_ON = FALSE;
+                } else {
+                    llOwnerSay("Configuration \""+g_sCard+"\" loaded.");
+                    g_iAO_ON = TRUE;
+                }
                 DoStatus();
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
             }
@@ -693,8 +699,10 @@ default {
 
     run_time_permissions(integer iFlag) {
         if (iFlag & PERMISSION_OVERRIDE_ANIMATIONS) {
-            g_iReady = TRUE;
+            if (g_sJson_Anims != "{}") g_iReady = TRUE;
+            else g_iReady =  FALSE;
             if (g_iAO_ON) SetAnimOverride();
+            else llResetAnimationOverride("ALL");
         }
     }
 
