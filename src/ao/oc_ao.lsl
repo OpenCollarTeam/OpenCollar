@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160520.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160523.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -455,7 +455,7 @@ default {
     state_entry() {
         if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) return;
         g_kWearer = llGetOwner();
-        g_sJsonErrors = llUnescapeURL("%EF%B7%90")+llUnescapeURL("%EF%B7%95")+llUnescapeURL("%EF%B7%97");
+        g_sJsonErrors = JSON_FALSE+JSON_INVALID+JSON_NULL;
         g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
