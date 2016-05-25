@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160525.2          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160525.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160525.2;
+float g_fBuildVersion = 160525.3;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -228,7 +228,7 @@ SetAnimOverride() {
             if (!~llSubStringIndex(g_sJsonErrors,sAnim)) {
                 if (sAnimState == "Walking" && g_sWalkAnim != "") 
                     sAnim = g_sWalkAnim;
-                else if (sAnimState == "Sitting" && g_sSitAnim != "") 
+                else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
                     sAnim = g_sSitAnim;
                 else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
                     sAnim = g_sSitAnywhereAnim;
@@ -673,9 +673,11 @@ default {
                     }
                     if (sAnimationState == "Sitting on Ground")
                         g_sSitAnywhereAnim = llList2String(lTemp,0);
-                    else if (sAnimationState == "Sitting")
+                    else if (sAnimationState == "Sitting") {
                         g_sSitAnim = llList2String(lTemp,0);
-                    else if (sAnimationState == "Walking")
+                        if (g_sSitAnim != "") g_iSitAnimOn = TRUE;
+                        else g_iSitAnimOn = FALSE;
+                    } else if (sAnimationState == "Walking")
                         g_sWalkAnim = llList2String(lTemp,0);
                     else if (sAnimationState != "Standing") lTemp = llList2List(lTemp,0,0);
                     if (lTemp) g_sJson_Anims = llJsonSetValue(g_sJson_Anims, [sAnimationState],llDumpList2String(lTemp,"|"));
