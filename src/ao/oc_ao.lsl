@@ -718,10 +718,7 @@ default {
     }
 
     changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) {
-            if (llGetInventoryNumber(INVENTORY_SCRIPT)==1) //a script added is an update
-                llOwnerSay("AO's content has changed, remember to reload the configuraton notecard if you changed anything.");
-        } else if (iChange & CHANGED_COLOR) {
+        if (iChange & CHANGED_COLOR) {
             if (llGetColor(0) != g_vAOoncolor) DetermineColors();
         } else if (iChange & CHANGED_LINK) llResetScript();
     }
