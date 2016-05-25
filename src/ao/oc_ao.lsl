@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160523.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160525.2          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -50,8 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "160520.1";//"⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160520.1;
+string g_sFancyVersion = "⁶⋅¹⋅⁰";
+float g_fBuildVersion = 160525.2;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -328,9 +328,9 @@ MenuAO(key kID) {
     if (kID == g_kWearer) lButtons += "Collar Menu";
     else lButtons += "-";
     lButtons += ["Load","Sits","Ground Sits","Walks"];
-    if (g_iSitAnimOn) lButtons += ["Sits ☒"];
+    if (g_iSitAnimOn) lButtons += ["Sits ☑"];
     else lButtons += ["Sits ☐"];
-    if (g_iShuffle) lButtons += "Shuffle ☒";
+    if (g_iShuffle) lButtons += "Shuffle ☑";
     else lButtons += "Shuffle ☐";
     lButtons += ["Stand Time","Next Stand"];
     if (kID == g_kWearer) lButtons += "HUD Style";
@@ -338,7 +338,7 @@ MenuAO(key kID) {
 }
 
 MenuLoad(key kID) {
-    string sPrompt = "\nChoose one of the configuration notecards to load:";
+    string sPrompt = "\nLoad an animation set!";
     list lButtons;
     integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
     string sNotecardName;
@@ -346,7 +346,7 @@ MenuLoad(key kID) {
         sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, --i);
         if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") lButtons += sNotecardName;
     } while (i > 0);
-    if (!llGetListLength(lButtons)) llOwnerSay("No configuration card found!");
+    if (!llGetListLength(lButtons)) llOwnerSay("There aren't any animation sets installed!");
     Dialog(kID, sPrompt, llListSort(lButtons,1,TRUE), ["BACK"],"Load");
 }
 
@@ -409,7 +409,7 @@ TranslateCollarCMD(string sCommand, key kID){
     } else if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
             else {
-                Notify(kID,"Please load a configuration card first!",TRUE);
+                Notify(kID,"Please load an animation set first.",TRUE);
                 MenuLoad(kID);
             }
     } else if (!llSubStringIndex(sCommand,"ao"))
@@ -421,7 +421,7 @@ Command(key kID, string sCommand) {
     sCommand = llList2String(lParams,0);
     string sValue = llList2String(lParams,1);
     if (!g_iReady) {
-        Notify(kID,"Please load a configuration card first!",TRUE);
+        Notify(kID,"Please load an animation set first.",TRUE);
         MenuLoad(kID);
         return;
     } else if (sCommand == "on") {
@@ -437,11 +437,13 @@ Command(key kID, string sCommand) {
     } else if (sCommand == "unlock") {
         g_iLocked = FALSE;
         llOwnerSay("@detach=y");
-        Notify(kID,"AO unlocked!",TRUE);
+        llPlaySound("82fa6d06-b494-f97c-2908-84009380c8d1", 1.0);
+        Notify(kID,"The AO has been unlocked.",TRUE);
     } else if (sCommand == "lock") {
         g_iLocked = TRUE;
         llOwnerSay("@detach=n");
-        Notify(kID,"AO locked!",TRUE);
+        llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
+        Notify(kID,"The AO has been locked.",TRUE);
     } else if (sCommand == "menu") MenuAO(kID);
 }
 
@@ -487,7 +489,7 @@ default {
         if(llGetAttached()) {
             if (!g_iReady) {
                 MenuLoad(g_kWearer);
-                llOwnerSay("Please load a configuration card first!");
+                llOwnerSay("Please load an animation set first.");
                 return;
             }
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
@@ -539,7 +541,7 @@ default {
                 else if (sMessage == "Walks") MenuChooseAnim(kID,"Walking");
                 else if (sMessage == "Ground Sits") MenuChooseAnim(kID,"Sitting on Ground");
                 else if (!llSubStringIndex(sMessage,"Sits")) {
-                    if (~llSubStringIndex(sMessage,"☒")) {
+                    if (~llSubStringIndex(sMessage,"☑")) {
                         g_iSitAnimOn = FALSE;
                         llResetAnimationOverride("Sitting");
                     } else {
@@ -552,7 +554,7 @@ default {
                     SwitchStand();
                     MenuAO(kID);
                 } else if (!llSubStringIndex(sMessage,"Shuffle")) {
-                    if (~llSubStringIndex(sMessage,"☒")) g_iShuffle = FALSE;
+                    if (~llSubStringIndex(sMessage,"☑")) g_iShuffle = FALSE;
                     else g_iShuffle = TRUE;
                     MenuAO(kID);
                 } 
@@ -566,8 +568,8 @@ default {
                 } else if (g_iReady && sMessage == "BACK") {
                     MenuAO(kID);
                     return;
-                } else if (!g_iReady) llOwnerSay("Please load a configuration card first!");
-                else llOwnerSay("Could not find configuration Notecard: "+sMessage);
+                } else if (!g_iReady) llOwnerSay("Please load an animation set first.");
+                else llOwnerSay("Could not find animation set: "+sMessage);
                 MenuLoad(kID);
             } else if (sMenuType == "Interval") {
                 if (sMessage == "BACK") {
@@ -685,10 +687,10 @@ default {
                 g_kCard = "";
                 g_iSitAnywhereOn = FALSE;
                 if (g_sJson_Anims == "{}") {
-                    llOwnerSay("Configuration \""+g_sCard+"\" is invalid!");
+                    llOwnerSay("\""+g_sCard+"\" is an invalid animation set and can't play.");
                     g_iAO_ON = FALSE;
                 } else {
-                    llOwnerSay("Configuration \""+g_sCard+"\" loaded.");
+                    llOwnerSay("The \""+g_sCard+"\" animation set was loaded successfully.");
                     g_iAO_ON = TRUE;
                 }
                 DoStatus();
