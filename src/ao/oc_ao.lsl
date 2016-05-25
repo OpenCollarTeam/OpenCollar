@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160525.4          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160525.5          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅¹⋅⁰";
-float g_fBuildVersion = 160525.3;
+float g_fBuildVersion = 160525.5;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -547,7 +547,7 @@ default {
                     } else if (g_sSitAnim != "") {
                         g_iSitAnimOn = TRUE;
                         llSetAnimationOverride("Sitting",g_sSitAnim);
-                    } else Notify(kID,"Cannot turn Sits on with no Sitting animation set.",TRUE);
+                    } else Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     MenuAO(kID);
                 } else if (sMessage == "Stand Time") MenuInterval(kID);
                 else if (sMessage == "Next Stand") {
