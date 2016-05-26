@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 160423.1                            //
+//                         RLV System - 160426.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -320,7 +320,7 @@ ApplyRem(string sBehav) {
     //Debug("(post rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
 }
 
-SafeWord() {
+SafeWord(key kID) {
     //leave lock and exceptions intact, clear everything else
     integer numRestrictions=llGetListLength(g_lRestrictions);
     while (numRestrictions){
@@ -331,6 +331,7 @@ SafeWord() {
     }
     llMessageLinked(LINK_THIS,RLV_CMD,"unsit=force","");
     llMessageLinked(LINK_ALL_OTHERS,RLV_CLEAR,"","");
+    if (kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"RLV restrictions cleared.",kID);
 }
 // End of book keeping functions
 
@@ -358,7 +359,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     } else if (sStr == "clear") {
-        if (iNum == CMD_OWNER) SafeWord();
+        if (iNum == CMD_OWNER) SafeWord(kID);
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
     } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
         if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
@@ -502,7 +503,7 @@ default {
                 g_iRLVOff = !g_iRLVOn;
                 setRlvState();
             }
-        } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord();
+        } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord("");
         else if (iNum==RLV_QUERY) {
             if (g_iRlvActive) llMessageLinked(LINK_ALL_OTHERS, RLV_RESPONSE, "ON", "");
             else llMessageLinked(LINK_ALL_OTHERS, RLV_RESPONSE, "OFF", "");
