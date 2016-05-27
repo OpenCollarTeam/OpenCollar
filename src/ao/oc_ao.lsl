@@ -349,7 +349,10 @@ MenuLoad(key kID) {
     string sNotecardName;
     do {
         sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, --i);
-        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") lButtons += sNotecardName;
+        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") {
+            if(llStringLength(sNotecardName) < 24) lButtons += sNotecardName;
+            else llOwnerSay(sNotecardName+"'s name is too long to be displayed in menus and cannot be used.");
+        }
     } while (i > 0);
     if (!llGetListLength(lButtons)) llOwnerSay("There aren't any animation sets installed!");
     Dialog(kID, sPrompt, llListSort(lButtons,1,TRUE), ["BACK"],"Load");
