@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160525.5          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160527.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -73,7 +73,6 @@ list g_lAnimStates = [ //http://wiki.secondlife.com/wiki/LlSetAnimationOverride
         ];
 
 string g_sJson_Anims = "{}";
-string g_sJsonErrors;
 integer g_iAO_ON;
 integer g_iSitAnimOn;
 string g_sSitAnim;
@@ -113,6 +112,12 @@ vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
 
 string g_sTexture = "Dark"; // current style
+
+integer JsonValid(string sTest) {
+    if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest))
+        return FALSE;
+    return TRUE;
+}
 
 FindButtons() { // collect buttons names & links
     g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for g_sTexture
@@ -225,7 +230,7 @@ SetAnimOverride() {
         sAnimState = llList2String(g_lAnimStates,i);
         if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
             sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
-            if (!~llSubStringIndex(g_sJsonErrors,sAnim)) {
+            if (JsonValid(sAnim)) {
                 if (sAnimState == "Walking" && g_sWalkAnim != "") 
                     sAnim = g_sWalkAnim;
                 else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
@@ -241,7 +246,7 @@ SetAnimOverride() {
         }
     } while (i--);
     llSetTimerEvent(g_iChangeInterval);
-//    llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+    //llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
 }
 
 SwitchStand() {
@@ -344,7 +349,10 @@ MenuLoad(key kID) {
     string sNotecardName;
     do {
         sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, --i);
-        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") lButtons += sNotecardName;
+        if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") {
+            if(llStringLength(sNotecardName) < 24) lButtons += sNotecardName;
+            else llOwnerSay(sNotecardName+"'s name is too long to be displayed in menus and cannot be used.");
+        }
     } while (i > 0);
     if (!llGetListLength(lButtons)) llOwnerSay("There aren't any animation sets installed!");
     Dialog(kID, sPrompt, llListSort(lButtons,1,TRUE), ["BACK"],"Load");
@@ -398,12 +406,22 @@ TranslateCollarCMD(string sCommand, key kID){
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
             llResetAnimationOverride("Standing");
+            if (~llSubStringIndex(g_sJson_Anims,"Turning Left"))
+                llResetAnimationOverride("Turning Left");
+            if (~llSubStringIndex(g_sJson_Anims,"Turning Right"))
+                llResetAnimationOverride("Turning Right");
             if (g_iSitAnywhereOn) {
                 g_iSitAnywhereOn = FALSE;
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
+            string sAnim = llJsonGetValue(g_sJson_Anims,["Turning Left"]);
+            if (JsonValid(sAnim))
+                llSetAnimationOverride("Turning Left", sAnim);
+            sAnim = llJsonGetValue(g_sJson_Anims,["Turning Right"]);
+            if (JsonValid(sAnim))
+                llSetAnimationOverride("Turning Right", sAnim);
             SwitchStand();
         }        
     } else if (~llSubStringIndex(sCommand,"menu")) {
@@ -457,7 +475,6 @@ default {
     state_entry() {
         if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) return;
         g_kWearer = llGetOwner();
-        g_sJsonErrors = JSON_FALSE+JSON_INVALID+JSON_NULL;
         g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
