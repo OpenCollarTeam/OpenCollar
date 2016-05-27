@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160525.5          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160527.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -398,12 +398,22 @@ TranslateCollarCMD(string sCommand, key kID){
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
             llResetAnimationOverride("Standing");
+            if (~llSubStringIndex(g_sJson_Anims,"Turning Left"))
+                llResetAnimationOverride("Turning Left");
+            if (~llSubStringIndex(g_sJson_Anims,"Turning Right"))
+                llResetAnimationOverride("Turning Right");
             if (g_iSitAnywhereOn) {
                 g_iSitAnywhereOn = FALSE;
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
+            string sAnim = llJsonGetValue(g_sJson_Anims,["Turning Left"]);
+            if (!~llSubStringIndex(g_sJsonErrors,sAnim))
+                llSetAnimationOverride("Turning Left", sAnim);
+            sAnim = llJsonGetValue(g_sJson_Anims,["Turning Right"]);
+            if (!~llSubStringIndex(g_sJsonErrors,sAnim))
+                llSetAnimationOverride("Turning Right", sAnim);
             SwitchStand();
         }        
     } else if (~llSubStringIndex(sCommand,"menu")) {
