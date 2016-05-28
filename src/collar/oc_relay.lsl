@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//             Relay - 160510.2          .*' /  .*' ; .*`- +'  `*'          //
+//             Relay - 160529.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
@@ -562,7 +562,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (g_lSources!=[]) iWSuccess = 2;
             else if (sChangevalue == "on") {
                 if (iNum == CMD_OWNER) g_iMinHelplessMode = TRUE;
-                sText = "Helplessness imposed.\n\nRestrictions from outside sources can't be cleard with safewording.\n";
+                sText = "Helplessness imposed.\n\nRestrictions from outside sources can't be cleard with the dedicated relay safeword command.\n";
                 g_iHelpless = TRUE;
             } else if (sChangevalue == "off") {
                 if (iNum == CMD_OWNER) g_iMinHelplessMode = FALSE;
