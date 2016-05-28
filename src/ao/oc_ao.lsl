@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160527.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160528.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -162,7 +162,7 @@ DefinePosition() {
     integer iPosition = llGetAttached();
     vector vSize = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iPosition && iPosition > 30) { //do this only when attached to the hud
+    if (iPosition != g_iPosition && iPosition > 30 && iPosition < 39) { //do this only when attached to the hud
         vector vOffset = <0, vSize.y/2+g_Yoff, vSize.z/2+g_Zoff>;
         if (iPosition == ATTACH_HUD_TOP_RIGHT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT) vOffset.z = -vOffset.z;
         if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM_LEFT) vOffset.y = -vOffset.y;
@@ -246,7 +246,8 @@ SetAnimOverride() {
         }
     } while (i--);
     llSetTimerEvent(g_iChangeInterval);
-    //llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+    llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
+   // llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
 }
 
 SwitchStand() {
@@ -405,24 +406,17 @@ TranslateCollarCMD(string sCommand, key kID){
     if (!llSubStringIndex(sCommand,"stand")) {
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
-            llResetAnimationOverride("Standing");
-            if (~llSubStringIndex(g_sJson_Anims,"Turning Left"))
-                llResetAnimationOverride("Turning Left");
-            if (~llSubStringIndex(g_sJson_Anims,"Turning Right"))
-                llResetAnimationOverride("Turning Right");
+            if (llGetAnimationOverride("Standing") != "")
+                llResetAnimationOverride("Standing");
+            llResetAnimationOverride("Turning Left");
+            llResetAnimationOverride("Turning Right");
             if (g_iSitAnywhereOn) {
                 g_iSitAnywhereOn = FALSE;
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
             g_iStandPause = FALSE;
-            string sAnim = llJsonGetValue(g_sJson_Anims,["Turning Left"]);
-            if (JsonValid(sAnim))
-                llSetAnimationOverride("Turning Left", sAnim);
-            sAnim = llJsonGetValue(g_sJson_Anims,["Turning Right"]);
-            if (JsonValid(sAnim))
-                llSetAnimationOverride("Turning Right", sAnim);
-            SwitchStand();
+            SetAnimOverride();
         }        
     } else if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
@@ -495,7 +489,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) llResetAnimationOverride("ALL");
-        else if (llGetAttached() <= 30) {
+        else if (llGetAttached() <= 30 || llGetAttached() >= 39) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
             llDetachFromAvatar();

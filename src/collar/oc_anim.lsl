@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160413.2                             //
+//                          Animator - 160528.3                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -308,22 +308,20 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
 
 PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods configured for each
     if (g_iTweakPoseAO) {
-        llSetAnimationOverride( "Standing", sAnim);
         if (g_sPoseMoveWalk) llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
         if (g_sPoseMoveRun) {
             if (llGetInventoryKey(g_sPoseMoveRun)) llSetAnimationOverride( "Running", g_sPoseMoveRun);
             else if (llGetInventoryKey("~run")) llSetAnimationOverride( "Running", "~run");
         }
-    } else { 
-        if (g_iRLVA_ON && g_iHoverOn) {
-            integer index = llListFindList(g_lHeightAdjustments,[sAnim]);
-            if (~index)
-                llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+llList2String(g_lHeightAdjustments,index+1)+"=force",g_kWearer);
-            else if (g_fStandHover)
-                llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
-        }
-        llStartAnimation(sAnim);
     }
+    if (g_iRLVA_ON && g_iHoverOn) {
+        integer index = llListFindList(g_lHeightAdjustments,[sAnim]);
+        if (~index)
+            llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+llList2String(g_lHeightAdjustments,index+1)+"=force",g_kWearer);
+        else if (g_fStandHover)
+            llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+    }
+    llStartAnimation(sAnim);
 }
 
 StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAnim to stop it, calls AO as nexessary
@@ -342,12 +340,10 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
 }
 
 UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods configured for each
-    if (g_iTweakPoseAO) llResetAnimationOverride("ALL");
-    else {
-        if (g_iRLVA_ON && g_iHoverOn) 
-            llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
-        llStopAnimation(sAnim);
-    }
+   if (g_iTweakPoseAO && llGetAnimationOverride("Standing") != "") llResetAnimationOverride("ALL");
+    if (g_iRLVA_ON && g_iHoverOn) 
+        llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+    llStopAnimation(sAnim);
 }
 
 CreateAnimList() {
@@ -441,15 +437,17 @@ UserCommand(integer iNum, string sStr, key kID) {
         if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
             if (sValue == "on") {
-                g_iTweakPoseAO = 1;
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"TweakPoseAO=1" , "");
-                RefreshAnim();
-                llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
+                if (llGetAnimationOverride("Standing") != "") {
+                    g_iTweakPoseAO = 1;
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"TweakPoseAO=1" , "");
+                    RefreshAnim();
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
+                } else llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide cannot be used together with a ServerSide AO.", kID);
             } else if (sValue == "off") {
                 g_iTweakPoseAO = 0;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"TweakPoseAO", "");
                 RefreshAnim();
-                llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now disabled.", kID);
+                if (llList2String(lParams,2) == "") llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now disabled.", kID);
             } else if (sValue == "none") {
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"PoseMoveWalk", "");
                 g_sPoseMoveWalk = "";
@@ -562,10 +560,13 @@ default {
                 else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
                 else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
                 else if (sToken == "PoseMoveRun") g_sPoseMoveRun = sValue;
-                else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
+               // else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
                 else if (sToken == "PostureRank") g_iLastPostureRank= (integer)sValue;
                 else if (sToken == "PoselockRank") g_iLastPoselockRank= (integer)sValue;
-                else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
+                else if (sToken == "TweakPoseAO") {
+                     if (llGetAnimationOverride("Standing") != "")
+                        g_iTweakPoseAO = (integer)sValue;
+                }
             } else if (llGetSubString(sToken,0,i) == "intern") {
                 sToken = llGetSubString(sToken,i+1,-1);
                 if (sToken == "AllowHover") {
