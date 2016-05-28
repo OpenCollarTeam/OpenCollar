@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160528.3                             //
+//                          Animator - 160528.4                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -442,7 +442,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"TweakPoseAO=1" , "");
                     RefreshAnim();
                     llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
-                } else llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide cannot be used together with a ServerSide AO.", kID);
+                } else llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required. www.opencollar.at/ao\n", kID);
             } else if (sValue == "off") {
                 g_iTweakPoseAO = 0;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"TweakPoseAO", "");
