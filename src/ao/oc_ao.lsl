@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160528.3          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160529.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -162,7 +162,7 @@ DefinePosition() {
     integer iPosition = llGetAttached();
     vector vSize = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iPosition && iPosition > 30 && iPosition < 39) { //do this only when attached to the hud
+    if (iPosition != g_iPosition && iPosition > 30) { //do this only when attached to the hud
         vector vOffset = <0, vSize.y/2+g_Yoff, vSize.z/2+g_Zoff>;
         if (iPosition == ATTACH_HUD_TOP_RIGHT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT) vOffset.z = -vOffset.z;
         if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM_LEFT) vOffset.y = -vOffset.y;
@@ -233,6 +233,7 @@ SetAnimOverride() {
             if (JsonValid(sAnim)) {
                 if (sAnimState == "Walking" && g_sWalkAnim != "") 
                     sAnim = g_sWalkAnim;
+                else if (sAnimState == "Sitting" && !g_iSitAnimOn) jump next;
                 else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
                     sAnim = g_sSitAnim;
                 else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
@@ -242,6 +243,7 @@ SetAnimOverride() {
                 if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) 
                     llSetAnimationOverride(sAnimState, sAnim);
                 else llOwnerSay(sAnim+" could not be found.");
+                @next;
             }
         }
     } while (i--);
@@ -489,7 +491,7 @@ default {
 
     attach(key kID) {
         if (kID == NULL_KEY) llResetAnimationOverride("ALL");
-        else if (llGetAttached() <= 30 || llGetAttached() >= 39) {
+        else if (llGetAttached() <= 30) {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
             llDetachFromAvatar();
@@ -557,12 +559,12 @@ default {
                         llResetAnimationOverride("Sitting");
                     } else if (g_sSitAnim != "") {
                         g_iSitAnimOn = TRUE;
-                        llSetAnimationOverride("Sitting",g_sSitAnim);
+                        if (g_iAO_ON) llSetAnimationOverride("Sitting",g_sSitAnim);
                     } else Notify(kID,"Sorry, the currently loaded animation set doesn't have any sits.",TRUE);
                     MenuAO(kID);
                 } else if (sMessage == "Stand Time") MenuInterval(kID);
                 else if (sMessage == "Next Stand") {
-                    SwitchStand();
+                    if (g_iAO_ON) SwitchStand();
                     MenuAO(kID);
                 } else if (!llSubStringIndex(sMessage,"Shuffle")) {
                     if (~llSubStringIndex(sMessage,"☑")) g_iShuffle = FALSE;
@@ -604,7 +606,8 @@ default {
                         if (sMenuType == "Sitting") g_sSitAnim = sMessage;
                         else if (sMenuType == "Sitting on Ground") g_sSitAnywhereAnim = sMessage;
                         else if (sMenuType == "Walking") g_sWalkAnim = sMessage;
-                        llSetAnimationOverride(sMenuType,sMessage);
+                        if (g_iAO_ON && (sMenuType != "Sitting" || g_iSitAnimOn))
+                            llSetAnimationOverride(sMenuType,sMessage);
                     } else llOwnerSay("No "+sMenuType+" animation set.");
                     MenuChooseAnim(kID,sMenuType);
                 }
