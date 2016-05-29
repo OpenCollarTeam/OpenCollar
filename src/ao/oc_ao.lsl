@@ -50,8 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "⁶⋅¹⋅¹";
-float g_fBuildVersion = 160528.3;
+string g_sFancyVersion = "⁶⋅¹⋅²";
+float g_fBuildVersion = 160529.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
