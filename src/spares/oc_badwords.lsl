@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Badwords - 160207.1                             //
+//                          Badwords - 160621.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -59,8 +59,8 @@ string g_sAppVersion = "¹⋅¹";
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
-//integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
@@ -183,7 +183,7 @@ ParseAnimList(string sStr) {
             g_lAnims = llDeleteSubList(g_lAnims,i,i);
             if (sTest == "~shock") g_iDefaultAnim = TRUE;
         }
-    } while (i);
+    } while (i>0);
 }
 
 UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
@@ -357,7 +357,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: 
 
 default {
     on_rez(integer iParam) {
-        ListenControl();
+        //ListenControl();
     }
 
     state_entry() {
@@ -370,10 +370,10 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         //Debug("Got message:"+(string)iNum+" "+sStr);
-        if (kID == g_kWearer || iNum == CMD_OWNER) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+g_sSubMenu, "");
-            llMessageLinked(LINK_ANIM, ANIM_LIST_REQUEST,"","");
+            //llMessageLinked(LINK_ANIM, ANIM_LIST_REQUEST,"","");
         } else if (iNum == ANIM_LIST_RESPONSE) ParseAnimList(sStr);
         else if (iNum == CMD_SAFEWORD) {
             if(g_sBadWordSound != g_sNoSound) llStopSound();
@@ -391,7 +391,10 @@ default {
                 else if (sToken == "sound") g_sBadWordSound = sValue;
                 else if (sToken == "words") g_lBadWords = llParseString2List(llToLower(sValue), [","], []);
                 else if (sToken == "penance") g_sPenance = sValue;
+            }
+            if (sStr == "settings=sent") {
                 ListenControl();
+                llMessageLinked(LINK_ANIM, ANIM_LIST_REQUEST,"","");
             }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
