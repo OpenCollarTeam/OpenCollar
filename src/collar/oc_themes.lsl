@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160410.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160629.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -164,7 +164,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 LooksMenu(key kID, integer iAuth) {
-    Dialog(kID, "\nChoose which look you want to change for your %DEVICETYPE%.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
+    Dialog(kID, "\nHere you can change cosmetic settings of the %DEVICETYPE%. \"Themes\" will also be applied to any matching cuffs.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
 }
 
 StyleMenu(key kID, integer iAuth) {
@@ -235,8 +235,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         iMask=ELEMENT_NOCOLOR;
         sTypeNice = "Color";
     }
-    string sPrompt = "\nSelect an element of the %DEVICETYPE% who's "+sTypeNice+" should be changed.\n\nChoose *Touch* if you want to select the part by directly clicking on the %DEVICETYPE%.";
-
+    string sPrompt = "\nSelect an element to adjust its "+sTypeNice+".";
     list lButtons;
     integer numElements = g_iNumElements;
     while(numElements--) {
@@ -246,7 +245,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         }
     }
     lButtons = llListSort(lButtons, 1, TRUE);
-    Dialog(kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
+    Dialog(kAv, sPrompt, lButtons, ["ALL", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -371,7 +370,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     else llMessageLinked(LINK_ROOT, iNum, "settings", kID);
                     llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
-            }  else if (sCommand == "looks") LooksMenu(kID,iNum);
+            } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
             else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
                 //get currently shown state
@@ -486,7 +485,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 if (sTextureShortName=="") {  //no texture name supplied, send texture menu for this element
                     TextureMenu(kID, 0, iNum, sStr);
                 } else if (! ~iTextureIndex) {  //invalid texture name supplied, send texture menu for this element
-                    llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"No texture "+sTextureShortName+" found, please choose one from the menu.",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Sorry! The \""+sTextureShortName+"\" texture doesn't fit on this particular element, please try another.",kID);
                     if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {  //valid element and texture names supplied, apply texture
                     //get key from long name
