@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Timer - 160413.1                              //
+//                            Timer - 160704.3                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⋅¹";
+string g_sAppVersion = "¹⋅²";
 
 string g_sSubMenu = "Timer";
 string g_sParentMenu = "Apps";
@@ -77,6 +77,7 @@ integer ATTACHMENT_FORWARD = 610;
 integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 integer REBOOT  = -1000;
+integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
 integer LINK_RLV    = 4;
 integer LINK_SAVE   = 5;
@@ -253,6 +254,7 @@ TimerFinish() {
     g_iOnRunning=g_iRealRunning=0;
     g_iOnTimeUpAt=g_iRealTimeUpAt=0;
     g_iWhoCanChangeTime=504;
+    llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout false","");
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Yay! Timer expired!",g_kWearer);
     llMessageLinked(LINK_SET, TIMER_EVENT, "end", "");
 }
@@ -263,6 +265,7 @@ TimerStart(integer perm) {
     if (g_iRealSetTime) {
         g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
 //        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
+        llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout true","");
         llMessageLinked(LINK_SET, TIMER_EVENT, "START", "RL");
         g_iRealRunning=1;
     } else g_iRealRunning=3;
@@ -270,15 +273,16 @@ TimerStart(integer perm) {
     if (g_iOnSetTime) {
         g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
 //        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
+        llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout true","");
         llMessageLinked(LINK_SET, TIMER_EVENT, "START", "Online Timer");
         g_iOnRunning=1;
     } else g_iOnRunning=3;
 }
 
 UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
-    if (iAuth == CMD_WEARER && sStr == "menu") {
-        if (g_iOnRunning || g_iRealRunning) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0You are locked out of the %DEVICETYPE% until the timer expires",kID);
+    if ((g_iOnRunning || g_iRealRunning) && kID == g_kWearer) {
+        if (!llSubStringIndex(llToLower(sStr),"timer")) {
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You can't access here until the timer went off.",kID);
             return;
         }
     }
@@ -539,6 +543,7 @@ default {
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
+            else if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
