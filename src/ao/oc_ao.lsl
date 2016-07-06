@@ -510,7 +510,7 @@ default {
             if (sButton == "Menu") 
                 MenuAO(g_kWearer);
             else if (sButton == "SitAny") {
-                if (!g_iLocked) ToggleSitAnywhere();
+                ToggleSitAnywhere();
             } else if (llSubStringIndex(llToLower(sButton),"ao")>=0) {
                 g_iHidden = !g_iHidden;
                 DefinePosition();
