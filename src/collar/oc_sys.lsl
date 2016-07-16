@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 160418.3                              //
+//                           System - 160616.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -48,7 +48,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/collar       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.2.5";
 string g_sFancyVersion="⁶⋅²⋅⁵";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 160703.2;
+float g_fBuildVersion = 160716.1;
 
 key g_kWearer;
 
@@ -150,13 +150,13 @@ key github_version_request;
 string g_sDistributor;
 string g_sOtherDist;
 string g_sDistCard = ".distributor";
-string url_check = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~distributor";
+string url_check = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~distributor";
 key g_kDistCheck;
 integer g_iOffDist;
 key g_kNCkey;
-string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~version";
-string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~news";
-string license_blob = "https://github.com/VirtualDisgrace/Collar/blob/live/LICENSE";
+string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~version";
+string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~news";
+string license_blob = "https://github.com/VirtualDisgrace/opencollar/blob/master/LICENSE";
 string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
@@ -319,7 +319,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "settings") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) SettingsMenu(kID, iNum);
     } else if (sStr == "contact") {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         g_kCurrentUser = kID;
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "menuto") {
@@ -813,7 +813,7 @@ default
             g_iWaitUpdate = FALSE;
             llListenRemove(g_iUpdateHandle);
             if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
-                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);

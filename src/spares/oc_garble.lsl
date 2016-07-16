@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Garble - 170117.1                             //
+//                            Garble - 160117.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Sumi Perl, littlemousy, Romka Swallowtail et al.        //
@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/spares          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/spares       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 

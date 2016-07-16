@@ -48,13 +48,15 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/collar       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
 //scans for sounds starting with: bell_
 //show/hide for elements named: Bell
 //2009-01-30 Cleo Collins - 1. draft
+
+string g_sAppVersion = "¹⋅¹";
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
@@ -152,7 +154,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 BellMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/bell.html Bell]\n\n";
+    string sPrompt = "\n[http://www.opencollar.at/bell.html Bell]\t"+g_sAppVersion+"\n\n";
     list lMyButtons;
     if (g_iBellOn>0) {
         lMyButtons+= g_sBellOff;

@@ -50,9 +50,11 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/collar       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
+
+string g_sAppVersion = "¹⋅⁶";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
@@ -446,7 +448,7 @@ MainMenu(key kID, integer iAuth) {
     if (g_iScroll) lButtons += ["☑ Scroll"];
     else lButtons += ["☐ Scroll"];
 
-    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\n\nCustomize the %DEVICETYPE%'s label!";
+    string sPrompt = "\n[http://www.opencollar.at/label.html Label]\t"+g_sAppVersion+"\n\nCustomize the %DEVICETYPE%'s label!";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"main");
 }
 

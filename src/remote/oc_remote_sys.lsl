@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/remote          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/remote       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -262,7 +262,7 @@ integer PicturePrim() {
 default {
     state_entry() {
         g_kOwner = llGetOwner();
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -276,7 +276,7 @@ default {
     }
     
     on_rez(integer iStart) {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
     }
     
     touch_start(integer iNum) {

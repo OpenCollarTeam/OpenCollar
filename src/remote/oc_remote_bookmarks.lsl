@@ -47,7 +47,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/remote          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/remote       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -305,7 +305,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, "TextBoxIdLoca
 ReadDestinations() {     
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~bookmarks",[HTTP_METHOD, "GET"], "");
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET"], "");
     //start re-reading the notecards
     if(llGetInventoryKey(g_sCard))
         g_kDataID = llGetNotecardLine(g_sCard, 0);

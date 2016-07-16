@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 160201.1                            //
+//                          Bookmarks - 160716.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -48,11 +48,11 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/OpenCollar/opencollar/tree/master/src/collar          //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/collar       //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⁵¹⁰²⁴⋅¹";
+string g_sAppVersion = "¹⋅⁰";
 
 string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
@@ -351,11 +351,9 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth,"TextBox
     return 0;
 }
 
-ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from https://raw.githubusercontent.com/OpenCollar/opencollar/master/web/~bookmarks
+ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from web
     key kAv;
-   // webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/whisper/LSL/~bookmarks",
-       //[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/Collar/live/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards
