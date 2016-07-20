@@ -711,7 +711,7 @@ default {
                                         }
                                     }
 
-                                    if (succes<0) { // old themes format
+                                    if (succes==0) { // old themes format
                                         sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
                                         if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
                                         sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
@@ -761,4 +761,3 @@ default {
 */
     }
 }
-
