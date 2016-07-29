@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160629.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160720.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -683,8 +683,7 @@ default {
                             //do what the notecard says
                             list lParams = llParseStringKeepNulls(sData,["~"],[]);
                             string element = llStringTrim(llList2String(lParams,0),STRING_TRIM);
-                            if (element != "")
-                            {
+                            if (element != "") {
                                 if (~llSubStringIndex(element,"particle")) {
                                    // Debug("[good line]:"+sData);
                                    // llMessageLinked(LINK_THIS, CMD_WEARER, "particle reset", "");
@@ -695,18 +694,35 @@ default {
                                     }
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
-                                    jump next ;
+                                } else {
+                                    list commands = ["texture","color","shiny","glow","hide","show"];
+                                    integer succes = 0;
+                                    integer i;
+                                    for (i = 1; i < llGetListLength(lParams); i++) {
+                                        string substring = llStringTrim(llList2String(lParams,i),STRING_TRIM);
+                                        if (substring != "") {
+                                            list params = llParseString2List(substring, ["="], []);
+                                            string cmd = llList2String(params,0);
+                                            sData = llList2String(params,1);
+                                            if (llListFindList(commands, [cmd])!=-1) {
+                                                UserCommand(g_iSetStyleAuth, cmd+" "+element+" "+sData, g_kSetStyleUser, FALSE);
+                                                succes++;
+                                            }
+                                        }
+                                    }
+
+                                    if (succes==0) { // old themes format
+                                        sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
+                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                        sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
+                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                        sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
+                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                        sData = llStringTrim(llList2String(lParams,4),STRING_TRIM);
+                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "glow " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                    }
                                 }
-                                sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
-                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
-                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                sData = llStringTrim(llList2String(lParams,4),STRING_TRIM);
-                                if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "glow " + element+" "+sData, g_kSetStyleUser, FALSE);
                             }
-                            @next;
                         }
                         g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
                     }
