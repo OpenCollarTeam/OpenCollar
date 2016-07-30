@@ -711,15 +711,11 @@ default {
                                         }
                                     }
 
-                                    if (succes==0) { // old themes format
-                                        sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "texture " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                        sData = llStringTrim(llList2String(lParams,2),STRING_TRIM);
-                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "color " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                        sData = llStringTrim(llList2String(lParams,3),STRING_TRIM);
-                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "shiny " + element+" "+sData, g_kSetStyleUser, FALSE);
-                                        sData = llStringTrim(llList2String(lParams,4),STRING_TRIM);
-                                        if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, "glow " + element+" "+sData, g_kSetStyleUser, FALSE);
+                                    if (succes==0) { // old themes format                                        
+                                        for (i = 0; i < 4; i++) {
+                                            sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
+                                            if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetStyleUser, FALSE);
+                                        }
                                     }
                                 }
                             }
