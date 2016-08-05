@@ -192,12 +192,12 @@ GlowMenu(key kID, integer iAuth, string sElement) {
 TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
     list lElementTextures;
     integer iCustomTextureFound;
-
+    string sTexElement = llList2String(llParseString2List(sElement,[" "],[]),-1);
     integer iNumTextures=llGetListLength(g_lTextures);
     while (iNumTextures--) {
         string sTextureName=llList2String(g_lTextures,iNumTextures);
         if (! ~llListFindList(lElementTextures,[sTextureName])) {  //we can ignore textures we already know about
-            if (llSubStringIndex(sTextureName,sElement+"~")) {  //a texture starting with sElement~ is just for me.  Add it
+            if (llSubStringIndex(sTextureName,sTexElement+"~")==0) {  //a texture starting with sElement~ is just for me.  Add it
                 lElementTextures+=llList2String(g_lTextureShortNames,iNumTextures);
                 if ((!iCustomTextureFound) && llGetListLength(lElementTextures) ) {  //this is the first custom texture we found, we don't want general textures.  Clear thelist and start again
                     iCustomTextureFound=1;
@@ -209,7 +209,6 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
             }
         }
     }
-    string sTexElement = llList2String(llParseString2List(sElement,[" "],[]),-1);
     Dialog(kID, "\nSelect a texture to apply to "+sTexElement+".", lElementTextures, ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
 }
 
