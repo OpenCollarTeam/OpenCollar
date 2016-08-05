@@ -204,7 +204,7 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
                     lElementTextures=[];
                     iNumTextures=llGetListLength(g_lTextures);
                 }
-            } else if (~llSubStringIndex(sTextureName,"~") && ! iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
+            } else if (!~llSubStringIndex(sTextureName,"~") && !iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
                 lElementTextures+=llList2String(g_lTextureShortNames,iNumTextures);
             }
         }
