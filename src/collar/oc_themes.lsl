@@ -115,12 +115,6 @@ integer TOUCH_RESPONSE      = -9502;
 
 key g_kWearer;
 
-integer ELEMENT_NOTEXTURE   =  1;
-integer ELEMENT_NOCOLOR     =  2;
-integer ELEMENT_NOSHINY     =  4;
-integer ELEMENT_NOGLOW      =  8;
-//integer ELEMENT_NOHIDE      = 16;
-
 list g_lShiny = ["none","low","medium","high","specular"];
 list g_lHide = ["Hide","Show"];
 list g_lGlows;
@@ -222,17 +216,17 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
     string sTypeNice;
     sType=llToLower(sType);
     if (sType == "texture") {
-        iMask=ELEMENT_NOTEXTURE;
+        iMask=1;
         sTypeNice = "Texture";
+    } else if (sType == "color") {
+        iMask=2;
+        sTypeNice = "Color";
     } else if (sType == "shiny") {
-        iMask=ELEMENT_NOSHINY;
+        iMask=4;
         sTypeNice = "Shininess";
     } else if (sType == "glow") {
-        iMask=ELEMENT_NOGLOW;
+        iMask=8;
         sTypeNice = "Glow";
-    } else if (sType == "color") {
-        iMask=ELEMENT_NOCOLOR;
-        sTypeNice = "Color";
     }
     string sPrompt = "\nSelect an element to adjust its "+sTypeNice+".";
     list lButtons;
@@ -310,7 +304,7 @@ BuildElementsList(){
             //prim desc will be elementtype~notexture(maybe)
             list lParams = llParseString2List(llStringTrim(sElement,STRING_TRIM), ["~"], []);
             string sElementName=llList2String(lParams,0);
-            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow
+            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow, 16=nohide
             if (~llListFindList(lParams,["notexture"])) iLinkFlags = iLinkFlags | 1;
             if (~llListFindList(lParams,["nocolor"])) iLinkFlags = iLinkFlags | 2;
             if (~llListFindList(lParams,["noshiny"])) iLinkFlags = iLinkFlags | 4;
