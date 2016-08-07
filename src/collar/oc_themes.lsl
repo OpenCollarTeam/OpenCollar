@@ -133,8 +133,8 @@ integer g_iStylesNotecardLine;
 integer g_iLeashParticle;
 integer g_iLooks;
 
-//string g_sSettingToken = "themes_";
-string g_sGlobalToken = "global_";
+//command list - used for check in UserCommand()
+list commands = ["styles", "themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -238,7 +238,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         }
     }
     lButtons = llListSort(lButtons, 1, TRUE);
-    Dialog(kAv, sPrompt, lButtons, ["ALL", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
+    Dialog(kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -334,10 +334,10 @@ BuildElementsList(){
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
-   if ( llSubStringIndex(sStrLower,"styles")==0 || sStrLower == "menu styles" || llSubStringIndex(sStrLower,"themes")==0 || sStrLower == "menu themes" || llSubStringIndex(sStrLower,"hide")==0 || llSubStringIndex(sStrLower,"show")==0 || llSubStringIndex(sStrLower,"stealth")==0 ||  llSubStringIndex(sStrLower,"color")==0 || sStrLower == "menu color" || llSubStringIndex(sStrLower,"texture")==0 || sStrLower == "menu texture" || llSubStringIndex(sStrLower,"shiny")==0 || sStrLower == "menu shiny" || llSubStringIndex(sStrLower,"glow")==0 || sStrLower == "menu glow" || sStrLower == "looks") {  //this is for us....
-
+    list lParams = llParseString2List(sStrLower, [" "], []);
+    if (~llListFindList(commands, [llList2String(lParams,0)]) || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
         if (kID == g_kWearer || iNum == CMD_OWNER) {  //only allowed users can...
-            list lParams = llParseString2List(sStr, [" "], []);
+            lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
             string sElement=llList2String(lParams,1);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
@@ -537,7 +537,7 @@ default {
             integer i = llSubStringIndex(sID, "_");
             string sCategory=llGetSubString(sID, 0, i);
             string sToken = llGetSubString(sID, i + 1, -1);
-            if (sID == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
+            if (sID == "global_DeviceType") g_sDeviceType = sValue;
             else if (sID == "intern_looks") g_iLooks = (integer)sValue;
             else if (sCategory == "texture_") {
                 i = llListFindList(g_lTextureDefaults, [sToken]);
@@ -704,7 +704,7 @@ default {
                                         }
                                     }
 
-                                    if (succes==0) { // old themes format                                        
+                                    if (succes==0) { // old themes format
                                         for (i = 0; i < 4; i++) {
                                             sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
                                             if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetStyleUser, FALSE);
