@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160808.2           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160808.3           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -203,7 +203,7 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
             }
         }
     }
-    Dialog(kID, "\nSelect a texture to apply to "+sTexElement+".", lElementTextures, ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
+    Dialog(kID, "\nSelect a texture to apply to "+sTexElement+".",llListSort(lElementTextures,1,1), ["BACK"], iPage, iAuth, "TextureMenu~"+sElement);
 }
 
 ColorMenu(key kID, integer iPage, integer iAuth, string sBreadcrumbs) {
