@@ -1,0 +1,7 @@
+# This is a sample of OpenCollar Six settings
+# To print accurate settings, type: <prefix> print settings
+# If settings are loaded from a URL, we need RAW data without meta-tags
+# Settings loaded from URLs are only fetched once and then stored locally
+
+GLOBAL=DeviceName~Punk Choker~channel~23,TRUE~safeword~Mayday
+AUTH=trust~00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000~owner~00000000-0000-0000-0000-000000000000~public~1~block~00000000-0000-0000-0000-000000000000

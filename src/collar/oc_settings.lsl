@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160729.1                             //
+//                          Settings - 160808.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -97,7 +97,7 @@ integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
-string g_sSampleURL = "https://goo.gl/T4lcWx";
+string g_sSampleURL = "https://goo.gl/adCn8Y";
 
 //string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
