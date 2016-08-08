@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 160720.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 160808.2           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -122,19 +122,19 @@ list g_lGlow = ["none",0.0,"low",0.1,"medium",0.2,"high",0.4,"veryHigh",0.8];
 integer g_iNumHideableElements;
 integer g_iNumElements;
 integer g_iCollarHidden;
-string g_sStylesCard=".themes";
-key g_kStylesNotecardRead;
-key g_kStylesCardUUID;
-integer g_iSetStyleAuth;
-key g_kSetStyleUser;
-string g_sStylesNotecardReadType;
-list g_lStyles;
-integer g_iStylesNotecardLine;
+string g_sThemesCard=".themes";
+key g_kThemesNotecardRead;
+key g_kThemesCardUUID;
+integer g_iSetThemeAuth;
+key g_kSetThemeUser;
+string g_sThemesNotecardReadType;
+list g_lThemes;
+integer g_iThemesNotecardLine;
 integer g_iLeashParticle;
 integer g_iLooks;
 
 //command list - used for check in UserCommand()
-list commands = ["styles", "themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
+list commands = ["themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -161,14 +161,14 @@ LooksMenu(key kID, integer iAuth) {
     Dialog(kID, "\nHere you can change cosmetic settings of the %DEVICETYPE%. \"Themes\" will also be applied to any matching cuffs.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
 }
 
-StyleMenu(key kID, integer iAuth) {
+ThemeMenu(key kID, integer iAuth) {
     list lButtons;
     integer i;
-    while (i < llGetListLength(g_lStyles)) {
-        lButtons += llList2List(g_lStyles,i,i);
+    while (i < llGetListLength(g_lThemes)) {
+        lButtons += llList2List(g_lThemes,i,i);
         i=i+2;
     }
-    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], 0, iAuth, "StyleMenu~styles");
+    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], 0, iAuth, "ThemeMenu~themes");
     lButtons=[];
 }
 
@@ -238,7 +238,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         }
     }
     lButtons = llListSort(lButtons, 1, TRUE);
-    Dialog(kAv, sPrompt, lButtons, ["ALL", "*Touch*", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
+    Dialog(kAv, sPrompt, lButtons, ["ALL", "BACK"], iPage, iAuth, "ElementMenu~"+sType);
 }
 
 string LinkType(integer iLinkNum, string sSearchString) {
@@ -251,15 +251,15 @@ string LinkType(integer iLinkNum, string sSearchString) {
     else return llList2String(lParams, 0);
 }
 
-BuildStylesList() {
-    if(llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) {
-        g_kStylesCardUUID=llGetInventoryKey(g_sStylesCard);
-        g_lStyles=[];
-        g_iStylesNotecardLine=0;
-        g_sStylesNotecardReadType="initialize";
-        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
+BuildThemesList() {
+    if(llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD) {
+        g_kThemesCardUUID=llGetInventoryKey(g_sThemesCard);
+        g_lThemes=[];
+        g_iThemesNotecardLine=0;
+        g_sThemesNotecardReadType="initialize";
+        g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,g_iThemesNotecardLine);
     //} else {
-        //Debug("No styles card:"+g_sStylesCard);
+        //Debug("No themes card:"+g_sThemesCard);
     }
 }
 
@@ -341,18 +341,18 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             string sCommand=llToLower(llList2String(lParams,0));
             string sElement=llList2String(lParams,1);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
-            if (sCommand == "themes" || sStrLower == "menu themes" || sCommand == "styles" || sStrLower == "menu styles") {
-                integer iElementIndex = llListFindList(g_lStyles,[sElement]);
+            if (sCommand == "themes" || sStrLower == "menu themes") {
+                integer iElementIndex = llListFindList(g_lThemes,[sElement]);
                 if (~iElementIndex) {
-                    g_sStylesNotecardReadType="processing";
-                    g_iStylesNotecardLine = 1 + llList2Integer(g_lStyles,iElementIndex+1);
-                    g_kSetStyleUser=kID;
-                    g_iSetStyleAuth=iNum;
+                    g_sThemesNotecardReadType="processing";
+                    g_iThemesNotecardLine = 1 + llList2Integer(g_lThemes,iElementIndex+1);
+                    g_kSetThemeUser=kID;
+                    g_iSetThemeAuth=iNum;
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
                     llMessageLinked(LINK_ROOT,601,"themes "+sElement,g_kWearer);
-                    g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,g_iStylesNotecardLine);
-                } else if (g_kStylesCardUUID) {
-                    if (g_iThemesReady) StyleMenu(kID,iNum);
+                    g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,g_iThemesNotecardLine);
+                } else if (g_kThemesCardUUID) {
+                    if (g_iThemesReady) ThemeMenu(kID,iNum);
                     else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
                         if (g_iLooks) LooksMenu(kID, iNum);
@@ -524,7 +524,7 @@ default {
         g_kWearer = llGetOwner();
         BuildTexturesList();
         BuildElementsList();
-        BuildStylesList();
+        BuildThemesList();
         //Debug("Starting");
     }
 
@@ -575,14 +575,15 @@ default {
                     if (sMessage == "BACK") LooksMenu(kAv, iAuth);
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
-                        if (sMessage == "*Touch*") {
+                        UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
+                    /*  if (sMessage == "*Touch*") {
                             llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Please touch the part of the %DEVICETYPE% you want to change. Press ctr+alt+T to see invisible parts.",kAv);
                             key kTouchID = llGenerateKey();
                             llMessageLinked(LINK_ROOT, TOUCH_REQUEST, (string)kAv + "|3|" + (string)iAuth, kTouchID);  //3 = touchStart and touchEnd
                             integer iIndex = llListFindList(g_lMenuIDs, [kID]);
                             if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kTouchID, sMenuType], iIndex, iIndex + g_iMenuStride - 1);
                             else g_lMenuIDs += [kID, kTouchID, sMenuType];
-                        } else UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
+                        } else UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);*/
                     }
                 } else if (sMenu == "LooksMenu~menu" && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu Settings",kAv);
                  else {
@@ -590,7 +591,7 @@ default {
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
                     if (sMessage == "BACK") {
-                        if (~llSubStringIndex(sMenu,"StyleMenu~styles")) {
+                        if (~llSubStringIndex(sMenu,"ThemeMenu~themes")) {
                             if (g_iLooks) LooksMenu(kAv, iAuth);
                             else llMessageLinked(LINK_ROOT, iAuth, "menu Settings", kAv);
                         } else  ElementMenu(kAv, 0, iAuth, sBackMenu);
@@ -647,30 +648,30 @@ default {
                 }
                 g_kTexturesNotecardRead=llGetNotecardLine(g_sTextureCard,++g_iTexturesNotecardLine);
             }
-        } else if (kID==g_kStylesNotecardRead) {
+        } else if (kID==g_kThemesNotecardRead) {
             if(sData!=EOF) {
                 sData=llStringTrim(sData,STRING_TRIM);
                 if(sData!="" && llSubStringIndex(sData,"#") != 0) {
                     if( llGetSubString(sData,0,0) == "[" ){
-                        //Debug("("+g_sStylesNotecardReadType+")[good line]:"+sData);
+                        //Debug("("+g_sThemesNotecardReadType+")[good line]:"+sData);
                         sData = llGetSubString(sData,llSubStringIndex(sData,"[")+1,llSubStringIndex(sData,"]")-1);
                         sData = llStringTrim(sData,STRING_TRIM);
-                        if (g_sStylesNotecardReadType=="initialize") {  //reading notecard to determine style names
-                            g_lStyles += [sData,g_iStylesNotecardLine];
-                        } else if (sData==g_sStylesNotecardReadType) {  //we just found our section
-                            g_sStylesNotecardReadType="processing";
+                        if (g_sThemesNotecardReadType=="initialize") {  //reading notecard to determine theme names
+                            g_lThemes += [sData,g_iThemesNotecardLine];
+                        } else if (sData==g_sThemesNotecardReadType) {  //we just found our section
+                            g_sThemesNotecardReadType="processing";
                             g_sCurrentTheme = sData;
-                        } else if (g_sStylesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
+                        } else if (g_sThemesNotecardReadType=="processing") {  //we just found the start of the next section, we're done
                            // if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                            // else g_iLeashParticle = FALSE;
-                            //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
-                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
-                            UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
+                            //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
+                            UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
                             return;
                         }
-                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+                        g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
                     } else {
-                        if (g_sStylesNotecardReadType=="processing"){
+                        if (g_sThemesNotecardReadType=="processing"){
                           // Debug("[good line]:"+sData);
                           // Debug("iLeash="+(string)g_iLeashParticle);
                             //do what the notecard says
@@ -698,7 +699,7 @@ default {
                                             string cmd = llList2String(params,0);
                                             sData = llList2String(params,1);
                                             if (llListFindList(commands, [cmd])!=-1) {
-                                                UserCommand(g_iSetStyleAuth, cmd+" "+element+" "+sData, g_kSetStyleUser, FALSE);
+                                                UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                                 succes++;
                                             }
                                         }
@@ -707,25 +708,25 @@ default {
                                     if (succes==0) { // old themes format
                                         for (i = 0; i < 4; i++) {
                                             sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
-                                            if (sData != "" && sData != ",,") UserCommand(g_iSetStyleAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetStyleUser, FALSE);
+                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                         }
                                     }
                                 }
                             }
                         }
-                        g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+                        g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
                     }
-                } else g_kStylesNotecardRead=llGetNotecardLine(g_sStylesCard,++g_iStylesNotecardLine);
+                } else g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
             } else {
-                if (g_sStylesNotecardReadType=="processing") {  //we just found the end of file, we're done
+                if (g_sThemesNotecardReadType=="processing") {  //we just found the end of file, we're done
                    // if (!g_iLeashParticle) llMessageLinked(LINK_SET, CMD_WEARER, "particle reset", "");
                    // else g_iLeashParticle = FALSE;
-                    //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetStyleUser);
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetStyleUser);
-                    UserCommand(g_iSetStyleAuth,"styles",g_kSetStyleUser,TRUE);
+                    //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
+                    UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
                 } else {
                     g_iThemesReady = TRUE;
-                    //Debug(llDumpList2String(g_lStyles,","));
+                    //Debug(llDumpList2String(g_lThemes,","));
                 }
             }
         }
@@ -737,8 +738,8 @@ default {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
             else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
-            if (llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sStylesCard)!=g_kStylesCardUUID) BuildStylesList();
-            else if (!llGetInventoryType(g_sStylesCard)==INVENTORY_NOTECARD) g_kStylesCardUUID = "";
+            if (llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sThemesCard)!=g_kThemesCardUUID) BuildThemesList();
+            else if (!llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD) g_kThemesCardUUID = "";
         }
 /*
         if (iChange & CHANGED_REGION) {
