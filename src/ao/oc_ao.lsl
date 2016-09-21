@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160920.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160921.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅¹⋅⁴";
-float g_fBuildVersion = 160920.1;
+float g_fBuildVersion = 160921.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -676,12 +676,12 @@ default {
                 if (llGetSubString(sData,0,0) != "[") jump next;
                 string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
                 if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
-                if (sAnimationState == "Crouch Walking") sAnimationState = "CrouchWalking";
-                if (sAnimationState == "Falling") sAnimationState = "Falling Down";
-                if (sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
-                if (sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
-                if (sAnimationState == "Flying Slow") sAnimationState = "FlyingSlow";
-                if (sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
+                else if (sAnimationState == "Crouch Walking") sAnimationState = "CrouchWalking";
+                else if (sAnimationState == "Falling") sAnimationState = "Falling Down";
+                else if (sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
+                else if (sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
+                else if (sAnimationState == "Flying Slow") sAnimationState = "FlyingSlow";
+                else if (sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
                 if (!~llListFindList(g_lAnimStates,[sAnimationState])) jump next;
                 if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
