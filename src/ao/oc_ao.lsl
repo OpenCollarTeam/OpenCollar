@@ -688,7 +688,7 @@ default {
                 else if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
                 else if (sAnimationState == "Jump.N") sAnimationState = "Jumping";
                 //else if (sAnimationState == "") sAnimationState = "Soft Landing";
-                else if (sAnimationState == "Hover.N") sAnimationState = "Taking Off";
+                //else if (sAnimationState == "") sAnimationState = "Taking Off";
                 else if (sAnimationState == "Hover.N") sAnimationState = "Hovering";
                 else if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
                 else if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
