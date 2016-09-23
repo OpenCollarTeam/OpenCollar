@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160921.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160923.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -675,17 +675,33 @@ default {
             if (sData != EOF) {
                 if (llGetSubString(sData,0,0) != "[") jump next;
                 string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
-                if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
-                else if (sAnimationState == "Crouch Walking") sAnimationState = "CrouchWalking";
-                else if (sAnimationState == "Falling") sAnimationState = "Falling Down";
-                else if (sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
-                else if (sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
+                // Translate common ZHAOII, Oracul and AX anim state values
+                if (sAnimationState == "Stand.1" || sAnimationState == "Stand.2" || sAnimationState == "Stand.3") sAnimationState = "Standing";
+                else if (sAnimationState == "Walk.N") sAnimationState = "Walking";
+                //else if (sAnimationState == "") sAnimationState = "Running";
+                else if (sAnimationState == "Turn.L") sAnimationState = "Turning Left";
+                else if (sAnimationState == "Turn.R") sAnimationState = "Turning Right";
+                else if (sAnimationState == "Sit.N") sAnimationState = "Sitting";
+                else if (sAnimationState == "Sit.G" || sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
+                else if (sAnimationState == "Crouch") sAnimationState = "Crouching";
+                else if (sAnimationState == "Walk.C" || sAnimationState == "Crouch Walking") sAnimationState = "CrouchWalking";
+                else if (sAnimationState == "Jump.P" || sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
+                else if (sAnimationState == "Jump.N") sAnimationState = "Jumping";
+                //else if (sAnimationState == "") sAnimationState = "Soft Landing";
+                //else if (sAnimationState == "") sAnimationState = "Taking Off";
+                else if (sAnimationState == "Hover.N") sAnimationState = "Hovering";
+                else if (sAnimationState == "Hover.U" || sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
+                else if (sAnimationState == "Hover.D" || sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
+                else if (sAnimationState == "Fly.N") sAnimationState = "Flying";
                 else if (sAnimationState == "Flying Slow") sAnimationState = "FlyingSlow";
-                else if (sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
+                else if (sAnimationState == "Land.N") sAnimationState = "Landing";
+                else if (sAnimationState == "Falling") sAnimationState = "Falling Down";
+                else if (sAnimationState == "Stand.U") sAnimationState = "Standing Up";
+                //else if (sAnimationState == "") sAnimationState = "Striding";
                 if (!~llListFindList(g_lAnimStates,[sAnimationState])) jump next;
                 if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
-                    list lTemp = llParseString2List(sData, ["|"],[]);
+                    list lTemp = llParseString2List(sData, ["|",","],[]);
                     integer i = llGetListLength(lTemp);
                     while(i--) {
                         if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
