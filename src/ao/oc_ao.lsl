@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160923.2          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160923.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -701,7 +701,7 @@ default {
                 if (!~llListFindList(g_lAnimStates,[sAnimationState])) jump next;
                 if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
-                    list lTemp = llParseString2List(sData, ["|"],[]);
+                    list lTemp = llParseString2List(sData, ["|",","],[]);
                     integer i = llGetListLength(lTemp);
                     while(i--) {
                         if (llGetInventoryType(llList2String(lTemp,i)) != INVENTORY_ANIMATION)
