@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160921.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160923.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -675,13 +675,28 @@ default {
             if (sData != EOF) {
                 if (llGetSubString(sData,0,0) != "[") jump next;
                 string sAnimationState = llStringTrim(llGetSubString(sData,1,llSubStringIndex(sData,"]")-1),STRING_TRIM);
-                if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
+                // Translate common ZHAOII, Oracul and AX anim state values
+                if (sAnimationState == "") sAnimationState = "Standing";
+                //else if (sAnimationState == "") sAnimationState = "Walking";
+                //else if (sAnimationState == "") sAnimationState = "Running";
+                //else if (sAnimationState == "") sAnimationState = "Turning Left";
+                //else if (sAnimationState == "") sAnimationState = "Turning Right";
+                //else if (sAnimationState == "") sAnimationState = "Sitting";
+                else if (sAnimationState == "Sitting On Ground") sAnimationState = "Sitting on Ground";
+                //else if (sAnimationState == "") sAnimationState = "Crouching";
                 else if (sAnimationState == "Crouch Walking") sAnimationState = "CrouchWalking";
-                else if (sAnimationState == "Falling") sAnimationState = "Falling Down";
-                else if (sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
-                else if (sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
-                else if (sAnimationState == "Flying Slow") sAnimationState = "FlyingSlow";
                 else if (sAnimationState == "Pre Jumping") sAnimationState = "PreJumping";
+                //else if (sAnimationState == "") sAnimationState = "Jumping";
+                //else if (sAnimationState == "") sAnimationState = "Soft Landing";
+                //else if (sAnimationState == "") sAnimationState = "Taking Off";
+                else if (sAnimationState == "Flying Up") sAnimationState = "Hovering Up";
+                else if (sAnimationState == "Flying Down") sAnimationState = "Hovering Down";
+                //else if (sAnimationState == "") sAnimationState = "Flying";
+                else if (sAnimationState == "Flying Slow") sAnimationState = "FlyingSlow";
+                //else if (sAnimationState == "") sAnimationState = "Landing";
+                else if (sAnimationState == "Falling") sAnimationState = "Falling Down";
+                //else if (sAnimationState == "") sAnimationState = "Standing Up";
+                //else if (sAnimationState == "") sAnimationState = "Striding";
                 if (!~llListFindList(g_lAnimStates,[sAnimationState])) jump next;
                 if (llStringLength(sData)-1 > llSubStringIndex(sData,"]")) {
                     sData = llGetSubString(sData,llSubStringIndex(sData,"]")+1,-1);
