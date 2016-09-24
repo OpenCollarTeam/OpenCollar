@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160923.3          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160924.3          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -86,6 +86,9 @@ integer g_iStandPause;
 
 list g_lMenuIDs;
 list g_lAnims2Choose;
+list g_lCustomCards;
+integer g_iPage;
+integer g_iNumberOfPages;
 /*
 Debug(string sStr) {
     llScriptProfiler(1);
@@ -222,48 +225,52 @@ DoStatus() {
 //ao functions
 
 SetAnimOverride() {
-    llResetAnimationOverride("ALL");
-    integer i = 22; //llGetListLength(g_lAnimStates);
-    string sAnim;
-    string sAnimState;
-    do {
-        sAnimState = llList2String(g_lAnimStates,i);
-        if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
-            sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
-            if (JsonValid(sAnim)) {
-                if (sAnimState == "Walking" && g_sWalkAnim != "") 
-                    sAnim = g_sWalkAnim;
-                else if (sAnimState == "Sitting" && !g_iSitAnimOn) jump next;
-                else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
-                    sAnim = g_sSitAnim;
-                else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
-                    sAnim = g_sSitAnywhereAnim;
-                else if (sAnimState == "Standing") 
-                    sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
-                if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) 
-                    llSetAnimationOverride(sAnimState, sAnim);
-                else llOwnerSay(sAnim+" could not be found.");
-                @next;
+    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
+        llResetAnimationOverride("ALL");
+        integer i = 22; //llGetListLength(g_lAnimStates);
+        string sAnim;
+        string sAnimState;
+        do {
+            sAnimState = llList2String(g_lAnimStates,i);
+            if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
+                sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
+                if (JsonValid(sAnim)) {
+                    if (sAnimState == "Walking" && g_sWalkAnim != "") 
+                        sAnim = g_sWalkAnim;
+                    else if (sAnimState == "Sitting" && !g_iSitAnimOn) jump next;
+                    else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
+                        sAnim = g_sSitAnim;
+                    else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
+                        sAnim = g_sSitAnywhereAnim;
+                    else if (sAnimState == "Standing") 
+                        sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
+                    if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) 
+                        llSetAnimationOverride(sAnimState, sAnim);
+                    else llOwnerSay(sAnim+" could not be found.");
+                    @next;
+                }
             }
-        }
-    } while (i--);
-    llSetTimerEvent(g_iChangeInterval);
-    llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
-   // llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+        } while (i--);
+        llSetTimerEvent(g_iChangeInterval);
+        llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
+        //llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+    }
 }
 
 SwitchStand() {
     if (g_iStandPause) return;
-    string sCurAnim = llGetAnimationOverride("Standing");
-    list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,["Standing"]),["|"],[]);
-    integer index;
-    if (g_iShuffle) index = (integer)llFrand(llGetListLength(lAnims));
-    else {
-        index = llListFindList(lAnims,[sCurAnim]);
-        if (index == llGetListLength(lAnims)-1) index = 0;
-        else index += 1;
+    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
+        string sCurAnim = llGetAnimationOverride("Standing");
+        list lAnims = llParseString2List(llJsonGetValue(g_sJson_Anims,["Standing"]),["|"],[]);
+        integer index;
+        if (g_iShuffle) index = (integer)llFrand(llGetListLength(lAnims));
+        else {
+            index = llListFindList(lAnims,[sCurAnim]);
+            if (index == llGetListLength(lAnims)-1) index = 0;
+            else index += 1;
+        }
+        if (g_iReady) llSetAnimationOverride("Standing",llList2String(lAnims,index));
     }
-    if (g_iReady) llSetAnimationOverride("Standing",llList2String(lAnims,index));
 }
 
 ToggleSitAnywhere() {
@@ -345,20 +352,37 @@ MenuAO(key kID) {
     Dialog(kID, sPrompt, lButtons, ["Cancel"], "AO");
 }
 
-MenuLoad(key kID) {
+MenuLoad(key kID, integer iPage) {
+    if (!iPage) g_iPage = 0;
     string sPrompt = "\nLoad an animation set!";
     list lButtons;
-    integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
+    g_lCustomCards = [];
+    integer iEnd = llGetInventoryNumber(INVENTORY_NOTECARD);
+    integer iCountCustomCards;
     string sNotecardName;
-    do {
-        sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, --i);
+    integer i;
+    while (i < iEnd) {
+        sNotecardName = llGetInventoryName(INVENTORY_NOTECARD, i++);
         if (llSubStringIndex(sNotecardName,".") && sNotecardName != "") {
-            if(llStringLength(sNotecardName) < 24) lButtons += sNotecardName;
+            if (!llSubStringIndex(sNotecardName,"SET"))
+                g_lCustomCards += [sNotecardName,"Wildcard "+(string)(++iCountCustomCards)];// + g_lCustomCards;
+            else if(llStringLength(sNotecardName) < 24) lButtons += sNotecardName;
             else llOwnerSay(sNotecardName+"'s name is too long to be displayed in menus and cannot be used.");
         }
-    } while (i > 0);
+    }
+    i = 1;
+    while (i <= 2*iCountCustomCards) {
+        lButtons += llList2List(g_lCustomCards,i,i);
+        i += 2;
+    }
+    list lStaticButtons = ["BACK"];
+    if (llGetListLength(lButtons) > 11) {
+        lStaticButtons = ["◄","►","BACK"];
+        g_iNumberOfPages = llGetListLength(lButtons)/9;
+        lButtons = llList2List(lButtons,iPage*9,iPage*9+8);
+    }
     if (!llGetListLength(lButtons)) llOwnerSay("There aren't any animation sets installed!");
-    Dialog(kID, sPrompt, llListSort(lButtons,1,TRUE), ["BACK"],"Load");
+    Dialog(kID, sPrompt, lButtons, lStaticButtons,"Load");
 }
 
 MenuInterval(key kID) {
@@ -424,7 +448,7 @@ TranslateCollarCMD(string sCommand, key kID){
             if (g_iReady) MenuAO(kID);
             else {
                 Notify(kID,"Please load an animation set first.",TRUE);
-                MenuLoad(kID);
+                MenuLoad(kID,0);
             }
     } else if (!llSubStringIndex(sCommand,"ao"))
         Command(kID,llGetSubString(sCommand,2,-1));
@@ -436,7 +460,7 @@ Command(key kID, string sCommand) {
     string sValue = llList2String(lParams,1);
     if (!g_iReady) {
         Notify(kID,"Please load an animation set first.",TRUE);
-        MenuLoad(kID);
+        MenuLoad(kID,0);
         return;
     } else if (sCommand == "on") {
         SetAnimOverride();
@@ -478,7 +502,7 @@ default {
         DefinePosition();
         DoTextures("Dark");
         DetermineColors();
-        MenuLoad(g_kWearer);
+        MenuLoad(g_kWearer,0);
     }
 
     on_rez(integer iStart) {
@@ -501,7 +525,7 @@ default {
     touch_start(integer total_number) {
         if(llGetAttached()) {
             if (!g_iReady) {
-                MenuLoad(g_kWearer);
+                MenuLoad(g_kWearer,0);
                 llOwnerSay("Please load an animation set first.");
                 return;
             }
@@ -527,6 +551,19 @@ default {
             if (sMessage == "-.. --- / .- ---") {
                 StartUpdate(kID);
                 return;
+            } else if (!llGetAttached() && sMessage == "AO set installation") {
+                sMessage = "";
+                integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
+                while(i) {
+                    sMessage += llGetInventoryName(INVENTORY_ANIMATION,--i);
+                    if (llStringLength(sMessage) > 960) {
+                        llRegionSayTo(kID,iChannel,sMessage);
+                        sMessage = "";
+                    }
+                }
+                llRegionSayTo(kID,iChannel,sMessage);
+                llRegionSayTo(kID,iChannel,"@END");
+                return;
             } //"CollarCommmand|499|ZHAO_STANDON" or "CollarCommmand|iAuth|ZHAO_MENU|commanderID"
             list lParams = llParseString2List(sMessage,["|"],[]);
             if (llList2String(lParams,0) == "CollarCommand") {
@@ -549,7 +586,7 @@ default {
                     Command(kID,llToLower(sMessage));
                     MenuAO(kID);
                 } else if (sMessage == "HUD Style") MenuOptions(kID);
-                else if (sMessage == "Load") MenuLoad(kID);
+                else if (sMessage == "Load") MenuLoad(kID,0);
                 else if (sMessage == "Sits") MenuChooseAnim(kID,"Sitting");
                 else if (sMessage == "Walks") MenuChooseAnim(kID,"Walking");
                 else if (sMessage == "Ground Sits") MenuChooseAnim(kID,"Sitting on Ground");
@@ -572,6 +609,8 @@ default {
                     MenuAO(kID);
                 } 
             } else if (sMenuType == "Load") {
+                integer index = llListFindList(g_lCustomCards,[sMessage]);
+                if (~index) sMessage = llList2String(g_lCustomCards,index-1);
                 if (llGetInventoryType(sMessage) == INVENTORY_NOTECARD) {
                     g_sCard = sMessage;
                     g_iCardLine = 0;
@@ -581,9 +620,13 @@ default {
                 } else if (g_iReady && sMessage == "BACK") {
                     MenuAO(kID);
                     return;
+                } else if (sMessage == "►") {
+                    if (++g_iPage > g_iNumberOfPages) g_iPage = 0;
+                } else if (sMessage == "◄") {
+                    if (--g_iPage < 0) g_iPage = g_iNumberOfPages;
                 } else if (!g_iReady) llOwnerSay("Please load an animation set first.");
                 else llOwnerSay("Could not find animation set: "+sMessage);
-                MenuLoad(kID);
+                MenuLoad(kID,g_iPage);
             } else if (sMenuType == "Interval") {
                 if (sMessage == "BACK") {
                     MenuAO(kID);
@@ -724,6 +767,9 @@ default {
                 g_iCardLine = 0;
                 g_kCard = "";
                 g_iSitAnywhereOn = FALSE;
+                integer index = llListFindList(g_lCustomCards,[g_sCard]);
+                if (~index) g_sCard = llList2String(g_lCustomCards,index+1)+" ("+g_sCard+")";
+                g_lCustomCards = [];
                 if (g_sJson_Anims == "{}") {
                     llOwnerSay("\""+g_sCard+"\" is an invalid animation set and can't play.");
                     g_iAO_ON = FALSE;
