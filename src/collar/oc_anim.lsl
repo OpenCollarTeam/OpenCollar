@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 160809.1                             //
+//                          Animator - 160926.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -286,11 +286,12 @@ MessageAOs(string sONOFF, string sWhat){ //send string as "ON"  / "OFF" saves 2 
 
 RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and call this function in "changed" event on TP
     if (llGetListLength(g_lAnims)) {
-        if (g_iPosture) llStartAnimation("~stiff");
         if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
-            llResetAnimationOverride("ALL");
-            string sAnim = llList2String(g_lAnims, 0);
-            if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) StartAnim(sAnim);  //get and stop currently playing anim
+            if (g_iPosture) llStartAnimation("~stiff");
+            if (g_iTweakPoseAO) llResetAnimationOverride("ALL");
+            StartAnim(llList2String(g_lAnims, 0));
+           // string sAnim = llList2String(g_lAnims, 0);
+           // if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) StartAnim(sAnim);  //get and stop currently playing anim
         } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Permission to animate lost. Try taking me off and re-attaching me.",g_kWearer);
     }
 }
@@ -327,10 +328,9 @@ PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods config
 StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAnim to stop it, calls AO as nexessary
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
         if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
-            while(~llListFindList(g_lAnims,[sAnim])){
-                integer n=llListFindList(g_lAnims,[sAnim]);
-                g_lAnims=llDeleteSubList(g_lAnims, n, n);
-            }
+            integer n;
+            while(~(n=llListFindList(g_lAnims,[sAnim])))
+                g_lAnims = llDeleteSubList(g_lAnims,n,n);
             UnPlayAnim(sAnim);
             //play the new g_lAnims[0].  If anim list is empty, turn AO back on
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
@@ -375,7 +375,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr == "release" || sStr == "stop") {  //only release if person giving command outranks person who posed us
         if (iNum <= g_iLastRank || !g_iAnimLock) {
             g_iLastRank = 0;
-            llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
+            StopAnim(g_sCurrentPose);
+            //llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
             g_sCurrentPose = "";
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         }
@@ -536,7 +537,8 @@ default {
         } else if (iNum == CMD_SAFEWORD) {
             if (llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION) {
                 g_iLastRank = 0;
-                llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
+                StopAnim(g_sCurrentPose);
+                //llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
@@ -555,7 +557,8 @@ default {
                     list lAnimParams = llParseString2List(sValue, [","], []);
                     g_sCurrentPose = llList2String(lAnimParams, 0);
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
-                    llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
+                    StartAnim(g_sCurrentPose);
+                    //llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
                 } else if (sToken == "animlock") g_iAnimLock = (integer)sValue;
                 else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
                 else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
@@ -588,7 +591,8 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenuType == "Anim") {
                     //Debug("Got message "+sMessage);
-                    if (sMessage == "BACK") llMessageLinked(LINK_SET, iAuth, "menu Main", kAv);
+                    if (sMessage == "BACK")
+                        llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu Main", kAv);
                     else if (sMessage == "Pose") PoseMenu(kAv, 0, iAuth);
                     else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
