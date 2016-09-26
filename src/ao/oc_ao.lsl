@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160924.3          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 160925.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -252,7 +252,7 @@ SetAnimOverride() {
             }
         } while (i--);
         llSetTimerEvent(g_iChangeInterval);
-        llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
+        if (!g_iStandPause) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         //llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
     }
 }
@@ -441,8 +441,8 @@ TranslateCollarCMD(string sCommand, key kID){
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
-            g_iStandPause = FALSE;
             SetAnimOverride();
+            g_iStandPause = FALSE;
         }        
     } else if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
