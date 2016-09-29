@@ -71,6 +71,7 @@ integer iType;
 // integer iType=3; // for Vista type AOs
 // integer iType=4; // for AKEYO type AOs
 // integer iType=5; // for Gaeline type AOs
+// integer iType=7; // for AKEYO NITRO type AOs
 //----------------------------------------------------------------------
 //Integer map for above
 integer ORACUL  = 1; 
@@ -79,6 +80,7 @@ integer VISTA   = 3;
 integer AKEYO   = 4;
 integer GAELINE = 5;
 integer HUDDLES = 6;
+integer AKEYO_NITRO = 7;
 
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
@@ -119,9 +121,14 @@ determineType() { //function to determine AO type.
     llListenRemove(g_iAOListenHandle);
     iType = 0;
     if (llSubStringIndex(llGetObjectName(),"AKEYO") >= 0) { //AKEYO is not a string in their script name, it is in animations but think the object name is a better test for this AO - Sumi Perl
-        iType = AKEYO;
-        llOwnerSay("OC compatibility script configured for AKEYO AO.  This support is experimental.  Please let us know if you notice any problems.");
-    } else if (llSubStringIndex(llGetObjectName(),"HUDDLES") >= 0) { 
+        if (llSubStringIndex(llGetObjectName(),"NitroAO") >= 0) { // Nitro has different messages.
+            iType = AKEYO_NITRO;
+            llOwnerSay("OC compatibility script configured for AKEYO NITRO AO.  This support is experimental.  Please let us know if you notice any problems.");
+        } else {
+            iType = AKEYO;
+            llOwnerSay("OC compatibility script configured for AKEYO AO.  This support is experimental.  Please let us know if you notice any problems.");
+        }
+    } else if (llSubStringIndex(llGetObjectName(),"HUDDLES") >= 0) {
         iType = HUDDLES;
         llOwnerSay("OC compatibility script configured for HUDDLES AO.  This support is experimental.  Please let us know if you notice any problems.");
     }
@@ -171,6 +178,7 @@ AOPause() {
     if(g_iAOSwitch) {
         if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
         else if (iType == AKEYO) llMessageLinked(LINK_ROOT, 0, "PAO_AOOFF", "ocpause");
+        else if (iType == AKEYO_NITRO) llMessageLinked(LINK_ROOT, 0, "NITRO_AOOFF", "ocpause");
         else if(iType == GAELINE) llMessageLinked(LINK_THIS, 102, "", "ocpause");
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_OFF", "ocpause");
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
@@ -184,6 +192,7 @@ AOUnPause() {
     if(g_iAOSwitch) {
         if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
         else if(iType == AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+        else if(iType == AKEYO_NITRO ) llMessageLinked(LINK_ROOT, 0, "NITRO_AOON", "ocpause");
         else if(iType == GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_ON", "ocpause");
         else if(iType>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
