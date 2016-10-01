@@ -414,11 +414,9 @@ default {
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
             if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
-            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 2, -3);
+            // Allow for Firestorm style "(( SAFEWORD ))" by trimming.
+            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llStringTrim(llGetSubString(sw, 2, -3), STRING_TRIM);
             if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
-            // Allow extra spaces, as in Firestorm's alt + enter "(( SAFEWORD ))", or a typo-ed "/me  SAFEWORD"
-            list lSw = llParseString2List(sw, [" "], []);
-            if(llGetListLength(lSw) == 1) sw = llList2String(lSw, 0);
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
