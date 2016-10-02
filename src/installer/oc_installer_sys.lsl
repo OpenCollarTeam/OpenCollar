@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 161002.1                        //
+//                       Installer System - 161002.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -185,7 +185,7 @@ InitiateInstallation() {
     llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
     //llPlaySound("3409e593-20ab-fd34-82b3-6ecfdefc0207",1.0); //ao
     //llPlaySound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b",1.0); //remote hud
-    Debug("PLaying sound");
+    Debug("Playing sound");
     llWhisper(iChan,(string)llGetOwner()+":.- ... -.-|"+g_sBuildVersion+"|"+(string)llGetKey());
     //llWhisper(iChan,"-.. --- / .- ---"); AO command
     //llWhisper(iChan,"-.. --- / .... ..- -.."); Remote HUD command
@@ -202,7 +202,7 @@ default {
         llListen(g_initChannel, "", "", "");
         llRegionSay(g_initChannel,"OC Installer out there?");
         llSetTimerEvent(3.0);
-        llOwnerSay("\n\nStarting updater... please wait a moment.\n");
+        llOwnerSay("\n\nPlease stand by...\n");
         // set all scripts except self to not running
         // also build list of all bundles
         list lBundleNumbers;
@@ -254,7 +254,7 @@ default {
                 return;
             } else if (sMsg == "OC Installer here!") {
                 g_iHighlander = FALSE;
-                llOwnerSay("\n\nAnother OC Installer found: "+sName+". Please remove before trying to install with me.\n");
+                llOwnerSay("\n\nAnother installer was found in this region. Please remove all but one installer and try again.\n");
                 return;
             }
             list lParts = llParseString2List(sMsg, ["|"], []);
@@ -317,7 +317,7 @@ default {
             else llResetScript();
         } else if (g_iHighlander < 0) {
             g_iHighlander = TRUE;
-            llOwnerSay("\n\nReady to install, just touch me!\n");
+            llOwnerSay("\n\nThis installer is ready!\n\nTo start, please touch the installer and proceed with \"Yes\" in the confirmation dialog.\n");
         }
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
