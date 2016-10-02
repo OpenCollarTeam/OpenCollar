@@ -414,7 +414,8 @@ default {
             // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
             // and may include prefix
             if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
-            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llGetSubString(sw, 2, -3);
+            // Allow for Firestorm style "(( SAFEWORD ))" by trimming.
+            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llStringTrim(llGetSubString(sw, 2, -3), STRING_TRIM);
             if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
