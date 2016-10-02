@@ -251,7 +251,7 @@ AddRestriction(key kID, string sBehav) {
     string sSrcRestr = llList2String(g_lRestrictions,iSource+1);
     //Debug("AddRestriction 2.1");
     //if (!(sSrcRestr==sBehav || ~llSubStringIndex(sSrcRestr,"§"+sBehav) || ~llSubStringIndex(sSrcRestr,sBehav+"§")) ) {
-    if (!~llListFindList(llParseString2List(sSrcRestr,["§"],[]),[sBehav])) {
+    if (!~llSubStringIndex("§"+sSrcRestr+"§","§"+sBehav+"§")) {
         //Debug("AddRestriction 2.2");
         sSrcRestr+="§"+sBehav;
         if (llSubStringIndex(sSrcRestr,"§")==0) sSrcRestr=llGetSubString(sSrcRestr,1,-1);
