@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 160203.1                        //
+//                       Installer System - 161003.1                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -112,6 +112,11 @@ integer g_iLine;
 
 string g_sName;
 string g_sObjectType;
+
+integer g_iHighlander = -1; //there can only be one (oc_installer)
+
+string g_sObjectName;
+
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string sName) {
@@ -119,6 +124,12 @@ DisableScript(string sName) {
         if (llGetScriptState(sName))
             llSetScriptState(sName, FALSE);
     }
+}
+
+Say(string sStr) {
+    llSetObjectName("Installer");
+    llOwnerSay(sStr);
+    llSetObjectName(g_sObjectName);
 }
 
 DoBundle() {
@@ -182,7 +193,7 @@ InitiateInstallation() {
     llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
     //llPlaySound("3409e593-20ab-fd34-82b3-6ecfdefc0207",1.0); //ao
     //llPlaySound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b",1.0); //remote hud
-    Debug("PLaying sound");
+    Debug("Playing sound");
     llWhisper(iChan,(string)llGetOwner()+":.- ... -.-|"+g_sBuildVersion+"|"+(string)llGetKey());
     //llWhisper(iChan,"-.. --- / .- ---"); AO command
     //llWhisper(iChan,"-.. --- / .... ..- -.."); Remote HUD command
@@ -194,9 +205,13 @@ default {
        // llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
         //llPreloadSound("3409e593-20ab-fd34-82b3-6ecfdefc0207"); // ao
        // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
-        llSetTimerEvent(300.0);
+        //llSetTimerEvent(300.0);
         ReadName();
+        g_sObjectName = llGetObjectName();
         llListen(g_initChannel, "", "", "");
+        llRegionSay(g_initChannel,"OC Installer out there?");
+        llSetTimerEvent(3.0);
+        Say("\n\nPlease stand by...\n");
         // set all scripts except self to not running
         // also build list of all bundles
         list lBundleNumbers;
@@ -228,6 +243,7 @@ default {
     
     touch_start(integer iNumber) {
         if (llDetectedKey(0) != llGetOwner()) return;
+        if (g_iHighlander <= 0) llResetScript();
         if (g_iDone) {
             g_iDone = FALSE;
             llSetTimerEvent(30.0);
@@ -242,6 +258,17 @@ default {
             // everything heard on the init channel is stuff that has to
             // comply with the existing update kickoff protocol.  New stuff
             // will be heard on the random secure channel instead.
+            if (sMsg == "OC Installer out there?") {
+                llRegionSayTo(kID,iChannel,"OC Installer here!");
+                return;
+            } else if (sMsg == "OC Installer here!") {
+                g_iHighlander = FALSE;
+                vector vPos = llList2Vector(llGetObjectDetails(kID,[OBJECT_POS]),0);
+                string sSURL = llEscapeURL(llGetRegionName()+"/"+(string)llRound(vPos.x)+"/"+(string)llRound(vPos.y)+"/"+(string)llRound(vPos.z));
+                string sObjectURI = "secondlife:///app/objectim/"+(string)kID+"/?name="+llEscapeURL(llKey2Name(kID))+"&owner="+(string)llGetOwnerKey(kID)+"&slurl="+sSURL;
+                Say("\n\nAnother installer ("+sObjectURI+") was found in this region. Please remove all but one installer and try again.\n");
+                return;
+            }
             list lParts = llParseString2List(sMsg, ["|"], []);
             string sCmd = llList2String(lParts, 0);
             string sParam = llList2String(lParts, 1);
@@ -291,7 +318,7 @@ default {
                 llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
                 llSleep(1);
                 llLoadURL(llGetOwner(),"\nVisit our website for manual pages and release notes!\n",g_sInfoURL);
-                llOwnerSay(g_sInfoText);
+                Say(g_sInfoText);
                 llSetTimerEvent(15.0);
             }
         }
@@ -300,6 +327,9 @@ default {
         if (g_iDone) {
             if (g_iInstallOnRez) SetFloatText();
             else llResetScript();
+        } else if (g_iHighlander < 0) {
+            g_iHighlander = TRUE;
+            Say("\n\nThis installer is ready!\n\nTo start, please touch the installer and proceed with \"Yes\" in the confirmation dialog.\n");
         }
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
