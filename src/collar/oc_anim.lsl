@@ -570,7 +570,7 @@ default {
                      if (llGetAnimationOverride("Standing") != "")
                         g_iTweakPoseAO = (integer)sValue;
                 }
-            } else if (llGetSubString(sToken,0,i) == "intern") {
+            } else if (llGetSubString(sToken,0,i) == "intern_") {
                 sToken = llGetSubString(sToken,i+1,-1);
                 if (sToken == "AllowHover") {
                     g_iHoverOn = (integer)llGetSubString(sValue,0,0);
