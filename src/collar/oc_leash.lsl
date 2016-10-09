@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160625.1                               //
+//                           Leash - 161009.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -592,7 +592,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "turn", "");
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
-        } else if (sComm == "leashto" || sComm == "pass") {
+        } else if (sComm == "pass") {
             if (!CheckCommandAuth(kMessageID, iAuth)) return;
             if (sVal==llToLower(BUTTON_UPMENU))
                 UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -769,7 +769,7 @@ default {
                     if (sButton == "Yes") {
                         g_iPassConfirmed = TRUE;
                         if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
-                        UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
+                        UserCommand(iAuth, "pass " + (string)kAV, g_kLeashCmderID, TRUE);
                     } else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kAV)+" did not accept %WEARERNAME%'s leash.",g_kLeashCmderID);
                         g_iPassConfirmed = FALSE;
