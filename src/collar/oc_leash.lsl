@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Leash - 160625.1                               //
+//                           Leash - 161010.1                               //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,        //
@@ -449,7 +449,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
             if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) Unleash(kMessageID);
-           // else if (sMessage == "giveholder") llGiveInventory(kMessageID, "Leash Holder");
             else if (sMessage == "yank") YankTo(kMessageID);
         }
     } else { //(iAuth >= CMD_OWNER && iAuth <= CMD_WEARER)
@@ -485,13 +484,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             } else if (!g_iStay) sPrompt += "\n%WEARERNAME% can move freely.";
             if (g_iStay) sPrompt += "\n%WEARERNAME% can't move on their own.";
             Dialog(kMessageID, sPrompt, lButtons, [BUTTON_UPMENU], 0, iAuth, "MainDialog");
-        } else  if (sComm == "post") {
-          //  if (sComm == "post" && !bFromMenu) UserCommand(iAuth, "find"+sMessage, kMessageID ,bFromMenu);
-            if (sVal==llToLower(BUTTON_UPMENU)) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-           // else if (sMessage == "post give post")   UserCommand(iAuth, "givepost", kMessageID ,bFromMenu);
-           // else if (sMessage == "post park")        UserCommand(iAuth, "rezpost", kMessageID ,bFromMenu);
-           // else if (sMessage == "post anchor")      UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
-           // else  Dialog(kMessageID, "\nAnchor the leash to something nearby\nor use instant parking mode!", ["Anchor", "Park"], [BUTTON_UPMENU], 0, iAuth,"PostMenu");
         } else  if (sMessage == "grab" || sMessage == "leash" || (sMessage == "toggleleash" && NULL_KEY == g_kLeashedTo)) {
             g_iPassConfirmed = TRUE;
             LeashTo(kMessageID, kMessageID, iAuth, ["handle"], FALSE);
@@ -514,28 +506,11 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-        } /*else if (sMessage == "giveholder" || sMessage == "give holder") {
-            if (llGetInventoryType("Leash Holder") == INVENTORY_OBJECT)
-                llGiveInventory(kMessageID, "Leash Holder");
-            else
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, there is no leash holder in this %DEVICETYPE%.",kMessageID);
-            if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-        } else if (sMessage == "givepost" || sMessage == "give post") {
-            if (llGetInventoryType("Leash Post") == INVENTORY_OBJECT)
-                llGiveInventory(kMessageID, "Leash Post");
-            else
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, there is no leash post in this %DEVICETYPE%.",kMessageID);
-            if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
-        }*/ //else if (sMessage == "rezpost" || sMessage == "rez post" || sMessage == "park") {
-            else if (sMessage == "park") {
+        } else if (sMessage == "park") {
             if (llGetInventoryType("Pretty Balloon") == INVENTORY_OBJECT) {
                 g_iRezAuth=iAuth;
                 llRezObject("Pretty Balloon", llGetPos() + (<0.2, 0.0, 1.2> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
             }
-           /* else if (llGetInventoryType("Leash Post") == INVENTORY_OBJECT)
-                llRezObject("Leash Post", llGetPos() + (<0.1, 0.0, 0.37> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 90, 270> * DEG_TO_RAD), 0);
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, there is no leash post in this %DEVICETYPE%.",kMessageID);
-            if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);*/
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
             //Person holding the leash can yank.
             if(llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_RLV, RLV_CMD, "unsit=force", "realleash");
@@ -579,7 +554,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 ApplyRestrictions();
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Strict leashing disabled.",kMessageID);
             } else {
-                //llMessageLinked(LINK_SET, LM_SETTING_RESPONSE,"strictAuthError="+(string)iAuth,kMessageID);
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
             }
         } else if (sMessage == "turn on") {
@@ -592,18 +566,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "turn", "");
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
-        } else if (sComm == "leashto" || sComm == "pass") {
-            if (!CheckCommandAuth(kMessageID, iAuth)) return;
-            if (sVal==llToLower(BUTTON_UPMENU))
-                UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-            else if((key)sVal) {
-                list lPoints;
-                if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
-                //debug("leash target is key");//could be a post, or could be we specified an av key
-                //g_kLeashTargetDialogID = "";
-                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else 
-                SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
         } else if (sComm == "length") {
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
@@ -621,21 +583,20 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Oops! The leash can only reach 20 meters at most.",kMessageID);
                 Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth,"SetLength");
             }
-        } else if (sComm == "findpost" || sMessage == "find post" || sComm == "anchor") {
-            if (!CheckCommandAuth(kMessageID, iAuth)) {
-                if (bFromMenu) UserCommand(iAuth, "post", kMessageID ,bFromMenu);
-            }
-            if (sVal==llToLower(BUTTON_UPMENU))  UserCommand(iAuth, "menu leash", kMessageID ,bFromMenu);
-            else if((key)sVal) {
+        } else if (sComm == "anchor" || sComm == "pass") {
+            if (!CheckCommandAuth(kMessageID, iAuth) || sVal == llToLower(BUTTON_UPMENU)) {
+                if (bFromMenu) UserCommand(iAuth, "menu leash", kMessageID ,bFromMenu);
+            } else if((key)sVal) {
                 list lPoints;
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
                 //debug("leash target is key");//could be a post, or could be we specified an av key
-                //if (bFromMenu) UserCommand(iAuth, "findpost", kMessageID ,bFromMenu);
                 if (llGetAgentSize((key)sVal)) g_iPassConfirmed = FALSE;
                 else g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else 
+            } else if (sComm == "anchor")
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
+            else if (sComm == "pass")
+                SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
         }
     }
 }
@@ -758,9 +719,8 @@ default {
                         llMessageLinked(LINK_ROOT, iAuth, "menu "+sButton, kAV);
                     else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
-                else if (sMenu == "PostTarget") UserCommand(iAuth, "findpost " + sButton, kAV, TRUE);
+                else if (sMenu == "PostTarget") UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
                 else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
-               // else if (sMenu == "PostMenu") UserCommand(iAuth, "post " + sButton, kAV, TRUE);
                 // added for Confirmation Request 15-04-17 Otto
                 else if (sMenu == "LeashTarget") {
                     g_kLeashCmderID = kAV;
@@ -769,7 +729,7 @@ default {
                     if (sButton == "Yes") {
                         g_iPassConfirmed = TRUE;
                         if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
-                        UserCommand(iAuth, "leashto " + (string)kAV, g_kLeashCmderID, TRUE);
+                        UserCommand(iAuth, "pass " + (string)kAV, g_kLeashCmderID, TRUE);
                     } else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kAV)+" did not accept %WEARERNAME%'s leash.",g_kLeashCmderID);
                         g_iPassConfirmed = FALSE;
@@ -821,9 +781,7 @@ default {
         // i ran into a problem here which seems to be "speed" related, specially when using the menu to unleash this event gets triggered together or just after the CleanUp() function
         //to prevent to get stay in the target events i added a check on g_kLeashedTo is NULL_KEY
         if(g_kLeashedTo) {
-            //if (g_iStrictModeOn && llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_RLV, RLV_CMD, "unsit=force", "");
             vector vNewPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
-            //llStopMoveToTarget();
             if (g_vPos != vNewPos) {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vNewPos;
