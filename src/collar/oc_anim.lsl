@@ -570,7 +570,7 @@ default {
                      if (llGetAnimationOverride("Standing") != "")
                         g_iTweakPoseAO = (integer)sValue;
                 }
-            } else if (llGetSubString(sToken,0,i) == "intern_") {
+            } else if (llGetSubString(sToken,0,i) == "offset_") {
                 sToken = llGetSubString(sToken,i+1,-1);
                 if (sToken == "AllowHover") {
                     g_iHoverOn = (integer)llGetSubString(sValue,0,0);
@@ -616,9 +616,9 @@ default {
                             g_fStandHover += fNewHover;
                             fNewHover = g_fStandHover;
                             if (g_fStandHover) 
-                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_standhover="+(string)g_fStandHover,"");
+                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_standhover="+(string)g_fStandHover,"");
                             else
-                                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_standhover","");
+                                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"offset_standhover","");
                             jump next;
                         }
                         integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
@@ -634,7 +634,7 @@ default {
                         }
                         @next;
                         llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
-                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
+                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
                         PoseMenu(kAv, iPage, iAuth);
                     } else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
