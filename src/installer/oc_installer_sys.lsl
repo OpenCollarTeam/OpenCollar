@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 161003.1                        //
+//                       Installer System - 161003.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -356,6 +356,7 @@ default {
             }
             sData = llStringTrim(llGetSubString(sData,0, index-1),STRING_TRIM);
             list lNameParts = llParseString2List(sData, [" - "], []);
+            g_sObjectName = sData;
             llSetObjectName(sData);
             g_sName = llList2String(lNameParts,1);
             g_sObjectType = llList2String(lNameParts,0);
