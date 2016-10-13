@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer System - 161003.2                        //
+//                       Installer System - 161013.2                        //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, DrakeSystem,       //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
@@ -211,7 +211,7 @@ default {
         llListen(g_initChannel, "", "", "");
         llRegionSay(g_initChannel,"OC Installer out there?");
         llSetTimerEvent(3.0);
-        Say("\n\nPlease stand by...\n");
+        Say("Please stand by...\n");
         // set all scripts except self to not running
         // also build list of all bundles
         list lBundleNumbers;
@@ -329,7 +329,7 @@ default {
             else llResetScript();
         } else if (g_iHighlander < 0) {
             g_iHighlander = TRUE;
-            Say("\n\nThis installer is ready!\n\nTo start, please touch the installer and proceed with \"Yes\" in the confirmation dialog.\n");
+            Say("This installer is ready!\n\nTo start, please touch the installer and proceed with \"Yes\" in the confirmation dialog.\n");
         }
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
