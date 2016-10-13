@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          AO Link - 160528.1                              //
+//                          AO Link - 161013.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Medea Destiny, XenHat Liamano, Silkie Sabra,  //
 //  Wendy Starfall, Sumi Perl, Ansariel Hiller and Garvin Twine             //
@@ -85,7 +85,6 @@ integer AKEYO_NITRO = 7;
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
 integer g_iAOListenHandle;
-integer g_iHUDChannel; //to send antislide command to the collar
 
 //Lockmeister protocol support for couple animations and furnitures
 
@@ -109,13 +108,6 @@ integer g_iOCSwitch = TRUE; //monitor on/off due to collar pauses (FALSE=paused,
 integer g_iSitOverride = TRUE; //monitor AO sit override
 
 key g_kWearer;
-
-integer ServerSideAO() {
-    if (!(llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS)) 
-        llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
-    if (llGetAnimationOverride("Standing") != "stand") return TRUE;
-    return FALSE;
-}
 
 determineType() { //function to determine AO type.
     llListenRemove(g_iAOListenHandle);
@@ -168,7 +160,6 @@ determineType() { //function to determine AO type.
         g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
         g_iLMListenHandle = llListen(g_iLMChannel,"","","");
         g_iCommandHandle = llListen(g_iCommandChannel,"",g_kWearer,"");
-        if (ServerSideAO()) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         llOwnerSay("Lockmeister protocol support to interact with couple animators and furnitures is enabled, to disable it type:\n/88 LM off\nto enable again\n/88 LM on");
     }
 }
@@ -262,7 +253,6 @@ MenuCommand(string sMsg, key kID) {
                                    
 default {
     state_entry() {
-        g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
         g_kWearer = llGetOwner();
         if(iType == 0) determineType();
         g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
@@ -311,7 +301,6 @@ default {
         if (iType == ORACUL && iNum == 0 && kID != "ocpause") {//oracul power command
                 g_sOraculstring = llGetSubString(sMsg,1,-1); //store the config string for Oracul AO.
                 g_iAOSwitch = (integer)llGetSubString(sMsg,0,1); //store the AO power state.
-                if (g_iAOSwitch && ServerSideAO()) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         } else if(iType > 1) {
             if (sMsg == "ZHAO_SITON") g_iSitOverride=TRUE;
             else if (sMsg == "ZHAO_SITOFF") g_iSitOverride=FALSE;
@@ -319,8 +308,7 @@ default {
                 if(sMsg == "ZHAO_AOON") g_iAOSwitch=TRUE;
                 else if(sMsg == "ZHAO_AOOFF")
                     g_iAOSwitch = FALSE;
-            }
-            if (g_iAOSwitch && ServerSideAO()) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
+            }          
         }
     }
         
