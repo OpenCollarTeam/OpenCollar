@@ -1,69 +1,27 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                          AO Link - 161014.1                              //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2016 Medea Destiny, XenHat Liamano, Silkie Sabra,  //
-//  Wendy Starfall, Sumi Perl, Ansariel Hiller, Garvin Twine and stawberri  //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/VirtualDisgrace/opencollar/tree/master/src/spares       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+/*
+    _____________________________.
+   |;;|                      |;;||     Copyright (c) 2014 - 2016:
+   |[]|----------------------|[]||
+   |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
+   |;;|       161014.1       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
+   |;;|   www.opencollar.at  |;;||     stawberri et al.
+   |;;|----------------------|;;||
+   |;;|______________________|;;||
+   |;;;;;;;;;;;;;;;;;;;;;;;;;;;;||     This script is free software:
+   |;;;;;;;_______________ ;;;;;||
+   |;;;;;;|  ___          |;;;;;||     You can redistribute it and/or
+   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the
+   |;;;;;;| |;;;|         |;;;;;||     GNU General Public License as
+   |;;;;;;| |;;;|         |;;;;;||     published by the Free Software
+   |;;;;;;| |___|         |;;;;;||     Foundation, version 2.
+   \______|_______________|_____||
+    ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
 
-// Based on Medea Destiny's AO interface script for OpenCollar.
+*/
 
-// HOW TO: This script is intended to be dropped into ZHAO-2, Vista and Oracul
-// AOs that are not already compatible with OpenCollar's AO interface. Just rez
-// your existing AO Hud, right-click to open it and drop this script inside!
+integer iType;
 
-// This is not a complete replacement of the Sub AO as it cannot allow as complete
-// access to the AO as that does, but it should provide most of the functionality
-// while being very easy to add to your pre-existing AOs.
-
-// The lite variation of this script is complementary to AntiSlide technology.
-
-integer iType; 
 //If left like this, script will try to determine AO type automatically.
 //To force compatibility for a particular type of AO, change to:
 // integer iType=1; //for Oracul type AOs
@@ -72,9 +30,9 @@ integer iType;
 // integer iType=4; // for AKEYO type AOs
 // integer iType=5; // for Gaeline type AOs
 // integer iType=7; // for AKEYO NITRO type AOs
-//----------------------------------------------------------------------
+
 //Integer map for above
-integer ORACUL  = 1; 
+integer ORACUL  = 1;
 integer ZHAO    = 2;
 integer VISTA   = 3;
 integer AKEYO   = 4;
@@ -95,9 +53,9 @@ integer g_iCommandChannel = 88;
 integer g_iCommandHandle;
 
 //Menu handler for script's own ZHAO menu
-integer g_iMenuHandle; 
+integer g_iMenuHandle;
 integer g_iMenuChannel = -23423456; //dummy channel, changed to unique on attach
-list g_lMenuUsers; //list of menu users to allow for multiple users of menu 
+list g_lMenuUsers; //list of menu users to allow for multiple users of menu
 integer g_iMenuTimeout = 60;
 
 string g_sOraculstring; //configuration string for Oracul power on/off, 0 prepended for off, 1 prepended for on
@@ -183,7 +141,7 @@ AOPause() {
 AOUnPause() {
     if(g_iAOSwitch) {
         if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_SET,0,"1"+g_sOraculstring,"ocpause");
-        else if(iType == AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause"); 
+        else if(iType == AKEYO ) llMessageLinked(LINK_ROOT, 0, "PAO_AOON", "ocpause");
         else if(iType == AKEYO_NITRO ) llMessageLinked(LINK_ROOT, 0, "NITRO_AOON", "ocpause");
         else if(iType == GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_ON", "ocpause");
@@ -193,8 +151,8 @@ AOUnPause() {
 }
 
 zhaoMenu(key kMenuTo) {
-    //script's own menu for some ZHAO features. 
-    //Open listener if no menu users are registered in g_lMenuUsers already, and add 
+    //script's own menu for some ZHAO features.
+    //Open listener if no menu users are registered in g_lMenuUsers already, and add
     //menu user to list if not already present.
     if(!llGetListLength(g_lMenuUsers)) g_iMenuHandle=llListen(g_iMenuChannel,"","","");
     if(llListFindList(g_lMenuUsers,[kMenuTo])==-1) g_lMenuUsers+=kMenuTo;
@@ -202,7 +160,7 @@ zhaoMenu(key kMenuTo) {
     if(g_iSitOverride) sSit = "AO Sits OFF";
     list lButtons=[sSit,"Load Notecard","Done","AO on","AO off","Next Stand"];
     llSetTimerEvent(g_iMenuTimeout);
-    llDialog(kMenuTo,"AO options. Depending on model of AO, some may not work. Use OC Sub AO for more comprehensive control!",lButtons,g_iMenuChannel);   
+    llDialog(kMenuTo,"AO options. Depending on model of AO, some may not work. Use OC Sub AO for more comprehensive control!",lButtons,g_iMenuChannel);
 }
 
 MenuCommand(string sMsg, key kID) {
@@ -228,7 +186,7 @@ MenuCommand(string sMsg, key kID) {
         }
         llSetTimerEvent(g_iMenuTimeout);
         llDialog(kID,"Pick an AO settings notecard to load, or click Cancel",lButtons+["Cancel"],g_iMenuChannel);
-        
+
     } else if(sMsg == "AO Sits ON") {
         g_iSitOverride = TRUE; //this will get set by the link message anyway, but set here just in case remenu happens before link message is read.
         llMessageLinked(LINK_SET,0,"ZHAO_SITON","");
@@ -244,14 +202,14 @@ MenuCommand(string sMsg, key kID) {
     else if(sMsg=="Next Stand") {
         if(iType == 2) // ZHAO-II
             llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
-        else // VISTA                
+        else // VISTA
             llMessageLinked(LINK_SET,0,"ZHAO_NEXTPOSE","");
     //check if sMsg is a notecard picked from Load Notecard menu, and send load command if so.
     } else  if(llGetInventoryType(sMsg) == INVENTORY_NOTECARD) llMessageLinked(LINK_THIS,0,"ZHAO_LOAD|"+sMsg,"");
     //resend the menu where it makes sense.
     if(sMsg!="Done" && sMsg!="Cancel" && sMsg!="Load Notecard") zhaoMenu(kID);
 }
-                                   
+
 default {
     state_entry() {
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
@@ -259,14 +217,14 @@ default {
         if(iType == 0) determineType();
         g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
     }
-    
+
     attach(key kAvatar) {
         if(kAvatar) {//on attach
             if(iType == 0) determineType();
-            g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel 
-        }  
+            g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
+        }
     }
-    
+
     listen(integer iChannel, string sName, key kID, string sMsg) {
         if(iChannel == g_iMenuChannel) {// this is for our own limited ZHAO menu.
             MenuCommand(sMsg,kID);
@@ -298,7 +256,7 @@ default {
             }
         }
     }
-    
+
     link_message(integer iPrim, integer iNum, string sMsg, key kID) {
         if (iType == ORACUL && iNum == 0 && kID != "ocpause") {//oracul power command
                 g_sOraculstring = llGetSubString(sMsg,1,-1); //store the config string for Oracul AO.
@@ -315,14 +273,14 @@ default {
             if (g_iAOSwitch) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         }
     }
-        
+
     timer() {
         llSetTimerEvent(0);
         llListenRemove(g_iMenuHandle);
         g_lMenuUsers = []; //clear list
     }
-    
+
     changed(integer change) {
         if(change & CHANGED_OWNER) llResetScript();
-    }  
+    }
 }
