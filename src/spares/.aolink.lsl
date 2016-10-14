@@ -1,9 +1,9 @@
 /*
-    _____________________________.
+    _____________________________. 
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161014.2       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161014.3       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -11,12 +11,14 @@
    |;;;;;;;;;;;;;;;;;;;;;;;;;;;;||     This script is free software:
    |;;;;;;;_______________ ;;;;;||
    |;;;;;;|  ___          |;;;;;||     You can redistribute it and/or
-   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the
+   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the 
    |;;;;;;| |;;;|         |;;;;;||     GNU General Public License as
    |;;;;;;| |;;;|         |;;;;;||     published by the Free Software
    |;;;;;;| |___|         |;;;;;||     Foundation, version 2.
    \______|_______________|_____||
     ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
+
+github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aolink.lsl
 
 */
 
@@ -133,10 +135,9 @@ AOPause() {
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_OFF", "ocpause");
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
         else if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
-
+        llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // we assume that the AO is turned on and take controls to be able overriding walks when pushing arrow or WASD buttons
     }
     g_iOCSwitch = FALSE;
-    if(g_iAOSwitch = TRUE) llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // we assume that the AO is turned on and take controls to be able overriding walks when pushing arrow or WASD buttons
 }
 
 AOUnPause() {
@@ -147,9 +148,9 @@ AOUnPause() {
         else if(iType == GAELINE) llMessageLinked(LINK_THIS, 103, "", "ocpause");
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_ON", "ocpause");
         else if(iType>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
+        if(llGetPermissionsKey()) llReleaseControls(); // release now if we gave perms to take control
     }
     g_iOCSwitch = TRUE;
-    if(llGetPermissionsKey()) llReleaseControls(); // release now if we gave perms to take control
 }
 
 zhaoMenu(key kMenuTo) {
@@ -281,7 +282,7 @@ default {
     }
 
     run_time_permissions(integer iPerms) { // when the AO is turned on yet "paused" because we also play a collar pose, we want perms to know pushing arrow or WASD keys to override the walk anyway (without AntiSlide)
-            if(iPerms && PERMISSION_TAKE_CONTROLS) llTakeControls(CONTROL_FWD|CONTROL_LEFT|CONTROL_BACK|CONTROL_RIGHT,TRUE,TRUE);
+            if(iPerms & PERMISSION_TAKE_CONTROLS) llTakeControls(CONTROL_FWD|CONTROL_LEFT|CONTROL_BACK|CONTROL_RIGHT,TRUE,TRUE);
         }
 
         control(key id, integer level, integer edge) {
@@ -289,12 +290,12 @@ default {
                 llReleaseControls();
                 return; // the AO is turned off and we aren't playing any collar poses so let's get out of here
             }
-            if(level&edge) {
+            if(level & edge) {
                 if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); // we are pushing arrows or WASD
-                else if (iType == ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");
-            } else if((!level)&edge) {
+                else if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");
+            } else if((!level) & edge) {
                 if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); // we don't push any movement related keys
-                else if (iType == ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
+                else if (iType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
             }
         }
 
