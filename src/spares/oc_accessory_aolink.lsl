@@ -24,7 +24,7 @@
 //                          AO Link - 161014.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Medea Destiny, XenHat Liamano, Silkie Sabra,  //
-//  Wendy Starfall, Sumi Perl, Ansariel Hiller and Garvin Twine             //
+//  Wendy Starfall, Sumi Perl, Ansariel Hiller, Garvin Twine and stawberri  //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
