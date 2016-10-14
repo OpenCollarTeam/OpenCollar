@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161014.3       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161014.4       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -21,6 +21,8 @@
 github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aolink.lsl
 
 */
+
+string g_sVersion = "4.7"; // keep this simple
 
 integer iType;
 
@@ -135,7 +137,7 @@ AOPause() {
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_OFF", "ocpause");
         //Note: for ZHAO use LINK_THIS in pause functions, LINK_SET elsewhere. This is because ZHAOs which switch power on buttons by a script in the button reading the link messages are quite common. This avoids toggling the power switch when AO is only paused in those cases.
         else if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
-        llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // we assume that the AO is turned on and take controls to be able overriding walks when pushing arrow or WASD buttons
+        llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS); // we assume that the AO is turned on and take controls to be able overriding walks when pushing arrow or WASD buttons
     }
     g_iOCSwitch = FALSE;
 }
@@ -198,7 +200,7 @@ MenuCommand(string sMsg, key kID) {
         llMessageLinked(LINK_SET,0,"ZHAO_SITOFF","");
     } else if(sMsg == "AO on") {
         if(g_iOCSwitch) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); // don't switch on AO if we are paused
-        else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // the AO is on and we take controls to be able overriding walks when pushing arrow or WASD buttons
+        else llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS); // the AO is on and we take controls to be able overriding walks when pushing arrow or WASD buttons
         g_iAOSwitch = TRUE;
     }
     else if(sMsg == "AO off")
@@ -217,8 +219,15 @@ MenuCommand(string sMsg, key kID) {
 
 default {
     state_entry() {
-        g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
+        if (llGetInventoryType("oc_sys") == INVENTORY_SCRIPT) {
+            llOwnerSay("\n\nPlease drop me into an AO, I don't belong into a collar! Cleaning myself up here.\n");
+            llRemoveInventory(llGetScriptName());
+        } else if (llGetInventoryType("oc_ao") == INVENTORY_SCRIPT) {
+            llOwnerSay("\n\nPlease don't drop me into the OpenCollar AO, I'm not needed in there as it already works just fine. Just drope me into any other AO to make it OpenCollar compatible if you want. Cleaning myself up here.\n");
+            llRemoveInventory(llGetScriptName());
+        }
         g_kWearer = llGetOwner();
+        g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,-7,-1)));
         if(iType == 0) determineType();
         g_iMenuChannel = -(integer)llFrand(999999)-10000; //randomise menu channel
     }
@@ -242,7 +251,11 @@ default {
             } else if (sMsg == "LM off") {
                 llListenRemove(g_iLMListenHandle);
                 llOwnerSay("Lockmeister support disabled, you can enable it by typing:\n/88 LM on");
-            }
+            } else if (sMsg == "version") llOwnerSay("AO Link v"+g_sVersion);
+            else if (sMsg == "rm") {
+                llOwnerSay("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please add the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent version] of the AO Link script.\n");
+                llRemoveInventory(llGetScriptName());
+                }
             return;
         } else if (iChannel == g_iLMChannel) {
             if (llGetSubString(sMsg,0,35) == g_kWearer) {
