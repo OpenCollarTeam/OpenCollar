@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161014.1       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161014.2       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -89,7 +89,7 @@ determineType() { //function to determine AO type.
         --x;
         string sScriptName = llToLower(llGetInventoryName(INVENTORY_SCRIPT,x));
         if(~llSubStringIndex(sScriptName,"vista")) {//if we find a script with "zhao" in the name.
-            iType=VISTA;
+            iType = VISTA;
             x=0;
             llOwnerSay("OC compatibility script configured for VISTA AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
@@ -98,16 +98,16 @@ determineType() { //function to determine AO type.
             x=0;
             llOwnerSay("OC compatibility script configured for HUDDLES AO.  This support is experimental.  Please let us know if you notice any problems.");
         } else if (~llSubStringIndex(sScriptName,"z_ao")) {//if we find a script with "z_ao" in the name.
-            iType=GAELINE;
+            iType = GAELINE;
             x=0;
             llOwnerSay("OC compatibility script configured for Gaeline AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
             llMessageLinked(LINK_SET, 103, "", "");
         } else if(~llSubStringIndex(sScriptName,"oracul")) {//if we find a script with "oracul" in the name.
-            iType=ORACUL;
+            iType = ORACUL;
             x=0;
             llOwnerSay("OC compatibility script configured for Oracul AO. IMPORTANT: for proper functioning, you must now switch your AO on (switching it off first if necessary!)");
         } else if(~llSubStringIndex(sScriptName,"zhao")) {//if we find a script with "zhao" in the name.
-            iType=ZHAO;
+            iType = ZHAO;
             x=0;
             llOwnerSay("OC compatibility script configured for Zhao AO. Depending on your AO model, you may sometimes see your AO buttons get out of sync when the AO is accessed via the collar, just toggle a setting to restore it. NOTE! Toggling sit override now is highly recommended, but if you don't know what that means or don't have one, don't worry.");
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
@@ -135,7 +135,8 @@ AOPause() {
         else if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");//we use "ocpause" as a dummy key to identify our own linked messages so we can tell when an on or off comes from the AO rather than from the collar standoff, to sync usage.
 
     }
-    g_iOCSwitch=FALSE;
+    g_iOCSwitch = FALSE;
+    if(g_iAOSwitch = TRUE) llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // we assume that the AO is turned on and take controls to be able overriding walks when pushing arrow or WASD buttons
 }
 
 AOUnPause() {
@@ -147,7 +148,8 @@ AOUnPause() {
         else if (iType == HUDDLES) llMessageLinked(LINK_THIS, 4900, "AO_ON", "ocpause");
         else if(iType>1 ) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
     }
-    g_iOCSwitch=TRUE;
+    g_iOCSwitch = TRUE;
+    if(llGetPermissionsKey()) llReleaseControls(); // release now if we gave perms to take control
 }
 
 zhaoMenu(key kMenuTo) {
@@ -195,10 +197,12 @@ MenuCommand(string sMsg, key kID) {
         llMessageLinked(LINK_SET,0,"ZHAO_SITOFF","");
     } else if(sMsg == "AO on") {
         if(g_iOCSwitch) llMessageLinked(LINK_SET,0,"ZHAO_AOON",""); // don't switch on AO if we are paused
+        else llRequestPermissions(llGetOwner(),PERMISSION_TAKE_CONTROLS); // the AO is on and we take controls to be able overriding walks when pushing arrow or WASD buttons
         g_iAOSwitch = TRUE;
     }
     else if(sMsg == "AO off")
         llMessageLinked(LINK_SET,0,"ZHAO_AOOFF","");
+        if(llGetPermissions()) llReleaseControls(); // we don't need controls when the AO is off
     else if(sMsg=="Next Stand") {
         if(iType == 2) // ZHAO-II
             llMessageLinked(LINK_SET,0,"ZHAO_NEXTSTAND","");
@@ -261,6 +265,7 @@ default {
         if (iType == ORACUL && iNum == 0 && kID != "ocpause") {//oracul power command
                 g_sOraculstring = llGetSubString(sMsg,1,-1); //store the config string for Oracul AO.
                 g_iAOSwitch = (integer)llGetSubString(sMsg,0,1); //store the AO power state.
+                if(!g_iAOSwitch && llGetPermissions()) llReleaseControls(); // no need for input controls
                 if (g_iAOSwitch) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         } else if(iType > 1) {
             if (sMsg == "ZHAO_SITON") g_iSitOverride=TRUE;
@@ -269,10 +274,29 @@ default {
                 if(sMsg == "ZHAO_AOON") g_iAOSwitch=TRUE;
                 else if(sMsg == "ZHAO_AOOFF")
                     g_iAOSwitch = FALSE;
+                    if(llGetPermissions()) llReleaseControls(); // no need for input controls
             }
             if (g_iAOSwitch) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
         }
     }
+
+    run_time_permissions(integer iPerms) { // when the AO is turned on yet "paused" because we also play a collar pose, we want perms to know pushing arrow or WASD keys to override the walk anyway (without AntiSlide)
+            if(iPerms && PERMISSION_TAKE_CONTROLS) llTakeControls(CONTROL_FWD|CONTROL_LEFT|CONTROL_BACK|CONTROL_RIGHT,TRUE,TRUE);
+        }
+
+        control(key id, integer level, integer edge) {
+            if(!g_iAOSwitch || g_iOCSwitch) {
+                llReleaseControls();
+                return; // the AO is turned off and we aren't playing any collar poses so let's get out of here
+            }
+            if(level&edge) {
+                if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); // we are pushing arrows or WASD
+                else if (iType == ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");
+            } else if((!level)&edge) {
+                if(iType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); // we don't push any movement related keys
+                else if (iType == ORACUL && g_sOraculstring!="") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
+            }
+        }
 
     timer() {
         llSetTimerEvent(0);
