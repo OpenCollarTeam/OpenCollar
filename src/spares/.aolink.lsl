@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161015.4       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161015.5       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -69,7 +69,7 @@ integer g_iOCSwitch = TRUE; //monitor on/off due to collar pauses (FALSE=paused,
 integer g_iSitOverride = TRUE; //monitor AO sit override
 
 Say(string sStr) {
-    llSetObjectName(g_sMyName);
+    llSetObjectName("OpenCollar AO Link");
     if (g_iDebugMode) llSay(0,sStr);
     else llOwnerSay(sStr);
     llSetObjectName(g_sObjectName);
@@ -162,7 +162,13 @@ default {
         g_sMyName = llGetScriptName();
         g_sObjectName = llGetObjectName();
         if (llGetInventoryType("oc_sys") == INVENTORY_SCRIPT) {
-            Say("I do not belong into a collar... bye.");
+            Say("\n\nPlease drop me into an AO, I don't belong into a collar! Cleaning myself up here.\n");
+            llRemoveInventory(g_sMyName);
+        } else if (llGetInventoryType("oc_ao") == INVENTORY_SCRIPT || llGetInventoryType("oc_ao_interface") == INVENTORY_SCRIPT) {
+            Say("\n\nPlease don't drop me into the OpenCollar AO, I'm not needed in there as it already works just fine. Just drop me into any other AO to make it OpenCollar Six™ compatible if you want. Cleaning myself up here.\n");
+            llRemoveInventory(g_sMyName);
+        } else if (llGetInventoryType("OpenCollarAttch - Interface") == INVENTORY_SCRIPT) {
+            Say("\n\nPlease don't drop me into the OpenCollar Sub AO, I'm not needed in there. Just drop me into any other AO to make it OpenCollar Six™ compatible if you want. If you are trying to update a very old Sub AO, please find a cost-free replacement at any official OpenCollar location or network vendor. Cleaning myself up here.\n");
             llRemoveInventory(g_sMyName);
         }
         g_kWearer = llGetOwner();
@@ -193,9 +199,9 @@ default {
             } else if (sMsg == "LM off") {
                 llListenRemove(g_iLMListenHandle);
                 Say("Lockmeister support disabled, you can enable it by typing:\n/88 LM on");
-            } else if (sMsg == "version") Say("Version: "+g_sVersion);
+            } else if (sMsg == "version") Say("I'm version "+g_sVersion);
             else if (sMsg == "rm aolink") {
-                Say("\nRemoving myself, bye!");
+                Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
                 llRemoveInventory(g_sMyName);
             } else if (sMsg == "debug on") {
                 g_iDebugMode = TRUE;
