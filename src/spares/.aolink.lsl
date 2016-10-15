@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161015.5       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161016.1       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -28,25 +28,19 @@ integer g_iAOType;
 string g_sMyName;
 string g_sObjectName;
 
-//If left like this, script will try to determine AO type automatically.
-//To force compatibility for a particular type of AO, change to:
-// integer g_iAOType=1; //for Oracul type AOs
-// integer g_iAOType=2; // for ZHAO-II type AOs
-// integer g_iAOType=3; // for Vista type AOs
-// integer g_iAOType=4; // for AKEYO type AOs
-// integer g_iAOType=5; // for Gaeline type AOs
-// integer g_iAOType=7; // for AKEYO NITRO type AOs
-
-//Integer map for above
-integer ORACUL  = 1;
-integer ZHAO    = 2;
-integer VISTA   = 3;
-integer AKEYO   = 4;
-integer GAELINE = 5;
-integer HUDDLES = 6;
+//integer map for g_iAOType
+integer ORACUL      = 1;
+integer ZHAO        = 2;
+integer VISTA       = 3;
+integer AKEYO       = 4;
+integer GAELINE     = 5;
+integer HUDDLES     = 6;
 integer AKEYO_NITRO = 7;
+
+//integer g_iAOType = i; // enabling this will try to force compatibility with the AO type of the corresponding integer instead of letting the script automatically detect it
+
 //just a ordered list to use for notifies
-string g_sKnownAOs = "AKEYO, AKEYO_NITRO, GAELINE, HUDDLES, ORACUL, VISTA, ZHAO";
+string g_sKnownAOs = "AKEYO, Gaeline, Huddles, Oracul, Vista and ZHAO";
 
 // OC channel listener for comms from collar
 integer g_iAOChannel = -782690;
@@ -77,18 +71,20 @@ Say(string sStr) {
 
 determineAOType() { //function to determine AO type.
     llListenRemove(g_iAOListenHandle);
+    string sNotifyBegin = "\n\nCongratulations! Your ";
+    string sNotifyEnd = " has been successfully linked with OpenCollar Six™. Your AO will now pause itself when you play a pose or couples animation with your collar. To make things work smoothly, please push the power button on your AO HUD off/on once.\n\nFor a list of commands type: /88 help\nwww.opencollar.at/aolink\n";
     g_iAOType = 0;
     if (~llSubStringIndex(llGetObjectName(),"AKEYO")) { //AKEYO is not a string in their script name, it is in animations but think the object name is a better test for this AO - Sumi Perl
         if (~llSubStringIndex(llGetObjectName(),"NitroAO")) { // Nitro has different messages.
             g_iAOType = AKEYO_NITRO;
-            Say("OC compatibility script configured for AKEYO NITRO AO.  This support is experimental.  Please let us know if you notice any problems.");
+            Say(sNotifyBegin+"AKEYO NITRO AO"+sNotifyEnd);
         } else {
             g_iAOType = AKEYO;
-            Say("OC compatibility script configured for AKEYO AO.  This support is experimental.  Please let us know if you notice any problems.");
+            Say(sNotifyBegin+"AKEYO AO"+sNotifyEnd);
         }
     } else if (~llSubStringIndex(llGetObjectName(),"HUDDLES")) {
         g_iAOType = HUDDLES;
-        Say("OC compatibility script configured for HUDDLES AO.  This support is experimental.  Please let us know if you notice any problems.");
+        Say(sNotifyBegin+"Huddles AO"+sNotifyEnd);
     }
     if (g_iAOType) jump next ; // no need to check any further if we already have the type identified
     integer x = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -98,35 +94,34 @@ determineAOType() { //function to determine AO type.
         if(~llSubStringIndex(sScriptName,"vista")) {//if we find a script with "zhao" in the name.
             g_iAOType = VISTA;
             x = 0;
-            Say("OC compatibility script configured for VISTA AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
+            Say(sNotifyBegin+"Vista AO"+sNotifyEnd);
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
         } else if ( ~llSubStringIndex(sScriptName,"huddles")) { //double check if the name wasnt found in the object name already
             g_iAOType = HUDDLES;
             x = 0;
-            Say("OC compatibility script configured for HUDDLES AO.  This support is experimental.  Please let us know if you notice any problems.");
+            Say(sNotifyBegin+"Huddles AO"+sNotifyEnd);
         } else if (~llSubStringIndex(sScriptName,"z_ao")) {//if we find a script with "z_ao" in the name.
             g_iAOType = GAELINE;
             x = 0;
-            Say("OC compatibility script configured for Gaeline AO. Support is very experimental since it is unknown how much was changed from ZHAO.");
+            Say(sNotifyBegin+"Gaeline AO"+sNotifyEnd);
             llMessageLinked(LINK_SET, 103, "", "");
         } else if(~llSubStringIndex(sScriptName,"oracul")) {//if we find a script with "oracul" in the name.
             g_iAOType = ORACUL;
             x = 0;
-            Say("OC compatibility script configured for Oracul AO. IMPORTANT: for proper functioning, you must now switch your AO on (switching it off first if necessary!)");
+            Say(sNotifyBegin+"Oracul AO"+sNotifyEnd);
         } else if(~llSubStringIndex(sScriptName,"zhao")) {//if we find a script with "zhao" in the name.
             g_iAOType = ZHAO;
             x = 0;
-            Say("OC compatibility script configured for Zhao AO. Depending on your AO model, you may sometimes see your AO buttons get out of sync when the AO is accessed via the collar, just toggle a setting to restore it. NOTE! Toggling sit override now is highly recommended, but if you don't know what that means or don't have one, don't worry.");
+            Say(sNotifyBegin+"ZHAO AO"+sNotifyEnd);
             llMessageLinked(LINK_SET, 0, "ZHAO_AOON", "");
         }
     }
     @next;
-    if(!g_iAOType) Say("Cannot identify AO type after trying to to identify one of the following AOs:\n"+g_sKnownAOs);
+    if(!g_iAOType) Say("\n\nOops! Either I landed in something that's not an AO or I'm not yet familiar with this type of AO. At version "+g_sVersion+" I know how to link with "+g_sKnownAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] in a new script!\n\nwww.opencollar.at/aolink\n");
     else {
         g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
         g_iLMListenHandle = llListen(g_iLMChannel,"","","");
         llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
-        Say("Lockmeister protocol support to interact with couple animators and furnitures is enabled, to disable it type:\n/88 LM off\nto enable again\n/88 LM on");
     }
 }
 
@@ -192,24 +187,24 @@ default {
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
         if (iChannel == g_iCommandChannel) {
-            if (sMsg == "LM on") {
-                Say("Lockmeister support enabled, you can disable it by typing:\n/88 LM off");
+            if (sMsg == "lm on") {
+                Say("\n\nLockMeister protocol support for couple animators and furniture has been enabled.\n");
                 llListenRemove(g_iLMListenHandle);
                 g_iLMListenHandle = llListen(g_iLMChannel,"","","");
-            } else if (sMsg == "LM off") {
+            } else if (sMsg == "lm off") {
                 llListenRemove(g_iLMListenHandle);
-                Say("Lockmeister support disabled, you can enable it by typing:\n/88 LM on");
+                Say("\n\nLockMeister protocol support for couple animators and furniture has been disabled.\n");
             } else if (sMsg == "version") Say("I'm version "+g_sVersion);
             else if (sMsg == "rm aolink") {
                 Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
                 llRemoveInventory(g_sMyName);
             } else if (sMsg == "debug on") {
                 g_iDebugMode = TRUE;
-                Say("Debug mode is turned on. Remember to turn it off again: \"/88 debug off\"");
+                Say("Let's debug!");
             } else if (sMsg == "debug off") {
-                Say("Debug mode is off.");
+                Say("I'm done debugging.");
                 g_iDebugMode = FALSE;
-            }
+            } else if (sMsg == "help") Say("\n\n/88 lm on|off ... lockmeister support on/off\n/88 debug on|off ... debug mode on/off\n/88 version ... print the version\n/88 rm aolink ... remove the script\n\nwww.opencollar.at/aolink\n"); //why can't chat be monospaced >:(
         } else if (iChannel == g_iLMChannel) {
             if (llGetSubString(sMsg,0,35) == g_kWearer) {
                 sMsg = llGetSubString(sMsg,36,-1);
