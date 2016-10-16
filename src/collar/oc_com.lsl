@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 161002.1                          //
+//                         Communicator - 161014.2                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -85,6 +85,7 @@ integer NOTIFY_OWNERS=1003;
 integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
 integer LINK_SAVE = 5;
+integer LINK_ANIM = 6;
 integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
@@ -95,7 +96,7 @@ integer LM_SETTING_DELETE = 2003;
 
 //integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
-
+integer ANIM_LIST_REQUEST = 7002;
 integer TOUCH_REQUEST = -9500;
 integer TOUCH_CANCEL = -9501;
 integer TOUCH_RESPONSE = -9502;
@@ -202,6 +203,24 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
         if (g_iTouchNotify && kToucher!=g_kWearer)
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your %DEVICETYPE%.\n",g_kWearer);
     }
+}
+
+MoveAnims(integer i) {
+    key kAnimator = llGetLinkKey(LINK_ANIM);
+    string sAnim;
+    list lAnims;
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nMoving "+(string)i+" animations to the Animator...",g_kWearer);
+    while (i) {
+        sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
+        llGiveInventory(kAnimator,sAnim);
+        lAnims += sAnim;
+        if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
+            if (llGetInventoryPermMask(sAnim,MASK_OWNER) & PERM_COPY)
+                llRemoveInventory(sAnim);
+        }
+    }
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nAnimations have been moved to the Animator:\n"+llList2CSV(lAnims),g_kWearer);
+    llMessageLinked(LINK_ANIM,ANIM_LIST_REQUEST,"","");
 }
 
 UserCommand(key kID, integer iAuth, string sStr) {
@@ -314,8 +333,11 @@ UserCommand(key kID, integer iAuth, string sStr) {
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                 } else
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
-            }
-            else if (sCommand == "busted") {
+            } else if (sStr == "mv anims") {
+                integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
+                if (i) MoveAnims(i);
+                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no animations to move",g_kWearer);
+            } else if (sCommand == "busted") {
                 if (sValue == "on") {
                     llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
                     g_iTouchNotify=TRUE;
@@ -504,6 +526,7 @@ default {
             if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
             else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
+            else if (sStr == "LINK_ANIM") LINK_ANIM = iSender;
             if (sStr != "LINK_REQUEST") {
                 if (!~llListFindList(g_lFoundCore5Scripts,[sStr,iSender]))
                     g_lFoundCore5Scripts += [sStr,iSender];
