@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 161011.1                             //
+//                          Animator - 161016.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -69,11 +69,6 @@ string g_sPoseMoveRun;  //Variable to hold our run animation
 string g_sWalkButtonPrefix = "";  //This can be changed to prefix walks in the PoseMove menu
 list g_lPoseMoveAnimationPrefix = ["~walk_","~run_"];
 
-//for the height scaling feature
-key g_kDataID;  //uuid of notecard read request
-integer g_iLine = 0;  //records progress through notecard
-list g_lAnimScalars;  //a 3-strided list in form animname,scalar,delay
-
 string g_sCurrentPose = "";
 integer g_iLastRank = 0;  //in this integer, save the rank of the person who posed the av, according to message map.  0 means unposed
 integer g_iLastPostureRank = 504;
@@ -86,6 +81,7 @@ list g_lHeightAdjustments;
 integer g_iRLVA_ON;
 integer g_iHoverOn = TRUE;
 float g_fHoverIncrement = 0.02;
+string g_sPose2Remove;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -376,7 +372,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (iNum <= g_iLastRank || !g_iAnimLock) {
             g_iLastRank = 0;
             StopAnim(g_sCurrentPose);
-            //llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
             g_sCurrentPose = "";
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
         }
@@ -385,7 +380,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
-        //llResetScript();
     } else if (sCommand=="posture") {
         if ( sValue=="on") {
             if (iNum<=CMD_WEARER) {
@@ -405,6 +399,19 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
                 else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%",kID);
         }
+    } else if (sCommand == "rm" && sValue == "pose") {
+        if (kID != g_kWearer || g_iAnimLock) {
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kID);
+            return;
+        }
+        g_sPose2Remove = llList2String(lParams,2);
+        if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
+            string sPrompt = "\nAre you sure you want to remove the no-copy animation "+sValue+" from your %DEVICETYPE%?\nRemember to accept the inventory offer or lose the animation for ever!";
+            if (llGetInventoryPermMask(g_sPose2Remove,MASK_OWNER) & PERM_COPY)
+                sPrompt = "\nAre you sure you want to reomve the animation "+g_sPose2Remove+" from your %DEVICETYPE%?";
+            Dialog(g_kWearer,sPrompt,["Yes","No"],["CANCEL"],0,CMD_WEARER,"RmPose");
+        } else
+            Dialog(g_kWearer, "\nPlease choose which animation to remove:", g_lPoseList+g_lOtherAnims,["CANCEL"],0,CMD_WEARER,"RmPoseSelect");
     } else if (sCommand=="animlock") {
         if (sValue=="on") {
             if (iNum<=CMD_WEARER) {
@@ -428,12 +435,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
         else if (sValue == "off" || sValue == "on")
             MessageAOs(llToUpper(sValue),"AO");
-        //else if (sValue == "on") MessageAOs("ON");
-        //doesnt work as it should, needs adjustment in AO
-        /*} else if (sValue == "lock") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_LOCK|"+(string)kID, g_kWearer);
-        else if (sValue == "unlock") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_UNLOCK|"+(string)kID, g_kWearer);
-        else if (sValue == "hide") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_HIDE|"+(string)kID, g_kWearer);
-        else if (sValue == "show") llMessageLinked(LINK_DIALOG, ATTACHMENT_RESPONSE,"CollarCommand|"+(string)iNum+"|ZHAO_SHOW|"+(string)kID, g_kWearer);*/
     } else if (sCommand == "antislide") {
         if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
@@ -494,18 +495,7 @@ default {
         g_kWearer = llGetOwner();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
-        if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
         //Debug("Starting");
-    }
-
-    dataserver(key kID, string sData) {
-        if (kID == g_kDataID) {
-            if (sData != EOF) {
-                g_lAnimScalars += llParseString2List(sData, ["|"], []);
-                g_kDataID = llGetNotecardLine("~heightscalars", ++g_iLine);
-            }
-            //else Debug("Notecard read complete");
-        }
     }
 
     run_time_permissions(integer iPerm) {
@@ -538,15 +528,15 @@ default {
             if (llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION) {
                 g_iLastRank = 0;
                 StopAnim(g_sCurrentPose);
-                //llMessageLinked(LINK_THIS, ANIM_STOP, g_sCurrentPose, "");
                 g_iAnimLock = FALSE;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"animlock", "");
                 g_sCurrentPose = "";
             }
-        } else if (iNum == ANIM_LIST_REQUEST)
+        } else if (iNum == ANIM_LIST_REQUEST) {
+            CreateAnimList();
             llMessageLinked(iSender,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
-        else if (iNum == LM_SETTING_RESPONSE) {
+        } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -558,7 +548,6 @@ default {
                     g_sCurrentPose = llList2String(lAnimParams, 0);
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
                     StartAnim(g_sCurrentPose);
-                    //llMessageLinked(LINK_THIS, ANIM_START, g_sCurrentPose, "");
                 } else if (sToken == "animlock") g_iAnimLock = (integer)sValue;
                 else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
                 else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
@@ -650,6 +639,22 @@ default {
                         else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
                         PoseMoveMenu(kAv,iNum,iAuth);
                     }
+                } else if (sMenuType == "RmPoseSelect") {
+                    if (sMessage != "CANCEL") UserCommand(iAuth, "rm pose "+sMessage,kAv);
+                } else if (sMenuType == "RmPose") {
+                    if (sMessage == "Yes") {
+                        if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
+                            if (llGetInventoryPermMask(g_sPose2Remove,MASK_OWNER) & PERM_COPY) {
+                                llRemoveInventory(g_sPose2Remove);
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nThe Animation \""+g_sPose2Remove+"\" has been deleted from your %DEVICETYPE%.",g_kWearer);
+                            } else {
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nPlease accept the inventory offer from "+llGetObjectName()+" of your animation "+g_sPose2Remove+". Else it will be purged for good!",g_kWearer);
+                                llGiveInventory(g_kWearer,g_sPose2Remove);
+                            }
+                        }
+                        CreateAnimList();
+                    }
+                    g_sPose2Remove = "";
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
@@ -673,9 +678,6 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_TELEPORT) RefreshAnim();
         if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
-            g_lAnimScalars = [];
-            g_iLine = 0;
-            if (llGetInventoryKey("~heightscalars")) g_kDataID = llGetNotecardLine("~heightscalars", g_iLine);
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
         }
 /*
