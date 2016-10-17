@@ -1,9 +1,9 @@
 /*
-    _____________________________. 
+    _____________________________.
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161016.1       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161017.4       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -11,7 +11,7 @@
    |;;;;;;;;;;;;;;;;;;;;;;;;;;;;||     This script is free software:
    |;;;;;;;_______________ ;;;;;||
    |;;;;;;|  ___          |;;;;;||     You can redistribute it and/or
-   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the 
+   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the
    |;;;;;;| |;;;|         |;;;;;||     GNU General Public License as
    |;;;;;;| |;;;|         |;;;;;||     published by the Free Software
    |;;;;;;| |___|         |;;;;;||     Foundation, version 2.
@@ -19,6 +19,11 @@
     ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
 
 github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aolink.lsl
+
+Right-click and edit your AO HUD, then navigate to the Contents tab of
+the Build Menu. Once the contents finish loading, drag and drop this
+script from your Inventory into the Contents tab of your AO HUD. If the
+AO Link is compatible with your AO HUD, it will indicate so in the Chat.
 
 */
 
@@ -125,6 +130,14 @@ determineAOType() { //function to determine AO type.
     }
 }
 
+checkPerms(string sName) {
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & 57344) == 57344)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & 57344) == 57344)) {
+        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aolink\n");
+        llRemoveInventory(sName);
+    }
+}
+
 AOPause() {
     if(g_iAOSwitch) {
         if (g_iAOType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_SET,0,"0"+g_sOraculstring,"ocpause");
@@ -156,6 +169,7 @@ default {
     state_entry() {
         g_sMyName = llGetScriptName();
         g_sObjectName = llGetObjectName();
+        checkPerms(g_sMyName);
         if (llGetInventoryType("oc_sys") == INVENTORY_SCRIPT) {
             Say("\n\nPlease drop me into an AO, I don't belong into a collar! Cleaning myself up here.\n");
             llRemoveInventory(g_sMyName);
@@ -173,14 +187,14 @@ default {
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)g_kWearer,-7,-1)));
         determineAOType();
     }
-    
+
     timer() {
         llSetTimerEvent(0);
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
         string sName;
         while (i) {
             sName = llToLower(llGetInventoryName(INVENTORY_SCRIPT,--i));
-            if ((~llSubStringIndex(sName,"aolink") || ~llSubStringIndex(sName,"ao link")) 
+            if ((~llSubStringIndex(sName,"aolink") || ~llSubStringIndex(sName,"ao link"))
                 && sName != g_sMyName) llRemoveInventory(sName);
         }
     }
@@ -234,7 +248,7 @@ default {
                     if ((integer)llGetSubString(g_sMyName,-1,-1))
                         llRemoveInventory(g_sMyName);
                     else llRemoveInventory((string)kID);
-                } else 
+                } else
                     llMessageLinked(LINK_SET,161014,"aolink:"+g_sVersion,g_sMyName);
             }
             return;
@@ -270,15 +284,17 @@ default {
         //the AO is turned off and we aren't playing any collar poses so let's get out of here
         }
         if(level & edge) {// we are pushing arrows or WASD
-            if(g_iAOType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause"); 
+            if(g_iAOType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOON", "ocpause");
             else if (g_iAOType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_THIS,0,"1"+g_sOraculstring,"ocpause");
         } else if (!level & edge) {// we don't push any movement related keys, or released a pushed key
-            if(g_iAOType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause"); 
+            if(g_iAOType > 1) llMessageLinked(LINK_THIS, 0, "ZHAO_AOOFF", "ocpause");
             else if (g_iAOType == ORACUL && g_sOraculstring != "") llMessageLinked(LINK_THIS,0,"0"+g_sOraculstring,"ocpause");
         }
     }
-    
-    changed(integer change) {
-        if(change & CHANGED_OWNER) llResetScript();
+
+    changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) checkPerms(g_sMyName);
+
     }
 }
