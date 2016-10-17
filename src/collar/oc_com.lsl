@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 161014.2                          //
+//                         Communicator - 161017.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -209,7 +209,7 @@ MoveAnims(integer i) {
     key kAnimator = llGetLinkKey(LINK_ANIM);
     string sAnim;
     list lAnims;
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nMoving "+(string)i+" animations to the Animator...",g_kWearer);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nFetching "+(string)i+" animations from the %DEVICETYPE%'s root...\n",g_kWearer);
     while (i) {
         sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
         llGiveInventory(kAnimator,sAnim);
@@ -219,7 +219,7 @@ MoveAnims(integer i) {
                 llRemoveInventory(sAnim);
         }
     }
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nAnimations have been moved to the Animator:\n"+llList2CSV(lAnims),g_kWearer);
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThe following animations have been moved to the %DEVICETYPE%'s animator module and are now ready to use:\n\n"+llList2CSV(lAnims)+"\n",g_kWearer);
     llMessageLinked(LINK_ANIM,ANIM_LIST_REQUEST,"","");
 }
 
@@ -336,7 +336,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
             } else if (sStr == "mv anims") {
                 integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
                 if (i) MoveAnims(i);
-                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There are no animations to move",g_kWearer);
+                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThere are currently no animations in the %DEVICETYPE%'s root.\n",g_kWearer);
             } else if (sCommand == "busted") {
                 if (sValue == "on") {
                     llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
