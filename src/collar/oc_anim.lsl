@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 161016.1                             //
+//                          Animator - 161017.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -406,12 +406,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         g_sPose2Remove = llList2String(lParams,2);
         if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
-            string sPrompt = "\nAre you sure you want to remove the no-copy animation "+sValue+" from your %DEVICETYPE%?\nRemember to accept the inventory offer or lose the animation for ever!";
+            string sPrompt = "\nATTENTION: The pose that you are about to delete is not copyable! It will be removed from the %DEVICETYPE% and sent to you. Please make sure to accept the inventory.\n\nDo you really want to remove the \""+g_sPose2Remove+"\" pose?";
             if (llGetInventoryPermMask(g_sPose2Remove,MASK_OWNER) & PERM_COPY)
-                sPrompt = "\nAre you sure you want to reomve the animation "+g_sPose2Remove+" from your %DEVICETYPE%?";
+                sPrompt = "\nDo you really want to remove the \""+g_sPose2Remove+"\" pose?";
             Dialog(g_kWearer,sPrompt,["Yes","No"],["CANCEL"],0,CMD_WEARER,"RmPose");
         } else
-            Dialog(g_kWearer, "\nPlease choose which animation to remove:", g_lPoseList+g_lOtherAnims,["CANCEL"],0,CMD_WEARER,"RmPoseSelect");
+            Dialog(g_kWearer, "\nWhich pose do you want to remove?\n", g_lPoseList,["CANCEL"],0,CMD_WEARER,"RmPoseSelect");
     } else if (sCommand=="animlock") {
         if (sValue=="on") {
             if (iNum<=CMD_WEARER) {
@@ -646,9 +646,9 @@ default {
                         if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
                             if (llGetInventoryPermMask(g_sPose2Remove,MASK_OWNER) & PERM_COPY) {
                                 llRemoveInventory(g_sPose2Remove);
-                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nThe Animation \""+g_sPose2Remove+"\" has been deleted from your %DEVICETYPE%.",g_kWearer);
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThe \""+g_sPose2Remove+"\" pose has been removed from your %DEVICETYPE%.\n",g_kWearer);
                             } else {
-                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\nPlease accept the inventory offer from "+llGetObjectName()+" of your animation "+g_sPose2Remove+". Else it will be purged for good!",g_kWearer);
+                                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThe \""+g_sPose2Remove+"\" pose has been removed from your %DEVICETYPE% and is now being delivered to you from an object called \""+llGetObjectName()+"\". This particular pose is not copyable. If you want to keep it, please make sure to accept the inventory.\n",g_kWearer);
                                 llGiveInventory(g_kWearer,g_sPose2Remove);
                             }
                         }
