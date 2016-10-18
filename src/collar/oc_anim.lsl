@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 161017.1                             //
+//                          Animator - 161018.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -586,7 +586,7 @@ default {
                     else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Attempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their normal AO.", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n\nwww.opencollar.at/ao\n", kAv);
                         AOMenu(kAv, iAuth);
                     } else {
                         if (sMessage== "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
