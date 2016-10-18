@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 160925.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 161018.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -253,7 +253,7 @@ SetAnimOverride() {
         } while (i--);
         llSetTimerEvent(g_iChangeInterval);
         if (!g_iStandPause) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
-        //llOwnerSay("AO ready ("+(string)((100*llGetFreeMemory())/65536)+"% free memory)");
+        llOwnerSay("AO ready ("+(string)llGetFreeMemory()+" bytes free memory)");
     }
 }
 
@@ -426,9 +426,11 @@ OrderMenu(key kID) {
 //command handling
 
 TranslateCollarCMD(string sCommand, key kID){
-    if (!llSubStringIndex(sCommand,"ZHAO_"))
-        sCommand = llToLower(llGetSubString(sCommand,5,-1));
-    else return;
+    if (!llSubStringIndex(sCommand,"ZHAO_")) {
+        sCommand = llGetSubString(sCommand,5,-1);
+        if (!~llSubStringIndex(sCommand,"load"))
+            sCommand = llToLower(sCommand);
+    } else return;
     if (!llSubStringIndex(sCommand,"stand")) {
         if (~llSubStringIndex(sCommand,"off")) {
             g_iStandPause = TRUE;
@@ -483,6 +485,15 @@ Command(key kID, string sCommand) {
         llPlaySound("dec9fb53-0fef-29ae-a21d-b3047525d312", 1.0);
         Notify(kID,"The AO has been locked.",TRUE);
     } else if (sCommand == "menu") MenuAO(kID);
+    else if (sCommand == "load") {
+        if (llGetInventoryType(sValue) == INVENTORY_NOTECARD) {
+            g_sCard = sValue;
+            g_iCardLine = 0;
+            g_sJson_Anims = "{}";
+            Notify(kID,"Loading animation set \""+g_sCard+"\".",TRUE);
+            g_kCard = llGetNotecardLine(g_sCard, g_iCardLine);
+        } else MenuLoad(kID,0);
+    }
 }
 
 StartUpdate(key kID) {
