@@ -58,10 +58,10 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="6.3.3";
-string g_sFancyVersion="⁶⋅³⋅³";
+string g_sCollarVersion="6.4.0";
+string g_sFancyVersion="⁶⋅⁴⋅⁰";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 161013.4;
+float g_fBuildVersion = 161018.2;
 
 key g_kWearer;
 
