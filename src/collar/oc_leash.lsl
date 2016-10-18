@@ -583,7 +583,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Oops! The leash can only reach 20 meters at most.",kMessageID);
                 Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth,"SetLength");
             }
-        } else if (sComm == "anchor" || sComm == "pass") {
+        } else if (sComm == "post" || sComm == "anchor" || sComm == "pass") {
             if (!CheckCommandAuth(kMessageID, iAuth) || sVal == llToLower(BUTTON_UPMENU)) {
                 if (bFromMenu) UserCommand(iAuth, "menu leash", kMessageID ,bFromMenu);
             } else if((key)sVal) {
@@ -593,7 +593,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 if (llGetAgentSize((key)sVal)) g_iPassConfirmed = FALSE;
                 else g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
-            } else if (sComm == "anchor")
+            } else if (sComm == "post" || sComm == "anchor")
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
             else if (sComm == "pass")
                 SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
