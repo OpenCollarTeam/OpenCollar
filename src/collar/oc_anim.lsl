@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 161018.1                             //
+//                          Animator - 161018.2                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -435,6 +435,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         if (sValue == "" || sValue == "menu") AOMenu(kID, iNum);
         else if (sValue == "off" || sValue == "on")
             MessageAOs(llToUpper(sValue),"AO");
+        else 
+            llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_"+sStr+"|"+(string)kID, kID);
     } else if (sCommand == "antislide") {
         if ((iNum == CMD_OWNER)||(kID == g_kWearer)) {
             string sValueNotLower = llList2String(lParams, 1);
