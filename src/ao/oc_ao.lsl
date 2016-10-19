@@ -50,8 +50,8 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sFancyVersion = "⁶⋅²⋅⁰";
-float g_fBuildVersion = 160927.1;
+string g_sFancyVersion = "⁶⋅³⋅⁰";
+float g_fBuildVersion = 161019.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -253,7 +253,7 @@ SetAnimOverride() {
         } while (i--);
         llSetTimerEvent(g_iChangeInterval);
         if (!g_iStandPause) llRegionSayTo(g_kWearer,g_iHUDChannel,(string)g_kWearer+":antislide off ao");
-        llOwnerSay("AO ready ("+(string)llGetFreeMemory()+" bytes free memory)");
+        //llOwnerSay("AO ready ("+(string)llGetFreeMemory()+" bytes free memory)");
     }
 }
 
