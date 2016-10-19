@@ -268,7 +268,7 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O   P   E   N   C   O   L   L   A   R™]\nw w w  .  o p e n c o l l a r  .  a t\t\t"+g_sFancyVersion;
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O  p  e  n  C  o  l  l  a  r    S  i  x™]\nw w w  .  o p e n c o l l a r  .  a t\t\t"+g_sFancyVersion;
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
