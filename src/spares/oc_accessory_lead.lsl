@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Lead - 150810.1                               //
+//                            Lead - 161024.1                               //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Ilse Mannonen, Wendy Starfall, Garvin Twine   //
+//  Copyright (c) 2008 - 2016 Ilse Mannonen, Wendy Starfall, Garvin Twine   //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
 //  it under the terms of the GNU General Public License as published       //
@@ -55,14 +55,8 @@
 integer g_iMychannel = -8888;
 string g_sListenfor;
 string g_sResponse;
-key g_kLeashed;
 string g_sWearerID;
 integer g_i;
-
-AnnounceLeashHolder() {
-    if (g_kLeashed) llRegionSayTo(g_kLeashed, g_iMychannel, g_sResponse);
-    else            llSay(g_iMychannel, g_sResponse);
-}
 
 default {
     state_entry() {
@@ -71,24 +65,21 @@ default {
         g_sListenfor = g_sWearerID + "handle";
         g_sResponse = g_sWearerID + "handle ok";
         llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
-        AnnounceLeashHolder();
+        llSay(g_iMychannel, g_sResponse);
         llSetTimerEvent(2.0);         
     }
     
     listen(integer channel, string name, key id, string message) {
-        g_kLeashed = llGetOwnerKey(id);
-        AnnounceLeashHolder();
+        llSay(g_iMychannel, g_sResponse);
         llSetTimerEvent(2.0);
     }
     attach(key kAttached) {
-        if (kAttached == NULL_KEY) {
-            if (g_kLeashed) llRegionSayTo(g_kLeashed, g_iMychannel, g_sWearerID+"handle detached");
-            else            llSay(g_iMychannel, g_sWearerID+"handle detached");
-        }
+        if (kAttached == NULL_KEY)
+            llSay(g_iMychannel, g_sWearerID+"handle detached");
     }
     changed(integer change) {
         if (change & CHANGED_TELEPORT) {
-            AnnounceLeashHolder();
+            llSay(g_iMychannel, g_sResponse);
             llSetTimerEvent(2.0);
         }
     }
@@ -96,10 +87,10 @@ default {
         if (g_i) {
             g_i = FALSE;
             llSetTimerEvent(0.0);
-            AnnounceLeashHolder();
+            llSay(g_iMychannel, g_sResponse);
         } else {
             g_i = TRUE;
-            AnnounceLeashHolder();
+            llSay(g_iMychannel, g_sResponse);
         }
     }
     on_rez(integer param) {
