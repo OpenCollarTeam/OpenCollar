@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 161019.1                          //
+//                         Communicator - 161017.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -134,7 +134,6 @@ list g_lCore5Scripts = ["LINK_AUTH","oc_auth","LINK_DIALOG","oc_dialog","LINK_RL
 list g_lFoundCore5Scripts;
 list g_lWrongRootScripts;
 integer g_iVerify;
-integer g_iLHAttached;
 /*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,
@@ -419,11 +418,6 @@ default {
             return;
         }
         if (iChan == g_iLockMeisterChan) {
-            if (sMsg ==(string)g_kWearer+"handle attached"+(string)g_kWearer && llGetOwnerKey(kID) == g_kWearer)
-                g_iLHAttached = TRUE;
-            else if (sMsg ==(string)g_kWearer+"handle detached"+(string)g_kWearer)
-                g_iLHAttached = FALSE;
-            if (g_iLHAttached) return;
             if(sMsg ==(string)g_kWearer+"collar")
                 llSay(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
             //new for LMV2
