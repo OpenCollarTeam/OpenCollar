@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2014 - 2016:
    |[]|----------------------|[]||
    |;;|       AO  Link       |;;||     Medea Destiny, XenHat Liamano,
-   |;;|       161017.4       |;;||     Wendy Starfall, Sumi Perl,
+   |;;|       161024.1       |;;||     Wendy Starfall, Sumi Perl,
    |;;|----------------------|;;||     Ansariel Hiller, Garvin Twine,
    |;;|   www.opencollar.at  |;;||     stawberri et al.
    |;;|----------------------|;;||
@@ -24,6 +24,12 @@ Right-click and edit your AO HUD, then navigate to the Contents tab of
 the Build Menu. Once the contents finish loading, drag and drop this
 script from your Inventory into the Contents tab of your AO HUD. If the
 AO Link is compatible with your AO HUD, it will indicate so in the Chat.
+
+NOTE: Please be aware that some shops sell modified GPL licensed ZHAOII
+scripts in their AOs with closed permissions and without publishing the
+source code anywhere. If your AO reports having successfully linked but
+goes haywire chances are that this is such a case. This is very sad and
+the only thing you can do then is to remove the link with: /88 rm aolink
 
 */
 
@@ -68,7 +74,7 @@ integer g_iOCSwitch = TRUE; //monitor on/off due to collar pauses (FALSE=paused,
 integer g_iSitOverride = TRUE; //monitor AO sit override
 
 Say(string sStr) {
-    llSetObjectName("OpenCollar AO Link");
+    llSetObjectName("AO Link v"+g_sVersion);
     if (g_iDebugMode) llSay(0,sStr);
     else llOwnerSay(sStr);
     llSetObjectName(g_sObjectName);
