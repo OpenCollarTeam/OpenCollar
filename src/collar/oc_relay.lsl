@@ -520,6 +520,17 @@ CleanQueue() {
     Dequeue();
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_relay") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llToLower(sStr) == "rm relay") {
@@ -636,6 +647,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
         //Debug("Starting");
@@ -878,8 +890,10 @@ default {
         }
     }
 
-/*    changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+    changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+    }
+    /*    if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");

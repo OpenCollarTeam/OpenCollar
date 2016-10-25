@@ -350,6 +350,17 @@ releaseRestrictions() {
     doRestrictions();
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_rlvsuite") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     string sLowerStr=llToLower(sStr);
     //Debug(sStr);
@@ -625,6 +636,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -775,9 +787,11 @@ default {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
-/*
+
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+    }
+    /*    if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");

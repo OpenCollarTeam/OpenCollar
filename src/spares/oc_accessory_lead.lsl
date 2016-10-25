@@ -58,10 +58,21 @@ string g_sResponse;
 string g_sWearerID;
 integer g_i;
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms)) 
+        llRemoveInventory(sName);
+}
+
 default {
     state_entry() {
-        llSetMemoryLimit(8192);
+        llSetMemoryLimit(10240);
         g_sWearerID = (string)llGetOwner();
+        FailSafe();
         g_sListenfor = g_sWearerID + "handle";
         g_sResponse = g_sWearerID + "handle ok";
         llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
@@ -78,6 +89,7 @@ default {
             llSay(g_iMychannel, g_sWearerID+"handle detached");
     }
     changed(integer change) {
+        if (change & CHANGED_INVENTORY) FailSafe();
         if (change & CHANGED_TELEPORT) {
             llSay(g_iMychannel, g_sResponse);
             llSetTimerEvent(2.0);

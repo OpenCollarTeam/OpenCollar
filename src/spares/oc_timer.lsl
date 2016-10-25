@@ -279,6 +279,17 @@ TimerStart(integer perm) {
     } else g_iOnRunning=3;
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_timer")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
     if ((g_iOnRunning || g_iRealRunning) && kID == g_kWearer) {
         if (!llSubStringIndex(llToLower(sStr),"timer")) {
@@ -431,6 +442,7 @@ default {
 
     state_entry() {
         //llSetMemoryLimit(40960);  //2015-05-06 (4238 bytes free)
+        FailSafe();
         g_iLastTime=llGetUnixTime();
         llSetTimerEvent(1);
         g_kWearer = llGetOwner();
@@ -603,14 +615,13 @@ default {
         g_iLastTime=g_iCurrentTime;
     }
 
-/*
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+        /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
+        }*/
     }
-*/
 }

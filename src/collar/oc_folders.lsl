@@ -483,6 +483,16 @@ SetAsyncMenu(key kAv, integer iAuth) {
     g_kAsyncMenuUser = kAv;
     g_iAsyncMenuAuth = iAuth;
 }
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_folders")
+        llRemoveInventory(sName);
+}
 
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
@@ -535,6 +545,7 @@ default {
     state_entry() {
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -792,9 +803,10 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
         llSetTimerEvent(0.0);
     }
 
-/*
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+    }
+    /*    if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");

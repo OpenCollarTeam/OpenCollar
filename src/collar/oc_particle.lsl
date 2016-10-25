@@ -367,6 +367,17 @@ integer KeyIsAv(key id) {
     return llGetAgentSize(id) != ZERO_VECTOR;
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_particle") 
+        llRemoveInventory(sName);
+}
+
 //Menus
 
 ConfigureMenu(key kIn, integer iAuth) {
@@ -411,6 +422,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         FindLinkedPrims();
         StopParticles(TRUE);
         GetSettings(FALSE);
@@ -671,6 +683,7 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
+            FailSafe();
             integer iNumberOfTextures = llGetInventoryNumber(INVENTORY_TEXTURE);
             integer iLeashTexture;
             if (iNumberOfTextures) {

@@ -205,6 +205,20 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     }
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_com") {
+        integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
+        while (i)llRemoveInventory(llGetInventoryName(INVENTORY_NOTECARD,--i));
+        llRemoveInventory(sName);
+    }
+}
+
 MoveAnims(integer i) {
     key kAnimator = llGetLinkKey(LINK_ANIM);
     string sAnim;
@@ -370,6 +384,7 @@ default {
     state_entry() {
        // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
+        FailSafe();
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llGetObjectDesc();
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
@@ -611,6 +626,7 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){

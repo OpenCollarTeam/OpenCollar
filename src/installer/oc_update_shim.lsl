@@ -103,8 +103,20 @@ Check4Core5Script() {
     } while (i);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_update_shim")
+        llRemoveInventory(sName);
+}
+
 default {
     state_entry() {
+        FailSafe();
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ) g_iIsUpdate = TRUE;
         // build script list
@@ -253,5 +265,10 @@ default {
                 llRemoveInventory(sScriptName);
             }
         }
+    }
+    
+    changed(integer iChange){
+        if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 }

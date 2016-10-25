@@ -243,6 +243,17 @@ PrepareSounds() {
     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_bell")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
     sStr = llToLower(sStr);
@@ -316,6 +327,7 @@ default {
     state_entry() {
        // llSetMemoryLimit(36864);
         g_kWearer=llGetOwner();
+        FailSafe();
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();
         PrepareSounds();
@@ -452,7 +464,10 @@ default {
 
     changed(integer iChange) {
         if(iChange & CHANGED_LINK) BuildBellElementList();
-        else if (iChange & CHANGED_INVENTORY) PrepareSounds();
+        else if (iChange & CHANGED_INVENTORY) {
+            FailSafe();
+            PrepareSounds();
+        }
         if (iChange & CHANGED_COLOR) {
             integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
             if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop

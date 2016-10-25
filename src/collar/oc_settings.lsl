@@ -335,6 +335,20 @@ SendValues() {
     llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
+FailSafe(integer iSec) {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_settings" || iSec) {
+        integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
+        while (i)llRemoveInventory(llGetInventoryName(INVENTORY_NOTECARD,--i));
+        llRemoveInventory(sName);
+    }
+}
+
 UserCommand(integer iAuth, string sStr, key kID) {
     string sStrLower = llToLower(sStr);
     if (sStrLower == "print settings" || sStrLower == "debug settings") PrintSettings(kID, llGetSubString(sStrLower,0,4));
@@ -376,6 +390,7 @@ default {
     state_entry() { 
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
+        FailSafe(0);
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -452,6 +467,7 @@ default {
             else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
+        else if (iNum == 451 && kID == "sec") FailSafe(1);
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
@@ -477,6 +493,7 @@ default {
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
+            FailSafe(0);
             if (llGetInventoryKey(g_sCard) != g_kCardID) {
                 // the .settings card changed.  Re-read it.
                 g_iLineNr = 0;

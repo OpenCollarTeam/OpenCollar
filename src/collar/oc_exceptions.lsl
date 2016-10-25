@@ -333,6 +333,17 @@ ClearEx() {
     }
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_exceptions")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     string sLower = llToLower(sStr);
     if (iNum != CMD_OWNER) {
@@ -460,6 +471,7 @@ default {
     state_entry() {
         //llSetMemoryLimit(49152);
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -554,9 +566,11 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
-/*
+
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+    }
+    /*    if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");

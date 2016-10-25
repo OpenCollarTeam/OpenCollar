@@ -441,6 +441,17 @@ DoUnlockAll()
     if (g_iRLVOn) llOwnerSay("@addattach=y,remattach=y,addoutfit=y,remoutfit=y");
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_undress")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum > CMD_WEARER || iNum < CMD_OWNER) return; // sanity check
@@ -665,6 +676,7 @@ default {
     state_entry()
     {
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -832,14 +844,13 @@ default {
         llSetTimerEvent(0.0);
     }
 
-/*
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+        /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
+        }*/
     }
-*/
 }

@@ -115,6 +115,17 @@ DoMenu() {
     Dialog(sPrompt, lMyButtons, [sCancel], 0, "bookmarks");
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_remote_bookmarks")
+        llRemoveInventory(sName);
+}
+
 UserCommand(string sStr) {
     list lParams = llParseString2List(sStr, [" "], []);
     // So commands can accept a value
@@ -352,6 +363,7 @@ default {
     
     state_entry() {
         g_kOwner = llGetOwner();  // store key of wearer
+        FailSafe();
         ReadDestinations(); //Grab our presets
         //Debug("Starting");
     }
@@ -475,7 +487,10 @@ default {
     }
 
     changed(integer iChange) {
-        if(iChange & CHANGED_INVENTORY) ReadDestinations();
+        if(iChange & CHANGED_INVENTORY) {
+            FailSafe();
+            ReadDestinations();
+        }
         if(iChange & CHANGED_OWNER)  llResetScript();
 /*
         if (iChange & CHANGED_REGION) {

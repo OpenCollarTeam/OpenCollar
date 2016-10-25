@@ -491,10 +491,22 @@ BuildLockElementList() {//EB
     }
 }
 
-SafeX(){if(!(llGetObjectPermMask(1)&0x4000)){string n="";llSetText(n+"\nATTENTION!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰\nThis item does not grant\naccess to its source code.\nIt is not compliant with GNU\nand OpenCollar license terms.\nThe scripts can't run like this!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰",<1,1,0>,1);llOwnerSay("\n\n"+n+"Sorry but this item was not correctly set up to run OpenCollar scripts. If this item with faulty permissions was given or sold to you by "+NameGroupURI("agent/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]))+", please inform them that they are not compliant with GNU and OpenCollar license terms. Details can be seen ["+license_blob+"#L179-L185 here].\n");
-    n=llGetScriptName();integer i=llGetInventoryNumber(10);string s;do{
-    i--;s=llGetInventoryName(10,i);if(s!=n)llSetScriptState(s,0);}while(i);
-    llInstantMessage("4da2b231-87e1-45e4-a067-05cf3a5027ea","[§3/e] @ ("+GetTimestamp()+") SRC: "+g_sWorldAPI+"resident/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]));llSetScriptState(n,0);}
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    integer i;
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)) {
+        i = 1;
+        llOwnerSay("\n\nSorry but this item was not correctly set up to run OpenCollar scripts. If this item with faulty permissions was given or sold to you by "+NameGroupURI("agent/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]))+", please inform them that they are not compliant with GNU and OpenCollar license terms. Details can be seen ["+license_blob+"#L179-L185 here].\n");
+        llInstantMessage("4da2b231-87e1-45e4-a067-05cf3a5027ea","[§3/e] @ ("+GetTimestamp()+") SRC: "+g_sWorldAPI+"resident/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]));
+    }
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms)
+    || sName != "oc_sys" || i) {
+        llSetText("\nATTENTION!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰\nThis item does not grant\naccess to its source code.\nIt is not compliant with GNU\nand/or OpenCollar license terms.\nThe scripts can't run like this!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰",<1,1,0>,1);
+        llRemoveInventory(sName);
+    }
 }
 
 SetLockElementAlpha() { //EB
@@ -554,7 +566,8 @@ RebuildMenu() {
 
 init (){
     github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    g_iWaitRebuild = TRUE;SafeX();JB();
+    g_iWaitRebuild = TRUE;JB();
+    FailSafe();
     llSetTimerEvent(1.0);
 }
 
@@ -724,6 +737,7 @@ default
     changed(integer iChange) {
         if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
             g_iWaitRebuild = TRUE;JB();
+            FailSafe();
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
         }

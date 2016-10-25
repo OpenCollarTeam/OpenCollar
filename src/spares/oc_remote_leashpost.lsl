@@ -60,6 +60,17 @@ integer RemoteChannel(string sID,integer iOffset) {
     return iChan;
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_remote_leashpost") 
+        llRemoveInventory(sName);
+}
+
 default {
     on_rez(integer iStart) {
         llResetScript();
@@ -67,6 +78,7 @@ default {
     
     state_entry() {
         llSetMemoryLimit(16384);
+        FailSafe();
         g_iListener = llListen(RemoteChannel(llGetOwner(),1234),"","","");
         list lTemp = llParseString2List(llGetObjectDesc(),["@"],[]);
         vector vRot = (vector)("<"+llList2String(lTemp,1)+">");
@@ -85,5 +97,8 @@ default {
             kID = llList2Key(lToLeash,--i);
             llRegionSayTo(kID,RemoteChannel(kID,0),"anchor "+sObjectID);
         }
+    }
+    changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 }

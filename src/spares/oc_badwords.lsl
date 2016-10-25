@@ -186,6 +186,17 @@ ParseAnimList(string sStr) {
     } while (i>0);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_badwords")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer remenu) { // here iNum: auth value, sStr: user command, kID: avatar id
     //Debug("Got command:"+sStr);
     sStr=llStringTrim(sStr,STRING_TRIM);
@@ -363,6 +374,7 @@ default {
     state_entry() {
         //llSetMemoryLimit(40960);
         g_kWearer = llGetOwner();
+        FailSafe();
         g_sBadWordAnim = "~shock";
         g_sBadWordSound = "Default" ;
         //Debug("Starting");
@@ -474,14 +486,14 @@ default {
             }
         }
     }
-/*
+
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+        /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
+        }*/
     }
-*/
 }

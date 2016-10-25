@@ -415,6 +415,17 @@ integer Auth(string sObjID, integer iAttachment) {
     return iNum;
 }
 
+FailSafe(integer iSec) {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_auth" || iSec)
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
     string sMessage = llToLower(sStr);
@@ -596,6 +607,7 @@ default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         else g_iFirstRun = TRUE;
+        FailSafe(0);
       /*  if (g_iProfiled){
             llScriptProfiler(1);
            // Debug("profiling restarted");
@@ -730,7 +742,8 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_AUTH","");
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == 451 && kID == "sec") FailSafe(1);
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
@@ -781,6 +794,7 @@ default {
     }
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe(0);
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){

@@ -282,6 +282,17 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmlabel");
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_meshlabel") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iAuth, string sStr, key kAv) {
     //Debug("Command: "+sStr);
     string sLowerStr = llToLower(sStr);
@@ -347,6 +358,7 @@ default
     state_entry() {
        // llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
+        FailSafe();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;
         LabelsCount();
@@ -460,6 +472,7 @@ default
     changed(integer iChange) {
         if(iChange & CHANGED_LINK) // if links changed
             if (LabelsCount()==TRUE) SetLabel();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*        if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);

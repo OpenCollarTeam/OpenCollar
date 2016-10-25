@@ -357,6 +357,24 @@ CreateAnimList() {
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
 
+FailSafe(integer iSec) {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_anim" || iSec) {
+        integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
+        while (i) {
+            sName = llGetInventoryName(INVENTORY_ANIMATION,--i);
+            if (llGetInventoryPermMask(sName,MASK_OWNER) & PERM_COPY) 
+                llRemoveInventory(sName);
+        }
+        llRemoveInventory(llGetScriptName());
+    }
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
 
@@ -495,6 +513,7 @@ default {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
        // llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
+        FailSafe(0);
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         //Debug("Starting");
@@ -671,7 +690,8 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == 451 && kID == "sec") FailSafe(1);
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if (iNum == RLVA_VERSION) g_iRLVA_ON = TRUE;
         else if (iNum == RLV_OFF) g_iRLVA_ON = FALSE;
     }
@@ -681,6 +701,7 @@ default {
         if (iChange & CHANGED_TELEPORT) RefreshAnim();
         if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
+            FailSafe(0);
         }
 /*
         if (iChange & CHANGED_REGION) {

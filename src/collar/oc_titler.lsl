@@ -149,6 +149,17 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmtitler");
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_titler") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iAuth, string sStr, key kAv) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
@@ -231,6 +242,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 default{
     state_entry(){
        // llSetMemoryLimit(36864);
+        FailSafe();
         g_iTextPrim = -1 ;
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
@@ -318,6 +330,7 @@ default{
 
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 
     on_rez(integer param){

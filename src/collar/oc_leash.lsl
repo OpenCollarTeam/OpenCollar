@@ -443,6 +443,17 @@ YankTo(key kIn){
     llStopMoveToTarget();
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_leash") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_EVERYONE) {
@@ -621,6 +632,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
         //Debug("Starting");
@@ -822,6 +834,7 @@ default {
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
         }
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*        if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);

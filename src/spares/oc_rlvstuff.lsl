@@ -304,6 +304,17 @@ ClearSettings(string _category) { //clear settings list
     //main RLV script will take care of sending @clear to viewer
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_rlvstuff")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     if (iNum > CMD_WEARER) return;  //nothing for lower than wearer here
     sStr=llStringTrim(sStr,STRING_TRIM);
@@ -363,6 +374,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -475,15 +487,13 @@ default {
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
-/*
-    changed(integer iChange)
-    {
-        if (iChange & CHANGED_REGION) {
+    changed(integer iChange) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+        /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
+        }*/
     }
-*/
 }

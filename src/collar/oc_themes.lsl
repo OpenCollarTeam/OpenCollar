@@ -331,6 +331,17 @@ BuildElementsList(){
     }
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_themes") 
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
@@ -522,6 +533,7 @@ default {
     state_entry() {
         //llSetMemoryLimit(65536);  //cant set any lower in this script
         g_kWearer = llGetOwner();
+        FailSafe();
         BuildTexturesList();
         BuildElementsList();
         BuildThemesList();
@@ -736,6 +748,7 @@ default {
         if (iChange & CHANGED_LINK) BuildElementsList();
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
+            FailSafe();
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
             else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
             if (llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sThemesCard)!=g_kThemesCardUUID) BuildThemesList();

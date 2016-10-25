@@ -469,6 +469,17 @@ FontMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"font");
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_label")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iAuth, string sStr, key kAv) {
     string sLowerStr = llToLower(sStr);
     if (sStr == "rm label") {
@@ -536,6 +547,7 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner();
+        FailSafe();
         //first count the label prims.
         integer ok = LabelsCount();
         SetOffsets(NULL_KEY);
@@ -652,6 +664,7 @@ default
                 SetLabelBaseAlpha(); // update hide elements
             }
         }
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*        if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);

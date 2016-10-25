@@ -19,10 +19,10 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote Options - 160126.1       .*' /  .*' ; .*`- +'  `*'          //
+//       Remote Options - 160909.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
 //  Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, //
 //  Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.   //
 // ------------------------------------------------------------------------ //
@@ -169,6 +169,9 @@ DoStyle(string style) {
     "Pose~b2893dc1-2d38-5819-c8b1-6b7e931daad2",
     "Stop~88ea147b-939d-6462-adba-3c38cc0642f8",
     "Hudmenu~682cca8f-f1fe-f70e-f804-0a52a7838ddc",
+    "Acc-Gag~101286a6-0420-94a5-913b-60a027c3988e",
+    "Acc-Blindfold~a9ae5c9a-f865-87b6-2ebf-c254c7cacb22",
+    "Acc-Cuffs~1ad97509-88c3-a829-dfac-d3fc54422954",
     "[ Light ]",
     "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
     "Picture~86517d37-d251-06aa-0d57-127853f193b9",
@@ -187,7 +190,10 @@ DoStyle(string style) {
     "Rez~2a284c71-6c96-b0fd-9415-963e4bca9ca0",
     "Pose~c48d0e15-db82-9799-c3e3-882d9669bca4",
     "Stop~fcb2ccd6-5ebe-dc16-5002-618601b66500",
-    "Hudmenu~79f42937-65fb-8c3b-5a06-8f9d9cf21234"
+    "Hudmenu~79f42937-65fb-8c3b-5a06-8f9d9cf21234",
+    "Acc-Gag~b2719596-e1db-e3f9-bbbf-03c4c7f6d633",
+    "Acc-Blindfold~51b8d911-9a46-b89d-c3e6-41903825837b",
+    "Acc-Cuffs~6dce2821-9cbd-f6a3-fc3a-fcdef6e2ff0d"
     ];
 
     integer i;
@@ -337,16 +343,27 @@ OrderButton(string sButton)
     g_kMenuID = Dialog(llGetOwner(), sPrompt, lButtons, [UPMENU], 0);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_remote_options")
+        llRemoveInventory(sName);
+}
+
 default
 {
     state_entry() {
         //llSleep(1.0);
+        FailSafe();
         FindButtons(); // collect buttons names
         DefinePosition();
         DoStyle("initialize");
         DoStyle(llList2String(g_lStyles, 0));
        // llOwnerSay("Finalizing HUD Reset... please wait a few seconds so all menus have time to initialize.");
-        llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
     }
 
     attach(key kAttached) {
@@ -365,9 +382,7 @@ default
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sHudMenu, "");
-        else if (iNum == SUBMENU && sStr == g_sHudMenu) DoMenu(g_sHudMenu);
+        if (iNum == SUBMENU && sStr == g_sHudMenu) DoMenu(g_sHudMenu);
         else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
             list lParams = llParseString2List(sStr, ["|"], []);
             //kID = (key)llList2String(lParams, 0);
@@ -412,5 +427,6 @@ default
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_LINK) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 }

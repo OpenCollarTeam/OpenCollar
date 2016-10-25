@@ -19,10 +19,10 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 160307.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 160909.2        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2015 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
 //  Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, //
 //  Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.   //
 // ------------------------------------------------------------------------ //
@@ -53,8 +53,8 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "160307.1";
-string g_sFancyVersion = "⁶⋅⁰⋅¹";
+string g_sVersion = "160909.2";
+string g_sFancyVersion = "⁶⋅¹⋅⁰";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -94,7 +94,7 @@ integer CMD_TOUCH            = 100;
 integer MENUNAME_REQUEST     = 3000;
 integer MENUNAME_RESPONSE    = 3001;
 integer SUBMENU              = 3002;
-
+integer ACC_CMD              = 7000;
 integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
 integer DIALOG_TIMEOUT       = -9002;
@@ -107,7 +107,7 @@ string g_sAllPartners = "ALL";
 string g_sAddPartners = "Add";
 
 list g_lMainMenuButtons = [" ◄ ",g_sAllPartners," ► ",g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
-list g_lMenus;
+list g_lMenus = ["HUD Style"];
 key    g_kMenuID;
 string g_sMenuType;
 
@@ -160,13 +160,19 @@ SendCollarCommand(string sCmd) {
     g_lPartnersInSim = PartnersInSim();
     integer i = llGetListLength(g_lPartnersInSim);
     if (i > 1) {
-        if ((key)g_sActivePartnerID)
-            llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
-        else if (g_sActivePartnerID == g_sAllPartners) {
+        if ((key)g_sActivePartnerID) {
+            if (!llSubStringIndex(sCmd,"acc-")) 
+                llMessageLinked(LINK_THIS,ACC_CMD,sCmd,g_sActivePartnerID);
+            else
+                llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
+        } else if (g_sActivePartnerID == g_sAllPartners) {
             integer i = llGetListLength(g_lPartnersInSim);
              while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
                 string sPartnerID = llList2String(g_lPartnersInSim,--i);
-                llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
+                if (!llSubStringIndex(sCmd,"acc-")) 
+                    llMessageLinked(LINK_THIS,ACC_CMD,sCmd,sPartnerID);
+                else
+                    llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
             }
         }
     } else llOwnerSay("None of your partners are in range.");
@@ -259,9 +265,21 @@ integer PicturePrim() {
     return 0;
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_remote_sys")
+        llRemoveInventory(sName);
+}
+
 default {
     state_entry() {
         g_kOwner = llGetOwner();
+        FailSafe();
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
@@ -273,6 +291,8 @@ default {
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         g_iPicturePrim = PicturePrim();
         NextPartner(0,0);
+        MainMenu();
+        llOwnerSay("\n\nYou are wearing this OpenCollar Remote for the first time. I'm opening the remote menu where you can manage your partners. Make sure that your partners are near you and click Add to register them. To open the remote menu again, please select the gear (⚙) icon on your remote HUD. www.opencollar.at/remote\n");
     }
     
     on_rez(integer iStart) {
@@ -486,5 +506,6 @@ default {
             }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 }

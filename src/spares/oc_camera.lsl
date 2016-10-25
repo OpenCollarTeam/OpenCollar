@@ -304,6 +304,17 @@ ChatCamParams(integer iChannel, key kID) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sPosLine,kID);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_camera")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llList2String(lParams, 0);
@@ -377,6 +388,7 @@ default {
     state_entry() {
        // llSetMemoryLimit(36864);  
         g_kWearer = llGetOwner();
+        FailSafe();
         g_sJsonModes = JsonModes();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_CONTROL_CAMERA | PERMISSION_TRACK_CAMERA);
         //Debug("Starting");
@@ -457,13 +469,14 @@ default {
             llSetTimerEvent(0.0);
         }
     }
-/*    
+    
     changed(integer iChange) {
-        if (iChange & CHANGED_REGION) {
+        if (iChange & CHANGED_INVENTORY) FailSafe();
+        /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
                 Debug("profiling restarted");
             }
-        }
-    }*/
+        }*/
+    }
 }

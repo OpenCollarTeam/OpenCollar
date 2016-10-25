@@ -343,6 +343,17 @@ dequeueSensor() {
     llSetTimerEvent(g_iReapeat);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_remote_dialog")
+        llRemoveInventory(sName);
+}
+
 default {
     on_rez(integer iParam) {
         llResetScript();
@@ -350,6 +361,7 @@ default {
 
     state_entry() {
         g_kWearer=llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -543,6 +555,7 @@ default {
 
     changed(integer iChange){
         if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){

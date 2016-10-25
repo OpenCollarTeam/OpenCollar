@@ -172,6 +172,17 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
     }
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_capture")
+        llRemoveInventory(sName);
+}
+
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
@@ -252,6 +263,7 @@ default{
     state_entry() {
        // llSetMemoryLimit(32768); //2016-01-24 (6034 bytes free)
         g_kWearer = llGetOwner();
+        FailSafe();
         //Debug("Starting");
     }
 
@@ -345,6 +357,7 @@ default{
                 }
             }
         }
+        if (iChange & CHANGED_INVENTORY) FailSafe();
         /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);

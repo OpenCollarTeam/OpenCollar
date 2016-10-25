@@ -281,6 +281,17 @@ RotMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,ROTMENU);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_resizer") 
+        llRemoveInventory(sName);
+}
+
 PosMenu(key kAv, integer iAuth) {
     string sPrompt = "\nHere you can nudge the %DEVICETYPE% in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
@@ -341,6 +352,7 @@ default {
     state_entry() {
         //llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();
+        FailSafe();
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration
         Store_StartScaleLoop();
         //Debug("Starting");
@@ -446,6 +458,7 @@ default {
             else Store_StartScaleLoop();
         }
         if (iChange & (CHANGED_SHAPE | CHANGED_LINK)) Store_StartScaleLoop();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {

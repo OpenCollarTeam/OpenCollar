@@ -196,6 +196,17 @@ InitiateInstallation() {
     //llWhisper(iChan,"-.. --- / .... ..- -.."); Remote HUD command
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_installer_sys")
+        llRemoveInventory(sName);
+}
+
 default {
     state_entry() {
        // llPreloadSound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f");
@@ -203,6 +214,7 @@ default {
         //llPreloadSound("3409e593-20ab-fd34-82b3-6ecfdefc0207"); // ao
        // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
         llSetTimerEvent(300.0);
+        FailSafe();
         ReadName();
         g_sObjectName = llGetObjectName();
         llListen(g_initChannel, "", "", "");
@@ -321,7 +333,10 @@ default {
     changed(integer iChange) {
     // Resetting on inventory change ensures that the bundle list is
     // kept current, and that the .name card is re-read if it changes.
-        if (iChange & CHANGED_INVENTORY)  llResetScript();
+        if (iChange & CHANGED_INVENTORY) {
+            llResetScript();
+            FailSafe();
+        }
     }
 
     dataserver(key kID, string sData) {

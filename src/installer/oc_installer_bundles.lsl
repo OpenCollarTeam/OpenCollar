@@ -116,9 +116,21 @@ debug(string sMsg) {
    // llOwnerSay(llGetScriptName() + ": " + sMsg);
 }
 
+FailSafe() {
+    string sName = llGetScriptName();
+    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
+    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
+    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    || sName != "oc_installer_bundles")
+        llRemoveInventory(sName);
+}
+
 default
 {   
     state_entry() {
+        FailSafe();
         llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,"", <1,1,1>, 1.0]);
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;    
     }
@@ -209,8 +221,7 @@ default
     }
     
     changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) {
-            llResetScript();
-        }
+        if (iChange & CHANGED_INVENTORY) llResetScript();
+        if (iChange & CHANGED_INVENTORY) FailSafe();
     }
 }
