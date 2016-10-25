@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Exceptions - 160413.1                            //
+//                         Exceptions - 161024.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Medea Destiny, Garvin Twine, littlemousy,               //
