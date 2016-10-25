@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          RLV Stuff - 160503.3                            //
+//                          RLV Stuff - 161024.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail,        //
@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⋅⁰";
+string g_sAppVersion = "¹⋅¹";
 
 string g_sParentMenu = "RLV";
 

@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Undress - 160503.1                              //
+//                          Undress - 161024.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -54,7 +54,7 @@
 
 //gives menus for clothing and attachment, stripping and locking
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "¹⋅³";
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";

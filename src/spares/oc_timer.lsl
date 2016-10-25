@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                            Timer - 160704.3                              //
+//                            Timer - 161024.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
@@ -52,7 +52,7 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "¹⋅³";
 
 string g_sSubMenu = "Timer";
 string g_sParentMenu = "Apps";

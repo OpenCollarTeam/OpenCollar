@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Camera - 160301.1                              //
+//                           Camera - 161024.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Wendy Starfall, Medea Destiny, //
 //  littlemousy, Romka Swallowtail, Garvin Twine et al.                     //
@@ -54,7 +54,7 @@
 //allows owner to set different camera mode
 //responds to commands from modes list
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "¹⋅³";
 
 key g_kWearer;
 integer g_iLastNum;
