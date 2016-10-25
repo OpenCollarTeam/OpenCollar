@@ -526,29 +526,25 @@ SetLockElementAlpha() { //EB
 }
 
 UpdateGlow(integer iLink, integer iAlpha) {
+    list lGlows;
+    integer i;
     if (iAlpha == 0) {
-        SavePrimGlow(iLink);
-        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
-    } else RestorePrimGlow(iLink);
-}
-
-SavePrimGlow(integer iLink) {
-    float fGlow = llList2Float(llGetLinkPrimitiveParams(iLink,[PRIM_GLOW,0]),0);
-    list lGlows = g_lClosedLockGlows;
-    if (g_iLocked) lGlows = g_lOpenLockGlows;
-    integer i = llListFindList(lGlows,[iLink]);
-    if (i !=-1 && fGlow > 0) lGlows = llListReplaceList(lGlows,[fGlow],i+1,i+1);
-    if (i !=-1 && fGlow == 0) lGlows = llDeleteSubList(lGlows,i,i+1);
-    if (i == -1 && fGlow > 0) lGlows += [iLink, fGlow];
-    if (g_iLocked) g_lOpenLockGlows = lGlows;
-    else g_lClosedLockGlows = lGlows;
-}
-
-RestorePrimGlow(integer iLink) {
-    list lGlows = g_lOpenLockGlows;
-    if (g_iLocked) lGlows = g_lClosedLockGlows;    
-    integer i = llListFindList(lGlows,[iLink]);
-    if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(lGlows, i+1)]);
+        float fGlow = llList2Float(llGetLinkPrimitiveParams(iLink,[PRIM_GLOW,0]),0);
+        lGlows = g_lClosedLockGlows;
+        if (g_iLocked) lGlows = g_lOpenLockGlows;
+        i = llListFindList(lGlows,[iLink]);
+        if (i !=-1 && fGlow > 0) lGlows = llListReplaceList(lGlows,[fGlow],i+1,i+1);
+        if (i !=-1 && fGlow == 0) lGlows = llDeleteSubList(lGlows,i,i+1);
+        if (i == -1 && fGlow > 0) lGlows += [iLink, fGlow];
+        if (g_iLocked) g_lOpenLockGlows = lGlows;
+        else g_lClosedLockGlows = lGlows;
+        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]); 
+    } else {
+        lGlows = g_lOpenLockGlows;
+        if (g_iLocked) lGlows = g_lClosedLockGlows;    
+        i = llListFindList(lGlows,[iLink]);
+        if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(lGlows, i+1)]);
+    }
 }
 
 RebuildMenu() {
