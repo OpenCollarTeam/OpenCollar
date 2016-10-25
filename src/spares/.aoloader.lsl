@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2016:
    |[]|----------------------|[]||
    |;;|      AO  Loader      |;;||     Garvin Twine
-   |;;|       161019.1       |;;||
+   |;;|       161024.4       |;;||     Wendy Starfall
    |;;|----------------------|;;||
    |;;|   www.opencollar.at  |;;||
    |;;|----------------------|;;||
@@ -20,7 +20,18 @@
 
 github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aoloader.lsl
 
+This utility requires both the OpenCollar AO of version 6.2.0 or greater
+and another AO HUD rezzed next to each other on the ground. The script
+has to be dropped into the other AO HUD which will open a dialog with a
+selection of SET cards of this AO. Once a SET has been chosen, it will
+attempt to install it on the OpenCollar AO where it will then be available
+as a "Wildcard" until the user chooses to manually rename the notecard in
+the OpenCollar AO's contents.
+
 */
+
+string g_sVersion = "1.0";
+string g_sSupportedAOs = "Oracul, AX and SP";
 
 string g_sPreInstalledAnimations;
 key g_kOwner;
@@ -32,15 +43,18 @@ integer g_iLine;
 key g_kCardRequestID;
 string g_sObjectName;
 integer g_iTimeOut;
+string g_sMyName;
+
+string g_sManPage = "www.opencollar.at/aoloader";
 
 Say(string sStr) {
-    llSetObjectName(llGetScriptName());
+    llSetObjectName("AO Loader v"+g_sVersion);
     llOwnerSay(sStr);
     llSetObjectName(g_sObjectName);
 }
 
 Menu(){
-    string sPrompt = "\nPlease choose which set to install into your OpenCollar AO:";
+    string sPrompt = "\nWhich set do you want to install on your OpenCollar AO?\n\n"+g_sManPage;
     g_lSettingCards = [];
     list lButtons;
     integer iEnd = llGetInventoryNumber(INVENTORY_NOTECARD);
@@ -102,11 +116,11 @@ Particles(key kTarget) {
             PSYS_PART_TARGET_POS_MASK |
             PSYS_PART_EMISSIVE_MASK,
         PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
-        PSYS_SRC_TEXTURE, "930c3304-e899-9266-2ab5-ab9ec3aec2b6",
+        PSYS_SRC_TEXTURE, "a09ec8d2-45de-25f7-1662-ffffb8fe4a74",
         PSYS_SRC_TARGET_KEY, kTarget,
-        PSYS_PART_START_COLOR, <0.529, 0.416, 0.212>,
-        PSYS_PART_END_COLOR, <0.733, 0.592, 0.345>,
-        PSYS_PART_START_SCALE, <0.68, 0.64, 0>,
+        /*PSYS_PART_START_COLOR, <0.529, 0.416, 0.212>,
+        PSYS_PART_END_COLOR, <0.733, 0.592, 0.345>,*/
+        PSYS_PART_START_SCALE, <0.01, 0.01, 0>,
         PSYS_PART_END_SCALE, <0.04, 0.04, 0>,
         PSYS_PART_START_ALPHA, 0.1,
         PSYS_PART_END_ALPHA, 1,
@@ -117,6 +131,14 @@ Particles(key kTarget) {
     ]);
 }
 
+checkPerms(string sName) {
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & 57344) == 57344)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & 57344) == 57344)) {
+        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aoloader\n");
+        llRemoveInventory(sName);
+    }
+}
+
 RemoveMe() {
     llRemoveInventory(llGetScriptName());
 }
@@ -125,7 +147,9 @@ default {
     state_entry() {
         llParticleSystem([]);
         g_kOwner = llGetOwner();
+        g_sMyName = llGetScriptName();
         g_sObjectName = llGetObjectName();
+        checkPerms(g_sMyName);
         integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
         integer iIsOracul;
         while(i) {
@@ -139,17 +163,17 @@ default {
                 iIsOracul = FALSE;
         }
         if (!iIsOracul) {
-            Say("\n\n"+g_sObjectName+" does not appear to be a supported AO\nRemoving myself...\n");
+            Say("\n\nSorry! I'm not compatible with \""+g_sObjectName+"\" at this time. My version is "+g_sVersion+" and so far I can load sets from "+g_sSupportedAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aoloader.lsl recent source] in a new script!\n\n"+g_sManPage+"\n");
             RemoveMe();
         }
         if (llGetAttached()) {
-            Say("\n\nI only work when the AO is rezzed to the ground... \nRemoving myself...\n");
+            Say("\n\nI only work when the AO is rezzed to the ground...\n\nCleaning myself up...\n\n"+g_sManPage+"\n");
             RemoveMe();
         }
         integer iChannel = -llAbs((integer)("0x" + llGetSubString(g_kOwner,30,-1)));
         llListen(iChannel,"","","");
         llWhisper(iChannel,"AO set installation");
-        Say("\n\nSearching for OpenCollar AO version 6.2.0 or higher, please make sure there is only one and it is rezzed and not attached!\n");
+        Say("\n\nSearching for an OpenCollar AO 6.2.0 or greater...\n\nPlease make sure there is only one OpenCollar AO and that it is rezzed on the ground, not attached to your avatar!\n\n"+g_sManPage+"\n");
         llSetTimerEvent(5);
     }
     listen(integer iChannel, string sName, key kID, string sMessage) {
@@ -160,7 +184,7 @@ default {
             if (~index) {
                 g_sSettingCard = llList2String(g_lSettingCards,index+1);
                 g_kCardRequestID = llGetNotecardLine(g_sSettingCard,g_iLine);
-                Say("\n\nInstalling \""+g_sSettingCard+"\" from \""+g_sObjectName+"\" into your OpenCollar AO as new Wildcard.\nPlease stand by...\n");
+                Say("\n\nInstalling \""+g_sSettingCard+"\" from \""+g_sObjectName+"\" into your OpenCollar AO.\n\nPlease stand by...\n");
                 Particles(g_kAOID);
             }
         } else {
@@ -194,17 +218,23 @@ default {
             g_kCardRequestID = llGetNotecardLine(g_sSettingCard,++g_iLine);
         } else {
             llGiveInventory(g_kAOID,g_sSettingCard);
-            Say("\n\nInstallation of \""+g_sSettingCard+"\" from \""+g_sObjectName+"\" into your OpenCollar AO finished. Pick your AO up and wear it, then choose a Wildcard animation set.\nRemoving myself...\n");
+            Say("\n\nThe installation was a success!\n\nThe new animation set will now be available as a Wildcard from your OpenCollar AO's Load menu.\n\n"+g_sManPage+"\n");
             llParticleSystem([]);
             RemoveMe();
         }
     }
     timer() {
         if (g_iTimeOut)
-            Say("\n\nYou did not answer the menu in a timely fashion.\nRemoving myself...");
+            Say("\n\nEither you missed my menu or you forgot about me!\n\nCleaning myself up...\n\n"+g_sManPage+"\n");
         else
-            Say("\n\nNo OpenCollar AO 6.2.0 or higher found.\nRemoving myself......\nRez an OpenCollar AO version 6.2.0 or higher and insert me into the Oracal AO again.\n");
+            Say("\n\nI couldn't find a compatible OpenCollar AO nearby!\n\nPlease rez an OpenCollar AO version 6.2.0 or greater on the ground and insert me into the other AO HUD again.\n\n"+g_sManPage+"\n");
         llParticleSystem([]);
         RemoveMe();
+    }
+    
+    changed(integer iChange) {
+        if (iChange & CHANGED_OWNER) llResetScript();
+        if (iChange & CHANGED_INVENTORY) checkPerms(g_sMyName);
+
     }
 }
