@@ -555,7 +555,15 @@ default {
             }
         } //needed to be the same ID that send earlier pings or pongs
         else if (iNum == AUTH_REPLY) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
-        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == REBOOT && sStr == "reboot") {
+            if (llGetInventoryType("oc_relay") == INVENTORY_SCRIPT) {
+                if (!llGetScriptState("oc_relay")) {
+                    llSetScriptState("oc_relay",TRUE);
+                    llResetOtherScript("oc_relay");
+                }
+            }
+            llResetScript();
+        }
     }
 
     touch_start(integer iNum) {
