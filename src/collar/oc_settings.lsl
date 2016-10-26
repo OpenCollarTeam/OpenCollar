@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 161024.1                             //
+//                          Settings - 161026.4                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -98,8 +98,11 @@ integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
 string g_sSampleURL = "https://goo.gl/adCn8Y";
+string g_sEmergencyURL = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~attn";
+key g_kURLRequestID;
+float g_fLastNewsStamp;
+integer g_iCheckNews;
 
-//string WIKI_URL = "http://www.opencollar.at/user-guide.html";
 list g_lSettings;
 
 integer g_iSayLimit = 1024; // lsl "say" string limit
@@ -373,6 +376,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
+            g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
         } else {
             g_kConfirmDialogID = llGenerateKey();
@@ -405,6 +409,7 @@ default {
 
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
+            g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
             //llSleep(0.5); // brief wait for others to reset
             //llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
@@ -447,8 +452,18 @@ default {
                     } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
                 }
             } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
+            g_kURLLoadRequest = "";
+        } else if (iStatus == 200 && kID == g_kURLRequestID) {
+            g_iCheckNews = FALSE;
+            integer index = llSubStringIndex(sBody,"\n");
+            float fNewsStamp = (float)llGetSubString(sBody,0,index-1);
+            if (fNewsStamp > g_fLastNewsStamp) {
+                sBody = llGetSubString(sBody,index,-1); //schneidet die erste zeile ab
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sBody,g_kWearer);
+                g_fLastNewsStamp = fNewsStamp;
+                g_lSettings = SetSetting(g_lSettings,"intern_news",(string)fNewsStamp);
+            }
         }
-        g_kURLLoadRequest = "";
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -459,12 +474,18 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
+            if (sToken == "intern_news") {
+                g_fLastNewsStamp = (float)sValue;
+                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+            }
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
             if (SettingExists(sStr)) llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
-            else if (sStr == "ALL") llSetTimerEvent(2.0);
-            else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
+            else if (sStr == "ALL") {
+                g_iCheckNews = FALSE;
+                llSetTimerEvent(2.0);
+            } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
         else if (iNum == 451 && kID == "sec") FailSafe(1);
@@ -488,6 +509,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
+        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {
