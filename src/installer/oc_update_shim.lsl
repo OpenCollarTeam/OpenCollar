@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 161024.1                           //
+//                         Update Shim - 161026.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -235,7 +235,7 @@ default {
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
             // celebrate
-            llOwnerSay("Installation complete!");
+            //llOwnerSay("Installation complete!");
             if (g_iIsUpdate) {
                 //reboot scripts
                 llSleep(0.5);
