@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 161024.1                              //
+//                           System - 161026.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -785,13 +785,11 @@ default
                 else g_iLatestVersion=TRUE;
             } else if (id == news_request) {  // We got a response back from the news page on Github.  See if it's new enough to report to the user.
                 // The first line of a news item should be space delimited list with timestamp in format yyyymmdd.n as the last field, where n is the number of messages on this day
-                string firstline = llList2String(llParseString2List(body, ["\n"], []), 0);
-                list firstline_parts = llParseString2List(firstline, [" "], []);
-                string this_news_time = llList2String(firstline_parts, -1);
-
+                integer index = llSubStringIndex(body,"\n");
+                string this_news_time = llGetSubString(body,0,index-1);
                 if (compareVersions(this_news_time,g_sLastNewsTime)) {
-                    string news = "Beep: " + body;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+news,g_kWearer);
+                    body = llGetSubString(body,index,-1);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+body+"\n\nTo unsubscribe please type: /%CHANNEL% %PREFIX% news off\n",g_kWearer);
                     g_sLastNewsTime = this_news_time;
                 }
             } else if (id == g_kDistCheck) {
