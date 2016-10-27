@@ -1,6 +1,6 @@
-=======================
-OpenCollar™ Help Card | 2016-04-20
-=======================
+=========================
+OpenCollar Six™ Help Card | 2016-10-27
+=========================
 
 This is only a short version of the manual, explaining the basic usage and lists all chat commands.
 
@@ -86,7 +86,9 @@ If that’s too hard to remember you can easily change it.
 List of Chat Commands
 ===============
 
-Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles! (NOTE: Wearers have to use the first two letters of their username instead of the hash key.)
+Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles!
+
+NOTE: Wearers have to use the first two letters of their username instead of the hash key.
 
 -----------------------
 General Commands:
@@ -134,14 +136,11 @@ Titler:
 
     # menu titler
 
-    # title box
-
     # title [a fancy title]
 
     # title on
     # title off
 
-    # title color
     # title color <x, y, z>
 
 ------
@@ -156,9 +155,9 @@ Bell:
     # bell show
     # bell hide
 
--------
-Label:
--------
+----------------------------------
+Label (selected models only):
+----------------------------------
 
     # menu label
 
@@ -193,9 +192,13 @@ Animations:
     # antislide on
     # antislide off
 
---------
-Poses:
---------
+    # mv anims
+
+    # rm pose [name of pose]
+
+----------------------------
+Poses (stock selection):
+----------------------------
 
     # pose
 
@@ -221,9 +224,9 @@ Poses:
 
     # stop
 
-----------------------
-Couple Animations:
-----------------------
+-------------------------------------------
+Couple Animations (stock selection):
+-------------------------------------------
 
     # couples
 
@@ -237,9 +240,9 @@ Couple Animations:
 
     # stop couples
 
---------
+----------
 Capture:
---------
+----------
 
     # capture
 
@@ -268,11 +271,9 @@ Leash:
     # follow
     # beckon
     # unfollow
-    
+
     # stay
     # move
-
-    # post
 
     # anchor
     # park
@@ -294,6 +295,8 @@ RLV:
 
     # rlv handshakes
 
+    # terminal
+
     # clear
 
 -----------
@@ -302,7 +305,7 @@ Force Sit:
 
     # sit
     # stand
-    
+
     # forbid stand
     # allow stand
 
@@ -374,25 +377,25 @@ Relay:
     # relay trusted
     # relay ask
     # relay auto
-    
+
     # relay off
-    
+
     # relay lite on
     # relay lite off
-    
+
     # relay smart on
     # relay smart off
-    
+
     # relay land on
     # relay land off
-    
+
     # relay pending
-    
+
     # relay access
-    
+
     # relay helpless on
     # relay helpless off
-    
+
     # relay safeword
 
 ---------
@@ -433,7 +436,7 @@ Settings:
     # verify
 
     # stealth
-    
+
     # themes
     # looks
 
@@ -454,7 +457,7 @@ Help/About:
     # info
 
     # update
-    
+
     # reboot
 
 ==================================
