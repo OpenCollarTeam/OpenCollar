@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 161024.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 161029.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -51,7 +51,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 string g_sFancyVersion = "⁶⋅⁴⋅⁰";
-float g_fBuildVersion = 161024.1;
+float g_fBuildVersion = 161029.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
