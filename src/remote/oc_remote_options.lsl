@@ -232,12 +232,12 @@ DefinePosition() {
     integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
     vector size = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
-    if (iPosition != g_iSPosition && iPosition != -1) { //do this only when attached to the hud 
+    if (iPosition != g_iSPosition && iPosition != -1) { //do this only when attached to the hud
         vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
         if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
         if (iPosition==2||iPosition==5) offset.y = -offset.y;
         if (iPosition==1||iPosition==4) { g_iLayout = 0; g_iVertical = FALSE;}
-        else { g_iLayout = 1; g_iVertical = TRUE; }        
+        else { g_iLayout = 1; g_iVertical = TRUE; }
         llSetPos(offset); // Position the Root Prim on screen
         g_iSPosition = iPosition;
     }
@@ -290,8 +290,8 @@ DoMenu(string sMenu) {
         // for the simple can use only g_iRows++;
         integer n = llGetListLength(g_lPrimOrder)-1;
         do {
-            g_iRows++;            
-        } while ((n/g_iRows)*(n/(n/g_iRows)) != n); 
+            g_iRows++;
+        } while ((n/g_iRows)*(n/(n/g_iRows)) != n);
         //
         if (g_iRows > g_iMaxRows) g_iRows = 1;
         DefinePosition();
@@ -313,10 +313,10 @@ DoMenu(string sMenu) {
     }
     if (sMenu == g_sHudMenu) { // Main
         sPrompt = "\nCustomize your Remote!";
-        lButtons = ["Rows: "+(string)g_iRows] ;        
-        if (g_iRows > 1) lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;    
+        lButtons = ["Rows: "+(string)g_iRows] ;
+        if (g_iRows > 1) lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;
         else lButtons += [" - "] ;
-        if (g_iVertical) lButtons += llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;    
+        if (g_iVertical) lButtons += llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;
         else lButtons += [" - "] ;
         lButtons += [g_sOrderMenu,g_sTextureMenu,"Reset"];
     }
@@ -345,11 +345,11 @@ OrderButton(string sButton)
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_remote_options")
         llRemoveInventory(sName);
 }

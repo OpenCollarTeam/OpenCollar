@@ -109,8 +109,8 @@ list SortButtons(list lButtons, list lStaticButtons) {
 }
 
 Particles(key kTarget) {
-    llParticleSystem([ 
-        PSYS_PART_FLAGS, 
+    llParticleSystem([
+        PSYS_PART_FLAGS,
             PSYS_PART_INTERP_COLOR_MASK |
             PSYS_PART_INTERP_SCALE_MASK |
             PSYS_PART_TARGET_POS_MASK |
@@ -131,9 +131,10 @@ Particles(key kTarget) {
     ]);
 }
 
-checkPerms(string sName) {
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & 57344) == 57344)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & 57344) == 57344)) {
+FailSafe(string sName) {
+    if ((key)sName) return;
+    if (!((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
         Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aoloader\n");
         llRemoveInventory(sName);
     }
@@ -149,7 +150,7 @@ default {
         g_kOwner = llGetOwner();
         g_sMyName = llGetScriptName();
         g_sObjectName = llGetObjectName();
-        checkPerms(g_sMyName);
+        FailSafe(g_sMyName);
         integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
         integer iIsOracul;
         while(i) {
@@ -200,11 +201,11 @@ default {
     dataserver(key kRequestID, string sData) {
         if (kRequestID != g_kCardRequestID) return;
         if (sData != EOF) {
-            if (!llSubStringIndex(sData,"[Stand") || !llSubStringIndex(sData,"[Sit") 
-            || !llSubStringIndex(sData,"[Walk") || !llSubStringIndex(sData,"[Turn") 
+            if (!llSubStringIndex(sData,"[Stand") || !llSubStringIndex(sData,"[Sit")
+            || !llSubStringIndex(sData,"[Walk") || !llSubStringIndex(sData,"[Turn")
             || !llSubStringIndex(sData,"[Run") || !llSubStringIndex(sData,"[Crouch")
-            || !llSubStringIndex(sData,"[Jump") || !llSubStringIndex(sData,"[Fly") 
-            || !llSubStringIndex(sData,"[Hover") || !llSubStringIndex(sData,"[Fall") 
+            || !llSubStringIndex(sData,"[Jump") || !llSubStringIndex(sData,"[Fly")
+            || !llSubStringIndex(sData,"[Hover") || !llSubStringIndex(sData,"[Fall")
             || !llSubStringIndex(sData,"[Jump")) {
                 list temp = llParseString2List(sData,[",","]"],[]);
                 integer i = llGetListLength(temp);
@@ -231,10 +232,10 @@ default {
         llParticleSystem([]);
         RemoveMe();
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_INVENTORY) checkPerms(g_sMyName);
+        if (iChange & CHANGED_INVENTORY) FailSafe(g_sMyName);
 
     }
 }

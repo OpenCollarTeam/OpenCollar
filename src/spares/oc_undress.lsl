@@ -443,11 +443,11 @@ DoUnlockAll()
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_undress")
         llRemoveInventory(sName);
 }
@@ -456,7 +456,7 @@ UserCommand(integer iNum, string sStr, key kID)
 {
     if (iNum > CMD_WEARER || iNum < CMD_OWNER) return; // sanity check
     if (llToLower(sStr) == "rm undress" || llToLower(sStr) == "rm un/dress") {
-        if (iNum == CMD_OWNER || kID == g_kWearer) 
+        if (iNum == CMD_OWNER || kID == g_kWearer)
             Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmundress");
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         return;

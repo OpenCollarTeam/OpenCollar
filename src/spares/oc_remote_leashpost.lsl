@@ -62,12 +62,13 @@ integer RemoteChannel(string sID,integer iOffset) {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
-    || sName != "oc_remote_leashpost") 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms)
+    || sName != "oc_remote_leashpost")
         llRemoveInventory(sName);
 }
 
@@ -75,7 +76,7 @@ default {
     on_rez(integer iStart) {
         llResetScript();
     }
-    
+
     state_entry() {
         llSetMemoryLimit(16384);
         FailSafe();
@@ -86,7 +87,7 @@ default {
         llSetRot(llEuler2Rot(vRot * DEG_TO_RAD));
         llSetPos(llGetPos()+vPos);
     }
-    
+
     listen(integer iChannel, string sName, key kID, string sMessage) {
         llListenRemove(g_iListener);
         string sObjectID = (string)llGetKey();

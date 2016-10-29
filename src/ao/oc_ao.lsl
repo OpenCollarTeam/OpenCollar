@@ -235,16 +235,16 @@ SetAnimOverride() {
             if (~llSubStringIndex(g_sJson_Anims,sAnimState)) {
                 sAnim = llJsonGetValue(g_sJson_Anims,[sAnimState]);
                 if (JsonValid(sAnim)) {
-                    if (sAnimState == "Walking" && g_sWalkAnim != "") 
+                    if (sAnimState == "Walking" && g_sWalkAnim != "")
                         sAnim = g_sWalkAnim;
                     else if (sAnimState == "Sitting" && !g_iSitAnimOn) jump next;
-                    else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn) 
+                    else if (sAnimState == "Sitting" && g_sSitAnim != "" && g_iSitAnimOn)
                         sAnim = g_sSitAnim;
                     else if (sAnimState == "Sitting on Ground" && g_sSitAnywhereAnim != "")
                         sAnim = g_sSitAnywhereAnim;
-                    else if (sAnimState == "Standing") 
+                    else if (sAnimState == "Standing")
                         sAnim = llList2String(llParseString2List(sAnim, ["|"],[]),0);
-                    if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) 
+                    if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION)
                         llSetAnimationOverride(sAnimState, sAnim);
                     else llOwnerSay(sAnim+" could not be found.");
                     @next;
@@ -301,7 +301,7 @@ Notify(key kID, string sStr, integer iAlsoNotifyWearer) {
 //menus
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, string sName) {
-    integer iChannel = llRound(llFrand(10000000)) + 100000;  
+    integer iChannel = llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenuIDs, [iChannel]))
         iChannel = llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChannel, "",kID, "");
@@ -445,7 +445,7 @@ TranslateCollarCMD(string sCommand, key kID){
         } else if (~llSubStringIndex(sCommand,"on")) {
             SetAnimOverride();
             g_iStandPause = FALSE;
-        }        
+        }
     } else if (~llSubStringIndex(sCommand,"menu")) {
             if (g_iReady) MenuAO(kID);
             else {
@@ -504,11 +504,11 @@ StartUpdate(key kID) {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_ao")
         llRemoveInventory(sName);
 }
@@ -554,7 +554,7 @@ default {
             }
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
             string sMessage = "";
-            if (sButton == "Menu") 
+            if (sButton == "Menu")
                 MenuAO(g_kWearer);
             else if (sButton == "SitAny") {
                 ToggleSitAnywhere();
@@ -570,7 +570,7 @@ default {
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
         if (iChannel == g_iInterfaceChannel) {
-            if (llGetOwnerKey(kID) != g_kWearer) return;    
+            if (llGetOwnerKey(kID) != g_kWearer) return;
             if (sMessage == "-.. --- / .- ---") {
                 StartUpdate(kID);
                 return;
@@ -630,7 +630,7 @@ default {
                     if (~llSubStringIndex(sMessage,"☑")) g_iShuffle = FALSE;
                     else g_iShuffle = TRUE;
                     MenuAO(kID);
-                } 
+                }
             } else if (sMenuType == "Load") {
                 integer index = llListFindList(g_lCustomCards,[sMessage]);
                 if (~index) sMessage = llList2String(g_lCustomCards,index-1);

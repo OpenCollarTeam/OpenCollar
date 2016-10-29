@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 161026.4                             //
+//                          Settings - 160808.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -237,7 +237,7 @@ PrintSettings(key kID, string sDebug) {
     list lOut;
     //list lSay = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
     list lSay = ["\n\n"];
-    if (sDebug == "debug") 
+    if (sDebug == "debug")
         lSay = ["\n\nSettings Debug:\n"];
     lSay += Add2OutList(g_lSettings, sDebug);
     string sOld;
@@ -287,7 +287,7 @@ LoadSetting(string sData, integer iLine) {
         sID = llGetSubString(sData, 0, i - 1);
         sData = llGetSubString(sData, i + 1, -1);
         if (~llSubStringIndex(llToLower(sID), "_")) return;
-        else if (~llListFindList(g_lExceptionTokens,[sID])) return; 
+        else if (~llListFindList(g_lExceptionTokens,[sID])) return;
         sID = llToLower(sID)+"_";
         list lData = llParseString2List(sData, ["~"], []);
         for (i = 0; i < llGetListLength(lData); i += 2) {
@@ -312,11 +312,11 @@ LoadSetting(string sData, integer iLine) {
                         sValue = llDumpList2String(lOut,",");
                         lTest = [];
                         lOut = [];
-                    } 
+                    }
                 }
                 if (sValue) g_lSettings = SetSetting(g_lSettings, sID + sToken, sValue);
             }
-        }    
+        }
     }
 }
 
@@ -340,14 +340,14 @@ SendValues() {
 
 FailSafe(integer iSec) {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_settings" || iSec) {
-        integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
-        while (i)llRemoveInventory(llGetInventoryName(INVENTORY_NOTECARD,--i));
+        integer i = llGetInventoryNumber(7);
+        while (i) llRemoveInventory(llGetInventoryName(7,--i));
         llRemoveInventory(sName);
     }
 }
@@ -391,7 +391,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
 }
 
 default {
-    state_entry() { 
+    state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
         FailSafe(0);
@@ -430,7 +430,7 @@ default {
             }
         }
     }
-    
+
     http_response(key kID, integer iStatus, list lMeta, string sBody) {
         if (kID ==  g_kLoadFromWeb) {
             if (iStatus == 200) {
@@ -465,7 +465,7 @@ default {
             }
         }
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || kID == g_kWearer) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {

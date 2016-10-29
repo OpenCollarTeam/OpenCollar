@@ -117,11 +117,11 @@ DoMenu() {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_remote_bookmarks")
         llRemoveInventory(sName);
 }
@@ -133,7 +133,7 @@ UserCommand(string sStr) {
          llResetScript();
     } else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT)
         DoMenu();
-    else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {           
+    else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {
 //grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD + " save") + 1, -1), STRING_TRIM);
@@ -313,7 +313,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, "TextBoxIdLoca
     return 0;
 }
 
-ReadDestinations() {     
+ReadDestinations() {
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET"], "");
@@ -360,7 +360,7 @@ default {
     on_rez(integer iStart) {
         ReadDestinations();
     }
-    
+
     state_entry() {
         g_kOwner = llGetOwner();  // store key of wearer
         FailSafe();

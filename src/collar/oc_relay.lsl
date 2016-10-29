@@ -485,7 +485,7 @@ refreshRlvListener() {
     if (g_iRLV && g_iBaseMode && !g_iRecentSafeword) {
         g_iRlvListener = llListen(RELAY_CHANNEL, "", NULL_KEY, "");
         g_iSafetyListener = llListen(SAFETY_CHANNEL, "","","Safety!");
-        llRegionSayTo(g_kWearer,SAFETY_CHANNEL,"SafetyDenied!"); 
+        llRegionSayTo(g_kWearer,SAFETY_CHANNEL,"SafetyDenied!");
     }
 }
 
@@ -522,12 +522,12 @@ CleanQueue() {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
-    || sName != "oc_relay") 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
+    || sName != "oc_relay")
         llRemoveInventory(sName);
 }
 
@@ -545,7 +545,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     if (!g_iRLV) {
         llMessageLinked(LINK_RLV, iNum, "menu RLV", kID);
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);  
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
     } else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else if ((sStr=llGetSubString(sStr,6,-1))=="safeword") SafeWord(); // cut "relay " off sStr
@@ -655,7 +655,7 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) 
+        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum==CMD_ADDSRC)
             g_lSources+=[kID];
@@ -705,14 +705,14 @@ default {
                         Menu(kAv, iAuth);
                     } else {
                         sMsg = llToLower(sMsg);
-                        if (llSubStringIndex(sMsg,"☐ ")==0) 
+                        if (llSubStringIndex(sMsg,"☐ ")==0)
                             sMsg = llDeleteSubString(sMsg,0,1)+" on";
-                        else if (llSubStringIndex(sMsg,"☒ ")==0||llSubStringIndex(sMsg,"☑ ")==0) 
+                        else if (llSubStringIndex(sMsg,"☒ ")==0||llSubStringIndex(sMsg,"☑ ")==0)
                             sMsg = llDeleteSubString(sMsg,0,1)+" off";
                         sMsg ="relay "+sMsg;
                         UserCommand(iAuth, sMsg, kAv);
                         Menu(kAv, iAuth);
-                    }                    
+                    }
                 } else if (sMenu=="Access~List") {
                     if (sMsg==UPMENU) Menu(kAv, iAuth);
                     else ListsMenu(kAv,sMsg, iAuth);
@@ -800,7 +800,7 @@ default {
             llRegionSayTo(g_kWearer,SAFETY_CHANNEL,"SafetyDenied!");
         }
 /*
-        if (llGetSubString(sMsg,-43,-1)==","+(string)g_kWearer+",!pong") 
+        if (llGetSubString(sMsg,-43,-1)==","+(string)g_kWearer+",!pong")
         {   //sloppy matching; the protocol document is stricter, but some in-world devices do not respect it
             llOwnerSay("Forwarding "+sMsg+" to rlvmain");
             llMessageLinked(LINK_SET, CMD_RLV_RELAY, sMsg, kID);

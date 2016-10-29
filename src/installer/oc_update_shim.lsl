@@ -105,11 +105,11 @@ Check4Core5Script() {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_update_shim")
         llRemoveInventory(sName);
 }
@@ -135,7 +135,7 @@ default {
         // let mama know we're ready
         llWhisper(g_iStartParam, "reallyready");
     }
-    
+
     listen(integer iChannel, string sName, key kID, string sMsg) {
        // debug("heard: " + sMsg);
         if (llGetOwnerKey(kID) != llGetOwner()) return;
@@ -179,7 +179,7 @@ default {
                         // we don't have item. get it.
                         sCmd = "GIVE";
                     }
-                }                
+                }
             } else if (sMode == "REMOVE" || sMode == "DEPRECATED") {
                 debug("remove: " + sMsg);
                 if (sType == "SCRIPT") {
@@ -197,14 +197,14 @@ default {
             Check4Core5Script();
             string sResponse = llDumpList2String([sType, sName, sCmd], "|");
             //debug("responding: " + response);
-            llRegionSayTo(kID, iChannel, sResponse);     
+            llRegionSayTo(kID, iChannel, sResponse);
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
-            //restore settings 
+            //restore settings
             if (g_iIsUpdate) {
                 llMessageLinked(LINK_ALL_OTHERS, -10, "LINK_REQUEST","");
                 integer n;
-                integer iStop = llGetListLength(g_lSettings); 
+                integer iStop = llGetListLength(g_lSettings);
                 for (n = 0; n < iStop; n++) {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
@@ -245,9 +245,9 @@ default {
             llRemoveInventory(llGetScriptName());
         }
     }
-    
+
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them 
+        // The settings script will dump all its settings when an inventory change happens, so listen for that and remember them
         // so they can be restored when we're done.
         if (iNum == LM_SETTING_RESPONSE) {
             if (sStr != "settings=sent") {
@@ -266,7 +266,7 @@ default {
             }
         }
     }
-    
+
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
         if (iChange & CHANGED_INVENTORY) FailSafe();

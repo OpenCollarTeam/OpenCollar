@@ -60,7 +60,7 @@ key g_kWebLookup;
 
 list g_lPartners;
 list g_lNewPartnerIDs;
-list g_lPartnersInSim; 
+list g_lPartnersInSim;
 string g_sActivePartnerID = "ALL"; //either an UUID or "ALL"
 
 //  list of hud channel handles we are listening for, for building lists
@@ -161,7 +161,7 @@ SendCollarCommand(string sCmd) {
     integer i = llGetListLength(g_lPartnersInSim);
     if (i > 1) {
         if ((key)g_sActivePartnerID) {
-            if (!llSubStringIndex(sCmd,"acc-")) 
+            if (!llSubStringIndex(sCmd,"acc-"))
                 llMessageLinked(LINK_THIS,ACC_CMD,sCmd,g_sActivePartnerID);
             else
                 llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
@@ -169,7 +169,7 @@ SendCollarCommand(string sCmd) {
             integer i = llGetListLength(g_lPartnersInSim);
              while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
                 string sPartnerID = llList2String(g_lPartnersInSim,--i);
-                if (!llSubStringIndex(sCmd,"acc-")) 
+                if (!llSubStringIndex(sCmd,"acc-"))
                     llMessageLinked(LINK_THIS,ACC_CMD,sCmd,sPartnerID);
                 else
                     llRegionSayTo(sPartnerID,PersonalChannel(sPartnerID,0),sPartnerID+":"+sCmd);
@@ -267,11 +267,11 @@ integer PicturePrim() {
 
 FailSafe() {
     string sName = llGetScriptName();
-    integer iFullPerms = PERM_MODIFY | PERM_COPY | PERM_TRANSFER;
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY) 
-    || !(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)
-    || !((llGetInventoryPermMask(sName,MASK_OWNER) & iFullPerms) == iFullPerms)
-    || !((llGetInventoryPermMask(sName,MASK_NEXT) & iFullPerms) == iFullPerms) 
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
     || sName != "oc_remote_sys")
         llRemoveInventory(sName);
 }
@@ -294,11 +294,11 @@ default {
         MainMenu();
         llOwnerSay("\n\nYou are wearing this OpenCollar Remote for the first time. I'm opening the remote menu where you can manage your partners. Make sure that your partners are near you and click Add to register them. To open the remote menu again, please select the gear (⚙) icon on your remote HUD. www.opencollar.at/remote\n");
     }
-    
+
     on_rez(integer iStart) {
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
     }
-    
+
     touch_start(integer iNum) {
         if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {// Dont do anything if not attached to the HUD
 //          I made the root prim the "menu" prim, and the button action default to "menu."
@@ -340,7 +340,7 @@ default {
         } else if (llGetSubString(sMessage, 36, 40)==":pong") {
             if (!~llListFindList(g_lNewPartnerIDs, [llGetOwnerKey(kID)]) && !~llListFindList(g_lPartners, [(string)llGetOwnerKey(kID)]))
                 g_lNewPartnerIDs += [llGetOwnerKey(kID)];
-        } 
+        }
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -356,7 +356,7 @@ default {
         else if (iNum == CMD_REMOTE) SendCollarCommand(sStr);
         else if (iNum == 111) {
             g_sTextureALL = sStr;
-            if (g_sActivePartnerID == g_sAllPartners) 
+            if (g_sActivePartnerID == g_sAllPartners)
                 llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         } else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
             list lParams = llParseString2List(sStr, ["|"], []);
@@ -411,7 +411,7 @@ default {
                 } else if (sMessage == g_sAllPartners) {
                     g_sActivePartnerID = g_sAllPartners;
                     NextPartner(0,FALSE);
-                    MainMenu(); 
+                    MainMenu();
                 } else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
             } else if (g_sMenuType == "RemovePartnerMenu") {
                 integer index = llListFindList(g_lPartners, [sMessage]);
@@ -432,7 +432,7 @@ default {
                 }
             } else if (g_sMenuType == "RezzerMenu") {
                     if (sMessage == UPMENU) MainMenu();
-                    else { 
+                    else {
                         g_sRezObject = sMessage;
                         if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT)
                             llRezObject(g_sRezObject,llGetPos() + <2, 2, 0>, ZERO_VECTOR, llGetRot(), 0);
@@ -449,7 +449,7 @@ default {
                     AddPartner(sMessage);
                 g_lNewPartnerIDs = [];
                 MainMenu();
-            } 
+            }
         }
     }
 
@@ -469,11 +469,11 @@ default {
                 //llOwnerSay(g_sCard+" card loaded.");
                 return;
             } else if ((key)sData) // valid lines contain only a valid UUID which is a key
-                AddPartner(sData); 
+                AddPartner(sData);
             g_kLineID = llGetNotecardLine(g_sCard, ++g_iLineNr);
         }
     }
-    
+
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
         if (kRequestID == g_kWebLookup && iStatus == 200)  {
             if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
@@ -485,15 +485,15 @@ default {
             if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, sTexture,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         }
     }
-    
+
     object_rez(key kID) {
         llSleep(0.5); // make sure object is rezzed and listens
-        if (g_sActivePartnerID == g_sAllPartners) 
+        if (g_sActivePartnerID == g_sAllPartners)
             llRegionSayTo(kID,PersonalChannel(g_kOwner,1234),llDumpList2String(llDeleteSubList(PartnersInSim(),0,0),","));
-        else 
+        else
             llRegionSayTo(kID,PersonalChannel(g_kOwner,1234),g_sActivePartnerID);
     }
-    
+
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryKey(g_sCard) != g_kCardID) {
