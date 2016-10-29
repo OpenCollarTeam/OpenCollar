@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 161024.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 161029.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
@@ -53,7 +53,7 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "161024.1";
+string g_sVersion = "161029.1";
 string g_sFancyVersion = "⁶⋅⁴⋅⁰";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
