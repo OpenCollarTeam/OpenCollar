@@ -3,7 +3,7 @@
    |;;|                      |;;||     Copyright (c) 2008 - 2016:
    |[]|----------------------|[]||
    |;;|     Collar Lead      |;;||     Ilse Mannonen
-   |;;|       161024.1       |;;||     Wendy Starfall
+   |;;|       161029.2       |;;||     Wendy Starfall
    |;;|----------------------|;;||     Garvin Twine
    |;;|   www.opencollar.at  |;;||
    |;;|----------------------|;;||
@@ -34,7 +34,7 @@ FailSafe() {
     if (!(llGetObjectPermMask(1) & 0x4000)
     || !(llGetObjectPermMask(4) & 0x4000)
     || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000))
         llRemoveInventory(sName);
 }
 
