@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 161026.1                           //
+//                         Update Shim - 161029.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
