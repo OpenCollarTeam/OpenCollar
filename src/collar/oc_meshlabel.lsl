@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Mesh Label - 161024.1                            //
+//                         Mesh Label - 161030.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,                //
 //  Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,            //
@@ -123,10 +123,13 @@ float g_fScrollTime = 0.3 ;
 integer g_iSctollPos ;
 string g_sScrollText;
 list g_lLabelLinks ;
+list g_lLabelBaseElements;
+list g_lGlows;
 
 integer g_iScroll = FALSE;
 integer g_iShow;
 vector g_vColor = <1,1,1>;
+integer g_iHide;
 
 string g_sLabelText = "";
 string g_sSettingToken = "label_";
@@ -181,7 +184,7 @@ SetColor() {
 integer LabelsCount() {
     integer ok = TRUE ;
     g_lLabelLinks = [] ;
-
+    g_lLabelBaseElements = [];
     string sLabel;
     list lTmp;
     integer iLink;
@@ -194,7 +197,7 @@ integer LabelsCount() {
             g_lLabelLinks += [0]; // fill list witn nulls
             //change prim description
             llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
-        }
+        } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
     g_iCharLimit = llGetListLength(g_lLabelLinks) * 6;
     //find all 'Label' prims and store it's links to list
@@ -218,6 +221,32 @@ integer LabelsCount() {
     }
     return ok;
 }
+
+SetLabelBaseAlpha() {
+    if (g_iHide) return ;
+    //loop through stored links, setting color if element type is bell
+    integer n;
+    integer iLinkElements = llGetListLength(g_lLabelBaseElements);
+    for (n = 0; n < iLinkElements; n++) {
+        llSetLinkAlpha(llList2Integer(g_lLabelBaseElements,n), (float)g_iShow, ALL_SIDES);
+        UpdateGlow(llList2Integer(g_lLabelBaseElements,n), g_iShow);
+    }
+}
+
+UpdateGlow(integer iLink, integer iAlpha) {
+    integer i;
+    if (iAlpha == 0) {
+        float fGlow = llList2Float(llGetLinkPrimitiveParams(iLink,[PRIM_GLOW,0]),0);
+        i = llListFindList(g_lGlows,[iLink]);
+        if (i !=-1 && fGlow > 0) g_lGlows = llListReplaceList(g_lGlows,[fGlow],i+1,i+1);
+        if (i !=-1 && fGlow == 0) g_lGlows = llDeleteSubList(g_lGlows,i,i+1);
+        if (i == -1 && fGlow > 0) g_lGlows += [iLink, fGlow];
+        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
+    } else {
+        i = llListFindList(g_lGlows,[iLink]);
+        if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(g_lGlows, i+1)]);
+    }
+}   
 
 SetLabel() {
     string sText ;
@@ -324,10 +353,12 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                     SetColor();
                 } else ColorMenu(kAv, iAuth);
             } else if (sAction == "on" && sValue == "") {
-                   g_iShow = TRUE;
+                g_iShow = TRUE;
+                SetLabelBaseAlpha();
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
             } else if (sAction == "off" && sValue == "") {
                 g_iShow = FALSE;
+                SetLabelBaseAlpha();
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"show="+(string)g_iShow, "");
             } else if (sAction == "scroll") {
                 if (sValue == "on") g_iScroll = TRUE;
@@ -472,6 +503,13 @@ default
     changed(integer iChange) {
         if(iChange & CHANGED_LINK) // if links changed
             if (LabelsCount()==TRUE) SetLabel();
+        if (iChange & CHANGED_COLOR) {
+            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
+                g_iHide = iNewHide;
+                SetLabelBaseAlpha(); // update hide elements
+            }
+        }
         if (iChange & CHANGED_INVENTORY) FailSafe();
 /*        if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
