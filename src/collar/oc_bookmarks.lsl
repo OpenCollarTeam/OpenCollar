@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Bookmarks - 161024.1                            //
+//                          Bookmarks - 161031.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
@@ -60,7 +60,10 @@ string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat com
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
+string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
+
 key webLookup;
+string g_sWeb = "http://virtualdisgrace.com/oc/";
 
 list   g_lDestinations                = []; //Destination list direct from static notecard
 list   g_lDestinations_Slurls         = []; //Destination list direct from static notecard
@@ -364,7 +367,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth,"TextBox
 
 ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from web
     key kAv;
-    webLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~bookmarks",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
     //start re-reading the notecards

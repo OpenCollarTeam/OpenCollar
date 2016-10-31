@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 161026.1                              //
+//                           System - 161031.2                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -114,6 +114,7 @@ string GIVECARD = "Help";
 string HELPCARD = ".help";
 string CONTACT = "Contact";
 string LICENSE = "License";
+string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 key g_kWebLookup;
 key g_kCurrentUser;
 
@@ -151,17 +152,13 @@ key github_version_request;
 string g_sDistributor;
 string g_sOtherDist;
 string g_sDistCard = ".distributor";
-string url_check = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~distributor";
 key g_kDistCheck;
 integer g_iOffDist;
 key g_kNCkey;
-string version_check_url = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~version";
-string news_url = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~news";
-string license_blob = "https://github.com/VirtualDisgrace/opencollar/blob/master/LICENSE";
-string license_url = "http://www.opencollar.at/license-terms-for-the-opencollar-role-play-device.html";
 key news_request;
 string g_sLastNewsTime = "0";
 
+string g_sWeb = "http://virtualdisgrace.com/oc/";
 string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
@@ -310,7 +307,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision at this address: "+license_url,kID);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE here].",kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
         llGiveInventory(kID, HELPCARD);
@@ -320,7 +317,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "settings") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) SettingsMenu(kID, iNum);
     } else if (sStr == "contact") {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        g_kWebLookup = llHTTPRequest(g_sWeb+"contact"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         g_kCurrentUser = kID;
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "menuto") {
@@ -376,10 +373,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             } else if (sStr=="news on"){
                 g_iNews=TRUE;
                 g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
                 g_sLastNewsTime="0";
-                news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (fromMenu) HelpMenu(kID, iNum);
@@ -465,7 +462,7 @@ JB(){
     (7,i);do{if(s==g_sDistCard){if(llGetInventoryCreator(s)==
     "4da2b231-87e1-45e4-a067-05cf3a5027ea"){g_iOffDist=1;
     if (llGetInventoryPermMask(g_sDistCard,4)&0x2000){
-    llDialog(g_kWearer, "\nATTENTION:\n\nThe permissions on the .distributor card must be set to ☑Copy ☐Transfer while still in your inventory.\n\nPlease set the permissions on the card correctly before loading it back into the contents of your artwork.\n\nhttp://www.opencollar.at/workshop.html", [], 298479);
+    llDialog(g_kWearer, "\nATTENTION:\n\nThe permissions on the .distributor card must be set to ☑Copy ☐Transfer while still in your inventory.\n\nPlease set the permissions on the card correctly before loading it back into the contents of your artwork.\n", [], 298479);
     llRemoveInventory(s);g_iOffDist=0;return;}
     g_kNCkey=llGetNotecardLine(s,0);}else g_iOffDist=0;return;}i--;s=
     llGetInventoryName(7,i);}while(i+1);}
@@ -495,18 +492,14 @@ FailSafe() {
     string sName = llGetScriptName();
     if((key)sName) return;
     integer i;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
+    if (!(llGetObjectPermMask(1) & 0x4000)) {
         i = 1;
-        llOwnerSay("\n\nSorry but this item was not correctly set up to run OpenCollar scripts. If this item with faulty permissions was given or sold to you by "+NameGroupURI("agent/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]))+", please inform them that they are not compliant with GNU and OpenCollar license terms. Details can be seen ["+license_blob+"#L179-L185 here].\n");
         llInstantMessage("4da2b231-87e1-45e4-a067-05cf3a5027ea","[§3/e] @ ("+GetTimestamp()+") SRC: "+g_sWorldAPI+"resident/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]));
     }
     if (!(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
     || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_sys" || i) {
-        llSetText("\nATTENTION!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰\nThis item does not grant\naccess to its source code.\nIt is not compliant with GNU\nand/or OpenCollar license terms.\nThe scripts can't run like this!\n▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰ ▰",<1,1,0>,1);
-        llRemoveInventory(sName);
-    }
+    || sName != "oc_sys" || i) llRemoveInventory(sName);
 }
 
 SetLockElementAlpha() { //EB
@@ -561,7 +554,7 @@ RebuildMenu() {
 }
 
 init (){
-    github_version_request = llHTTPRequest(version_check_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    github_version_request = llHTTPRequest(g_sWeb+"version"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_iWaitRebuild = TRUE;JB();
     FailSafe();
     llSetTimerEvent(1.0);
@@ -578,7 +571,7 @@ default
     state_entry() {
         g_kWearer = llGetOwner();
         if (!llGetStartParameter())
-            news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+            news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
@@ -715,7 +708,7 @@ default
             else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
             else if (sToken == "intern_dist") g_sOtherDist = sValue;
             else if (sStr == "settings=sent") {
-                if (g_iNews) news_request = llHTTPRequest(news_url, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                if (g_iNews) news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -761,7 +754,7 @@ default
             g_sDistributor = sData;
             if (sData == "") g_iOffDist = 0;
             if (g_iOffDist)
-                g_kDistCheck = llHTTPRequest(url_check, [HTTP_METHOD, "GET", 2, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
+                g_kDistCheck = llHTTPRequest(g_sWeb+"distributor"+HTTP_TYPE, [HTTP_METHOD, "GET", 2, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
         }
     }
     attach(key kID) {
@@ -823,7 +816,7 @@ default
             g_iWaitUpdate = FALSE;
             llListenRemove(g_iUpdateHandle);
             if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
-                g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                g_kWebLookup = llHTTPRequest(g_sWeb+"update"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);

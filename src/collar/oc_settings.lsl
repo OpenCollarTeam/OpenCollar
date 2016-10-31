@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 160808.1                             //
+//                          Settings - 161031.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -67,6 +67,7 @@ key g_kWearer;
 
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
+string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -98,7 +99,7 @@ integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
 string g_sSampleURL = "https://goo.gl/adCn8Y";
-string g_sEmergencyURL = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~attn";
+string g_sEmergencyURL = "http://virtualdisgrace.com/oc/";
 key g_kURLRequestID;
 float g_fLastNewsStamp;
 integer g_iCheckNews;
@@ -476,7 +477,7 @@ default {
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
             if (sToken == "intern_news") {
                 g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
         }
         else if (iNum == LM_SETTING_REQUEST) {
@@ -509,7 +510,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {
