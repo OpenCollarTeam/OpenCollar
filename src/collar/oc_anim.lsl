@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 161030.1                             //
+//                          Animator - 161103.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -422,7 +422,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kID);
             return;
         }
-        g_sPose2Remove = llList2String(lParams,2);
+        g_sPose2Remove = llGetSubString(sStr,8,-1);
         if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
             string sPrompt = "\nATTENTION: The pose that you are about to delete is not copyable! It will be removed from the %DEVICETYPE% and sent to you. Please make sure to accept the inventory.\n\nDo you really want to remove the \""+g_sPose2Remove+"\" pose?";
             if (llGetInventoryPermMask(g_sPose2Remove,MASK_OWNER) & PERM_COPY)
