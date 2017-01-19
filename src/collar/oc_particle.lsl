@@ -287,8 +287,14 @@ SaveSettings(string sToken, string sValue, integer iSaveToLocal) {
     if (iIndex>=0) g_lSettings = llListReplaceList(g_lSettings, [sValue], iIndex +1, iIndex +1);
     else g_lSettings += [sToken, sValue];
 
-    if (sToken == "R_Texture") L_RIBBON_TEX = sValue;
-    else if (sToken == "C_Texture") L_CLASSIC_TEX = sValue;
+    if (sToken == "R_Texture") {
+        if (llToLower(llGetSubString(sValue,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sValue, 8, -1);
+        else L_RIBBON_TEX = sValue;
+    }
+    else if (sToken == "C_Texture") {
+        if (llToLower(llGetSubString(sValue,0,7)) == "!classic") L_CLASSIC_TEX = llGetSubString(sValue, 9, -1);
+        else L_CLASSIC_TEX = sValue;
+    }
     if (iSaveToLocal) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + sValue, "");
 }
 
