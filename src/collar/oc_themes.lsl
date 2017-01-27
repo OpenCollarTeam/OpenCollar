@@ -353,7 +353,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             string sElement=llList2String(lParams,1);
             //Debug("Command: "+sCommand+"\nElement: "+sElement);
             if (sCommand == "themes" || sStrLower == "menu themes") {
-                sElement = llDumpList2String(llDeleteSubList(lParams,0,0)," ");
+                sElement = llGetSubString(sStr, 7, -1);
                 integer iElementIndex = llListFindList(g_lThemes,[sElement]);
                 if (~iElementIndex) {
                     g_sThemesNotecardReadType="processing";
