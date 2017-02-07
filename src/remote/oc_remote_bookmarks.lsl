@@ -415,7 +415,7 @@ default {
                         + "/"+(string)((integer)g_vLocalPos.y)
                         + "/"+(string)((integer)g_vLocalPos.z);
             llMessageLinked(LINK_THIS,CMD_REMOTE, "hudtpto:" + pos_str + "=force","");
-            llOwnerSay("Follow your Partner(s) right way by clicking here: secondlife:///app/teleport/"+llEscapeURL(g_sRegion+sPos));
+            llOwnerSay("Follow your Partner(s) right way by clicking here: secondlife:///app/teleport/"+llEscapeURL(g_sRegion)+sPos);
         }
         if(kID == g_kDataID) {
             list split;
