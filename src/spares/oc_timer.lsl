@@ -617,6 +617,7 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) FailSafe();
+        if (iChange & CHANGED_OWNER) llResetScript();
         /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
