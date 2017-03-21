@@ -320,6 +320,7 @@ ReadDestinations() {
     g_lDestinations_Slurls = [];
     webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     //start re-reading the notecards
+    g_iLine = 0;
     if(llGetInventoryKey(g_sCard))
         g_kDataID = llGetNotecardLine(g_sCard, 0);
 }

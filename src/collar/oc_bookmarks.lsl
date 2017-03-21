@@ -366,11 +366,11 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth,"TextBox
 }
 
 ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from web
-    key kAv;
-    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
+    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     //start re-reading the notecards
+    g_iLine = 0;
     if(llGetInventoryKey(g_sCard))
         g_kDataID = llGetNotecardLine(g_sCard, 0);
 }
