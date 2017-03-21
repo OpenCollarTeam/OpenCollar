@@ -174,7 +174,6 @@ string LOADCARD = "Load";
 string REFRESH_MENU = "Fix";
 
 string g_sGlobalToken = "global_";
-integer g_iStealth;
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
@@ -231,7 +230,7 @@ SettingsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]";
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
-    if (g_iStealth) lButtons += [STEALTH_ON];
+    if (g_iHide) lButtons += [STEALTH_ON];
     else lButtons += [STEALTH_OFF];
     if (g_iLooks) lButtons += "Looks";
     else lButtons += "Themes";
@@ -531,10 +530,10 @@ UpdateGlow(integer iLink, integer iAlpha) {
         if (i == -1 && fGlow > 0) lGlows += [iLink, fGlow];
         if (g_iLocked) g_lOpenLockGlows = lGlows;
         else g_lClosedLockGlows = lGlows;
-        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]); 
+        llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, 0.0]);
     } else {
         lGlows = g_lOpenLockGlows;
-        if (g_iLocked) lGlows = g_lClosedLockGlows;    
+        if (g_iLocked) lGlows = g_lClosedLockGlows;
         i = llListFindList(lGlows,[iLink]);
         if (i != -1) llSetLinkPrimitiveParamsFast(iLink, [PRIM_GLOW, ALL_SIDES, llList2Float(lGlows, i+1)]);
     }
@@ -566,8 +565,7 @@ StartUpdate(){
     llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
 }
 
-default
-{
+default {
     state_entry() {
         g_kWearer = llGetOwner();
         if (!llGetStartParameter())
@@ -657,10 +655,10 @@ default
                          return;
                     } else if (sMessage == STEALTH_OFF) {
                          llMessageLinked(LINK_ROOT, iAuth,"hide",kAv);
-                         g_iStealth = TRUE;
+                         g_iHide = TRUE;
                     } else if (sMessage == STEALTH_ON) {
                         llMessageLinked(LINK_ROOT, iAuth,"show",kAv);
-                        g_iStealth = FALSE;
+                        g_iHide = FALSE;
                     } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_ROOT, iAuth, "menu Themes", kAv);
                         return;
@@ -720,6 +718,7 @@ default
     }
 
     on_rez(integer iParam) {
+        g_iHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
         init();
     }
 
