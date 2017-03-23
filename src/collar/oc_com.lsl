@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 170323.1                          //
+//                         Communicator - 170323.2                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -129,7 +129,7 @@ integer g_iNeedsPose = FALSE;  // should the avatar be forced into a still pose 
 string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
-
+integer g_iHighlander = TRUE;
 list g_lCore5Scripts = ["LINK_AUTH","oc_auth","LINK_DIALOG","oc_dialog","LINK_RLV","oc_rlvsys","LINK_SAVE","oc_settings","LINK_ANIM","oc_anim","LINK_ANIM","oc_couples"];
 list g_lFoundCore5Scripts;
 list g_lWrongRootScripts;
@@ -424,7 +424,11 @@ default {
                 llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else if (iChan == g_iInterfaceChannel && llGetOwnerKey(kID) == g_kWearer) { //for the rare but possible case g_iHUDChan == g_iInterfaceChannel
                 if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-                else if (llSubStringIndex(sMsg, "AuthRequest")==0)
+                else if (sMsg == "OpenCollar=Yes" && g_iHighlander) llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
+                else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
+                    llOwnerSay("You wear already \""+sName+"\". Detaching myself.");
+                    llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+                } else if (llSubStringIndex(sMsg, "AuthRequest")==0)
                     llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
                 else llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else
@@ -468,7 +472,13 @@ default {
             if (llGetOwnerKey(kID) != g_kWearer) return;
             //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-            else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
+            else if (sMsg == "OpenCollar=Yes" && g_iHighlander) {
+                llOwnerSay("Detected "+sName);
+                llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
+            } else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
+                llOwnerSay("You wear already \""+sName+"\". Detaching myself.");
+                llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
+            } else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
                 if (llSubStringIndex(sMsg, "AuthRequest")==0) {
                     llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
                 }
@@ -517,7 +527,7 @@ default {
             else if (sToken == g_sGlobalToken+"WearerName") {
                  if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName = "["+NameURI(g_kWearer)+" " + sValue + "]";
-            }
+            } else if (sToken == "intern_Highlander") g_iHighlander = (integer)sValue;
             else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
             else if (sToken == g_sGlobalToken+"channel") {
                 g_iPrivateListenChan = (integer)sValue;
@@ -576,6 +586,10 @@ default {
 
     run_time_permissions(integer iPerm) {
         if (iPerm & PERMISSION_TRIGGER_ANIMATION) g_iNeedsPose = TRUE;
+        if (iPerm & PERMISSION_ATTACH) {
+            llOwnerSay("@detach=yes");
+            llDetachFromAvatar();
+        }
     }
 
     timer() {
