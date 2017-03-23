@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           Dialog - 161030.1                              //
+//                           Dialog - 170323.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2007 - 2016 Schmobag Hogfather, Nandana Singh,            //
+//  Copyright (c) 2007 - 2017 Schmobag Hogfather, Nandana Singh,            //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,       //
 //  Romka Swallowtail, Garvin Twine et al.                                  //
 // ------------------------------------------------------------------------ //
@@ -525,7 +525,9 @@ default {
         FailSafe(0);
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
-        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
+        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
+        if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") 
+            g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
         llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
         //Debug("Starting");
     }
