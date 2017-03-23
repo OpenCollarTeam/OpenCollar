@@ -528,7 +528,7 @@ default {
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") 
             g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-        llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
+        llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_NAME,g_sDeviceName]);
         //Debug("Starting");
     }
 
@@ -674,7 +674,7 @@ default {
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") {
                 g_sDeviceName = sValue;
-                llSetPrimitiveParams([PRIM_NAME,g_sDeviceName]);
+                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_NAME,g_sDeviceName]);
             } else if (sToken == g_sGlobalToken+"WearerName") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
