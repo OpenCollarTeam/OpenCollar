@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                       Installer Bundles - 161029.1                       //
+//                       Installer Bundles - 170328.1                       //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2016 Nandana Singh, Wendy Starfall, Garvin Twine   //
+//  Copyright (c) 2011 - 2017 Nandana Singh, Wendy Starfall, Garvin Twine   //
 //  and Romka Swallowtail                                                   //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -206,7 +206,7 @@ default
                     llGiveInventory(kID, sItemName);
                 } else if (sType == "SCRIPT") {
                     integer iStart = TRUE;
-                    if (llSubStringIndex(g_sCard,"Core5") != -1) iStart = FALSE;
+                    if (llSubStringIndex(g_sCard,"_23_") != -1) iStart = FALSE;
                     // get the full name, and load it via script pin.
                     llRemoteLoadScriptPin(kID, sItemName, g_iPin, iStart, 1);
                 }
