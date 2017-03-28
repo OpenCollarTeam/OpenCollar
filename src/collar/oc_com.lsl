@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 170323.2                          //
+//                         Communicator - 170328.1                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -426,7 +426,7 @@ default {
                 if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
                 else if (sMsg == "OpenCollar=Yes" && g_iHighlander) llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
                 else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
-                    llOwnerSay("You wear already \""+sName+"\". Detaching myself.");
+                    llOwnerSay("/me has been detached.");
                     llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
                 } else if (llSubStringIndex(sMsg, "AuthRequest")==0)
                     llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
@@ -473,10 +473,10 @@ default {
             //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
             else if (sMsg == "OpenCollar=Yes" && g_iHighlander) {
-                llOwnerSay("Detected "+sName);
+                llOwnerSay("\n\nATTENTION: You are wearing more than one OpenCollar core at the moment. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider taking \""+sName+"\" off.\n");
                 llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
             } else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
-                llOwnerSay("You wear already \""+sName+"\". Detaching myself.");
+                llOwnerSay("/me has been detached.");
                 llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
             } else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
                 if (llSubStringIndex(sMsg, "AuthRequest")==0) {
