@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                           System - 161105.1                              //
+//                           System - 170330.1                              //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
@@ -369,8 +369,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if (sStr=="news off"){
                 g_iNews=FALSE;
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"News feature disabled.",kID);
+                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_news=0","");
             } else if (sStr=="news on"){
                 g_iNews=TRUE;
+                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_news","");
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             } else {
@@ -696,6 +698,7 @@ default {
                 SetLockElementAlpha();
             } else if (sToken == "intern_integrity") g_sIntegrity = sValue;
             else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
+            else if (sToken == "intern_news") g_iNews = (integer)sValue;
             else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
                 else if((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sLockSound=sValue;
@@ -703,7 +706,6 @@ default {
                 if (sValue=="default") g_sUnlockSound=g_sDefaultUnlockSound;
                 else if ((key)sValue!=NULL_KEY || llGetInventoryType(sValue)==INVENTORY_SOUND) g_sUnlockSound=sValue;
             } else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
-            else if (sToken == g_sGlobalToken+"news") g_iNews = (integer)sValue;
             else if (sToken == "intern_dist") g_sOtherDist = sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(g_sWeb+"news"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
