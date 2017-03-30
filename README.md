@@ -40,3 +40,9 @@ OpenCollar Six source code and creative resource are covered and protected by st
 * Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Six Role Play Device](https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE).
 
 **NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar Six goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
+
+**A few words on authorship, years and copyright:**
+
+OpenCollar source code has been composed by many different authors and while not all authors composed something in every year since 2008, we chose to state copyright as year spans (i.e. Copyright (c) 2008 - 2017) in our copyright notice.
+
+We chose to do that in order to save space in a already cramped screen environment with in-world LSL editors. Nevertheless, we tried our best to make all authors appear in order of appearance if read from left to right. <3
