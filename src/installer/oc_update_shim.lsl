@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 161029.1                           //
+//                         Update Shim - 170330.1                           //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2011 - 2016 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
+//  Copyright (c) 2011 - 2017 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -74,7 +74,7 @@ list g_lSettings;
 integer g_iIsUpdate;
 
 // list of deprecated tokens to remove from previous collar scripts
-list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover"];
+list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint"];
 
 integer CMD_OWNER = 500;
 
