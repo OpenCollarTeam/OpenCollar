@@ -74,7 +74,7 @@ list g_lSettings;
 integer g_iIsUpdate;
 
 // list of deprecated tokens to remove from previous collar scripts
-list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint"];
+list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint","auth_groupname"];
 
 integer CMD_OWNER = 500;
 
