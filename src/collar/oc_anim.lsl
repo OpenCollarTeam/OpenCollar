@@ -227,7 +227,7 @@ PoseMoveMenu(key kID, integer iPage, integer iAuth) {
     if (g_sPoseMoveWalk != "") {
        if (g_iTweakPoseAO) {
            sPrompt += "\n\nSelected Walk: "+g_sPoseMoveWalk;
-           if (llGetInventoryKey(g_sPoseMoveRun)) sPrompt += "\nSelected Run: "+g_sPoseMoveRun;
+           if (llGetInventoryType(g_sPoseMoveRun) == INVENTORY_ANIMATION) sPrompt += "\nSelected Run: "+g_sPoseMoveRun;
            else sPrompt += "\nSelected Run: ~run";
        }
        lButtons += ["☐ none"];
@@ -307,7 +307,7 @@ PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods config
     if (g_iTweakPoseAO) {
         if (g_sPoseMoveWalk) llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
         if (g_sPoseMoveRun) {
-            if (llGetInventoryKey(g_sPoseMoveRun)) llSetAnimationOverride( "Running", g_sPoseMoveRun);
+            if (llGetInventoryType(g_sPoseMoveRun) == INVENTORY_ANIMATION) llSetAnimationOverride( "Running", g_sPoseMoveRun);
             else if (llGetInventoryKey("~run")) llSetAnimationOverride( "Running", "~run");
         }
     }
