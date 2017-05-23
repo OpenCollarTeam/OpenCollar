@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 161030.1                           //
+//                          Authorizer - 170523.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -60,7 +60,6 @@ list g_lBlock;//list of blacklisted UUID
 list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
 
 key g_kGroup = "";
-// string g_sGroupName;
 integer g_iGroupEnabled = FALSE;
 
 string g_sParentMenu = "Main";
@@ -514,29 +513,19 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 if (g_kGroup != "") {
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "group=" + (string)g_kGroup, "");
                     g_iGroupEnabled = TRUE;
-                    //get group name from world api
-                    // key kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");
-                    // g_lQueryId+=[kGroupHTTPID,"","group", kID, FALSE];
                     llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=n", "auth");
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group set to secondlife:///app/group/" + (string)g_kGroup + "/about",kID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group set to secondlife:///app/group/" + (string)g_kGroup + "/about\n\nNOTE: If RLV is enabled, the group slot has been locked and group mode has to be disabled before %WEARERNAME% can switch to another group again.\n",kID);
                 }
             } else if (sAction == "off") {
                 g_kGroup = "";
-                // g_sGroupName = "";
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "group", "");
-                // llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "groupname", "");
                 g_iGroupEnabled = FALSE;
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group unset.",kID);
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
-    } /* else if (sCommand == "set" && sAction == "groupname") {
-        if (iNum==CMD_OWNER){
-            g_sGroupName = llDumpList2String(llList2List(lParams, 2, -1), " ");
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-    } */ else if (sCommand == "public") {
+    } else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
             if (sAction == "on") {
                 g_iOpenAccess = TRUE;
@@ -659,7 +648,6 @@ default {
                         else g_iGroupEnabled = FALSE;
                     } else g_iGroupEnabled = FALSE;
                 }
-                // else if (sToken == "groupname") g_sGroupName = sValue;
                 else if (sToken == "public") g_iOpenAccess = (integer)sValue;
                 else if (sToken == "limitrange") g_iLimitRange = (integer)sValue;
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
@@ -746,48 +734,6 @@ default {
         } else if (iNum == 451 && kID == "sec") FailSafe(1);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
-
-/*  http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
-        integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
-        if (listIndex!= -1){
-            key g_kDialoger=llList2Key(g_lQueryId,listIndex+3);
-            g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
-
-            g_sGroupName = "(group name hidden)";
-            if (iStatus == 200) {
-                integer iPos = llSubStringIndex(sBody, "<title>");
-                integer iPos2 = llSubStringIndex(sBody, "</title>");
-                if ((~iPos) // Found
-                    && iPos2 > iPos // Has to be after it
-                    && iPos2 <= iPos + 43 // 36 characters max (that's 7+36 because <title> has 7)
-                    && !~llSubStringIndex(sBody, "AccessDenied") // Check as per groupname.py (?)
-                    ) {
-                    g_sGroupName = llGetSubString(sBody, iPos + 7, iPos2 - 1);
-                }
-            }
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group set to " + g_sGroupName + ".",g_kDialoger);
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
-        }
-    }
-
-    dataserver(key kQueryId, string sData){ //response after an add-by-uuid
-        integer listIndex = llListFindList(g_lQueryId,[kQueryId]);
-        if (listIndex!= -1){
-            key newOwner = llList2Key(g_lQueryId,listIndex+1);
-            string sRequestType = llList2String(g_lQueryId,listIndex+2);
-            key kAv  =llList2Key(g_lQueryId,listIndex+3);
-            integer iRemenu = llList2Integer(g_lQueryId,listIndex+4);
-            g_lQueryId=llDeleteSubList(g_lQueryId,listIndex,listIndex+g_iQueryStride-1);
-            AddUniquePerson(newOwner, sData, sRequestType, kAv);
-            if (iRemenu){
-                integer iNewAuth = Auth(kAv,FALSE);
-                if (iNewAuth == CMD_OWNER)
-                    UserCommand(iNewAuth,sRequestType,kAv,TRUE);
-                else
-                    AuthMenu(kAv,iNewAuth);
-            }
-        }
-    }*/
     
     timer () {
         llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
