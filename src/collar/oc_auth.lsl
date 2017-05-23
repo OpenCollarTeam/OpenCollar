@@ -60,7 +60,7 @@ list g_lBlock;//list of blacklisted UUID
 list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
 
 key g_kGroup = "";
-string g_sGroupName;
+// string g_sGroupName;
 integer g_iGroupEnabled = FALSE;
 
 string g_sParentMenu = "Main";
@@ -515,27 +515,28 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "group=" + (string)g_kGroup, "");
                     g_iGroupEnabled = TRUE;
                     //get group name from world api
-                    key kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");
-                    g_lQueryId+=[kGroupHTTPID,"","group", kID, FALSE];
+                    // key kGroupHTTPID = llHTTPRequest("http://world.secondlife.com/group/" + (string)g_kGroup, [], "");
+                    // g_lQueryId+=[kGroupHTTPID,"","group", kID, FALSE];
                     llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=n", "auth");
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group set to secondlife:///app/group/" + (string)g_kGroup + "/about",kID);
                 }
             } else if (sAction == "off") {
                 g_kGroup = "";
-                g_sGroupName = "";
+                // g_sGroupName = "";
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "group", "");
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "groupname", "");
+                // llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "groupname", "");
                 g_iGroupEnabled = FALSE;
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group unset.",kID);
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
-    } else if (sCommand == "set" && sAction == "groupname") {
+    } /* else if (sCommand == "set" && sAction == "groupname") {
         if (iNum==CMD_OWNER){
             g_sGroupName = llDumpList2String(llList2List(lParams, 2, -1), " ");
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "groupname=" + g_sGroupName, "");
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-    } else if (sCommand == "public") {
+    } */ else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
             if (sAction == "on") {
                 g_iOpenAccess = TRUE;
@@ -658,7 +659,7 @@ default {
                         else g_iGroupEnabled = FALSE;
                     } else g_iGroupEnabled = FALSE;
                 }
-                else if (sToken == "groupname") g_sGroupName = sValue;
+                // else if (sToken == "groupname") g_sGroupName = sValue;
                 else if (sToken == "public") g_iOpenAccess = (integer)sValue;
                 else if (sToken == "limitrange") g_iLimitRange = (integer)sValue;
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
@@ -746,7 +747,7 @@ default {
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
-    http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
+/*  http_response(key kQueryId, integer iStatus, list lMeta, string sBody) { //response to a group name lookup
         integer listIndex=llListFindList(g_lQueryId,[kQueryId]);
         if (listIndex!= -1){
             key g_kDialoger=llList2Key(g_lQueryId,listIndex+3);
@@ -769,7 +770,7 @@ default {
         }
     }
 
-/*    dataserver(key kQueryId, string sData){ //response after an add-by-uuid
+    dataserver(key kQueryId, string sData){ //response after an add-by-uuid
         integer listIndex = llListFindList(g_lQueryId,[kQueryId]);
         if (listIndex!= -1){
             key newOwner = llList2Key(g_lQueryId,listIndex+1);
