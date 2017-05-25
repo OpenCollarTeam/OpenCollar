@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 161031.2                             //
+//                          Settings - 170525.1                             //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Nandana Singh, Cleo Collins, Master Starship, //
+//  Copyright (c) 2008 - 2017 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
 //  Wendy Starfall, Medea Destiny, Rebbie, Romka Swallowtail,               //
 //  littlemousy et al.                                                      //
@@ -236,10 +236,9 @@ list Add2OutList(list lIn, string sDebug) {
 PrintSettings(key kID, string sDebug) {
     // compile everything into one list, so we can tell the user everything seamlessly
     list lOut;
-    //list lSay = ["\n\nEverything below this line can be copied & pasted into a notecard called \".settings\" for backup:\n"];
-    list lSay = ["\n\n"];
+    list lSay = ["/me Settings:\n"];
     if (sDebug == "debug")
-        lSay = ["\n\nSettings Debug:\n"];
+        lSay = ["/me Settings Debug:\n"];
     lSay += Add2OutList(g_lSettings, sDebug);
     string sOld;
     string sNew;
