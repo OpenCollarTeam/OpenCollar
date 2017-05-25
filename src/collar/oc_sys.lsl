@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                           System - 170330.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
 //  Sumi Perl et al.                                                        //
 // ------------------------------------------------------------------------ //
@@ -58,10 +58,10 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="6.5.0";
-string g_sFancyVersion="⁶⋅⁵⋅⁰";
+string g_sCollarVersion="6.5.5";
+string g_sFancyVersion="⁶⋅⁵⋅⁵";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 170330.1;
+float g_fBuildVersion = 170525.2;
 
 key g_kWearer;
 

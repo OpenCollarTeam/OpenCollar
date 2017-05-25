@@ -22,7 +22,7 @@
 //           Themes - 170121.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
+//  Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,       //
 //  Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy,  //
 //  Romka Swallowtail et al.                                                //
 // ------------------------------------------------------------------------ //

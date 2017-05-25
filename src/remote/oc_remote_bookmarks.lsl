@@ -22,7 +22,7 @@
 //     Remote Bookmarks - 170222.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2015 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
+//  Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
 //  Romka Swallowtail, Garvin Twine, Mace68 et al.                          //
 // ------------------------------------------------------------------------ //

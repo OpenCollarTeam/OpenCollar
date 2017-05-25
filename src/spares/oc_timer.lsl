@@ -23,7 +23,7 @@
 //                        |                  ~----~                         //
 //                            Timer - 170213.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,         //
+//  Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Joy Stipe,         //
 //  Wendy Starfall, Master Starship, Medea Destiny, littlemousy,            //
 //  Romka Swallowtail, Sumi Perl, Keiyra Aeon, Garvin Twine et al.          //
 // ------------------------------------------------------------------------ //
