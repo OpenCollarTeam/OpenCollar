@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     Remote Bookmarks - 170222.1       .*' /  .*' ; .*`- +'  `*'          //
+//     Remote Bookmarks - 170525.1       .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
@@ -51,15 +51,12 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "¹⋅³";
 
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
-string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
-key webLookup;
-string g_sWeb = "http://virtualdisgrace.com/oc/";
 
 list   g_lDestinations                = []; //Destination list direct from static notecard
 list   g_lDestinations_Slurls         = []; //Destination list direct from static notecard
@@ -318,7 +315,6 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, "TextBoxIdLoca
 ReadDestinations() {
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
-    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     //start re-reading the notecards
     g_iLine = 0;
     if(llGetInventoryKey(g_sCard))
@@ -336,7 +332,7 @@ TeleportTo(string sStr) {  //take a string in region (x,y,z) format, and retriev
     g_kRequestHandle = llRequestSimulatorData(g_sRegion, DATA_SIM_POS);
 }
 
-PrintDestinations() {  // On inventory change, re-read our ~destinations notecard
+PrintDestinations() {  // On inventory change, re-read our .bookmarks notecard
     integer i;
     integer iLength = llGetListLength(g_lDestinations);
     string sMsg;
@@ -369,28 +365,6 @@ default {
         FailSafe();
         ReadDestinations(); //Grab our presets
         //Debug("Starting");
-    }
-
-    http_response(key id, integer status, list meta, string body) {
-        if(status == 200) {  // be silent on failures.
-            //      Debug(body);
-            if(id == webLookup) {
-                list lResponse;
-                lResponse = llParseString2List(body, ["\n"], [""]);
-                integer i = 0;
-                integer x = 0;
-                string sData;
-                list split;
-                x = llGetListLength(lResponse) - 1;
-                for(i = 0; i <= x; ++i) {
-                    sData = llStringTrim(llList2String(lResponse, i), STRING_TRIM);
-                    split = llParseString2List(sData, ["~"], []);
-                    g_lDestinations = [ llStringTrim(llList2String(split, 0), STRING_TRIM) ] + g_lDestinations;
-                    g_lDestinations_Slurls = [ llStringTrim(llList2String(split, 1), STRING_TRIM) ] + g_lDestinations_Slurls ;
-                }
-                //     Debug("Body: " + body);
-            }
-        }
     }
 
     dataserver(key kID, string sData) {
