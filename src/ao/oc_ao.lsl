@@ -443,7 +443,7 @@ TranslateCollarCMD(string sCommand, key kID){
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
-            SetAnimOverride();
+            if (g_iAO_ON) SetAnimOverride();
             g_iStandPause = FALSE;
         }
     } else if (~llSubStringIndex(sCommand,"menu")) {
