@@ -61,7 +61,7 @@ string g_sDevStage="";
 string g_sCollarVersion="6.5.5";
 string g_sFancyVersion="⁶⋅⁵⋅⁵";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 170525.2;
+float g_fBuildVersion = 170620.1;
 
 key g_kWearer;
 
@@ -114,7 +114,7 @@ string GIVECARD = "Help";
 string HELPCARD = ".help";
 string CONTACT = "Contact";
 string LICENSE = "License";
-string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
+string HTTP_TYPE = ""; // can be raw, text/plain or text/*
 key g_kWebLookup;
 key g_kCurrentUser;
 
@@ -158,7 +158,7 @@ key g_kNCkey;
 key news_request;
 string g_sLastNewsTime = "0";
 
-string g_sWeb = "http://virtualdisgrace.com/oc/";
+string g_sWeb = "https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~";
 string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
