@@ -19,10 +19,10 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 161029.1          .*' /  .*' ; .*`- +'  `*'          //
+//     OpenCollar AO - 170620.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Copyright (c) 2008 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
 //  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -54,6 +54,8 @@ string g_sFancyVersion = "⁶⋅⁴⋅⁰";
 float g_fBuildVersion = 161029.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
+integer g_iToday;
+integer g_iLastDay;
 
 integer g_iInterfaceChannel = -12587429;
 integer g_iHUDChannel = -1812221819;
@@ -532,7 +534,11 @@ default {
         if (g_kWearer != llGetOwner()) llResetScript();
         if (g_iLocked) llOwnerSay("@detach=n");
         g_iReady = FALSE;
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~ao", [HTTP_METHOD, "GET"],"");
+        g_iToday = (integer)llGetSubString(llGetDate(),-2,-1);
+        if (g_iToday % 2) {
+            g_iLastDay = g_iToday;
+            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~ao",[HTTP_METHOD,"GET"],"");
+        }
         llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
     }
 

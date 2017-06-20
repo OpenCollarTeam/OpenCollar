@@ -19,10 +19,10 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 161029.1        .*' /  .*' ; .*`- +'  `*'          //
+//       Remote System - 170620.1        .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
+//  Copyright (c) 2014 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
 //  Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, //
 //  Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.   //
 // ------------------------------------------------------------------------ //
@@ -57,6 +57,8 @@ string g_sVersion = "170321.1";
 string g_sFancyVersion = "⁶⋅⁴⋅⁰";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
+integer g_iToday;
+integer g_iLastDay;
 
 list g_lPartners;
 list g_lNewPartnerIDs;
@@ -280,7 +282,11 @@ default {
     state_entry() {
         g_kOwner = llGetOwner();
         FailSafe();
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_iToday = (integer)llGetSubString(llGetDate(),-2,-1);
+        if (g_iToday % 2) {
+            g_iLastDay = g_iToday;
+            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        }
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -296,7 +302,11 @@ default {
     }
 
     on_rez(integer iStart) {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_iToday = (integer)llGetSubString(llGetDate(),-2,-1);
+        if (g_iToday != g_iLastDay && g_iToday % 2) {
+            g_iLastDay = g_iToday;
+            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote",[HTTP_METHOD,"GET"],"");
+        }
     }
 
     touch_start(integer iNum) {
@@ -475,7 +485,8 @@ default {
     }
 
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
-        if (kRequestID == g_kWebLookup && iStatus == 200)  {
+        if (iStatus != 200) return;
+        if (kRequestID == g_kWebLookup) {
             if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
         } else if (kRequestID == g_kPicRequest) {
