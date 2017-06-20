@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Settings - 170525.1                             //
+//                          Settings - 170620.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Cleo Collins, Master Starship, //
 //  Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,    //
@@ -67,7 +67,6 @@ key g_kWearer;
 
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
-string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -99,10 +98,6 @@ integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
 string g_sSampleURL = "https://goo.gl/adCn8Y";
-string g_sEmergencyURL = "http://virtualdisgrace.com/oc/";
-key g_kURLRequestID;
-float g_fLastNewsStamp;
-integer g_iCheckNews;
 
 list g_lSettings;
 
@@ -376,7 +371,6 @@ UserCommand(integer iAuth, string sStr, key kID) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
             llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
-            g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
         } else {
             g_kConfirmDialogID = llGenerateKey();
@@ -409,7 +403,6 @@ default {
 
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
-            g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
             //llSleep(0.5); // brief wait for others to reset
             //llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
@@ -453,16 +446,6 @@ default {
                 }
             } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
             g_kURLLoadRequest = "";
-        } else if (iStatus == 200 && kID == g_kURLRequestID) {
-            g_iCheckNews = FALSE;
-            integer index = llSubStringIndex(sBody,"\n");
-            float fNewsStamp = (float)llGetSubString(sBody,0,index-1);
-            if (fNewsStamp > g_fLastNewsStamp) {
-                sBody = llGetSubString(sBody,index,-1); //schneidet die erste zeile ab
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sBody,g_kWearer);
-                g_fLastNewsStamp = fNewsStamp;
-                g_lSettings = SetSetting(g_lSettings,"intern_news",(string)fNewsStamp);
-            }
         }
     }
 
@@ -474,16 +457,11 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
-            if (sToken == "intern_news") {
-                g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
-            }
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
             if (SettingExists(sStr)) llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
             else if (sStr == "ALL") {
-                g_iCheckNews = FALSE;
                 llSetTimerEvent(2.0);
             } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
@@ -509,7 +487,6 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {
