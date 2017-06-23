@@ -53,17 +53,62 @@ integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
 
+list apps;
+list adjusters;
+integer menu_anim;
+integer menu_rlv;
+integer menu_kidnap;
+
+make_menus() {
+    menu_anim = FALSE;
+    menu_rlv = FALSE;
+    menu_kidnap = FALSE;
+    adjusters = [];
+    apps = [] ;
+    llMessageLinked(LINK_SET,MENUNAME_REQUEST,"Main","");
+    llMessageLinked(LINK_SET,MENUNAME_REQUEST,"Apps","");
+    llMessageLinked(LINK_SET,MENUNAME_REQUEST,"Settings","");
+    llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
+}
+
 default {
     state_entry() {
         wearer = llGetOwner();
+        llSetTimerEvent(1.0);
     }
     on_rez(integer iStart) {
+        llSetTimerEvent(1.0);
     }
     link_message(integer sender, integer num, string str, key id) {
+        list params;
+        if (num == MENUNAME_RESPONSE) {
+            params = llParseString2List(str,["|"],[]);
+            string parentmenu = llList2String(params,0);
+            string submenu = llList2String(params,1);
+            if (parentmenu == "Apps") {
+                if (!~llListFindList(apps, [submenu])) {
+                    apps += [submenu];
+                    apps = llListSort(apps,1,TRUE);
+                }
+            } else if (str == "Main|Animations") menu_anim = TRUE;
+            else if (str == "Main|RLV") menu_rlv = TRUE;
+            else if (str == "Main|Capture") menu_kidnap = TRUE;
+            else if (str == "Settings|Size/Position") adjusters = ["Position","Rotation","Size"];
+        } else if (num == MENUNAME_REMOVE) {
+            params = llParseString2List(str,["|"],[]);
+            string parentmenu = llList2String(params,0);
+            string submenu = llList2String(params,1);
+            if (parentmenu == "Apps") {
+                integer index = llListFindList(apps,[submenu]);
+                if (~index) apps = llDeleteSubList(apps,index,index);
+            } else if (submenu == "Size/Position") adjusters = [];
+        } else if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
         if (changes & CHANGED_OWNER) llResetScript();
     }
     timer() {
+        make_menus();
+        llSetTimerEvent(0.0);
     }
 }
