@@ -55,7 +55,11 @@ key wearer;
 
 integer version;
 
+string that_token = "root_";
+string about;
+string dist;
 integer locked;
+integer hidden;
 
 list these_menus;
 
@@ -76,7 +80,7 @@ integer menu_rlv;
 integer menu_kidnap;
 
 menu_root(key id, integer auth) {
-    string context = "\n/root";
+    string context = "\n [http://www.opencollar.at/main-menu.html /root]";
     list these_buttons = ["Apps"];
     if (menu_anim) these_buttons += "Animations";
     else these_buttons += "-";
@@ -92,12 +96,27 @@ menu_root(key id, integer auth) {
 }
 
 menu_settings(key id, integer auth) {
+    string context = "\n [http://www.opencollar.at/settings.html ./settings]";
+    list these_buttons = ["Print","Load","Fix"];
+    these_buttons += adjusters;
+    if (hidden) these_buttons += ["☑ Stealth"];
+    else these_buttons += ["☐ Stealth"];
+    these_buttons += "Looks";
+    dialog(id,context,these_buttons,["BACK"],0,auth,"Settings");
 }
 
 menu_apps(key id, integer auth) {
+    string context="\n [http://www.opencollar.at/apps.html ./apps]";
+    dialog(id,context,apps,["BACK"],0,auth,"Apps");
 }
 
 menu_about(key id) {
+    string context = "\nVersion: "+(string)version+"\nOrigin: ";
+    if (dist) context += uri("agent/"+dist);
+    else context += "Unknown";
+    context+="\n\n"+about;
+    context+="\n\nThe OpenCollar Six™ scripts were used in this product to an unknown extent. The OpenCollar project can't support this product. Relevant [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE license terms] still apply.";
+    llDialog(id,context,["OK"],-12345);
 }
 
 commands(integer auth, string str, key id, integer clicked) {
@@ -134,7 +153,12 @@ make_menus() {
 }
 
 init() {
+    hidden = !(integer)llGetAlpha(ALL_SIDES);
     llSetTimerEvent(1.0);
+}
+
+string uri(string str){
+    return "secondlife:///app/"+str+"/inspect";
 }
 
 default {
@@ -184,13 +208,54 @@ default {
                     else if (button == "About") menu_about(id);
                     else if (button == "Apps") menu_apps(id,auth);
                     else llMessageLinked(LINK_SET,auth,"menu "+button,id);
+                } else if (menu == "Apps") {
+                    if (button == "BACK") menu_root(id,auth);
+                    else llMessageLinked(LINK_SET,auth,"menu "+button,id);
+                } else if (menu == "Settings") {
+                     if (button == "Print") llMessageLinked(LINK_SAVE,auth,"print settings",id);
+                     else if (button == "Load") llMessageLinked(LINK_SAVE,auth,button,id);
+                     else if (button == "Fix") {
+                         commands(auth,button,id,TRUE);
+                         return;
+                    } else if (button == "☐ Stealth") {
+                         llMessageLinked(LINK_ROOT,auth,"hide",id);
+                         hidden = TRUE;
+                    } else if (button == "☑ Stealth") {
+                        llMessageLinked(LINK_ROOT,auth,"show",id);
+                        hidden = FALSE;
+                    } else if (button == "Themes") {
+                        llMessageLinked(LINK_ROOT,auth,"menu Themes",id);
+                        return;
+                    } else if (button == "Looks") {
+                        llMessageLinked(LINK_ROOT,auth,"looks",id);
+                        return;
+                    } else if (button == "BACK") {
+                        menu_root(id,auth);
+                        return;
+                    } else if (button == "Position" || button == "Rotation" || button == "Size") {
+                        llMessageLinked(LINK_ROOT,auth,llToLower(button),id);
+                        return;
+                    }
+                    menu_settings(id,auth);
                 }
             }
         } else if (num >= CMD_OWNER && num <= CMD_WEARER) commands(num,str,id,FALSE);
-        else if (num == REBOOT && str == "reboot") llResetScript();
+        else if (num == LM_SETTING_RESPONSE) {
+            params = llParseString2List(str,["="],[]);
+            string this_token = llList2String(params,0);
+            string value = llList2String(params,1);
+            if (this_token == that_token+"locked") locked = (integer)value;
+            else if (this_token == "intern_dist") dist = value;
+        } else if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
         if (changes & CHANGED_OWNER) llResetScript();
+        if ((changes & CHANGED_INVENTORY) && !llGetStartParameter()) {
+            llSetTimerEvent(1.0);
+            llMessageLinked(LINK_ALL_OTHERS,LM_SETTING_REQUEST,"ALL","");
+        }
+        if (changes & CHANGED_COLOR)
+            hidden = !(integer)llGetAlpha(ALL_SIDES) ;
     }
     timer() {
         make_menus();
