@@ -58,6 +58,7 @@ integer version;
 string that_token = "root_";
 string about;
 string dist;
+string safeword = "RED";
 integer locked;
 integer hidden;
 
@@ -133,11 +134,36 @@ commands(integer auth, string str, key id, integer clicked) {
                 menu_root(id,auth);
             } else menu_settings(id,auth);
         }
+    } else if (str == "info" || str == "version") {
+        string message = "\n\nModel: "+llGetObjectName();
+        message += "\nVersion: "+(string)version+"\nOrigin: ";
+        if (dist) message += uri("agent/"+dist);
+        else message += "Unknown";
+        message += "\nUser: "+llGetUsername(wearer);
+        message += "\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+safeword+"\n";
+        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+message,id);
+    } else if (str == "license") {
+        if (llGetInventoryType(".license") == INVENTORY_NOTECARD) llGiveInventory(id,".license");
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no license file in this collar. Please request one directly from "+uri("agent/"+dist)+"!",id);
+    } else if (str == "help") {
+        if (llGetInventoryType(".help") == INVENTORY_NOTECARD) llGiveInventory(id,".help");
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no help file in this collar. Please request one directly from "+uri("agent/"+dist)+"!",id);
     } else if (str == "about") menu_about(id);
     else if (str == "apps") menu_apps(id,auth);
     else if (str == "settings") {
         if (auth == CMD_OWNER || auth == CMD_WEARER) menu_settings(id,auth);
+    } else if (cmd == "fix") {
+        if (id == wearer){
+            make_menus();
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"I've fixed the menus.",id);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",id);
     }
+}
+
+failsafe() {
+    string name = llGetScriptName();
+    if((key)name) return;
+    if(name != "oc_root") llRemoveInventory(name);
 }
 
 make_menus() {
@@ -154,6 +180,7 @@ make_menus() {
 
 init() {
     hidden = !(integer)llGetAlpha(ALL_SIDES);
+    failsafe();
     llSetTimerEvent(1.0);
 }
 
@@ -249,12 +276,14 @@ default {
             string this_token = llList2String(params,0);
             string value = llList2String(params,1);
             if (this_token == that_token+"locked") locked = (integer)value;
+            else if (this_token == that_token+"safeword") safeword = value;
             else if (this_token == "intern_dist") dist = value;
         } else if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
         if (changes & CHANGED_OWNER) llResetScript();
         if ((changes & CHANGED_INVENTORY) && !llGetStartParameter()) {
+            failsafe();
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS,LM_SETTING_REQUEST,"ALL","");
         }
