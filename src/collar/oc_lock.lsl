@@ -15,6 +15,10 @@
  limitations under the License.
  
  */
+
+// This plugin is the tiny steam-engine behind the LOCK/UNLOCK button
+// that lives in the oc_root. It can play different noises depending on
+// lock/unlock action and reveal or hide a lock element on the device.
  
 integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
@@ -101,6 +105,7 @@ get_locks() {
 
 default {
     state_entry() {
+        //llSetMemoryLimit(20480);
         wearer = llGetOwner();
         get_locks();
         failsafe();
