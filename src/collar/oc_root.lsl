@@ -16,22 +16,10 @@
  
  */
 
-//MESSAGE MAP
-integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
-//integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED = 520;
 integer NOTIFY = 1002;
-integer NOTIFY_OWNERS = 1003;
-//integer SAY = 1004;
 integer REBOOT = -1000;
-integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
@@ -40,13 +28,9 @@ integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;
-integer RLV_CLEAR = 6002;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
@@ -55,7 +39,7 @@ key wearer;
 
 integer version;
 
-string that_token = "root_";
+string that_token = "global_";
 string about;
 string dist;
 string safeword = "RED";
@@ -144,10 +128,10 @@ commands(integer auth, string str, key id, integer clicked) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+message,id);
     } else if (str == "license") {
         if (llGetInventoryType(".license") == INVENTORY_NOTECARD) llGiveInventory(id,".license");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no license file in this collar. Please request one directly from "+uri("agent/"+dist)+"!",id);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no license file in this %DEVICETYPE%. Please request one directly from "+uri("agent/"+dist)+"!",id);
     } else if (str == "help") {
         if (llGetInventoryType(".help") == INVENTORY_NOTECARD) llGiveInventory(id,".help");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no help file in this collar. Please request one directly from "+uri("agent/"+dist)+"!",id);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"There is no help file in this %DEVICETYPE%. Please request one directly from "+uri("agent/"+dist)+"!",id);
     } else if (str == "about") menu_about(id);
     else if (str == "apps") menu_apps(id,auth);
     else if (str == "settings") {
@@ -278,6 +262,9 @@ default {
             if (this_token == that_token+"locked") locked = (integer)value;
             else if (this_token == that_token+"safeword") safeword = value;
             else if (this_token == "intern_dist") dist = value;
+        } else if (num == DIALOG_TIMEOUT) {
+            integer menuindex = llListFindList(these_menus,[id]);
+            these_menus = llDeleteSubList(these_menus,menuindex - 1,menuindex + 1);
         } else if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
