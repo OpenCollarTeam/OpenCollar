@@ -192,6 +192,10 @@ default {
                 integer index = llListFindList(apps,[submenu]);
                 if (~index) apps = llDeleteSubList(apps,index,index);
             } else if (submenu == "Size/Position") adjusters = [];
+        } else if (num == LINK_UPDATE) {
+            if (str == "LINK_DIALOG") LINK_DIALOG = sender;
+            else if (str == "LINK_RLV") LINK_RLV = sender;
+            else if (str == "LINK_SAVE") LINK_SAVE = sender;
         } else if (num == DIALOG_RESPONSE) {
             integer menuindex = llListFindList(these_menus,[id]);
             if (~menuindex) {
@@ -255,7 +259,9 @@ default {
             llMessageLinked(LINK_ALL_OTHERS,LM_SETTING_REQUEST,"ALL","");
         }
         if (changes & CHANGED_COLOR)
-            hidden = !(integer)llGetAlpha(ALL_SIDES) ;
+            hidden = !(integer)llGetAlpha(ALL_SIDES);
+        if (changes & CHANGED_LINK)
+            llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
     }
     timer() {
         make_menus();
