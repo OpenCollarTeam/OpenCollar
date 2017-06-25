@@ -15,6 +15,10 @@
  limitations under the License.
  
  */
+ 
+// This plugin creates the root (or main), apps and settings menus,
+// and has the default LOCK/UNLOCK button. It can also dispense the help
+// and license files (if present in contents) and can print info/version.
 
 integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
@@ -174,6 +178,7 @@ string uri(string str){
 
 default {
     state_entry() {
+        //llSetMemoryLimit(32768);
         wearer = llGetOwner();
         init();
     }
