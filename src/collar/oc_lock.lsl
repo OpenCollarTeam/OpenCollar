@@ -51,15 +51,50 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
-
 string that_token = "global_";
 integer locked;
 integer hidden;
 
 list closed_locks;
 list open_locks;
+list closed_locks_glows;
+list open_locks_glows;
 
 show_hide_lock() {
+    if (hidden) return;
+    integer i;
+    integer links = llGetListLength(open_locks);
+    for (;i < links; ++i) {
+        llSetLinkAlpha(llList2Integer(open_locks,i),!locked,ALL_SIDES);
+        update_glows(llList2Integer(open_locks,i),!locked);
+    }
+    links = llGetListLength(closed_locks);
+    for (i=0; i < links; ++i) {
+        llSetLinkAlpha(llList2Integer(closed_locks,i),locked,ALL_SIDES);
+        update_glows(llList2Integer(closed_locks,i),locked);
+    }
+}
+
+update_glows(integer link, integer alpha) {
+    list glows;
+    integer index;
+    if (alpha) {
+        glows = open_locks_glows;
+        if (locked) glows = closed_locks_glows;
+        index = llListFindList(glows,[link]);
+        if (!~index) llSetLinkPrimitiveParamsFast(link,[PRIM_GLOW,ALL_SIDES,llList2Float(glows,index+1)]);
+    } else {
+        float glow = llList2Float(llGetLinkPrimitiveParams(link,[PRIM_GLOW,0]),0);
+        glows = closed_locks_glows;
+        if (locked) glows = open_locks_glows;
+        index = llListFindList(glows,[link]);
+        if (~index && glow > 0) glows = llListReplaceList(glows,[glow],index+1,index+1);
+        if (~index && glow == 0) glows = llDeleteSubList(glows,index,index+1);
+        if (!~index && glow > 0) glows += [link,glow];
+        if (locked) open_locks_glows = glows;
+        else closed_locks_glows = glows;
+        llSetLinkPrimitiveParamsFast(link,[PRIM_GLOW,ALL_SIDES,0.0]);
+    }
 }
 
 get_locks() {
@@ -82,6 +117,7 @@ default {
         get_locks();
     }
     on_rez(integer iStart) {
+        hidden = !(integer)llGetAlpha(ALL_SIDES);
     }
     link_message(integer sender, integer num, string str, key id) {
         if (num == LINK_UPDATE) {
@@ -112,7 +148,8 @@ default {
                     show_hide_lock();
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"/me is unlocked.",id);
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",id);
-            }
+            } else if (str == "show") hidden = FALSE;
+            else if (str == "hide") hidden = TRUE;
         } else if (num == LM_SETTING_RESPONSE) {
             list params = llParseString2List(str,["="],[]);
             string this_token = llList2String(params,0);
@@ -122,10 +159,20 @@ default {
                 if (locked) llOwnerSay("@detach=n");
                 show_hide_lock();
             }
-        }
+        } else if (num == RLV_REFRESH || num == RLV_CLEAR) {
+            if (locked) llMessageLinked(LINK_RLV, RLV_CMD,"detach=n","main");
+            else llMessageLinked(LINK_RLV,RLV_CMD,"detach=y","main");
+        } else if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
         if (changes & CHANGED_OWNER) llResetScript();
         if (changes & CHANGED_LINK) get_locks();
+        if (changes & CHANGED_COLOR) {
+            integer new_hide = !(integer)llGetAlpha(ALL_SIDES);
+            if (hidden != new_hide) {
+                hidden = new_hide;
+                show_hide_lock();
+            }
+        }
     }
 }
