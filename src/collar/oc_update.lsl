@@ -51,13 +51,39 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
+integer upstream;
+key id_installer;
+
+update(){
+    integer pin = (integer)llFrand(99999998.0) + 1;
+    llSetRemoteScriptAccessPin(pin);
+    integer chan_installer = -12345;
+    if (upstream) chan_installer = -7483213;
+    llRegionSayTo(id_installer,chan_installer,"ready|"+(string)pin);
+}
+
+key menu_id;
 
 default {
     state_entry() {
         wearer = llGetOwner();
     }
     link_message(integer sender, integer num, string str, key id) {
-     }
+        if (!llSubStringIndex(str,".- ... -.-") && id == wearer) {
+            id_installer = (key)llGetSubString(str,-36,-1);
+            menu_id = llGenerateKey();
+            llMessageLinked(LINK_DIALOG,DIALOG,(string)wearer+"|\nReady to install?|0|Yes`No|Cancel|"+(string)CMD_WEARER,menu_id);
+        } else if (num == DIALOG_RESPONSE) {
+            if (id == menu_id) {
+                list params = llParseString2List(str,["|"],[]);
+                id = (key)llList2String(params,0);
+                string button = llList2String(params,1);
+                if (button == "Yes") update();
+                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"cancelled",id);
+            }
+        } else if (num == LINK_UPDATE) {
+            if (str == "LINK_DIALOG") LINK_DIALOG = sender;
+            
     listen(integer chan, string name, key id, string sMessage) {
     }
     timer() {
