@@ -16,39 +16,13 @@
  
  */
 
-integer CMD_ZERO = 0;
-integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
-integer CMD_BLOCKED = 520;
 integer NOTIFY = 1002;
-integer NOTIFY_OWNERS = 1003;
-integer SAY = 1004;
 integer REBOOT = -1000;
-integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
-integer LM_SETTING_SAVE = 2000;
-integer LM_SETTING_REQUEST = 2001;
-integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;
-integer RLV_CLEAR = 6002;
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
 integer upstream;
@@ -64,9 +38,16 @@ update(){
 
 key menu_id;
 
+failsafe() {
+    string name = llGetScriptName();
+    if((key)name) return;
+    if((upstream && name != "oc_update")) llRemoveInventory(name);
+}
+
 default {
     state_entry() {
         wearer = llGetOwner();
+        failsafe();
     }
     link_message(integer sender, integer num, string str, key id) {
         if (!llSubStringIndex(str,".- ... -.-") && id == wearer) {
@@ -83,11 +64,14 @@ default {
             }
         } else if (num == LINK_UPDATE) {
             if (str == "LINK_DIALOG") LINK_DIALOG = sender;
-            
+        } else if (num == REBOOT && str == "reboot") llResetScript();
+    }
     listen(integer chan, string name, key id, string sMessage) {
     }
     timer() {
     }
     on_rez(integer start) {
+        if (llGetOwner() != wearer) llResetScript();
+        failsafe();
     }
 }
