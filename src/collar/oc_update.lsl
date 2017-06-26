@@ -16,6 +16,10 @@
  
  */
 
+// This plugin can be used to receive updates through the OpenCollar Six
+// Installer. The user has to confirm before any installations can start.
+// Whether patches from the upstream can be installed or not is optional.
+
 integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
@@ -46,6 +50,7 @@ failsafe() {
 
 default {
     state_entry() {
+        //llSetMemoryLimit(16384);
         wearer = llGetOwner();
         failsafe();
     }
@@ -65,10 +70,6 @@ default {
         } else if (num == LINK_UPDATE) {
             if (str == "LINK_DIALOG") LINK_DIALOG = sender;
         } else if (num == REBOOT && str == "reboot") llResetScript();
-    }
-    listen(integer chan, string name, key id, string sMessage) {
-    }
-    timer() {
     }
     on_rez(integer start) {
         if (llGetOwner() != wearer) llResetScript();
