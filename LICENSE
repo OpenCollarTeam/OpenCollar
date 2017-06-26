@@ -1,4 +1,4 @@
-License Terms for the OpenCollar Six(tm) Role Play Device | 2016-10-26
+License Terms for the OpenCollar Six(tm) Role Play Device | 2017-06-23
 
 raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE
 
@@ -19,17 +19,20 @@ Preamble and Introduction
 
     In a nutshell, everyone must follow these basic rules:
 
-    1. All scripts are licensed as and must remain under the
+    1. Most scripts are licensed as and must remain under the
        GNU General Public License, version 2.
 
-    2. Most contents are licensed as and must remain under
+    2. The LSL scripts oc_root, oc_lock and oc_update have the
+       Apache 2.0 license.
+
+    3. Most contents are licensed as and must remain under
        the Creative Commons Attribution-ShareAlike 4.0
        International Public License.
 
-    3. Everything else where no explicit license was applied
+    4. Everything else where no explicit license was applied
        is covered by this License Addendum.
 
-    4. Everything coming from us which was FULL PERMS also
+    5. Everything coming from us which was FULL PERMS also
        has to remain FULL PERMS if you wish to share it with
        your friends.
 
@@ -101,31 +104,31 @@ Contents available under these terms and conditions.
 
 § 2.) Scripts:
 
-    a. The OpenCollar scripts are licensed under the
+    a. Most OpenCollar scripts are licensed under the
        GNU General Public License, version 2
        (http://www.gnu.org/licenses/gpl-2.0) and are free to
        be studied, copied, modified, and redistributed, in
        respect to the following guidelines:
 
-            i. If You distribute the OpenCollar scripts, You
+            i. If You distribute these OpenCollar scripts, You
                must leave them FULL PERMS.
 
-           ii. If You include the scripts in items that You
-               make, You must leave the scripts FULL PERMS.
+           ii. If You include these scripts in items that You
+               make, You must leave these scripts FULL PERMS.
 
-          iii. If You modify the OpenCollar scripts and
+          iii. If You modify these OpenCollar scripts and
                distribute the modifications, You must also
                make Your modifications FULL PERMS and point
                to a log of changes e.g. readme file, git log,
                svn history.
 
            iv. In all cases a verbatim copy of this License
-               Addendum must be included and all OpenCollar
-               scripts must remain under the GNU General
-               Public License, version 2.
+               Addendum must be included and all these
+               OpenCollar scripts must remain under the
+               GNU General Public License, version 2.
 
-    b. While We hope to encourage others to write indeed Free
-       Software, custom plugins are not subject to the above
+    b. While We hope to encourage others to write open-source
+       software, custom plugins are not subject to the above
        conditions if the following requirements are met:
 
             i. The program is entirely written by You,
@@ -138,6 +141,15 @@ Contents available under these terms and conditions.
 
           iii. The program communicates with the OpenCollar
                scripts only through script link messages.
+
+    c. The scripts oc_root, oc_lock and oc_update have the Apache 2.0
+       license (http://www.apache.org/licenses/LICENSE-2.0). We
+       distribute these scripts in combined, or singular form, with or
+       without permissions set to FULL PERM at Our discretion.
+
+            i. If You modify these scripts and distribute Your modifications
+               You don't have to make Your modifications FULL PERM but must
+               follow the terms of the Apache 2.0 license.
 
 
 § 3.) Models:
@@ -373,7 +385,7 @@ Contents available under these terms and conditions.
 
 --------------------------------------------------------------
 
-This text was last edited on October 26, 2016.
+This text was last edited on June 23, 2017.
 License Terms are subject to change from time to time.
 
 Virtual Disgrace(tm) can be contacted at virtualdisgrace.com

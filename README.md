@@ -1,8 +1,8 @@
 ### Welcome to OpenCollar Six™
 
-OpenCollar Six is a set of LSL scripts and other creative content, such as animations, sounds, textures, graphics and 3D models, which can be used to create role play devices in the form of scripted accessory and/or so-called HUDs for the metaverse.
+OpenCollar Six is a set of LSL scripts and other creative content, such as animations, sounds, textures, graphics and 3D models, which can be used to create role play devices in the form of scripted accessory and/or so-called HUDs.
 
-Punk, goth and fetish collars would be the most popular of those and OpenCollar eventually became everyone's script set of choice to create items that are used for creative role play amongst adults in Second Life®. OpenCollar is [free software](http://www.gnu.org/philosophy/free-sw.html "What is free software?")."
+Punk, goth and fetish collars would be the most popular of those and OpenCollar eventually became everyone's script set of choice to create items that are used for creative role play amongst adults in Second Life®.
 
 #### Finding your way around this repo
 
@@ -31,9 +31,11 @@ At the moment this repository is separated into resources, source code and web q
 
 #### License Terms and Addendum
 
-OpenCollar Six source code and creative resource are covered and protected by strong [copyleft](https://en.wikipedia.org/wiki/Copyleft "What does "copyleft" mean?") licenses.
+OpenCollar Six source code and creative resource are covered by free software, free culture and permissive open-source software licenses. Each script is its own program and compiles individually.
 
-* LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
+* Most LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
+
+* The LSL scripts ``oc_root``, ``oc_lock`` and ``oc_update`` have the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
 
 * Creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
 
