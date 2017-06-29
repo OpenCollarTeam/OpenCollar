@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 170401.1                           //
+//                         Update Shim - 170627.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2017 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -155,7 +155,7 @@ default {
                         sCmd = "GIVE";
                     } else {
                         // it's in our list.  Check UUID.
-                        if (llGetInventoryKey(sName) == kUUID  && kUUID != NULL_KEY && sName != "oc_sys") {
+                        if (llGetInventoryKey(sName) == kUUID  && kUUID != NULL_KEY && sName != "oc_root") {
                             // already have script.  skip
                             sCmd = "SKIP";
                         } else {
