@@ -16,6 +16,8 @@
  
  */
 
+// This plugin can be used to hide the whole device (and to show it again).
+
 integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
