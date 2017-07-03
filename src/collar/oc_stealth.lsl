@@ -95,6 +95,7 @@ default {
             string lowerstr = llToLower(str);
             if (lowerstr == "hide" || lowerstr == "show" || lowerstr == "stealth") {
                 if (num == CMD_OWNER || num == CMD_WEARER) stealth(lowerstr);
+                else if ((key)id) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",id);
             } else if (num == REBOOT && str == "reboot") llResetScript();
         }
     }
