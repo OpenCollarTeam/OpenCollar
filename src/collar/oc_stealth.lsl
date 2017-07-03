@@ -53,6 +53,13 @@ integer DIALOG_TIMEOUT = -9002;
 key wearer;
 integer hidden;
 
+stealth (string str) {
+    if (str == "hide") hidden = TRUE;
+    else if (str == "show") hidden = FALSE;
+    else hidden = !hidden;
+    llSetLinkAlpha(LINK_SET,(float)(!hidden),ALL_SIDES);
+}
+
 init() {
     hidden = !(integer)llGetAlpha(ALL_SIDES);
 }
@@ -66,7 +73,13 @@ default {
         init();
     }
     link_message(integer sender, integer num, string str, key id) {
-         if (num == REBOOT && str == "reboot") llResetScript();
+        if (num == LINK_UPDATE &&  str == "LINK_DIALOG") LINK_DIALOG = sender;
+        else {
+            string lowerstr = llToLower(str);
+            if (lowerstr == "hide" || lowerstr == "show" || lowerstr == "stealth") {
+                if (num == CMD_OWNER || num == CMD_WEARER) stealth(lowerstr);
+            } else if (num == REBOOT && str == "reboot") llResetScript();
+        }
     }
     changed(integer changes) {
         if (changes & CHANGED_OWNER) llResetScript();
