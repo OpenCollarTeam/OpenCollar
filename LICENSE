@@ -1,4 +1,4 @@
-License Terms for the OpenCollar Six(tm) Role Play Device | 2017-06-23
+License Terms for the OpenCollar Six(tm) Role Play Device | 2017-07-03
 
 raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE
 
@@ -22,8 +22,8 @@ Preamble and Introduction
     1. Most scripts are licensed as and must remain under the
        GNU General Public License, version 2.
 
-    2. The LSL scripts oc_root, oc_lock and oc_update have the
-       Apache 2.0 license.
+    2. The LSL scripts oc_root, oc_lock, oc_stealth and
+       oc_update have the Apache 2.0 license.
 
     3. Most contents are licensed as and must remain under
        the Creative Commons Attribution-ShareAlike 4.0
@@ -142,9 +142,9 @@ Contents available under these terms and conditions.
           iii. The program communicates with the OpenCollar
                scripts only through script link messages.
 
-    c. The scripts oc_root, oc_lock and oc_update have the Apache 2.0
-       license (http://www.apache.org/licenses/LICENSE-2.0). We
-       distribute these scripts in combined, or singular form, with or
+    c. The scripts oc_root, oc_lock, oc_stealth and oc_update have
+       the Apache 2.0 license (http://www.apache.org/licenses/LICENSE-2.0).
+       We distribute these scripts in combined, or singular form, with or
        without permissions set to FULL PERM at Our discretion.
 
             i. If You modify these scripts and distribute Your modifications
@@ -385,7 +385,7 @@ Contents available under these terms and conditions.
 
 --------------------------------------------------------------
 
-This text was last edited on June 23, 2017.
+This text was last edited on July 3, 2017.
 License Terms are subject to change from time to time.
 
 Virtual Disgrace(tm) can be contacted at virtualdisgrace.com
