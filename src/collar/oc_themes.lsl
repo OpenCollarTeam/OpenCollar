@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 170121.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 170703.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -134,7 +134,7 @@ integer g_iLeashParticle;
 integer g_iLooks;
 
 //command list - used for check in UserCommand()
-list commands = ["themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
+list commands = ["themes", "color", "texture", "shiny", "glow", "looks"];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -304,12 +304,11 @@ BuildElementsList(){
             //prim desc will be elementtype~notexture(maybe)
             list lParams = llParseString2List(llStringTrim(sElement,STRING_TRIM), ["~"], []);
             string sElementName=llList2String(lParams,0);
-            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow, 16=nohide
+            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow
             if (~llListFindList(lParams,["notexture"])) iLinkFlags = iLinkFlags | 1;
             if (~llListFindList(lParams,["nocolor"])) iLinkFlags = iLinkFlags | 2;
             if (~llListFindList(lParams,["noshiny"])) iLinkFlags = iLinkFlags | 4;
             if (~llListFindList(lParams,["noglow"])) iLinkFlags = iLinkFlags | 8;
-            if (~llListFindList(lParams,["nohide"])) iLinkFlags = iLinkFlags | 16;
 
             integer iElementIndex=llListFindList(g_lElements, [sElementName]);
             if (! ~iElementIndex ) {  //it's a new element, store it, and its flags, and a default texture
@@ -377,42 +376,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 }
             } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
-            else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
-                //get currently shown state
-                integer iCurrentlyShown;
-                if (sElement=="") sElement=g_sDeviceType;
-                if (sCommand == "show")       iCurrentlyShown = 1;
-                else if (sCommand == "hide")  iCurrentlyShown = 0;
-                else if (sCommand == "stealth") iCurrentlyShown = g_iCollarHidden;
-                if (sElement == g_sDeviceType) g_iCollarHidden = !iCurrentlyShown;  //toggle whole collar visibility
-
-                //do the actual hiding and re/de-glowing of elements
-                integer iLinkCount = llGetNumberOfPrims()+1;
-                while (iLinkCount-- > 1) {
-                    string sLinkType=LinkType(iLinkCount, "nohide");
-                    if (sLinkType == sElement || sElement==g_sDeviceType) {
-                        if (!g_iCollarHidden || sElement == g_sDeviceType ) {
-                            //don't change things if collar is set hidden, unless we're doing the hiding now
-                            llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
-                            //update glow settings for this link
-                            integer iGlowsIndex = llListFindList(g_lGlows,[iLinkCount]);
-                            if (iCurrentlyShown){  //restore glow if it is now shown
-                                if (~iGlowsIndex) {  //if it had a glow, restore it, otherwise don't
-                                    float fGlow = (float)llList2String(g_lGlows, iGlowsIndex+1);
-                                    llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, fGlow]);
-                                }
-                            } else {  //save glow and switch it off if it is now hidden
-                                float fGlow = llList2Float(llGetLinkPrimitiveParams(iLinkCount,[PRIM_GLOW,0]),0) ;
-                                if (fGlow > 0) {  //if it glows, store glow
-                                    if (~iGlowsIndex) g_lGlows = llListReplaceList(g_lGlows,[fGlow],iGlowsIndex+1,iGlowsIndex+1) ;
-                                    else g_lGlows += [iLinkCount, fGlow];
-                                } else if (~iGlowsIndex) g_lGlows = llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex+1); //remove glow from list
-                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
-                            }
-                        }
-                    }
-                }
-            } else if (sCommand == "shiny") {
+            else if (sCommand == "shiny") {
                 string sShiny=llList2String(lParams,2);
                 integer iShinyIndex=llListFindList(g_lShiny,[sShiny]);
                 if (~iShinyIndex) sShiny=(string)iShinyIndex;  //if found, convert string to index and overwrite supplied string
@@ -562,11 +526,6 @@ default {
                 if (~i) g_lShinyDefaults = llListReplaceList(g_lShinyDefaults, [sValue], i + 1, i + 1);
                 else g_lShinyDefaults += [sToken, sValue];
             }
-            else if (sCategory == "hide_") {
-                i = llListFindList(g_lHideDefaults, [sToken]);
-                if (~i) g_lHideDefaults = llListReplaceList(g_lHideDefaults, [sValue], i + 1, i + 1);
-                else g_lHideDefaults += [sToken, sValue];
-            }
             else if (sCategory == "color_") {
                 i = llListFindList(g_lColorDefaults, [sToken]);
                 if (~i) g_lColorDefaults = llListReplaceList(g_lColorDefaults, [sValue], i + 1, i + 1);
@@ -702,7 +661,7 @@ default {
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
                                 } else {
-                                    list commands = ["texture","color","shiny","glow","hide","show"];
+                                    list commands = ["texture","color","shiny","glow"];
                                     integer succes = 0;
                                     integer i;
                                     for (i = 1; i < llGetListLength(lParams); i++) {
