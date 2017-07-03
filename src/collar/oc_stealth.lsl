@@ -52,12 +52,29 @@ integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
 integer hidden;
+list glowy;
 
 stealth (string str) {
     if (str == "hide") hidden = TRUE;
     else if (str == "show") hidden = FALSE;
     else hidden = !hidden;
     llSetLinkAlpha(LINK_SET,(float)(!hidden),ALL_SIDES);
+    integer count;
+    if (hidden) {
+        count = llGetNumberOfPrims();
+        float glow;
+        for (;count > 0; --count) {
+            glow = llList2Float(llGetLinkPrimitiveParams(count,[PRIM_GLOW,0]),0);
+            if (glow > 0) glowy += [count,glow];
+        }
+        llSetLinkPrimitiveParamsFast(LINK_SET,[PRIM_GLOW,ALL_SIDES,0.0]);
+    } else {
+        integer i;
+        count = llGetListLength(glowy);
+        for (;i < count;i += 2)
+            llSetLinkPrimitiveParamsFast(llList2Integer(glowy,i),[PRIM_GLOW,ALL_SIDES,llList2Float(glowy,i+1)]);
+        glowy = [];
+    }
 }
 
 init() {
