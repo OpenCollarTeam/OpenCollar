@@ -51,15 +51,24 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
 key wearer;
+integer hidden;
+
+init() {
+    hidden = !(integer)llGetAlpha(ALL_SIDES);
+}
 
 default {
     state_entry() {
         wearer = llGetOwner();
+        init();
     }
     on_rez(integer start) {
+        init();
     }
     link_message(integer sender, integer num, string str, key id) {
+         if (num == REBOOT && str == "reboot") llResetScript();
     }
     changed(integer changes) {
+        if (changes & CHANGED_OWNER) llResetScript();
     }
 }
