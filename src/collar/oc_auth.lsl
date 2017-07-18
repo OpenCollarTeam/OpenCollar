@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 170523.1                           //
+//                          Authorizer - 170718.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -129,6 +129,7 @@ integer g_iMenuStride = 3;
 
 //key REQUEST_KEY;
 integer g_iFirstRun;
+integer g_iIsLED;
 
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
@@ -604,14 +605,17 @@ default {
         }*/
         //llSetMemoryLimit(65536);
         g_sWearerID = llGetOwner();
+        if (!llSubStringIndex(llGetObjectDesc(),"LED")) g_iIsLED = TRUE;
         llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
-            llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-            llSetTimerEvent(0.22);
+            if (g_iIsLED) {
+                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+                llSetTimerEvent(0.22);
+            }
             integer iAuth = Auth(kID, FALSE);
             if ( kID == g_sWearerID && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)

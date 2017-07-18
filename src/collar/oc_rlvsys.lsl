@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         RLV System - 161030.1                            //
+//                         RLV System - 170718.1                            //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
 //  Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,            //
@@ -139,7 +139,7 @@ key g_kSitTarget=NULL_KEY;
 
 integer CMD_ADDSRC = 11;
 integer CMD_REMSRC = 12;
-
+integer g_iIsLED;
 /*
 integer g_iProfiled;
 Debug(string sStr) {
@@ -421,6 +421,7 @@ default {
         //llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
+        if (!llSubStringIndex(llGetObjectDesc(),"LED")) g_iIsLED = TRUE;
         //Debug("Starting");
     }
 
@@ -467,8 +468,10 @@ default {
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
-                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-                llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
+                if (g_iIsLED) {
+                    llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+                    llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
+                }
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
