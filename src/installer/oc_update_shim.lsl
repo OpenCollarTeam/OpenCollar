@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Update Shim - 170627.1                           //
+//                         Update Shim - 170719.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2011 - 2017 Nandana Singh, Satomi Ahn, Wendy Starfall,    //
 //  littlemousy, Sumi Perl, Garvin Twine et al.                             //
@@ -236,6 +236,11 @@ default {
             llSetRemoteScriptAccessPin(0);
             // celebrate
             //llOwnerSay("Installation complete!");
+            if (llGetInventoryType(".themes") != INVENTORY_NOTECARD) {
+                if (!~llListFindList(g_lSettings,["intern_looks=1"])
+                && llGetInventoryType("oc_themes") == INVENTORY_SCRIPT)
+                    llRemoveInventory("oc_themes");
+            }
             if (g_iIsUpdate) {
                 //reboot scripts
                 llSleep(0.5);
