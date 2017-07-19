@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 170719.1           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 170719.2           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -344,7 +344,7 @@ FailSafe() {
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
     if (sStrLower == "rm themes") {
-        Dialog(kID,"\nDo you really want to uninstall Themes?",["Yes","No","Cancel"],[],0,iNum,"rmThemes");
+        Dialog(kID,"\nDo you really want to uninstall the themes plugin?",["Yes","No","Cancel"],[],0,iNum,"rmThemes");
         return;
     }
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
@@ -374,10 +374,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         else llMessageLinked(LINK_ROOT, iNum, "menu Settings", kID);
                     }
                 } else {
-                    Dialog(kID,"\nThis %DEVICETYPE% has no themes installed.\n\nYou can [Uninstall] the themes script to save resources\nor you can use the [Looks] menu to fine-tune your %DEVICETYPE%\n(NOTE: Basic building knowledge required.)",[],["Uninstall","Looks","BACK"],0,iNum,"NoThemesMenu");
-                   /* if (g_iLooks) LooksMenu(kID, iNum);
-                    else llMessageLinked(LINK_ROOT, iNum, "menu Settings", kID);
-                    llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);*/
+                    Dialog(kID,"\n⚠ This %DEVICETYPE% has no dedicated themes configured for it\n\nYou can [Uninstall] the themes plugin to save resources\nor you can use the [Looks] menu to fine-tune your %DEVICETYPE%\n\nATTENTION:\n\nDevices that are properly configured for [Looks] don't show this warning. Please use [Looks] responsibly in this case as it could alter your %DEVICETYPE% permanently\n\nIn case of doubt simply [Uninstall] this plugin ❤\n\nwww.opencollar.at/themes",[],["Uninstall","Looks","BACK"],0,iNum,"NoThemesMenu");
                 }
             } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
@@ -568,9 +565,9 @@ default {
                      else LooksMenu(kAv,iAuth);
                 } else if (sMenu == "rmThemes") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Themes has been removed.",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The themes plugin has been removed.",kAv);
                         llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Themes remains installed.",kAv);
+                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The themes plugin remains installed.",kAv);
                 } else {
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
