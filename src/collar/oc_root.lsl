@@ -49,6 +49,7 @@ string dist;
 string safeword = "RED";
 integer locked;
 integer hidden;
+integer looks;
 
 list these_menus;
 
@@ -90,7 +91,8 @@ menu_settings(key id, integer auth) {
     these_buttons += adjusters;
     if (hidden) these_buttons += ["☑ Stealth"];
     else these_buttons += ["☐ Stealth"];
-    these_buttons += "Looks";
+    if (looks) these_buttons += "Looks";
+    else these_buttons += "Themes";
     dialog(id,context,these_buttons,["BACK"],0,auth,"Settings");
 }
 
@@ -267,6 +269,7 @@ default {
             if (this_token == that_token+"locked") locked = (integer)value;
             else if (this_token == that_token+"safeword") safeword = value;
             else if (this_token == "intern_dist") dist = value;
+            else if (this_token == "intern_looks") looks = (integer)value;
         } else if (num == DIALOG_TIMEOUT) {
             integer menuindex = llListFindList(these_menus,[id]);
             these_menus = llDeleteSubList(these_menus,menuindex - 1,menuindex + 1);
