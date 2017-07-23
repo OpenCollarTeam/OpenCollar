@@ -571,7 +571,7 @@ default {
                 llSetScriptState("oc_relay",TRUE);
                 llResetOtherScript("oc_relay");
             }
-            if (llGetInventoryType("oc_folders") == INVENTORY_SCRIPT) && !llGetScriptState("oc_folders")) {
+            if (llGetInventoryType("oc_folders") == INVENTORY_SCRIPT && !llGetScriptState("oc_folders")) {
                 llSetScriptState("oc_folders",TRUE);
                 llResetOtherScript("oc_folders");
             }
