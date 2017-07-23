@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                         Communicator - 170723.2                          //
+//                         Communicator - 170723.3                          //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    //
@@ -567,13 +567,20 @@ default {
         } //needed to be the same ID that send earlier pings or pongs
         else if (iNum == AUTH_REPLY) llRegionSayTo(kID, g_iInterfaceChannel, sStr);
         else if (iNum == REBOOT && sStr == "reboot") {
-            if (llGetInventoryType("oc_relay") == INVENTORY_SCRIPT && !llGetScriptState("oc_relay")) {
-                llSetScriptState("oc_relay",TRUE);
-                llResetOtherScript("oc_relay");
+            integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+            string sScriptName;
+            while (i) {
+                sScriptName = llGetInventoryName(INVENTORY_SCRIPT,--i);
+                if (sScriptName != "oc_com" && sScriptName != "oc_root" 
+                && llGetInventoryType(sScriptName) == INVENTORY_SCRIPT
+                && llGetScriptState(sScriptName) == FALSE) {
+                    llSetScriptState(sScriptName,TRUE);
+                    llResetOtherScript(sScriptName);
+                }
             }
-            if (llGetInventoryType("oc_folders") == INVENTORY_SCRIPT && !llGetScriptState("oc_folders")) {
-                llSetScriptState("oc_folders",TRUE);
-                llResetOtherScript("oc_folders");
+            if (llGetInventoryType("oc_root") == INVENTORY_SCRIPT && !llGetScriptState("oc_root")) {
+                llSetScriptState("oc_root",TRUE);
+                llResetOtherScript("oc_root");
             }
             llResetScript();
         }
