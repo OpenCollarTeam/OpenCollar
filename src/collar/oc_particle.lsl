@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 161225.1                             //
+//                          Particle - 170806.1                             //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2016 Lulu Pink, Nandana Singh, Garvin Twine,       //
+//  Copyright (c) 2008 - 2017 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
 //  littlemousy et al.                                                      //
 // ------------------------------------------------------------------------ //
@@ -237,6 +237,7 @@ Particles(integer iLink, key kParticleTarget) {
 StartParticles(key kParticleTarget) {
     //Debug(llList2CSV(g_lLeashPrims));
     StopParticles(FALSE);
+    if (g_sParticleMode == "noParticle") return;
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
@@ -644,9 +645,9 @@ default {
     timer() {
         if (llGetOwnerKey(g_kParticleTarget) == g_kParticleTarget) {
             if(g_kLeashedTo) {
-                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
+                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
             }
             else if(!g_iLeashActive) llSetTimerEvent(0.0);
         }
