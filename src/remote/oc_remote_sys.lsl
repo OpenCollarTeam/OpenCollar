@@ -53,8 +53,8 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "170321.1";
-string g_sFancyVersion = "⁶⋅⁴⋅⁰";
+string g_sVersion = "170818.1";
+string g_sFancyVersion = "⁶⋅⁶⋅⁰";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 integer g_iToday;
