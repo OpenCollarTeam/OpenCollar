@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//          Resizer2 - 170818.1          .*' /  .*' ; .*`- +'  `*'          //
+//          Resizer2 - 170820.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -381,10 +381,13 @@ Save(string sName, key kAv) {
 
 Delete(string sName, key kAv) {
     integer i = llListFindList(g_lPresets,[sName]);
-    if (~i) g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+    if (~i) {
+        g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
+        if (g_lPresets != []) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+        else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
 
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+    }
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
