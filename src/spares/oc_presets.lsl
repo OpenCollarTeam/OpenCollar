@@ -25,7 +25,7 @@ integer NOTIFY = 1002;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 integer REBOOT      = -1000;
 integer LINK_DIALOG = 3;
@@ -296,6 +296,7 @@ default {
                 } else if (sMenuType == "rmscript") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
                         llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Resizer has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Resizer remains installed.", kAv);
