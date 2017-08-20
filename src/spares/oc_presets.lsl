@@ -44,7 +44,7 @@ string UPMENU = "BACK";
 
 key g_kWearer;
 
-string g_sSettingToken = "presets";
+string g_sSettingToken = "presets"; // or "resizer" for oc_resizer2 settings compatible ?
 
 list g_lPresets = [] ;  // [sName, "vScale/vPos/vRot"]
 
