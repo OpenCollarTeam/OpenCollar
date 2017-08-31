@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//          Resizer2 - 170818.1          .*' /  .*' ; .*`- +'  `*'          //
+//          Resizer2 - 170820.1          .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -102,7 +102,7 @@ integer NOTIFY = 1002;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 integer REBOOT              = -1000;
 integer LINK_DIALOG         = 3;
@@ -381,10 +381,13 @@ Save(string sName, key kAv) {
 
 Delete(string sName, key kAv) {
     integer i = llListFindList(g_lPresets,[sName]);
-    if (~i) g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+    if (~i) {
+        g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
+        if (g_lPresets != []) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+        else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
 
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+    }
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -527,6 +530,7 @@ default {
                 } else if (sMenuType == "rmresizer") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
                         llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Resizer has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Resizer remains installed.", kAv);

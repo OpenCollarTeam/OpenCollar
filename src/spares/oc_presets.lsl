@@ -1,3 +1,20 @@
+ /*
+
+ Copyright (c) 2017 virtualdisgrace.com
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License. 
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ 
+*/
 
 // Based on Virtual Disgrace - Resizer
 
@@ -25,7 +42,7 @@ integer NOTIFY = 1002;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 integer REBOOT      = -1000;
 integer LINK_DIALOG = 3;
@@ -44,7 +61,7 @@ string UPMENU = "BACK";
 
 key g_kWearer;
 
-string g_sSettingToken = "presets";
+string g_sSettingToken = "presets"; // or "resizer" for oc_resizer2 settings compatible ?
 
 list g_lPresets = [] ;  // [sName, "vScale/vPos/vRot"]
 
@@ -216,10 +233,13 @@ Save(string sName, key kAv) {
 
 Delete(string sName, key kAv) {
     integer i = llListFindList(g_lPresets,[sName]);
-    if (~i) g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+    if (~i) {
+        g_lPresets = llDeleteSubList(g_lPresets, i, i+1);
+        if (g_lPresets != []) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"="+llDumpList2String(g_lPresets,"~"), "");
+        else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
 
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%DEVICETYPE% size/position/rotation preset "+sName+" is deleted.",kAv);
+    }
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -296,6 +316,7 @@ default {
                 } else if (sMenuType == "rmscript") {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken, "");
                         llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"Resizer has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"Resizer remains installed.", kAv);
