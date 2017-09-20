@@ -54,6 +54,7 @@ string g_sParticle = "";
 integer g_iTextPrim;
 integer g_iPartPrim;
 vector g_vPartOffset = <0.0, 0.0, 0.2>;
+vector g_vPartSize = <0.3, 0.3, 0.0>;
 
 key g_kWearer;
 string g_sSettingToken = "titler_";
@@ -124,8 +125,7 @@ ShowHideText() {
                                 PSYS_PART_FOLLOW_SRC_MASK,
                             PSYS_PART_START_COLOR, <1.,1.,1.>,
                             PSYS_PART_START_ALPHA, 1.,
-                            PSYS_PART_START_SCALE, <0.3, 0.3, 0>]);
-
+                            PSYS_PART_START_SCALE, g_vPartSize]);
         }
     }
 }
@@ -133,6 +133,58 @@ ShowHideText() {
 ConfirmDeleteMenu(key kAv, integer iAuth) {
     string sPrompt ="\nDo you really want to uninstall the "+g_sSubMenu+" App?";
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmtitler");
+}
+
+ParticleMenu(key kAv, integer iAuth) {
+  Dialog(kAv, "Hang a particle overhead", ["Select", "Bigger", "Smaller"], [UPMENU],0, iAuth, "particle");
+}
+
+list g_lStdParticles = [
+                        "(off)",            "(off)",
+                        "(custom)",	  "(custom)",
+                        "hottie",	"30dc3c59-85ea-fd18-85c8-9670ae4f66c3",
+                        "gold star",        "be5ee4dc-2fbb-8cd9-1fac-bdab4ab93972",
+                        "⚠",		"915adf9e-0463-59eb-5789-91bff669adbe",
+                        "do not enter", "2eab4a9d-2ffd-37a2-2df3-5d3aaf8a733f",
+                        "on phone",        "1bccc436-f62b-17a9-7f4f-fa6aa1b3e48e",
+                        "AFK",            "e330828a-c67d-15dd-1107-77e0950afe81"
+                        ];
+list g_lParticles;
+
+AssembleTextures() {
+  g_lParticles = g_lStdParticles;
+  integer iHowMany = llGetInventoryNumber(INVENTORY_TEXTURE);
+  integer i;
+  for (i=0; i<iHowMany; i++) {
+    string name = llGetInventoryName(INVENTORY_TEXTURE, i);
+    key k = llGetInventoryKey(name);
+    g_lParticles = g_lParticles + [name, k];
+  }
+}
+
+
+ParticlesDialog(key kAv, integer iAuth) {
+  list lNames = llList2ListStrided(g_lParticles, 0, -1, 2);
+  Dialog(kAv, "Select a particle: ", lNames, [UPMENU], 0, iAuth, "particle");
+}
+
+string FindParticle(string name) {
+  integer ind = llListFindList(g_lParticles, [name]);
+  if (ind < 0 || ind % 2 != 0) {
+    return name;
+  }
+  return llList2String(g_lParticles, ind+1);
+}
+
+FailSafe() {
+    string sName = llGetScriptName();
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
+    || sName != "oc_titler")
+        llRemoveInventory(sName);
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
@@ -150,7 +202,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
-            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth,"main");
+            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
         }
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
@@ -169,6 +221,27 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();*/
+    } else if (sCommand == "particle") {
+      if (sAction == "") ParticleMenu(kAv, iAuth);
+      else if (sAction == "select") ParticlesDialog(kAv, iAuth);
+      else if (sAction == "bigger") {
+        float fNew = g_vPartSize.x + 0.1;
+        if (fNew > 2.0) fNew = 2.0;
+        g_vPartSize = < fNew, fNew, 0.0 >;
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+      } else if (sAction == "smaller") {
+        float fNew = g_vPartSize.x - 0.1;
+        if (fNew < 0.1) fNew = 0.1;
+        g_vPartSize = < fNew, fNew, 0.0 >;
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+      } else if (sAction == "(off)") {
+        g_sParticle = "";
+        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+      } else {
+        g_sParticle = FindParticle(llGetSubString(sStr, 9, -1));
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+      }
+      ShowHideText();
     } else if (sCommand == "title") {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
@@ -243,6 +316,7 @@ default{
           }
         }
         g_kWearer = llGetOwner();
+        AssembleTextures();
         //Debug("State Entry Event ended");
 
         if (g_iTextPrim < 0) {
@@ -268,6 +342,7 @@ default{
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
                 if(sToken == "particle") g_sParticle = sValue;
+                if(sToken == "particlesize") g_vPartSize = (vector)sValue;
             } else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -283,6 +358,8 @@ default{
                     if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == "Uninstall") ConfirmDeleteMenu(kAv,iAuth);
+                    else if (sMessage == "Particle") ParticleMenu(kAv,iAuth);
                     else {
                         if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
                         else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
@@ -296,7 +373,21 @@ default{
                         UserCommand(iAuth, "titler color "+sMessage, kAv);
                         UserCommand(iAuth, "menu titler color", kAv);
                     }
-                } else if (sMenuType == "textbox") {  //response from text box
+                } else if (sMenuType == "particle") {
+                  if (sMessage == "") {
+                    UserCommand(iAuth, "particle", kAv);
+                  } else if (sMessage == "Bigger") {
+                    UserCommand(iAuth, "particle bigger", kAv);
+                  } else if (sMessage == "Smaller") {
+                    UserCommand(iAuth, "particle smaller", kAv);
+                  } else if (sMessage == "Select") {
+                    UserCommand(iAuth, "particle select", kAv);
+                  } else if (sMessage == "(custom)") {
+                    Dialog(kAv, "\n- Enter a texture key to use as the particle", [], [], 0, iAuth, "particle");
+                  } else UserCommand(iAuth, "particle "+sMessage, kAv);
+                  ShowHideText();
+                }
+                else if (sMenuType == "textbox") {  //response from text box
                     if(sMessage != " ") UserCommand(iAuth, "title " + sMessage, kAv);
                     UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmtitler") {
