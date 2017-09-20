@@ -10,6 +10,7 @@ string g_sAppVersion = "¹⋅⁴";
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
+string g_sPartDesc = "FloatPart";   //description text of the particle-emitting prim.
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -48,8 +49,11 @@ integer g_iLastRank = CMD_EVERYONE ;
 integer g_iOn = FALSE;
 string g_sText;
 vector g_vColor = <1.0,1.0,1.0>; // default white
+string g_sParticle = "";
 
 integer g_iTextPrim;
+integer g_iPartPrim;
+vector g_vPartOffset = <0.0, 0.0, 0.2>;
 
 key g_kWearer;
 string g_sSettingToken = "titler_";
@@ -94,6 +98,35 @@ ShowHideText() {
     if (g_iTextPrim >0){
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
+    }
+    if (g_iPartPrim >0) {
+        // Might as well move it...
+        llSetLinkPrimitiveParamsFast(g_iPartPrim,
+                                     [PRIM_POS_LOCAL,
+                                      g_vPartOffset + <0.,0, g_vPrimScale.z>]);
+        if (g_sParticle == "") {
+          llLinkParticleSystem(g_iPartPrim,[]);
+        }
+        else {
+          llLinkParticleSystem(g_iPartPrim,
+                            [PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
+                            PSYS_SRC_TEXTURE, g_sParticle,
+                            PSYS_SRC_MAX_AGE, 0,
+                            PSYS_PART_MAX_AGE, 7,
+                            PSYS_SRC_BURST_RATE, 5,
+                            PSYS_SRC_BURST_PART_COUNT, 1,
+                            PSYS_SRC_OMEGA, ZERO_VECTOR,
+                            PSYS_SRC_ACCEL, ZERO_VECTOR,
+                            PSYS_SRC_BURST_SPEED_MIN, 0.,
+                            PSYS_SRC_BURST_SPEED_MAX, 0,
+                            PSYS_PART_FLAGS,
+                                PSYS_PART_EMISSIVE_MASK|
+                                PSYS_PART_FOLLOW_SRC_MASK,
+                            PSYS_PART_START_COLOR, <1.,1.,1.>,
+                            PSYS_PART_START_ALPHA, 1.,
+                            PSYS_PART_START_SCALE, <0.3, 0.3, 0>]);
+
+        }
     }
 }
 
@@ -151,6 +184,14 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             g_iOn = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on", "");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
+        } else if (sAction == "particle") {
+          string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");
+          g_sParticle = sNewText;
+          if (sNewText == "") {
+            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+          } else {
+            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+          }
         } else if (sAction == "up" && iIsCommand) {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
@@ -191,11 +232,16 @@ default{
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
                     llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
-                    linkNumber = 0 ; // break while cycle
-                } else {
-                    llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
-                }
+                    // linkNumber = 0 ; // break while cycle
+          } else {
+            if (llSubStringIndex(desc, g_sPartDesc) == 0) {
+              g_iPartPrim = linkNumber;
+              llSetLinkPrimitiveParamsFast(g_iPartPrim, [PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.95,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_SIZE,<0.01,0.01,0.01>,PRIM_SLICE,<0.49,0.51,0.0>,PRIM_DESC,g_sPartDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
             }
+            llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
+            llLinkParticleSystem(linkNumber, []);
+          }
+        }
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
 
@@ -221,6 +267,7 @@ default{
                 if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
+                if(sToken == "particle") g_sParticle = sValue;
             } else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
