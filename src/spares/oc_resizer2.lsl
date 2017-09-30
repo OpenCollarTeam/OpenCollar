@@ -393,8 +393,8 @@ Delete(string sName, key kAv) {
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
-    string sValue = llToLower(llList2String(lParams, 1));
-    if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu) {
+    string sValue = llList2String(lParams, 1);
+    if (sCommand == "menu" && sValue == g_sSubMenu) {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
