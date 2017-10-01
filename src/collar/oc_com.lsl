@@ -416,27 +416,6 @@ default {
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
-        if (iChan == g_iHUDChan) {
-            //check for a ping, if we find one we request auth and answer in LMs with a pong
-            if (sMsg==(string)g_kWearer + ":ping")
-                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", llGetOwnerKey(kID));
-            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
-            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
-                sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            } else if (iChan == g_iInterfaceChannel && llGetOwnerKey(kID) == g_kWearer) { //for the rare but possible case g_iHUDChan == g_iInterfaceChannel
-                if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
-                else if (sMsg == "OpenCollar=Yes" && g_iHighlander) llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
-                else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
-                    llOwnerSay("/me has been detached.");
-                    llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
-                } else if (llSubStringIndex(sMsg, "AuthRequest")==0)
-                    llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
-                else llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            } else
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            return;
-        }
         if (iChan == g_iLockMeisterChan) {
             if(sMsg ==(string)g_kWearer+"collar")
                 llSay(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
@@ -451,33 +430,28 @@ default {
             }
             return;
         }
-        if(llGetOwnerKey(kID) == g_kWearer) { // also works for attachments
-            string sw = sMsg; // we'll have to shave pieces off as we go to test
-            // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
-            // and may include prefix
-            if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
-            // Allow for Firestorm style "(( SAFEWORD ))" by trimming.
-            if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llStringTrim(llGetSubString(sw, 2, -3), STRING_TRIM);
-            if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
-            if (sw == g_sSafeWord) {
-                llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
-                llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You used the safeword, your owners have been notified.",g_kWearer);
-                llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"\n\n%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%'s well-being in case further care is required.\n","");
-                return;
-            }
+
+        if (iChan == g_iHUDChan) {
+            //check for a ping, if we find one we request auth and answer in LMs with a pong
+            if (sMsg==(string)g_kWearer + ":ping")
+                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", llGetOwnerKey(kID));
+            // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
+            else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
+                sMsg = llGetSubString(sMsg, 37, -1);
+                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+            } else
+                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
         }
+
         //added for attachment auth (garvin)
-        if (iChan == g_iInterfaceChannel) {
+        if (iChan == g_iInterfaceChannel && llGetOwnerKey(kID) == g_kWearer) {
             //Debug(sMsg);
-            //do nothing if wearer isnt owner of the object
-            if (llGetOwnerKey(kID) != g_kWearer) return;
             //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
             else if (sMsg == "OpenCollar=Yes" && g_iHighlander) {
                 llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+sName+"\" manually if it doesn't detach automatically.\n");
                 llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
-            } else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
+            } else if (sMsg == "There can be only one!" && g_iHighlander) {
                 llOwnerSay("/me has been detached.");
                 llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
             } else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
@@ -485,7 +459,26 @@ default {
                     llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
                 }
             }
-        } else { //check for our prefix, or *
+        }
+
+        if (iChan == 0 || iChan == g_iPrivateListenChan) {
+            if (llGetOwnerKey(kID) == g_kWearer) { // also works for attachments
+                string sw = sMsg; // we'll have to shave pieces off as we go to test
+                // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
+                // and may include prefix
+                if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
+                // Allow for Firestorm style "(( SAFEWORD ))" by trimming.
+                if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llStringTrim(llGetSubString(sw, 2, -3), STRING_TRIM);
+                if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
+                if (sw == g_sSafeWord) {
+                    llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
+                    llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You used the safeword, your owners have been notified.",g_kWearer);
+                    llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"\n\n%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%'s well-being in case further care is required.\n","");
+                    return;
+                }
+            }
+            //check for our prefix, or *
             if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
             else if (!llSubStringIndex(sMsg, "/"+g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
             else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
