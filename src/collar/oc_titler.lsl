@@ -100,15 +100,18 @@ ShowHideText() {
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
     }
-    if (g_iPartPrim >0) {
-        // Might as well move it...
-        llSetLinkPrimitiveParamsFast(g_iPartPrim,
-                                     [PRIM_POS_LOCAL,
-                                      g_vPartOffset + <0.,0, g_vPrimScale.z>]);
+    if (g_iPartPrim > 0) {
         if (g_sParticle == "") {
           llLinkParticleSystem(g_iPartPrim,[]);
+          if (g_iPartPrim == g_iTextPrim) {
+            llSetLinkPrimitiveParamsFast(g_iTextPrim,
+                                         [PRIM_POS_LOCAL, <0,0,0>]);
+          }
         }
         else {
+          llSetLinkPrimitiveParamsFast(g_iPartPrim,
+                                       [PRIM_POS_LOCAL,
+                                        g_vPartOffset + <0.,0, g_vPrimScale.z>]);
           llLinkParticleSystem(g_iPartPrim,
                             [PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
                             PSYS_SRC_TEXTURE, g_sParticle,
@@ -305,7 +308,7 @@ default{
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
                     llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
-                    // linkNumber = 0 ; // break while cycle
+                    llLinkParticleSystem(linkNumber, []);
           } else {
             if (llSubStringIndex(desc, g_sPartDesc) == 0) {
               g_iPartPrim = linkNumber;
@@ -314,6 +317,10 @@ default{
             llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
             llLinkParticleSystem(linkNumber, []);
           }
+        }
+        // If there's only one prim, share.
+        if (g_iPartPrim <= 0) {
+          g_iPartPrim = g_iTextPrim;
         }
         g_kWearer = llGetOwner();
         AssembleTextures();
