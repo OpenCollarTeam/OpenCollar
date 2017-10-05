@@ -430,21 +430,21 @@ default {
             }
             return;
         }
-
+        key kOwnerID = llGetOwnerKey(kID);
         if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
-                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", llGetOwnerKey(kID));
+                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", kOwnerID);
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
                 sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kOwnerID);
             } else
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kOwnerID);
         }
 
         //added for attachment auth (garvin)
-        if (iChan == g_iInterfaceChannel && llGetOwnerKey(kID) == g_kWearer) {
+        if (iChan == g_iInterfaceChannel && kOwnerID == g_kWearer) {
             //Debug(sMsg);
             //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
@@ -462,7 +462,7 @@ default {
         }
 
         if (iChan == 0 || iChan == g_iPrivateListenChan) {
-            if (llGetOwnerKey(kID) == g_kWearer) { // also works for attachments
+            if (kOwnerID == g_kWearer) { // also works for attachments
                 string sw = sMsg; // we'll have to shave pieces off as we go to test
                 // safeword can be the safeword or safeword said in OOC chat "((SAFEWORD))"
                 // and may include prefix
