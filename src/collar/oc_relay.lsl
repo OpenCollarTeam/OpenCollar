@@ -333,9 +333,8 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
             else return llDumpList2String(llList2List(lCommands,i,-1),"|");
         } else if ((lSubArgs!=[])==2) {
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
-            list lTemp=llParseString2List(sBehav,[":"],[]);
-            if (g_iSmartStrip && llList2String(lTemp,0) == "remoutfit" && sVal == "force")
-                sBehav = "detachallthis:" + llList2String(lTemp,1);
+            if (g_iSmartStrip && llSubStringIndex(sBehav,"remoutfit:")==0 && sVal=="force")
+                sBehav="detachallthis:"+llDeleteSubString(sBehav,0,9);
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
                 llMessageLinked(LINK_RLV,RLV_CMD,sBehav+"="+sVal,kID);
             else sAck="ko";
