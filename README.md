@@ -6,7 +6,7 @@ Punk, goth and fetish collars would be the most popular of those and OpenCollar 
 
 #### Finding your way around this repo
 
-At the moment this repository is separated into resources, source code and web queries. The directory names are self-explanatory and each has a readme attached that tells about specific details. Resource subdirectories inform which file formats we work with and point to other free software that can be used to create such content.
+At the moment this repository is separated into resources, source code and (now deprecated) web queries. The directory names are self-explanatory and each has a readme attached that tells about specific details. Resource subdirectories inform which file formats we work with and point to other free software that can be used to create such content.
 
 ```
 ./opencollar/
