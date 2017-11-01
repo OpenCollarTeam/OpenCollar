@@ -1,4 +1,4 @@
-License Terms for the OpenCollar Six(tm) Role Play Device | 2017-09-20
+License Terms for the OpenCollar Six(tm) Role Play Device | 2017-11-01
 
 raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE
 
@@ -22,10 +22,10 @@ Preamble and Introduction
     1. Most scripts are licensed as and must remain under the
        GNU General Public License, version 2.
 
-    2. The LSL scripts oc_root, oc_lock, oc_stealth and
-       oc_update have the Apache 2.0 license.
+    2. The unmodified LSL scripts oc_root, oc_lock, oc_stealth
+       and oc_update have the Apache 2.0 license.
 
-    3. Most contents are licensed as and must remain under
+    3. Some contents are licensed as and must remain under
        the Creative Commons Attribution-ShareAlike 4.0
        International Public License.
 
@@ -142,10 +142,10 @@ Contents available under these terms and conditions.
           iii. The program communicates with the OpenCollar
                scripts only through script link messages.
 
-    c. The scripts oc_root, oc_lock, oc_stealth and oc_update have
-       the Apache 2.0 license (http://www.apache.org/licenses/LICENSE-2.0).
-       We distribute these scripts in combined, or singular form, with or
-       without permissions set to FULL PERM at Our discretion.
+    c. The unmodified scripts oc_root, oc_lock, oc_stealth and oc_update have
+       the Apache 2.0 license (http://www.apache.org/licenses/LICENSE-2.0). On
+       Second Life(R) we may distribute these scripts in modified form, with
+       the MODIFY, COPY, and TRANSFER permissions configured at Our discretion.
 
             i. If You modify these scripts and distribute Your modifications
                You don't have to make Your modifications FULL PERM but must

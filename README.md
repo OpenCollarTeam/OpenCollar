@@ -35,9 +35,9 @@ OpenCollar Six source code and creative resource are covered by free software, f
 
 * Most LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
 
-* The LSL scripts ``oc_root``, ``oc_lock``, ``oc_stealth`` and ``oc_update`` have the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
+* The unmodified LSL scripts ``oc_root``, ``oc_lock``, ``oc_stealth`` and ``oc_update`` have the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
 
-* Creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
+* Some creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 * Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Six Role Play Device](https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE).
 
