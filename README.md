@@ -29,7 +29,7 @@ At the moment this repository is separated into resources, source code and web q
     > web: Web queries.
 ```
 
-#### License Terms and Addendum
+#### Licensing Information
 
 OpenCollar Six source code and creative resource are covered by free software, free culture and permissive open-source software licenses. Each script is its own program and compiles individually.
 
