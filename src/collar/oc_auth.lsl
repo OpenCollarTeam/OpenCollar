@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 171107.1                           //
+//                          Authorizer - 171107.2                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -300,7 +300,6 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         } else return;
         if (! ~llListFindList(lPeople, [sPersonID])) { //owner is not already in list.  add him/her
             lPeople += sPersonID;
-            if (sPersonID == g_sWearerID && sToken == "owner") g_iVanilla = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" is already registered as "+sToken+".",kID);
             return;
@@ -317,10 +316,8 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         }
         if (sToken == "owner") {
             if (sPersonID == g_sWearerID) {
-                if (kID == g_sWearerID)
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nCongratulations, you own yourself now.\n",g_sWearerID);
-                else
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is their own Owner now.\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% vanilla on\n",kID);
+                return;
             } else
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.opencollar.at/congratulations.html here] what that means!\n",sPersonID);
         }
