@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 171107.2                           //
+//                          Authorizer - 171108.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -201,14 +201,6 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The list is empty",kID);
         AuthMenu(kID, iAuth);
     }
-}
-
-VanillaOff(key kID) {
-    g_iVanilla = FALSE;
-    if (kID == g_sWearerID)
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kID);
-    else
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% does no longer own themselves.\n",kID);
 }
 
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
@@ -456,12 +448,12 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 g_iVanilla = TRUE;
                 //UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"vanilla=1","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Vanilla enabled.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vanilla enabled.",kID);
             } else if (sAction == "off") {
                 g_iVanilla = FALSE;
                 //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
                 llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"vanilla","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Vanilla disabled.",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vanilla disabled.",kID);
             } else {
                 sStr = "disabled.";
                 if (g_iVanilla) sStr = "enabled.";
