@@ -19,7 +19,7 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 170719.2           .*' /  .*' ; .*`- +'  `*'          //
+//           Themes - 171111.1           .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,       //
@@ -132,6 +132,7 @@ list g_lThemes;
 integer g_iThemesNotecardLine;
 integer g_iLeashParticle;
 integer g_iLooks;
+integer g_iThemePage;
 
 //command list - used for check in UserCommand()
 list commands = ["themes", "color", "texture", "shiny", "glow", "looks"];
@@ -161,14 +162,14 @@ LooksMenu(key kID, integer iAuth) {
     Dialog(kID, "\nHere you can change cosmetic settings of the %DEVICETYPE%. \"Themes\" will also be applied to any matching cuffs.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
 }
 
-ThemeMenu(key kID, integer iAuth) {
+ThemeMenu(key kID, integer iAuth, integer iPage) {
     list lButtons;
     integer i;
     while (i < llGetListLength(g_lThemes)) {
         lButtons += llList2List(g_lThemes,i,i);
         i=i+2;
     }
-    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], 0, iAuth, "ThemeMenu~themes");
+    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], iPage, iAuth, "ThemeMenu~themes");
     lButtons=[];
 }
 
@@ -341,7 +342,7 @@ FailSafe() {
         llRemoveInventory(sName);
 }
 
-UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
+UserCommand(integer iNum, string sStr, key kID, integer reMenu, integer iPage) {
     string sStrLower = llToLower(sStr);
     if (sStrLower == "rm themes") {
         Dialog(kID,"\nDo you really want to uninstall the themes plugin?",["Yes","No","Cancel"],[],0,iNum,"rmThemes");
@@ -365,9 +366,10 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     g_iSetThemeAuth=iNum;
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
                     llMessageLinked(LINK_ROOT,601,"themes "+sElement,g_kWearer);
+                    g_iThemePage = iPage;
                     g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,g_iThemesNotecardLine);
                 } else if (g_kThemesCardUUID) {
-                    if (g_iThemesReady) ThemeMenu(kID,iNum);
+                    if (g_iThemesReady) ThemeMenu(kID,iNum,iPage);
                     else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
                         if (g_iLooks) LooksMenu(kID, iNum);
@@ -435,9 +437,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
-                    if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    if (reMenu) ColorMenu(kID, iPage, iNum, sCommand+" "+sElement);
                 } else {
-                    ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
+                    ColorMenu(kID, iPage, iNum, sCommand+" "+sElement);
                 }
             } else if (sCommand=="texture") {
                 //Debug("Texture command:"+sStr);
@@ -508,7 +510,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE,0);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sID = llList2String(lParams, 0);
@@ -549,7 +551,7 @@ default {
                     if (sMessage == "BACK") LooksMenu(kAv, iAuth);
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
-                        UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
+                        UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE,iPage);
                     /*  if (sMessage == "*Touch*") {
                             llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Please touch the part of the %DEVICETYPE% you want to change. Press ctr+alt+T to see invisible parts.",kAv);
                             key kTouchID = llGenerateKey();
@@ -561,7 +563,7 @@ default {
                     }
                 } else if ((sMenu == "LooksMenu~menu" || sMenu == "NoThemesMenu") && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu Settings",kAv);
                 else if (sMenu == "NoThemesMenu") {
-                     if (sMessage == "Uninstall") UserCommand(iAuth,"rm themes",kAv,TRUE);
+                     if (sMessage == "Uninstall") UserCommand(iAuth,"rm themes",kAv,TRUE,iPage);
                      else LooksMenu(kAv,iAuth);
                 } else if (sMenu == "rmThemes") {
                     if (sMessage == "Yes") {
@@ -578,7 +580,7 @@ default {
                             else llMessageLinked(LINK_ROOT, iAuth, "menu Settings", kAv);
                         } else  ElementMenu(kAv, 0, iAuth, sBackMenu);
                     }
-                    else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
+                    else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE,iPage);
                 }
             }
         }/* else if (iNum == TOUCH_RESPONSE) {
@@ -648,7 +650,7 @@ default {
                            // else g_iLeashParticle = FALSE;
                             //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
                             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
-                            UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
+                            UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE,g_iThemePage);
                             return;
                         }
                         g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
@@ -681,7 +683,7 @@ default {
                                             string cmd = llList2String(params,0);
                                             sData = llList2String(params,1);
                                             if (llListFindList(commands, [cmd])!=-1) {
-                                                UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE);
+                                                UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE,0);
                                                 succes++;
                                             }
                                         }
@@ -690,7 +692,7 @@ default {
                                     if (succes==0) { // old themes format
                                         for (i = 0; i < 4; i++) {
                                             sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
-                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE);
+                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE,0);
                                         }
                                     }
                                 }
@@ -705,7 +707,7 @@ default {
                    // else g_iLeashParticle = FALSE;
                     //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
-                    UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
+                    UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE,g_iThemePage);
                 } else {
                     g_iThemesReady = TRUE;
                     //Debug(llDumpList2String(g_lThemes,","));
