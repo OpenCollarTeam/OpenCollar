@@ -19,10 +19,10 @@
 //                                          '  `+.;  ;  '      :            //
 //                                          :  '  |    ;       ;-.          //
 //                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 161030.1            .*' /  .*' ; .*`- +'  `*'          //
+//       RLV Suite - 171111.1            .*' /  .*' ; .*`- +'  `*'          //
 //                                       `*-*   `*-*  `*-*'                 //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2016 Wendy Starfall, littlemousy, Sumi Perl,       //
+//  Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,       //
 //  Garvin Twine, Romka Swallowtail et al.                                  //
 // ------------------------------------------------------------------------ //
 //  This script is free software: you can redistribute it and/or modify     //
@@ -761,6 +761,7 @@ default {
         llSetTimerEvent(0.0);
         //Debug((string)iChan+"|"+sName+"|"+(string)kID+"|"+sMsg);
         if (iChan == g_iFolderRLV) { //We got some folders to process
+            if (llStringLength(sMsg) == 1023) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nATTENTION: Either some of the names of your outfit folders are too long, or there are too many folders in your .outfits directory. This could lead to gaps in your outfits folder index. For best operability, please consider reducing the overall amount of subfolders within the .outfits directory and use shorter names.\n",g_kWearer);
             FolderMenu(g_kMenuClicker,g_iAuth,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
             g_iAuth = CMD_EVERYONE;
         }
