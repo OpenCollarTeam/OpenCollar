@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Particle - 170806.1                             //
+//                          Particle - 171111.1                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Lulu Pink, Nandana Singh, Garvin Twine,       //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
@@ -411,9 +411,9 @@ FeelMenu(key kIn, integer iAuth) {
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"feel");
 }
 
-ColorMenu(key kIn, integer iAuth) {
+ColorMenu(key kIn, integer iAuth, integer iPage) {
     string sPrompt = "\nChoose a color.";
-    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth,"color");
+    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], iPage, iAuth,"color");
 }
 
 LMSay() {
@@ -486,6 +486,7 @@ default {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
+                integer iPage = llList2Integer(lMenuParams,2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -496,7 +497,7 @@ default {
                     string sButtonType = llGetSubString(sButton,2,-1);
                     string sButtonCheck = llGetSubString(sButton,0,0);
                     if (sButton == L_COLOR) {
-                        ColorMenu(kAv, iAuth);
+                        ColorMenu(kAv, iAuth,0);
                         return;
                     } else if (sButton == "Feel") {
                         FeelMenu(kAv, iAuth);
@@ -562,7 +563,7 @@ default {
                     g_vLeashColor = (vector)sButton;
                     SaveSettings(L_COLOR, sButton, TRUE);
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
-                    ColorMenu(kAv, iAuth);
+                    ColorMenu(kAv, iAuth,iPage);
                 } else if (sMenu == "feel") {
                     if (sButton == L_DEFAULTS) {
                         if (g_sParticleMode == "Ribbon") g_vLeashSize = (vector)GetDefaultSetting(L_SIZE);
