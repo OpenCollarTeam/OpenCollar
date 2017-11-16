@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Authorizer - 171108.1                           //
+//                          Authorizer - 171116.1                           //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
@@ -454,6 +454,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
                 llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"vanilla","");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vanilla disabled.",kID);
+                if (iRemenu && kID == g_sWearerID) iNum = Auth(kID,FALSE);
             } else {
                 sStr = "disabled.";
                 if (g_iVanilla) sStr = "enabled.";
