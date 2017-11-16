@@ -21,7 +21,7 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Animator - 171116.1                             //
+//                          Animator - 171116.2                             //
 // ------------------------------------------------------------------------ //
 //  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
 //  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
@@ -274,6 +274,34 @@ integer SetPosture(integer iOn, key kCommander) {
     }
 }
 
+SetHover(string sStr) {
+    float fNewHover = g_fHoverIncrement;
+    if (sStr == "↓" || sStr == "hoverdown") fNewHover = -fNewHover;
+    if (g_sCurrentPose == "") {
+        g_fStandHover += fNewHover;
+        fNewHover = g_fStandHover;
+        if (g_fStandHover) 
+            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_standhover="+(string)g_fStandHover,"");
+        else
+            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"offset_standhover","");
+        jump next;
+    }
+    integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
+    if (~index) {
+        fNewHover = fNewHover + llList2Float(g_lHeightAdjustments,index+1);
+        if (fNewHover)
+            g_lHeightAdjustments = llListReplaceList(g_lHeightAdjustments,[fNewHover],index+1,index+1);
+        else
+            g_lHeightAdjustments = llDeleteSubList(g_lHeightAdjustments,index,index+1);
+    } else {
+        fNewHover += g_fStandHover;
+        g_lHeightAdjustments += [g_sCurrentPose,fNewHover];
+    }
+    @next;
+    llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
+    llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
+}
+
 MessageAOs(string sONOFF, string sWhat){ //send string as "ON"  / "OFF" saves 2 llToUpper
     llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE,"CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_"+sWhat+sONOFF, g_kWearer);
     llRegionSayTo(g_kWearer,g_iAOChannel, "ZHAO_"+sWhat+sONOFF);
@@ -395,6 +423,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sStr == "animations") AnimMenu(kID, iNum);
     else if (sStr == "pose") PoseMenu(kID, 0, iNum);
+    else if (!llSubStringIndex(sCommand,"hover")) SetHover(sCommand);
     else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
@@ -620,31 +649,7 @@ default {
                 } else if (sMenuType == "Pose") {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else if (sMessage == "↑" || sMessage == "↓") {
-                        float fNewHover = g_fHoverIncrement;
-                        if (sMessage == "↓") fNewHover = -fNewHover;
-                        if (g_sCurrentPose == "") {
-                            g_fStandHover += fNewHover;
-                            fNewHover = g_fStandHover;
-                            if (g_fStandHover) 
-                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_standhover="+(string)g_fStandHover,"");
-                            else
-                                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"offset_standhover","");
-                            jump next;
-                        }
-                        integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
-                        if (~index) {
-                            fNewHover = fNewHover + llList2Float(g_lHeightAdjustments,index+1);
-                            if (fNewHover)
-                                g_lHeightAdjustments = llListReplaceList(g_lHeightAdjustments,[fNewHover],index+1,index+1);
-                            else
-                                g_lHeightAdjustments = llDeleteSubList(g_lHeightAdjustments,index,index+1);
-                        } else {
-                            fNewHover += g_fStandHover;
-                            g_lHeightAdjustments += [g_sCurrentPose,fNewHover];
-                        }
-                        @next;
-                        llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
-                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
+                        SetHover(sMessage);
                         PoseMenu(kAv, iPage, iAuth);
                     } else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);
