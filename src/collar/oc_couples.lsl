@@ -21,9 +21,9 @@
 //                    |     .'    ~~~~       \    / :                       //
 //                     \.. /               `. `--' .'                       //
 //                        |                  ~----~                         //
-//                          Couples - 161030.1                              //
+//                          Couples - 171116.1                              //
 // ------------------------------------------------------------------------ //
-//  Copyright (c) 2004 - 2016 Francis Chung, Ilse Mannonen, Nandana Singh,  //
+//  Copyright (c) 2004 - 2017 Francis Chung, Ilse Mannonen, Nandana Singh,  //
 //  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,      //
 //  littlemousy, Romka Swallowtail, Sumi Perl et al.                        //
 // ------------------------------------------------------------------------ //
@@ -52,9 +52,6 @@
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
-string g_sParentMenu = "Animations";
-string g_sSubMenu = " Couples";
-string UPMENU = "BACK";
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
 
@@ -127,10 +124,6 @@ integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
-integer MENUNAME_REQUEST = 3000;
-integer MENUNAME_RESPONSE = 3001;
-//integer MENUNAME_REMOVE = 3003;
-
 integer RLV_CMD = 6000;
 //integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 //integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
@@ -201,7 +194,7 @@ CoupleAnimMenu(key kID, integer iAuth) {
     else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
     list lButtons = g_lAnimCmds;
     lButtons += [TIME_COUPLES, STOP_COUPLES];
-    Dialog(kID, sPrompt, lButtons, [UPMENU],0, iAuth,"couples");
+    Dialog(kID, sPrompt, lButtons, ["BACK"],0, iAuth,"couples");
 }
 
 string StrReplace(string sSrc, string sFrom, string sTo) {
@@ -299,7 +292,6 @@ default {
             g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
         }
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-       // llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
 
@@ -341,7 +333,7 @@ default {
                     }
                 }
             } else if (llToLower(sStr) == "stop couples") StopAnims();
-            else if (sStr == "menu "+g_sSubMenu || sStr == "couples") CoupleAnimMenu(kID, iNum);
+            else if (sStr == "menu Couples" || sStr == "couples") CoupleAnimMenu(kID, iNum);
             else if (sCommand == "couples" && sValue == "verbose") {
                 sValue = llToLower(llList2String(lParams, 2));
                 if (sValue == "off"){
@@ -353,9 +345,7 @@ default {
                 }
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Verbose for couple animations is now turned "+sValue+".",kID);
             }
-        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        else if (iNum == LM_SETTING_RESPONSE) {
+        } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -376,8 +366,8 @@ default {
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenu == "couples") {
-                    if (sMessage == UPMENU)
-                        llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
+                    if (sMessage == "BACK")
+                        llMessageLinked(LINK_THIS, iAuth, "menu Animations", kAv);
                     else if (sMessage == STOP_COUPLES) {
                         StopAnims();
                         CoupleAnimMenu(kAv, iAuth);
@@ -385,7 +375,7 @@ default {
                         string sPrompt = "\nChoose the duration for couple animations.\n\nCurrent duration: ";
                         if(g_fTimeOut == 0) sPrompt += "ENDLESS.\n\nNOTE: The non-looped \"pet\" sequence is an exception to this rule and can only play for 20 seconds at a time." ;
                         else sPrompt += "for "+(string)llCeil(g_fTimeOut)+" seconds.";
-                        Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], [UPMENU],0, iAuth,"timer");
+                        Dialog(kAv, sPrompt, ["10","20","30","40","60","90","120", "ENDLESS"], ["BACK"],0, iAuth,"timer");
                     } else if (llGetSubString(sMessage,0,6) == "Verbose") {
                         if (llGetSubString(sMessage,8,-1) == "Off") {
                             g_iVerbose = FALSE;
@@ -409,7 +399,7 @@ default {
                     }
                 } else if (sMenu == "sensor") {
                     //Debug("Response from partner"+sStr);
-                    if (sMessage == UPMENU) CoupleAnimMenu(kAv, iAuth);
+                    if (sMessage == "BACK") CoupleAnimMenu(kAv, iAuth);
                     else {
                         g_kPartner = (key)sMessage;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
@@ -421,7 +411,7 @@ default {
                     }
                 } else if (sMenu == "timer") {
                     //Debug("Response from timer menu"+sStr);
-                    if (sMessage == UPMENU) CoupleAnimMenu(kAv, iAuth);
+                    if (sMessage == "BACK") CoupleAnimMenu(kAv, iAuth);
                     else if ((integer)sMessage > 0 && ((string)((integer)sMessage) == sMessage)) {
                         g_fTimeOut = (float)((integer)sMessage);
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "timeout=" + (string)g_fTimeOut, "");
