@@ -1,6 +1,10 @@
-### Welcome to OpenCollar Six™
+### Pardon Our Dust
 
-OpenCollar Six is a set of LSL scripts and other creative content, such as animations, sounds, textures, graphics and 3D models, which can be used to create role play devices in the form of scripted accessory and/or so-called HUDs.
+The OpenCollar founders have recently split the project from the for-profit VirtualDisgrace project that had been joined to it for the last few years.  We're optimistic that this split will be a healthy change for both projects in the long run, avoiding the conflicts of interest that have at times undermined OpenCollar's values of being a free, open, and non-profit community.  Some parts of this repository may still contain VirtualDisgrace-specific links or wording.  Those will be cleaned up.  In the meantime, we encourage you to dive in and help!  Pull requests welcome.
+
+### Welcome to OpenCollar
+
+OpenCollar is a set of LSL scripts and other creative content, such as animations, sounds, textures, graphics and 3D models, which can be used to create role play devices in the form of scripted accessory and/or so-called HUDs.
 
 Punk, goth and fetish collars would be the most popular of those and OpenCollar eventually became everyone's script set of choice to create items that are used for creative role play amongst adults in Second Life®.
 
@@ -31,7 +35,7 @@ At the moment this repository is separated into resources, source code and web q
 
 #### Licensing Information
 
-OpenCollar Six source code and creative resource are covered by free software, free culture and permissive open-source software licenses. Each script is its own program and compiles individually.
+OpenCollar source code and creative resource are covered by free software, free culture and permissive open-source software licenses. Each script is its own program and compiles individually.
 
 * Most LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
 
