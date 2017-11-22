@@ -10,6 +10,6 @@ To prevent the collar from listing an animation in the pose menu, we can add a t
 We will add further description in the readme here.
 
 Information:
-* [Second Life® JIRA](https://jira.secondlife.com/browse/SUN-38)
+* [Second Life JIRA](https://jira.secondlife.com/browse/SUN-38)
 * [Recently blogged](http://www.opencollar.at/blog/news-on-height-offset)
   
