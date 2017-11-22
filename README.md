@@ -1,6 +1,6 @@
 ### Pardon Our Dust
 
-The OpenCollar founders have recently split the project from the for-profit VirtualDisgrace project that had been joined to it for the last few years.  We're optimistic that this split will be a healthy change for both projects in the long run, avoiding the conflicts of interest that have at times undermined OpenCollar's values of being a free, open, and non-profit community.  Some parts of this repository may still contain VirtualDisgrace-specific links or wording.  Those will be cleaned up.  In the meantime, we encourage you to dive in and help!  Pull requests welcome.
+The OpenCollar founders have recently split the project from the for-profit VirtualDisgrace project that had been joined to it for the last few years.  We're optimistic that this split will be a healthy change for both projects in the long run, avoiding the conflicts of interest that have at times undermined OpenCollar's values of being a free, open, and non-profit community.  Some parts of this repository may still contain VirtualDisgrace-specific links or wording.  Those will be cleaned up.  In the meantime, we encourage you to dive in and help!  Check out the [open issues](https://github.com/OpenCollarTeam/OpenCollar/issues).  Pull requests welcome.
 
 ### Welcome to OpenCollar
 
