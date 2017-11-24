@@ -16,7 +16,7 @@
  
  */
 
-// This plugin can be used to receive updates through the OpenCollar Six
+// This plugin can be used to receive updates through the OpenCollar
 // Installer. The user has to confirm before any installations can start.
 // Whether patches from the upstream can be installed or not is optional.
 

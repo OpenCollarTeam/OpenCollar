@@ -22,7 +22,7 @@ At the moment this repository is separated into resources, source code and web q
         > sounds: Sounds as .wav and .aup binaries.
         > textures: Images as .png and .xcf binaries.
 
-    > src: Source code of the OpenCollar Six role play device.
+    > src: Source code of the OpenCollar role play device.
 
         > ao: The source code for the animation overrider.
         > collar: The source code for the collar device.
@@ -45,7 +45,7 @@ OpenCollar source code and creative resource are covered by free software, free 
 
 * Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Role Play Device](https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/LICENSE).
 
-**NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar Six goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
+**NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
 
 **A few words on authorship, years and copyright:**
 

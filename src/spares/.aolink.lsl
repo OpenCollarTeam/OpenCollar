@@ -83,7 +83,7 @@ Say(string sStr) {
 determineAOType() { //function to determine AO type.
     llListenRemove(g_iAOListenHandle);
     string sNotifyBegin = "\n\nCongratulations! Your ";
-    string sNotifyEnd = " has been successfully linked with OpenCollar Six™. Your AO will now pause itself when you play a pose or couples animation with your collar. To make things work smoothly, please push the power button on your AO HUD off/on once.\n\nFor a list of commands type: /88 help\nwww.opencollar.at/aolink\n";
+    string sNotifyEnd = " has been successfully linked with OpenCollar™. Your AO will now pause itself when you play a pose or couples animation with your collar. To make things work smoothly, please push the power button on your AO HUD off/on once.\n\nFor a list of commands type: /88 help\nwww.opencollar.at/aolink\n";
     g_iAOType = 0;
     if (~llSubStringIndex(llGetObjectName(),"AKEYO")) { //AKEYO is not a string in their script name, it is in animations but think the object name is a better test for this AO - Sumi Perl
         if (~llSubStringIndex(llGetObjectName(),"NitroAO")) { // Nitro has different messages.
@@ -181,10 +181,10 @@ default {
             Say("\n\nPlease drop me into an AO, I don't belong into a collar! Cleaning myself up here.\n");
             llRemoveInventory(g_sMyName);
         } else if (llGetInventoryType("oc_ao") == INVENTORY_SCRIPT || llGetInventoryType("oc_ao_interface") == INVENTORY_SCRIPT) {
-            Say("\n\nPlease don't drop me into the OpenCollar AO, I'm not needed in there as it already works just fine. Just drop me into any other AO to make it OpenCollar Six™ compatible if you want. Cleaning myself up here.\n");
+            Say("\n\nPlease don't drop me into the OpenCollar AO, I'm not needed in there as it already works just fine. Just drop me into any other AO to make it OpenCollar™ compatible if you want. Cleaning myself up here.\n");
             llRemoveInventory(g_sMyName);
         } else if (llGetInventoryType("OpenCollarAttch - Interface") == INVENTORY_SCRIPT) {
-            Say("\n\nPlease don't drop me into the OpenCollar Sub AO, I'm not needed in there. Just drop me into any other AO to make it OpenCollar Six™ compatible if you want. If you are trying to update a very old Sub AO, please find a cost-free replacement at any official OpenCollar location or network vendor. Cleaning myself up here.\n");
+            Say("\n\nPlease don't drop me into the OpenCollar Sub AO, I'm not needed in there. Just drop me into any other AO to make it OpenCollar™ compatible if you want. If you are trying to update a very old Sub AO, please find a cost-free replacement at any official OpenCollar location or network vendor. Cleaning myself up here.\n");
             llRemoveInventory(g_sMyName);
         }
         g_kWearer = llGetOwner();
@@ -217,7 +217,7 @@ default {
                 Say("\n\nLockMeister protocol support for couple animators and furniture has been disabled.\n");
             } else if (sMsg == "version") Say("I'm version "+g_sVersion);
             else if (sMsg == "rm aolink") {
-                Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
+                Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar™ again, please copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
                 llRemoveInventory(g_sMyName);
             } else if (sMsg == "debug on") {
                 g_iDebugMode = TRUE;
