@@ -42,7 +42,7 @@ most important: rather than starting a competing for-profit venture, we made
 OpenCollar free and open source.  That altruism and openness led to a rapid
 explosion of interest from both users and contributors.
 
-# Gratitude
+## Gratitude
 
 Fairly early on we started hearing from users who treated us and other
 contributors as though we owed them technical support, specific bug fixes, and
