@@ -18,7 +18,7 @@
    \______|_______________|_____||
     ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
 
-github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aolink.lsl
+github.com/OpenCollarTeam/opencollar/blob/master/src/spares/.aolink.lsl
 
 Right-click and edit your AO HUD, then navigate to the Contents tab of
 the Build Menu. Once the contents finish loading, drag and drop this
@@ -128,7 +128,7 @@ determineAOType() { //function to determine AO type.
         }
     }
     @next;
-    if(!g_iAOType) Say("\n\nOops! Either I landed in something that's not an AO or I'm not yet familiar with this type of AO. At version "+g_sVersion+" I know how to link with "+g_sKnownAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] in a new script!\n\nwww.opencollar.at/aolink\n");
+    if(!g_iAOType) Say("\n\nOops! Either I landed in something that's not an AO or I'm not yet familiar with this type of AO. At version "+g_sVersion+" I know how to link with "+g_sKnownAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aolink.lsl recent source] in a new script!\n\nwww.opencollar.at/aolink\n");
     else {
         g_iAOListenHandle = llListen(g_iAOChannel,"","",""); //We identified type, start script listening!
         g_iLMListenHandle = llListen(g_iLMChannel,"","","");
@@ -140,7 +140,7 @@ FailSafe(string sName) {
     if ((key)sName) return;
     if (!((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
     || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
-        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aolink\n");
+        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aolink\n");
         llRemoveInventory(sName);
     }
 }
@@ -217,7 +217,7 @@ default {
                 Say("\n\nLockMeister protocol support for couple animators and furniture has been disabled.\n");
             } else if (sMsg == "version") Say("I'm version "+g_sVersion);
             else if (sMsg == "rm aolink") {
-                Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
+                Say("\n\nRemoving AO Link v"+g_sVersion+". If you want to link this AO with OpenCollar Six™ again, please copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aolink.lsl recent source] of the AO Link in a new script or ask the community for an already compiled variation.\n");
                 llRemoveInventory(g_sMyName);
             } else if (sMsg == "debug on") {
                 g_iDebugMode = TRUE;

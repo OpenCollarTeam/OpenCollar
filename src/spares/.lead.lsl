@@ -18,7 +18,7 @@
    \______|_______________|_____||
     ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
 
-github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.lead.lsl
+github.com/OpenCollarTeam/opencollar/blob/master/src/spares/.lead.lsl
 
 */
 

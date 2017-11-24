@@ -46,7 +46,7 @@
 //  future, then "full perms" will mean the most permissive possible set    //
 //  of permissions allowed by the platform.                                 //
 // ------------------------------------------------------------------------ //
-//         github.com/VirtualDisgrace/opencollar/tree/master/src/ao         //
+//         github.com/OpenCollarTeam/opencollar/tree/master/src/ao         //
 // ------------------------------------------------------------------------ //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -537,7 +537,7 @@ default {
         g_iToday = (integer)llGetSubString(llGetDate(),-2,-1);
         if (g_iToday % 2) {
             g_iLastDay = g_iToday;
-            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~ao",[HTTP_METHOD,"GET"],"");
+            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/web/~ao",[HTTP_METHOD,"GET"],"");
         }
         llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
     }

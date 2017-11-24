@@ -43,7 +43,7 @@ OpenCollar source code and creative resource are covered by free software, free 
 
 * Some creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
 
-* Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Six Role Play Device](https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE).
+* Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Role Play Device](https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/LICENSE).
 
 **NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar Six goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
 

@@ -106,7 +106,7 @@ menu_about(key id) {
     if (dist) context += uri("agent/"+dist);
     else context += "Unknown";
     context+="\n\n"+about;
-    context+="\n\nThe OpenCollar Six™ scripts were used in this product to an unknown extent. The OpenCollar project can't support this product. Relevant [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE license terms] still apply.";
+    context+="\n\nThe OpenCollar Six™ scripts were used in this product to an unknown extent. The OpenCollar project can't support this product. Relevant [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/LICENSE license terms] still apply.";
     llDialog(id,context,["OK"],-12345);
 }
 
