@@ -18,7 +18,7 @@
    \______|_______________|_____||
     ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
 
-github.com/VirtualDisgrace/opencollar/blob/master/src/spares/.aoloader.lsl
+github.com/OpenCollarTeam/opencollar/blob/master/src/spares/.aoloader.lsl
 
 This utility requires both the OpenCollar AO of version 6.2.0 or greater
 and another AO HUD rezzed next to each other on the ground. The script
@@ -135,7 +135,7 @@ FailSafe(string sName) {
     if ((key)sName) return;
     if (!((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
     || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
-        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aoloader\n");
+        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aoloader\n");
         llRemoveInventory(sName);
     }
 }
@@ -164,7 +164,7 @@ default {
                 iIsOracul = FALSE;
         }
         if (!iIsOracul) {
-            Say("\n\nSorry! I'm not compatible with \""+g_sObjectName+"\" at this time. My version is "+g_sVersion+" and so far I can load sets from "+g_sSupportedAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/src/spares/.aoloader.lsl recent source] in a new script!\n\n"+g_sManPage+"\n");
+            Say("\n\nSorry! I'm not compatible with \""+g_sObjectName+"\" at this time. My version is "+g_sVersion+" and so far I can load sets from "+g_sSupportedAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aoloader.lsl recent source] in a new script!\n\n"+g_sManPage+"\n");
             RemoveMe();
         }
         if (llGetAttached()) {

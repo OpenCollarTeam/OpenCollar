@@ -1,4 +1,4 @@
-# This is a sample of OpenCollar Six settings
+# This is a sample of OpenCollar settings
 # To print accurate settings, type: <prefix> print settings
 # If settings are loaded from a URL, we need RAW data without meta-tags
 # Settings loaded from URLs are only fetched once and then stored locally
