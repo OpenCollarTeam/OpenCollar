@@ -1,6 +1,13 @@
 =========================
-OpenCollar Help Card
+OpenCollar Six™ Help Card | 2016-10-27
 =========================
+
+This is only a short version of the manual, explaining the basic usage and lists all chat commands.
+
+The manual on the web is a lot more gentle on the eyes and has the major advantage that we can improve it in between update releases. Some of the menus have useful hotlinks to manual pages.
+
+http://www.opencollar.at
+
 
 ==========
 The Very Basics
@@ -14,9 +21,9 @@ The Prefix:
 
 Your [prefix] are the first two letters of your username
 
-    Athaliah Opus's prefix is: at
-    nirea's prefix is: ni
-    Iala (jwenting)'s prefix is: jw
+    Wendy Starfall's prefix is: we
+    Otto (garvin.twine)'s prefix is: ga
+    Virtual Disgrace™ (virtualdisgrace)'s prefix is: vi
 
 Your prefix is used to issue commands in the Nearby Chat.
 
@@ -79,34 +86,32 @@ If that’s too hard to remember you can easily change it.
 List of Chat Commands
 ===============
 
-Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. 
+Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. Why hash key? Cause waffles!
 
-To use any of these commands, say your prefix and then the command on the same
-line.  For example if your prefix is 'az' and you want to give the menu command,
-you would say "az menu".
+NOTE: Wearers have to use the first two letters of their username instead of the hash key.
 
 -----------------------
 General Commands:
 -----------------------
 
-    menu
+    # menu
 
-    lock
-    unlock
+    # lock
+    # unlock
 
-    apps
+    # apps
 
-    channel [positive number]
-    channel -1
-    channel 0
+    # channel [positive number]
+    # channel -1
+    # channel 0
 
-    prefix [custom prefix]
+    # prefix [custom prefix]
 
     RED
     /1RED
     ((RED))
 
-    safeword [custom safeword]
+    # safeword [custom safeword]
 
     CustomSafeword
     /1CustomSafeword
@@ -116,243 +121,243 @@ General Commands:
 Bookmarks:
 --------------
 
-    bookmarks
-    tp
+    # bookmarks
+    # tp
 
-    tp [name of bookmark]
+    # tp [name of bookmark]
 
-    tp save
-    tp print
-    tp remove
+    # tp save
+    # tp print
+    # tp remove
 
 -------
 Titler:
 -------
 
-    menu titler
+    # menu titler
 
-    title [a fancy title]
+    # title [a fancy title]
 
-    title on
-    title off
+    # title on
+    # title off
 
-    title color <x, y, z>
+    # title color <x, y, z>
 
 ------
 Bell:
 ------
 
-    menu bell
+    # menu bell
 
-    bell on
-    bell off
+    # bell on
+    # bell off
 
-    bell show
-    bell hide
+    # bell show
+    # bell hide
 
 ----------------------------------
 Label (selected models only):
 ----------------------------------
 
-    menu label
+    # menu label
 
-    label box
+    # label box
 
-    label [a fancy label]
+    # label [a fancy label]
 
-    label on
-    label off
+    # label on
+    # label off
 
-    label scroll on
-    label scroll off
+    # label scroll on
+    # label scroll off
 
-    label font
+    # label font
 
 --------------
 Animations:
 --------------
 
-    animations
+    # animations
 
-    posture on
-    posture off
+    # posture on
+    # posture off
 
-    ao menu
+    # ao menu
 
-    ao on
-    ao off
+    # ao on
+    # ao off
 
-    antislide
+    # antislide
 
-    antislide on
-    antislide off
+    # antislide on
+    # antislide off
 
-    mv anims
+    # mv anims
 
-    rm pose [name of pose]
+    # rm pose [name of pose]
 
 ----------------------------
 Poses (stock selection):
 ----------------------------
 
-    pose
+    # pose
 
-    back
-    beautystand
-    belly
-    booty
+    # back
+    # beautystand
+    # belly
+    # booty
 
-    bop
-    bracelets
-    cutie
-    display
+    # bop
+    # bracelets
+    # cutie
+    # display
 
-    doggie
-    kneel
-    nadu
-    rise
+    # doggie
+    # kneel
+    # nadu
+    # rise
 
-    shy
-    submit
-    table
-    tower
+    # shy
+    # submit
+    # table
+    # tower
 
-    stop
+    # stop
 
 -------------------------------------------
 Couple Animations (stock selection):
 -------------------------------------------
 
-    couples
+    # couples
 
-    hug
-    kiss
-    pet
+    # hug
+    # kiss
+    # pet
 
-    cling
-    foot
-    catch
+    # cling
+    # foot
+    # catch
 
-    stop couples
+    # stop couples
 
 ----------
 Capture:
 ----------
 
-    capture
+    # capture
 
-    capture on
-    capture off
+    # capture on
+    # capture off
 
-    capture risky on
-    capture risky off
+    # capture risky on
+    # capture risky off
 
-    capture info on
-    capture info off
+    # capture info on
+    # capture info off
 
-    capture release
+    # capture release
 
 -------
 Leash:
 -------
 
-    menu leash
+    # menu leash
 
-    leash
-    grab
-    yank
-    unleash
+    # leash
+    # grab
+    # yank
+    # unleash
 
-    follow
-    beckon
-    unfollow
+    # follow
+    # beckon
+    # unfollow
 
-    stay
-    move
+    # stay
+    # move
 
-    anchor
-    park
+    # anchor
+    # park
 
-    pass
+    # pass
 
-    length
+    # length
 
-    leash configure
+    # leash configure
 
 -----
 RLV:
 -----
 
-    rlv
+    # rlv
 
-    rlv on
-    rlv off
+    # rlv on
+    # rlv off
 
-    rlv handshakes
+    # rlv handshakes
 
-    terminal
+    # terminal
 
-    clear
+    # clear
 
 -----------
 Force Sit:
 -----------
 
-    sit
-    stand
+    # sit
+    # stand
 
-    forbid stand
-    allow stand
+    # forbid stand
+    # allow stand
 
 ---------
 Outfits:
 ---------
 
-    outfits
+    # outfits
 
-    wear [name of the outfit]
+    # wear [name of the outfit]
 
 ---------------
 Restrictions:
 ---------------
 
-    restrictions
+    # restrictions
 
-    allow sendim
-    forbid sendim
+    # allow sendim
+    # forbid sendim
 
-    allow readim
-    forbid readim
+    # allow readim
+    # forbid readim
 
-    allow hear
-    forbid hear
+    # allow hear
+    # forbid hear
 
-    allow touch
-    forbid touch
+    # allow touch
+    # forbid touch
 
-    allow stray
-    forbid stray
+    # allow stray
+    # forbid stray
 
-    allow talk
-    forbid talk
+    # allow talk
+    # forbid talk
 
-    allow rummage
-    forbid rummage
+    # allow rummage
+    # forbid rummage
 
-    allow dress
-    forbid dress
+    # allow dress
+    # forbid dress
 
-    dazzle
-    undazzle
+    # dazzle
+    # undazzle
 
-    daze
-    undaze
+    # daze
+    # undaze
 
 --------------
 RLV Folders:
 --------------
 
-    folders
+    # folders
 
     #+ foldername (wears it)
     #++ foldername (wears it and its subfolders)
@@ -363,96 +368,98 @@ RLV Folders:
     #- foldername (removes it)
     #-- foldername (removes it and its subfolders)
 
-    history
+    # history
 
 --------
 Relay:
 --------
 
-    relay trusted
-    relay ask
-    relay auto
+    # relay trusted
+    # relay ask
+    # relay auto
 
-    relay off
+    # relay off
 
-    relay lite on
-    relay lite off
+    # relay lite on
+    # relay lite off
 
-    relay smart on
-    relay smart off
+    # relay smart on
+    # relay smart off
 
-    relay land on
-    relay land off
+    # relay land on
+    # relay land off
 
-    relay pending
+    # relay pending
 
-    relay access
+    # relay access
 
-    relay helpless on
-    relay helpless off
+    # relay helpless on
+    # relay helpless off
 
-    relay safeword
+    # relay safeword
 
 ---------
 Access:
 ---------
 
-    access
+    # access
 
-    add owner [UUID or name]
-    rm owner [name]
+    # add owner [UUID or name]
+    # rm owner [name]
 
-    add trust [UUID or name]
-    rm trust [name]
+    # add trust [UUID or name]
+    # rm trust [name]
 
-    add block [UUID or name]
-    rm block [name]
+    # add block [UUID or name]
+    # rm block [name]
 
-    public on
-    public off
+    # public on
+    # public off
 
-    flavor
+    # flavor
 
-    vanilla on
-    vanilla off
+    # vanilla on
+    # vanilla off
 
-    runaway
+    # runaway
 
 ----------
 Settings:
 ----------
 
-    settings
+    # settings
 
-    print settings
-    load url [url]
+    # print settings
+    # load url [url]
 
-    fix
-    verify
+    # fix
+    # verify
 
-    stealth
+    # stealth
 
-    themes
-    looks
+    # themes
+    # looks
 
 --------------
 Help/About:
 --------------
 
-    about
+    # about
 
-    help
-    license
+    # help
+    # license
 
-    news
-    news on
-    news off
+    # news
+    # news on
+    # news off
 
-    version
-    info
+    # version
+    # info
 
-    update
+    # update
 
-    reboot
+    # reboot
 
+==================================
+That's all! Please consult www.opencollar.at for more.
 ==================================

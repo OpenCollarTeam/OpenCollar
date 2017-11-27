@@ -1,20 +1,66 @@
-// This file is part of OpenCollar.
-// Licensed under the GPLv2.  See LICENSE for full details. 
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                       Installer Bundles - 170328.1                       //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2011 - 2017 Nandana Singh, Wendy Starfall, Garvin Twine   //
+//  and Romka Swallowtail                                                   //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//      github.com/VirtualDisgrace/opencollar/tree/master/src/installer     //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
+// this script receives DO_BUNDLE messages that contain the uuid of the collar being updated,
+// the name of a bundle notecard, the talkchannel on which the collar shim script is listening, and
+// the script pin set by the shim.  This script then loops over the items listed in the notecard
+// and chats with the shim about each one.  Items that are already present (as determined by uuid)
+// are skipped.  Items not present are given to the collar.  Items that are present but don't have the
+// right uuid are deleted and replaced with the version in the updater.  Scripts are loaded with
+// llRemoteLoadScriptPin, and are set running immediately.
 
-// this script receives DO_BUNDLE messages that contain the uuid of the collar
-// being updated, the name of a bundle notecard, the talkchannel on which the
-// collar shim script is listening, and the script pin set by the shim.  This
-// script then loops over the items listed in the notecard and chats with the
-// shim about each one.  Items that are already present (as determined by uuid)
-// are skipped.  Items not present are given to the collar.  Items that are
-// present but don't have the right uuid are deleted and replaced with the
-// version in the updater.  Scripts are loaded with llRemoteLoadScriptPin, and
-// are set running immediately.
-
-// once the end of the notecard is reached, this script sends a BUNDLE_DONE
-// message that includes all the same stuff it got in DO_BUNDLE (talkchannel,
-// recipient, card, pin).
+// once the end of the notecard is reached, this script sends a BUNDLE_DONE message that includes all the same
+// stuff it got in DO_BUNDLE (talkchannel, recipient, card, pin).
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
