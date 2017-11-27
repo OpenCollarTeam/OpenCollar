@@ -71,8 +71,8 @@ string UPMENU = "BACK";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
-integer g_iVanilla; // self-owned wearers
-string g_sFlavor = "Vanilla";
+integer g_iOwnSelf; // self-owned wearers
+string g_sFlavor = "OwnSelf";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -122,7 +122,7 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☑"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iVanilla) lButtons += g_sFlavor+" ☑";    //add wearer as owner
+    if (g_iOwnSelf) lButtons += g_sFlavor+" ☑";    //add wearer as owner
     else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
@@ -152,8 +152,8 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
-VanillaOff(key kID) {
-    g_iVanilla = FALSE;
+OwnSelfOff(key kID) {
+    g_iOwnSelf = FALSE;
     if (kID == g_sWearerID)
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kID);
     else
@@ -177,12 +177,12 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     } else {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
-            if (sToken == "owner" && sPersonID == g_sWearerID) VanillaOff(kCmdr);
+            if (sToken == "owner" && sPersonID == g_sWearerID) OwnSelfOff(kCmdr);
             lPeople = llDeleteSubList(lPeople,index,index);
             if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
             iFound = TRUE;
         } else if (llToLower(sPersonID) == "remove all") {
-            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])) VanillaOff(kCmdr);
+            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])) OwnSelfOff(kCmdr);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
             lPeople = [];
             iFound = TRUE;
@@ -227,7 +227,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
                 return;
             } else if (sPersonID==g_sWearerID) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% vanilla on\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% ownself on\n",kID);
                 return;
             }
         } else if (sToken=="tempowner") {
@@ -251,7 +251,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         } else return;
         if (! ~llListFindList(lPeople, [sPersonID])) { //owner is not already in list.  add him/her
             lPeople += sPersonID;
-            if (sPersonID == g_sWearerID && sToken == "owner") g_iVanilla = TRUE;
+            if (sPersonID == g_sWearerID && sToken == "owner") g_iOwnSelf = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" is already registered as "+sToken+".",kID);
             return;
@@ -414,13 +414,13 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sCommand == "vanilla" || sCommand == llToLower(g_sFlavor)) {
+    } else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
-                //g_iVanilla = TRUE;
+                //g_iOwnSelf = TRUE;
                 UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
             } else if (sAction == "off") {
-                g_iVanilla = FALSE;
+                g_iOwnSelf = FALSE;
                 UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%", kID);
@@ -585,8 +585,8 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     g_lOwner = llParseString2List(sValue, [","], []);
-                    if (~llSubStringIndex(sValue,g_sWearerID)) g_iVanilla = TRUE;
-                    else g_iVanilla = FALSE;
+                    if (~llSubStringIndex(sValue,g_sWearerID)) g_iOwnSelf = TRUE;
+                    else g_iOwnSelf = FALSE;
                 } else if (sToken == "tempowner")
                     g_lTempOwner = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
@@ -642,8 +642,8 @@ default {
                             "Group ☑","group off",
                             "Public ☐","public on",
                             "Public ☑","public off",
-                            g_sFlavor+" ☐","vanilla on",
-                            g_sFlavor+" ☑","vanilla off",
+                            g_sFlavor+" ☐","ownself on",
+                            g_sFlavor+" ☑","ownself off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
