@@ -121,7 +121,7 @@ for the overall OpenCollar project, the funds it collected were dedicated to
 project expenses like tier and web hosting fees.
 
 In the time before Wendy started maintaining the project, Athy and I saw a
-number of people try to subvert its commitment to openness for its own profit.
+number of people try to subvert its commitment to openness for their own profit.
 Some of these were outside creators with far-fetched ideas, while others were
 insiders who saw an opportunity to use the OpenCollar name to promote their
 products in ways not available to their competitors.  When I removed the
