@@ -165,7 +165,7 @@ This was concerning.  Imagine the feeling of coming home from vacation and
 seeing that your housesitter had locked you out of your own house and changed
 the locks.  Without a view into the account's transactions, I had no way of
 ensuring that funds were still going to the project's stated mission.  I asked
-Wendy about this, and she told me mysteriously told me to talk to Otto/Garvin
+Wendy about this, and she mysteriously told me to talk to Otto/Garvin
 Twine.  After some more discussion,  she walked me through the systems then in
 use for distributing funds.  I was satisfied that she was doing so honestly,
 with one exception.  I saw that 50% of all tips to the "OpenCollar" tip boards
