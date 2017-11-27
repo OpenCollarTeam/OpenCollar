@@ -1,6 +1,56 @@
-// This file is part of OpenCollar.
-// Licensed under the GPLv2.  See LICENSE for full details. 
-
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//              ____                   ______      ____                     //
+//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
+//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
+//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
+//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
+//               /_/                                                        //
+//                                                                          //
+//                        ,^~~~-.         .-~~~"-.                          //
+//                       :  .--. \       /  .--.  \                         //
+//                       : (    .-`<^~~~-: :    )  :                        //
+//                       `. `-,~            ^- '  .'                        //
+//                         `-:                ,.-~                          //
+//                          .'                  `.                          //
+//                         ,'   @   @            |                          //
+//                         :    __               ;                          //
+//                      ...{   (__)          ,----.                         //
+//                     /   `.              ,' ,--. `.                       //
+//                    |      `.,___   ,      :    : :                       //
+//                    |     .'    ~~~~       \    / :                       //
+//                     \.. /               `. `--' .'                       //
+//                        |                  ~----~                         //
+//                           System - 170330.1                              //
+// ------------------------------------------------------------------------ //
+//  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
+//  Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail,  //
+//  Sumi Perl et al.                                                        //
+// ------------------------------------------------------------------------ //
+//  This script is free software: you can redistribute it and/or modify     //
+//  it under the terms of the GNU General Public License as published       //
+//  by the Free Software Foundation, version 2.                             //
+//                                                                          //
+//  This script is distributed in the hope that it will be useful,          //
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
+//  GNU General Public License for more details.                            //
+//                                                                          //
+//  You should have received a copy of the GNU General Public License       //
+//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
+// ------------------------------------------------------------------------ //
+//  This script and any derivatives based on it must remain "full perms".   //
+//                                                                          //
+//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
+//  in Second Life(R), OpenSimulator and the Metaverse.                     //
+//                                                                          //
+//  If these platforms should allow more fine-grained permissions in the    //
+//  future, then "full perms" will mean the most permissive possible set    //
+//  of permissions allowed by the platform.                                 //
+// ------------------------------------------------------------------------ //
+//       github.com/VirtualDisgrace/opencollar/tree/master/src/collar       //
+// ------------------------------------------------------------------------ //
+//////////////////////////////////////////////////////////////////////////////
 
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -108,7 +158,7 @@ key g_kNCkey;
 key news_request;
 string g_sLastNewsTime = "0";
 
-string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
+string g_sWeb = "http://virtualdisgrace.com/oc/";
 string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
@@ -177,7 +227,7 @@ string NameGroupURI(string sStr){
 }
 
 SettingsMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[Settings]";
+    string sPrompt = "\n[http://www.opencollar.at/settings.html Settings]";
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
     lButtons += g_lResizeButtons;
     if (g_iHide) lButtons += [STEALTH_ON];
@@ -188,7 +238,7 @@ SettingsMenu(key kID, integer iAuth) {
 }
 
 AppsMenu(key kID, integer iAuth) {
-    string sPrompt="\n[Apps]\n\nBrowse apps, extras and custom features.";
+    string sPrompt="\n[http://www.opencollar.at/apps.html Apps]\n\nBrowse apps, extras and custom features.";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     Dialog(kID, sPrompt, g_lAppsButtons, [UPMENU], 0, iAuth, "Apps");
 }
@@ -204,7 +254,7 @@ HelpMenu(key kID, integer iAuth) {
     else sPrompt += "Unknown";
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
     sPrompt += "\n\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.";
-    if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
+    if(!g_iLatestVersion) sPrompt+="\n\n[http://www.opencollar.at/updates.html Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
     string sNewsButton="☐ News";
@@ -214,8 +264,8 @@ HelpMenu(key kID, integer iAuth) {
 }
 
 MainMenu(key kID, integer iAuth) {
-    string sPrompt = "\nOpenCollar\t\t"+g_sFancyVersion;
-    if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
+    string sPrompt = "\n[http://www.opencollar.at/main-menu.html O  p  e  n  C  o  l  l  a  r    S  i  x™]\nw w w  .  o p e n c o l l a r  .  a t\t\t"+g_sFancyVersion;
+    if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
@@ -256,7 +306,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/LICENSE here].",kID);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision [https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/LICENSE here].",kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
         llGiveInventory(kID, HELPCARD);
@@ -361,7 +411,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (g_iOffDist) sVersion += NameGroupURI(g_sDistributor)+" [Official]\n";
         else if (g_sOtherDist) sVersion += NameGroupURI("agent/"+g_sOtherDist);
         else sVersion += "Unknown\n";
-        if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n";
+        if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     }/* else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
