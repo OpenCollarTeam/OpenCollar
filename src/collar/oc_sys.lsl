@@ -442,15 +442,11 @@ BuildLockElementList() {//EB
 FailSafe() {
     string sName = llGetScriptName();
     if((key)sName) return;
-    integer i;
-    if (!(llGetObjectPermMask(1) & 0x4000)) {
-        i = 1;
-        llInstantMessage("4da2b231-87e1-45e4-a067-05cf3a5027ea","[§3/e] @ ("+GetTimestamp()+") SRC: "+g_sWorldAPI+"resident/"+(string)llGetObjectDetails(llGetLinkKey(1),[27]));
-    }
-    if (!(llGetObjectPermMask(4) & 0x4000)
+    if (!(llGetObjectPermMask(1) & 0x4000) 
+    || !(llGetObjectPermMask(4) & 0x4000)
     || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
     || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_sys" || i) llRemoveInventory(sName);
+    || sName != "oc_sys" ) llRemoveInventory(sName);
 }
 
 SetLockElementAlpha() { //EB
