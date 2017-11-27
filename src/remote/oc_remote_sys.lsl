@@ -1,55 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//       _   ___     __            __  ___  _                               //
-//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
-//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
-//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
-//                                             /___/                        //
-//                                                                          //
-//                                        _                                 //
-//                                        \`*-.                             //
-//                                         )  _`-.                          //
-//                                        .  : `. .                         //
-//                                        : _   '  \                        //
-//                                        ; *` _.   `*-._                   //
-//                                        `-.-'          `-.                //
-//                                          ;       `       `.              //
-//                                          :.       .        \             //
-//                                          . \  .   :   .-'   .            //
-//                                          '  `+.;  ;  '      :            //
-//                                          :  '  |    ;       ;-.          //
-//                                          ; '   : :`-:     _.`* ;         //
-//       Remote System - 161029.1        .*' /  .*' ; .*`- +'  `*'          //
-//                                       `*-*   `*-*  `*-*'                 //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
-//  Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, //
-//  Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.   //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/VirtualDisgrace/opencollar/tree/master/src/remote       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
@@ -203,9 +154,9 @@ Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, strin
 }
 
 MainMenu(){
-    string sPrompt = "\n[http://www.opencollar.at/remote.html OpenCollar Remote]\t"+g_sFancyVersion;
+    string sPrompt = "\n[OpenCollar Remote]\t"+g_sFancyVersion;
     sPrompt += "\n\nSelected Partner: "+NameURI(g_sActivePartnerID);
-    if (g_iUpdateAvailable) sPrompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
+    if (g_iUpdateAvailable) sPrompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     list lButtons = g_lMainMenuButtons + g_lMenus;
     Dialog(sPrompt, lButtons, [], 0, g_sMainMenu);
 }
@@ -280,7 +231,7 @@ default {
     state_entry() {
         g_kOwner = llGetOwner();
         FailSafe();
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -292,11 +243,11 @@ default {
         g_iPicturePrim = PicturePrim();
         NextPartner(0,0);
         MainMenu();
-        llOwnerSay("\n\nYou are wearing this OpenCollar Remote for the first time. I'm opening the remote menu where you can manage your partners. Make sure that your partners are near you and click Add to register them. To open the remote menu again, please select the gear (⚙) icon on your remote HUD. www.opencollar.at/remote\n");
+        llOwnerSay("\n\nYou are wearing this OpenCollar Remote for the first time. I'm opening the remote menu where you can manage your partners. Make sure that your partners are near you and click Add to register them. To open the remote menu again, please select the gear (⚙) icon on your remote HUD.\n");
     }
 
     on_rez(integer iStart) {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/VirtualDisgrace/opencollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
     }
 
     touch_start(integer iNum) {
@@ -330,7 +281,7 @@ default {
                 } else llOwnerSay("Your HUD command channel is "+(string)g_iChannel+". Type /"+(string)g_iChannel+"menu to bring up your HUD menu.");
             }
             else if (llToLower(sMessage) == "help")
-                llOwnerSay("\n\nThe manual page can be found [http://www.opencollar.at/remote.html here].\n");
+                llOwnerSay("\n\nThe manual page can be found [here].\n");
             else if (sMessage == "reset") llResetScript();
         } else if (iChannel == PersonalChannel(g_kOwner,0) && llGetOwnerKey(kID) == g_kOwner) {
             if (sMessage == "-.. --- / .... ..- -..") {
@@ -455,7 +406,7 @@ default {
 
     timer() {
         if (llGetListLength(g_lNewPartnerIDs)) AddPartnerMenu();
-        else llOwnerSay("\n\nYou currently don't have access to any nearby collars. Requirements to add partners are to either have them captured or their collar is set to public or they have you listed as an owner or trust role. www.opencollar.at/remote\n");
+        else llOwnerSay("\n\nYou currently don't have access to any nearby collars. Requirements to add partners are to either have them captured or their collar is set to public or they have you listed as an owner or trust role.\n");
         llSetTimerEvent(0);
         integer n = llGetListLength(g_lListeners);
         while (n--)
