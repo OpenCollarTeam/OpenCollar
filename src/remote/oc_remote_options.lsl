@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven, 
+// Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, 
+// Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 //Adjusted to OpenCollar name convention und format standards June 2015 Otto (garvin.twine)

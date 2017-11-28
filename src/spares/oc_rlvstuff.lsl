@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,     
+// Wendy Starfall, Master Starship, littlemousy, Romka Swallowtail,    
+// Garvin Twine et al.                           
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 string g_sAppVersion = "¹⋅¹";

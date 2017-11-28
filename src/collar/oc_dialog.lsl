@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2007 - 2017 Schmobag Hogfather, Nandana Singh,      
+// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
+// Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

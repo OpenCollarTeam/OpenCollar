@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,      
+// Sumi Perl et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

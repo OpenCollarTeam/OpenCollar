@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2016 Medea Destiny, XenHat Liamano, Wendy Starfall, Sumi Perl, Ansariel Hiller,
+// Garvin Twine, stawberri et al.
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 /*

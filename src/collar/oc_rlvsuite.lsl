@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,    
+// Garvin Twine, Romka Swallowtail et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

@@ -1,4 +1,9 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,        
+// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,      
+// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn, 
+// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
+// Garvin Twine et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

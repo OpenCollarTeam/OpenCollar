@@ -1,4 +1,8 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
+// Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
+// Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
+// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

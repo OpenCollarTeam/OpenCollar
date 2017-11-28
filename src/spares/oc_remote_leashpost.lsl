@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2016 Garvin Twine                     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2013 - 2015 Toy Wylie et. al               
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

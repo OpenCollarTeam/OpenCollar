@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven.  Wendy Starfall,
+// littlemousy, Romka Swallowtail, Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

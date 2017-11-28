@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2011 - 2017 Nandana Singh, Wendy Starfall, Garvin Twine  
+// and Romka Swallowtail  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

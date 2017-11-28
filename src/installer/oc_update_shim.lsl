@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2011 - 2017 Nandana Singh, Satomi Ahn, Wendy Starfall,  
+// littlemousy, Sumi Perl, Garvin Twine et al.               
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // This script is like a kamikaze missile.  It sits dormant in the updater

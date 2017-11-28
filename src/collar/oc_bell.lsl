@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,   
+// Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,         
+// Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

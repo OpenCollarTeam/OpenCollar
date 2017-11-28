@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008-2016 Ilse Mannonen, Garvin Twine, Wendy Starfall.
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 integer g_iMychannel = -8888;

@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Lulu Pink, Nandana Singh, Garvin Twine,    
+// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, 
+// littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 

@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Joy Stipe,     
+// Wendy Starfall, Master Starship, Medea Destiny, littlemousy,      
+// Romka Swallowtail, Sumi Perl, Keiyra Aeon, Garvin Twine et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 //gives menus for clothing and attachment, stripping and locking

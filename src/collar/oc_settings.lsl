@@ -1,4 +1,8 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Cleo Collins, Master Starship, 
+// Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,  
+// Wendy Starfall, Medea Destiny, Rebbie, Romka Swallowtail,        
+// littlemousy et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
