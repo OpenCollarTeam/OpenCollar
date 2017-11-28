@@ -67,6 +67,7 @@ appearance:
 - Lecina Enigma
 - Eiko Zeffirelli
 - Anika Mureaux
+- Quitero Klaar
 - Andria Babenco
 - Ivald Huldasson
 - Jenniferz Vita
