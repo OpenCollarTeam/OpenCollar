@@ -121,7 +121,7 @@ Particles(key kTarget) {
             PSYS_PART_TARGET_POS_MASK |
             PSYS_PART_EMISSIVE_MASK,
         PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
-        PSYS_SRC_TEXTURE, "930c3304-e899-9266-2ab5-ab9ec3aec2b6",
+        PSYS_SRC_TEXTURE, "690c110f-95b9-3042-5d93-0c04a062b6db",
         PSYS_SRC_TARGET_KEY, kTarget,
         PSYS_PART_START_COLOR, vParticleColor,
         PSYS_PART_END_COLOR, vParticleColor,
