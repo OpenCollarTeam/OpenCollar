@@ -107,13 +107,6 @@ SetFloatText() {
 
 Particles(key kTarget) {
     integer i = llGetNumberOfPrims();
-    vector vParticleColor;
-    do {
-        if (llGetLinkName(i) == "<3") {
-            vParticleColor = llList2Vector(llGetLinkPrimitiveParams(i,[PRIM_COLOR,ALL_SIDES]),0);
-            i = 1;
-        }
-    } while (--i > 1);
     llParticleSystem([
         PSYS_PART_FLAGS,
             PSYS_PART_INTERP_COLOR_MASK |
@@ -121,12 +114,8 @@ Particles(key kTarget) {
             PSYS_PART_TARGET_POS_MASK |
             PSYS_PART_EMISSIVE_MASK,
         PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
-        PSYS_SRC_TEXTURE, "930c3304-e899-9266-2ab5-ab9ec3aec2b6",
+        PSYS_SRC_TEXTURE, "690c110f-95b9-3042-5d93-0c04a062b6db",
         PSYS_SRC_TARGET_KEY, kTarget,
-        PSYS_PART_START_COLOR, vParticleColor,
-        PSYS_PART_END_COLOR, vParticleColor,
-       // PSYS_PART_START_COLOR, <0.529, 0.416, 0.212>,
-       // PSYS_PART_END_COLOR, <0.733, 0.592, 0.345>,
         PSYS_PART_START_SCALE, <0.68, 0.64, 0>,
         PSYS_PART_END_SCALE, <0.04, 0.04, 0>,
         PSYS_PART_START_ALPHA, 0.1,

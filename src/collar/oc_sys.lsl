@@ -208,6 +208,7 @@ HelpMenu(key kID, integer iAuth) {
 
 MainMenu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar\t\t"+g_sFancyVersion;
+    sPrompt += "\n\n[secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about Join the official OpenCollar group to become part of our community.]";
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
