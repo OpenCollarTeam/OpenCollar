@@ -109,7 +109,6 @@ Particles(key kTarget) {
     integer i = llGetNumberOfPrims();
     llParticleSystem([
         PSYS_PART_FLAGS,
-            PSYS_PART_INTERP_COLOR_MASK |
             PSYS_PART_INTERP_SCALE_MASK |
             PSYS_PART_TARGET_POS_MASK |
             PSYS_PART_EMISSIVE_MASK,
