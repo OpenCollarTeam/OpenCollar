@@ -197,6 +197,7 @@ UpdateConfirmMenu() {
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
+    sPrompt+="\n\nDocumentation: https://github.com/OpenCollarTeam/OpenCollar/wiki";
     if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];

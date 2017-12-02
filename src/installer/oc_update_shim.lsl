@@ -12,6 +12,7 @@
 
 integer g_iStartParam;
 integer LOADPIN = -1904;
+integer LINK_UPDATE = -10;
 
 // a strided list of all scripts in inventory, with their names,versions,uuids
 // built on startup
@@ -164,7 +165,7 @@ default {
         else if (!llSubStringIndex(sMsg, "DONE")){
             //restore settings
             if (g_iIsUpdate) {
-                llMessageLinked(LINK_ALL_OTHERS, -10, "LINK_REQUEST","");
+                llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings);
                 for (n = 0; n < iStop; n++) {
@@ -234,3 +235,4 @@ default {
         if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
 }
+
