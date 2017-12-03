@@ -55,6 +55,11 @@ integer TOUCH_CANCEL = -9501;
 integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 
+integer MVANIM_INIT = 13000;
+integer MVANIM_ANNOUNCE = 13001;
+integer MVANIM_SKIP = 13002;
+integer MVANIM_GIVE = 13003;
+
 string g_sSafeWord = "RED";
 
 //added for attachment auth
@@ -179,24 +184,6 @@ PermsCheck() {
 }
 
 
-MoveAnims(integer i) {
-    key kAnimator = llGetLinkKey(LINK_ANIM);
-    string sAnim;
-    list lAnims;
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nFetching "+(string)i+" animations from the %DEVICETYPE%'s root...\n",g_kWearer);
-    while (i) {
-        sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
-        llGiveInventory(kAnimator,sAnim);
-        lAnims += sAnim;
-        if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
-            if (llGetInventoryPermMask(sAnim,MASK_OWNER) & PERM_COPY)
-                llRemoveInventory(sAnim);
-        }
-    }
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThe following animations have been moved to the %DEVICETYPE%'s animator module and are now ready to use:\n\n"+llList2CSV(lAnims)+"\n",g_kWearer);
-    llMessageLinked(LINK_ANIM,ANIM_LIST_REQUEST,"","");
-}
-
 UserCommand(key kID, integer iAuth, string sStr) {
     if (sStr == "ping") { // ping from an object, we answer to it on the object channel
         llRegionSayTo(kID,g_iHUDChan,(string)g_kWearer+":pong"); // sim wide response to owner hud
@@ -308,9 +295,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 } else
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
             } else if (sStr == "mv anims") {
-                integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
-                if (i) MoveAnims(i);
-                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThere are currently no animations in the %DEVICETYPE%'s root.\n",g_kWearer);
+                AnnounceAnimInventory(LINK_ALL_OTHERS);
             } else if (sCommand == "busted") {
                 if (sValue == "on") {
                     llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
@@ -333,6 +318,39 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 }
             }
         }
+    }
+}
+
+AnnounceAnimInventory(integer iLink) {
+    // announce the couples notecard, if present
+    if (llGetInventoryType(".couples") == INVENTORY_NOTECARD) {
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, ".couples", llGetInventoryKey(".couples"));
+    }
+
+    // announce all animations
+    integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
+    while (i) {
+        string sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
+    }
+}
+
+MoveItem(integer iLink, string sItem) {
+    // this is used for the .couples notecard as well as animations
+    // don't try giving things we don't have
+    if (llGetInventoryType(sItem) == INVENTORY_NONE) {
+        return;
+    }
+    llGiveInventory(llGetLinkKey(iLink), sItem);
+    RemoveItem(sItem);
+    // Notify what's going on.
+    llOwnerSay(sItem + " moved to animator prim.");
+}
+
+RemoveItem(string sItem) {
+    // only remove item if it's present.  Never delete anything no-copy.
+    if (llGetInventoryType(sItem) != INVENTORY_NONE && (llGetInventoryPermMask(sItem, MASK_OWNER) & PERM_COPY) == PERM_COPY) {
+        llRemoveInventory(sItem);
     }
 }
 
@@ -532,6 +550,15 @@ default {
                 }
             }
             llResetScript();
+        }
+        else if (iNum == MVANIM_INIT) {
+            AnnounceAnimInventory(iSender);
+        }
+        else if (iNum == MVANIM_GIVE) {
+            MoveItem(iSender, sStr); 
+        }
+        else if (iNum == MVANIM_SKIP) {
+            RemoveItem(sStr);
         }
     }
 

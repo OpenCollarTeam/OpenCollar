@@ -80,6 +80,11 @@ integer DIALOG_TIMEOUT = -9002;
 
 integer g_iAOChannel = -782690;
 
+integer MVANIM_INIT = 13000;
+integer MVANIM_ANNOUNCE = 13001;
+integer MVANIM_SKIP = 13002;
+integer MVANIM_GIVE = 13003;
+
 string g_sSettingToken = "anim_";
 //string g_sGlobalToken = "global_";
 key g_kWearer;
@@ -473,6 +478,9 @@ default {
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         //Debug("Starting");
+        if (llGetLinkNumber() > LINK_ROOT) {
+          llMessageLinked(LINK_ALL_OTHERS, MVANIM_INIT, "", "");
+        }
     }
 
     run_time_permissions(integer iPerm) {
@@ -650,6 +658,28 @@ default {
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if (iNum == RLVA_VERSION) g_iRLVA_ON = TRUE;
         else if (iNum == RLV_OFF) g_iRLVA_ON = FALSE;
+        else if (iNum == MVANIM_ANNOUNCE) {
+            // the root prim has something for us!
+            // if we don't have the item, then request it.
+            if (llGetInventoryType(sStr) == INVENTORY_NONE) {
+                llMessageLinked(iSender, MVANIM_GIVE, sStr, "");
+                return;
+            }
+            // never delete/replace a no-copy item.  skip it.
+            if (llGetInventoryPermMask(sStr, MASK_OWNER) & PERM_COPY != PERM_COPY) {
+              llMessageLinked(iSender, MVANIM_SKIP, sStr, "");
+              return;
+            }
+            // item is present, and copyable.  If UUID doesn't match, then delete our copy and
+            // request new one.
+            if (llGetInventoryKey(sStr) != kID) {
+                llRemoveInventory(sStr);
+                llMessageLinked(iSender, MVANIM_GIVE, sStr, "");
+            } else {
+                // we've already got one.  Skip.
+                llMessageLinked(iSender, MVANIM_SKIP, sStr, "");
+            }
+        }
     }
 
     changed(integer iChange) {
