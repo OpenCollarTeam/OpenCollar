@@ -1,4 +1,12 @@
-OpenCollar needs your help!
+## OpenCollar needs your help!
+
+### Creating Issues
+
+Please do a quick search of existing issues before making a new one.  Your
+problem might have already been reported.  If you don't see it though, a new
+issue would be greatly appreciated.
+
+### Contributing Code
 
 For small, obvious bug fixes, just fork our repo, make the fix on your fork, and
 send us a pull request.  We'll try to review it promptly.
