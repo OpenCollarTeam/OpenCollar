@@ -49,7 +49,7 @@ StatusBar(float fCount) {
     do { i--;
         sStatusBar = "█"+llGetSubString(sStatusBar,0,-2);
     } while (i>0);
-    llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
+    llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
     //return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
 }
 
@@ -96,7 +96,7 @@ PermsCheck() {
 default
 {
     state_entry() {
-        llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,"", <1,1,1>, 1.0]);
+        llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,"", <1,1,1>, 1.0]);
         PermsCheck();
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;
     }
