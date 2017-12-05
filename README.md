@@ -1,16 +1,26 @@
-### Pardon Our Dust
-
-The OpenCollar founders have recently split the project from the for-profit VirtualDisgrace project that had been joined to it for the last few years.  We're optimistic that this split will be a healthy change for both projects in the long run, avoiding the conflicts of interest that have at times undermined OpenCollar's values of being a free, open, and non-profit community.  Some parts of this repository may still contain VirtualDisgrace-specific links or wording.  Those will be cleaned up.  In the meantime, we encourage you to dive in and help!  Check out the [open issues](https://github.com/OpenCollarTeam/OpenCollar/issues).  Pull requests welcome.
-
 ### Welcome to OpenCollar
 
-OpenCollar is a set of LSL scripts and other creative content, such as animations, sounds, textures, graphics and 3D models, which can be used to create role play devices in the form of scripted accessory and/or so-called HUDs.
+OpenCollar is a set of LSL scripts and related content (such as animations,
+sounds, textures, graphics and 3D models) created for SecondLife.  It has many
+features, but most are centered on one avatar voluntarily giving some degree of
+control to another.
 
-Punk, goth and fetish collars would be the most popular of those and OpenCollar eventually became everyone's script set of choice to create items that are used for creative role play amongst adults in Second Life®.
+### OpenCollar Needs Your Help
+
+OpenCollar is non-profit and community driven.  Its creators and maintainers
+donate their time and talents free of charge.  If you would like to give back,
+consider taking a look at our [open
+issues](https://github.com/OpenCollarTeam/OpenCollar/issues) and see where you
+can pitch in.  You can also join the official OpenCollar group in Second Life
+and ask the community there how you can help support the project.
 
 #### Finding your way around this repo
 
-At the moment this repository is separated into resources, source code and web queries. The directory names are self-explanatory and each has a readme attached that tells about specific details. Resource subdirectories inform which file formats we work with and point to other free software that can be used to create such content.
+This repository is separated into resources, source code and web queries. The
+directory names are self-explanatory and each has a readme attached that tells
+about specific details. Resource subdirectories inform which file formats we
+work with and point to other free software that can be used to create such
+content.
 
 ```
 ./opencollar/
@@ -22,7 +32,7 @@ At the moment this repository is separated into resources, source code and web q
         > sounds: Sounds as .wav and .aup binaries.
         > textures: Images as .png and .xcf binaries.
 
-    > src: Source code of the OpenCollar role play device.
+    > src: Source code
 
         > ao: The source code for the animation overrider.
         > collar: The source code for the collar device.
@@ -35,20 +45,8 @@ At the moment this repository is separated into resources, source code and web q
 
 #### Licensing Information
 
-OpenCollar source code and creative resource are covered by free software, free culture and permissive open-source software licenses. Each script is its own program and compiles individually.
-
-* Most LSL scripts are licensed as and must remain under the [GNU General Public License, version 2](http://www.gnu.org/licenses/gpl-2.0).
-
-* The unmodified LSL scripts ``oc_root``, ``oc_lock``, ``oc_stealth`` and ``oc_update`` have the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
-
-* Some creative content is licensed as and must remain under the [Creative Commons Attribution-ShareAlike 4.0 International Public License](https://creativecommons.org/licenses/by-sa/4.0/).
-
-* Everything else that is shared within the metaverse and where no explicit license was applied is covered by the [License Terms for the OpenCollar Role Play Device](https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/LICENSE).
-
-**NOTE:** Please make sure that you have read and understood the full legal text of each license if your interest in OpenCollar goes beyond personal use (i.e. commercial redistribution). For human-readable summaries of various licenses, check out [tl;drLegal](https://tldrlegal.com/)
-
-**A few words on authorship, years and copyright:**
-
-OpenCollar source code has been composed by many different authors and while not all authors composed something in every year since 2008, we chose to state copyright as year spans (i.e. Copyright (c) 2008 - 2017) in our copyright notice.
-
-We chose to do that in order to save space in a already cramped screen environment with in-world LSL editors. Nevertheless, we tried our best to make all authors appear in order of appearance if read from left to right. <3
+Scripts are all under the [GNU General Public License, version
+2](http://www.gnu.org/licenses/gpl-2.0).  Other resources are either public
+domain or under the [Creative Commons Attribution-ShareAlike 4.0 International
+Public License](https://creativecommons.org/licenses/by-sa/4.0/)  For full
+details, see the LICENSE file.

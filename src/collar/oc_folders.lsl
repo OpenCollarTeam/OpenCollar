@@ -1,56 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                           Folders - 171102.1                             //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
-//  Medea Destiny, Romka Swallowtail, littlemousy, Sumi Perl,               //
-//  Garvin Twine et al.                                                     //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 string g_sParentMenu = "RLV";
 
@@ -103,10 +53,10 @@ string UPMENU = "BACK";
 
 // Folder actions
 
-//string REPLACE_ALL = "Replace all";
+string REPLACE_ALL = "Replace all";
 string ADD_ALL = "Add all";
 string DETACH_ALL = "Detach all";
-//string REPLACE = "Replace this";
+string REPLACE = "Replace this";
 string ADD = "Add this";
 string DETACH = "Detach this";
 string LOCK_ATTACH_ALL = "Lock att. all";
@@ -228,7 +178,7 @@ HistoryMenu(key kAv, integer iAuth) {
 
 RootActionsMenu(key kAv, integer iAuth) {
     list lActions = [lockUnsharedButton(0, iAuth), lockUnsharedButton(1, iAuth), "Save", "Restore"];
-    string sPrompt = "\n[http://www.opencollar.at/folders.html RLV Folders]\n\nYou are at the #RLV shared root.\n\nFrom here, you can restrict wearing or removing not shared items, you can also save the list of worn shared folders or make the currently saved list be worn again.\n\nWhat do you want to do?";
+    string sPrompt = "\n[RLV Folders]\n\nYou are at the #RLV shared root.\n\nFrom here, you can restrict wearing or removing not shared items, you can also save the list of worn shared folders or make the currently saved list be worn again.\n\nWhat do you want to do?";
     Dialog(kAv, sPrompt, lActions, [UPMENU], 0, iAuth, "RootActions");
 }
 
@@ -255,7 +205,7 @@ FolderActionsMenu(integer iState, key kAv, integer iAuth) {
         if ( iStateSub == 2 || iStateSub == 3) // there are items that can be removed from descendant folders
             lActions += [DETACH_ALL,  lockFolderButton(iLock, 3, iAuth)];
     }
-    string sPrompt = "\n[http://www.opencollar.at/folders.html RLV Folders]\n\nCurrent folder is ";
+    string sPrompt = "\n[RLV Folders]\n\nCurrent folder is ";
     if (g_sCurrentFolder == "") sPrompt += "root";
     else sPrompt += g_sCurrentFolder;
     sPrompt += ".\n";
@@ -280,7 +230,7 @@ string folderIcon(integer iState) {
     else sOut += " ";
     return sOut;
 }
-/*
+
 integer StateFromButton(string sButton) {
     string sIconThis = llGetSubString(sButton, 0, 0);
     string sIconSub = llGetSubString(sButton, 1, 1);
@@ -297,7 +247,7 @@ integer StateFromButton(string sButton) {
 
 string FolderFromButton(string sButton) {
     return llToLower(llGetSubString(sButton, 2, -1));
-}*/
+}
 
 updateFolderLocks(string sFolder, integer iAdd, integer iRem) {
 // adds and removes locks for sFolder, which implies saving to central settings and triggering a RLV command (dolockFolder)
@@ -366,7 +316,7 @@ doLockUnshared() { // sends command to the viewer to update all locks concerning
 FolderBrowseMenu(string sStr) {
     g_iAsyncMenuRequested = FALSE;
     list lUtilityButtons = [UPMENU];
-    string sPrompt = "\n[http://www.opencollar.at/folders.html RLV Folders]\n\nCurrent folder is ";
+    string sPrompt = "\n[RLV Folders]\n\nCurrent folder is ";
     if (g_sCurrentFolder == "") sPrompt += "root";
     else sPrompt += g_sCurrentFolder;
     sPrompt += ".\n";
@@ -401,7 +351,7 @@ FolderBrowseMenu(string sStr) {
     sPrompt += "- Click "+UPMENU+" to go back to "+g_sParentMenu+".\n";
     Dialog(g_kAsyncMenuUser, sPrompt, lFolders, lUtilityButtons, g_iPage, g_iAsyncMenuAuth, "FolderBrowse");
 }
-/*
+
 SaveFolder(string sStr) {
     list sData = llParseString2List(sStr, [","], []);
     integer i;
@@ -428,7 +378,7 @@ SaveFolder(string sStr) {
             llMessageLinked(LINK_RLV, g_iAsyncMenuAuth, "menu "+g_sParentMenu, g_kAsyncMenuUser);
         }
     }
-}*/
+}
 
 handleMultiSearch() {
     string sItem=llList2String(g_lSearchList,0);
@@ -510,20 +460,20 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sPattern = llDeleteSubString(sStr,0, 4);
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Searching folder containing string \"" + sPattern + "\" for browsing.",g_kWearer);
         searchSingle(sPattern);
-    }/* else if (sStr=="save") {
+    } else if (sStr=="save") {
         g_sCurrentFolder = "";
         g_lOutfit=[];
         g_lToCheck=[];
         QueryFolders("save");
         //if (sCommand == "menu") SetAsyncMenu(kID, iNum);
         g_kAsyncMenuUser = kID; // needed for notifying
-    } else if (sStr=="restore") {//|| sStr=="menu Restore")  {
+    } else if (sStr=="restore"/*|| sStr=="menu Restore"*/)  {
         integer i = 0; integer n = llGetListLength(g_lOutfit);
         for (; i < n; ++i)
             llMessageLinked(LINK_RLV,RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Saved outfit has been restored.",kID);
         //if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
-    }*/ else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&") {
+    } else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&") {
         g_kAsyncMenuUser = kID;
         g_lSearchList=llParseString2List(sStr,[","],[]);
         handleMultiSearch();
@@ -546,7 +496,7 @@ default {
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
         FailSafe();
-        //Debug("Started");
+        //Debug("Starting");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -590,8 +540,8 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     if (sMessage == UPMENU) {
                         SetAsyncMenu(kAv, iAuth); QueryFolders("browse");
                         return;
-                    }// else if (sMessage == "Save") UserCommand(iAuth, "save", kAv);
-                   // else if (sMessage == "Restore") UserCommand(iAuth, "restore", kAv);
+                    } else if (sMessage == "Save") UserCommand(iAuth, "save", kAv);
+                    else if (sMessage == "Restore") UserCommand(iAuth, "restore", kAv);
                     else if (sMessage == lockUnsharedButton(0, 0)) {
                         if (g_iUnsharedLocks & 0x1) {
                             updateUnsharedLocks(0x0, 0x1);
@@ -623,17 +573,8 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     } else if (sMessage == PARENT)
                         ParentFolder();
                     else { //we got a folder.  send the RLV command to remove/attach it.
-                        string sIconThis = llGetSubString(sMessage, 0, 0);
-                        string sIconSub = llGetSubString(sMessage, 1, 1);
-                        integer iState;
-                        if (sIconThis == "◻") iState = 1;
-                        else if (sIconThis == "◩") iState = 2;
-                        else if (sIconThis == "◼") iState = 3;
-                        iState *= 10;
-                        if (sIconSub == "◻") iState +=1;
-                        else if (sIconSub == "◩") iState +=2;
-                        else if (sIconSub == "◼") iState += 3;
-                        string folder = llToLower(llGetSubString(sMessage,2,-1));
+                        integer iState = StateFromButton(sMessage);
+                        string folder = FolderFromButton(sMessage);
                         if (g_sCurrentFolder == "") g_sCurrentFolder = folder;
                         else g_sCurrentFolder  += "/" + folder;
                         if ((iState % 10) == 0) { // open actions menu if requested folder does not have subfolders
@@ -648,20 +589,20 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     if (sMessage == ADD) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachover:" + g_sCurrentFolder + "=force", NULL_KEY);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now adding "+g_sCurrentFolder,kAv);
-                    } /*else if (sMessage == REPLACE) {
+                    } else if (sMessage == REPLACE) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attach:" + g_sCurrentFolder + "=force", NULL_KEY);
                         addToHistory(g_sCurrentFolder);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now attaching "+g_sCurrentFolder,kAv);
-                    }*/ else if (sMessage == DETACH) {
+                    } else if (sMessage == DETACH) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "detach:" + g_sCurrentFolder + "=force", NULL_KEY);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now detaching "+g_sCurrentFolder,kAv);
                     } else if (sMessage == ADD_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachallover:" + g_sCurrentFolder + "=force", NULL_KEY);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now adding everything in "+g_sCurrentFolder,kAv);
-                    }/* else if (sMessage == REPLACE_ALL) {
+                    } else if (sMessage == REPLACE_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "attachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now attaching everything in "+g_sCurrentFolder,kAv);
-                    }*/ else if (sMessage == DETACH_ALL) {
+                    } else if (sMessage == DETACH_ALL) {
                         llMessageLinked(LINK_RLV,RLV_CMD, "detachall:" + g_sCurrentFolder  + "=force", NULL_KEY);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now detaching everything in "+g_sCurrentFolder,kAv);
                     } else if (sMessage == lockFolderButton(0x00, 0, 0)) {
@@ -746,15 +687,12 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     g_sCurrentFolder = "";
                     g_iPage = 0;
                     QueryFolders("browse");
-                } else {
-                    if (llStringLength(sMsg) == 1023) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nATTENTION: Either some of the names of your folders are too long, or there are too many folders in your current #RLV directory. This could lead to gaps in your #RLV folder index. For best operability, please consider reducing the overall amount of subfolders within the #RLV directory and use shorter names.\n",g_kWearer);
-                    FolderBrowseMenu(sMsg);
-                }
+                } else FolderBrowseMenu(sMsg);
             } else if (g_sFolderType=="history") {
                 list sData = llParseStringKeepNulls(sMsg, [",", "|"], []);
                 integer iState = llList2Integer(sData, 1);
                 FolderActionsMenu(iState, g_kAsyncMenuUser, g_iAsyncMenuAuth);
-            }// else if (g_sFolderType=="save") SaveFolder(sMsg);
+            } else if (g_sFolderType=="save") SaveFolder(sMsg);
             else if (llGetSubString(g_sFolderType,0,5)=="search") {
                 if (sMsg=="") llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg+"No folder found.",g_kAsyncMenuUser);
                 else if (llGetSubString(g_sFolderType,6,-1)=="browse") {

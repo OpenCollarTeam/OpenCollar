@@ -1,56 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                          Animator - 171116.2                             //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
-//  Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,  //
-//  Sumi Perl, Romka Swallowtail, littlemousy, North Glenwalker et al.      //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 //needs to handle anim requests from sister scripts as well
 //this script as essentially two layers
@@ -158,7 +108,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 AnimMenu(key kID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/animations.html Animations]\n\n%WEARERNAME%";
+    string sPrompt = "\n[Animations]\n\n%WEARERNAME%";
     list lButtons;
 
     if (g_iAnimLock) {
@@ -180,13 +130,13 @@ AnimMenu(key kID, integer iAuth) {
     if (g_iTweakPoseAO) lButtons += ["☑ AntiSlide"];
     else lButtons += ["☐ AntiSlide"];
 
-    lButtons += ["AO Menu", "AO ON", "AO OFF", "Pose", "Couples"];
+    lButtons += ["AO Menu", "AO ON", "AO OFF", "Pose"];
 
     Dialog(kID, sPrompt, lButtons+g_lAnimButtons, ["BACK"], 0, iAuth, "Anim");
 }
 
 PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
-    string sPrompt = "\n[http://www.opencollar.at/animations.html Pose]\n\nCurrently playing: ";
+    string sPrompt = "\n[Pose]\n\nCurrently playing: ";
     if (g_sCurrentPose == "")sPrompt += "-\n";
     else {
         string sActivePose = g_sCurrentPose;
@@ -269,37 +219,9 @@ integer SetPosture(integer iOn, key kCommander) {
         g_iPosture=iOn;
         return TRUE;
     } else {
-        //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
         return FALSE;
     }
-}
-
-SetHover(string sStr) {
-    float fNewHover = g_fHoverIncrement;
-    if (sStr == "↓" || sStr == "hoverdown") fNewHover = -fNewHover;
-    if (g_sCurrentPose == "") {
-        g_fStandHover += fNewHover;
-        fNewHover = g_fStandHover;
-        if (g_fStandHover) 
-            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_standhover="+(string)g_fStandHover,"");
-        else
-            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"offset_standhover","");
-        jump next;
-    }
-    integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
-    if (~index) {
-        fNewHover = fNewHover + llList2Float(g_lHeightAdjustments,index+1);
-        if (fNewHover)
-            g_lHeightAdjustments = llListReplaceList(g_lHeightAdjustments,[fNewHover],index+1,index+1);
-        else
-            g_lHeightAdjustments = llDeleteSubList(g_lHeightAdjustments,index,index+1);
-    } else {
-        fNewHover += g_fStandHover;
-        g_lHeightAdjustments += [g_sCurrentPose,fNewHover];
-    }
-    @next;
-    llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
-    llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
 }
 
 MessageAOs(string sONOFF, string sWhat){ //send string as "ON"  / "OFF" saves 2 llToUpper
@@ -316,7 +238,7 @@ RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and
             StartAnim(llList2String(g_lAnims, 0));
            // string sAnim = llList2String(g_lAnims, 0);
            // if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) StartAnim(sAnim);  //get and stop currently playing anim
-        } //else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Permission to animate lost. Try taking me off and re-attaching me.",g_kWearer);
+        } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Permission to animate lost. Try taking me off and re-attaching me.",g_kWearer);
     }
 }
 
@@ -328,7 +250,7 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
             PlayAnim(sAnim);
             MessageAOs("OFF","STAND");
         }
-    } //else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
+    } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
 
 PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods configured for each
@@ -360,7 +282,7 @@ StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAni
             if (llGetListLength(g_lAnims)) PlayAnim(llList2String(g_lAnims, 0));
             else MessageAOs("ON","STAND");
         }
-    } //else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
+    } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
 
 UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods configured for each
@@ -423,7 +345,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
     } else if (sStr == "animations") AnimMenu(kID, iNum);
     else if (sStr == "pose") PoseMenu(kID, 0, iNum);
-    else if (!llSubStringIndex(sCommand,"hover")) SetHover(sCommand);
     else if (sStr == "runaway" && (iNum == CMD_OWNER || iNum == CMD_WEARER)) {
         if (g_sCurrentPose != "") StopAnim(g_sCurrentPose);
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"currentpose", "");
@@ -493,7 +414,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"TweakPoseAO=1" , "");
                     RefreshAnim();
                     llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide is now enabled.", kID);
-                } else llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required. www.opencollar.at/ao\n", kID);
+                } else llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required.\n", kID);
             } else if (sValue == "off") {
                 g_iTweakPoseAO = 0;
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"TweakPoseAO", "");
@@ -634,9 +555,9 @@ default {
                         llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu Main", kAv);
                     else if (sMessage == "Pose") PoseMenu(kAv, 0, iAuth);
                     else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
-                    else if (sMessage == "Couples") llMessageLinked(LINK_THIS,iAuth,"menu Couples",kAv);  // SA: can be child scripts menus, not handled in UserCommand()
+                    else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n\nwww.opencollar.at/ao\n", kAv);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n", kAv);
                         AOMenu(kAv, iAuth);
                     } else {
                         if (sMessage== "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
@@ -649,7 +570,31 @@ default {
                 } else if (sMenuType == "Pose") {
                     if (sMessage == "BACK") AnimMenu(kAv, iAuth);
                     else if (sMessage == "↑" || sMessage == "↓") {
-                        SetHover(sMessage);
+                        float fNewHover = g_fHoverIncrement;
+                        if (sMessage == "↓") fNewHover = -fNewHover;
+                        if (g_sCurrentPose == "") {
+                            g_fStandHover += fNewHover;
+                            fNewHover = g_fStandHover;
+                            if (g_fStandHover) 
+                                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_standhover="+(string)g_fStandHover,"");
+                            else
+                                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"offset_standhover","");
+                            jump next;
+                        }
+                        integer index = llListFindList(g_lHeightAdjustments,[g_sCurrentPose]);
+                        if (~index) {
+                            fNewHover = fNewHover + llList2Float(g_lHeightAdjustments,index+1);
+                            if (fNewHover)
+                                g_lHeightAdjustments = llListReplaceList(g_lHeightAdjustments,[fNewHover],index+1,index+1);
+                            else
+                                g_lHeightAdjustments = llDeleteSubList(g_lHeightAdjustments,index,index+1);
+                        } else {
+                            fNewHover += g_fStandHover;
+                            g_lHeightAdjustments += [g_sCurrentPose,fNewHover];
+                        }
+                        @next;
+                        llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)fNewHover+"=force",g_kWearer);
+                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"offset_hovers="+llDumpList2String(g_lHeightAdjustments,","),"");
                         PoseMenu(kAv, iPage, iAuth);
                     } else {
                         if (sMessage == "STOP") UserCommand(iAuth, "release", kAv);

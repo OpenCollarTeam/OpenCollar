@@ -1,61 +1,11 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//       _   ___     __            __  ___  _                               //
-//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
-//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
-//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
-//                                             /___/                        //
-//                                                                          //
-//                                        _                                 //
-//                                        \`*-.                             //
-//                                         )  _`-.                          //
-//                                        .  : `. .                         //
-//                                        : _   '  \                        //
-//                                        ; *` _.   `*-._                   //
-//                                        `-.-'          `-.                //
-//                                          ;       `       `.              //
-//                                          :.       .        \             //
-//                                          . \  .   :   .-'   .            //
-//                                          '  `+.;  ;  '      :            //
-//                                          :  '  |    ;       ;-.          //
-//                                          ; '   : :`-:     _.`* ;         //
-//     OpenCollar AO - 170620.1          .*' /  .*' ; .*`- +'  `*'          //
-//                                       `*-*   `*-*  `*-*'                 //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven,  //
-//  Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.     //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//         github.com/OpenCollarTeam/opencollar/tree/master/src/ao         //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sFancyVersion = "⁶⋅⁶⋅⁰";
-float g_fBuildVersion = 170818.1;
+
+string g_sFancyVersion = "⁶⋅⁴⋅⁰";
+float g_fBuildVersion = 161029.1;
 integer g_iUpdateAvailable;
 key g_kWebLookup;
-integer g_iToday;
-integer g_iLastDay;
 
 integer g_iInterfaceChannel = -12587429;
 integer g_iHUDChannel = -1812221819;
@@ -338,8 +288,8 @@ list SortButtons(list lButtons, list lStaticButtons) {
 }
 
 MenuAO(key kID) {
-    string sPrompt = "\n[http://www.opencollar.at/ao.html OpenCollar AO]\t"+g_sFancyVersion;
-    if (g_iUpdateAvailable) sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n\nwww.opencollar.at/updates";
+    string sPrompt = "\n[OpenCollar AO]\t"+g_sFancyVersion;
+    if (g_iUpdateAvailable) sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     list lButtons = ["LOCK"];
     if (g_iLocked) lButtons = ["UNLOCK"];
     if (kID == g_kWearer) lButtons += "Collar Menu";
@@ -445,7 +395,7 @@ TranslateCollarCMD(string sCommand, key kID){
                 DoStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
-            if (g_iAO_ON) SetAnimOverride();
+            SetAnimOverride();
             g_iStandPause = FALSE;
         }
     } else if (~llSubStringIndex(sCommand,"menu")) {
@@ -534,11 +484,7 @@ default {
         if (g_kWearer != llGetOwner()) llResetScript();
         if (g_iLocked) llOwnerSay("@detach=n");
         g_iReady = FALSE;
-        g_iToday = (integer)llGetSubString(llGetDate(),-2,-1);
-        if (g_iToday % 2) {
-            g_iLastDay = g_iToday;
-            g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/web/~ao",[HTTP_METHOD,"GET"],"");
-        }
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~ao", [HTTP_METHOD, "GET"],"");
         llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
     }
 

@@ -7,9 +7,5 @@ Scalar animations are poses that exclusively alter the hip joint in the second f
 To prevent the collar from listing an animation in the pose menu, we can add a tilde in front of the pose name.
 * i.e. ~-30.bvh
 
-We will add further description in the readme here.
-
 Information:
-* [Second Life JIRA](https://jira.secondlife.com/browse/SUN-38)
-* [Recently blogged](http://www.opencollar.at/blog/news-on-height-offset)
-  
+* [Second Life® JIRA](https://jira.secondlife.com/browse/SUN-38)

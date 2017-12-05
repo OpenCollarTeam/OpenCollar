@@ -79,6 +79,7 @@ appearance:
 - Garvin Twine (aka Otto)
 - Silkie Sabra
 - littlemousy
+- Medea Destiny
 - Sumi Perl
 - Ray Zopf
 - Toy Wylie
@@ -121,7 +122,7 @@ for the overall OpenCollar project, the funds it collected were dedicated to
 project expenses like tier and web hosting fees.
 
 In the time before Wendy started maintaining the project, Athy and I saw a
-number of people try to subvert its commitment to openness for its own profit.
+number of people try to subvert its commitment to openness for their own profit.
 Some of these were outside creators with far-fetched ideas, while others were
 insiders who saw an opportunity to use the OpenCollar name to promote their
 products in ways not available to their competitors.  When I removed the
@@ -164,7 +165,7 @@ This was concerning.  Imagine the feeling of coming home from vacation and
 seeing that your housesitter had locked you out of your own house and changed
 the locks.  Without a view into the account's transactions, I had no way of
 ensuring that funds were still going to the project's stated mission.  I asked
-Wendy about this, and she told me mysteriously told me to talk to Otto/Garvin
+Wendy about this, and she mysteriously told me to talk to Otto/Garvin
 Twine.  After some more discussion,  she walked me through the systems then in
 use for distributing funds.  I was satisfied that she was doing so honestly,
 with one exception.  I saw that 50% of all tips to the "OpenCollar" tip boards
@@ -203,3 +204,4 @@ It was OpenCollar's commitment to openness and community that initially
 attracted the surge of involvement that the project has seen.  I'm confident
 that holding to those values will continue to attract people who want to give
 back to the rest of the Second Life community.
+

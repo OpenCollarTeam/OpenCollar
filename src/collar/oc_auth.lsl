@@ -1,56 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                          Authorizer - 171116.2                           //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
-//  Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,       //
-//  Medea Destiny, littlemousy, Romka Swallowtail, Sumi Perl et al.         //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 
 string g_sWearerID;
@@ -121,15 +71,14 @@ string UPMENU = "BACK";
 
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
-integer g_iVanilla; // self-owned wearers
-string g_sFlavor = "Vanilla";
+integer g_iOwnSelf; // self-owned wearers
+string g_sFlavor = "OwnSelf";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
 //key REQUEST_KEY;
 integer g_iFirstRun;
-integer g_iIsLED;
 
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
@@ -166,14 +115,14 @@ Dialog(string sID, string sPrompt, list lChoices, list lUtilityButtons, integer 
 }
 
 AuthMenu(key kAv, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/access.html Access & Authorization]";
+    string sPrompt = "\n[Access & Authorization]";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
 
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☑"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iVanilla) lButtons += g_sFlavor+" ☑";    //add wearer as owner
+    if (g_iOwnSelf) lButtons += g_sFlavor+" ☑";    //add wearer as owner
     else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
@@ -203,6 +152,14 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
+OwnSelfOff(key kID) {
+    g_iOwnSelf = FALSE;
+    if (kID == g_sWearerID)
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kID);
+    else
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% does no longer own themselves.\n",kID);
+}
+
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     list lPeople;
     if (sToken=="owner") lPeople=g_lOwner;
@@ -220,10 +177,12 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     } else {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
+            if (sToken == "owner" && sPersonID == g_sWearerID) OwnSelfOff(kCmdr);
             lPeople = llDeleteSubList(lPeople,index,index);
             if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
             iFound = TRUE;
         } else if (llToLower(sPersonID) == "remove all") {
+            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])) OwnSelfOff(kCmdr);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
             lPeople = [];
             iFound = TRUE;
@@ -268,7 +227,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
                 return;
             } else if (sPersonID==g_sWearerID) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% vanilla on\n",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% ownself on\n",kID);
                 return;
             }
         } else if (sToken=="tempowner") {
@@ -292,6 +251,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         } else return;
         if (! ~llListFindList(lPeople, [sPersonID])) { //owner is not already in list.  add him/her
             lPeople += sPersonID;
+            if (sPersonID == g_sWearerID && sToken == "owner") g_iOwnSelf = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" is already registered as "+sToken+".",kID);
             return;
@@ -308,13 +268,15 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         }
         if (sToken == "owner") {
             if (sPersonID == g_sWearerID) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% vanilla on\n",kID);
-                return;
+                if (kID == g_sWearerID)
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nCongratulations, you own yourself now.\n",g_sWearerID);
+                else
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is their own Owner now.\n",kID);
             } else
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [http://www.opencollar.at/congratulations.html here] what that means!\n",sPersonID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [here] what that means!\n",sPersonID);
         }
         if (sToken == "trust")
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [http://www.opencollar.at/congratulations.html here] what that means!\n",sPersonID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [here] what that means!\n",sPersonID);
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         if (sToken=="owner") {
@@ -331,17 +293,30 @@ SayOwners() {  // Give a "you are owned by" message, nicely formatted.
     integer iCount = llGetListLength(g_lOwner);
     if (iCount) {
         list lTemp = g_lOwner;
-        integer index;
+        integer index = llListFindList(lTemp, [g_sWearerID]);
+        //if wearer is also owner, move the key to the end of the list.
+        if (~index) lTemp = llDeleteSubList(lTemp,index,index) + [g_sWearerID];
         string sMsg = "You belong to ";
-        if (iCount == 1) sMsg += NameURI(llList2String(lTemp,0))+".";
-        else if (iCount == 2)
-            sMsg +=  NameURI(llList2String(lTemp,0))+" and "+NameURI(llList2Key(lTemp,1))+".";
-        else {
+        if (iCount == 1) {
+            if (llList2Key(lTemp,0)==g_sWearerID)
+                sMsg += "yourself.";
+            else
+                sMsg += NameURI(llList2String(lTemp,0))+".";
+        } else if (iCount == 2) {
+            sMsg +=  NameURI(llList2String(lTemp,0))+" and ";
+            if (llList2String(lTemp,1)==g_sWearerID)
+                sMsg += "yourself.";
+            else
+                sMsg += NameURI(llList2Key(lTemp,1))+".";
+        } else {
             index=0;
             do {
                 sMsg += NameURI(llList2String(lTemp,index))+", ";
                 index+=1;
             } while (index<iCount-1);
+            if (llList2String(lTemp,index) == g_sWearerID)
+                sMsg += "and yourself.";
+            else
                 sMsg += "and "+NameURI(llList2String(lTemp,index))+".";
         }
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg,g_sWearerID);
@@ -360,7 +335,7 @@ integer in_range(key kID) {
 integer Auth(string sObjID, integer iAttachment) {
     string sID = (string)llGetOwnerKey(sObjID); // if sObjID is an avatar key, then sID is the same key
     integer iNum;
-    if (~llListFindList(g_lOwner+g_lTempOwner,[sID]) || (sID == g_sWearerID && g_iVanilla))
+    if (~llListFindList(g_lOwner+g_lTempOwner, [sID]))
         iNum = CMD_OWNER;
     else if (llGetListLength(g_lOwner+g_lTempOwner) == 0 && sID == g_sWearerID)
         //if no owners set, then wearer's cmds have owner auth
@@ -433,36 +408,23 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Blocked: "+sOutput,kID);
             //if (g_sGroupName) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: "+g_sGroupName,kID);
             if (g_kGroup) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: secondlife:///app/group/"+(string)g_kGroup+"/about",kID);
-            if (g_iVanilla) sOutput = g_sFlavor+" Mode: enabled";
-            else sOutput = g_sFlavor+" Mode: disabled";
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOutput,kID);
             sOutput="closed";
             if (g_iOpenAccess) sOutput="open";
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public Access: "+ sOutput,kID);
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sCommand == "vanilla" || sCommand == llToLower(g_sFlavor)) {
+    } else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
-                g_iVanilla = TRUE;
-                //UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
-                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"vanilla=1","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vanilla enabled.",kID);
+                //g_iOwnSelf = TRUE;
+                UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
             } else if (sAction == "off") {
-                g_iVanilla = FALSE;
-                //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
-                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"vanilla","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Vanilla disabled.",kID);
-                if (iRemenu && kID == g_sWearerID) iNum = Auth(kID,FALSE);
-            } else {
-                sStr = "disabled.";
-                if (g_iVanilla) sStr = "enabled.";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Vanilla is currently "+sStr,kID);
+                g_iOwnSelf = FALSE;
+                UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
             }
-            
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%", kID);
-        if (iRemenu) AuthMenu(kID, iNum);
+         if (iRemenu) AuthMenu(kID, iNum);
     } else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
@@ -592,17 +554,14 @@ default {
         }*/
         //llSetMemoryLimit(65536);
         g_sWearerID = llGetOwner();
-        if (!llSubStringIndex(llGetObjectDesc(),"LED")) g_iIsLED = TRUE;
         llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
         //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
-            if (g_iIsLED) {
-                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-                llSetTimerEvent(0.22);
-            }
+            llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+            llSetTimerEvent(0.22);
             integer iAuth = Auth(kID, FALSE);
             if ( kID == g_sWearerID && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
@@ -624,12 +583,13 @@ default {
             integer i = llSubStringIndex(sToken, "_");
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
-                if (sToken == "owner")
+                if (sToken == "owner") {
                     g_lOwner = llParseString2List(sValue, [","], []);
-                else if (sToken == "tempowner")
+                    if (~llSubStringIndex(sValue,g_sWearerID)) g_iOwnSelf = TRUE;
+                    else g_iOwnSelf = FALSE;
+                } else if (sToken == "tempowner")
                     g_lTempOwner = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
-                else if (sToken == "vanilla") g_iVanilla = (integer)sValue;
                 else if (sToken == "group") {
                     g_kGroup = (key)sValue;
                     //check to see if the object's group is set properly
@@ -682,8 +642,8 @@ default {
                             "Group ☑","group off",
                             "Public ☐","public on",
                             "Public ☑","public off",
-                            g_sFlavor+" ☐","vanilla on",
-                            g_sFlavor+" ☑","vanilla off",
+                            g_sFlavor+" ☐","ownself on",
+                            g_sFlavor+" ☑","ownself off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];

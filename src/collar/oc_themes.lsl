@@ -1,55 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//       _   ___     __            __  ___  _                               //
-//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
-//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
-//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
-//                                             /___/                        //
-//                                                                          //
-//                                        _                                 //
-//                                        \`*-.                             //
-//                                         )  _`-.                          //
-//                                        .  : `. .                         //
-//                                        : _   '  \                        //
-//                                        ; *` _.   `*-._                   //
-//                                        `-.-'          `-.                //
-//                                          ;       `       `.              //
-//                                          :.       .        \             //
-//                                          . \  .   :   .-'   .            //
-//                                          '  `+.;  ;  '      :            //
-//                                          :  '  |    ;       ;-.          //
-//                                          ; '   : :`-:     _.`* ;         //
-//           Themes - 171111.1           .*' /  .*' ; .*`- +'  `*'          //
-//                                       `*-*   `*-*  `*-*'                 //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,       //
-//  Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy,  //
-//  Romka Swallowtail et al.                                                //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
@@ -132,10 +83,9 @@ list g_lThemes;
 integer g_iThemesNotecardLine;
 integer g_iLeashParticle;
 integer g_iLooks;
-integer g_iThemePage;
 
 //command list - used for check in UserCommand()
-list commands = ["themes", "color", "texture", "shiny", "glow", "looks"];
+list commands = ["themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -162,14 +112,14 @@ LooksMenu(key kID, integer iAuth) {
     Dialog(kID, "\nHere you can change cosmetic settings of the %DEVICETYPE%. \"Themes\" will also be applied to any matching cuffs.", ["Color","Glow","Shiny","Texture","Themes"], ["BACK"],0, iAuth, "LooksMenu~menu");
 }
 
-ThemeMenu(key kID, integer iAuth, integer iPage) {
+ThemeMenu(key kID, integer iAuth) {
     list lButtons;
     integer i;
     while (i < llGetListLength(g_lThemes)) {
         lButtons += llList2List(g_lThemes,i,i);
         i=i+2;
     }
-    Dialog(kID, "\n[http://www.opencollar.at/themes.html Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], iPage, iAuth, "ThemeMenu~themes");
+    Dialog(kID, "\n[Themes]\n\nChoose a visual theme for your %DEVICETYPE%.\n", lButtons, ["BACK"], 0, iAuth, "ThemeMenu~themes");
     lButtons=[];
 }
 
@@ -305,11 +255,12 @@ BuildElementsList(){
             //prim desc will be elementtype~notexture(maybe)
             list lParams = llParseString2List(llStringTrim(sElement,STRING_TRIM), ["~"], []);
             string sElementName=llList2String(lParams,0);
-            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow
+            integer iLinkFlags=0;  //bitmask. 1=notexture, 2=nocolor, 4=noshiny, 8=noglow, 16=nohide
             if (~llListFindList(lParams,["notexture"])) iLinkFlags = iLinkFlags | 1;
             if (~llListFindList(lParams,["nocolor"])) iLinkFlags = iLinkFlags | 2;
             if (~llListFindList(lParams,["noshiny"])) iLinkFlags = iLinkFlags | 4;
             if (~llListFindList(lParams,["noglow"])) iLinkFlags = iLinkFlags | 8;
+            if (~llListFindList(lParams,["nohide"])) iLinkFlags = iLinkFlags | 16;
 
             integer iElementIndex=llListFindList(g_lElements, [sElementName]);
             if (! ~iElementIndex ) {  //it's a new element, store it, and its flags, and a default texture
@@ -342,12 +293,8 @@ FailSafe() {
         llRemoveInventory(sName);
 }
 
-UserCommand(integer iNum, string sStr, key kID, integer reMenu, integer iPage) {
+UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
-    if (sStrLower == "rm themes") {
-        Dialog(kID,"\nDo you really want to uninstall the themes plugin?",["Yes","No","Cancel"],[],0,iNum,"rmThemes");
-        return;
-    }
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
     list lParams = llParseString2List(sStrLower, [" "], []);
     if (~llListFindList(commands, [llList2String(lParams,0)]) || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
@@ -366,21 +313,57 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu, integer iPage) {
                     g_iSetThemeAuth=iNum;
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sElement+" theme...",kID);
                     llMessageLinked(LINK_ROOT,601,"themes "+sElement,g_kWearer);
-                    g_iThemePage = iPage;
                     g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,g_iThemesNotecardLine);
                 } else if (g_kThemesCardUUID) {
-                    if (g_iThemesReady) ThemeMenu(kID,iNum,iPage);
+                    if (g_iThemesReady) ThemeMenu(kID,iNum);
                     else {
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Themes still loading...",kID);
                         if (g_iLooks) LooksMenu(kID, iNum);
                         else llMessageLinked(LINK_ROOT, iNum, "menu Settings", kID);
                     }
                 } else {
-                    Dialog(kID,"\n⚠ This %DEVICETYPE% has no dedicated themes configured for it\n\nYou can [Uninstall] the themes plugin to save resources\nor you can use the [Looks] menu to fine-tune your %DEVICETYPE%\n\nATTENTION:\n\nDevices that are properly configured for [Looks] don't show this warning. Please use [Looks] responsibly in this case as it could alter your %DEVICETYPE% permanently\n\nIn case of doubt simply [Uninstall] this plugin ❤\n\nwww.opencollar.at/themes",[],["Uninstall","Looks","BACK"],0,iNum,"NoThemesMenu");
+                    if (g_iLooks) LooksMenu(kID, iNum);
+                    else llMessageLinked(LINK_ROOT, iNum, "menu Settings", kID);
+                    llMessageLinked(LINK_DIALOG, NOTIFY,"0"+"This %DEVICETYPE% has no themes installed. You can type \"%PREFIX% looks\" to fine-tune your %DEVICETYPE% (NOTE: Basic building knowledge required.)",kID);
                 }
             } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
-            else if (sCommand == "shiny") {
+            else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
+                //get currently shown state
+                integer iCurrentlyShown;
+                if (sElement=="") sElement=g_sDeviceType;
+                if (sCommand == "show")       iCurrentlyShown = 1;
+                else if (sCommand == "hide")  iCurrentlyShown = 0;
+                else if (sCommand == "stealth") iCurrentlyShown = g_iCollarHidden;
+                if (sElement == g_sDeviceType) g_iCollarHidden = !iCurrentlyShown;  //toggle whole collar visibility
+
+                //do the actual hiding and re/de-glowing of elements
+                integer iLinkCount = llGetNumberOfPrims()+1;
+                while (iLinkCount-- > 1) {
+                    string sLinkType=LinkType(iLinkCount, "nohide");
+                    if (sLinkType == sElement || sElement==g_sDeviceType) {
+                        if (!g_iCollarHidden || sElement == g_sDeviceType ) {
+                            //don't change things if collar is set hidden, unless we're doing the hiding now
+                            llSetLinkAlpha(iLinkCount,(float)(iCurrentlyShown),ALL_SIDES);
+                            //update glow settings for this link
+                            integer iGlowsIndex = llListFindList(g_lGlows,[iLinkCount]);
+                            if (iCurrentlyShown){  //restore glow if it is now shown
+                                if (~iGlowsIndex) {  //if it had a glow, restore it, otherwise don't
+                                    float fGlow = (float)llList2String(g_lGlows, iGlowsIndex+1);
+                                    llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, fGlow]);
+                                }
+                            } else {  //save glow and switch it off if it is now hidden
+                                float fGlow = llList2Float(llGetLinkPrimitiveParams(iLinkCount,[PRIM_GLOW,0]),0) ;
+                                if (fGlow > 0) {  //if it glows, store glow
+                                    if (~iGlowsIndex) g_lGlows = llListReplaceList(g_lGlows,[fGlow],iGlowsIndex+1,iGlowsIndex+1) ;
+                                    else g_lGlows += [iLinkCount, fGlow];
+                                } else if (~iGlowsIndex) g_lGlows = llDeleteSubList(g_lGlows,iGlowsIndex,iGlowsIndex+1); //remove glow from list
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_GLOW, ALL_SIDES, 0.0]);  // set no glow;
+                            }
+                        }
+                    }
+                }
+            } else if (sCommand == "shiny") {
                 string sShiny=llList2String(lParams,2);
                 integer iShinyIndex=llListFindList(g_lShiny,[sShiny]);
                 if (~iShinyIndex) sShiny=(string)iShinyIndex;  //if found, convert string to index and overwrite supplied string
@@ -437,9 +420,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu, integer iPage) {
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
-                    if (reMenu) ColorMenu(kID, iPage, iNum, sCommand+" "+sElement);
+                    if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {
-                    ColorMenu(kID, iPage, iNum, sCommand+" "+sElement);
+                    ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             } else if (sCommand=="texture") {
                 //Debug("Texture command:"+sStr);
@@ -510,7 +493,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE,0);
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sID = llList2String(lParams, 0);
@@ -529,6 +512,11 @@ default {
                 i = llListFindList(g_lShinyDefaults, [sToken]);
                 if (~i) g_lShinyDefaults = llListReplaceList(g_lShinyDefaults, [sValue], i + 1, i + 1);
                 else g_lShinyDefaults += [sToken, sValue];
+            }
+            else if (sCategory == "hide_") {
+                i = llListFindList(g_lHideDefaults, [sToken]);
+                if (~i) g_lHideDefaults = llListReplaceList(g_lHideDefaults, [sValue], i + 1, i + 1);
+                else g_lHideDefaults += [sToken, sValue];
             }
             else if (sCategory == "color_") {
                 i = llListFindList(g_lColorDefaults, [sToken]);
@@ -551,7 +539,7 @@ default {
                     if (sMessage == "BACK") LooksMenu(kAv, iAuth);
                     else {
                         string sMenuType=llList2String(llParseString2List(sMenu,["~"],[]),1);
-                        UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE,iPage);
+                        UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);
                     /*  if (sMessage == "*Touch*") {
                             llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Please touch the part of the %DEVICETYPE% you want to change. Press ctr+alt+T to see invisible parts.",kAv);
                             key kTouchID = llGenerateKey();
@@ -561,16 +549,8 @@ default {
                             else g_lMenuIDs += [kID, kTouchID, sMenuType];
                         } else UserCommand(iAuth, sMenuType+" "+sMessage, kAv, TRUE);*/
                     }
-                } else if ((sMenu == "LooksMenu~menu" || sMenu == "NoThemesMenu") && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu Settings",kAv);
-                else if (sMenu == "NoThemesMenu") {
-                     if (sMessage == "Uninstall") UserCommand(iAuth,"rm themes",kAv,TRUE,iPage);
-                     else LooksMenu(kAv,iAuth);
-                } else if (sMenu == "rmThemes") {
-                    if (sMessage == "Yes") {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The themes plugin has been removed.",kAv);
-                        llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The themes plugin remains installed.",kAv);
-                } else {
+                } else if (sMenu == "LooksMenu~menu" && sMessage == "BACK") llMessageLinked(LINK_ROOT,iAuth,"menu Settings",kAv);
+                 else {
                     string sBreadcrumbs=llList2String(llParseString2List(sMenu,["~"],[]),1);
                     string sBackMenu=llList2String(llParseString2List(sBreadcrumbs,[" "],[]),0);
                     //Debug(sBreadcrumbs+" "+sMessage);
@@ -580,10 +560,10 @@ default {
                             else llMessageLinked(LINK_ROOT, iAuth, "menu Settings", kAv);
                         } else  ElementMenu(kAv, 0, iAuth, sBackMenu);
                     }
-                    else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE,iPage);
+                    else UserCommand(iAuth,sBreadcrumbs+" "+sMessage, kAv, TRUE);
                 }
             }
-        }/* else if (iNum == TOUCH_RESPONSE) {
+        } else if (iNum == TOUCH_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);  //we hid the touch request in the menu details... naughty!!
             if (iMenuIndex != -1) {  //got a response meant for us.  pull out values
                 list lParams = llParseString2List(sStr, ["|"], []);
@@ -603,7 +583,7 @@ default {
                     UserCommand(iAuth, sTouchType+" "+sElement, kAv, TRUE);
                 }
             }
-        }*/ else if (iNum == DIALOG_TIMEOUT) {
+        } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         } else if (iNum == LINK_UPDATE) {
@@ -650,7 +630,7 @@ default {
                            // else g_iLeashParticle = FALSE;
                             //llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
                             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
-                            UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE,g_iThemePage);
+                            UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
                             return;
                         }
                         g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
@@ -673,7 +653,7 @@ default {
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
                                 } else {
-                                    list commands = ["texture","color","shiny","glow"];
+                                    list commands = ["texture","color","shiny","glow","hide","show"];
                                     integer succes = 0;
                                     integer i;
                                     for (i = 1; i < llGetListLength(lParams); i++) {
@@ -683,7 +663,7 @@ default {
                                             string cmd = llList2String(params,0);
                                             sData = llList2String(params,1);
                                             if (llListFindList(commands, [cmd])!=-1) {
-                                                UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE,0);
+                                                UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                                 succes++;
                                             }
                                         }
@@ -692,7 +672,7 @@ default {
                                     if (succes==0) { // old themes format
                                         for (i = 0; i < 4; i++) {
                                             sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
-                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE,0);
+                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                         }
                                     }
                                 }
@@ -707,7 +687,7 @@ default {
                    // else g_iLeashParticle = FALSE;
                     //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Theme \""+g_sCurrentTheme+"\" applied!",g_kSetThemeUser);
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Applied!",g_kSetThemeUser);
-                    UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE,g_iThemePage);
+                    UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
                 } else {
                     g_iThemesReady = TRUE;
                     //Debug(llDumpList2String(g_lThemes,","));

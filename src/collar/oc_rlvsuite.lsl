@@ -1,54 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//       _   ___     __            __  ___  _                               //
-//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
-//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
-//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
-//                                             /___/                        //
-//                                                                          //
-//                                        _                                 //
-//                                        \`*-.                             //
-//                                         )  _`-.                          //
-//                                        .  : `. .                         //
-//                                        : _   '  \                        //
-//                                        ; *` _.   `*-._                   //
-//                                        `-.-'          `-.                //
-//                                          ;       `       `.              //
-//                                          :.       .        \             //
-//                                          . \  .   :   .-'   .            //
-//                                          '  `+.;  ;  '      :            //
-//                                          :  '  |    ;       ;-.          //
-//                                          ; '   : :`-:     _.`* ;         //
-//       RLV Suite - 171111.1            .*' /  .*' ; .*`- +'  `*'          //
-//                                       `*-*   `*-*  `*-*'                 //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,       //
-//  Garvin Twine, Romka Swallowtail et al.                                  //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 //menu setup
 string  RESTRICTION_BUTTON          = "Restrictions"; // Name of the submenu
@@ -145,7 +97,7 @@ integer g_iAuth;
 
 key g_kLastForcedSeat;
 string g_sLastForcedSeat;
-string g_sTerminalText = "\n[http://www.opencollar.at/rlv.html RLV Command Terminal]\n\nType one command per line without \"@\" sign.";
+string g_sTerminalText = "\n[RLV Command Terminal]\n\nType one command per line without \"@\" sign.";
 
 /*
 integer g_iProfiled=1;
@@ -204,7 +156,7 @@ SitMenu(key kID, integer iAuth) {
 
 
 RestrictionsMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n[http://www.opencollar.at/rlv.html Restrictions]";
+    string sPrompt = "\n[Restrictions]";
     list lMyButtons;
 
     if (g_iSendRestricted) lMyButtons += "☐ Send IMs";
@@ -251,7 +203,7 @@ OutfitsMenu(key kID, integer iAuth) {
 }
 
 FolderMenu(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[http://www.opencollar.at/outfits.html Outfits]";
+    string sPrompt = "\n[Outfits]";
     sPrompt += "\n\nCurrent Path = "+g_sCurrentPath;
     list lMyButtons = llParseString2List(sFolders,[","],[""]);
     lMyButtons = llListSort(lMyButtons, 1, TRUE);
@@ -267,7 +219,7 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
 }
 
 RemAttached(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[http://www.opencollar.at/outfits.html Outfits]";
+    string sPrompt = "\n[Outfits]";
     sPrompt += "\n\nRemove Attachment by Name";
     list lMyButtons = llParseString2List(sFolders,[","],[""]);
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "remattached");
@@ -761,7 +713,6 @@ default {
         llSetTimerEvent(0.0);
         //Debug((string)iChan+"|"+sName+"|"+(string)kID+"|"+sMsg);
         if (iChan == g_iFolderRLV) { //We got some folders to process
-            if (llStringLength(sMsg) == 1023) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nATTENTION: Either some of the names of your outfit folders are too long, or there are too many folders in your .outfits directory. This could lead to gaps in your outfits folder index. For best operability, please consider reducing the overall amount of subfolders within the .outfits directory and use shorter names.\n",g_kWearer);
             FolderMenu(g_kMenuClicker,g_iAuth,sMsg); //we use g_kMenuClicker to respond to the person who asked for the menu
             g_iAuth = CMD_EVERYONE;
         }

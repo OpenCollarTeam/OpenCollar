@@ -1,62 +1,16 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//       _   ___     __            __  ___  _                               //
-//      | | / (_)___/ /___ _____ _/ / / _ \(_)__ ___ ________ ________      //
-//      | |/ / / __/ __/ // / _ `/ / / // / (_-</ _ `/ __/ _ `/ __/ -_)     //
-//      |___/_/_/  \__/\_,_/\_,_/_/ /____/_/___/\_, /_/  \_,_/\__/\__/      //
-//                                             /___/                        //
-//                                                                          //
-//                                        _                                 //
-//                                        \`*-.                             //
-//                                         )  _`-.                          //
-//                                        .  : `. .                         //
-//                                        : _   '  \                        //
-//                                        ; *` _.   `*-._                   //
-//                                        `-.-'          `-.                //
-//                                          ;       `       `.              //
-//                                          :.       .        \             //
-//                                          . \  .   :   .-'   .            //
-//                                          '  `+.;  ;  '      :            //
-//                                          :  '  |    ;       ;-.          //
-//                                          ; '   : :`-:     _.`* ;         //
-//     Remote Bookmarks - 170525.1       .*' /  .*' ; .*`- +'  `*'          //
-//                                       `*-*   `*-*  `*-*'                 //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,    //
-//  Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,              //
-//  Romka Swallowtail, Garvin Twine, Mace68 et al.                          //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/remote       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sAppVersion = "¹⋅³";
+
+string g_sAppVersion = "¹⋅²";
 
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
+string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
+key webLookup;
+string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
 
 list   g_lDestinations                = []; //Destination list direct from static notecard
 list   g_lDestinations_Slurls         = []; //Destination list direct from static notecard
@@ -107,7 +61,7 @@ Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, strin
 }
 
 DoMenu() {
-    string sPrompt = "\n[http://www.opencollar.at/bookmarks.html Remote Bookmarks]\t"+g_sAppVersion;
+    string sPrompt = "\n[Remote Bookmarks]\t"+g_sAppVersion;
     list lMyButtons = PLUGIN_BUTTONS + g_lDestinations + g_lVolatile_Destinations;
     string sCancel;
     if (llGetListLength(lMyButtons) % 3) sCancel = "Cancel";
@@ -315,6 +269,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, "TextBoxIdLoca
 ReadDestinations() {
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
+    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     //start re-reading the notecards
     g_iLine = 0;
     if(llGetInventoryKey(g_sCard))
@@ -332,7 +287,7 @@ TeleportTo(string sStr) {  //take a string in region (x,y,z) format, and retriev
     g_kRequestHandle = llRequestSimulatorData(g_sRegion, DATA_SIM_POS);
 }
 
-PrintDestinations() {  // On inventory change, re-read our .bookmarks notecard
+PrintDestinations() {  // On inventory change, re-read our ~destinations notecard
     integer i;
     integer iLength = llGetListLength(g_lDestinations);
     string sMsg;
@@ -365,6 +320,28 @@ default {
         FailSafe();
         ReadDestinations(); //Grab our presets
         //Debug("Starting");
+    }
+
+    http_response(key id, integer status, list meta, string body) {
+        if(status == 200) {  // be silent on failures.
+            //      Debug(body);
+            if(id == webLookup) {
+                list lResponse;
+                lResponse = llParseString2List(body, ["\n"], [""]);
+                integer i = 0;
+                integer x = 0;
+                string sData;
+                list split;
+                x = llGetListLength(lResponse) - 1;
+                for(i = 0; i <= x; ++i) {
+                    sData = llStringTrim(llList2String(lResponse, i), STRING_TRIM);
+                    split = llParseString2List(sData, ["~"], []);
+                    g_lDestinations = [ llStringTrim(llList2String(split, 0), STRING_TRIM) ] + g_lDestinations;
+                    g_lDestinations_Slurls = [ llStringTrim(llList2String(split, 1), STRING_TRIM) ] + g_lDestinations_Slurls ;
+                }
+                //     Debug("Body: " + body);
+            }
+        }
     }
 
     dataserver(key kID, string sData) {

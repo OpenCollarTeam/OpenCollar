@@ -1,58 +1,8 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                           Titler - 170718.1                              //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,    //
-//  Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,            //
-//  Romka Swallowtail et al.                                                //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sAppVersion = "¹⋅⁵";
+
+string g_sAppVersion = "¹⋅⁴";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
@@ -165,17 +115,18 @@ UserCommand(integer iAuth, string sStr, key kAv) {
     string sCommand = llToLower(llList2String(lParams, 0));
     string sAction = llToLower(llList2String(lParams, 1));
     string sLowerStr = llToLower(sStr);
-    if (~llSubStringIndex(sLowerStr,"title") && g_iTextPrim == -10) {
-        Dialog(kAv,"\n[http://www.opencollar.at/titler.html Titler]\t"+g_sAppVersion+"\n\nThis %DEVICETYPE% is missing a FloatText element which is required to display and to adjust titles. Please visit [http://www.opencollar.at/titler.html this page] to learn how to add this element to your %DEVICETYPE% or click [Uninstall] below to remove the app.",["Uninstall"], [UPMENU],0, iAuth,"main");
-        return;
-    }
     if (sLowerStr == "menu titler" || sLowerStr == "titler") {
         string ON_OFF ;
         string sPrompt;
-        sPrompt = "\n[http://www.opencollar.at/titler.html Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
-        if(g_iOn == TRUE) ON_OFF = ON ;
-        else ON_OFF = OFF ;
-        Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth,"main");
+        if (g_iTextPrim == -1) {
+            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nThis design is missing a FloatText box. Titler disabled.";
+            Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
+        } else {
+            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
+            if(g_iOn == TRUE) ON_OFF = ON ;
+            else ON_OFF = OFF ;
+            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth,"main");
+        }
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
     } else if ((sCommand=="titler" || sCommand == "title") && sAction == "color") {
@@ -241,10 +192,10 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 default{
     state_entry(){
        // llSetMemoryLimit(36864);
-        FailSafe(); 
-        g_iTextPrim = -10;
+        FailSafe();
+        g_iTextPrim = -1 ;
         integer linkNumber = llGetNumberOfPrims()+1;
-        while (linkNumber-- > 2){
+        while (linkNumber-- >2){
             string desc = llList2String(llGetLinkPrimitiveParams(linkNumber, [PRIM_DESC]),0);
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
@@ -256,6 +207,11 @@ default{
             }
         g_kWearer = llGetOwner();
         //Debug("State Entry Event ended");
+
+        if (g_iTextPrim < 0) {
+            llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llRemoveInventory(llGetScriptName());
+        }
         ShowHideText();
     }
 
@@ -289,7 +245,6 @@ default{
                     if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
-                    else if (sMessage == "Uninstall") ConfirmDeleteMenu(kAv,iAuth);
                     else {
                         if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
                         else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);

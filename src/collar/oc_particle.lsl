@@ -1,56 +1,6 @@
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//              ____                   ______      ____                     //
-//             / __ \____  ___  ____  / ____/___  / / /___ ______           //
-//            / / / / __ \/ _ \/ __ \/ /   / __ \/ / / __ `/ ___/           //
-//           / /_/ / /_/ /  __/ / / / /___/ /_/ / / / /_/ / /               //
-//           \____/ .___/\___/_/ /_/\____/\____/_/_/\__,_/_/                //
-//               /_/                                                        //
-//                                                                          //
-//                        ,^~~~-.         .-~~~"-.                          //
-//                       :  .--. \       /  .--.  \                         //
-//                       : (    .-`<^~~~-: :    )  :                        //
-//                       `. `-,~            ^- '  .'                        //
-//                         `-:                ,.-~                          //
-//                          .'                  `.                          //
-//                         ,'   @   @            |                          //
-//                         :    __               ;                          //
-//                      ...{   (__)          ,----.                         //
-//                     /   `.              ,' ,--. `.                       //
-//                    |      `.,___   ,      :    : :                       //
-//                    |     .'    ~~~~       \    / :                       //
-//                     \.. /               `. `--' .'                       //
-//                        |                  ~----~                         //
-//                          Particle - 171111.1                             //
-// ------------------------------------------------------------------------ //
-//  Copyright (c) 2008 - 2017 Lulu Pink, Nandana Singh, Garvin Twine,       //
-//  Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, //
-//  littlemousy et al.                                                      //
-// ------------------------------------------------------------------------ //
-//  This script is free software: you can redistribute it and/or modify     //
-//  it under the terms of the GNU General Public License as published       //
-//  by the Free Software Foundation, version 2.                             //
-//                                                                          //
-//  This script is distributed in the hope that it will be useful,          //
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of          //
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the            //
-//  GNU General Public License for more details.                            //
-//                                                                          //
-//  You should have received a copy of the GNU General Public License       //
-//  along with this script; if not, see www.gnu.org/licenses/gpl-2.0        //
-// ------------------------------------------------------------------------ //
-//  This script and any derivatives based on it must remain "full perms".   //
-//                                                                          //
-//  "Full perms" means maintaining MODIFY, COPY, and TRANSFER permissions   //
-//  in Second Life(R), OpenSimulator and the Metaverse.                     //
-//                                                                          //
-//  If these platforms should allow more fine-grained permissions in the    //
-//  future, then "full perms" will mean the most permissive possible set    //
-//  of permissions allowed by the platform.                                 //
-// ------------------------------------------------------------------------ //
-//       github.com/OpenCollarTeam/opencollar/tree/master/src/collar       //
-// ------------------------------------------------------------------------ //
-//////////////////////////////////////////////////////////////////////////////
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -237,7 +187,6 @@ Particles(integer iLink, key kParticleTarget) {
 StartParticles(key kParticleTarget) {
     //Debug(llList2CSV(g_lLeashPrims));
     StopParticles(FALSE);
-    if (g_sParticleMode == "noParticle") return;
     for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
         if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
             Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
@@ -400,7 +349,7 @@ ConfigureMenu(key kIn, integer iAuth) {
     else if (g_sParticleMode == "Classic")  lButtons += ["☒ "+L_CLASSIC_TEX,"☐ "+L_RIBBON_TEX,"☐ Invisible"];
 
     lButtons += [L_FEEL, L_COLOR];
-    string sPrompt = "\n[http://www.opencollar.at/leash.html Leash Configuration]\n\nCustomize the looks and feel of your leash.";
+    string sPrompt = "\n[Leash Configuration]\n\nCustomize the looks and feel of your leash.";
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"configure");
 }
 
@@ -411,9 +360,9 @@ FeelMenu(key kIn, integer iAuth) {
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"feel");
 }
 
-ColorMenu(key kIn, integer iAuth, integer iPage) {
+ColorMenu(key kIn, integer iAuth) {
     string sPrompt = "\nChoose a color.";
-    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], iPage, iAuth,"color");
+    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth,"color");
 }
 
 LMSay() {
@@ -486,7 +435,6 @@ default {
                 list lMenuParams = llParseString2List(sMessage, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
-                integer iPage = llList2Integer(lMenuParams,2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -497,7 +445,7 @@ default {
                     string sButtonType = llGetSubString(sButton,2,-1);
                     string sButtonCheck = llGetSubString(sButton,0,0);
                     if (sButton == L_COLOR) {
-                        ColorMenu(kAv, iAuth,0);
+                        ColorMenu(kAv, iAuth);
                         return;
                     } else if (sButton == "Feel") {
                         FeelMenu(kAv, iAuth);
@@ -563,7 +511,7 @@ default {
                     g_vLeashColor = (vector)sButton;
                     SaveSettings(L_COLOR, sButton, TRUE);
                     if (g_sParticleMode != "noParticle" && g_iLeashActive) StartParticles(g_kParticleTarget);
-                    ColorMenu(kAv, iAuth,iPage);
+                    ColorMenu(kAv, iAuth);
                 } else if (sMenu == "feel") {
                     if (sButton == L_DEFAULTS) {
                         if (g_sParticleMode == "Ribbon") g_vLeashSize = (vector)GetDefaultSetting(L_SIZE);
@@ -646,9 +594,9 @@ default {
     timer() {
         if (llGetOwnerKey(g_kParticleTarget) == g_kParticleTarget) {
             if(g_kLeashedTo) {
+                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
-                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
             }
             else if(!g_iLeashActive) llSetTimerEvent(0.0);
         }

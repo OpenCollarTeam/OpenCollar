@@ -1,25 +1,7 @@
+// This file is part of OpenCollar.
+// Licensed under the GPLv2.  See LICENSE for full details. 
+
 /*
-    _____________________________.
-   |;;|                      |;;||     Copyright (c) 2016:
-   |[]|----------------------|[]||
-   |;;|      AO  Loader      |;;||     Garvin Twine
-   |;;|       161029.2       |;;||     Wendy Starfall
-   |;;|----------------------|;;||
-   |;;|   www.opencollar.at  |;;||
-   |;;|----------------------|;;||
-   |;;|______________________|;;||
-   |;;;;;;;;;;;;;;;;;;;;;;;;;;;;||     This script is free software:
-   |;;;;;;;_______________ ;;;;;||
-   |;;;;;;|  ___          |;;;;;||     You can redistribute it and/or
-   |;;;;;;| |;;;|         |;;;;;||     modify it under the terms of the
-   |;;;;;;| |;;;|         |;;;;;||     GNU General Public License as
-   |;;;;;;| |;;;|         |;;;;;||     published by the Free Software
-   |;;;;;;| |___|         |;;;;;||     Foundation, version 2.
-   \______|_______________|_____||
-    ~~~~~~^^^^^^^^^^^^^^^^^^~~~~~~     www.gnu.org/licenses/gpl-2.0
-
-github.com/OpenCollarTeam/opencollar/blob/master/src/spares/.aoloader.lsl
-
 This utility requires both the OpenCollar AO of version 6.2.0 or greater
 and another AO HUD rezzed next to each other on the ground. The script
 has to be dropped into the other AO HUD which will open a dialog with a
@@ -27,7 +9,6 @@ selection of SET cards of this AO. Once a SET has been chosen, it will
 attempt to install it on the OpenCollar AO where it will then be available
 as a "Wildcard" until the user chooses to manually rename the notecard in
 the OpenCollar AO's contents.
-
 */
 
 string g_sVersion = "1.0";
@@ -45,7 +26,7 @@ string g_sObjectName;
 integer g_iTimeOut;
 string g_sMyName;
 
-string g_sManPage = "www.opencollar.at/aoloader";
+string g_sManPage = "https://github.com/OpenCollarTeam/OpenCollar/wiki/AO-Loader";
 
 Say(string sStr) {
     llSetObjectName("AO Loader v"+g_sVersion);
@@ -135,7 +116,7 @@ FailSafe(string sName) {
     if ((key)sName) return;
     if (!((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
     || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
-        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n\nwww.opencollar.at/aoloader\n");
+        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n");
         llRemoveInventory(sName);
     }
 }
@@ -164,7 +145,7 @@ default {
                 iIsOracul = FALSE;
         }
         if (!iIsOracul) {
-            Say("\n\nSorry! I'm not compatible with \""+g_sObjectName+"\" at this time. My version is "+g_sVersion+" and so far I can load sets from "+g_sSupportedAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/OpenCollarTeam/opencollar/master/src/spares/.aoloader.lsl recent source] in a new script!\n\n"+g_sManPage+"\n");
+            Say("\n\nSorry! I'm not compatible with \""+g_sObjectName+"\" at this time. My version is "+g_sVersion+" and so far I can load sets from "+g_sSupportedAOs+" AOs. Maybe there is a newer version of me available if you copy and paste my [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/src/spares/.aoloader.lsl recent source] in a new script!\n\n"+g_sManPage+"\n");
             RemoveMe();
         }
         if (llGetAttached()) {
