@@ -4,7 +4,7 @@
 // Romka Swallowtail, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-integer
+
 integer g_iPrivateListenChan = 1;
 integer g_iPublicListenChan = TRUE;
 string g_sPrefix = ".";
