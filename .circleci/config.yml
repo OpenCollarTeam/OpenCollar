@@ -5,4 +5,5 @@ jobs:
       - image: debian:stretch
     steps:
       - checkout
+      - run: sudo apt install make curl unzip
       - run: make lint
