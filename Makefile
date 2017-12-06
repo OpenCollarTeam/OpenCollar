@@ -13,12 +13,9 @@ endif
 LSLINT_VERSION := v1.0.8
 LSLINT_FILE := lslint_$(LSLINT_VERSION)_$(LSLINT_ENV).zip
 LSLINT_URL := https://github.com/Makopo/lslint/releases/download/$(LSLINT_VERSION)/$(LSLINT_FILE)
-
 LSLINT := bin/lslint
-
 LSL_FILES := $(shell ls src/*/*.lsl)
 LINT_FILES := $(shell echo $(LSL_FILES) | sed 's/src/build\/lint/g' | sed 's/lsl/lslint/g')
-
 BUILD := build/
 
 .PHONY: lint
