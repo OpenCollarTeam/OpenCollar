@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: debian:stretch
+      - image: circleci/node:4.8.2
     steps:
       - checkout
       - run: sudo apt install make curl unzip
