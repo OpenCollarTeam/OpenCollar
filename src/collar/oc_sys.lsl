@@ -739,4 +739,3 @@ default {
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
 }
-
