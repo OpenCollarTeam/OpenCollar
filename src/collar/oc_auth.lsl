@@ -21,9 +21,6 @@ integer g_iRunawayDisable=0;
 
 string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
 
-list g_lQueryId; //5 strided list of dataserver/http request: key, uuid, requestType, kAv, remenu.  For AV name/group name  lookups
-integer g_iQueryStride=5;
-
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -32,7 +29,7 @@ integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
+//integer CMD_SAFEWORD = 510;
 integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
@@ -335,7 +332,7 @@ integer in_range(key kID) {
     return TRUE;
 }
 
-integer Auth(string sObjID, integer iAttachment) {
+integer Auth(string sObjID) {
     string sID = (string)llGetOwnerKey(sObjID); // if sObjID is an avatar key, then sID is the same key
     integer iNum;
     if (~llListFindList(g_lOwner+g_lTempOwner, [sID]))
@@ -366,27 +363,6 @@ integer Auth(string sObjID, integer iAttachment) {
     //Debug("Authed as "+(string)iNum);
     return iNum;
 }
-
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
 
 UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug ("UserCommand("+(string)iNum+","+sStr+","+(string)kID+")");
@@ -447,10 +423,10 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-            if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+            if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID){
             AddUniquePerson(sTmpID, sAction, kID);
-            if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,Auth(kID,FALSE),"AddAvi"+sAction, TRUE);
+            if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,Auth(kID),"AddAvi"+sAction, TRUE);
         } else
             Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
@@ -458,13 +434,13 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         string sTmpID = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-            if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+            if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID) {
             RemovePerson(sTmpID, sAction, kID, FALSE);
-            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID,FALSE));
+            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
         } else if (llToLower(sTmpID) == "remove all") {
             RemovePerson(sTmpID, sAction, kID, FALSE);
-            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID,FALSE));
+            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
         } else RemPersonMenu(kID, sAction, iNum);
      } else if (sCommand == "group") {
          if (iNum==CMD_OWNER){
@@ -487,7 +463,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+        if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
             if (sAction == "on") {
@@ -500,7 +476,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The %DEVICETYPE% is closed to the public.",kID);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+        if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "limitrange") {
         if (iNum==CMD_OWNER){
             if (sAction == "on") {
@@ -515,7 +491,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Public access range is simwide.",kID);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+        if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sMessage == "runaway"){
        // list lButtons=[];
       // string message;//="\nOnly the wearer or an Owner can access this menu";
@@ -527,7 +503,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 return;
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This feature is only for the wearer of the %DEVICETYPE%.",kID);
-        if (iRemenu) AuthMenu(kID, Auth(kID,FALSE));
+        if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "flavor") {
         if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else if (sAction) {
@@ -560,7 +536,6 @@ default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         else g_iFirstRun = TRUE;
-        PermsCheck();
       /*  if (g_iProfiled){
             llScriptProfiler(1);
            // Debug("profiling restarted");
@@ -568,14 +543,13 @@ default {
         //llSetMemoryLimit(65536);
         g_sWearerID = llGetOwner();
         llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
-        //Debug("Auth starting: "+(string)llGetFreeMemory());
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
-            integer iAuth = Auth(kID, FALSE);
+            integer iAuth = Auth(kID);
             if ( kID == g_sWearerID && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway is currently disabled.",g_sWearerID);
@@ -626,7 +600,7 @@ default {
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
-            llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID, TRUE), llGetSubString(sStr,0,35));
+            llMessageLinked(iSender,AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)Auth(kID), llGetSubString(sStr,0,35));
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -635,7 +609,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -694,7 +668,7 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_AUTH","");
-        } else if (iNum == 451 && kID == "sec") PermsCheck();
+        }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
     
@@ -704,7 +678,6 @@ default {
     }
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){

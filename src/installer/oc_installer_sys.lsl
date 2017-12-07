@@ -21,8 +21,6 @@
 // name always matches the contents of the ".name" card.
 
 
-integer g_iInstallOnRez = FALSE; // TRUE initiates right away on rez
-
 key g_kNameID;
 integer g_initChannel = -7483213;
 //integer g_initChannel = -7483220; channel for AO SIX
@@ -44,9 +42,6 @@ list g_lBundles;
 // here we remember the index of the bundle that's currently being installed/removed
 // by the bundlegiver.
 integer g_iBundleIndex;
-
-// handle for our dialogs
-key g_kDialogID;
 
 string g_sShim = "oc_update_shim";
 
@@ -90,10 +85,6 @@ DoBundle() {
     llMessageLinked(LINK_SET, DO_BUNDLE, bundlemsg, "");
 }
 
-Debug(string str) {
-    // llOwnerSay(llGetScriptName() + ": " + str);
-}
-
 ReadName() {
     // try to keep object's name in sync with ".name" notecard.
     if (llGetInventoryType(".name") == INVENTORY_NOTECARD) {
@@ -106,7 +97,6 @@ SetFloatText() {
 }
 
 Particles(key kTarget) {
-    integer i = llGetNumberOfPrims();
     llParticleSystem([
         PSYS_PART_FLAGS,
             PSYS_PART_INTERP_COLOR_MASK |
@@ -132,14 +122,12 @@ InitiateInstallation() {
     llPlaySound("6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",1.0);
     //llPlaySound("3409e593-20ab-fd34-82b3-6ecfdefc0207",1.0); //ao
     //llPlaySound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b",1.0); //remote hud
-    Debug("Playing sound");
     llWhisper(iChan,(string)llGetOwner()+":.- ... -.-|"+g_sBuildVersion+"|"+(string)llGetKey());
     //llWhisper(iChan,"-.. --- / .- ---"); AO command
     //llWhisper(iChan,"-.. --- / .... ..- -.."); Remote HUD command
 }
 
 PermsCheck() {
-    string sName = llGetScriptName();
     if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
         llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
     }
@@ -149,15 +137,22 @@ PermsCheck() {
     }
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
 
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
+		// check permissions on all oc_* scripts
+		integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+		while (i) {
+			string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
+			if (llSubStringIndex(sScript, "oc_") == 0) {
+				if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+				}
+
+				if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+				}
+			}
+		}
 }
-
 
 default {
     state_entry() {
@@ -210,7 +205,6 @@ default {
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
         if (llGetOwnerKey(kID) != llGetOwner()) return;
-        Debug(llDumpList2String([sName, sMsg], ", "));
         if (iChannel == g_initChannel) {
             // everything heard on the init channel is stuff that has to
             // comply with the existing update kickoff protocol.  New stuff
@@ -224,7 +218,6 @@ default {
                     g_iDone = FALSE;
                     //llSetTimerEvent(30.0);
                 }
-                Debug("sound");
                 llPlaySound("d023339f-9a9d-75cf-4232-93957c6f620c",1.0);
                 llWhisper(g_initChannel,"-.. ---|"+g_sBuildVersion); //tell collar we are here and to send the pin
             } else if (sCmd == "ready") {
@@ -271,8 +264,7 @@ default {
     }
     timer() {
         if (g_iDone) {
-            if (g_iInstallOnRez) SetFloatText();
-            else llResetScript();
+            llResetScript();
         }
         llSetTimerEvent(300);
         if (llVecDist(llGetPos(),llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0)) > 30) llDie();
@@ -304,7 +296,6 @@ default {
             g_sName = llList2String(lNameParts,1);
             g_sObjectType = llList2String(lNameParts,0);
             SetFloatText();
-            if (g_iInstallOnRez) InitiateInstallation();
         }
         if (kID == g_kInfoID) {
             if (sData != EOF) {

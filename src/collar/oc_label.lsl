@@ -38,7 +38,7 @@ integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -72,7 +72,6 @@ integer g_iHide;
 
 string g_sLabelText = "";
 
-float g_iRotIncrement = 11.75;
 // defaults for cylinders
 vector g_vGridOffset;
 vector g_vRepeats;
@@ -100,50 +99,10 @@ vector g_vOffset;
 //
 ////////////////////////////////////////////
 
-/////////////// CONSTANTS ///////////////////
-// XyText Message Map.
-integer DISPLAY_STRING      = 204000;
-integer DISPLAY_EXTENDED    = 204001;
-integer REMAP_INDICES       = 204002;
-integer RESET_INDICES       = 204003;
-//integer SET_FADE_OPTIONS    = 204004;
-integer SET_FONT_TEXTURE    = 204005;
-//integer SET_LINE_COLOR      = 204006;
-//integer SET_COLOR           = 204007;
-integer RESCAN_LINKSET      = 204008;
-
-// This is an extended character escape sequence.
-string  ESCAPE_SEQUENCE = "\\e";
-
-// This is used to get an index for the extended character.
-string  EXTENDED_INDEX  = "12345";
-
 // Face numbers.
 // only one face needed. -1 lets setup function know that it hasn't run yet
 integer FACE          = -1;
 
-// Used to hide the text after a fade-out.
-//key     TRANSPARENT     = "701917a8-d614-471f-13dd-5f4644e36e3c";
-//key     null_key        = NULL_KEY;
-///////////// END CONSTANTS ////////////////
-
-///////////// GLOBAL VARIABLES ///////////////
-// This is the key of the font we are displaying.
-//key     gFontTexture        = "b2e7394f-5e54-aa12-6e1c-ef327b6bed9e";
-// 48 pixel font key     g_kFontTexture        = "f226766c-c5ac-690e-9018-5a37367ae95a";
-// 38 pixel font
-//key g_kFontTexture= "ac955f98-74bb-290f-7eb6-dca54e5e4491";
-//key g_kFontTexture= "e5efeead-c69e-eb81-e7bd-dad2bb787d2b"; // Bitstream Vera Monotype // SALAHZAR
-
-//key g_kFontTexture= "41b57e2d-e60b-01f0-8f23-e109f532d01d"; //oldEnglish Chars
-//key g_kFontTexture = "0d3c99c1-5df4-638c-0f51-ed8591ae8b93";  //Bitstream Vera Serif
-//key g_kFontTexture = "a37110e0-5a1f-810d-f999-d0b88568adf0";  //Apple Chancery
-//key g_kFontTexture = "020f8783-0d0d-88e3-487d-df3e07d068e7"; //Lucida Bright
-//key g_kFontTexture = "fa87184c-35ca-5143-fe24-cdf70e427a09"; // monotype Corsiva
-//key g_kFontTexture = "34835ebf-b13a-a054-46bc-678d0849025c"; // DejaVu Sans Mono
-//key g_kFontTexture = "316b2161-0669-1796-fec2-976526a29efd";//Andale Mono, Etched
-//key g_kFontTexture = "f38c6993-d85e-cffb-fce9-7aed87b80c2e";//andale mono etched 45 point
-//key g_kFontTexture = "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe";//verily serif 40 etched, on white
 key g_kFontTexture = NULL_KEY;
 list g_lFonts = [
     "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
@@ -157,21 +116,6 @@ list g_lFonts = [
 string g_sCharIndex;
 list g_lDecode=[]; // to handle special characters from CP850 page for european countries // SALAHZAR
 //string g_sScript;
-
-/////////// END GLOBAL VARIABLES ////////////
-
-/*
-integer g_iProfiled=1;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
 
 ResetCharIndex() {
 
@@ -200,7 +144,6 @@ vector GetGridOffset(integer iIndex) {
     //     return <-0.725 + 0.1 * iCol, 0.472 - 0.05 * iRow, 0.0>;
 }
 
-//ShowChars(integer link,vector grkID_offset1, vector grkID_offset2, vector grkID_offset3, vector grkID_offset4, vector grkID_offset5)
 ShowChars(integer link,vector grkID_offset) {
     // SALAHZAR modified .1 to .05 to handle different sized texture
     float alpha = llList2Float(llGetLinkPrimitiveParams( link,[PRIM_COLOR,FACE]),1);
@@ -232,23 +175,6 @@ RenderString(integer iLink, string sStr) {
     //   ShowChars(iLink,GridOffset1, GridOffset2, GridOffset3, GridOffset4, GridOffset5);
     ShowChars(iLink,GridOffset1);
 }
-
-integer ConvertIndex(integer iIndex) {
-    // This converts from an ASCII based index to our indexing scheme.
-    if (iIndex >= 32) // ' ' or higher
-        iIndex -= 32;
-    else { // index < 32
-        // Quick bounds check.
-        if (iIndex > 15)
-            iIndex = 15;
-
-        iIndex += 94; // extended characters
-    }
-
-    return iIndex;
-}
-
-/////END XYTEXT FUNCTIONS
 
 // add for text scroll
 float g_fScrollTime = 0.2 ;
@@ -422,27 +348,6 @@ FontMenu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth,"font");
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iAuth, string sStr, key kAv) {
     string sLowerStr = llToLower(sStr);
     if (sStr == "rm label") {
@@ -510,9 +415,8 @@ default
 {
     state_entry() {
         g_kWearer = llGetOwner();
-        PermsCheck();
         //first count the label prims.
-        integer ok = LabelsCount();
+        LabelsCount();
         SetOffsets(NULL_KEY);
         ResetCharIndex();
         if (g_iCharLimit <= 0) {
@@ -554,7 +458,7 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMenuType=="main") {
                     if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
@@ -627,12 +531,5 @@ default
                 SetLabelBaseAlpha(); // update hide elements
             }
         }
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-/*        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
     }
 }

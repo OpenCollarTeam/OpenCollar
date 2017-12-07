@@ -51,7 +51,6 @@ integer CMD_PARTICLE = 20000;
 string UPMENU       = "BACK";
 string PARENTMENU   = "Leash";
 string SUBMENU      = "Configure";
-string L_TEXTURE    = "Texture";
 string L_COLOR      = "Color";
 string L_GRAVITY    = "Gravity";
 string L_SIZE       = "Size";
@@ -62,7 +61,6 @@ string L_TURN       = "Turn";
 string L_DEFAULTS   = "RESET";
 string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle stream
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
-string L_COSTUM_TEX_ID;
 // Defalut leash particle, can read from defaultsettings:
 // leashParticle=Shine~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
 list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
@@ -77,8 +75,6 @@ key NULLKEY;
 key g_kLeashedTo;
 key g_kLeashToPoint;
 key g_kParticleTarget;
-integer g_iLeasherInRange;
-integer g_iAwayCounter;
 
 integer g_iLeashActive;
 integer g_iTurnMode;
@@ -103,7 +99,6 @@ vector g_vLeashColor = <1.00000, 1.00000, 1.00000>;
 vector g_vLeashSize = <0.04, 0.04, 1.0>;
 integer g_iParticleGlow = TRUE;
 float g_fParticleAge = 3.5;
-float g_fParticleAlpha = 1.0;
 vector g_vLeashGravity = <0.0,0.0,-1.0>;
 integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
@@ -181,8 +176,6 @@ Particles(integer iLink, key kParticleTarget) {
         PSYS_SRC_TARGET_KEY,kParticleTarget,
         PSYS_SRC_MAX_AGE, 0,
         PSYS_SRC_TEXTURE, g_sParticleTextureID
-        //PSYS_PART_START_ALPHA, g_fParticleAlpha,
-        //PSYS_PART_END_ALPHA, g_fParticleAlpha
         ];
     llLinkParticleSystem(iLink, lTemp);
 }
@@ -251,12 +244,6 @@ SaveSettings(string sToken, string sValue, integer iSaveToLocal) {
     if (iSaveToLocal) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + sValue, "");
 }
 
-SaveDefaultSettings(string sToken, string sValue) {
-    integer index = llListFindList(g_lDefaultSettings, [sToken]);
-    if (index>=0) g_lDefaultSettings = llListReplaceList(g_lDefaultSettings, [sValue], index+1, index+1);
-    else g_lDefaultSettings += [sToken, sValue];
-}
-
 string GetDefaultSetting(string sToken) {
     integer index = llListFindList(g_lDefaultSettings, [sToken]);
     if (index != -1) return llList2String(g_lDefaultSettings, index + 1);
@@ -322,31 +309,6 @@ SetTexture(string sIn, key kIn) {
     }
 }
 
-integer KeyIsAv(key id) {
-    return llGetAgentSize(id) != ZERO_VECTOR;
-}
-
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 //Menus
 
 ConfigureMenu(key kIn, integer iAuth) {
@@ -368,7 +330,6 @@ ConfigureMenu(key kIn, integer iAuth) {
 
 FeelMenu(key kIn, integer iAuth) {
     list lButtons = ["Bigger", "Smaller", L_DEFAULTS, "Heavier", "Lighter"];
-    vector defaultsize = (vector)GetDefaultSetting(L_SIZE);
     string sPrompt = "\nHere you can change the weight and size of your leash.";
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth,"feel");
 }
@@ -391,7 +352,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        PermsCheck();
         FindLinkedPrims();
         StopParticles(TRUE);
         GetSettings(FALSE);
@@ -577,7 +537,6 @@ default {
                 //Debug("Setting Response. "+sToken+sValue);
                 sToken = llGetSubString(sToken, i + 1, -1);
                 SaveSettings(sToken, sValue, FALSE);
-             //   SaveDefaultSettings(sToken, sValue);
             } else if (llGetSubString(sToken, 0, i) == "leash_") {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 //Debug(sToken + sValue);
@@ -652,7 +611,6 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
-            PermsCheck();
             integer iNumberOfTextures = llGetInventoryNumber(INVENTORY_TEXTURE);
             integer iLeashTexture;
             if (iNumberOfTextures) {

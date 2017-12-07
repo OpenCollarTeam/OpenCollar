@@ -33,14 +33,10 @@ integer CMD_OWNER = 500;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
-
-debug(string msg) {
-   // llOwnerSay(llGetScriptName() + ": " + msg);
-}
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 Check4Core5Script() {
     integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -92,7 +88,6 @@ default {
                     llRemoveInventory(sName);
             } else g_lScripts += sName;
         } while (i);
-        debug(llDumpList2String(g_lScripts, "|"));
         // listen on the start param channel
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
@@ -100,7 +95,6 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
-       // debug("heard: " + sMsg);
         if (llGetOwnerKey(kID) != llGetOwner()) return;
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
@@ -144,7 +138,6 @@ default {
                     }
                 }
             } else if (sMode == "REMOVE" || sMode == "DEPRECATED") {
-                debug("remove: " + sMsg);
                 if (sType == "SCRIPT") {
                     if (llGetInventoryType(sName) != INVENTORY_NONE) {
                         llRemoveInventory(sName);
@@ -159,7 +152,6 @@ default {
             //check if there is a core5 script to move to its destination prim
             Check4Core5Script();
             string sResponse = llDumpList2String([sType, sName, sCmd], "|");
-            //debug("responding: " + response);
             llRegionSayTo(kID, iChannel, sResponse);
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
@@ -172,7 +164,6 @@ default {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
                     // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
-                   // debug("Settings: "+sSetting);
                     list lTest = llParseString2List(sSetting,["="],[]);
                     string sToken = llList2String(lTest,0);
                     if (llListFindList(g_lDeprecatedSettingTokens,[sToken]) == -1) { //If it doesn't exist in our list
@@ -187,7 +178,6 @@ default {
                             sSetting = sToken+"="+llDumpList2String(lTest,",");
                         }
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
-                       // debug("SP - Saving :"+sSetting);
                     } else {
                         //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
                          //remove it if it's somehow persistent still
@@ -222,7 +212,6 @@ default {
         if (iNum == LOADPIN) {
             integer iPin =  (integer)llGetSubString(sStr,0,llSubStringIndex(sStr,"@")-1);
             string sScriptName = llGetSubString(sStr,llSubStringIndex(sStr,"@")+1,-1);
-           //debug("PrimNr:"+(string)iSender+" - "+sStr);
             if (llGetInventoryType(sScriptName) == INVENTORY_SCRIPT) {
                 llRemoteLoadScriptPin(kID, sScriptName, iPin, TRUE, 825);
                 llRemoveInventory(sScriptName);

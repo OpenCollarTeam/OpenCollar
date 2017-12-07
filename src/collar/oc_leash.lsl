@@ -41,7 +41,7 @@ integer LM_SETTING_DELETE     = 2003;
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
-integer MENUNAME_REMOVE     = 3003;
+//integer MENUNAME_REMOVE     = 3003;
 
 integer RLV_CMD = 6000;
 
@@ -83,7 +83,6 @@ integer g_iLastRank;
 integer g_iStayRank;
 integer g_iStrictRank;
 vector g_vPos = ZERO_VECTOR;
-string g_sTmpName;
 key g_kCmdGiver;
 key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
@@ -103,7 +102,6 @@ integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
 
-list g_lRestrictionNames= ["fly","tplm","tplure","tploc"];
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -396,27 +394,6 @@ YankTo(key kIn){
     llStopMoveToTarget();
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_EVERYONE) {
@@ -430,7 +407,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         list lParam = llParseString2List(sMessage, [" "], []);
         string sComm = llToLower(llList2String(lParam, 0));
         string sVal = llToLower(llList2String(lParam, 1));
-        string sVal2= llList2String(lParam, 2);
 
         sMessage = llToLower(sMessage);  //convert sMessage to lower case for caseless comparisson
         //debug(sMessage);
@@ -595,7 +571,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        PermsCheck();
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
         //Debug("Starting");
@@ -797,13 +772,5 @@ default {
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
         }
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-/*        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }

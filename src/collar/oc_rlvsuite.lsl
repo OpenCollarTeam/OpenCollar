@@ -38,8 +38,6 @@ integer g_iDazedRestricted;
 
 integer g_iSitting;
 
-string bluriness;
-
 //outfit vars
 integer g_iListener;
 integer g_iFolderRLV = 98745923;
@@ -85,7 +83,7 @@ integer MENUNAME_RESPONSE          = 3001;
 
 // messages for RLV commands
 integer RLV_CMD                    = 6000;
-integer RLV_REFRESH                = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_REFRESH                = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR                  = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_OFF                    = 6100;
 integer RLV_ON                     = 6101;
@@ -220,13 +218,6 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
     Dialog(keyID, sPrompt, lMyButtons, lStaticButtons, 0, iAuth, "folder");
 }
 
-RemAttached(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[Outfits]";
-    sPrompt += "\n\nRemove Attachment by Name";
-    list lMyButtons = llParseString2List(sFolders,[","],[""]);
-    Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "remattached");
-}
-
 WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
     string sAttach ="@attachallover:"+sStr+"=force,attachallover:"+g_sPathPrefix+"/.core/=force";
     string sPrePath;
@@ -303,27 +294,6 @@ releaseRestrictions() {
 
     doRestrictions();
 }
-
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
 
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     string sLowerStr=llToLower(sStr);
@@ -600,7 +570,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        PermsCheck();
         //Debug("Starting");
     }
 
@@ -666,7 +635,7 @@ default {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 //Debug("Sending restrictions "+sMessage);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
@@ -751,16 +720,4 @@ default {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }
-*/
 }

@@ -79,7 +79,6 @@ string TURNON = "☐";
 string TURNOFF = "☑";
 
 integer g_iRLVOn=FALSE;
-integer g_iAuth = 0;
 
 key g_kWearer;
 
@@ -113,10 +112,10 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 //integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message.
+//integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message.
 
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
@@ -133,7 +132,6 @@ integer DIALOG_TIMEOUT = -9002;
 //integer FIND_AGENT = -9005;
 string UPMENU = "BACK";
 
-key REQUEST_KEY;
 string g_sSettingToken = "rlvex_";
 //string g_sGlobalToken = "global_";
 
@@ -159,7 +157,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuID];
 }
 
-Menu(key kID, string sWho, integer iAuth) {
+Menu(key kID, integer iAuth) {
     if (!g_iRLVOn) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.",kID);
         llMessageLinked(LINK_RLV, iAuth, "menu RLV", kID);
@@ -286,27 +284,6 @@ ClearEx() {
     }
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iNum, string sStr, key kID) {
     string sLower = llToLower(sStr);
     if (iNum != CMD_OWNER) {
@@ -317,7 +294,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
     if (sLower == "ex" || sLower == "menu " + llToLower(g_sSubMenu)) {
-        Menu(kID, "", iNum);
+        Menu(kID, iNum);
         jump UCDone;
     }
     list lParts = llParseString2List(sStr, [" "], []); // ex,add,first,last at most
@@ -342,7 +319,6 @@ UserCommand(integer iNum, string sStr, key kID) {
     integer iRLV;
     integer iBin;
     integer iSet;
-    integer iN2K;
     integer iNames;
     integer iL = 0;
     integer iC = 0;
@@ -434,7 +410,6 @@ default {
     state_entry() {
         //llSetMemoryLimit(49152);
         g_kWearer = llGetOwner();
-        PermsCheck();
         //Debug("Starting");
     }
 
@@ -476,7 +451,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex+1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -489,7 +464,7 @@ default {
                         ExMenu(kAv, "trusted", iAuth);
 
                 } else if (llGetSubString(sMenu,0,1) == "ex") {
-                    if (sMessage == UPMENU) Menu(kAv,"", iAuth);
+                    if (sMessage == UPMENU) Menu(kAv, iAuth);
                     else {  // clear out Tmp settings
                         list lParams = llParseString2List(sMessage, [" "], []);
                         string sSwitch = llList2String(lParams, 0);
@@ -529,16 +504,4 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }
-*/
 }

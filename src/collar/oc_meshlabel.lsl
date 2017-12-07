@@ -15,12 +15,12 @@ string g_sSubMenu = "Label";
 key g_kWearer;
 
 //MESSAGE MAP
-integer CMD_ZERO = 0;
+//integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -36,7 +36,7 @@ integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -264,27 +264,6 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmlabel");
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iAuth, string sStr, key kAv) {
     //Debug("Command: "+sStr);
     string sLowerStr = llToLower(sStr);
@@ -352,7 +331,6 @@ default
     state_entry() {
        // llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
-        PermsCheck();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;
         LabelsCount();
@@ -399,7 +377,7 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMenuType=="main") {
                     //got a menu response meant for us.  pull out values
@@ -473,12 +451,5 @@ default
                 SetLabelBaseAlpha(); // update hide elements
             }
         }
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-/*        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
     }
 }

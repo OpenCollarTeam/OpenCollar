@@ -9,12 +9,12 @@
 
 // MESSAGE MAPS
 integer CMD_TOUCH         = 100;
-integer MENUNAME_REQUEST  = 3000;
-integer MENUNAME_RESPONSE = 3001;
+//integer MENUNAME_REQUEST  = 3000;
+//integer MENUNAME_RESPONSE = 3001;
 integer SUBMENU           = 3002;
 integer DIALOG            = -9000;
 integer DIALOG_RESPONSE   = -9001;
-integer DIALOG_TIMEOUT    = -9002;
+//integer DIALOG_TIMEOUT    = -9002;
 
 // Constants
 string UPMENU         = "BACK";

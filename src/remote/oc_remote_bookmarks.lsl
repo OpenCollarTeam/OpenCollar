@@ -9,7 +9,6 @@ string g_sAppVersion = "¹⋅²";
 
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
-integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 key webLookup;
@@ -32,7 +31,6 @@ key     g_kOwner;
 key     g_kDataID;
 integer g_iLine = 0;
 string  UPMENU                      = "BACK";
-key     g_kCommander;
 
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 
@@ -93,7 +91,6 @@ PermsCheck() {
 
 
 UserCommand(string sStr) {
-    list lParams = llParseString2List(sStr, [" "], []);
     // So commands can accept a value
     if (sStr == "reset") {
          llResetScript();
@@ -407,11 +404,11 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
+                //key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
                 string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
-                integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-                list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
+                //integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+                //integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
+                //list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if(sMenuType == "TextBoxIdLocation") {

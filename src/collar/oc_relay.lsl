@@ -20,7 +20,7 @@ integer CMD_TRUSTED = 501;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
-integer CMD_SAFEWORD = 510;
+//integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
@@ -77,7 +77,6 @@ list g_lBlockAv; // same here (this fixes issue 1253)
 integer g_iRLV=FALSE;
 list g_lQueue=[];
 integer QSTRIDES=3;
-integer g_iListener=0;
 integer g_iAuthPending = FALSE;
 integer g_iRecentSafeword;
 
@@ -473,27 +472,6 @@ CleanQueue() {
     Dequeue();
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llToLower(sStr) == "rm relay") {
@@ -610,7 +588,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        PermsCheck();
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
         //Debug("Starting");
@@ -655,7 +632,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = llList2Key(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
-                integer iPage = llList2Integer(lMenuParams, 2);
+                //integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = llList2Integer(lMenuParams, 3);
                 llSetTimerEvent(g_iGarbageRate);
                 if (sMenu == "Menu~Main") {
@@ -852,15 +829,4 @@ default {
             g_lTempTrustUser=[];
         }
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }*/
 }

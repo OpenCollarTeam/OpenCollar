@@ -27,7 +27,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -107,7 +107,6 @@ key news_request;
 string g_sLastNewsTime = "0";
 
 string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
-string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
@@ -167,10 +166,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else //we've not already given this user a menu. append to list
         g_lMenuIDs += [kID, kMenuID, sName];
-}
-
-string NameGroupURI(string sStr){
-    return "secondlife:///app/"+sStr+"/inspect";
 }
 
 SettingsMenu(key kID, integer iAuth) {
@@ -410,7 +405,6 @@ BuildLockElementList() {//EB
 }
 
 PermsCheck() {
-    string sName = llGetScriptName();
     if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
         llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
     }
@@ -420,13 +414,21 @@ PermsCheck() {
     }
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
 
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
+		// check permissions on all oc_* scripts
+		integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+		while (i) {
+			string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
+			if (llSubStringIndex(sScript, "oc_") == 0) {
+				if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+				}
+
+				if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+				}
+			}
+		}
 }
 
 
@@ -544,7 +546,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);

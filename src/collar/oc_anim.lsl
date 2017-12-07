@@ -65,13 +65,12 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer RLV_CMD = 6000;
 integer RLV_OFF = 6100;
-integer RLV_ON  = 6101;
+// integer RLV_ON  = 6101;
 integer RLVA_VERSION = 6004;
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
 integer ANIM_LIST_REQUEST = 7002;
 integer ANIM_LIST_RESPONSE =7003;
-float g_fHover = 0.0;
 float g_fStandHover = 0.0;
 
 integer DIALOG = -9000;
@@ -172,7 +171,7 @@ PoseMenu(key kID, integer iPage, integer iAuth) {  //create a list
     Dialog(kID, sPrompt, g_lPoseList, lStaticButtons, iPage, iAuth, "Pose");
 }
 
-PoseMoveMenu(key kID, integer iPage, integer iAuth) {
+PoseMoveMenu(key kID, integer iAuth) {
     string sPrompt;
     list lButtons;
     if (g_iTweakPoseAO) {
@@ -315,26 +314,6 @@ CreateAnimList() {
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
@@ -344,7 +323,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     string sValue = llToLower(llList2String(lParams, 1));
     if (sCommand == "menu") {
         if (sValue == "pose") PoseMenu(kID, 0, iNum);
-        else if (sValue == "antislide") PoseMoveMenu(kID,0,iNum);
+        else if (sValue == "antislide") PoseMoveMenu(kID,iNum);
         else if (sValue == "ao") AOMenu(kID, iNum);
         else if (sValue == "animations") AnimMenu(kID, iNum);
     } else if (sStr == "release" || sStr == "stop") {  //only release if person giving command outranks person who posed us
@@ -444,7 +423,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"PoseMoveRun="  + g_sPoseMoveRun,  "");
                 RefreshAnim();
                 llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"AntiSlide animation is \""+sValueNotLower+"\".", kID);
-            } else if (sValue=="") PoseMoveMenu(kID,0,iNum);
+            } else if (sValue=="") PoseMoveMenu(kID,iNum);
             else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Can't find animation "+llList2String(g_lPoseMoveAnimationPrefix,0)+sValueNotLower, kID);
         } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Only owners or the wearer can change antislide settings.",g_kWearer);
     } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
@@ -474,7 +453,6 @@ default {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
        // llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
-        PermsCheck();
         if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
         CreateAnimList();
         //Debug("Starting");
@@ -568,7 +546,7 @@ default {
                     if (sMessage == "BACK")
                         llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu Main", kAv);
                     else if (sMessage == "Pose") PoseMenu(kAv, 0, iAuth);
-                    else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iNum,iAuth);
+                    else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") PoseMoveMenu(kAv,iAuth);
                     else if (~llListFindList(g_lAnimButtons, [sMessage])) llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     else if (sMessage == "AO Menu") {
                         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n", kAv);
@@ -622,7 +600,7 @@ default {
                         else if (sMessage == "OFF") UserCommand(iAuth, "antislide off", kAv);
                         else if (llGetSubString(sMessage,2,-1) == "none" ) UserCommand(iAuth, "antislide none", kAv);
                         else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix,0)+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1))==INVENTORY_ANIMATION) UserCommand(iAuth, "antislide "+llGetSubString(sMessage,2+llStringLength(g_sWalkButtonPrefix),-1), kAv);
-                        PoseMoveMenu(kAv,iNum,iAuth);
+                        PoseMoveMenu(kAv,iAuth);
                     }
                 } else if (sMenuType == "RmPoseSelect") {
                     if (sMessage != "CANCEL") UserCommand(iAuth, "rm pose "+sMessage,kAv);
@@ -654,7 +632,7 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_ANIM","");
-        } else if (iNum == 451 && kID == "sec") PermsCheck();
+        }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if (iNum == RLVA_VERSION) g_iRLVA_ON = TRUE;
         else if (iNum == RLV_OFF) g_iRLVA_ON = FALSE;
@@ -687,7 +665,6 @@ default {
         if (iChange & CHANGED_TELEPORT) RefreshAnim();
         if (iChange & CHANGED_INVENTORY) {  //start re-reading the ~heightscalars notecard
             if (g_iNumberOfAnims!=llGetInventoryNumber(INVENTORY_ANIMATION)) CreateAnimList();
-            PermsCheck();
         }
 /*
         if (iChange & CHANGED_REGION) {

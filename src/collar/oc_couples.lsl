@@ -25,8 +25,6 @@ key g_kDataID1;
 key g_kDataID2;
 string CARD1 = ".couples";
 string CARD2 = "!couples";
-integer card1line1;
-integer card1line2;
 integer iCardComplete;
 
 list g_lAnimCmds;//1-strided list of strings that will trigger
@@ -59,7 +57,7 @@ integer g_iVerbose = TRUE;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
+//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
@@ -178,26 +176,6 @@ string StrReplace(string sSrc, string sFrom, string sTo) {
     return sSrc;
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
 //added to stop eventual still going animations
 StopAnims() {
     if (llGetInventoryType(g_sSubAnim) == INVENTORY_ANIMATION) llMessageLinked(LINK_THIS, ANIM_STOP, g_sSubAnim, "");
@@ -231,6 +209,21 @@ GetPartnerPermission() {
     llSetObjectName(sObjectName);
 }
 
+StartNotecards() {
+		if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
+				g_kCardID1 = llGetInventoryKey(CARD1);
+				g_iLine1 = 0;
+				g_lAnimCmds = [];
+				g_lAnimSettings = [];
+				g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
+		}
+		if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
+				g_kCardID2 = llGetInventoryKey(CARD2);
+				g_iLine2 = 0;
+				g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
+		}
+}
+
 default {
     on_rez(integer iStart) {
         //added to stop anims after relog when you logged off while in an endless couple anim
@@ -243,23 +236,9 @@ default {
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-       // llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_kWearer = llGetOwner();
-        PermsCheck();
-        if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
-            g_kCardID1 = llGetInventoryKey(CARD1);
-            g_iLine1 = 0;
-            g_lAnimCmds = [];
-            g_lAnimSettings = [];
-            g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
-        }
-        if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
-            g_kCardID2 = llGetInventoryKey(CARD2);
-            g_iLine2 = 0;
-            g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
-        }
+				StartNotecards();
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-       // llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
 
@@ -331,7 +310,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -374,7 +353,6 @@ default {
                         g_kPartner = (key)sMessage;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         StopAnims();
-                        string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                         GetPartnerPermission();
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation.",g_kWearer);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
@@ -408,7 +386,7 @@ default {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        } else if (iNum == 451 && kID == "sec") PermsCheck();
+        }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
     not_at_target() {
@@ -506,9 +484,8 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
-            PermsCheck();
-            if (llGetInventoryKey(CARD1) != g_kCardID1) state default;
-            if (llGetInventoryKey(CARD2) != g_kCardID1) state default;
+            if (llGetInventoryKey(CARD1) != g_kCardID1) StartNotecards();
+            if (llGetInventoryKey(CARD2) != g_kCardID2) StartNotecards();
         }
 /*
         if (iChange & CHANGED_REGION) {

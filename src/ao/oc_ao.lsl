@@ -11,7 +11,6 @@ key g_kWebLookup;
 
 integer g_iInterfaceChannel = -12587429;
 integer g_iHUDChannel = -1812221819;
-string g_sPendingCmd;
 
 key g_kWearer;
 string g_sCard = "Girl";
@@ -68,8 +67,6 @@ integer g_iOldPos;
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
 
-string g_sTexture = "Dark"; // current style
-
 integer JsonValid(string sTest) {
     if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest))
         return FALSE;
@@ -77,7 +74,7 @@ integer JsonValid(string sTest) {
 }
 
 FindButtons() { // collect buttons names & links
-    g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for g_sTexture
+    g_lButtons = [" ", "Minimize"] ;
     g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
     for (i=2; i<=llGetNumberOfPrims(); ++i) {
@@ -517,7 +514,6 @@ default {
                 return;
             }
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
-            string sMessage = "";
             if (sButton == "Menu")
                 MenuAO(g_kWearer);
             else if (sButton == "SitAny") {

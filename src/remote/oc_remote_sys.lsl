@@ -35,9 +35,7 @@ integer g_iChannel = 7;
 key g_kUpdater;
 integer g_iUpdateChan = -7483210;
 
-integer g_iHidden;
 integer g_iPicturePrim;
-string g_sPictureID;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
 string g_sTextureALL ="4fb4a7fe-733b-fae7-810d-81e6784bc3c3";
@@ -51,7 +49,7 @@ integer SUBMENU              = 3002;
 integer ACC_CMD              = 7000;
 integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
-integer DIALOG_TIMEOUT       = -9002;
+//integer DIALOG_TIMEOUT       = -9002;
 integer CMD_REMOTE           = 10000;
 
 string UPMENU          = "BACK";

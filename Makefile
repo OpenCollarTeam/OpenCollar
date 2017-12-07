@@ -18,7 +18,7 @@ LSL_FILES := $(shell ls src/*/*.lsl)
 LINT_FILES := $(shell echo $(LSL_FILES) | sed 's/src/build\/lint/g' | sed 's/lsl/lslint/g')
 BUILD := build/
 
-.PHONY: lint
+.PHONY: lint clean_lint
 
 $(LSLINT):
 	mkdir -p $(shell dirname $@)
@@ -27,6 +27,10 @@ $(LSLINT):
 
 $(BUILD)lint/%.lslint: src/%.lsl
 	mkdir -p $(shell dirname $@)
-	$(LSLINT) -p src/$*.lsl
+	$(LSLINT) -p src/$*.lsl 2> $@
 
-lint: $(LSLINT) $(LINT_FILES)
+clean_lint:
+	rm -rf $(BUILD)lint
+
+lint: $(LSLINT) clean_lint $(LINT_FILES)
+	cat $(LINT_FILES)

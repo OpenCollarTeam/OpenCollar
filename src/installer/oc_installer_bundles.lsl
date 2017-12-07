@@ -20,8 +20,7 @@
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
-integer INSTALLION_DONE = 98751;
-integer g_iDebug = FALSE;
+integer INSTALLATION_DONE = 98751;
 
 integer g_iTalkChannel;
 key g_kRCPT;
@@ -53,56 +52,27 @@ StatusBar(float fCount) {
     //return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
 }
 
-SetStatus(string sName) {
+SetStatus() {
     // use card name, item type, and item name to set a nice
     // text status message
     g_iItemCounter++;
     string sMsg = "Installation in progress...\n \n \n";
-    if (g_iDebug) {
-        sMsg = "Installing: " + sName+ "\n \n \n";
-        if (g_sMode == "DEPRECATED") sMsg = "Removing: " + sName+ "\n \n \n";
-    }
     llSetText(sMsg, <1,1,1>, 1.0);
     if (g_iTotalItems < 2) StatusBar(0.5);
     else StatusBar(g_iItemCounter);
     //if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
-debug(string sMsg) {
-   // llOwnerSay(llGetScriptName() + ": " + sMsg);
-}
-
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
 
 
 default
 {
     state_entry() {
         llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,"", <1,1,1>, 1.0]);
-        PermsCheck();
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == DO_BUNDLE) {
-            debug("doing bundle: " + sStr);
             // str will be in form talkchannel|uuid|bundle_card_name
             list lParts = llParseString2List(sStr, ["|"], []);
             g_iTalkChannel = (integer)llList2String(lParts, 0);
@@ -118,7 +88,7 @@ default
             // get the first line of the card
             g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
         }
-        if (iNum == INSTALLION_DONE) llResetScript();
+        if (iNum == INSTALLATION_DONE) llResetScript();
     }
 
     dataserver(key kID, string sData) {
@@ -136,14 +106,12 @@ default
                     string sName = llStringTrim(llList2String(lParts, 1), STRING_TRIM);
                     key kUUID;
                     string sMsg;
-                    SetStatus(sName);
+                    SetStatus();
                     kUUID = llGetInventoryKey(sName);
                     sMsg = llDumpList2String([sType, sName, kUUID, g_sMode], "|");
-                    debug("querying: " + sMsg);
                     llRegionSayTo(g_kRCPT, g_iTalkChannel, sMsg);
                 }
             } else {
-                debug("finished bundle: " + g_sCard);
                 // all done reading the card. send link msg to main script saying we're done.
 
                 llListenRemove(g_iListener);
@@ -154,7 +122,6 @@ default
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
-        debug("heard: " + sMsg);
         // let's live on the edge and assume that we only ever listen with a uuid filter so we know it's safe
         // look for msgs in the form <type>|<name>|<cmd>
         list lParts = llParseString2List(sMsg, ["|"], []);

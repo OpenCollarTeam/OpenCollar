@@ -31,10 +31,10 @@ integer LINK_RLV            =  4;
 integer LINK_SAVE           =  5;
 integer LINK_UPDATE         = -10;
 integer LM_SETTING_SAVE     =  2000;
-integer LM_SETTING_REQUEST  =  2001;
+// integer LM_SETTING_REQUEST  =  2001;
 integer LM_SETTING_RESPONSE =  2002;
 integer LM_SETTING_DELETE   =  2003;
-integer LM_SETTING_EMPTY    =  2004;
+// integer LM_SETTING_EMPTY    =  2004;
 
 integer MENUNAME_REQUEST    =  3000;
 integer MENUNAME_RESPONSE   =  3001;
@@ -126,27 +126,6 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
     }
 }
 
-PermsCheck() {
-    string sName = llGetScriptName();
-    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
-        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
-    }
-
-    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
-        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
-    }
-
-    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
-    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-    }
-
-    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-    }
-}
-
-
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
@@ -227,7 +206,6 @@ default{
     state_entry() {
        // llSetMemoryLimit(32768); //2016-01-24 (6034 bytes free)
         g_kWearer = llGetOwner();
-        PermsCheck();
         //Debug("Starting");
     }
 
@@ -272,7 +250,7 @@ default{
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = llList2Integer(lMenuParams, 2);
+                // integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex+1);
                 key kCaptor=llList2Key(g_lMenuIDs, iMenuIndex + 2);
@@ -321,7 +299,6 @@ default{
                 }
             }
         }
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
         /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);
