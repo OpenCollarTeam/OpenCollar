@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2011 - 2015 Nandana Singh, Satomi Ahn, Wendy Starfall,  
+// littlemousy et al.                           
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // This script exists to clean up some legacy cruft in old collars:

@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,    
+// Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy, 
+// Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -27,7 +30,6 @@ integer g_iThemesReady;
 
 list g_lMenuIDs;  //menu information
 integer g_iMenuStride=3;
-key g_kTouchID;  //touch request handle
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -35,7 +37,7 @@ integer CMD_OWNER           =   500;
 //integer CMD_TRUSTED       =   501;
 //integer CMD_GROUP         =   502;
 integer CMD_WEARER          =   503;
-integer CMD_EVERYONE        =   504;
+//integer CMD_EVERYONE        =   504;
 //integer CMD_RLV_RELAY     =   507;
 //integer CMD_SAFEWORD      =   510;
 //integer CMD_RELAY_SAFEWORD=   511;
@@ -43,7 +45,7 @@ integer CMD_EVERYONE        =   504;
 
 integer LM_SETTING_SAVE     =  2000;
 integer LM_SETTING_RESPONSE =  2002;
-integer LM_SETTING_DELETE   =  2003;
+//integer LM_SETTING_DELETE   =  2003;
 
 integer NOTIFY = 1002;
 //integer SAY = 1004;
@@ -59,7 +61,7 @@ integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
 
-integer TOUCH_REQUEST       = -9500;
+//integer TOUCH_REQUEST       = -9500;
 //integer TOUCH_CANCEL        = -9501;
 integer TOUCH_RESPONSE      = -9502;
 //integer TOUCH_EXPIRE        = -9503;
@@ -67,7 +69,6 @@ integer TOUCH_RESPONSE      = -9502;
 key g_kWearer;
 
 list g_lShiny = ["none","low","medium","high","specular"];
-list g_lHide = ["Hide","Show"];
 list g_lGlows;
 list g_lGlow = ["none",0.0,"low",0.1,"medium",0.2,"high",0.4,"veryHigh",0.8];
 integer g_iNumHideableElements;
@@ -282,17 +283,6 @@ BuildElementsList(){
     }
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_themes")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
@@ -485,7 +475,6 @@ default {
     state_entry() {
         //llSetMemoryLimit(65536);  //cant set any lower in this script
         g_kWearer = llGetOwner();
-        FailSafe();
         BuildTexturesList();
         BuildElementsList();
         BuildThemesList();
@@ -529,12 +518,10 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-               // if (sMessage == "Cancel") return;
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-                list lMenuPath = llParseString2List(sMenu,[" "],[]);
                 if (llSubStringIndex(sMenu,"ElementMenu~")==0) {
                     if (sMessage == "BACK") LooksMenu(kAv, iAuth);
                     else {
@@ -700,19 +687,10 @@ default {
         if (iChange & CHANGED_LINK) BuildElementsList();
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
-            FailSafe();
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
             else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
             if (llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sThemesCard)!=g_kThemesCardUUID) BuildThemesList();
             else if (!llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD) g_kThemesCardUUID = "";
         }
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }

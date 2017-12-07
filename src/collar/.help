@@ -413,8 +413,8 @@ Access:
 
     flavor
 
-    vanilla on
-    vanilla off
+    ownself on
+    ownself off
 
     runaway
 

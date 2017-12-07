@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2016 Garvin Twine, Wendy Starfall.
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 /*
@@ -112,14 +113,26 @@ Particles(key kTarget) {
     ]);
 }
 
-FailSafe(string sName) {
-    if ((key)sName) return;
-    if (!((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)) {
-        Say("\n\nThis can only work if the script \""+g_sMyName+"\" is set to \"☑ Modify ☑ Copy ☑ Transfer\". In case you have been handed this script by someone else you can copy and paste the [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/src/spares/.aoloader.lsl recent source] of the AO Loader in a new script or ask the community for an already compiled variation.\n");
-        llRemoveInventory(sName);
+PermsCheck() {
+    string sName = llGetScriptName();
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+    }
+
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
     }
 }
+
 
 RemoveMe() {
     llRemoveInventory(llGetScriptName());
@@ -131,7 +144,7 @@ default {
         g_kOwner = llGetOwner();
         g_sMyName = llGetScriptName();
         g_sObjectName = llGetObjectName();
-        FailSafe(g_sMyName);
+        PermsCheck();
         integer i = llGetInventoryNumber(INVENTORY_NOTECARD);
         integer iIsOracul;
         while(i) {
@@ -216,7 +229,7 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_INVENTORY) FailSafe(g_sMyName);
+        if (iChange & CHANGED_INVENTORY) PermsCheck();
 
     }
 }

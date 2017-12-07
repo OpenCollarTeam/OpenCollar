@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2016 Nandana Singh, Jessenia Mocha, Alexei Maven, 
+// Master Starship, Wendy Starfall, North Glenwalker, Ray Zopf, Sumi Perl, 
+// Kire Faulkes, Zinn Ixtar, Builder's Brewery, Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -32,9 +35,7 @@ integer g_iChannel = 7;
 key g_kUpdater;
 integer g_iUpdateChan = -7483210;
 
-integer g_iHidden;
 integer g_iPicturePrim;
-string g_sPictureID;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
 string g_sTextureALL ="4fb4a7fe-733b-fae7-810d-81e6784bc3c3";
@@ -48,7 +49,7 @@ integer SUBMENU              = 3002;
 integer ACC_CMD              = 7000;
 integer DIALOG               = -9000;
 integer DIALOG_RESPONSE      = -9001;
-integer DIALOG_TIMEOUT       = -9002;
+//integer DIALOG_TIMEOUT       = -9002;
 integer CMD_REMOTE           = 10000;
 
 string UPMENU          = "BACK";
@@ -216,21 +217,31 @@ integer PicturePrim() {
     return 0;
 }
 
-FailSafe() {
+PermsCheck() {
     string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_remote_sys")
-        llRemoveInventory(sName);
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+    }
+
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+    }
 }
+
 
 default {
     state_entry() {
         g_kOwner = llGetOwner();
-        FailSafe();
+        PermsCheck();
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
@@ -457,6 +468,6 @@ default {
             }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_INVENTORY) FailSafe();
+        if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
 }

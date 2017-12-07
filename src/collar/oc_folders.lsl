@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Medea Destiny, Romka Swallowtail, littlemousy, Sumi Perl,        
+// Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -37,9 +40,9 @@ integer MENUNAME_RESPONSE = 3001;
 //integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
-integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+//integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -95,7 +98,6 @@ list g_lSearchList; //list of folders to search
 integer g_iLastFolderState;
 
 key g_kWearer;
-string g_sScript;
 string g_sSettingToken = "rlvfolders_";
 //string g_sGlobalToken = "global_";
 
@@ -433,21 +435,8 @@ SetAsyncMenu(key kAv, integer iAuth) {
     g_kAsyncMenuUser = kAv;
     g_iAsyncMenuAuth = iAuth;
 }
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_folders")
-        llRemoveInventory(sName);
-}
 
 UserCommand(integer iNum, string sStr, key kID) {
-    list lParams = llParseString2List(sStr, [" "], []);
-    string sCommand = llToLower(llList2String(lParams, 0));
-    string sValue = llToLower(llList2String(lParams, 1));
     if (llToLower(sStr) == "folders" || llToLower(sStr) == "#rlv" || sStr == "menu # Folders") {
         g_sCurrentFolder = "";
         QueryFolders("browse");
@@ -465,14 +454,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         g_lOutfit=[];
         g_lToCheck=[];
         QueryFolders("save");
-        //if (sCommand == "menu") SetAsyncMenu(kID, iNum);
         g_kAsyncMenuUser = kID; // needed for notifying
     } else if (sStr=="restore"/*|| sStr=="menu Restore"*/)  {
         integer i = 0; integer n = llGetListLength(g_lOutfit);
         for (; i < n; ++i)
             llMessageLinked(LINK_RLV,RLV_CMD,  "attachover:" + llList2String(g_lOutfit,i) + "=force", NULL_KEY);
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Saved outfit has been restored.",kID);
-        //if (sCommand == "menu") llMessageLinked(LINK_SET, iNum, "menu "  + g_sParentMenu, kID);;
     } else if (llGetSubString(sStr,0,0)=="+"||llGetSubString(sStr,0,0)=="-"||llGetSubString(sStr,0,0)=="&") {
         g_kAsyncMenuUser = kID;
         g_lSearchList=llParseString2List(sStr,[","],[]);
@@ -495,7 +482,6 @@ default {
     state_entry() {
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
-        FailSafe();
         //Debug("Starting");
     }
 
@@ -752,16 +738,4 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }
-*/
 }

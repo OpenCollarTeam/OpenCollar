@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2011 - 2017 Nandana Singh, Satomi Ahn, Wendy Starfall,  
+// littlemousy, Sumi Perl, Garvin Twine et al.               
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // This script is like a kamikaze missile.  It sits dormant in the updater
@@ -10,6 +12,7 @@
 
 integer g_iStartParam;
 integer LOADPIN = -1904;
+integer LINK_UPDATE = -10;
 
 // a strided list of all scripts in inventory, with their names,versions,uuids
 // built on startup
@@ -30,14 +33,10 @@ integer CMD_OWNER = 500;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
-
-debug(string msg) {
-   // llOwnerSay(llGetScriptName() + ": " + msg);
-}
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
 Check4Core5Script() {
     integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -53,20 +52,30 @@ Check4Core5Script() {
     } while (i);
 }
 
-FailSafe() {
+PermsCheck() {
     string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_update_shim")
-        llRemoveInventory(sName);
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+    }
+
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+    }
 }
+
 
 default {
     state_entry() {
-        FailSafe();
+        PermsCheck();
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ) g_iIsUpdate = TRUE;
         // build script list
@@ -79,7 +88,6 @@ default {
                     llRemoveInventory(sName);
             } else g_lScripts += sName;
         } while (i);
-        debug(llDumpList2String(g_lScripts, "|"));
         // listen on the start param channel
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
@@ -87,7 +95,6 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
-       // debug("heard: " + sMsg);
         if (llGetOwnerKey(kID) != llGetOwner()) return;
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
@@ -131,7 +138,6 @@ default {
                     }
                 }
             } else if (sMode == "REMOVE" || sMode == "DEPRECATED") {
-                debug("remove: " + sMsg);
                 if (sType == "SCRIPT") {
                     if (llGetInventoryType(sName) != INVENTORY_NONE) {
                         llRemoveInventory(sName);
@@ -146,20 +152,18 @@ default {
             //check if there is a core5 script to move to its destination prim
             Check4Core5Script();
             string sResponse = llDumpList2String([sType, sName, sCmd], "|");
-            //debug("responding: " + response);
             llRegionSayTo(kID, iChannel, sResponse);
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
             //restore settings
             if (g_iIsUpdate) {
-                llMessageLinked(LINK_ALL_OTHERS, -10, "LINK_REQUEST","");
+                llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings);
                 for (n = 0; n < iStop; n++) {
                     string sSetting = llList2String(g_lSettings, n);
                     //Look through deprecated settings to see if we should ignore any...
                     // Settings look like rlvmain_on=1, we want to deprecate the token ie. rlvmain_on <--store
-                   // debug("Settings: "+sSetting);
                     list lTest = llParseString2List(sSetting,["="],[]);
                     string sToken = llList2String(lTest,0);
                     if (llListFindList(g_lDeprecatedSettingTokens,[sToken]) == -1) { //If it doesn't exist in our list
@@ -174,7 +178,6 @@ default {
                             sSetting = sToken+"="+llDumpList2String(lTest,",");
                         }
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, sSetting, "");
-                       // debug("SP - Saving :"+sSetting);
                     } else {
                         //Debug("SP - Deleting :"+ llList2String(sDeprecatedSplitSettingTokenForTest,0));
                          //remove it if it's somehow persistent still
@@ -209,7 +212,6 @@ default {
         if (iNum == LOADPIN) {
             integer iPin =  (integer)llGetSubString(sStr,0,llSubStringIndex(sStr,"@")-1);
             string sScriptName = llGetSubString(sStr,llSubStringIndex(sStr,"@")+1,-1);
-           //debug("PrimNr:"+(string)iSender+" - "+sStr);
             if (llGetInventoryType(sScriptName) == INVENTORY_SCRIPT) {
                 llRemoteLoadScriptPin(kID, sScriptName, iPin, TRUE, 825);
                 llRemoveInventory(sScriptName);
@@ -219,6 +221,7 @@ default {
 
     changed(integer iChange){
         if (iChange & (CHANGED_OWNER|CHANGED_LINK)) llResetScript();
-        if (iChange & CHANGED_INVENTORY) FailSafe();
+        if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
 }
+

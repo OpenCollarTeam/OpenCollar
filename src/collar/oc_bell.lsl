@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2009 - 2016 Cleo Collins, Nandana Singh, Satomi Ahn,   
+// Joy Stipe, Wendy Starfall, Medea Destiny, littlemousy,         
+// Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -51,7 +54,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
@@ -67,7 +70,7 @@ integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -193,17 +196,6 @@ PrepareSounds() {
     g_kCurrentBellSound=llList2Key(g_listBellSounds,g_iCurrentBellSound);
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_bell")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr: user command, kID: avatar id
    // Debug("command: "+sStr);
     sStr = llToLower(sStr);
@@ -277,7 +269,6 @@ default {
     state_entry() {
        // llSetMemoryLimit(36864);
         g_kWearer=llGetOwner();
-        FailSafe();
         llResetTime();  // reset script time used for ringing the bell in intervalls
         BuildBellElementList();
         PrepareSounds();
@@ -298,7 +289,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAV = llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMessage == UPMENU) {
                     llMessageLinked(LINK_ROOT, iAuth, "menu "+g_sParentMenu, kAV);
@@ -415,7 +406,6 @@ default {
     changed(integer iChange) {
         if(iChange & CHANGED_LINK) BuildBellElementList();
         else if (iChange & CHANGED_INVENTORY) {
-            FailSafe();
             PrepareSounds();
         }
         if (iChange & CHANGED_COLOR) {

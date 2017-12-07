@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,    
+// Garvin Twine, Romka Swallowtail et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -35,8 +37,6 @@ integer g_iBlurredRestricted;
 integer g_iDazedRestricted;
 
 integer g_iSitting;
-
-string bluriness;
 
 //outfit vars
 integer g_iListener;
@@ -83,7 +83,7 @@ integer MENUNAME_RESPONSE          = 3001;
 
 // messages for RLV commands
 integer RLV_CMD                    = 6000;
-integer RLV_REFRESH                = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_REFRESH                = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR                  = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
 integer RLV_OFF                    = 6100;
 integer RLV_ON                     = 6101;
@@ -218,13 +218,6 @@ FolderMenu(key keyID, integer iAuth,string sFolders) {
     Dialog(keyID, sPrompt, lMyButtons, lStaticButtons, 0, iAuth, "folder");
 }
 
-RemAttached(key keyID, integer iAuth,string sFolders) {
-    string sPrompt = "\n[Outfits]";
-    sPrompt += "\n\nRemove Attachment by Name";
-    list lMyButtons = llParseString2List(sFolders,[","],[""]);
-    Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "remattached");
-}
-
 WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the final directory path, attaching .core directories and passes RLV commands
     string sAttach ="@attachallover:"+sStr+"=force,attachallover:"+g_sPathPrefix+"/.core/=force";
     string sPrePath;
@@ -300,17 +293,6 @@ releaseRestrictions() {
     llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"restrictions_dazed","");
 
     doRestrictions();
-}
-
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_rlvsuite")
-        llRemoveInventory(sName);
 }
 
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
@@ -588,7 +570,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        FailSafe();
         //Debug("Starting");
     }
 
@@ -654,7 +635,7 @@ default {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 //Debug("Sending restrictions "+sMessage);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
@@ -739,16 +720,4 @@ default {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }
-*/
 }

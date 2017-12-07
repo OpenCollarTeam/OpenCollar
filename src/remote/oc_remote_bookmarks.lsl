@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
+// Romka Swallowtail, Garvin Twine, Mace68 et al.             
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -6,7 +9,6 @@ string g_sAppVersion = "¹⋅²";
 
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
-integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 key webLookup;
@@ -29,7 +31,6 @@ key     g_kOwner;
 key     g_kDataID;
 integer g_iLine = 0;
 string  UPMENU                      = "BACK";
-key     g_kCommander;
 
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 
@@ -68,19 +69,28 @@ DoMenu() {
     Dialog(sPrompt, lMyButtons, [sCancel], 0, "bookmarks");
 }
 
-FailSafe() {
+PermsCheck() {
     string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_remote_bookmarks")
-        llRemoveInventory(sName);
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+    }
+
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+    }
 }
 
+
 UserCommand(string sStr) {
-    list lParams = llParseString2List(sStr, [" "], []);
     // So commands can accept a value
     if (sStr == "reset") {
          llResetScript();
@@ -317,7 +327,7 @@ default {
 
     state_entry() {
         g_kOwner = llGetOwner();  // store key of wearer
-        FailSafe();
+        PermsCheck();
         ReadDestinations(); //Grab our presets
         //Debug("Starting");
     }
@@ -394,11 +404,11 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
-                key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
+                //key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
                 string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
-                integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-                list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
+                //integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+                //integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
+                //list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if(sMenuType == "TextBoxIdLocation") {
@@ -442,7 +452,7 @@ default {
 
     changed(integer iChange) {
         if(iChange & CHANGED_INVENTORY) {
-            FailSafe();
+            PermsCheck();
             ReadDestinations();
         }
         if(iChange & CHANGED_OWNER)  llResetScript();

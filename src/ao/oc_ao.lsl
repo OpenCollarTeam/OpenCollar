@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Jessenia Mocha, Alexei Maven.  Wendy Starfall,
+// littlemousy, Romka Swallowtail, Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -9,7 +11,6 @@ key g_kWebLookup;
 
 integer g_iInterfaceChannel = -12587429;
 integer g_iHUDChannel = -1812221819;
-string g_sPendingCmd;
 
 key g_kWearer;
 string g_sCard = "Girl";
@@ -66,8 +67,6 @@ integer g_iOldPos;
 vector g_vAOoffcolor = <0.5,0.5,0.5>;
 vector g_vAOoncolor = <1,1,1>;
 
-string g_sTexture = "Dark"; // current style
-
 integer JsonValid(string sTest) {
     if (~llSubStringIndex(JSON_FALSE+JSON_INVALID+JSON_NULL,sTest))
         return FALSE;
@@ -75,7 +74,7 @@ integer JsonValid(string sTest) {
 }
 
 FindButtons() { // collect buttons names & links
-    g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for g_sTexture
+    g_lButtons = [" ", "Minimize"] ;
     g_lPrimOrder = [0, 1];  //  '1' - root prim
     integer i;
     for (i=2; i<=llGetNumberOfPrims(); ++i) {
@@ -454,22 +453,32 @@ StartUpdate(key kID) {
     llRegionSayTo(kID, -7483220, "ready|" + (string)iPin );
 }
 
-FailSafe() {
+PermsCheck() {
     string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_ao")
-        llRemoveInventory(sName);
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    if (!((llGetInventoryPermMask(sName,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("The " + sName + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+    }
+
+    if (!((llGetInventoryPermMask(sName,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sName + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+    }
 }
+
 
 default {
     state_entry() {
         if (llGetInventoryType("oc_installer_sys")==INVENTORY_SCRIPT) return;
         g_kWearer = llGetOwner();
-        FailSafe();
+        PermsCheck();
         g_iInterfaceChannel = -llAbs((integer)("0x" + llGetSubString(g_kWearer,30,-1)));
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
@@ -505,7 +514,6 @@ default {
                 return;
             }
             string sButton = (string)llGetObjectDetails(llGetLinkKey(llDetectedLinkNumber(0)),[OBJECT_DESC]);
-            string sMessage = "";
             if (sButton == "Menu")
                 MenuAO(g_kWearer);
             else if (sButton == "SitAny") {
@@ -778,6 +786,6 @@ default {
         if (iChange & CHANGED_COLOR) {
             if (llGetColor(0) != g_vAOoncolor) DetermineColors();
         } else if (iChange & CHANGED_LINK) llResetScript();
-        if (iChange & CHANGED_INVENTORY) FailSafe();
+        if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
 }

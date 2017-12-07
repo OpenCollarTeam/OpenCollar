@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,  
+// Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail, 
+// Sumi Perl et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -8,10 +11,10 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="6.5.5";
-string g_sFancyVersion="⁶⋅⁵⋅⁵";
+string g_sCollarVersion="7.0.beta3";
+string g_sFancyVersion="7.0.beta3";
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 170525.2;
+float g_fBuildVersion = 200000.0;
 
 key g_kWearer;
 
@@ -24,7 +27,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -99,17 +102,11 @@ key g_kUpdaterOrb;
 integer g_iUpdateFromMenu;
 
 key github_version_request;
-string g_sDistributor;
 string g_sOtherDist;
-string g_sDistCard = ".distributor";
-key g_kDistCheck;
-integer g_iOffDist;
-key g_kNCkey;
 key news_request;
 string g_sLastNewsTime = "0";
 
 string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
-string g_sWorldAPI = "http://world.secondlife.com/";
 
 integer g_iUpdateAuth;
 integer g_iWillingUpdaters = 0;
@@ -127,7 +124,6 @@ string g_sGlobalToken = "global_";
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
-string g_sIntegrity = "(pending...)";
 
 /*
 integer g_iProfiled=1;
@@ -172,10 +168,6 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
         g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-string NameGroupURI(string sStr){
-    return "secondlife:///app/"+sStr+"/inspect";
-}
-
 SettingsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[Settings]";
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
@@ -198,12 +190,9 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+"\nOrigin: ";
-    if (g_iOffDist) sPrompt += NameGroupURI(g_sDistributor)+" [Official]";
-    else if (g_sOtherDist) sPrompt += NameGroupURI("agent/"+g_sOtherDist);
-    else sPrompt += "Unknown";
+    string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
-    sPrompt += "\n\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.";
+    sPrompt+="\n\nDocumentation: https://github.com/OpenCollarTeam/OpenCollar/wiki";
     if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
@@ -215,6 +204,7 @@ HelpMenu(key kID, integer iAuth) {
 
 MainMenu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar\t\t"+g_sFancyVersion;
+    sPrompt += "\n\n[secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about Join the official OpenCollar group to become part of our community.]";
     if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
@@ -246,13 +236,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sStr == "info") {
         string sMessage = "\n\nModel: "+llGetObjectName();
-        sMessage += "\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sMessage += NameGroupURI(g_sDistributor)+" [Official]";
-        else if (g_sOtherDist) sMessage += NameGroupURI("agent/"+g_sOtherDist);
-        else sMessage += "Unknown";
+        sMessage += "\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")";
         sMessage += "\nUser: "+llGetUsername(g_kWearer);
         sMessage += "\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
-        sMessage += "\nThis %DEVICETYPE% has a "+g_sIntegrity+" core.\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
@@ -306,14 +292,6 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             RebuildMenu();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-    } else if (llToLower(sStr) == "rm seal" && kID == g_kWearer) {
-        if (g_iOffDist) {
-            if (llGetAttached())
-                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Oops! For this to work, please rez your %DEVICETYPE% on the ground and then use the command to remove the seal again.",kID);
-            else
-                Dialog(kID,"\nThis process is irreversible. Do you wish to proceed?", ["Yes","No","Cancel"],[],0,iNum,"JB");
-        } else
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This %DEVICETYPE% has no official seal.",kID);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==CMD_OWNER){
             if (sStr=="news off"){
@@ -357,10 +335,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             }
         }
     } else if (sCmd == "version") {
-        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")\nOrigin: ";
-        if (g_iOffDist) sVersion += NameGroupURI(g_sDistributor)+" [Official]\n";
-        else if (g_sOtherDist) sVersion += NameGroupURI("agent/"+g_sOtherDist);
-        else sVersion += "Unknown\n";
+        string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     }/* else if (sCmd == "objectversion") {
@@ -408,16 +383,6 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-JB(){
-    integer i=llGetInventoryNumber(7);if(i){i--;string s=llGetInventoryName
-    (7,i);do{if(s==g_sDistCard){if(llGetInventoryCreator(s)==
-    "4da2b231-87e1-45e4-a067-05cf3a5027ea"){g_iOffDist=1;
-    if (llGetInventoryPermMask(g_sDistCard,4)&0x2000){
-    llDialog(g_kWearer, "\nATTENTION:\n\nThe permissions on the .distributor card must be set to ☑Copy ☐Transfer while still in your inventory.\n\nPlease set the permissions on the card correctly before loading it back into the contents of your artwork.\n", [], 298479);
-    llRemoveInventory(s);g_iOffDist=0;return;}
-    g_kNCkey=llGetNotecardLine(s,0);}else g_iOffDist=0;return;}i--;s=
-    llGetInventoryName(7,i);}while(i+1);}
-}
 
 BuildLockElementList() {//EB
     list lParams;
@@ -439,15 +404,33 @@ BuildLockElementList() {//EB
     }
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000) 
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_sys" ) llRemoveInventory(sName);
+PermsCheck() {
+    if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
+        llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
+    }
+
+    if (!(llGetObjectPermMask(MASK_NEXT) & PERM_MODIFY)) {
+        llOwnerSay("You have put an OpenCollar script into an object that the next user cannot modify.  This could break future updates.  Please leave your OpenCollar objects modifiable.");
+    }
+
+    integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+
+		// check permissions on all oc_* scripts
+		integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+		while (i) {
+			string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
+			if (llSubStringIndex(sScript, "oc_") == 0) {
+				if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+				}
+
+				if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+						llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+				}
+			}
+		}
 }
+
 
 SetLockElementAlpha() { //EB
     if (g_iHide) return ; // ***** if collar is hide, don't do anything
@@ -502,8 +485,8 @@ RebuildMenu() {
 
 init (){
     github_version_request = llHTTPRequest(g_sWeb+"version"+HTTP_TYPE, [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-    g_iWaitRebuild = TRUE;JB();
-    FailSafe();
+    g_iWaitRebuild = TRUE;
+    PermsCheck();
     llSetTimerEvent(1.0);
 }
 
@@ -563,7 +546,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -621,16 +604,6 @@ default {
                         return;
                     }
                     SettingsMenu(kAv,iAuth);
-                } else if (sMenu =="JB") {
-                    if (sMessage == "Yes") {
-                        if (llGetInventoryType(g_sDistCard)==7) llRemoveInventory(g_sDistCard);
-                        if (llGetInventoryType(g_sDistCard)==-1) {
-                            g_sDistributor = "";
-                            g_iOffDist = 0;
-                            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The %DEVICETYPE%'s official seal has been removed.",kAv);
-                        }
-                    } else
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The %DEVICETYPE%'s official seal remains intact.",kAv);
                 }
             }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
@@ -642,8 +615,7 @@ default {
                 g_iLocked = (integer)sValue;
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
-            } else if (sToken == "intern_integrity") g_sIntegrity = sValue;
-            else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
+            } else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
             else if (sToken == "intern_news") g_iNews = (integer)sValue;
             else if(sToken =="lock_locksound") {
                 if(sValue=="default") g_sLockSound=g_sDefaultLockSound;
@@ -672,8 +644,8 @@ default {
 
     changed(integer iChange) {
         if ((iChange & CHANGED_INVENTORY) && !llGetStartParameter()) {
-            g_iWaitRebuild = TRUE;JB();
-            FailSafe();
+            g_iWaitRebuild = TRUE;
+            PermsCheck();
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
         }
@@ -696,14 +668,7 @@ default {
             }
         }*/
     }
-    dataserver(key kRequestID, string sData) {
-        if (g_kNCkey == kRequestID) {
-            g_sDistributor = sData;
-            if (sData == "") g_iOffDist = 0;
-            if (g_iOffDist)
-                g_kDistCheck = llHTTPRequest(g_sWeb+"distributor"+HTTP_TYPE, [HTTP_METHOD, "GET", 2, 16384,  HTTP_VERBOSE_THROTTLE, FALSE], "");
-        }
-    }
+
     attach(key kID) {
         if (g_iLocked) {
             if(kID == NULL_KEY) {
@@ -732,9 +697,6 @@ default {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+body+"\n\nTo unsubscribe please type: /%CHANNEL% %PREFIX% news off\n",g_kWearer);
                     g_sLastNewsTime = this_news_time;
                 }
-            } else if (id == g_kDistCheck) {
-                if(~llSubStringIndex(body,llGetSubString(g_sDistributor,-36,-1))) g_iOffDist=1;
-                else {g_sDistributor="";g_iOffDist=0;}
             }
         }
     }
@@ -777,3 +739,4 @@ default {
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
 }
+

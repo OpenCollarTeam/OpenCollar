@@ -1,4 +1,8 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
+// Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
+// Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
+// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -37,7 +41,7 @@ integer LM_SETTING_DELETE     = 2003;
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
-integer MENUNAME_REMOVE     = 3003;
+//integer MENUNAME_REMOVE     = 3003;
 
 integer RLV_CMD = 6000;
 
@@ -79,7 +83,6 @@ integer g_iLastRank;
 integer g_iStayRank;
 integer g_iStrictRank;
 vector g_vPos = ZERO_VECTOR;
-string g_sTmpName;
 key g_kCmdGiver;
 key g_kLeashedTo = NULL_KEY;
 integer g_bLeashedToAvi;
@@ -99,7 +102,6 @@ integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
 
-list g_lRestrictionNames= ["fly","tplm","tplure","tploc"];
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -392,17 +394,6 @@ YankTo(key kIn){
     llStopMoveToTarget();
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_leash")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_EVERYONE) {
@@ -416,7 +407,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         list lParam = llParseString2List(sMessage, [" "], []);
         string sComm = llToLower(llList2String(lParam, 0));
         string sVal = llToLower(llList2String(lParam, 1));
-        string sVal2= llList2String(lParam, 2);
 
         sMessage = llToLower(sMessage);  //convert sMessage to lower case for caseless comparisson
         //debug(sMessage);
@@ -581,7 +571,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        FailSafe();
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
         //Debug("Starting");
@@ -783,13 +772,5 @@ default {
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
         }
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-/*        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }

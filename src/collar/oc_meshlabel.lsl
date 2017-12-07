@@ -1,4 +1,9 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2006 - 2016 Xylor Baysklef, Kermitt Quirk,        
+// Thraxis Epsilon, Gigs Taggart, Strife Onizuka, Huney Jewell,      
+// Salahzar Stenvaag, Lulu Pink, Nandana Singh, Cleo Collins, Satomi Ahn, 
+// Joy Stipe, Wendy Starfall, Romka Swallowtail, littlemousy,       
+// Garvin Twine et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -10,12 +15,12 @@ string g_sSubMenu = "Label";
 key g_kWearer;
 
 //MESSAGE MAP
-integer CMD_ZERO = 0;
+//integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -31,7 +36,7 @@ integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -259,17 +264,6 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmlabel");
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_meshlabel")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iAuth, string sStr, key kAv) {
     //Debug("Command: "+sStr);
     string sLowerStr = llToLower(sStr);
@@ -337,7 +331,6 @@ default
     state_entry() {
        // llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
-        FailSafe();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;
         LabelsCount();
@@ -384,7 +377,7 @@ default
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 if (sMenuType=="main") {
                     //got a menu response meant for us.  pull out values
@@ -458,12 +451,5 @@ default
                 SetLabelBaseAlpha(); // update hide elements
             }
         }
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-/*        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
     }
 }

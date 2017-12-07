@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2016 littlemousy, Sumi Perl, Wendy Starfall,    
+// Garvin Twine 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -29,10 +31,10 @@ integer LINK_RLV            =  4;
 integer LINK_SAVE           =  5;
 integer LINK_UPDATE         = -10;
 integer LM_SETTING_SAVE     =  2000;
-integer LM_SETTING_REQUEST  =  2001;
+// integer LM_SETTING_REQUEST  =  2001;
 integer LM_SETTING_RESPONSE =  2002;
 integer LM_SETTING_DELETE   =  2003;
-integer LM_SETTING_EMPTY    =  2004;
+// integer LM_SETTING_EMPTY    =  2004;
 
 integer MENUNAME_REQUEST    =  3000;
 integer MENUNAME_RESPONSE   =  3001;
@@ -124,17 +126,6 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
     }
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_capture")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
@@ -215,7 +206,6 @@ default{
     state_entry() {
        // llSetMemoryLimit(32768); //2016-01-24 (6034 bytes free)
         g_kWearer = llGetOwner();
-        FailSafe();
         //Debug("Starting");
     }
 
@@ -260,7 +250,7 @@ default{
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = llList2Integer(lMenuParams, 2);
+                // integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex+1);
                 key kCaptor=llList2Key(g_lMenuIDs, iMenuIndex + 2);
@@ -309,7 +299,6 @@ default{
                 }
             }
         }
-        if (iChange & CHANGED_INVENTORY) FailSafe();
         /*if (iChange & CHANGED_REGION) {
             if (g_iProfiled){
                 llScriptProfiler(1);

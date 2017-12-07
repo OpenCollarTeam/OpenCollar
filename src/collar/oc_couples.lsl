@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2004 - 2017 Francis Chung, Ilse Mannonen, Nandana Singh, 
+// Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,   
+// littlemousy, Romka Swallowtail, Sumi Perl et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -22,8 +25,6 @@ key g_kDataID1;
 key g_kDataID2;
 string CARD1 = ".couples";
 string CARD2 = "!couples";
-integer card1line1;
-integer card1line2;
 integer iCardComplete;
 
 list g_lAnimCmds;//1-strided list of strings that will trigger
@@ -56,7 +57,7 @@ integer g_iVerbose = TRUE;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
+//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
@@ -175,19 +176,6 @@ string StrReplace(string sSrc, string sFrom, string sTo) {
     return sSrc;
 }
 
-FailSafe(integer iSec) {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000) 
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000) 
-    || sName != "oc_couples" || iSec) {
-        integer i = llGetInventoryNumber(7);
-        while (i)llRemoveInventory(llGetInventoryName(7,--i));
-        llRemoveInventory(sName);
-    }
-}
 //added to stop eventual still going animations
 StopAnims() {
     if (llGetInventoryType(g_sSubAnim) == INVENTORY_ANIMATION) llMessageLinked(LINK_THIS, ANIM_STOP, g_sSubAnim, "");
@@ -221,6 +209,21 @@ GetPartnerPermission() {
     llSetObjectName(sObjectName);
 }
 
+StartNotecards() {
+		if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
+				g_kCardID1 = llGetInventoryKey(CARD1);
+				g_iLine1 = 0;
+				g_lAnimCmds = [];
+				g_lAnimSettings = [];
+				g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
+		}
+		if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
+				g_kCardID2 = llGetInventoryKey(CARD2);
+				g_iLine2 = 0;
+				g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
+		}
+}
+
 default {
     on_rez(integer iStart) {
         //added to stop anims after relog when you logged off while in an endless couple anim
@@ -233,23 +236,9 @@ default {
 
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-       // llSetMemoryLimit(40960);  //2015-05-06 (5272 bytes free)
         g_kWearer = llGetOwner();
-        FailSafe(0);
-        if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
-            g_kCardID1 = llGetInventoryKey(CARD1);
-            g_iLine1 = 0;
-            g_lAnimCmds = [];
-            g_lAnimSettings = [];
-            g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
-        }
-        if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
-            g_kCardID2 = llGetInventoryKey(CARD2);
-            g_iLine2 = 0;
-            g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
-        }
+				StartNotecards();
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-       // llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         //Debug("Starting");
     }
 
@@ -321,7 +310,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -364,7 +353,6 @@ default {
                         g_kPartner = (key)sMessage;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
                         StopAnims();
-                        string sCommand = llList2String(g_lAnimCmds, g_iCmdIndex);
                         GetPartnerPermission();
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Inviting "+ g_sPartnerName + " to a couples animation.",g_kWearer);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%WEARERNAME% invited you to a couples animation! Click [Yes] to accept.",g_kPartner);
@@ -398,7 +386,7 @@ default {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        } else if (iNum == 451 && kID == "sec") FailSafe(1);
+        }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
     not_at_target() {
@@ -496,9 +484,8 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) {
-            FailSafe(0);
-            if (llGetInventoryKey(CARD1) != g_kCardID1) state default;
-            if (llGetInventoryKey(CARD2) != g_kCardID1) state default;
+            if (llGetInventoryKey(CARD1) != g_kCardID1) StartNotecards();
+            if (llGetInventoryKey(CARD2) != g_kCardID2) StartNotecards();
         }
 /*
         if (iChange & CHANGED_REGION) {

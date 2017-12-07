@@ -1,4 +1,8 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Cleo Collins, Master Starship, 
+// Satomi Ahn, Garvin Twine, Joy Stipe, Alex Carpenter, Xenhat Liamano,  
+// Wendy Starfall, Medea Destiny, Rebbie, Romka Swallowtail,        
+// littlemousy et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -23,7 +27,7 @@ string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
@@ -88,30 +92,9 @@ list SetSetting(list lCache, string sToken, string sValue) {
     return lCache + [sToken, sValue];
 }
 
-// like SetSetting, but only sets the value if there's not one already there.
-list AddSetting(list lCache, string sToken, string sValue) {
-    integer i = llListFindList(lCache, [sToken]);
-    if (~i) return lCache;
-    i = GroupIndex(lCache, sToken);
-    if (~i) return llListInsertList(lCache, [sToken, sValue], i);
-    return lCache + [sToken, sValue];
-}
-
 string GetSetting(string sToken) {
     integer i = llListFindList(g_lSettings, [sToken]);
     return llList2String(g_lSettings, i + 1);
-}
-// per = number of entries to put in each bracket
-list ListCombineEntries(list lIn, string sAdd, integer iPer) {
-    list lOut;
-    while (llGetListLength(lIn)) {
-        list lItem;
-        integer i;
-        for (; i < iPer; i++) lItem += llList2List(lIn, i, i);
-        lOut += [llDumpList2String(lItem, sAdd)];
-        lIn = llDeleteSubList(lIn, 0, iPer - 1);
-    }
-    return lOut;
 }
 
 DelSetting(string sToken) { // we'll only ever delete user settings
@@ -287,19 +270,6 @@ SendValues() {
     llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
-FailSafe(integer iSec) {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_settings" || iSec) {
-        integer i = llGetInventoryNumber(7);
-        while (i) llRemoveInventory(llGetInventoryName(7,--i));
-        llRemoveInventory(sName);
-    }
-}
 
 UserCommand(integer iAuth, string sStr, key kID) {
     string sStrLower = llToLower(sStr);
@@ -343,7 +313,6 @@ default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
-        FailSafe(0);
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -437,7 +406,6 @@ default {
             } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
-        else if (iNum == 451 && kID == "sec") FailSafe(1);
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
@@ -464,7 +432,6 @@ default {
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
-            FailSafe(0);
             if (llGetInventoryKey(g_sCard) != g_kCardID) {
                 // the .settings card changed.  Re-read it.
                 g_iLineNr = 0;

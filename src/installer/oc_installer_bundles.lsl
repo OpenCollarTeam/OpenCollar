@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2011 - 2017 Nandana Singh, Wendy Starfall, Garvin Twine  
+// and Romka Swallowtail  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -18,8 +20,7 @@
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
-integer INSTALLION_DONE = 98751;
-integer g_iDebug = FALSE;
+integer INSTALLATION_DONE = 98751;
 
 integer g_iTalkChannel;
 key g_kRCPT;
@@ -47,50 +48,31 @@ StatusBar(float fCount) {
     do { i--;
         sStatusBar = "█"+llGetSubString(sStatusBar,0,-2);
     } while (i>0);
-    llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
+    llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1), <1,1,0>, 1.0]);
     //return llGetSubString(sStatusBar,0,7)+sCount+llGetSubString(sStatusBar,12,-1);
 }
 
-SetStatus(string sName) {
+SetStatus() {
     // use card name, item type, and item name to set a nice
     // text status message
     g_iItemCounter++;
     string sMsg = "Installation in progress...\n \n \n";
-    if (g_iDebug) {
-        sMsg = "Installing: " + sName+ "\n \n \n";
-        if (g_sMode == "DEPRECATED") sMsg = "Removing: " + sName+ "\n \n \n";
-    }
     llSetText(sMsg, <1,1,1>, 1.0);
     if (g_iTotalItems < 2) StatusBar(0.5);
     else StatusBar(g_iItemCounter);
     //if (g_iItemCounter == g_iTotalItems) g_iTotalItems= 0;
 }
 
-debug(string sMsg) {
-   // llOwnerSay(llGetScriptName() + ": " + sMsg);
-}
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_installer_bundles")
-        llRemoveInventory(sName);
-}
 
 default
 {
     state_entry() {
-        llSetLinkPrimitiveParamsFast(4,[PRIM_TEXT,"", <1,1,1>, 1.0]);
-        FailSafe();
+        llSetLinkPrimitiveParamsFast(2,[PRIM_TEXT,"", <1,1,1>, 1.0]);
         g_iTotalItems = llGetInventoryNumber(INVENTORY_ALL) - llGetInventoryNumber(INVENTORY_NOTECARD) - 3;
     }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == DO_BUNDLE) {
-            debug("doing bundle: " + sStr);
             // str will be in form talkchannel|uuid|bundle_card_name
             list lParts = llParseString2List(sStr, ["|"], []);
             g_iTalkChannel = (integer)llList2String(lParts, 0);
@@ -106,7 +88,7 @@ default
             // get the first line of the card
             g_kLineID = llGetNotecardLine(g_sCard, g_iLine);
         }
-        if (iNum == INSTALLION_DONE) llResetScript();
+        if (iNum == INSTALLATION_DONE) llResetScript();
     }
 
     dataserver(key kID, string sData) {
@@ -124,14 +106,12 @@ default
                     string sName = llStringTrim(llList2String(lParts, 1), STRING_TRIM);
                     key kUUID;
                     string sMsg;
-                    SetStatus(sName);
+                    SetStatus();
                     kUUID = llGetInventoryKey(sName);
                     sMsg = llDumpList2String([sType, sName, kUUID, g_sMode], "|");
-                    debug("querying: " + sMsg);
                     llRegionSayTo(g_kRCPT, g_iTalkChannel, sMsg);
                 }
             } else {
-                debug("finished bundle: " + g_sCard);
                 // all done reading the card. send link msg to main script saying we're done.
 
                 llListenRemove(g_iListener);
@@ -142,7 +122,6 @@ default
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
-        debug("heard: " + sMsg);
         // let's live on the edge and assume that we only ever listen with a uuid filter so we know it's safe
         // look for msgs in the form <type>|<name>|<cmd>
         list lParts = llParseString2List(sMsg, ["|"], []);

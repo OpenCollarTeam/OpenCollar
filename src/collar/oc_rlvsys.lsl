@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,      
+// Sumi Perl et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -28,9 +31,9 @@ integer RELAY_CHANNEL = -1812221819;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
+//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -46,7 +49,7 @@ integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -253,7 +256,6 @@ RemRestriction(key kID, string sBehav) {
 }
 
 ApplyRem(string sBehav) {
-    //Debug("(rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
     integer iRestr=llListFindList(g_lBaked, [sBehav]);  //look for this restriction in the baked list
     if (~iRestr) {  //if this restriction has been baked already
         integer i;
@@ -262,13 +264,9 @@ ApplyRem(string sBehav) {
             if (llListFindList(lSrcRestr, [sBehav])!=-1) return; //check it for this restriction
         }
         //also check the exceptions list, in case its an exception
-        list lParts=llParseString2List(sBehav,[":"],[]);
         g_lBaked=llDeleteSubList(g_lBaked,iRestr,iRestr); //delete it from the baked list
         llOwnerSay("@"+sBehav+"=y"); //remove restriction
-    //} else {
-        //Debug("Restriction '"+sBehav+"'not in baked list");
     }
-    //Debug("(post rem) Baked restrictions:\n"+llDumpList2String(g_lBaked,"\n"));
 }
 
 SafeWord(key kID) {
@@ -285,16 +283,6 @@ SafeWord(key kID) {
     if (kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"RLV restrictions cleared.",kID);
 }
 // End of book keeping functions
-FailSafe(integer iSec) {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000) 
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000) 
-    || sName != "oc_rlvsys" || iSec)
-        llRemoveInventory(sName);
-}
 
 UserCommand(integer iNum, string sStr, key kID) {
     sStr = llToLower(sStr);
@@ -365,7 +353,6 @@ default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
-        FailSafe(0);
         setRlvState();
         //llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         //llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
@@ -422,7 +409,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 lMenuParams=[];
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
@@ -494,7 +481,7 @@ default {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-        } else if (iNum == 451 && kID == "sec") FailSafe(1);
+        }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript(); 
         else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
@@ -525,7 +512,6 @@ default {
                         } else if (~iSource) {   //if this is a known source
                             //Debug("Clearing restrictions:\nrestrictions: "+sVal+"\nfor key: "+(string)kID+"\nindex: "+(string)iSource);
                             list lSrcRestr=llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
-                            integer numRestrictions=llGetListLength(lSrcRestr);
                             list lRestrictionsToRemove;
 
                             while (llGetListLength(lSrcRestr)) {//loop through all of this source's restrictions and store them in a new list
@@ -625,7 +611,6 @@ default {
     }
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange * CHANGED_INVENTORY) FailSafe(0);
         //re make rlv restrictions after teleport or region change, because SL seems to be losing them
         if (iChange & CHANGED_TELEPORT || iChange & CHANGED_REGION) {   //if we teleported, or changed regions
             //re make rlv restrictions after teleport or region change, because SL seems to be losing them
@@ -637,12 +622,4 @@ default {
 
         }
     }
-/*
-        if (change & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
 }

@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2014 - 2015 Sumi Perl et. al               
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 string  SUBMENU_BUTTON              = "SafeZone"; // Name of the submenu

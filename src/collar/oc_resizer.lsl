@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
+// Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy, 
+// Romka Swallowtail et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -232,17 +235,6 @@ RotMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, lMyButtons, [UPMENU], 0, iAuth,ROTMENU);
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_resizer")
-        llRemoveInventory(sName);
-}
-
 PosMenu(key kAv, integer iAuth) {
     string sPrompt = "\nHere you can nudge the %DEVICETYPE% in place.\n\nCurrent nudge strength is: ";
     list lMyButtons = ["left ←", "up ↑", "forward ↳", "right →", "down ↓", "backward ↲"];// ria iChange
@@ -271,7 +263,7 @@ DoMenu(key kAv, integer iAuth) {
 UserCommand(integer iNum, string sStr, key kID) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
-    string sValue = llToLower(llList2String(lParams, 1));
+    // string sValue = llToLower(llList2String(lParams, 1));
     if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu) {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
@@ -303,7 +295,6 @@ default {
     state_entry() {
         //llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();
-        FailSafe();
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration
         Store_StartScaleLoop();
         //Debug("Starting");
@@ -320,7 +311,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 //remove stride from g_lMenuIDs
@@ -409,14 +400,5 @@ default {
             else Store_StartScaleLoop();
         }
         if (iChange & (CHANGED_SHAPE | CHANGED_LINK)) Store_StartScaleLoop();
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
  }

@@ -1,4 +1,7 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,  
+// Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,  
+// Romka Swallowtail, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -46,11 +49,15 @@ integer LM_SETTING_DELETE = 2003;
 
 //integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
-integer ANIM_LIST_REQUEST = 7002;
 integer TOUCH_REQUEST = -9500;
 integer TOUCH_CANCEL = -9501;
 integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
+
+integer MVANIM_INIT = 13000;
+integer MVANIM_ANNOUNCE = 13001;
+integer MVANIM_SKIP = 13002;
+integer MVANIM_GIVE = 13003;
 
 string g_sSafeWord = "RED";
 
@@ -155,37 +162,6 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     }
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000) 
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000) 
-    || sName != "oc_com") {
-        integer i = llGetInventoryNumber(7);
-        while (i) llRemoveInventory(llGetInventoryName(7,--i));
-        llRemoveInventory(sName);
-    }
-}
-
-MoveAnims(integer i) {
-    key kAnimator = llGetLinkKey(LINK_ANIM);
-    string sAnim;
-    list lAnims;
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nFetching "+(string)i+" animations from the %DEVICETYPE%'s root...\n",g_kWearer);
-    while (i) {
-        sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
-        llGiveInventory(kAnimator,sAnim);
-        lAnims += sAnim;
-        if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) {
-            if (llGetInventoryPermMask(sAnim,MASK_OWNER) & PERM_COPY)
-                llRemoveInventory(sAnim);
-        }
-    }
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThe following animations have been moved to the %DEVICETYPE%'s animator module and are now ready to use:\n\n"+llList2CSV(lAnims)+"\n",g_kWearer);
-    llMessageLinked(LINK_ANIM,ANIM_LIST_REQUEST,"","");
-}
 
 UserCommand(key kID, integer iAuth, string sStr) {
     if (sStr == "ping") { // ping from an object, we answer to it on the object channel
@@ -298,9 +274,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 } else
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
             } else if (sStr == "mv anims") {
-                integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
-                if (i) MoveAnims(i);
-                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nThere are currently no animations in the %DEVICETYPE%'s root.\n",g_kWearer);
+                AnnounceAnimInventory(LINK_ALL_OTHERS);
             } else if (sCommand == "busted") {
                 if (sValue == "on") {
                     llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
@@ -326,6 +300,39 @@ UserCommand(key kID, integer iAuth, string sStr) {
     }
 }
 
+AnnounceAnimInventory(integer iLink) {
+    // announce the couples notecard, if present
+    if (llGetInventoryType(".couples") == INVENTORY_NOTECARD) {
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, ".couples", llGetInventoryKey(".couples"));
+    }
+
+    // announce all animations
+    integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
+    while (i) {
+        string sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
+    }
+}
+
+MoveItem(integer iLink, string sItem) {
+    // this is used for the .couples notecard as well as animations
+    // don't try giving things we don't have
+    if (llGetInventoryType(sItem) == INVENTORY_NONE) {
+        return;
+    }
+    llGiveInventory(llGetLinkKey(iLink), sItem);
+    RemoveItem(sItem);
+    // Notify what's going on.
+    llOwnerSay(sItem + " moved to animator prim.");
+}
+
+RemoveItem(string sItem) {
+    // only remove item if it's present.  Never delete anything no-copy.
+    if (llGetInventoryType(sItem) != INVENTORY_NONE && (llGetInventoryPermMask(sItem, MASK_OWNER) & PERM_COPY) == PERM_COPY) {
+        llRemoveInventory(sItem);
+    }
+}
+
 default {
     on_rez(integer iParam) {
         llResetScript();
@@ -334,7 +341,6 @@ default {
     state_entry() {
        // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
-        FailSafe();
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llGetObjectDesc();
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
@@ -523,6 +529,15 @@ default {
             }
             llResetScript();
         }
+        else if (iNum == MVANIM_INIT) {
+            AnnounceAnimInventory(iSender);
+        }
+        else if (iNum == MVANIM_GIVE) {
+            MoveItem(iSender, sStr); 
+        }
+        else if (iNum == MVANIM_SKIP) {
+            RemoveItem(sStr);
+        }
     }
 
     touch_start(integer iNum) {
@@ -567,37 +582,24 @@ default {
         } while (i<10);
         i = llGetLinkNumber();
         if (i != 1) sMessage += "\noc_com\t(not in root prim!)";
-        string sSaveIntegrity = "intern_integrity=";
         if (llSubStringIndex(sMessage,"False") == -1 && llGetListLength(lTemp) == 1) {
             g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2, TRUE);
-            if (llListFindList(g_lFoundCore5Scripts,["LINK_ANIM",6,"LINK_AUTH",2,"LINK_DIALOG",3,"LINK_RLV",4,"LINK_SAVE",5])) {
-                sMessage = "All operational!";
-                sSaveIntegrity += "homemade";
-            } else {
-                sMessage = "Optimal conditions!";
-                sSaveIntegrity += "professionally made";
-            }
-            llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,sSaveIntegrity,"");
-            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,sSaveIntegrity,"");
             lTemp = [];
             g_lFoundCore5Scripts = [];
         } else {
             if (llGetListLength(lTemp) ==1) lTemp = [];
             sMessage = "\n\nCore corruption detected:\n"+ llDumpList2String(lTemp,"\n")+sMessage;
             if (i == 1) sMessage += "\noc_com\t(root)";
-            llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_integrity","");
         }
         g_lFoundCore5Scripts = [];
         if (g_iVerify) {
             g_iVerify = FALSE;
-            //llMessageLinked(LINK_THIS,LM_SETTING_RESPONSE,sSaveIntegrity,"");
             llOwnerSay(sMessage);
         }
     }
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_INVENTORY) FailSafe();
 /*
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled){

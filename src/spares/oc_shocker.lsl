@@ -1,4 +1,5 @@
 // This file is part of OpenCollar.
+//  Copyright (c) 2014 - 2015 Romka Swallowtail                             
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 string g_sAppVersion = "¹⁶¹⁰¹³⋅¹";

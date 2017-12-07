@@ -1,4 +1,6 @@
 // This file is part of OpenCollar.
+// Copyright (c) 2008 - 2017 Satomi Ahn, Nandana Singh, Wendy Starfall,  
+// Sumi Perl, littlemousy, Romka Swallowtail, Garvin Twine et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -18,7 +20,7 @@ integer CMD_TRUSTED = 501;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
-integer CMD_SAFEWORD = 510;
+//integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
@@ -75,7 +77,6 @@ list g_lBlockAv; // same here (this fixes issue 1253)
 integer g_iRLV=FALSE;
 list g_lQueue=[];
 integer QSTRIDES=3;
-integer g_iListener=0;
 integer g_iAuthPending = FALSE;
 integer g_iRecentSafeword;
 
@@ -471,17 +472,6 @@ CleanQueue() {
     Dequeue();
 }
 
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_relay")
-        llRemoveInventory(sName);
-}
-
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llToLower(sStr) == "rm relay") {
@@ -598,7 +588,6 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        FailSafe();
         g_lSources=[];
         llSetTimerEvent(g_iGarbageRate); //start garbage collection timer
         //Debug("Starting");
@@ -643,7 +632,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = llList2Key(lMenuParams, 0);
                 string sMsg = llList2String(lMenuParams, 1);
-                integer iPage = llList2Integer(lMenuParams, 2);
+                //integer iPage = llList2Integer(lMenuParams, 2);
                 integer iAuth = llList2Integer(lMenuParams, 3);
                 llSetTimerEvent(g_iGarbageRate);
                 if (sMenu == "Menu~Main") {
@@ -840,15 +829,4 @@ default {
             g_lTempTrustUser=[];
         }
     }
-
-    changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) FailSafe();
-    }
-    /*    if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-    }*/
 }
