@@ -11,3 +11,5 @@
 - Removed VirtualDisgrace-specific branding and links.
 - Renamed "Vanilla" to "OwnSelf"
 - Added mechanism for safely updating animations and preventing duplicates.
+- Removed dozens of unused variables and functions.
+- Fixed problem with oc_couples not re-reading config notecards on change.
