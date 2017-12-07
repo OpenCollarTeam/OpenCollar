@@ -1,13 +1,13 @@
 ifeq ($(OS),Windows_NT)
 		LSLINT_ENV := win64
 else
-		UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-				LSLINT_ENV := linux
-    endif
-    ifeq ($(UNAME_S),Darwin)
-				LSLINT_ENV := osx
-    endif		
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		LSLINT_ENV := linux
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		LSLINT_ENV := osx
+	endif
 endif
 
 LSLINT_VERSION := v1.0.8
