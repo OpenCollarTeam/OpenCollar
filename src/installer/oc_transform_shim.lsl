@@ -1,6 +1,87 @@
 integer g_iUpdateChan = -7483213;
 
+
+// be explicit about what we delete
+list deletables = [
+    "!totallytransparent",
+    "beautystand",
+    "belly",
+    "bendover",
+    "bracelets",
+    "chain",
+    "coupleanims",
+    "cutie",
+    "defaultsettings",
+    "display",
+    "doggie",
+    "kneel",
+    "Leash Holder",
+    "nadu",
+    "naduw",
+    "OC_Leash_Post",
+    "open",
+    "OpenCollar Guide",
+    "OpenCollar License",
+    "plead",
+    "rope",
+    "sleep",
+    "squirm",
+    "submit",
+    "subsit",
+    "Temple",
+    "tower",
+    "underground",
+    "~-30",
+    "~-31",
+    "~-32",
+    "~-33",
+    "~-34",
+    "~-35",
+    "~-36",
+    "~-37",
+    "~-38",
+    "~-39",
+    "~-39",
+    "~-40",
+    "~-41",
+    "~-42",
+    "~-43",
+    "~-44",
+    "~-45",
+    "~-46",
+    "~-47",
+    "~-48",
+    "~-49",
+    "~-50",
+    "~bootlick",
+    "~extendfoot",
+    "~footextend",
+    "~footkiss",
+    "~heightscalars",
+    "~hug",
+    "~hug-feminine",
+    "~jumphold",
+    "~jumphug",
+    "~kiss",
+    "~kiss-feminine",
+    "~kneelhug",
+    "~kneelhug-dom",
+    "~master",
+    "~pet_the_pet",
+    "~sub-hug",
+    "~sub-pet"
+];
+
 LegacyCleanup() {
+    // clean up junk.
+
+    // delete the transparent texture but keep the prim transparent, if applicable
+    if (llGetTexture(ALL_SIDES) == "!totallytransparent") {
+        key tex = llGetInventoryKey("!totallytransparent");
+        llRemoveInventory("!totallytransparent");
+        llSetTexture(tex, ALL_SIDES);
+    }
+
     // clean up old scripts
     string sName;
     integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -12,11 +93,12 @@ LegacyCleanup() {
         }
     }
     
-    // clean up old animations.  Any copyable anim starting with a "~"
-    i = llGetInventoryNumber(INVENTORY_ANIMATION);
-    while (i) {
-        sName = llGetInventoryName(INVENTORY_ANIMATION, --i);
-        if ((llGetInventoryPermMask(sName, MASK_OWNER) & PERM_COPY) == PERM_COPY) {
+    // clean up other old things.
+    i = llGetInventoryNumber(INVENTORY_ALL);
+    integer stop = llGetListLength(deletables);
+    for (i = 0; i < stop; i++) {
+        sName = llList2String(deletables, i);
+        if (llGetInventoryType(sName) != INVENTORY_NONE) {
             llRemoveInventory(sName);
         }
     }
@@ -26,9 +108,14 @@ default
 {
     state_entry()
     {
+        if (llGetAttached()) {
+            llOwnerSay("I can't do this update while attached.  Please rez me on the ground!");
+            llRemoveInventory(llGetScriptName());
+        }
+
         if (llGetStartParameter()) {
             llOwnerSay("I need permission to link a few new child prims to your collar.");
-            llOwnerSay("I will first delete all old OpenCollar scripts and copyable animations.");
+            llOwnerSay("I will first delete all old OpenCollar contents.");
             llOwnerSay("If that's OK, click Yes.");
             llRequestPermissions(llGetOwner(), PERMISSION_CHANGE_LINKS);
         }
@@ -43,6 +130,7 @@ default
     
     object_rez(key id) {
         llCreateLink(id, TRUE);
+        llRemoveInventory("ChildPrims");
     }
     
     changed(integer change) {
@@ -69,6 +157,7 @@ state update {
             list nameParts = llParseString2List(llGetObjectName(), [" - "], []);
             if (llList2Float(nameParts, 1)) {
                 llSetObjectName(llList2String(nameParts, 0));
+                llSetObjectDesc(llList2String(nameParts, 0));
             }
             integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
             llSetRemoteScriptAccessPin(pin);

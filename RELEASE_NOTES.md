@@ -13,3 +13,4 @@
 - Added mechanism for safely updating animations and preventing duplicates.
 - Removed dozens of unused variables and functions.
 - Fixed problem with oc_couples not re-reading config notecards on change.
+- Added support for updating collars back to 3.x.

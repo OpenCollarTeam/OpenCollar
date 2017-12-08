@@ -210,18 +210,18 @@ GetPartnerPermission() {
 }
 
 StartNotecards() {
-		if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
-				g_kCardID1 = llGetInventoryKey(CARD1);
-				g_iLine1 = 0;
-				g_lAnimCmds = [];
-				g_lAnimSettings = [];
-				g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
-		}
-		if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
-				g_kCardID2 = llGetInventoryKey(CARD2);
-				g_iLine2 = 0;
-				g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
-		}
+        if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {  //card is present, start reading
+                g_kCardID1 = llGetInventoryKey(CARD1);
+                g_iLine1 = 0;
+                g_lAnimCmds = [];
+                g_lAnimSettings = [];
+                g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
+        }
+        if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {  //card is present, start reading
+                g_kCardID2 = llGetInventoryKey(CARD2);
+                g_iLine2 = 0;
+                g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
+        }
 }
 
 default {
@@ -237,7 +237,7 @@ default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
         g_kWearer = llGetOwner();
-				StartNotecards();
+                StartNotecards();
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
         //Debug("Starting");
     }
@@ -459,11 +459,15 @@ default {
             }
             if ( iCardComplete <2) {
                 if (kID == g_kDataID1) {
-                    g_iLine1++;
-                    g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
+                    if (llGetInventoryType(CARD1) == INVENTORY_NOTECARD) {
+                        g_iLine1++;
+                        g_kDataID1 = llGetNotecardLine(CARD1, g_iLine1);
+                    }
                 } else if (kID == g_kDataID2) {
-                    g_iLine2++;
-                    g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
+                    if (llGetInventoryType(CARD2) == INVENTORY_NOTECARD) {
+                        g_iLine2++;
+                        g_kDataID2 = llGetNotecardLine(CARD2, g_iLine2);
+                    }
                 }
             }
         }
