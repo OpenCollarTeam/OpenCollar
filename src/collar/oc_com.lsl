@@ -301,36 +301,45 @@ UserCommand(key kID, integer iAuth, string sStr) {
 }
 
 AnnounceAnimInventory(integer iLink) {
-    // announce the couples notecard, if present
+    // if there's an anim, announce it.
+    if (llGetInventoryNumber(INVENTORY_ANIMATION)) {
+        string sAnim = llGetInventoryName(INVENTORY_ANIMATION, 0);
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
+    }
+    
     if (llGetInventoryType(".couples") == INVENTORY_NOTECARD) {
         llMessageLinked(iLink, MVANIM_ANNOUNCE, ".couples", llGetInventoryKey(".couples"));
-    }
-
-    // announce all animations
-    integer i = llGetInventoryNumber(INVENTORY_ANIMATION);
-    while (i) {
-        string sAnim = llGetInventoryName(INVENTORY_ANIMATION,--i);
-        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
     }
 }
 
 MoveItem(integer iLink, string sItem) {
+    // prevent phantom inventory issues with a slight pause. 
+    llSleep(0.1);
+    
     // this is used for the .couples notecard as well as animations
-    // don't try giving things we don't have
+    // don't try giving things we don't have    
     if (llGetInventoryType(sItem) == INVENTORY_NONE) {
         return;
     }
+    //llWhisper(DEBUG_CHANNEL, "Giving " + sItem);    
     llGiveInventory(llGetLinkKey(iLink), sItem);
-    RemoveItem(sItem);
+    RemoveItem(iLink, sItem);
     // Notify what's going on.
     llOwnerSay(sItem + " moved to animator prim.");
 }
 
-RemoveItem(string sItem) {
-    // only remove item if it's present.  Never delete anything no-copy.
+RemoveItem(integer iLink, string sItem) {
+    // prevent phantom inventory issues with a slight pause.
+    llSleep(0.1);
+    // only remove item if it's present.  Never delete anything no-copy.        
     if (llGetInventoryType(sItem) != INVENTORY_NONE && (llGetInventoryPermMask(sItem, MASK_OWNER) & PERM_COPY) == PERM_COPY) {
+        //llWhisper(DEBUG_CHANNEL, "Removing " + sItem);
         llRemoveInventory(sItem);
+        //llSleep(0.1);
     }
+    
+    // we might be in the process of moving a bunch of anims.  Keep that going.
+    AnnounceAnimInventory(iLink);    
 }
 
 default {
@@ -536,7 +545,7 @@ default {
             MoveItem(iSender, sStr); 
         }
         else if (iNum == MVANIM_SKIP) {
-            RemoveItem(sStr);
+            RemoveItem(iSender, sStr);
         }
     }
 
@@ -600,13 +609,9 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
+        
+        if (iChange & CHANGED_INVENTORY) {
+            AnnounceAnimInventory(LINK_ALL_OTHERS);
         }
-        */
     }
 }
