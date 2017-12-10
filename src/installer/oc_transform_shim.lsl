@@ -4,6 +4,28 @@ integer g_iUpdateChan = -7483213;
 // be explicit about what we delete
 list deletables = [
     "!totallytransparent",
+    "!fadestripe",
+    "!whiteleather",
+    "5fadestripes",
+    "blank",
+    "blkgraindot",
+    "brushedmetal-hshaded",
+    "brushedmetal-hshaded-contrasty",
+    "brushedmetal-roundshaded",
+    "brushedmetal-vshaded",
+    "Celtic",
+    "diamond",
+    "I-Beam",
+    "metal-h",
+    "metal-h-contrast",
+    "metal-round",
+    "metal-v",
+    "opaque gradient circle",
+    "Rusty Metal Chest",
+    "Rusty Panel",
+    "seamless foil",
+    "seamless gold foil",
+    "Silver Filligree",
     "beautystand",
     "belly",
     "bendover",
@@ -24,6 +46,7 @@ list deletables = [
     "OpenCollar License",
     "plead",
     "rope",
+    "shock",
     "sleep",
     "squirm",
     "submit",
@@ -69,8 +92,19 @@ list deletables = [
     "~master",
     "~pet_the_pet",
     "~sub-hug",
-    "~sub-pet"
+    "~sub-pet",
+    "Tranquility",
+    "~version",
+    "Grabby Post",
+    "OpenCollar RLV Relay Help",
+    "OpenCollar - rlvrelay - Help"
 ];
+
+SafeDelete(string item) {
+    if (llGetInventoryType(item) == INVENTORY_NONE) return;
+    if (llGetInventoryPermMask(item, MASK_OWNER) & PERM_COPY != PERM_COPY) return;
+    llRemoveInventory(item);
+}
 
 LegacyCleanup() {
     // clean up junk.
@@ -87,8 +121,8 @@ LegacyCleanup() {
     integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
     while (i) {
         sName = llGetInventoryName(INVENTORY_SCRIPT, --i);
-        // old scripts all start with "OpenCollar - "
-        if (llSubStringIndex(sName, "OpenCollar - ") == 0) {
+        // old scripts all start with "OpenCollar - " or "OpenCuffs - "
+        if ((llSubStringIndex(sName, "OpenCollar - ") == 0) || (llSubStringIndex(sName, "OpenCuffs - ") == 0)) {
             llRemoveInventory(sName);
         }
     }
@@ -97,10 +131,7 @@ LegacyCleanup() {
     i = llGetInventoryNumber(INVENTORY_ALL);
     integer stop = llGetListLength(deletables);
     for (i = 0; i < stop; i++) {
-        sName = llList2String(deletables, i);
-        if (llGetInventoryType(sName) != INVENTORY_NONE) {
-            llRemoveInventory(sName);
-        }
+        SafeDelete(llList2String(deletables, i));
     }
 }
 
