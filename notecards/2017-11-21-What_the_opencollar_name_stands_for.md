@@ -74,6 +74,7 @@ appearance:
 - Cleo Collins
 - Asami Imako
 - Satomi Ahn
+- Sei Lisa
 - Wendy Starfall
 - Master Starship
 - Romka Swallowtail

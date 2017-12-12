@@ -323,23 +323,15 @@ MoveItem(integer iLink, string sItem) {
     }
     //llWhisper(DEBUG_CHANNEL, "Giving " + sItem);    
     llGiveInventory(llGetLinkKey(iLink), sItem);
-    RemoveItem(iLink, sItem);
+    SafeDelete(sItem);
     // Notify what's going on.
     llOwnerSay(sItem + " moved to animator prim.");
 }
 
-RemoveItem(integer iLink, string sItem) {
-    // prevent phantom inventory issues with a slight pause.
-    llSleep(0.1);
-    // only remove item if it's present.  Never delete anything no-copy.        
-    if (llGetInventoryType(sItem) != INVENTORY_NONE && (llGetInventoryPermMask(sItem, MASK_OWNER) & PERM_COPY) == PERM_COPY) {
-        //llWhisper(DEBUG_CHANNEL, "Removing " + sItem);
-        llRemoveInventory(sItem);
-        //llSleep(0.1);
-    }
-    
-    // we might be in the process of moving a bunch of anims.  Keep that going.
-    AnnounceAnimInventory(iLink);    
+SafeDelete(string item) {
+    if (llGetInventoryType(item) == INVENTORY_NONE) return;
+    if (llGetInventoryPermMask(item, MASK_OWNER) & PERM_COPY != PERM_COPY) return;
+    llRemoveInventory(item);
 }
 
 default {
@@ -542,10 +534,12 @@ default {
             AnnounceAnimInventory(iSender);
         }
         else if (iNum == MVANIM_GIVE) {
-            MoveItem(iSender, sStr); 
+            MoveItem(iSender, sStr);
+            AnnounceAnimInventory(iSender);
         }
         else if (iNum == MVANIM_SKIP) {
-            RemoveItem(iSender, sStr);
+            SafeDelete(sStr);
+            AnnounceAnimInventory(iSender);
         }
     }
 
@@ -609,9 +603,5 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
-        
-        if (iChange & CHANGED_INVENTORY) {
-            AnnounceAnimInventory(LINK_ALL_OTHERS);
-        }
     }
 }

@@ -216,7 +216,7 @@ default {
                 llRegionSayTo(kID, g_iLegacyChannel, "get ready");     
             } else if (sCmd == "ready") {
                 integer iPin = llList2Integer(lParts, 1);
-                llGiveInventory(kID, "ChildPrims");
+                llGiveInventory(kID, "leashpoint");
                 llRemoteLoadScriptPin(kID, "oc_transform_shim", iPin, TRUE, 1);
             }
                     

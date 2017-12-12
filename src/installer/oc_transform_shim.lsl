@@ -155,13 +155,13 @@ default
     run_time_permissions(integer perms) {
         if (perms & PERMISSION_CHANGE_LINKS) {
             LegacyCleanup();            
-            llRezObject("ChildPrims", llGetPos(), ZERO_VECTOR, llGetRot(), 1);
+            llRezAtRoot("leashpoint", llGetPos(), ZERO_VECTOR, llEuler2Rot(<0,0,-90 * DEG_TO_RAD>) * llGetRot(), 1);
         }
     }
     
     object_rez(key id) {
         llCreateLink(id, TRUE);
-        llRemoveInventory("ChildPrims");
+        llRemoveInventory("leashpoint");
     }
     
     changed(integer change) {

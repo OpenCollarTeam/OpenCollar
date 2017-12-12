@@ -637,6 +637,8 @@ default {
         else if (iNum == RLVA_VERSION) g_iRLVA_ON = TRUE;
         else if (iNum == RLV_OFF) g_iRLVA_ON = FALSE;
         else if (iNum == MVANIM_ANNOUNCE) {
+            // avoid flooding the event queue
+            llSleep(0.1);
             // the root prim has something for us!
             // if we don't have the item, then request it.
             if (llGetInventoryType(sStr) == INVENTORY_NONE) {
