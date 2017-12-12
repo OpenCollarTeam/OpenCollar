@@ -23,6 +23,7 @@
 
 key g_kNameID;
 integer g_initChannel = -7483213;
+integer g_iLegacyChannel = -7483214;
 //integer g_initChannel = -7483220; channel for AO SIX
 //integer g_initChannel = -7483210; channel for Remote HUD SIX
 integer g_iSecureChannel;
@@ -61,6 +62,7 @@ integer g_iLine;
 string g_sName;
 string g_sObjectType;
 string g_sObjectName;
+
 
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
@@ -138,20 +140,20 @@ PermsCheck() {
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
 
-		// check permissions on all oc_* scripts
-		integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
-		while (i) {
-			string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
-			if (llSubStringIndex(sScript, "oc_") == 0) {
-				if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-						llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-				}
+        // check permissions on all oc_* scripts
+        integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+        while (i) {
+            string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
+            if (llSubStringIndex(sScript, "oc_") == 0) {
+                if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+                        llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+                }
 
-				if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-						llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-				}
-			}
-		}
+                if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+                        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+                }
+            }
+        }
 }
 
 default {
@@ -165,6 +167,7 @@ default {
         ReadName();
         g_sObjectName = llGetObjectName();
         llListen(g_initChannel, "", "", "");
+        llListen(g_iLegacyChannel, "", "", "");
         // set all scripts except self to not running
         // also build list of all bundles
         list lBundleNumbers;
@@ -204,8 +207,20 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMsg) {
+
         if (llGetOwnerKey(kID) != llGetOwner()) return;
-        if (iChannel == g_initChannel) {
+        if (iChannel == g_iLegacyChannel) {
+            list lParts = llParseStringKeepNulls(sMsg, ["|"], []);
+            string sCmd = llList2String(lParts, 0);
+            if (sCmd == "UPDATE") {
+                llRegionSayTo(kID, g_iLegacyChannel, "get ready");     
+            } else if (sCmd == "ready") {
+                integer iPin = llList2Integer(lParts, 1);
+                llGiveInventory(kID, "ChildPrims");
+                llRemoteLoadScriptPin(kID, "oc_transform_shim", iPin, TRUE, 1);
+            }
+                    
+        } else if (iChannel == g_initChannel) {
             // everything heard on the init channel is stuff that has to
             // comply with the existing update kickoff protocol.  New stuff
             // will be heard on the random secure channel instead.

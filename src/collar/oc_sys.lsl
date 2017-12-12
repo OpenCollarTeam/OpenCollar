@@ -11,8 +11,8 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.0.beta3";
-string g_sFancyVersion="7.0.beta3";
+string g_sCollarVersion="7.0.beta5";
+string g_sFancyVersion="7.0.beta5";
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
@@ -415,20 +415,20 @@ PermsCheck() {
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
 
-		// check permissions on all oc_* scripts
-		integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
-		while (i) {
-			string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
-			if (llSubStringIndex(sScript, "oc_") == 0) {
-				if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-						llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-				}
+        // check permissions on all oc_* scripts
+        integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+        while (i) {
+            string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
+            if (llSubStringIndex(sScript, "oc_") == 0) {
+                if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+                        llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+                }
 
-				if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-						llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-				}
-			}
-		}
+                if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+                        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
+                }
+            }
+        }
 }
 
 
@@ -739,4 +739,3 @@ default {
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
 }
-
