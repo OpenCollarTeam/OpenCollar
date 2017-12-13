@@ -471,9 +471,13 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
 }
 
 default {
-
     state_entry() {
-        //llSetMemoryLimit(65536);  //cant set any lower in this script
+        if (
+            llGetInventoryType(g_sThemesCard) != INVENTORY_NOTECARD &&
+            llGetInventoryType(".meshthemes") == INVENTORY_NOTECARD) {
+            // our NC isn't here, but oc_meshthemes' is.  Get out of the way.
+            llRemoveInventory(llGetScriptName());
+        }
         g_kWearer = llGetOwner();
         BuildTexturesList();
         BuildElementsList();

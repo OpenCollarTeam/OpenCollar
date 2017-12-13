@@ -11,7 +11,7 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.0.beta8";
+string g_sCollarVersion="7.0.beta9";
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
