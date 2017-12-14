@@ -11,7 +11,6 @@ string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
-integer IN_DEBUG_MODE               = FALSE;    // set to TRUE to enable Debug messages
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
 string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
@@ -72,19 +71,7 @@ integer RLV_ON                     = 6101;
 integer DIALOG                     = -9000;
 integer DIALOG_RESPONSE            = -9001;
 integer DIALOG_TIMEOUT             = -9002;
-/*
-integer g_iProfiled;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}
-*/
+
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -94,7 +81,7 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
 }
 
 DoMenu(key keyID, integer iAuth) {
-    string sPrompt = "\n[Bookmarks]\t"+g_sAppVersion+"\n\nTake me away, gumby!";
+    string sPrompt = "\n[Bookmarks]\t"+g_sAppVersion;
     list lMyButtons = PLUGIN_BUTTONS + g_lDestinations + g_lVolatile_Destinations;
     Dialog(keyID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "bookmarks");
 }
@@ -121,7 +108,6 @@ PermsCheck() {
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    list lParams = llParseString2List(sStr, [" "], []);
     // So commands can accept a value
     if (sStr == "reset") {
         // it is a request for a reset
@@ -250,7 +236,7 @@ string FormatRegionName() {
     return (region + "(" + posx + "," + posy + "," + posz + ")");
 }
 
-string convertSlurl(string sStr, key kAv, integer iAuth) {  //convert the slurl http strings to region (xxx,xxx,xxx)
+string convertSlurl(string sStr) {  //convert the slurl http strings to region (xxx,xxx,xxx)
     sStr = llStringTrim(llUnescapeURL(sStr), STRING_TRIM);
     string sIndex = "http:";
     list lPieces =  llParseStringKeepNulls(sStr, ["/"], []);
@@ -479,9 +465,8 @@ default {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
                 string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+                // integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
-                list lParams =  llParseStringKeepNulls(sStr, ["|"], []);
                 string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if(sMenuType == "TextBoxIdLocation") {
@@ -491,7 +476,7 @@ default {
                 } else if(sMenuType == "TextBoxIdSave") {
                     //Debug("TBoxIDSave " + sMessage);
                     if(sMessage != " ")
-                        validatePlace(convertSlurl(sMessage, kAv, iAuth), kAv, iAuth);
+                        validatePlace(convertSlurl(sMessage), kAv, iAuth);
                     else
                         UserCommand(iAuth, PLUGIN_CHAT_CMD, kAv);
                 } else if(sMenuType == "RemoveMenu") {
@@ -541,13 +526,5 @@ default {
             ReadDestinations();
         }
         if(iChange & CHANGED_OWNER)  llResetScript();
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
     }
 }

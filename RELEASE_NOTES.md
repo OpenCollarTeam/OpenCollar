@@ -14,3 +14,4 @@
 - Removed dozens of unused variables and functions.
 - Fixed problem with oc_couples not re-reading config notecards on change.
 - Added support for updating collars back to 3.x.
+- Add oc_bookmarks back to the default updater.
