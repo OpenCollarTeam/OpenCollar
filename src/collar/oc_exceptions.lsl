@@ -164,7 +164,7 @@ Menu(key kID, integer iAuth) {
         return;
     }
     list lButtons = ["Owner", "Trusted"];
-    string sPrompt = "\n[Exceptions]\n\nSet execptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
+    string sPrompt = "\n[Exceptions]\n\nSet exceptions to the restrictions for RLV commands.\n\n(\"Force Teleports\" are already defaulted for Owners.)";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "main");
 }
 
