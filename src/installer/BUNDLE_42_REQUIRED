@@ -10,6 +10,7 @@ SCRIPT|oc_relay
 SCRIPT|oc_resizer
 SCRIPT|oc_rlvsuite
 SCRIPT|oc_themes
+SCRIPT|oc_meshthemes
 SCRIPT|oc_titler
 ITEM|.license
 ITEM|.help
