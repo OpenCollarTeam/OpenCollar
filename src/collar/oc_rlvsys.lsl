@@ -122,12 +122,6 @@ DoMenu(key kID, integer iAuth){
     list lButtons;
     if (g_iRlvActive) {
         lButtons = llListSort(g_lMenu, 1, TRUE);
-        integer iRelay = llListFindList(lButtons,["Relay"]);
-        integer iTerminal = llListFindList(lButtons,["Terminal"]);
-        if (~iRelay && ~iTerminal) { //check if there is a Relay registered and replace the Terminal button with it
-            lButtons = llListReplaceList(lButtons,["Relay"],iTerminal,iTerminal);
-            lButtons = llDeleteSubList(lButtons,iRelay,iRelay);
-        }
         lButtons = [TURNOFF, CLEAR] + lButtons;
     } else if (g_iRLVOff) lButtons = [TURNON];
     else lButtons = [TURNON, TURNOFF];
