@@ -67,6 +67,33 @@ string HELPCARD = ".help";
 string CONTACT = "Contact";
 string LICENSE = "License";
 string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
+
+list OC_SCRIPTS = [
+    "oc_anim",
+    "oc_auth",
+    "oc_bell",
+    "oc_bookmarks",
+    "oc_capture",
+    "oc_com",
+    "oc_couples",
+    "oc_dialog",
+    "oc_exceptions",
+    "oc_folders",
+    "oc_label",
+    "oc_leash",
+    "oc_meshlabel",
+    "oc_meshthemes",
+    "oc_particle",
+    "oc_relay",
+    "oc_resizer",
+    "oc_rlvsuite",
+    "oc_rlvsys",
+    "oc_settings",
+    "oc_sys",
+    "oc_themes",
+    "oc_titler"
+];
+
 key g_kWebLookup;
 key g_kCurrentUser;
 
@@ -123,19 +150,6 @@ string g_sGlobalToken = "global_";
 
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
-
-/*
-integer g_iProfiled=1;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+" :\n" + sStr);
-}*/
 
 integer compareVersions(string v1, string v2) { //compares two symantic version strings, true if v1 >= v2
     integer v1Index=llSubStringIndex(v1,".");
@@ -414,20 +428,20 @@ PermsCheck() {
 
     integer FULL_PERMS = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
 
-        // check permissions on all oc_* scripts
-        integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
-        while (i) {
-            string sScript = llGetInventoryName(INVENTORY_SCRIPT, --i);
-            if (llSubStringIndex(sScript, "oc_") == 0) {
-                if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
-                        llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
-                }
+    // check permissions on all OC_SCRIPTS 
+    integer i = llGetListLength(OC_SCRIPTS);
+    while (i) {
+        string sScript = llList2String(OC_SCRIPTS, --i);
+        if (llGetInventoryType(sScript) == INVENTORY_SCRIPT) {
+            if (!((llGetInventoryPermMask(sScript,MASK_OWNER) & FULL_PERMS) == FULL_PERMS)) {
+                    llOwnerSay("The " + sScript + " script is not mod/copy/trans.  This is a violation of the OpenCollar license.  Please ask the person who gave you this script for a full-perms replacement.");
+            }
 
-                if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
-                        llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
-                }
+            if (!((llGetInventoryPermMask(sScript,MASK_NEXT) & FULL_PERMS) == FULL_PERMS)) {
+                    llOwnerSay("You have removed mod/copy/trans permissions for the next owner of the " + sScript + " script.  This is a violation of the OpenCollar license.  Please make the script full perms again.");
             }
         }
+    }
 }
 
 
