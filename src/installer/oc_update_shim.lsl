@@ -94,7 +94,7 @@ default {
         llWhisper(g_iStartParam, "reallyready");
     }
 
-    listen(integer iChannel, string sName, key kID, string sMsg) {
+    listen(integer iChannel, string sWho, key kID, string sMsg) {
         if (llGetOwnerKey(kID) != llGetOwner()) return;
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
@@ -148,6 +148,19 @@ default {
                     }
                 }
                 sCmd = "OK";
+            } else if  (sMode == "OPTIONAL") {
+                // only update if present but outdated.  skip if absent.
+                if (llGetInventoryType(sName) == INVENTORY_NONE) {
+                    sCmd = "SKIP";
+                } else {
+                    if (llGetInventoryKey(sName) == kUUID && kUUID != NULL_KEY) {
+                        sCmd = "SKIP";
+                    } else {
+                        // we have it but it's the wrong version.  delete and get new one.
+                        llRemoveInventory(sName);
+                        sCmd = "GIVE";
+                    }
+                }
             }
             //check if there is a core5 script to move to its destination prim
             Check4Core5Script();

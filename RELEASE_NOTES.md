@@ -1,6 +1,13 @@
 # OpenCollar Release Notes
 
-## 7.0 (beta)
+## 7.? (In development)
+
+- Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
+  users might have intentionally removed.
+- Use explicit list of scripts in PermsCheck instead of oc_* prefix, reducing
+  spam for users of closed source third party plugins that use that prefix.
+
+## 7.0
 
 - Returned to fully GPL version of OpenCollar scripts.
 - Returned to license requiring the scripts to remain full perms in Second Life.  (No more no-mod oc_root script.)

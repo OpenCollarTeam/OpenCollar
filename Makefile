@@ -18,7 +18,7 @@ LSL_FILES := $(shell ls src/*/*.lsl)
 LINT_FILES := $(shell echo $(LSL_FILES) | sed 's/src/build\/lint/g' | sed 's/lsl/lslint/g')
 BUILD := build/
 
-.PHONY: lint clean_lint
+.PHONY: lint clean_lint changed
 
 $(LSLINT):
 	mkdir -p $(shell dirname $@)
@@ -34,3 +34,9 @@ clean_lint:
 
 lint: $(LSLINT) clean_lint $(LINT_FILES)
 	cat $(LINT_FILES)
+
+# Helper for telling you which files have changed since a given version, and need to be synced
+# inworld.
+# Run like this: make changed TAG=v7.0
+changed:
+	git diff --name-status $(TAG)
