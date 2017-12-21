@@ -48,10 +48,9 @@ string g_sShim = "oc_update_shim";
 
 integer DO_BUNDLE = 98749;
 integer BUNDLE_DONE = 98750;
-integer INSTALLION_DONE = 98751;
+integer INSTALLATION_DONE = 98751;
 
 integer g_iDone;
-integer g_iIsUpdate;
 
 string g_sInfoCard = ".info";
 string g_sInfoText;
@@ -170,7 +169,6 @@ default {
         llListen(g_iLegacyChannel, "", "", "");
         // set all scripts except self to not running
         // also build list of all bundles
-        list lBundleNumbers;
         integer i = llGetInventoryNumber(INVENTORY_ALL);
         do { i--;
             string sName = llGetInventoryName(INVENTORY_ALL, i);
@@ -184,12 +182,9 @@ default {
                 if (!llSubStringIndex(sName, "BUNDLE_")) {
                     list lParts = llParseString2List(sName, ["_"], []);
                     g_lBundles += [sName, llList2String(lParts, -1)];
-                    lBundleNumbers += llList2List(lParts,1,1);
                 }
             }
         } while (i);
-        if (~llListFindList(lBundleNumbers,["23"]) || ~llListFindList(lBundleNumbers,["42"])
-            || ~llListFindList(lBundleNumbers,["00"])) g_iIsUpdate = TRUE;
         g_lBundles = llListSort(g_lBundles,2,TRUE);
         SetFloatText();
         llParticleSystem([]);
@@ -214,6 +209,7 @@ default {
             string sCmd = llList2String(lParts, 0);
             if (sCmd == "UPDATE") {
                 llRegionSayTo(kID, g_iLegacyChannel, "get ready");     
+                llRegionSayTo(kID, g_iLegacyChannel, "items"); // 3.2 and earlier 
             } else if (sCmd == "ready") {
                 integer iPin = llList2Integer(lParts, 1);
                 llGiveInventory(kID, "leashpoint");
@@ -240,9 +236,7 @@ default {
                 // the script pin will be in the param
                 g_iPin = (integer)sParam;
                 g_kCollarKey = kID;
-                g_iSecureChannel = (integer)llFrand(-2000000000 + 1);
-                if(g_iSecureChannel == 0) g_iSecureChannel = -1234567;
-                if (!g_iIsUpdate) g_iSecureChannel = -g_iSecureChannel;
+                g_iSecureChannel = (integer)llFrand(-2000000000) - 1;
                 llListen(g_iSecureChannel, "", g_kCollarKey, "");
                 llRemoteLoadScriptPin(g_kCollarKey, g_sShim, g_iPin, TRUE, g_iSecureChannel);
             }
@@ -269,7 +263,7 @@ default {
                 llSetText("DONE!\n \n████████100%████████", <0,1,0>, 1.0);
                 llParticleSystem([]);
                 g_iDone = TRUE;
-                llMessageLinked(LINK_SET,INSTALLION_DONE,"","");
+                llMessageLinked(LINK_SET,INSTALLATION_DONE,"","");
                 llSleep(1);
                 llLoadURL(llGetOwner(),"\nVisit our website for manual pages and release notes!\n",g_sInfoURL);
                 Say(g_sInfoText);
