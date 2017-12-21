@@ -287,7 +287,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //unless asked not to, chat anything that wouldn't fit to menu user
     if (! ~llListFindList(MRSBUN, [kRecipient])){
         integer iRemainingChatLen;
-        while (iRemainingChatLen=llStringLength(sThisChat)){ //capture and compare in one go
+        while ((iRemainingChatLen=llStringLength(sThisChat))){ //capture and compare in one go
             if(iRemainingChatLen<1015) {
                 Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
                 sThisChat="";

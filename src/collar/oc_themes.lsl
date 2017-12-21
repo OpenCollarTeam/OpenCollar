@@ -450,9 +450,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             integer iSides = llGetLinkNumberOfSides(iLinkCount);
                             integer iFace ;
                             for (iFace = 0; iFace < iSides; iFace++) {
-                                list lParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                                lParams = llDeleteSubList(lParams,0,0); // get texture params
-                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lParams);
+                                list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
+                                lPrimParams = llDeleteSubList(lParams,0,0); // get texture params
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
                             }
                         //} else {
                             //Debug("Not applying texture to element number "+(string)iLinkCount);
@@ -644,7 +644,7 @@ default {
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
                                 } else {
-                                    list commands = ["texture","color","shiny","glow","hide","show"];
+                                    list subcommands = ["texture","color","shiny","glow","hide","show"];
                                     integer succes = 0;
                                     integer i;
                                     for (i = 1; i < llGetListLength(lParams); i++) {
@@ -653,7 +653,7 @@ default {
                                             list params = llParseString2List(substring, ["="], []);
                                             string cmd = llList2String(params,0);
                                             sData = llList2String(params,1);
-                                            if (llListFindList(commands, [cmd])!=-1) {
+                                            if (llListFindList(subcommands, [cmd])!=-1) {
                                                 UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                                 succes++;
                                             }
@@ -663,7 +663,7 @@ default {
                                     if (succes==0) { // old themes format
                                         for (i = 0; i < 4; i++) {
                                             sData = llStringTrim(llList2String(lParams,i+1),STRING_TRIM);
-                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(commands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE);
+                                            if (sData != "" && sData != ",,") UserCommand(g_iSetThemeAuth, llList2String(subcommands,i)+" "+element+" "+sData, g_kSetThemeUser, FALSE);
                                         }
                                     }
                                 }

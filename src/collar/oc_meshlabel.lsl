@@ -215,12 +215,11 @@ SetLabel() {
         llSetTimerEvent(0);
         //inlined single use CenterJustify function
         while(llStringLength(sPadding + sText + sPadding) < g_iCharLimit) sPadding += " ";
-        string sText = sPadding + sText;
+        sText = sPadding + sText;
         integer iCharPosition;
         for(iCharPosition=0; iCharPosition < g_iCharLimit; iCharPosition++)
             RenderString(iCharPosition, llGetSubString(sText, iCharPosition, iCharPosition));
     }
-    //Debug("Label Set");
 }
 
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {

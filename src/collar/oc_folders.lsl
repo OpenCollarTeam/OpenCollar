@@ -650,8 +650,8 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 if (sToken == "Locks") {
                     g_lFolderLocks = llParseString2List(sValue, [","], []);
                     integer iN = llGetListLength(g_lFolderLocks);
-                    integer i;
-                    for (i = 0; i < iN; i += 2) doLockFolder(i);
+                    integer j;
+                    for (j = 0; j < iN; j += 2) doLockFolder(j);
                 } else if (sToken == "Unshared") {
                     g_iUnsharedLocks = (integer) sValue;
                     doLockUnshared();
