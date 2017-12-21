@@ -270,7 +270,7 @@ SetLabel() {
         llSetTimerEvent(0);
         //inlined single use CenterJustify function
         while(llStringLength(sPadding + sText + sPadding) < g_iCharLimit) sPadding += " ";
-        string sText = sPadding + sText;
+        sText = sPadding + sText;
         integer iCharPosition;
         for(iCharPosition=0; iCharPosition < g_iCharLimit; iCharPosition++)
             RenderString(llList2Integer(g_lLabelLinks, iCharPosition), llGetSubString(sText, iCharPosition, iCharPosition));

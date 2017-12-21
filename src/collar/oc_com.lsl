@@ -370,7 +370,7 @@ default {
             llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=No");
     }
 
-    listen(integer iChan, string sName, key kID, string sMsg) {
+    listen(integer iChan, string sSpeaker, key kID, string sMsg) {
         if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
@@ -430,7 +430,7 @@ default {
             //play ping pong with the Sub AO
             if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
             else if (sMsg == "OpenCollar=Yes" && g_iHighlander) {
-                llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+sName+"\" manually if it doesn't detach automatically.\n");
+                llOwnerSay("\n\nATTENTION: You are attempting to wear more than one OpenCollar core. This causes errors with other compatible accessories and your RLV relay. For a smooth experience, and to avoid wearing unnecessary script duplicates, please consider to take off \""+sSpeaker+"\" manually if it doesn't detach automatically.\n");
                 llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
             } else if (sMsg == "There can be only one!" && llGetOwnerKey(kID) == g_kWearer && g_iHighlander) {
                 llOwnerSay("/me has been detached.");

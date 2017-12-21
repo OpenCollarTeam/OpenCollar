@@ -4,6 +4,9 @@
 
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
+- Add new STOPPEDSCRIPT item type to bundles, for handling scripts that need to
+  be loaded into child prims.  (Replaces hardcoded special treatment of bundle
+  "23" in the bundle handler.)
 - Use explicit list of scripts in PermsCheck instead of oc_* prefix, reducing
   spam for users of closed source third party plugins that use that prefix.
 - Fixed upgradeability of collar versions 3.0 through 3.2.  Thank you
