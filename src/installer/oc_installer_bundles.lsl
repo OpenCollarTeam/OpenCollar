@@ -138,10 +138,9 @@ default
                 if (sType == "ITEM") {
                     llGiveInventory(kID, sItemName);
                 } else if (sType == "SCRIPT") {
-                    integer iStart = TRUE;
-                    if (llSubStringIndex(g_sCard,"_23_") != -1) iStart = FALSE;
-                    // get the full name, and load it via script pin.
-                    llRemoteLoadScriptPin(kID, sItemName, g_iPin, iStart, 1);
+                    llRemoteLoadScriptPin(kID, sItemName, g_iPin, TRUE, 1);
+                } else if (sType == "STOPPEDSCRIPT") {
+                    llRemoteLoadScriptPin(kID, sItemName, g_iPin, FALSE, 1);
                 }
                 g_iLine++;
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLine);

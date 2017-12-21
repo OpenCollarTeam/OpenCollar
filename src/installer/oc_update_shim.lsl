@@ -104,7 +104,7 @@ default {
             string sMode = llList2String(lParts, 3);
             string sCmd;
             if (sMode == "INSTALL" || sMode == "REQUIRED") {
-                if (sType == "SCRIPT") {
+                if (sType == "SCRIPT" || sType == "STOPPEDSCRIPT") {
                     // see if we have that script in our list.
                     integer idx = llListFindList(g_lScripts, [sName]);
                     if (idx == -1) {
@@ -138,11 +138,7 @@ default {
                     }
                 }
             } else if (sMode == "REMOVE" || sMode == "DEPRECATED") {
-                if (sType == "SCRIPT") {
-                    if (llGetInventoryType(sName) != INVENTORY_NONE) {
-                        llRemoveInventory(sName);
-                    }
-                } else if (sType == "ITEM") {
+                if (sType == "SCRIPT" || sType == "STOPPEDSCRIPT" || sType == "ITEM") {
                     if (llGetInventoryType(sName) != INVENTORY_NONE) {
                         llRemoveInventory(sName);
                     }
@@ -237,4 +233,3 @@ default {
         if (iChange & CHANGED_INVENTORY) PermsCheck();
     }
 }
-
