@@ -13,8 +13,6 @@ string  g_sScript                   = "SafeZone_";                              
 integer g_iSafeZoneOn = FALSE;
 integer g_iAllowList = FALSE;
 integer g_iDenyList = FALSE; //default behavior
-integer g_iTakeMe = FALSE; //takeme support
-integer g_iOpenAccess = FALSE; //auth openaccess support
 integer g_iStealth = FALSE; //hide/show collar when inactive
 
 list g_lRegions;
@@ -26,31 +24,31 @@ string TICKED = "☒ ";
 string UNTICKED = "☐ ";
 
 integer COMMAND_OWNER              = 500;
-integer COMMAND_SECOWNER           = 501;
+//integer COMMAND_SECOWNER           = 501;
 integer COMMAND_GROUP              = 502;
-integer COMMAND_WEARER             = 503;
-integer COMMAND_EVERYONE           = 504;
-integer COMMAND_RLV_RELAY          = 507;
+//integer COMMAND_WEARER             = 503;
+//integer COMMAND_EVERYONE           = 504;
+//integer COMMAND_RLV_RELAY          = 507;
 integer COMMAND_SAFEWORD           = 510;
-integer COMMAND_RELAY_SAFEWORD     = 511;
-integer COMMAND_BLACKLIST          = 520;
+//integer COMMAND_RELAY_SAFEWORD     = 511;
+//integer COMMAND_BLACKLIST          = 520;
 
 // messages for storing and retrieving values from settings store
 integer LM_SETTING_SAVE            = 2000; // scripts send messages on this channel to have settings saved to settings store
-integer LM_SETTING_REQUEST         = 2001;
+//integer LM_SETTING_REQUEST         = 2001;
 integer LM_SETTING_RESPONSE        = 2002; // the settings script will send responses on this channel
 integer LM_SETTING_DELETE          = 2003; // delete token from settings store
-integer LM_SETTING_EMPTY           = 2004; 
+//integer LM_SETTING_EMPTY           = 2004; 
 
 // messages for creating OC menu structure
 integer MENUNAME_REQUEST           = 3000;
 integer MENUNAME_RESPONSE          = 3001;
-integer MENUNAME_REMOVE            = 3003;
+//integer MENUNAME_REMOVE            = 3003;
 
 // messages to the dialog helper
 integer DIALOG                     = -9000;
 integer DIALOG_RESPONSE            = -9001;
-integer DIALOG_TIMEOUT             = -9002;
+//integer DIALOG_TIMEOUT             = -9002;
 
 
 // menu option to go one step back in menustructure
@@ -204,7 +202,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     } else if ((sParam0 == g_sAppName) && (sParam1 == "remove")) {
         string sRegion;
         if ( sParam2 == "") {
-            string sRegion =  llGetRegionName();
+            sRegion =  llGetRegionName();
         } else {
             sRegion = sParam2;
         }
@@ -305,7 +303,7 @@ default {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
                 string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+                // integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 // request to switch to parent menu
                 if (sMessage == UPMENU) {
@@ -343,7 +341,7 @@ default {
                 list lMenuParams = llParseStringKeepNulls(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0); // avatar using the menu
                 string sMessage = llList2String(lMenuParams, 1); // button label
-                integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
+                // integer iPage = (integer)llList2String(lMenuParams, 2); // menu page
                 integer iAuth = (integer)llList2String(lMenuParams, 3); // auth level of avatar
                 // request to switch to parent menu
                 if (sMessage == UPMENU) {
