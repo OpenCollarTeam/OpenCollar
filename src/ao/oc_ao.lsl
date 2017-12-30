@@ -672,8 +672,7 @@ default {
                     integer i;
                     for (i=2;i<llGetListLength(g_lPrimOrder);++i) {
                         if (g_iOldPos != i) {
-                            integer iTemp = llList2Integer(g_lPrimOrder,i);
-                            lButtons +=[llList2String(g_lButtons,iTemp)+":"+(string)i];
+                            lButtons +=[llList2String(g_lButtons,llList2Integer(g_lPrimOrder,i))+":"+(string)i];
                         }
                     }
                     Dialog(kID, sPrompt, lButtons, ["BACK"],"ordermenu");

@@ -17,7 +17,6 @@ integer NOTIFY = 1002;
 integer LINK_DIALOG = 3;
 integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
-integer REBOOT = -1000;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;

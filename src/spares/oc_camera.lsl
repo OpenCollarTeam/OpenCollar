@@ -13,9 +13,7 @@ key g_kWearer;
 integer g_iLastNum;
 string g_sSubMenu = "Camera";
 string g_sParentMenu = "Apps";
-key g_kMenuID;
 string g_sCurrentMode = "default";
-float g_fReapeat = 0.5;
 
 //these 4 are used for syncing dom to us by broadcasting cam pos/rot
 integer g_iSync2Me;//TRUE if we're currently dumping cam pos/rot iChanges to chat so the owner can sync to us
@@ -151,22 +149,22 @@ ClearCam() {
     llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "all", "");
 }
 
-CamFocus(vector g_vCamPos, rotation g_rCamRot) {
+CamFocus(vector vCamPos, rotation rCamRot) {
     vector vStartPose = llGetCameraPos();
     rotation rStartRot = llGetCameraRot();
     float fSteps = 8.0;
     //Keep fSteps a float, but make sure its rounded off to the nearest 1.0
     fSteps = (float)llRound(fSteps);
     //Calculate camera position increments
-    vector vPosStep = (g_vCamPos - vStartPose) / fSteps;
+    vector vPosStep = (vCamPos - vStartPose) / fSteps;
     //Calculate camera rotation increments
-    //rotation rStep = (g_rCamRot - rStartRot);
+    //rotation rStep = (rCamRot - rStartRot);
     //rStep = <rStep.x / fSteps, rStep.y / fSteps, rStep.z / fSteps, rStep.s / fSteps>;
     float fCurrentStep = 0.0; //Loop through motion for fCurrentStep = current step, while fCurrentStep <= Total steps
     for(; fCurrentStep <= fSteps; ++fCurrentStep) {
         //Set next position in tween
         vector vNextPos = vStartPose + (vPosStep * fCurrentStep);
-        rotation rNextRot = Slerp( rStartRot, g_rCamRot, fCurrentStep / fSteps);
+        rotation rNextRot = Slerp( rStartRot, rCamRot, fCurrentStep / fSteps);
          //Set camera parameters
         llSetCameraParams([
             CAMERA_ACTIVE, 1, //1 is active, 0 is inactive
@@ -326,12 +324,12 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Sorry, cam settings have already been set by someone outranking you.", kID);
     } else if (sCommand == "camdump") {
         g_iBroadChan = (integer)sValue;
-        integer g_fReapeat = (integer)sValue2;
+        integer fReaPeat = (integer)sValue2;
         ChatCamParams(g_iBroadChan, kID);
-        if (g_fReapeat) {
+        if (fReaPeat) {
             g_kBroadRcpt = kID;
             g_iSync2Me = TRUE;
-            llSetTimerEvent(g_fReapeat);
+            llSetTimerEvent(fReaPeat);
         }
     } else if (sStr == "rm camera") {
             if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);

@@ -118,9 +118,9 @@ SendCollarCommand(string sCmd) {
             else
                 llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
         } else if (g_sActivePartnerID == g_sAllPartners) {
-            integer i = llGetListLength(g_lPartnersInSim);
-             while (i > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
-                string sPartnerID = llList2String(g_lPartnersInSim,--i);
+            integer j = llGetListLength(g_lPartnersInSim);
+             while (j > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
+                string sPartnerID = llList2String(g_lPartnersInSim,--j);
                 if (!llSubStringIndex(sCmd,"acc-"))
                     llMessageLinked(LINK_THIS,ACC_CMD,sCmd,sPartnerID);
                 else

@@ -201,11 +201,9 @@ list g_lChat = [
 
 
 list g_lDisabled; //we will log our disabled here
-string g_lOwnerSpecifics;
 
 string  g_sSubMenu    = "RLVcmd"; // Name of the submenu
 string  g_sParentMenu = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore
-string  g_sScript = "RLVcmd_";                             // part of script name used for settings
 
 key     g_kMenuID;                              // menu handler
 key     g_kMenuIDEnablements;                              // menu handler
@@ -273,14 +271,14 @@ integer MENUNAME_RESPONSE       = 3001;
 
 // messages for RLV commands
 integer RLV_CMD                 = 6000;
-integer RLV_REFRESH             = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR               = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION             = 6003; // RLV Plugins can recieve the used rl viewer version upon receiving this message..
+//integer RLV_REFRESH             = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CLEAR               = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
+//integer RLV_VERSION             = 6003; // RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer RLVA_VERSION            = 6004;
 integer RLV_OFF                 = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON                  = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-integer RLV_QUERY               = 6102; //query from a script asking if RLV is currently functioning
-integer RLV_RESPONSE            = 6103; //reply to RLV_QUERY, with "ON" or "OFF" as the message
+//integer RLV_QUERY               = 6102; //query from a script asking if RLV is currently functioning
+//integer RLV_RESPONSE            = 6103; //reply to RLV_QUERY, with "ON" or "OFF" as the message
 
 // messages for poses and couple anims
 //integer ANIM_START              = 7000; // send this with the name of an anim in the string part of the message to play the anim
@@ -293,7 +291,7 @@ integer RLV_RESPONSE            = 6103; //reply to RLV_QUERY, with "ON" or "OFF"
 // messages to the dialog helper
 integer DIALOG                  = -9000;
 integer DIALOG_RESPONSE         = -9001;
-integer DIALOG_TIMEOUT          = -9002;
+//integer DIALOG_TIMEOUT          = -9002;
 
 //integer FIND_AGENT              = -9005; // to look for agent(s) in region with a (optional) search string
 //key REQUEST_KEY;
@@ -394,7 +392,6 @@ DoMenuEnablements(key kAv, integer iAuth)
 DoMenuOther(key kAv, integer iAuth, string sType)
 {
     string sPrompt = sType + "\n[http://wiki.secondlife.com/wiki/LSL_Protocol/RestrainedLoveAPI RLVcmd Help]";
-    integer i = 0;
     list lMyButtons;
     if(sType == "Chat") { lMyButtons = llList2ListStrided(g_lChat, 0, -1, 2); }
     else if(sType == "GatherInfo") { lMyButtons = llList2ListStrided(g_lGatherInfo, 0, -1, 2); }
@@ -647,13 +644,13 @@ default {
                     DoMenu(kAv, iAuth);
                 } else {
                     g_kClicker = kAv;
-                    string sStr;
+                    string sCmdStr;
                     if (llSubStringIndex(sMessage, UNTICKED) >= 0) {
-                        sStr = llGetSubString(sMessage,llStringLength(UNTICKED),llStringLength(sMessage))+"=n" ;
+                        sCmdStr = llGetSubString(sMessage,llStringLength(UNTICKED),llStringLength(sMessage))+"=n" ;
                     } else if(llSubStringIndex(sMessage, TICKED) >= 0) {
-                        sStr = llGetSubString(sMessage, llStringLength(TICKED), llStringLength(sMessage))+"=y";
+                        sCmdStr = llGetSubString(sMessage, llStringLength(TICKED), llStringLength(sMessage))+"=y";
                     }
-                    RlvCmd("@" + sStr);
+                    RlvCmd("@" + sCmdStr);
                     llSetTimerEvent(20);
                     g_iListenerHandle = llListen(g_iExceptionsChannel, "", llGetOwner(), "");
                     OutCommand("@getstatusall" + "=" + (string)g_iExceptionsChannel);
