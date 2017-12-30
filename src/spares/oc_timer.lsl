@@ -15,13 +15,13 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
+//integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
-integer ATTACHMENT_COMMAND = 602;
+//integer ATTACHMENT_COMMAND = 602;
 integer ATTACHMENT_FORWARD = 610;
 
 //integer WEARERLOCKOUT = 620;
@@ -35,9 +35,9 @@ integer LINK_RLV    = 4;
 integer LINK_SAVE   = 5;
 integer LINK_UPDATE = -10;
 
-integer LM_SETTING_SAVE = 2000;
+// integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+// integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
@@ -491,7 +491,7 @@ default {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0);
             string sMsg = llList2String(lMenuParams, 1);
-            integer iPage = (integer)llList2String(lMenuParams, 2);
+            // integer iPage = (integer)llList2String(lMenuParams, 2);
             integer iAuth = (integer)llList2String(lMenuParams, 3);
             if (sMenu == "menu") {
                 if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
