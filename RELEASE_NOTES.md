@@ -4,7 +4,7 @@
 
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
-- Add new STOPPEDSCRIPT item type to bundles, for handling scripts that need to
+- Added new STOPPEDSCRIPT item type to bundles, for handling scripts that need to
   be loaded into child prims.  (Replaces hardcoded special treatment of bundle
   "23" in the bundle handler.)
 - Use explicit list of scripts in PermsCheck instead of oc_* prefix, reducing
@@ -25,5 +25,5 @@
 - Added mechanism for safely updating animations and preventing duplicates.
 - Removed dozens of unused variables and functions.
 - Fixed problem with oc_couples not re-reading config notecards on change.
-- Added support for updating collars back to 3.x.
+- Added support for updating collars as far back as 3.x.
 - Add oc_bookmarks back to the default updater.

@@ -12,7 +12,6 @@ string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plu
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp
 string  g_sCard                     = ".bookmarks"; //Name of the notecards to store destinations.
-string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
 key webLookup;
 string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
@@ -317,7 +316,7 @@ below.\n- Submit a blank field to cancel and return.", [], [], 0, iAuth,"TextBox
 ReadDestinations() {  // On inventory change, re-read our ~destinations notecard and pull from web
     g_lDestinations = [];
     g_lDestinations_Slurls = [];
-    webLookup = llHTTPRequest(g_sWeb+"bookmarks"+HTTP_TYPE,[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    webLookup = llHTTPRequest(g_sWeb+"bookmarks.txt",[HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     //start re-reading the notecards
     g_iLine = 0;
     if(llGetInventoryKey(g_sCard))

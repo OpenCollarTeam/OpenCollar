@@ -13,8 +13,6 @@ string g_sParentMenu = "RLV";
 
 //list g_lChildren = ["Rem. Clothing"]; //,"LockClothing","LockAttachment"];//,"LockClothing","UnlockClothing"];
 list g_lSubMenus = [];
-string SELECT_CURRENT = "*InFolder";
-string SELECT_RECURS= "*Recursively";
 list g_lRLVcmds = ["attach","detach","remoutfit", "addoutfit","remattach","addattach"];
 
 integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
@@ -136,10 +134,10 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD = 6000;
+// integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
+// integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
@@ -335,7 +333,7 @@ UpdateSettings()
         for (n = 0; n < iSettingsLength; n = n + 2)
         {
             list sOption=llParseString2List(llList2String(g_lSettings, n),[":"],[]);
-            string sValue=llList2String(g_lSettings, n + 1);
+            // string sValue=llList2String(g_lSettings, n + 1);
             //Debug(llList2String(g_lSettings, n) + "=" + sValue);
             lNewList += [llList2String(g_lSettings, n) + "=" + llList2String(g_lSettings, n + 1)];
             if (llGetListLength(sOption)==1 && llList2String(sOption,0)=="remoutfit")
@@ -611,8 +609,8 @@ RLVCMD(string sStr)
     string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
     string sParam = llList2String(llParseString2List(sStr, ["="], []), 1);
     integer iIndex = llListFindList(g_lSettings, [sOption]);
-    string opt1 = llList2String(llParseString2List(sOption, [":"], []), 0);
-    string opt2 = llList2String(llParseString2List(sOption, [":"], []), 1);
+    // string opt1 = llList2String(llParseString2List(sOption, [":"], []), 0);
+    // string opt2 = llList2String(llParseString2List(sOption, [":"], []), 1);
     if (sParam == "n")
     {
         if (iIndex == -1) g_lSettings += [sOption, sParam];
@@ -713,7 +711,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                // integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
 
                 if (sMenu == "Menu")
