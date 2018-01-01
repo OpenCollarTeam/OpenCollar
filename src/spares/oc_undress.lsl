@@ -22,6 +22,7 @@ integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
 //key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
 
 list g_lSettings;//2-strided list in form of [option, param]
+list g_lNamePoints;//2-strided list in form [name, attach point]
 
 list LOCK_CLOTH_POINTS = [
     "Gloves",
@@ -157,7 +158,6 @@ integer g_iMenuStride = 3;
 integer g_iRLVTimeOut = 60;
 
 integer g_iClothRLV = 78465;
-integer g_iAttachRLV = 78466;
 integer g_iListener;
 key g_kMenuUser; // id of the avatar who will get the next menu after asynchronous response from RLV
 integer g_iMenuAuth; // auth level of that user
@@ -263,18 +263,6 @@ LockClothMenu(key kID, integer iAuth)
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "lockclothing");
 }
 
-QueryAttachments(key kAv, integer iAuth)
-{    //open listener
-    g_iListener = llListen(g_iAttachRLV, "", g_kWearer, "");
-    //start timer
-    llSetTimerEvent(g_iRLVTimeOut);
-    //send rlvcmd
-    //llMessageLinked(LINK_RLV, RLV_CMD, "getattach=" + (string)g_iAttachRLV, NULL_KEY);
-    if (g_iRLVOn) llOwnerSay("@getattach=" + (string)g_iAttachRLV);
-    g_kMenuUser = kAv;
-    g_iMenuAuth = iAuth;
-}
-
 LockAttachmentMenu(key kID, integer iAuth)
 {
     string sPrompt = "\nSelect an attachment to un/lock.\n";
@@ -295,27 +283,37 @@ LockAttachmentMenu(key kID, integer iAuth)
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "lockattachment");
 }
 
-DetachMenu(key kID, string sStr, integer iAuth)
+DetachMenu(key kID, integer iAuth)
 {
     //remember not to add button for current object
     //str looks like 0110100001111
     //loop through CLOTH_POINTS, look at char of str for each
     //for each 1, add capitalized button
     string sPrompt = "\nSelect an attachment to remove.\n";
+    g_lNamePoints = [];
 
     //prevent detaching the collar itself
     integer myattachpoint = llGetAttached();
+    
+    list attachmentKeys = llGetAttachedList(llGetOwner());
+    integer n;
+    integer iStop = llGetListLength(attachmentKeys);
+    
+    for (n = 0; n < iStop; n++) {
+        list namePoint = llGetObjectDetails(
+            llList2Key(attachmentKeys, n),
+            [OBJECT_NAME, OBJECT_ATTACHED_POINT]
+        );
+        if (llList2Integer(namePoint,1) != myattachpoint) {
+            g_lNamePoints += namePoint;
+        }
+    }
 
     list lButtons;
-    integer iStop = llGetListLength(ATTACH_POINTS);
-    integer n;
-    for (n = 0; n < iStop; n++)
-    {
-        if (n != myattachpoint)
-        {
-            integer iWorn = (integer)llGetSubString(sStr, n, n);
-            if (iWorn) lButtons += [llList2String(ATTACH_POINTS, n)];
-        }
+    iStop = llGetListLength(g_lNamePoints);
+    
+    for (n = 0; n < iStop; n+=2) {
+        lButtons += [llList2String(g_lNamePoints, n)];
     }
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "detach");
 }
@@ -718,7 +716,7 @@ default {
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == "Rem. Clothing") QueryClothing(kAv, iAuth);
-                    else if (sMessage == "Rem. Attach.") QueryAttachments(kAv, iAuth);
+                    else if (sMessage == "Rem. Attach.") DetachMenu(kAv, iAuth);
                     else if (sMessage == "Lock Clothing") LockClothMenu(kAv, iAuth);
                     else if (sMessage == "Lock Attach.") LockAttachmentMenu(kAv, iAuth);
                     else if (sMessage == "☐ Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
@@ -740,18 +738,25 @@ default {
                 }
                 else if (sMenu == "detach")
                 {
-                    if (sMessage == UPMENU) MainMenu(kAv, iAuth);
+                    if (sMessage == UPMENU) {
+                        MainMenu(kAv, iAuth);
+                    }
                     else
-                    {
-                        sMessage = llToLower(sMessage);
-                        //send the RLV command to remove it.
-                        //llMessageLinked(LINK_RLV, RLV_CMD, "detach:" + sMessage + "=force", NULL_KEY);
-                        if (g_iRLVOn) llOwnerSay("@detach:" + sMessage + "=force");
-                        //sleep for a sec to let tihngs detach
-                        llSleep(0.5);
+                    {              
+                        integer idx = llListFindList(g_lNamePoints, [sMessage]);
+                        if (~idx) {
+                            integer pointNum = (integer)llList2String(g_lNamePoints, idx + 1);
+                            string point = llList2String(ATTACH_POINTS, pointNum);
+                            //send the RLV command to remove it.
+                            if (g_iRLVOn && llStringLength(point)) {
+                                llOwnerSay("@detach:" + point + "=force");
+                            }
+                            //sleep for a sec to let tihngs detach
+                            llSleep(0.5);
+                        }
                         //Return menu
                         g_kMenuUser = kAv;
-                        QueryAttachments(kAv, iAuth);
+                        DetachMenu(kAv, iAuth);
                     }
                 }
                 else if (sMenu == "lockclothing" || sMenu == "lockattachment")
@@ -795,7 +800,7 @@ default {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
         if (iChan == g_iClothRLV) ClothingMenu(g_kMenuUser, sMessage, g_iMenuAuth);
-        else if (iChan == g_iAttachRLV) DetachMenu(g_kMenuUser, sMessage, g_iMenuAuth);
+        // else if (iChan == g_iAttachRLV) DetachMenu(g_kMenuUser, sMessage, g_iMenuAuth);
     }
 
     timer()
