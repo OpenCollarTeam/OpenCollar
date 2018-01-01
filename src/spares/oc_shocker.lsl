@@ -131,7 +131,7 @@ DialogSelectSound(key kID, integer iAuth) {
     Dialog(kID, sText, lSoundList, [UPMENU],0, iAuth,"sound");
 }
 
-DialogHelp(key kID, integer iAuth) {
+DialogHelp(key kID) {
     string sMsg = "Shocker chat commands:\n\n";
     sMsg += "%PREFIX% shocker <seconds>\n     where <seconds> is time in seconds to punish you pet.\n\n";
     sMsg += "%PREFIX% shocker 0/stop/off\n     is stop to punish you pet immediately.\n\n";
@@ -142,7 +142,7 @@ DialogHelp(key kID, integer iAuth) {
     llMessageLinked(LINK_DIALOG, NOTIFY, "0"+sMsg, kID);
 }
 
-Shock(integer time, key kID) {
+Shock(integer time) {
     if (time > 0) {
         //llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.", kID);
         llMessageLinked(LINK_DIALOG, SAY, "1"+"%WEARERNAME% now shocked for "+(string)time+" seconds.","");
@@ -193,7 +193,7 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu) {
         string sCommand = llList2String(lParams, 1);
         string sValue = llList2String(lParams, 2);
 
-        if (sCommand == "help") DialogHelp(kID, iAuth);
+        if (sCommand == "help") DialogHelp(kID);
         else if (sCommand == "animation") {
             Stop();
             string sAnim = llStringTrim(sValue, STRING_TRIM);
@@ -218,7 +218,7 @@ UserCommand(integer iAuth, string sStr, key kID, integer remenu) {
                 llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"shocker_sound="+g_sShockSound, "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Punishment sound for shocker is now '"+g_sShockSound+"'.",kID);
             } else DialogSelectSound(kID, iAuth);
-        } else Shock((integer)sCommand, kID);
+        } else Shock((integer)sCommand);
     }
     if (remenu) DialogShocker(kID, iAuth);
 }
@@ -255,7 +255,7 @@ default {
             string sValue = llList2String(lParams, 1);
             if (sToken == "shocker_anim") g_sShockAnim = sValue;
             if (sToken == "shocker_sound") g_sShockSound = sValue;
-        } else if (iNum == CMD_SAFEWORD) Shock(0,kID);
+        } else if (iNum == CMD_SAFEWORD) Shock(0);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             llMessageLinked(LINK_ANIM, ANIM_LIST_REQUEST,"","");

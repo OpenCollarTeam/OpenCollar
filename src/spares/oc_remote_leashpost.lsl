@@ -56,10 +56,10 @@ default {
         string sObjectID = (string)llGetKey();
         list lToLeash = llParseString2List(sMessage,[","],[]);
         integer i = llGetListLength(lToLeash);
-        key kID;
+        key kLeashToID;
         while (i) {
-            kID = llList2Key(lToLeash,--i);
-            llRegionSayTo(kID,RemoteChannel(kID,0),"anchor "+sObjectID);
+            kLeashToID = llList2Key(lToLeash,--i);
+            llRegionSayTo(kLeashToID,RemoteChannel(kLeashToID,0),"anchor "+sObjectID);
         }
     }
     changed(integer iChange) {

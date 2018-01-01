@@ -20,7 +20,6 @@ key g_kWearer;
 
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
-string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -394,7 +393,7 @@ default {
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
             if (sToken == "intern_news") {
                 g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
         }
         else if (iNum == LM_SETTING_REQUEST) {
@@ -426,7 +425,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {

@@ -144,7 +144,6 @@ Notes:
 
 
 //OpenCollar Plugin Template
-integer g_iDebugMode = FALSE;       // set to TRUE to enable Debug messages, if any
 
 string  g_sParentMenu = "Apps";
 string  g_sSubMenu = "Cage Home";
@@ -245,7 +244,6 @@ integer CAGEHOME_NOTIFY = -11552; // internal link num to announce arrivals and 
 integer g_iTimerOnLine  = 60;  // check every .. seconds for on-line  (timer/dataserver)
 integer g_iTimerOffLine = 15;  // check every .. seconds for off-line (timer/dataserver)
 integer g_iSensorTimer  = 3;   // check every .. seconds to see if cage owner is near (sensor)
-integer g_iTP_Timer     = 30;  // try tp every .. seconds
 integer g_iMaxTPtries   = 5;   // ...until exhausted tries
 
 // plugin settings (dont change order as listed here, it's in 'protocol order'. see defaults below)
@@ -288,13 +286,6 @@ list    g_lLocalButtons = []; // extra buttons that we get inserted "from above"
 
 
 list lSTATES = ["UNSET","DISARMED","ARMED","WARNING","TELEPORT","CAGED","RELEASED"];
-
-DebugCurrentState(string sMsg) {
-    if (g_iDebugMode) Debug(llList2String(lSTATES,g_iState) + " " + sMsg );
-}
-Debug(string sMsg) {
-    if (g_iDebugMode) llOwnerSay(llGetScriptName()+" [DEBUG]: "+sMsg);
-}
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {

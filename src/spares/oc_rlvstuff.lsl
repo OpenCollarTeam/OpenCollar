@@ -79,10 +79,10 @@ integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the httpdb script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from DB
-integer LM_SETTING_EMPTY = 2004;//sent by setting script when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent by setting script when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -98,7 +98,6 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-integer SENSORDIALOG = -9003;
 
 string UPMENU = "BACK";
 
@@ -187,11 +186,6 @@ Menu(key kID, integer iAuth, string sMenuName) {
     lButtons += [TURNON + " All"];
     lButtons += [TURNOFF + " All"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, sMenuName);
-}
-
-string GetSetting(string sCategory, string sParam) {
-    integer iIndex = llListFindList(g_lSettings, [sCategory,sParam]);
-    return llList2String(g_lSettings, iIndex + 2);
 }
 
 SetSetting(string sCategory, string sOption, string sValue) {
@@ -296,7 +290,6 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
         list lItems = llParseString2List(sStr, [","], []);
         integer n;
         integer iStop = llGetListLength(lItems);
-        list lChange;  //list containing the categories with changed settings
         for (n = 0; n < iStop; n++) {
             //split off the parameters (anything after a : or =)
             //and see if the thing being set concerns us
@@ -313,7 +306,6 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
                     else {
                         string sOption = llList2String(llParseString2List(sThisItem, ["="], []), 0);
                         string sValue = llList2String(llParseString2List(sThisItem, ["="], []), 1);
-                        integer iIndex = llListFindList(g_lSettings, [sCategory,sOption]);
                         SetSetting(sCategory, sOption, sValue);
                     }
                 }
@@ -351,7 +343,6 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            integer iChange = FALSE;
 
             string category=llList2String(llParseString2List(sToken,["_"],[]),0)+"_";
             if (~llListFindList(g_lMenuHelpMap,[category])){
@@ -385,7 +376,7 @@ default {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sMessage = llList2String(lMenuParams, 1);
-                integer iPage = (integer)llList2String(lMenuParams, 2);
+                //integer iPage = (integer)llList2String(lMenuParams, 2);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 //remove stride from g_lMenuIDs
                 //we have to subtract from the index because the dialog id comes in the middle of the stride
