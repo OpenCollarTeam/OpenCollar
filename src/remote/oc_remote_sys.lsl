@@ -242,7 +242,7 @@ default {
     state_entry() {
         g_kOwner = llGetOwner();
         PermsCheck();
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -258,7 +258,7 @@ default {
     }
 
     on_rez(integer iStart) {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
     }
 
     touch_start(integer iNum) {
