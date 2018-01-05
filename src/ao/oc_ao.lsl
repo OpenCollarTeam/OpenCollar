@@ -4,8 +4,8 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
-string g_sFancyVersion = "⁶⋅⁴⋅⁰";
-float g_fBuildVersion = 161029.1;
+string g_sDevStage = "dev1";
+string g_sVersion = "7.0";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -287,7 +287,7 @@ list SortButtons(list lButtons, list lStaticButtons) {
 }
 
 MenuAO(key kID) {
-    string sPrompt = "\n[OpenCollar AO]\t"+g_sFancyVersion;
+    string sPrompt = "\n[OpenCollar AO]\t"+g_sVersion+g_sDevStage;
     if (g_iUpdateAvailable) sPrompt+= "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     list lButtons = ["LOCK"];
     if (g_iLocked) lButtons = ["UNLOCK"];
@@ -493,7 +493,7 @@ default {
         if (g_kWearer != llGetOwner()) llResetScript();
         if (g_iLocked) llOwnerSay("@detach=n");
         g_iReady = FALSE;
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~ao", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/ao.txt", [HTTP_METHOD, "GET"],"");
         llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
     }
 
@@ -776,7 +776,7 @@ default {
 
     http_response(key kRequestID, integer iStatus, list lMeta, string sBody) {
         if (kRequestID == g_kWebLookup && iStatus == 200)  {
-            if ((float)sBody > g_fBuildVersion) g_iUpdateAvailable = TRUE;
+            if ((float)sBody > (float)g_sVersion) g_iUpdateAvailable = TRUE;
             else g_iUpdateAvailable = FALSE;
         }
     }
