@@ -22,7 +22,7 @@ integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
 //key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
 
 list g_lSettings;//2-strided list in form of [option, param]
-list g_lNamePoints;//2-strided list in form [name, attach point]
+list g_lAttachments;//2-strided list in form [name, uuid]
 
 list LOCK_CLOTH_POINTS = [
     "Gloves",
@@ -290,30 +290,24 @@ DetachMenu(key kID, integer iAuth)
     //loop through CLOTH_POINTS, look at char of str for each
     //for each 1, add capitalized button
     string sPrompt = "\nSelect an attachment to remove.\n";
-    g_lNamePoints = [];
+    g_lAttachments = [];
 
-    //prevent detaching the collar itself
-    integer myattachpoint = llGetAttached();
-    
     list attachmentKeys = llGetAttachedList(llGetOwner());
     integer n;
     integer iStop = llGetListLength(attachmentKeys);
     
     for (n = 0; n < iStop; n++) {
-        list namePoint = llGetObjectDetails(
-            llList2Key(attachmentKeys, n),
-            [OBJECT_NAME, OBJECT_ATTACHED_POINT]
-        );
-        if (llList2Integer(namePoint,1) != myattachpoint) {
-            g_lNamePoints += namePoint;
+        key k = llList2Key(attachmentKeys, n);
+        if (k != llGetKey()) {
+            g_lAttachments += [llKey2Name(k), k];
         }
     }
 
     list lButtons;
-    iStop = llGetListLength(g_lNamePoints);
+    iStop = llGetListLength(g_lAttachments);
     
     for (n = 0; n < iStop; n+=2) {
-        lButtons += [llList2String(g_lNamePoints, n)];
+        lButtons += [llList2String(g_lAttachments, n)];
     }
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "detach");
 }
@@ -743,15 +737,14 @@ default {
                     }
                     else
                     {              
-                        integer idx = llListFindList(g_lNamePoints, [sMessage]);
+                        integer idx = llListFindList(g_lAttachments, [sMessage]);
                         if (~idx) {
-                            integer pointNum = (integer)llList2String(g_lNamePoints, idx + 1);
-                            string point = llList2String(ATTACH_POINTS, pointNum);
+                            string uuid = llList2String(g_lAttachments, idx + 1);
                             //send the RLV command to remove it.
-                            if (g_iRLVOn && llStringLength(point)) {
-                                llOwnerSay("@detach:" + point + "=force");
+                            if (g_iRLVOn) {
+                                llOwnerSay("@remattach:" + uuid + "=force");
                             }
-                            //sleep for a sec to let tihngs detach
+                            //sleep for a sec to let things detach
                             llSleep(0.5);
                         }
                         //Return menu
