@@ -1,6 +1,6 @@
 # OpenCollar Release Notes
 
-## 7.0.dev1 (In development)
+## 7.0.dev2 (In development)
 
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
