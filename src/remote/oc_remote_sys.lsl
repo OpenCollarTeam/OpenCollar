@@ -7,8 +7,8 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sVersion = "170321.1";
-string g_sFancyVersion = "⁶⋅⁴⋅⁰";
+string g_sDevStage="dev1";
+string g_sVersion = "7.0";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -155,7 +155,7 @@ Dialog(string sPrompt, list lChoices, list lUtilityButtons, integer iPage, strin
 }
 
 MainMenu(){
-    string sPrompt = "\n[OpenCollar Remote]\t"+g_sFancyVersion;
+    string sPrompt = "\n[OpenCollar Remote]\t"+g_sVersion+g_sDevStage;
     sPrompt += "\n\nSelected Partner: "+NameURI(g_sActivePartnerID);
     if (g_iUpdateAvailable) sPrompt += "\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
     list lButtons = g_lMainMenuButtons + g_lMenus;
@@ -242,7 +242,7 @@ default {
     state_entry() {
         g_kOwner = llGetOwner();
         PermsCheck();
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
             g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -258,7 +258,7 @@ default {
     }
 
     on_rez(integer iStart) {
-        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/~remote", [HTTP_METHOD, "GET"],"");
+        g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
     }
 
     touch_start(integer iNum) {

@@ -1,6 +1,6 @@
 # OpenCollar Release Notes
 
-## 7.0.dev1 (In development)
+## 7.0.dev2 (In development)
 
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
@@ -11,6 +11,9 @@
   spam for users of closed source third party plugins that use that prefix.
 - Fixed upgradeability of collar versions 3.0 through 3.2.  Thank you
   Nataliaa Wirefly for the bug report and testing.
+- Add new "Detach" button to the RLV menu, and associated "detach" command.
+  This feature shows the user a list of the collar wearer's attachments, and
+  allows you to detach them.
 
 ## 7.0
 
