@@ -5,7 +5,7 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "1.2";
 
 string  PLUGIN_CHAT_CMD             = "tp"; // every menu should have a chat command, so the user can easily access it by type for instance *plugin
 string  PLUGIN_CHAT_CMD_ALT         = "bookmarks"; //taking control over some map/tp commands from rlvtp

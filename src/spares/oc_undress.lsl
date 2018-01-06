@@ -22,7 +22,6 @@ integer g_iSmartStrip=FALSE; //use @detachallthis isntead of remove
 //key g_kSmartUser; //we store the last person to select if they are not wearer/owner, so that it can be switched on for current user without changing setting.
 
 list g_lSettings;//2-strided list in form of [option, param]
-list g_lNamePoints;//2-strided list in form [name, attach point]
 
 list LOCK_CLOTH_POINTS = [
     "Gloves",
@@ -281,41 +280,6 @@ LockAttachmentMenu(key kID, integer iAuth)
         else lButtons += [UNTICKED+sAttach];
     }
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "lockattachment");
-}
-
-DetachMenu(key kID, integer iAuth)
-{
-    //remember not to add button for current object
-    //str looks like 0110100001111
-    //loop through CLOTH_POINTS, look at char of str for each
-    //for each 1, add capitalized button
-    string sPrompt = "\nSelect an attachment to remove.\n";
-    g_lNamePoints = [];
-
-    //prevent detaching the collar itself
-    integer myattachpoint = llGetAttached();
-    
-    list attachmentKeys = llGetAttachedList(llGetOwner());
-    integer n;
-    integer iStop = llGetListLength(attachmentKeys);
-    
-    for (n = 0; n < iStop; n++) {
-        list namePoint = llGetObjectDetails(
-            llList2Key(attachmentKeys, n),
-            [OBJECT_NAME, OBJECT_ATTACHED_POINT]
-        );
-        if (llList2Integer(namePoint,1) != myattachpoint) {
-            g_lNamePoints += namePoint;
-        }
-    }
-
-    list lButtons;
-    iStop = llGetListLength(g_lNamePoints);
-    
-    for (n = 0; n < iStop; n+=2) {
-        lButtons += [llList2String(g_lNamePoints, n)];
-    }
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "detach");
 }
 
 UpdateSettings()
@@ -716,7 +680,7 @@ default {
                 {
                     if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == "Rem. Clothing") QueryClothing(kAv, iAuth);
-                    else if (sMessage == "Rem. Attach.") DetachMenu(kAv, iAuth);
+                    else if (sMessage == "Rem. Attach.") llMessageLinked(LINK_THIS, iAuth, "menu detach", kAv); // this is in oc_rlvsuite now
                     else if (sMessage == "Lock Clothing") LockClothMenu(kAv, iAuth);
                     else if (sMessage == "Lock Attach.") LockAttachmentMenu(kAv, iAuth);
                     else if (sMessage == "☐ Lock All") { UserCommand(iAuth, "lockall", kAv); MainMenu(kAv, iAuth); }
@@ -734,29 +698,6 @@ default {
                         UserCommand(iAuth, "strip "+sMessage,kAv);
                         llSleep(0.5);
                         QueryClothing(kAv, iAuth);
-                    }
-                }
-                else if (sMenu == "detach")
-                {
-                    if (sMessage == UPMENU) {
-                        MainMenu(kAv, iAuth);
-                    }
-                    else
-                    {              
-                        integer idx = llListFindList(g_lNamePoints, [sMessage]);
-                        if (~idx) {
-                            integer pointNum = (integer)llList2String(g_lNamePoints, idx + 1);
-                            string point = llList2String(ATTACH_POINTS, pointNum);
-                            //send the RLV command to remove it.
-                            if (g_iRLVOn && llStringLength(point)) {
-                                llOwnerSay("@detach:" + point + "=force");
-                            }
-                            //sleep for a sec to let tihngs detach
-                            llSleep(0.5);
-                        }
-                        //Return menu
-                        g_kMenuUser = kAv;
-                        DetachMenu(kAv, iAuth);
                     }
                 }
                 else if (sMenu == "lockclothing" || sMenu == "lockattachment")
@@ -800,7 +741,6 @@ default {
         llListenRemove(g_iListener);
         llSetTimerEvent(0.0);
         if (iChan == g_iClothRLV) ClothingMenu(g_kMenuUser, sMessage, g_iMenuAuth);
-        // else if (iChan == g_iAttachRLV) DetachMenu(g_kMenuUser, sMessage, g_iMenuAuth);
     }
 
     timer()
@@ -811,11 +751,5 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_INVENTORY) PermsCheck();
-        /*if (iChange & CHANGED_REGION) {
-            if (g_iProfiled) {
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
     }
 }

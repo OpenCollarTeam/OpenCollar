@@ -43,12 +43,12 @@ integer g_iListener;
 integer g_iFolderRLV = 98745923;
 integer g_iFolderRLVSearch = 98745925;
 integer g_iTimeOut = 30; //timeout on viewer response commands
-integer g_iRlvOn = FALSE;
-integer g_iRlvaOn = FALSE;
+integer g_iRLVOn = FALSE;
+integer g_iRLVaOn = FALSE;
 string g_sCurrentPath;
 string g_sPathPrefix = ".outfits"; //we look for outfits in here
 
-
+list g_lAttachments;//2-strided list in form [name, uuid]
 key     g_kWearer;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -232,6 +232,35 @@ WearFolder (string sStr) { //function grabs g_sCurrentPath, and splits out the f
     llOwnerSay(sAttach);
 }
 
+DetachMenu(key kID, integer iAuth)
+{
+    //remember not to add button for current object
+    //str looks like 0110100001111
+    //loop through CLOTH_POINTS, look at char of str for each
+    //for each 1, add capitalized button
+    string sPrompt = "\nSelect an attachment to remove.\n";
+    g_lAttachments = [];
+
+    list attachmentKeys = llGetAttachedList(llGetOwner());
+    integer n;
+    integer iStop = llGetListLength(attachmentKeys);
+    
+    for (n = 0; n < iStop; n++) {
+        key k = llList2Key(attachmentKeys, n);
+        if (k != llGetKey()) {
+            g_lAttachments += [llKey2Name(k), k];
+        }
+    }
+
+    list lButtons;
+    iStop = llGetListLength(g_lAttachments);
+    
+    for (n = 0; n < iStop; n+=2) {
+        lButtons += [llList2String(g_lAttachments, n)];
+    }
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "detach");
+}
+
 doRestrictions(){
     if (g_iSendRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"sendim=n","vdRestrict");
     else llMessageLinked(LINK_RLV,RLV_CMD,"sendim=y","vdRestrict");
@@ -300,14 +329,14 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     //Debug(sStr);
     //outfits command handling
     if (sLowerStr == "outfits" || sLowerStr == "menu outfits") {
-        if (g_iRlvaOn) OutfitsMenu(kID, iNum);
+        if (g_iRLVaOn) OutfitsMenu(kID, iNum);
         else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry! This feature can't work on RLV and will require a RLVa enabled viewer. The regular \"# Folders\" feature is a good alternative.\n" ,kID);
             llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
         }
         return;
     } else if (llSubStringIndex(sStr,"wear ") == 0) {
-        if (!g_iRlvaOn) {
+        if (!g_iRLVaOn) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry! This feature can't work on RLV and will require a RLVa enabled viewer. The regular \"# Folders\" feature is a good alternative.\n" ,kID);
             if (bFromMenu) llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
             return;
@@ -319,7 +348,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
                 llSetTimerEvent(g_iTimeOut);
                 g_iListener = llListen(g_iFolderRLVSearch, "", g_kWearer, "");
                 g_kMenuClicker = kID;
-                if (g_iRlvaOn) {
+                if (g_iRLVaOn) {
                     llOwnerSay("@findfolders:"+sLowerStr+"="+(string)g_iFolderRLVSearch);
                 }
                 else {
@@ -561,7 +590,9 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         releaseRestrictions();
         return;
     } else if (!llSubStringIndex(sLowerStr, "hudtpto:") && (iNum == CMD_OWNER || iNum == CMD_TRUSTED)) {
-        if (g_iRlvOn) llMessageLinked(LINK_RLV,RLV_CMD,llGetSubString(sLowerStr,3,-1),"");
+        if (g_iRLVOn) llMessageLinked(LINK_RLV,RLV_CMD,llGetSubString(sLowerStr,3,-1),"");
+    } else if (sLowerStr == "menu detach" || sLowerStr == "detach") {
+        DetachMenu(kID, iNum); 
     }
     if (bFromMenu) RestrictionsMenu(kID,iNum);
 }
@@ -575,8 +606,8 @@ default {
 
     on_rez(integer iParam) {
         if (llGetOwner()!=g_kWearer) llResetScript();
-        g_iRlvOn = FALSE;
-        g_iRlvaOn = FALSE;
+        g_iRLVOn = FALSE;
+        g_iRLVaOn = FALSE;
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -585,6 +616,7 @@ default {
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|Force Sit", "");
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + TERMINAL_BUTTON, "");
             llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|" + OUTFITS_BUTTON, "");
+            llMessageLinked(iSender, MENUNAME_RESPONSE, COLLAR_PARENT_MENU + "|Detach", "");
         } else if (iNum == LM_SETTING_EMPTY) {
             if (sStr=="restrictions_send")         g_iSendRestricted=FALSE;
             else if (sStr=="restrictions_read")    g_iReadRestricted=FALSE;
@@ -615,7 +647,7 @@ default {
         }
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID,FALSE);
         else if (iNum == RLV_ON) {
-            g_iRlvOn = TRUE;
+            g_iRLVOn = TRUE;
             doRestrictions();
             if (g_iSitting && g_iStandRestricted) {
                 if (CheckLastSit(g_kLastForcedSeat)==TRUE) {
@@ -624,10 +656,10 @@ default {
                 } else llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y","vdRestrict");
             }
         } else if (iNum == RLV_OFF) {
-            g_iRlvOn = FALSE;
+            g_iRLVOn = FALSE;
             releaseRestrictions();
         } else if (iNum == RLV_CLEAR) releaseRestrictions();
-        else if (iNum == RLVA_VERSION) g_iRlvaOn = TRUE;
+        else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
         else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) releaseRestrictions();
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -676,6 +708,23 @@ default {
                         g_iAuth = iAuth;
                         g_iListener = llListen(g_iFolderRLV, "", llGetOwner(), "");
                         llOwnerSay("@getinv:"+g_sCurrentPath+"="+(string)g_iFolderRLV);
+                    }
+                } else if (sMenu == "detach") {
+                    if (sMessage == UPMENU) {
+                        llMessageLinked(LINK_RLV, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
+                    } else {              
+                        integer idx = llListFindList(g_lAttachments, [sMessage]);
+                        if (~idx) {
+                            string uuid = llList2String(g_lAttachments, idx + 1);
+                            //send the RLV command to remove it.
+                            if (g_iRLVOn) {
+                                llOwnerSay("@remattach:" + uuid + "=force");
+                            }
+                            //sleep for a sec to let things detach
+                            llSleep(0.5);
+                        }
+                        //Return menu
+                        DetachMenu(kAv, iAuth);
                     }
                 }
             }
