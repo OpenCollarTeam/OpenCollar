@@ -38,7 +38,7 @@ integer g_iUpdateChan = -7483210;
 integer g_iPicturePrim;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
-string g_sTextureALL ="4fb4a7fe-733b-fae7-810d-81e6784bc3c3";
+string g_sTextureALL ="";
 
 //  MESSAGE MAP
 integer CMD_TOUCH            = 100;
@@ -443,7 +443,7 @@ default {
         } else if (kRequestID == g_kPicRequest) {
             integer iMetaPos =  llSubStringIndex(sBody, g_sMetaFind) + llStringLength(g_sMetaFind);
             string sTexture  = llGetSubString(sBody, iMetaPos, iMetaPos + 35);
-            if ((key)sTexture == NULL_KEY) sTexture = "ff3c4a89-8649-2bb0-6521-624be1305d29";
+            if ((key)sTexture == NULL_KEY) sTexture = "";
             if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, sTexture,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
         }
     }

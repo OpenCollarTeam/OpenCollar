@@ -86,15 +86,15 @@ FindButtons() { // collect buttons names & links
 DoTextures(string style) {
     list lTextures = [
     "Dark",
-    "Minimize~e1482c7e-8609-fcb0-56d8-18c3c94d21c0",
-    "Power~e630e9e0-799e-6acc-e066-196cca7b37d4",
-    "SitAny~251b2661-235e-b4d8-0c75-248b6bdf6675",
-    "Menu~f3ec1052-6ec4-04ba-d752-937a4d837bf8",
+    "Minimize~",
+    "Power~",
+    "SitAny~",
+    "Menu~",
     "Light",
-    "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
-    "Power~42d4d624-ca72-1c74-0045-f782d7409061",
-    "SitAny~349340c5-0045-c32d-540e-52b6fb77af55",
-    "Menu~52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96"
+    "Minimize~",
+    "Power~",
+    "SitAny~",
+    "Menu~"
     ];
     integer i = llListFindList(lTextures,[style]);
     integer iEnd = i+4;
