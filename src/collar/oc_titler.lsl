@@ -5,7 +5,7 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
-string g_sAppVersion = "¹⋅⁴";
+string g_sAppVersion = "1.5";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";

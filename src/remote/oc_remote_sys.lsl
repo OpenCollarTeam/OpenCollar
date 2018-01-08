@@ -38,11 +38,8 @@ integer g_iUpdateChan = -7483210;
 integer g_iPicturePrim;
 key g_kPicRequest;
 string g_sMetaFind = "<meta name=\"imageid\" content=\"";
-string g_sTextureALL ="4fb4a7fe-733b-fae7-810d-81e6784bc3c3";
 
 //  MESSAGE MAP
-integer CMD_TOUCH            = 100;
-
 integer MENUNAME_REQUEST     = 3000;
 integer MENUNAME_RESPONSE    = 3001;
 integer SUBMENU              = 3002;
@@ -53,13 +50,15 @@ integer DIALOG_RESPONSE      = -9001;
 integer CMD_REMOTE           = 10000;
 
 string UPMENU          = "BACK";
-string g_sListPartners  = "List";
-string g_sRemovePartner = "Remove";
-string g_sAllPartners = "ALL";
-string g_sAddPartners = "Add";
+string MENU_LIST_PARTNERS  = "List";
+string MENU_REMOVE_PARTNER = "Remove";
+string MENU_ALL_PARTNERS = "ALL";
+string MENU_ADD_PARTNERS = "Add";
+string MENU_LAYOUT = "Layout";
+string MENU_ORDER = "Order";
 
-list g_lMainMenuButtons = [" ◄ ",g_sAllPartners," ► ",g_sAddPartners, g_sListPartners, g_sRemovePartner, "Collar Menu", "Rez"];
-list g_lMenus = ["HUD Style"];
+list g_lMainMenuButtons = [" ◄ ",MENU_ALL_PARTNERS," ► ",MENU_ADD_PARTNERS, MENU_LIST_PARTNERS, MENU_REMOVE_PARTNER, "Collar Menu", "Rez", MENU_LAYOUT];
+list g_lMenus = [];
 key    g_kMenuID;
 string g_sMenuType;
 
@@ -68,18 +67,71 @@ key    g_kOwner;
 
 string  g_sRezObject;
 
+// this texture is a spritemap with all buttons on it, for faster texture
+// loading than having separate textures for each button.
+string BTN_TEXTURE = "9cc45c63-647e-1287-fbc0-f2c7f41e5814";
 
-/*integer g_iProfiled=1;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
+// There are 3 columns of buttons and 8 rows of buttons in the sprite map.
+integer BTN_XS = 3;
+integer BTN_YS = 8;
+
+// starting at the top left and moving to the right, the button sprites are in
+// this order.
+list BTNS = [
+    "Minimize",
+    "People",
+    "Menu",
+    "Couples",
+    "Favorite",
+    "Bookmarks",
+    "Lock",
+    "Outfits",
+    "Folders",
+    "Unleash",
+    "Leash",
+    "Yank",
+    "Sit",
+    "Stand",
+    "Rez",
+    "Pose",
+    "Stop",
+    "Hudmenu",
+    "Person",
+    "Restrictions",
+    "Titler",
+    "Detach",
+    "Maximize"
+];
+
+list g_lAttachPoints = [
+    ATTACH_HUD_TOP_RIGHT,
+    ATTACH_HUD_TOP_CENTER,
+    ATTACH_HUD_TOP_LEFT,
+    ATTACH_HUD_BOTTOM_RIGHT,
+    ATTACH_HUD_BOTTOM,
+    ATTACH_HUD_BOTTOM_LEFT,
+    ATTACH_HUD_CENTER_1,
+    ATTACH_HUD_CENTER_2
+    ];
+
+float g_fGap = 0.001; // This is the space between buttons
+float g_Yoff = 0.002; // space between buttons and screen top/bottom border
+float g_Zoff = 0.04; // space between buttons and screen left/right border
+
+integer g_iVertical = TRUE;  // can be vertical?
+integer g_iLayout = 1; // 0 - Horisontal, 1 - Vertical
+integer g_iHidden = FALSE;
+integer g_iSPosition = 69; // Nuff'said =D
+
+list g_lPrimOrder ;
+integer g_iColumn = 1;  // 0 - Column, 1 - Alternate
+integer g_iRows = 3;  // nummer of Rows: 1,2,3,4... up to g_iMaxRows
+integer g_iMaxRows = 4; // maximal Rows in Columns
+list g_lButtons ; // buttons names for Order menu
+
+// for swapping buttons
+integer g_iNewPos;
+integer g_iOldPos;
 
 string NameURI(string sID) {
     if ((key)sID)
@@ -105,7 +157,7 @@ list PartnersInSim() {
         if (InSim(sTemp))
             lTemp += sTemp;
     }
-    return [g_sAllPartners]+lTemp;
+    return [MENU_ALL_PARTNERS]+lTemp;
 }
 
 SendCollarCommand(string sCmd) {
@@ -117,7 +169,7 @@ SendCollarCommand(string sCmd) {
                 llMessageLinked(LINK_THIS,ACC_CMD,sCmd,g_sActivePartnerID);
             else
                 llRegionSayTo(g_sActivePartnerID,PersonalChannel(g_sActivePartnerID,0), g_sActivePartnerID+":"+sCmd);
-        } else if (g_sActivePartnerID == g_sAllPartners) {
+        } else if (g_sActivePartnerID == MENU_ALL_PARTNERS) {
             integer j = llGetListLength(g_lPartnersInSim);
              while (j > 1) { // g_lPartnersInSim has always one entry ["ALL"] do whom we dont want to send anything
                 string sPartnerID = llList2String(g_lPartnersInSim,--j);
@@ -173,7 +225,7 @@ AddPartnerMenu() {
     do {
         lButtons += llList2Key(g_lNewPartnerIDs,index);
     } while (++index < llGetListLength(g_lNewPartnerIDs));
-    Dialog(sPrompt, lButtons, [g_sAllPartners,UPMENU], -1,"AddPartnerMenu");
+    Dialog(sPrompt, lButtons, [MENU_ALL_PARTNERS,UPMENU], -1,"AddPartnerMenu");
 }
 
 StartUpdate() {
@@ -197,11 +249,11 @@ NextPartner(integer iDirection, integer iTouch) {
         if (index >= llGetListLength(g_lPartnersInSim)) index = 0;
         else if (index < 0) index = llGetListLength(g_lPartnersInSim)-1;
         g_sActivePartnerID = llList2String(g_lPartnersInSim,index);
-    } else g_sActivePartnerID = g_sAllPartners;
+    } else g_sActivePartnerID = MENU_ALL_PARTNERS;
     if ((key)g_sActivePartnerID)
         g_kPicRequest = llHTTPRequest("http://world.secondlife.com/resident/"+g_sActivePartnerID,[HTTP_METHOD,"GET"],"");
-    else if (g_sActivePartnerID == g_sAllPartners)
-        if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
+    else if (g_sActivePartnerID == MENU_ALL_PARTNERS)
+        if (g_iPicturePrim) SetButtonTexture(g_iPicturePrim, "People");
     if(iTouch) {
         if (llGetListLength(g_lPartnersInSim) < 2) llOwnerSay("There is nobody nearby at the moment.");
         else llOwnerSay("\n\nSelected Partner: "+NameURI(g_sActivePartnerID)+"\n");
@@ -237,11 +289,158 @@ PermsCheck() {
     }
 }
 
+SetButtonTexture(integer link, string name) {
+    integer idx = llListFindList(BTNS, [name]);
+    if (idx == -1) return;
+    integer x = idx % BTN_XS;
+    integer y = idx / BTN_XS;
+    vector scale = <1.0 / BTN_XS, 1.0 / BTN_YS, 0>;
+    vector offset = <
+        scale.x * (x - (BTN_XS / 2.0 - 0.5)), 
+        scale.y * -1 * (y - (BTN_YS / 2.0 - 0.5)),
+    0>;
+    llSetLinkPrimitiveParamsFast(link, [
+        PRIM_TEXTURE,
+            ALL_SIDES,
+            BTN_TEXTURE,
+            scale,
+            offset,
+            0 
+    ]);   
+}
+
+TextureButtons() {
+    integer i = llGetNumberOfPrims();
+
+    while (i) {
+        string name = llGetLinkName(i);
+        if (i == 1) {
+            if (g_iHidden) {
+                name = "Maximize";
+            } else {
+                name = "Minimize";
+            }
+        }
+        
+        SetButtonTexture(i, name);
+        i--;
+    }
+}
+
+PositionButtons() {
+    integer iPosition = llListFindList(g_lAttachPoints, [llGetAttached()]);
+    vector size = llGetScale();
+//  Allows manual repositioning, without resetting it, if needed
+    if (iPosition != g_iSPosition && iPosition != -1) { //do this only when attached to the hud
+        vector offset = <0, size.y/2+g_Yoff, size.z/2+g_Zoff>;
+        if (iPosition==0||iPosition==1||iPosition==2) offset.z = -offset.z;
+        if (iPosition==2||iPosition==5) offset.y = -offset.y;
+        if (iPosition==1||iPosition==4) { g_iLayout = 0; g_iVertical = FALSE;}
+        else { g_iLayout = 1; g_iVertical = TRUE; }
+        llSetPos(offset); // Position the Root Prim on screen
+        g_iSPosition = iPosition;
+    }
+    if (g_iHidden) { // -- Fixes Issue 615: HUD forgets hide setting on relog.
+        SetButtonTexture(1, "Maximize");
+        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION, <1.0, 0.0, 0.0>]);
+    } else {
+        SetButtonTexture(1, "Minimize");
+        float fYoff = size.y + g_fGap; float fZoff = size.z + g_fGap; // This is the space between buttons
+        if (iPosition == 0 || iPosition == 1 || iPosition == 2) fZoff = -fZoff;
+        if (iPosition == 1 || iPosition == 2 || iPosition == 4 || iPosition == 5) fYoff = -fYoff;
+        list lPrimOrder = llDeleteSubList(g_lPrimOrder, 0, 0);
+        integer n = llGetListLength(lPrimOrder);
+        vector pos ;
+        integer i;
+        float fXoff = 0.01; // small X offset
+        for (i=1; i < n; ++i) {
+            if (g_iColumn == 0) { // Column
+                if (!g_iLayout) pos = <fXoff, fYoff*(i-(i/(n/g_iRows))*(n/g_iRows)), fZoff*(i/(n/g_iRows))>;
+                else pos = <fXoff, fYoff*(i/(n/g_iRows)), fZoff*(i-(i/(n/g_iRows))*(n/g_iRows))>;
+            } else if (g_iColumn == 1) { // Alternate
+                if (!g_iLayout) pos = <fXoff, fYoff*(i/g_iRows), fZoff*(i-(i/g_iRows)*g_iRows)>;
+                else  pos = <fXoff, fYoff*(i-(i/g_iRows)*g_iRows), fZoff*(i/g_iRows)>;
+            }
+            llSetLinkPrimitiveParamsFast(llList2Integer(lPrimOrder,i),[PRIM_POSITION,pos]);
+        }
+    }
+}
+
+FindButtons() { // collect buttons names & links
+    g_lButtons = [" ", "Minimize"] ; // 'Minimize' need for texture
+    g_lPrimOrder = [0, 1];  //  '1' - root prim
+    integer i;
+    for (i=2; i<llGetNumberOfPrims()+1; ++i) {
+        g_lButtons += llGetLinkPrimitiveParams(i, [PRIM_NAME]);
+        g_lPrimOrder += i;
+    }
+    g_iMaxRows = llFloor(llSqrt(llGetListLength(g_lButtons)-1));
+}
+
+LayoutMenu() {
+    string sPrompt = "\nCustomize your Remote!";
+    list lButtons = ["Rows: "+(string)g_iRows] ;
+    if (g_iRows > 1) lButtons += llList2List(["Columns >","Alternate >"], g_iColumn, g_iColumn) ;
+    else lButtons += [" - "] ;
+    if (g_iVertical) lButtons += llList2List(["Horizontal >","Vertical >"], g_iLayout,g_iLayout) ;
+    else lButtons += [" - "] ;
+    lButtons += [MENU_ORDER,"Reset"];
+    Dialog(sPrompt, lButtons, [UPMENU], 0, MENU_LAYOUT);
+}
+
+OrderMenu() {
+    list lButtons = [];
+    string sPrompt = "\nThis is the order menu, simply select the\n";
+    sPrompt += "button which you want to re-order.\n\n";
+    integer i;
+    for (i=2;i<llGetListLength(g_lPrimOrder);++i) {
+        integer pos = llList2Integer(g_lPrimOrder,i);
+        lButtons += llList2List(g_lButtons,pos,pos);
+    }
+    Dialog(sPrompt, lButtons, ["Reset",UPMENU], 0, "Order");
+}
+
+DoButtonOrder() {   // -- Set the button order and reset display
+    integer iOldPos = llList2Integer(g_lPrimOrder,g_iOldPos);
+    integer iNewPos = llList2Integer(g_lPrimOrder,g_iNewPos);
+    integer i = 2;
+    list lTemp = [0,1];
+    for(;i<llGetListLength(g_lPrimOrder);++i) {
+        integer iTempPos = llList2Integer(g_lPrimOrder,i);
+        if (iTempPos == iOldPos) lTemp += [iNewPos];
+        else if (iTempPos == iNewPos) lTemp += [iOldPos];
+        else lTemp += [iTempPos];
+    }
+    g_lPrimOrder = lTemp;
+    g_iOldPos = -1;
+    g_iNewPos = -1;
+    PositionButtons();
+}
+
+NewButtonPositionMenu(string sButton)
+{
+    list lButtons;
+    string sPrompt;
+    integer iTemp = llListFindList(g_lButtons,[sButton]);
+    g_iOldPos = llListFindList(g_lPrimOrder, [iTemp]);
+
+    sPrompt = "\nSelect the new position for swap with "+sButton+"\n\n";
+    integer i;
+    for(i=2;i<llGetListLength(g_lPrimOrder);++i) {
+        if (g_iOldPos != i) {
+            lButtons +=[llList2String(g_lButtons,llList2Integer(g_lPrimOrder,i))+":"+(string)i];
+        }
+    }
+    Dialog(sPrompt, lButtons, [UPMENU], 0, "Order");
+}
+
+
 
 default {
     state_entry() {
         g_kOwner = llGetOwner();
         PermsCheck();
+        FindButtons(); // collect buttons names
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
         llSleep(1.0);//giving time for others to reset before populating menu
         if (llGetInventoryKey(g_sCard)) {
@@ -252,6 +451,8 @@ default {
         g_iCmdListener = llListen(g_iChannel,"",g_kOwner,"");
         llMessageLinked(LINK_SET,MENUNAME_REQUEST, g_sMainMenu,"");
         g_iPicturePrim = PicturePrim();
+        TextureButtons();
+        SetButtonTexture(3, "Menu");
         NextPartner(0,0);
         MainMenu();
         llOwnerSay("\n\nYou are wearing this OpenCollar Remote for the first time. I'm opening the remote menu where you can manage your partners. Make sure that your partners are near you and click Add to register them. To open the remote menu again, please select the gear (⚙) icon on your remote HUD.\n");
@@ -265,8 +466,10 @@ default {
         if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {// Dont do anything if not attached to the HUD
 //          I made the root prim the "menu" prim, and the button action default to "menu."
             string sButton = llToLower((string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]));
-            if (~llSubStringIndex(sButton,"remote"))
-                llMessageLinked(LINK_SET, CMD_TOUCH,"hide","");
+            if (~llSubStringIndex(sButton,"remote")) {
+                g_iHidden = !g_iHidden;
+                PositionButtons();
+            }
             else if (sButton == "hudmenu") MainMenu();
             else if (sButton == "rez") RezMenu();
             else if (~llSubStringIndex(sButton,"picture")) NextPartner(1,TRUE);
@@ -316,11 +519,7 @@ default {
             lParams = [];
         } else if (iNum == SUBMENU && sStr == "Main") MainMenu();
         else if (iNum == CMD_REMOTE) SendCollarCommand(sStr);
-        else if (iNum == 111) {
-            g_sTextureALL = sStr;
-            if (g_sActivePartnerID == g_sAllPartners)
-                llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, g_sTextureALL , <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
-        } else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
+        else if (iNum == DIALOG_RESPONSE && kID == g_kMenuID) {
             list lParams = llParseString2List(sStr, ["|"], []);
             string sMessage = llList2String(lParams, 1);
             integer i;
@@ -328,9 +527,9 @@ default {
                 if (sMessage == "Collar Menu") SendCollarCommand("menu");
                 else if (sMessage == "Rez")
                     RezMenu();
-                else if (sMessage == g_sRemovePartner)
+                else if (sMessage == MENU_REMOVE_PARTNER)
                     Dialog("\nWho would you like to remove?\n", g_lPartners, [UPMENU], -1,"RemovePartnerMenu");
-                else if (sMessage == g_sListPartners) {
+                else if (sMessage == MENU_LIST_PARTNERS) {
                     string sText ="\n\nI'm currently managing: ";
                     integer iPartnerCount = llGetListLength(g_lPartners);
                     if (iPartnerCount) {
@@ -347,7 +546,7 @@ default {
                     } else sText += "nobody :(";
                     llOwnerSay(sText);
                     MainMenu();
-                } else if (sMessage == g_sAddPartners) {
+                } else if (sMessage == MENU_ADD_PARTNERS) {
                      // Ping for auth OpenCollars in the parcel
                      list lAgents = llGetAgentList(AGENT_LIST_PARCEL, []); //scan for who is in the parcel
                      llOwnerSay("Scanning for collar access....");
@@ -370,10 +569,12 @@ default {
                 } else if (sMessage == " ► ") {
                     NextPartner(1,FALSE);
                     MainMenu();
-                } else if (sMessage == g_sAllPartners) {
-                    g_sActivePartnerID = g_sAllPartners;
+                } else if (sMessage == MENU_ALL_PARTNERS) {
+                    g_sActivePartnerID = MENU_ALL_PARTNERS;
                     NextPartner(0,FALSE);
                     MainMenu();
+                } else if (sMessage == MENU_LAYOUT) {
+                    LayoutMenu(); 
                 } else if (~llListFindList(g_lMenus,[sMessage])) llMessageLinked(LINK_SET,SUBMENU,sMessage,kID);
             } else if (g_sMenuType == "RemovePartnerMenu") {
                 integer index = llListFindList(g_lPartners, [sMessage]);
@@ -397,10 +598,10 @@ default {
                     else {
                         g_sRezObject = sMessage;
                         if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT)
-                            llRezObject(g_sRezObject,llGetPos() + <2, 2, 0>, ZERO_VECTOR, llGetRot(), 0);
+                            llRezObject(g_sRezObject,llGetPos() + <0, 2, 0> * llGetRot(), ZERO_VECTOR, llGetRot(), 0);
                     }
             } else if (g_sMenuType == "AddPartnerMenu") {
-                if (sMessage == g_sAllPartners) {
+                if (sMessage == MENU_ALL_PARTNERS) {
                     i = llGetListLength(g_lNewPartnerIDs);
                     key kNewPartnerID;
                     do {
@@ -411,6 +612,55 @@ default {
                     AddPartner(sMessage);
                 g_lNewPartnerIDs = [];
                 MainMenu();
+            } else if (g_sMenuType == "Layout") {
+                if (sMessage == UPMENU) {
+                    MainMenu();
+                } else if (sMessage == "Reset") {
+                    // set all variables that TextureButtons relies on back to defaults.
+                    g_iLayout = 1;
+                    g_iColumn = 1;
+                    g_iRows = 3;
+                    PositionButtons();
+                    TextureButtons();
+                    LayoutMenu();                    
+                } else if (sMessage == "Order") {
+                    OrderMenu();
+                } else if (sMessage == "Horizontal >" || sMessage == "Vertical >") {
+                    g_iLayout = !g_iLayout;
+                    PositionButtons();
+                    LayoutMenu();
+                }
+                else if (sMessage == "Columns >" || sMessage == "Alternate >") {
+                    g_iColumn = !g_iColumn;
+                    PositionButtons();
+                    LayoutMenu();
+                }
+                else if (llSubStringIndex(sMessage,"Rows")==0) {
+                    // this feature is not mandatory, it just passes uneven rows.
+                    // for the simple can use only g_iRows++;
+                    integer n = llGetListLength(g_lPrimOrder)-1;
+                    do {
+                        g_iRows++;
+                    } while ((n/g_iRows)*(n/(n/g_iRows)) != n);
+                    //
+                    if (g_iRows > g_iMaxRows) g_iRows = 1;
+                    PositionButtons();
+                    LayoutMenu();
+                }
+            } else if (g_sMenuType == "Order") {
+                if (sMessage == UPMENU) {
+                    LayoutMenu();
+                } else if (sMessage == "Reset") {
+                    FindButtons();
+                    llOwnerSay("Order position reset to default.");
+                    PositionButtons();
+                } else if (llSubStringIndex(sMessage,":") >= 0) { // Jess's nifty parsing trick for the menus
+                    g_iNewPos = llList2Integer(llParseString2List(sMessage,[":"],[]),1);
+                    DoButtonOrder();
+                } else {
+                    NewButtonPositionMenu(sMessage);
+                    return;
+                }
             }
         }
     }
@@ -443,14 +693,17 @@ default {
         } else if (kRequestID == g_kPicRequest) {
             integer iMetaPos =  llSubStringIndex(sBody, g_sMetaFind) + llStringLength(g_sMetaFind);
             string sTexture  = llGetSubString(sBody, iMetaPos, iMetaPos + 35);
-            if ((key)sTexture == NULL_KEY) sTexture = "ff3c4a89-8649-2bb0-6521-624be1305d29";
-            if (g_iPicturePrim) llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, sTexture,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
+            if ((key)sTexture == NULL_KEY) {
+                SetButtonTexture(g_iPicturePrim, "Person");
+            } else if (g_iPicturePrim) {
+                llSetLinkPrimitiveParamsFast(g_iPicturePrim,[PRIM_TEXTURE, ALL_SIDES, sTexture,<1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0]);
+            }
         }
     }
 
     object_rez(key kID) {
         llSleep(0.5); // make sure object is rezzed and listens
-        if (g_sActivePartnerID == g_sAllPartners)
+        if (g_sActivePartnerID == MENU_ALL_PARTNERS)
             llRegionSayTo(kID,PersonalChannel(g_kOwner,1234),llDumpList2String(llDeleteSubList(PartnersInSim(),0,0),","));
         else
             llRegionSayTo(kID,PersonalChannel(g_kOwner,1234),g_sActivePartnerID);
