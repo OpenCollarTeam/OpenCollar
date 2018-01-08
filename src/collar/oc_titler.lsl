@@ -109,9 +109,10 @@ ShowHideText() {
           }
         }
         else {
+          rotation vRotLcl = llList2Rot( llGetLinkPrimitiveParams( g_iPartPrim, [PRIM_ROT_LOCAL] ), 0 );
           llSetLinkPrimitiveParamsFast(g_iPartPrim,
                                        [PRIM_POS_LOCAL,
-                                        g_vPartOffset + <0.,0, g_vPrimScale.z>]);
+                                        (g_vPartOffset + <0.,0, g_vPrimScale.z>)*vRotLcl]);
           llLinkParticleSystem(g_iPartPrim,
                             [PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
                             PSYS_SRC_TEXTURE, g_sParticle,
@@ -177,17 +178,6 @@ string FindParticle(string name) {
     return name;
   }
   return llList2String(g_lParticles, ind+1);
-}
-
-FailSafe() {
-    string sName = llGetScriptName();
-    if ((key)sName) return;
-    if (!(llGetObjectPermMask(1) & 0x4000)
-    || !(llGetObjectPermMask(4) & 0x4000)
-    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
-    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
-    || sName != "oc_titler")
-        llRemoveInventory(sName);
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
