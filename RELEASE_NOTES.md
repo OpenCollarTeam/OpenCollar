@@ -14,6 +14,8 @@
 - Add new "Detach" button to the RLV menu, and associated "detach" command.
   This feature shows the user a list of the collar wearer's attachments, and
   allows you to detach them.
+- Added a new "particle" command that uses the titler prim to show an image
+  above the wearer's head.  Thank you Mano Nevadan for the pull request.
 
 ## 7.0
 
