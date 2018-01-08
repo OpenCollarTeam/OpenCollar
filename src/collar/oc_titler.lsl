@@ -10,6 +10,7 @@ string g_sAppVersion = "¹⋅⁴";
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
 string g_sPrimDesc = "FloatText";   //description text of the hovertext prim.  Needs to be separated from the menu name.
+string g_sPartDesc = "FloatPart";   //description text of the particle-emitting prim.
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -48,8 +49,12 @@ integer g_iLastRank = CMD_EVERYONE ;
 integer g_iOn = FALSE;
 string g_sText;
 vector g_vColor = <1.0,1.0,1.0>; // default white
+string g_sParticle = "";
 
 integer g_iTextPrim;
+integer g_iPartPrim;
+vector g_vPartOffset = <0.0, 0.0, 0.2>;
+vector g_vPartSize = <0.3, 0.3, 0.0>;
 
 key g_kWearer;
 string g_sSettingToken = "titler_";
@@ -95,11 +100,94 @@ ShowHideText() {
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
     }
+    if (g_iPartPrim > 0) {
+        if (g_sParticle == "") {
+          llLinkParticleSystem(g_iPartPrim,[]);
+          if (g_iPartPrim == g_iTextPrim) {
+            llSetLinkPrimitiveParamsFast(g_iTextPrim,
+                                         [PRIM_POS_LOCAL, <0,0,0>]);
+          }
+        }
+        else {
+          llSetLinkPrimitiveParamsFast(g_iPartPrim,
+                                       [PRIM_POS_LOCAL,
+                                        g_vPartOffset + <0.,0, g_vPrimScale.z>]);
+          llLinkParticleSystem(g_iPartPrim,
+                            [PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
+                            PSYS_SRC_TEXTURE, g_sParticle,
+                            PSYS_SRC_MAX_AGE, 0,
+                            PSYS_PART_MAX_AGE, 7,
+                            PSYS_SRC_BURST_RATE, 5,
+                            PSYS_SRC_BURST_PART_COUNT, 1,
+                            PSYS_SRC_OMEGA, ZERO_VECTOR,
+                            PSYS_SRC_ACCEL, ZERO_VECTOR,
+                            PSYS_SRC_BURST_SPEED_MIN, 0.,
+                            PSYS_SRC_BURST_SPEED_MAX, 0,
+                            PSYS_PART_FLAGS,
+                                PSYS_PART_EMISSIVE_MASK|
+                                PSYS_PART_FOLLOW_SRC_MASK,
+                            PSYS_PART_START_COLOR, <1.,1.,1.>,
+                            PSYS_PART_START_ALPHA, 1.,
+                            PSYS_PART_START_SCALE, g_vPartSize]);
+        }
+    }
 }
 
 ConfirmDeleteMenu(key kAv, integer iAuth) {
     string sPrompt ="\nDo you really want to uninstall the "+g_sSubMenu+" App?";
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmtitler");
+}
+
+ParticleMenu(key kAv, integer iAuth) {
+  Dialog(kAv, "Hang a particle overhead", ["Select", "Bigger", "Smaller"], [UPMENU],0, iAuth, "particle");
+}
+
+list g_lStdParticles = [
+                        "(off)",            "(off)",
+                        "(custom)",	  "(custom)",
+                        "hottie",	"30dc3c59-85ea-fd18-85c8-9670ae4f66c3",
+                        "gold star",        "be5ee4dc-2fbb-8cd9-1fac-bdab4ab93972",
+                        "⚠",		"915adf9e-0463-59eb-5789-91bff669adbe",
+                        "do not enter", "2eab4a9d-2ffd-37a2-2df3-5d3aaf8a733f",
+                        "on phone",        "1bccc436-f62b-17a9-7f4f-fa6aa1b3e48e",
+                        "AFK",            "e330828a-c67d-15dd-1107-77e0950afe81"
+                        ];
+list g_lParticles;
+
+AssembleTextures() {
+  g_lParticles = g_lStdParticles;
+  integer iHowMany = llGetInventoryNumber(INVENTORY_TEXTURE);
+  integer i;
+  for (i=0; i<iHowMany; i++) {
+    string name = llGetInventoryName(INVENTORY_TEXTURE, i);
+    key k = llGetInventoryKey(name);
+    g_lParticles = g_lParticles + [name, k];
+  }
+}
+
+
+ParticlesDialog(key kAv, integer iAuth) {
+  list lNames = llList2ListStrided(g_lParticles, 0, -1, 2);
+  Dialog(kAv, "Select a particle: ", lNames, [UPMENU], 0, iAuth, "particle");
+}
+
+string FindParticle(string name) {
+  integer ind = llListFindList(g_lParticles, [name]);
+  if (ind < 0 || ind % 2 != 0) {
+    return name;
+  }
+  return llList2String(g_lParticles, ind+1);
+}
+
+FailSafe() {
+    string sName = llGetScriptName();
+    if ((key)sName) return;
+    if (!(llGetObjectPermMask(1) & 0x4000)
+    || !(llGetObjectPermMask(4) & 0x4000)
+    || !((llGetInventoryPermMask(sName,1) & 0xe000) == 0xe000)
+    || !((llGetInventoryPermMask(sName,4) & 0xe000) == 0xe000)
+    || sName != "oc_titler")
+        llRemoveInventory(sName);
 }
 
 UserCommand(integer iAuth, string sStr, key kAv) {
@@ -117,7 +205,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
             if(g_iOn == TRUE) ON_OFF = ON ;
             else ON_OFF = OFF ;
-            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color"], [UPMENU],0, iAuth,"main");
+            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
         }
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
@@ -136,6 +224,27 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         g_iOn = FALSE;
         ShowHideText();
         llResetScript();*/
+    } else if (sCommand == "particle") {
+      if (sAction == "") ParticleMenu(kAv, iAuth);
+      else if (sAction == "select") ParticlesDialog(kAv, iAuth);
+      else if (sAction == "bigger") {
+        float fNew = g_vPartSize.x + 0.1;
+        if (fNew > 2.0) fNew = 2.0;
+        g_vPartSize = < fNew, fNew, 0.0 >;
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+      } else if (sAction == "smaller") {
+        float fNew = g_vPartSize.x - 0.1;
+        if (fNew < 0.1) fNew = 0.1;
+        g_vPartSize = < fNew, fNew, 0.0 >;
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+      } else if (sAction == "(off)") {
+        g_sParticle = "";
+        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+      } else {
+        g_sParticle = FindParticle(llGetSubString(sStr, 9, -1));
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+      }
+      ShowHideText();
     } else if (sCommand == "title") {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
@@ -151,6 +260,14 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             g_iOn = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on", "");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
+        } else if (sAction == "particle") {
+          string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");
+          g_sParticle = sNewText;
+          if (sNewText == "") {
+            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+          } else {
+            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+          }
         } else if (sAction == "up" && iIsCommand) {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
@@ -191,12 +308,22 @@ default{
             if (llSubStringIndex(desc, g_sPrimDesc) == 0) {
                     g_iTextPrim = linkNumber;
                     llSetLinkPrimitiveParamsFast(g_iTextPrim,[PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.0,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_DESC,g_sPrimDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
-                    linkNumber = 0 ; // break while cycle
-                } else {
-                    llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
-                }
+                    llLinkParticleSystem(linkNumber, []);
+          } else {
+            if (llSubStringIndex(desc, g_sPartDesc) == 0) {
+              g_iPartPrim = linkNumber;
+              llSetLinkPrimitiveParamsFast(g_iPartPrim, [PRIM_TYPE,PRIM_TYPE_CYLINDER,0,<0.0,1.0,0.0>,0.95,ZERO_VECTOR,<1.0,1.0,0.0>,ZERO_VECTOR,PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1.0, 1.0, 0.0>,ZERO_VECTOR,0.0,PRIM_SIZE,<0.01,0.01,0.01>,PRIM_SLICE,<0.49,0.51,0.0>,PRIM_DESC,g_sPartDesc+"~notexture~nocolor~nohide~noshiny~noglow"]);
             }
+            llSetLinkPrimitiveParamsFast(linkNumber,[PRIM_TEXT,"",<0,0,0>,0]);
+            llLinkParticleSystem(linkNumber, []);
+          }
+        }
+        // If there's only one prim, share.
+        if (g_iPartPrim <= 0) {
+          g_iPartPrim = g_iTextPrim;
+        }
         g_kWearer = llGetOwner();
+        AssembleTextures();
         //Debug("State Entry Event ended");
 
         if (g_iTextPrim < 0) {
@@ -221,6 +348,8 @@ default{
                 if(sToken == "color") g_vColor = (vector)sValue;
                 if(sToken == "height") g_vPrimScale.z = (float)sValue;
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
+                if(sToken == "particle") g_sParticle = sValue;
+                if(sToken == "particlesize") g_vPartSize = (vector)sValue;
             } else if( sStr == "settings=sent") ShowHideText();
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -236,6 +365,8 @@ default{
                     if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == "Uninstall") ConfirmDeleteMenu(kAv,iAuth);
+                    else if (sMessage == "Particle") ParticleMenu(kAv,iAuth);
                     else {
                         if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
                         else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
@@ -249,7 +380,21 @@ default{
                         UserCommand(iAuth, "titler color "+sMessage, kAv);
                         UserCommand(iAuth, "menu titler color", kAv);
                     }
-                } else if (sMenuType == "textbox") {  //response from text box
+                } else if (sMenuType == "particle") {
+                  if (sMessage == "") {
+                    UserCommand(iAuth, "particle", kAv);
+                  } else if (sMessage == "Bigger") {
+                    UserCommand(iAuth, "particle bigger", kAv);
+                  } else if (sMessage == "Smaller") {
+                    UserCommand(iAuth, "particle smaller", kAv);
+                  } else if (sMessage == "Select") {
+                    UserCommand(iAuth, "particle select", kAv);
+                  } else if (sMessage == "(custom)") {
+                    Dialog(kAv, "\n- Enter a texture key to use as the particle", [], [], 0, iAuth, "particle");
+                  } else UserCommand(iAuth, "particle "+sMessage, kAv);
+                  ShowHideText();
+                }
+                else if (sMenuType == "textbox") {  //response from text box
                     if(sMessage != " ") UserCommand(iAuth, "title " + sMessage, kAv);
                     UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmtitler") {
