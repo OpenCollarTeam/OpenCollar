@@ -63,7 +63,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 
 string GIVECARD = "Help";
-string HELPCARD = ".help";
+string HELPCARD = "OpenCollar_Help";
 string CONTACT = "Contact";
 string LICENSE = "License";
 

@@ -9,3 +9,5 @@
 - Added buttons for Lock and Titler.
 - Removed buttons for Gag, Blindfold, and Cuffs.
 - Fixed all unused and/or shadowed variables and functions.
+- Fixed the Rez function so that objects will always be rezzed in front of the
+  wearer.

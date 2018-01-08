@@ -118,7 +118,7 @@ ShowHideText() {
                             PSYS_SRC_TEXTURE, g_sParticle,
                             PSYS_SRC_MAX_AGE, 0,
                             PSYS_PART_MAX_AGE, 7,
-                            PSYS_SRC_BURST_RATE, 5,
+                            PSYS_SRC_BURST_RATE, 2,
                             PSYS_SRC_BURST_PART_COUNT, 1,
                             PSYS_SRC_OMEGA, ZERO_VECTOR,
                             PSYS_SRC_ACCEL, ZERO_VECTOR,

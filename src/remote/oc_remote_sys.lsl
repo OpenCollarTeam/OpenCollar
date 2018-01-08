@@ -594,12 +594,25 @@ default {
                     return;
                 }
             } else if (g_sMenuType == "RezzerMenu") {
-                    if (sMessage == UPMENU) MainMenu();
-                    else {
-                        g_sRezObject = sMessage;
-                        if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT)
-                            llRezObject(g_sRezObject,llGetPos() + <0, 2, 0> * llGetRot(), ZERO_VECTOR, llGetRot(), 0);
+                if (sMessage == UPMENU) MainMenu();
+                else {
+                    g_sRezObject = sMessage;
+                    if (llGetInventoryType(g_sRezObject) == INVENTORY_OBJECT) {
+                        vector myPos = llGetPos();
+                        rotation myRot = llGetRot();
+                 
+                        // [23:06:21] nirea: is there something special about the startparam 10 in your changes, Taylor?
+                        // [23:06:42] Taylor Paine: no, I just like it.
+                        // [23:06:47] nirea: good enough :)
+                        llRezObject(
+                            g_sRezObject,
+                            myPos + <2,0,-0.5>*myRot,
+                            <0,0,0>,
+                            <0,180,0,180>*myRot,
+                            10
+                        );
                     }
+                }
             } else if (g_sMenuType == "AddPartnerMenu") {
                 if (sMessage == MENU_ALL_PARTNERS) {
                     i = llGetListLength(g_lNewPartnerIDs);
