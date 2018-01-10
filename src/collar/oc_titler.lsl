@@ -58,7 +58,6 @@ vector g_vPartSize = <0.3, 0.3, 0.0>;
 
 key g_kWearer;
 string g_sSettingToken = "titler_";
-//string g_sGlobalToken = "global_";
 
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
@@ -73,18 +72,6 @@ float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text offset height)
 
-/*integer g_iProfiled;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
-
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -94,8 +81,8 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
-ShowHideText() {
-    //Debug("ShowHideText");
+ShowHideTitle() {
+    //Debug("ShowHideTitle");
     if (g_iTextPrim >0){
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
@@ -109,27 +96,20 @@ ShowHideText() {
           }
         }
         else {
-          rotation vRotLcl = llList2Rot( llGetLinkPrimitiveParams( g_iPartPrim, [PRIM_ROT_LOCAL] ), 0 );
-          llSetLinkPrimitiveParamsFast(g_iPartPrim,
-                                       [PRIM_POS_LOCAL,
-                                        (g_vPartOffset + <0.,0, g_vPrimScale.z>)*vRotLcl]);
-          llLinkParticleSystem(g_iPartPrim,
-                            [PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
-                            PSYS_SRC_TEXTURE, g_sParticle,
-                            PSYS_SRC_MAX_AGE, 0,
-                            PSYS_PART_MAX_AGE, 7,
-                            PSYS_SRC_BURST_RATE, 2,
-                            PSYS_SRC_BURST_PART_COUNT, 1,
-                            PSYS_SRC_OMEGA, ZERO_VECTOR,
-                            PSYS_SRC_ACCEL, ZERO_VECTOR,
-                            PSYS_SRC_BURST_SPEED_MIN, 0.,
-                            PSYS_SRC_BURST_SPEED_MAX, 0,
-                            PSYS_PART_FLAGS,
-                                PSYS_PART_EMISSIVE_MASK|
-                                PSYS_PART_FOLLOW_SRC_MASK,
-                            PSYS_PART_START_COLOR, <1.,1.,1.>,
-                            PSYS_PART_START_ALPHA, 1.,
-                            PSYS_PART_START_SCALE, g_vPartSize]);
+            llSetLinkPrimitiveParamsFast(g_iPartPrim, [
+                PRIM_POS_LOCAL, (g_vPartOffset + <0.,0, g_vPrimScale.z>)/llGetLocalRot()
+            ]);
+            llLinkParticleSystem(g_iPartPrim, [
+                PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
+                PSYS_PART_FLAGS,
+                    PSYS_PART_EMISSIVE_MASK|
+                    PSYS_PART_FOLLOW_SRC_MASK,
+                PSYS_SRC_TEXTURE, g_sParticle,
+                PSYS_SRC_BURST_RATE, 1,
+                PSYS_PART_MAX_AGE, 20,
+                PSYS_SRC_BURST_PART_COUNT, 1,
+                PSYS_PART_START_SCALE, g_vPartSize
+            ]);
         }
     }
 }
@@ -145,10 +125,10 @@ ParticleMenu(key kAv, integer iAuth) {
 
 list g_lStdParticles = [
                         "(off)",            "(off)",
-                        "(custom)",	  "(custom)",
-                        "hottie",	"30dc3c59-85ea-fd18-85c8-9670ae4f66c3",
+                        "(custom)",      "(custom)",
+                        "hottie",    "30dc3c59-85ea-fd18-85c8-9670ae4f66c3",
                         "gold star",        "be5ee4dc-2fbb-8cd9-1fac-bdab4ab93972",
-                        "⚠",		"915adf9e-0463-59eb-5789-91bff669adbe",
+                        "⚠",        "915adf9e-0463-59eb-5789-91bff669adbe",
                         "do not enter", "2eab4a9d-2ffd-37a2-2df3-5d3aaf8a733f",
                         "on phone",        "1bccc436-f62b-17a9-7f4f-fa6aa1b3e48e",
                         "AFK",            "e330828a-c67d-15dd-1107-77e0950afe81"
@@ -180,23 +160,27 @@ string FindParticle(string name) {
   return llList2String(g_lParticles, ind+1);
 }
 
+TitlerMenu(key kAv, integer iAuth) {
+    string ON_OFF ;
+    string sPrompt;
+    if (g_iTextPrim == -1) {
+        sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nThis design is missing a FloatText box. Titler disabled.";
+        Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
+    } else {
+        sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
+        if(g_iOn == TRUE) ON_OFF = ON ;
+        else ON_OFF = OFF ;
+        Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
+    }    
+}
+
 UserCommand(integer iAuth, string sStr, key kAv) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sAction = llToLower(llList2String(lParams, 1));
     string sLowerStr = llToLower(sStr);
     if (sLowerStr == "menu titler" || sLowerStr == "titler") {
-        string ON_OFF ;
-        string sPrompt;
-        if (g_iTextPrim == -1) {
-            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nThis design is missing a FloatText box. Titler disabled.";
-            Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
-        } else {
-            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
-            if(g_iOn == TRUE) ON_OFF = ON ;
-            else ON_OFF = OFF ;
-            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
-        }
+        TitlerMenu(kAv, iAuth);
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
     } else if ((sCommand=="titler" || sCommand == "title") && sAction == "color") {
@@ -205,15 +189,11 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             g_vColor=(vector)sColor;
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
         }
-        ShowHideText();
+        ShowHideTitle();
     } else if (sCommand=="titler" && sAction == "box")
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         UserCommand(CMD_OWNER,"title off", g_kWearer);
-       /* g_sText = "";
-        g_iOn = FALSE;
-        ShowHideText();
-        llResetScript();*/
     } else if (sCommand == "particle") {
       if (sAction == "") ParticleMenu(kAv, iAuth);
       else if (sAction == "select") ParticlesDialog(kAv, iAuth);
@@ -234,7 +214,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         g_sParticle = FindParticle(llGetSubString(sStr, 9, -1));
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
       }
-      ShowHideText();
+      ShowHideTitle();
     } else if (sCommand == "title") {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
@@ -281,7 +261,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         }
-        ShowHideText();
+        ShowHideTitle();
     } else if (sStr == "rm titler") {
             if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kAv);
             else ConfirmDeleteMenu(kAv, iAuth);
@@ -290,7 +270,6 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 
 default{
     state_entry(){
-       // llSetMemoryLimit(36864);
         g_iTextPrim = -1 ;
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
@@ -316,11 +295,11 @@ default{
         AssembleTextures();
         //Debug("State Entry Event ended");
 
-        if (g_iTextPrim < 0) {
+        if (g_iTextPrim < 0 && llSubStringIndex(llGetObjectName(), "Updater") == -1) {
             llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
-        ShowHideText();
+        ShowHideTitle();
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -340,7 +319,7 @@ default{
                 if(sToken == "auth") g_iLastRank = (integer)sValue; // restore lastrank from DB
                 if(sToken == "particle") g_sParticle = sValue;
                 if(sToken == "particlesize") g_vPartSize = (vector)sValue;
-            } else if( sStr == "settings=sent") ShowHideText();
+            } else if( sStr == "settings=sent") ShowHideTitle();
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
@@ -373,6 +352,8 @@ default{
                 } else if (sMenuType == "particle") {
                   if (sMessage == "") {
                     UserCommand(iAuth, "particle", kAv);
+                  } else if (sMessage == UPMENU) {
+                    TitlerMenu(kAv, iAuth);
                   } else if (sMessage == "Bigger") {
                     UserCommand(iAuth, "particle bigger", kAv);
                   } else if (sMessage == "Smaller") {
@@ -382,7 +363,7 @@ default{
                   } else if (sMessage == "(custom)") {
                     Dialog(kAv, "\n- Enter a texture key to use as the particle", [], [], 0, iAuth, "particle");
                   } else UserCommand(iAuth, "particle "+sMessage, kAv);
-                  ShowHideText();
+                  ShowHideTitle();
                 }
                 else if (sMenuType == "textbox") {  //response from text box
                     if(sMessage != " ") UserCommand(iAuth, "title " + sMessage, kAv);
