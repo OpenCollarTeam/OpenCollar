@@ -97,7 +97,7 @@ ShowHideTitle() {
         }
         else {
             llSetLinkPrimitiveParamsFast(g_iPartPrim, [
-                PRIM_POS_LOCAL, (g_vPartOffset + <0.,0, g_vPrimScale.z>) / llGetLocalRot()
+                PRIM_POS_LOCAL, (g_vPartOffset + <0.,0, g_vPrimScale.z>)/llGetLocalRot()
             ]);
             llLinkParticleSystem(g_iPartPrim, [
                 PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
@@ -105,7 +105,7 @@ ShowHideTitle() {
                     PSYS_PART_EMISSIVE_MASK|
                     PSYS_PART_FOLLOW_SRC_MASK,
                 PSYS_SRC_TEXTURE, g_sParticle,
-                PSYS_SRC_BURST_RATE, 2,
+                PSYS_SRC_BURST_RATE, 1,
                 PSYS_PART_MAX_AGE, 20,
                 PSYS_SRC_BURST_PART_COUNT, 1,
                 PSYS_PART_START_SCALE, g_vPartSize
@@ -160,23 +160,27 @@ string FindParticle(string name) {
   return llList2String(g_lParticles, ind+1);
 }
 
+TitlerMenu(key kAv, integer iAuth) {
+    string ON_OFF ;
+    string sPrompt;
+    if (g_iTextPrim == -1) {
+        sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nThis design is missing a FloatText box. Titler disabled.";
+        Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
+    } else {
+        sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
+        if(g_iOn == TRUE) ON_OFF = ON ;
+        else ON_OFF = OFF ;
+        Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
+    }    
+}
+
 UserCommand(integer iAuth, string sStr, key kAv) {
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sAction = llToLower(llList2String(lParams, 1));
     string sLowerStr = llToLower(sStr);
     if (sLowerStr == "menu titler" || sLowerStr == "titler") {
-        string ON_OFF ;
-        string sPrompt;
-        if (g_iTextPrim == -1) {
-            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nThis design is missing a FloatText box. Titler disabled.";
-            Dialog(kAv, sPrompt, [], [UPMENU],0, iAuth,"main");
-        } else {
-            sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
-            if(g_iOn == TRUE) ON_OFF = ON ;
-            else ON_OFF = OFF ;
-            Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
-        }
+        TitlerMenu(kAv, iAuth);
     } else if (sLowerStr == "menu titler color" || sLowerStr == "titler color") {
         Dialog(kAv, "\n\nSelect a color from the list", ["colormenu please"], [UPMENU],0, iAuth,"color");
     } else if ((sCommand=="titler" || sCommand == "title") && sAction == "color") {
@@ -190,10 +194,6 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         UserCommand(CMD_OWNER,"title off", g_kWearer);
-       /* g_sText = "";
-        g_iOn = FALSE;
-        ShowHideTitle();
-        llResetScript();*/
     } else if (sCommand == "particle") {
       if (sAction == "") ParticleMenu(kAv, iAuth);
       else if (sAction == "select") ParticlesDialog(kAv, iAuth);
@@ -352,6 +352,8 @@ default{
                 } else if (sMenuType == "particle") {
                   if (sMessage == "") {
                     UserCommand(iAuth, "particle", kAv);
+                  } else if (sMessage == UPMENU) {
+                    TitlerMenu(kAv, iAuth);
                   } else if (sMessage == "Bigger") {
                     UserCommand(iAuth, "particle bigger", kAv);
                   } else if (sMessage == "Smaller") {
