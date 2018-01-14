@@ -23,7 +23,6 @@ integer scanning=FALSE;
 
 list victimNames=[];    // list of victim names
 list victimKeys=[];     // corresponding list of keys
-list listeners=[];      // collar pong listeners per victim
 
 //===============================================================================
 //= parameters   :    key owner            key of the person to send the sMessage to
@@ -33,26 +32,14 @@ list listeners=[];      // collar pong listeners per victim
 //=
 //= returns      : Channel iNumber to be used
 //===============================================================================
-integer GetOwnerChannel(key kOwner, integer iOffset)
-{
-    integer iChan = (integer)("0x"+llGetSubString((string)kOwner,2,7)) + iOffset;
-    if (iChan > 0) iChan *= -1;
-    if (iChan > -10000) iChan -= 30000;
+integer PersonalChannel(string sID, integer iOffset) {
+    integer iChan = -llAbs((integer)("0x"+llGetSubString(sID,-7,-1)) + iOffset);
     return iChan;
 }
 
 // resets the menu dialog
 resetDialog()
 {
-    // clear out any remaining collar listeners
-    integer num=llGetListLength(listeners);
-    integer index;
-    for(index=0;index<num;index++)
-    {
-        llListenRemove(llList2Integer(listeners,index));
-    }
-    listeners=[];
-
     // clear out menu system data if needed
     if(menuListener)
     {
@@ -75,9 +62,9 @@ notFound(key k)
 // leash a victim
 leash(key k)
 {
-    integer channel=GetOwnerChannel(k,1111);
+    integer channel=PersonalChannel((string)k,0);
     llRegionSayTo(k,channel,"length "+(string) LEASH_LENGTH);
-    llRegionSayTo(k,channel,"leashto "+(string) llGetKey());
+    llRegionSayTo(k,channel,"anchor "+(string) llGetKey());
 }
 
 default
@@ -195,23 +182,6 @@ default
             return;
         }
 
-        // not a menu listener event, so this is a collar pong
-        key wearer=llGetOwnerKey(k);
-
-        // check for proper "<key>:pong" message
-        if(message==((string) wearer+":pong"))
-        {
-            // get the collar wearer's name
-            string wearerName=llKey2Name(wearer);
-
-            // cut to max. 24 characters and add to the list of names
-            victimNames+=[llGetSubString(wearerName,0,23)];
-            // add to the list of keys
-            victimKeys+=[wearer];
-
-            // reset waiting time
-            llSetTimerEvent(WAIT_TIME);
-        }
     }
 
     no_sensor()
@@ -235,19 +205,20 @@ default
             // do not include scanning user in the list
             if(k!=menuUser)
             {
-                // calculate collar channel per victim and add a listener
-                channel=GetOwnerChannel(k,1111);
-                listeners+=
-                [
-                    llListen(channel,"",NULL_KEY,"")
-                ];
+                // All scan results are potential victims
+                string wearerName=llKey2Name(k);
 
-                // ping victim's collar
-                llRegionSayTo(k,channel,"ping");
+                // cut to max. 24 characters and add to the list of names
+                victimNames+=[llGetSubString(wearerName,0,23)];
+                // add to the list of keys
+                victimKeys+=[k];
+
+                // reset waiting time
+                llSetTimerEvent(WAIT_TIME);
             }
         }
 
-        // initial waiting time after sending collar pings
+        // initial waiting time 
         llSetTimerEvent(WAIT_TIME);
     }
 
