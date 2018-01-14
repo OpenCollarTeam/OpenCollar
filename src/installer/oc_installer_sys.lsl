@@ -161,7 +161,7 @@ default {
        // llPreloadSound("d023339f-9a9d-75cf-4232-93957c6f620c");
         //llPreloadSound("3409e593-20ab-fd34-82b3-6ecfdefc0207"); // ao
        // llPreloadSound("95d3f6c5-6a27-da1c-d75c-a57cb29c883b"); //remote hud
-        llSetTimerEvent(300.0);
+        llSetTimerEvent(1200.0);
         PermsCheck();
         ReadName();
         g_sObjectName = llGetObjectName();
