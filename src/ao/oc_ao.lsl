@@ -50,6 +50,26 @@ Debug(string sStr) {
 
 //options
 
+
+
+// this texture is a spritemap with all buttons on it, for faster texture
+// loading than having separate textures for each button.
+string BTN_TEXTURE = "fb9a678d-c692-400e-e08c-9e0e85503925";
+
+// There are 3 columns of buttons and 8 rows of buttons in the sprite map.
+integer BTN_XS = 3;
+integer BTN_YS = 2;
+
+// starting at the top left and moving to the right, the button sprites are in
+// this order.
+list BTNS = [
+    "Minimize",
+    "Maximize",
+    "Power",
+    "Menu",
+    "SitAny"
+];
+
 float g_fGap = 0.001; // This is the space between buttons
 float g_Yoff = 0.002; // space between buttons and screen top/bottom border
 float g_Zoff = 0.04; // space between buttons and screen left/right border
@@ -83,48 +103,60 @@ FindButtons() { // collect buttons names & links
     }
 }
 
-DoTextures(string style) {
-    list lTextures = [
-    "Dark",
-    "Minimize~e1482c7e-8609-fcb0-56d8-18c3c94d21c0",
-    "Power~e630e9e0-799e-6acc-e066-196cca7b37d4",
-    "SitAny~251b2661-235e-b4d8-0c75-248b6bdf6675",
-    "Menu~f3ec1052-6ec4-04ba-d752-937a4d837bf8",
-    "Light",
-    "Minimize~b59f9932-5de4-fc23-b5aa-2ab46d22c9a6",
-    "Power~42d4d624-ca72-1c74-0045-f782d7409061",
-    "SitAny~349340c5-0045-c32d-540e-52b6fb77af55",
-    "Menu~52c3f4cf-e87e-dbdd-cf18-b2c4f6002a96"
-    ];
-    integer i = llListFindList(lTextures,[style]);
-    integer iEnd = i+4;
-    while (++i <= iEnd) {
-        string sData = llStringTrim(llList2String(lTextures,i),STRING_TRIM);
-        list lParams = llParseStringKeepNulls(sData,["~"],[]);
-        string sButton = llStringTrim(llList2String(lParams,0),STRING_TRIM);
-        integer link = llListFindList(g_lButtons,[sButton]);
-        if (link > 0) {
-            sData = llStringTrim(llList2String(lParams,1),STRING_TRIM);
-            if (sData != "" && sData != ",") {
-                llSetLinkPrimitiveParamsFast(link,[PRIM_TEXTURE, ALL_SIDES, sData, <1,1,0>, ZERO_VECTOR, 0]);
+SetButtonTexture(integer link, string name) {
+    integer idx = llListFindList(BTNS, [name]);
+    if (idx == -1) return;
+    integer x = idx % BTN_XS;
+    integer y = idx / BTN_XS;
+    vector scale = <1.0 / BTN_XS, 1.0 / BTN_YS, 0>;
+    vector offset = <
+        scale.x * (x - (BTN_XS / 2.0 - 0.5)), 
+        scale.y * -1 * (y - (BTN_YS / 2.0 - 0.5)),
+    0>;
+    llSetLinkPrimitiveParamsFast(link, [
+        PRIM_TEXTURE,
+            ALL_SIDES,
+            BTN_TEXTURE,
+            scale,
+            offset,
+            0 
+    ]);   
+}
+
+TextureButtons() {
+    integer i = llGetNumberOfPrims();
+
+    while (i) {
+        string name = llGetLinkName(i);
+        if (i == 1) {
+            if (g_iHidden) {
+                name = "Maximize";
+            } else {
+                name = "Minimize";
             }
         }
+        
+        SetButtonTexture(i, name);
+        i--;
     }
 }
 
-DefinePosition() {
+PositionButtons() {
     integer iPosition = llGetAttached();
     vector vSize = llGetScale();
 //  Allows manual repositioning, without resetting it, if needed
     if (iPosition != g_iPosition && iPosition > 30) { //do this only when attached to the hud
-        vector vOffset = <0, vSize.y/2+g_Yoff, vSize.z/2+g_Zoff>;
+        vector vOffset = <0.01, vSize.y/2+g_Yoff, vSize.z/2+g_Zoff>;
         if (iPosition == ATTACH_HUD_TOP_RIGHT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_LEFT) vOffset.z = -vOffset.z;
         if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_BOTTOM_LEFT) vOffset.y = -vOffset.y;
         llSetPos(vOffset); // Position the Root Prim on screen
         g_iPosition = iPosition;
     }
-    if (g_iHidden) llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION,<1,0,0>]);
-    else {
+    if (g_iHidden) {
+        SetButtonTexture(1, "Maximize");
+        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, [PRIM_POSITION,<1,0,0>]);
+    } else {
+        SetButtonTexture(1, "Minimize");
         float fYoff = vSize.y + g_fGap;
         float fZoff = vSize.z + g_fGap;
         if (iPosition == ATTACH_HUD_TOP_LEFT || iPosition == ATTACH_HUD_TOP_CENTER || iPosition == ATTACH_HUD_TOP_RIGHT)
@@ -137,7 +169,7 @@ DefinePosition() {
         integer i;
         integer LinkCount=llGetListLength(g_lPrimOrder);
         for (i=2;i<=LinkCount;++i) {
-            llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,<0, fYoff*(i-1), fZoff*(i-1)>]);
+            llSetLinkPrimitiveParamsFast(llList2Integer(g_lPrimOrder,i),[PRIM_POSITION,<0.01, fYoff*(i-1), fZoff*(i-1)>]);
         }
     }
 }
@@ -155,16 +187,16 @@ DoButtonOrder(integer iNewPos) {   // -- Set the button order and reset display
     }
     g_lPrimOrder = lTemp;
     g_iOldPos = -1;
-    DefinePosition();
+    PositionButtons();
 }
 
 DetermineColors() {
     g_vAOoncolor = llGetColor(0);
     g_vAOoffcolor = g_vAOoncolor/2;
-    DoStatus();
+    ShowStatus();
 }
 
-DoStatus() {
+ShowStatus() {
     vector vColor = g_vAOoffcolor;
     if (g_iAO_ON) vColor = g_vAOoncolor;
     llSetLinkColor(llListFindList(g_lButtons,["Power"]), vColor, ALL_SIDES);
@@ -237,7 +269,7 @@ ToggleSitAnywhere() {
             llSetAnimationOverride("Standing",g_sSitAnywhereAnim);
         }
         g_iSitAnywhereOn = !g_iSitAnywhereOn;
-        DoStatus();
+        ShowStatus();
     }
 }
 
@@ -391,7 +423,7 @@ TranslateCollarCMD(string sCommand, key kID){
             llResetAnimationOverride("Turning Right");
             if (g_iSitAnywhereOn) {
                 g_iSitAnywhereOn = FALSE;
-                DoStatus();
+                ShowStatus();
             }
         } else if (~llSubStringIndex(sCommand,"on")) {
             SetAnimOverride();
@@ -419,12 +451,12 @@ Command(key kID, string sCommand) {
         SetAnimOverride();
         g_iAO_ON = TRUE;
         llSetTimerEvent(g_iChangeInterval);
-        DoStatus();
+        ShowStatus();
     } else if (sCommand == "off") {
         llResetAnimationOverride("ALL");
         g_iAO_ON = FALSE;
         llSetTimerEvent(0.0);
-        DoStatus();
+        ShowStatus();
     } else if (sCommand == "unlock") {
         g_iLocked = FALSE;
         llOwnerSay("@detach=y");
@@ -483,8 +515,8 @@ default {
         llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDChannel = -llAbs((integer)("0x"+llGetSubString((string)llGetOwner(),-7,-1)));
         FindButtons();
-        DefinePosition();
-        DoTextures("Dark");
+        PositionButtons();
+        TextureButtons();
         DetermineColors();
         MenuLoad(g_kWearer,0);
     }
@@ -503,7 +535,7 @@ default {
             llOwnerSay("Sorry, this device can only be attached to the HUD.");
             llRequestPermissions(kID, PERMISSION_ATTACH);
             llDetachFromAvatar();
-        } else DefinePosition();
+        } else PositionButtons();
     }
 
     touch_start(integer total_number) {
@@ -520,7 +552,7 @@ default {
                 ToggleSitAnywhere();
             } else if (llSubStringIndex(llToLower(sButton),"ao")>=0) {
                 g_iHidden = !g_iHidden;
-                DefinePosition();
+                PositionButtons();
             } else if (sButton == "Power") {
                 if (g_iAO_ON) Command(g_kWearer,"off");
                 else if (g_iReady) Command(g_kWearer,"on");
@@ -643,14 +675,14 @@ default {
                     return;
                 } else if (sMessage == "Horizontal") {
                     g_iLayout = 0;
-                    DefinePosition();
+                    PositionButtons();
                 } else if (sMessage == "Vertical") {
                     g_iLayout = 1;
-                    DefinePosition();
+                    PositionButtons();
                 } else if (sMessage == "Order") {
                     OrderMenu(kID);
                     return;
-                } else DoTextures(sMessage);
+                }
                 MenuOptions(kID);
             } else if (sMenuType == "ordermenu") {
                 if (sMessage == "BACK") MenuOptions(kID);
@@ -658,7 +690,7 @@ default {
                 else if (sMessage == "Reset") {
                     FindButtons();
                     llOwnerSay("Order position reset to default.");
-                    DefinePosition();
+                    PositionButtons();
                     OrderMenu(kID);
                 } else if (llSubStringIndex(sMessage,":") >= 0) {
                     DoButtonOrder(llList2Integer(llParseString2List(sMessage,[":"],[]),1));
@@ -759,7 +791,7 @@ default {
                     llOwnerSay("The \""+g_sCard+"\" animation set was loaded successfully.");
                     g_iAO_ON = TRUE;
                 }
-                DoStatus();
+                ShowStatus();
                 llRequestPermissions(g_kWearer,PERMISSION_OVERRIDE_ANIMATIONS);
             }
         }
