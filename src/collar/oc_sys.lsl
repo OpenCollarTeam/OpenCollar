@@ -11,7 +11,7 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.0";
+string g_sCollarVersion="7.0.dev4";
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
@@ -63,7 +63,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 
 string GIVECARD = "Help";
-string HELPCARD = ".help";
+string HELPCARD = "OpenCollar_Help";
 string CONTACT = "Contact";
 string LICENSE = "License";
 
@@ -273,7 +273,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             if(llGetOwnerKey(kID)==kAv) MainMenu(kID, iNum);    //if the request was sent by something owned by that agent, send a menu
             else  llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kAv);   //else send an auth request for the menu
         }
-    } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) {    //does anything use togglelock?  If not, it'd be nice to get rid of it
+    } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) { // the remote uses togglelock
         //Debug("User command:"+sCmd);
         if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function
