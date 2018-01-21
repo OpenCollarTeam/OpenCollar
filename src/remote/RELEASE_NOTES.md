@@ -11,3 +11,4 @@
 - Fixed all unused and/or shadowed variables and functions.
 - Fixed the Rez function so that objects will always be rezzed in front of the
   wearer.
+- Fix Positioning when attached to a different point
