@@ -8,7 +8,7 @@
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
 string g_sDevStage="dev2";
-string g_sVersion = "7.0";
+string g_sVersion = "1.5";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
