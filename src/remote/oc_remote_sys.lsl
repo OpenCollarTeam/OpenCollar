@@ -7,7 +7,7 @@
 
 //merged HUD-menu, HUD-leash and HUD-rezzer into here June 2015 Otto (garvin.twine)
 
-string g_sDevStage="dev1";
+string g_sDevStage="dev2";
 string g_sVersion = "7.0";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
@@ -19,6 +19,9 @@ string g_sActivePartnerID = "ALL"; //either an UUID or "ALL"
 
 //  list of hud channel handles we are listening for, for building lists
 list g_lListeners;
+
+// Where I was last attached, to check for being moved to new point.
+integer g_iLastAttached = -1;
 
 string g_sMainMenu = "Main";
 
@@ -460,6 +463,12 @@ default {
 
     on_rez(integer iStart) {
         g_kWebLookup = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/remote.txt", [HTTP_METHOD, "GET"],"");
+        // check if repositioning needed
+        if (g_iLastAttached != llGetAttached())
+        {
+            g_iLastAttached = llGetAttached();
+            PositionButtons();
+        }
     }
 
     touch_start(integer iNum) {
