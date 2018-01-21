@@ -5,7 +5,7 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
-string g_sAppVersion = "¹⋅²";
+string g_sAppVersion = "1.3";
 
 string  g_sSubMenu              = "Bookmarks"; // Name of the submenu
 string  g_sParentMenu          = "Apps"; // name of the menu, where the menu plugs in, should be usually Addons. Please do not use the mainmenu anymore

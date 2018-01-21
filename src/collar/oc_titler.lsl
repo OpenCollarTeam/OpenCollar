@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,  
 // Satomi Ahn, Kisamin, Joy Stipe, Wendy Starfall, littlemousy,      
-// Romka Swallowtail et al.  
+// Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -72,17 +72,20 @@ float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text offset height)
 
+list ATTACH_POINT_ROTATIONS = [
+    ATTACH_BACK, <-90,0,0>,
+    ATTACH_CHEST, <90,0,0>
+];
+
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
-    //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
 ShowHideTitle() {
-    //Debug("ShowHideTitle");
     if (g_iTextPrim >0){
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
@@ -96,8 +99,14 @@ ShowHideTitle() {
           }
         }
         else {
+            rotation start = ZERO_ROTATION;
+            integer idx = llListFindList(ATTACH_POINT_ROTATIONS, [llGetAttached()]);
+            if (~idx) {
+                start = llEuler2Rot(llList2Vector(ATTACH_POINT_ROTATIONS, idx + 1) * DEG_TO_RAD);
+            }
+            vector pos = (g_vPartOffset + <0.,0, g_vPrimScale.z>)/(start * llGetLocalRot());
             llSetLinkPrimitiveParamsFast(g_iPartPrim, [
-                PRIM_POS_LOCAL, (g_vPartOffset + <0.,0, g_vPrimScale.z>)/llGetLocalRot()
+                PRIM_POS_LOCAL, pos
             ]);
             llLinkParticleSystem(g_iPartPrim, [
                 PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
@@ -106,7 +115,7 @@ ShowHideTitle() {
                     PSYS_PART_FOLLOW_SRC_MASK,
                 PSYS_SRC_TEXTURE, g_sParticle,
                 PSYS_SRC_BURST_RATE, 1,
-                PSYS_PART_MAX_AGE, 20,
+                PSYS_PART_MAX_AGE, 8,
                 PSYS_SRC_BURST_PART_COUNT, 1,
                 PSYS_PART_START_SCALE, g_vPartSize
             ]);
@@ -119,45 +128,47 @@ ConfirmDeleteMenu(key kAv, integer iAuth) {
     Dialog(kAv, sPrompt, ["Yes","No","Cancel"], [], 0, iAuth,"rmtitler");
 }
 
-ParticleMenu(key kAv, integer iAuth) {
-  Dialog(kAv, "Hang a particle overhead", ["Select", "Bigger", "Smaller"], [UPMENU],0, iAuth, "particle");
-}
+list g_lStdImagess = [
+    "afk", "888ba27f-8d54-69f9-1455-d8cb13274dc9",
+    "halo", "4dfc5618-d450-86cf-401b-ccf27152ed83",
+    "naughty", "f4805503-17d5-0371-6511-e0e4f23b1823",
+    "phone", "e2f59357-91fd-fe27-21c9-473dda1538bf",
+    "quest", "7a9d082f-e547-3cef-b034-ea676bdca3ed",
+    "sleep", "4c564db7-5a8e-56c0-fb57-ed8433c12228",
+    "star", "be5ee4dc-2fbb-8cd9-1fac-bdab4ab93972"
+];
 
-list g_lStdParticles = [
-                        "(off)",            "(off)",
-                        "(custom)",      "(custom)",
-                        "hottie",    "30dc3c59-85ea-fd18-85c8-9670ae4f66c3",
-                        "gold star",        "be5ee4dc-2fbb-8cd9-1fac-bdab4ab93972",
-                        "⚠",        "915adf9e-0463-59eb-5789-91bff669adbe",
-                        "do not enter", "2eab4a9d-2ffd-37a2-2df3-5d3aaf8a733f",
-                        "on phone",        "1bccc436-f62b-17a9-7f4f-fa6aa1b3e48e",
-                        "AFK",            "e330828a-c67d-15dd-1107-77e0950afe81"
-                        ];
-list g_lParticles;
+list g_lImages;
 
 AssembleTextures() {
-  g_lParticles = g_lStdParticles;
+  g_lImages = g_lStdImagess;
   integer iHowMany = llGetInventoryNumber(INVENTORY_TEXTURE);
   integer i;
   for (i=0; i<iHowMany; i++) {
     string name = llGetInventoryName(INVENTORY_TEXTURE, i);
     key k = llGetInventoryKey(name);
-    g_lParticles = g_lParticles + [name, k];
+    g_lImages = g_lImages + [name, k];
   }
 }
 
-
-ParticlesDialog(key kAv, integer iAuth) {
-  list lNames = llList2ListStrided(g_lParticles, 0, -1, 2);
-  Dialog(kAv, "Select a particle: ", lNames, [UPMENU], 0, iAuth, "particle");
+ImageMenu(key kAv, integer iAuth) {
+  Dialog(
+    kAv,
+    "Hang an image overhead",
+    ["OFF", "BIGGER", "SMALLER", "CUSTOM"] + llList2ListStrided(g_lImages, 0, -1, 2),
+    [UPMENU],
+    0,
+    iAuth,
+    "image"
+  );
 }
 
-string FindParticle(string name) {
-  integer ind = llListFindList(g_lParticles, [name]);
+string FindImage(string name) {
+  integer ind = llListFindList(g_lImages, [name]);
   if (ind < 0 || ind % 2 != 0) {
     return name;
   }
-  return llList2String(g_lParticles, ind+1);
+  return llList2String(g_lImages, ind+1);
 }
 
 TitlerMenu(key kAv, integer iAuth) {
@@ -170,7 +181,7 @@ TitlerMenu(key kAv, integer iAuth) {
         sPrompt = "\n[Titler]\t"+g_sAppVersion+"\n\nCurrent Title: " + g_sText ;
         if(g_iOn == TRUE) ON_OFF = ON ;
         else ON_OFF = OFF ;
-        Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Particle"], [UPMENU],0, iAuth,"main");
+        Dialog(kAv, sPrompt, [SET,UP,DN,ON_OFF,"Color", "Image"], [UPMENU],0, iAuth,"main");
     }    
 }
 
@@ -194,9 +205,8 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         Dialog(kAv, "\n- Submit the new title in the field below.\n- Submit a blank field to go back to " + g_sSubMenu + ".", [], [], 0, iAuth,"textbox");
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         UserCommand(CMD_OWNER,"title off", g_kWearer);
-    } else if (sCommand == "particle") {
-      if (sAction == "") ParticleMenu(kAv, iAuth);
-      else if (sAction == "select") ParticlesDialog(kAv, iAuth);
+    } else if (sCommand == "image") {
+      if (sAction == "") ImageMenu(kAv, iAuth);
       else if (sAction == "bigger") {
         float fNew = g_vPartSize.x + 0.1;
         if (fNew > 2.0) fNew = 2.0;
@@ -207,11 +217,13 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         if (fNew < 0.1) fNew = 0.1;
         g_vPartSize = < fNew, fNew, 0.0 >;
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
-      } else if (sAction == "(off)") {
+      } else if (sAction == "off") {
         g_sParticle = "";
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+      } else if (sAction == "custom") {
+        Dialog(kAv, "\n- Enter a texture uuid to use as the image", [], [], 0, iAuth, "image");
       } else {
-        g_sParticle = FindParticle(llGetSubString(sStr, 9, -1));
+        g_sParticle = FindImage(llGetSubString(sStr, llStringLength("image "), -1));
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
       }
       ShowHideTitle();
@@ -230,7 +242,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
             g_iOn = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on", "");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
-        } else if (sAction == "particle") {
+        } else if (sAction == "image") {
           string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");
           g_sParticle = sNewText;
           if (sNewText == "") {
@@ -293,7 +305,6 @@ default{
         }
         g_kWearer = llGetOwner();
         AssembleTextures();
-        //Debug("State Entry Event ended");
 
         if (g_iTextPrim < 0 && llSubStringIndex(llGetObjectName(), "Updater") == -1) {
             llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -303,7 +314,6 @@ default{
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
-        //Debug("Link Message Event");
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -335,7 +345,7 @@ default{
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
                     else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == "Uninstall") ConfirmDeleteMenu(kAv,iAuth);
-                    else if (sMessage == "Particle") ParticleMenu(kAv,iAuth);
+                    else if (sMessage == "Image") ImageMenu(kAv,iAuth);
                     else {
                         if (sMessage == UP) UserCommand(iAuth, "title up", kAv);
                         else if (sMessage == DN) UserCommand(iAuth, "title down", kAv);
@@ -349,21 +359,21 @@ default{
                         UserCommand(iAuth, "titler color "+sMessage, kAv);
                         UserCommand(iAuth, "menu titler color", kAv);
                     }
-                } else if (sMenuType == "particle") {
+                } else if (sMenuType == "image") {
                   if (sMessage == "") {
-                    UserCommand(iAuth, "particle", kAv);
+                    UserCommand(iAuth, "image", kAv);
                   } else if (sMessage == UPMENU) {
                     TitlerMenu(kAv, iAuth);
-                  } else if (sMessage == "Bigger") {
-                    UserCommand(iAuth, "particle bigger", kAv);
-                  } else if (sMessage == "Smaller") {
-                    UserCommand(iAuth, "particle smaller", kAv);
-                  } else if (sMessage == "Select") {
-                    UserCommand(iAuth, "particle select", kAv);
-                  } else if (sMessage == "(custom)") {
-                    Dialog(kAv, "\n- Enter a texture key to use as the particle", [], [], 0, iAuth, "particle");
-                  } else UserCommand(iAuth, "particle "+sMessage, kAv);
+                    return;
+                  } else if (sMessage == "BIGGER") {
+                    UserCommand(iAuth, "image bigger", kAv);
+                  } else if (sMessage == "SMALLER") {
+                    UserCommand(iAuth, "image smaller", kAv);
+                  } else UserCommand(iAuth, "image "+llToLower(sMessage), kAv);
                   ShowHideTitle();
+                  if (sMessage != "CUSTOM") {// don't remenu if we're giving a textbox already
+                      ImageMenu(kAv, iAuth);
+                  }
                 }
                 else if (sMenuType == "textbox") {  //response from text box
                     if(sMessage != " ") UserCommand(iAuth, "title " + sMessage, kAv);
