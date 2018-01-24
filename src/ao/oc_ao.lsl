@@ -5,7 +5,7 @@
 
 
 string g_sDevStage = "dev1";
-string g_sVersion = "7.0";
+string g_sVersion = "2.0";
 integer g_iUpdateAvailable;
 key g_kWebLookup;
 
@@ -391,7 +391,7 @@ MenuChooseAnim(key kID, string sAnimState) {
 }
 
 MenuOptions(key kID) {
-    Dialog(kID,"\nCustomize your AO!",["Horizontal","Vertical","Order","Dark","Light"],["BACK"], "options");
+    Dialog(kID,"\nCustomize your AO!",["Horizontal","Vertical","Order"],["BACK"], "options");
 }
 
 OrderMenu(key kID) {
