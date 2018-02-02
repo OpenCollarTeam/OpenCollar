@@ -374,7 +374,7 @@ default {
         if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
-                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", llGetOwnerKey(kID));
+                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", kID);
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
                 sMsg = llGetSubString(sMsg, 37, -1);
