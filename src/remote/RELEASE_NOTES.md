@@ -1,6 +1,6 @@
 # OpenCollar Remote HUD Release Notes
 
-## 1.5 (In development)
+## 1.5
 
 - Switched from separate textures per button to a faster loading single sprite
   sheet.  Moved oc_remote_options' functionality into oc_remote_sys.
