@@ -11,6 +11,7 @@ list g_lOwner;
 list g_lTrust;
 list g_lBlock;//list of blacklisted UUID
 list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
+integer g_iPeopleCap = 28; // we'll only store this many people across owner, trusted, blocked, and tempowner lists
 
 key g_kGroup = "";
 integer g_iGroupEnabled = FALSE;
@@ -212,18 +213,26 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
     if (~llListFindList(g_lTempOwner,[(string)kID]) && ! ~llListFindList(g_lOwner,[(string)kID]) && sToken != "tempowner")
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     else {
+        // Put a cap on how many people we'll remember, to avoid running out of
+        // memory.
+        integer peopleStored = llGetListLength(g_lOwner) +
+            llGetListLength(g_lTrust) + 
+            llGetListLength(g_lTempOwner) +
+            llGetListLength(g_lBlock);
+        if (peopleStored >= g_iPeopleCap) {
+            llMessageLinked(
+                LINK_DIALOG,
+                NOTIFY,
+                "0\n\nSorry, we reached a limit!\n\nYou have stored 28 people in the collar's lists. (owners+trusted+tempowners+blocked)\n",
+                kID
+            );
+            return;
+        }
         if (sToken=="owner") {
             lPeople=g_lOwner;
-            if (llGetListLength (lPeople) >=3) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nThree people at a time can have this role.\n",kID);
-                return;
-            }
         } else if (sToken=="trust") {
             lPeople=g_lTrust;
-            if (llGetListLength (lPeople) >=15) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\n15 people at a time can have this role.\n",kID);
-                return;
-            } else if (~llListFindList(g_lOwner,[sPersonID])) {
+            if (~llListFindList(g_lOwner,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
                 return;
             } else if (sPersonID==g_sWearerID) {
@@ -232,16 +241,9 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
             }
         } else if (sToken=="tempowner") {
             lPeople=g_lTempOwner;
-            if (llGetListLength (lPeople) >=1) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry!\n\nYou can only be captured by one person at a time.\n",kID);
-                return;
-            }
         } else if (sToken=="block") {
             lPeople=g_lBlock;
-            if (llGetListLength (lPeople) >=9) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\nYour Blocklist is already full.\n",kID);
-                return;
-            } else if (~llListFindList(g_lTrust,[sPersonID])) {
+            if (~llListFindList(g_lTrust,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\nYou trust "+NameURI(sPersonID)+". If you really want to block "+NameURI(sPersonID)+" then you should remove them as trusted first.\n",kID);
                 return;
             } else if (~llListFindList(g_lOwner,[sPersonID])) {
