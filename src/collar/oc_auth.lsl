@@ -11,7 +11,7 @@ list g_lOwner;
 list g_lTrust;
 list g_lBlock;//list of blacklisted UUID
 list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
-integer g_iMaxUsers = 60; //owners + trusts + blocks
+integer g_iPeopleCap = 28; // we'll only store this many people across owner, trusted, blocked, and tempowner lists
 
 key g_kGroup = "";
 integer g_iGroupEnabled = FALSE;
@@ -37,10 +37,10 @@ integer CMD_BLOCKED = 520;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
 integer LOADPIN = -1904;
-integer REBOOT = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
+integer REBOOT              = -1000;
+integer LINK_DIALOG         = 3;
+integer LINK_RLV            = 4;
+integer LINK_SAVE           = 5;
 integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
@@ -80,7 +80,6 @@ integer g_iMenuStride = 3;
 
 //key REQUEST_KEY;
 integer g_iFirstRun;
-integer g_iIsLED;
 
 string g_sSettingToken = "auth_";
 //string g_sGlobalToken = "global_";
@@ -118,15 +117,15 @@ Dialog(string sID, string sPrompt, list lChoices, list lUtilityButtons, integer 
 
 AuthMenu(key kAv, integer iAuth) {
     string sPrompt = "\n[Access & Authorization]";
-    integer iPercentage = llRound(((float)llGetListLength(g_lOwner+g_lTrust+g_lBlock)/(float)g_iMaxUsers)*100.0);
-    sPrompt += "\n\nYou are using "+(string)iPercentage+"% of your global access list storage.";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
+
     if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
     else lButtons += ["Group ☑"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
     if (g_iOwnSelf) lButtons += g_sFlavor+" ☑";    //add wearer as owner
     else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
+
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
 }
@@ -154,6 +153,14 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
+OwnSelfOff(key kID) {
+    g_iOwnSelf = FALSE;
+    if (kID == g_sWearerID)
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kID);
+    else
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% does no longer own themselves.\n",kID);
+}
+
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     list lPeople;
     if (sToken=="owner") lPeople=g_lOwner;
@@ -171,10 +178,12 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     } else {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
+            if (sToken == "owner" && sPersonID == g_sWearerID) OwnSelfOff(kCmdr);
             lPeople = llDeleteSubList(lPeople,index,index);
             if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
             iFound = TRUE;
         } else if (llToLower(sPersonID) == "remove all") {
+            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])) OwnSelfOff(kCmdr);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
             lPeople = [];
             iFound = TRUE;
@@ -204,11 +213,24 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
     if (~llListFindList(g_lTempOwner,[(string)kID]) && ! ~llListFindList(g_lOwner,[(string)kID]) && sToken != "tempowner")
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     else {
-        if (llGetListLength(g_lOwner+g_lTrust+g_lBlock) >= g_iMaxUsers) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry, we have reached a limit!\n\nYou now have 60 people on your combined global access lists. This means in order to add anyone else to a list, you will have to remove someone from either the Owner, Trust, or Block list.\n",kID);
+        // Put a cap on how many people we'll remember, to avoid running out of
+        // memory.
+        integer peopleStored = llGetListLength(g_lOwner) +
+            llGetListLength(g_lTrust) + 
+            llGetListLength(g_lTempOwner) +
+            llGetListLength(g_lBlock);
+        if (peopleStored >= g_iPeopleCap) {
+            llMessageLinked(
+                LINK_DIALOG,
+                NOTIFY,
+                "0\n\nSorry, we reached a limit!\n\nYou have stored 28 people in the collar's lists. (owners+trusted+tempowners+blocked)\n",
+                kID
+            );
             return;
-        } else if (sToken == "owner") lPeople = g_lOwner;
-        else if (sToken=="trust") {
+        }
+        if (sToken=="owner") {
+            lPeople=g_lOwner;
+        } else if (sToken=="trust") {
             lPeople=g_lTrust;
             if (~llListFindList(g_lOwner,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
@@ -219,10 +241,6 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
             }
         } else if (sToken=="tempowner") {
             lPeople=g_lTempOwner;
-            if (llGetListLength (lPeople) >=1) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry!\n\nYou can only be captured by one person at a time.\n",kID);
-                return;
-            }
         } else if (sToken=="block") {
             lPeople=g_lBlock;
             if (~llListFindList(g_lTrust,[sPersonID])) {
@@ -235,6 +253,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         } else return;
         if (! ~llListFindList(lPeople, [sPersonID])) { //owner is not already in list.  add him/her
             lPeople += sPersonID;
+            if (sPersonID == g_sWearerID && sToken == "owner") g_iOwnSelf = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" is already registered as "+sToken+".",kID);
             return;
@@ -251,8 +270,10 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         }
         if (sToken == "owner") {
             if (sPersonID == g_sWearerID) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% ownself on\n",kID);
-                return;
+                if (kID == g_sWearerID)
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nCongratulations, you own yourself now.\n",g_sWearerID);
+                else
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is their own Owner now.\n",kID);
             } else
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [https://github.com/OpenCollarTeam/OpenCollar/wiki/Access here] what that means!\n",sPersonID);
         }
@@ -262,7 +283,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         if (sToken=="owner") {
             g_lOwner = lPeople;
-            if (g_lOwner) SayOwners();
+            if (llGetListLength(g_lOwner)>1 || sPersonID != g_sWearerID) SayOwners();
         }
         else if (sToken=="trust") g_lTrust = lPeople;
         else if (sToken=="tempowner") g_lTempOwner = lPeople;
@@ -273,18 +294,32 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
 SayOwners() {  // Give a "you are owned by" message, nicely formatted.
     integer iCount = llGetListLength(g_lOwner);
     if (iCount) {
-        integer index;
+        list lTemp = g_lOwner;
+        integer index = llListFindList(lTemp, [g_sWearerID]);
+        //if wearer is also owner, move the key to the end of the list.
+        if (~index) lTemp = llDeleteSubList(lTemp,index,index) + [g_sWearerID];
         string sMsg = "You belong to ";
-        if (iCount == 1) sMsg += NameURI(llList2String(g_lOwner,0))+".";
-        else if (iCount == 2)
-            sMsg +=  NameURI(llList2String(g_lOwner,0))+" and "+NameURI(llList2Key(g_lOwner,1))+".";
-        else {
-            while (index < iCount-1 && index < 9) {
-                sMsg += NameURI(llList2String(g_lOwner,index))+", ";
+        if (iCount == 1) {
+            if (llList2Key(lTemp,0)==g_sWearerID)
+                sMsg += "yourself.";
+            else
+                sMsg += NameURI(llList2String(lTemp,0))+".";
+        } else if (iCount == 2) {
+            sMsg +=  NameURI(llList2String(lTemp,0))+" and ";
+            if (llList2String(lTemp,1)==g_sWearerID)
+                sMsg += "yourself.";
+            else
+                sMsg += NameURI(llList2Key(lTemp,1))+".";
+        } else {
+            index=0;
+            do {
+                sMsg += NameURI(llList2String(lTemp,index))+", ";
                 index+=1;
-            }
-            if (iCount > 10) sMsg += NameURI(llList2String(g_lOwner,index))+" et al.";
-            else sMsg += "and "+NameURI(llList2String(g_lOwner,index))+".";
+            } while (index<iCount-1);
+            if (llList2String(lTemp,index) == g_sWearerID)
+                sMsg += "and yourself.";
+            else
+                sMsg += "and "+NameURI(llList2String(lTemp,index))+".";
         }
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMsg,g_sWearerID);
  //       Debug("Lists Loaded!");
@@ -302,7 +337,7 @@ integer in_range(key kID) {
 integer Auth(string sObjID) {
     string sID = (string)llGetOwnerKey(sObjID); // if sObjID is an avatar key, then sID is the same key
     integer iNum;
-    if (~llListFindList(g_lOwner+g_lTempOwner,[sID]) || (sID == g_sWearerID && g_iOwnSelf))
+    if (~llListFindList(g_lOwner+g_lTempOwner, [sID]))
         iNum = CMD_OWNER;
     else if (llGetListLength(g_lOwner+g_lTempOwner) == 0 && sID == g_sWearerID)
         //if no owners set, then wearer's cmds have owner auth
@@ -341,44 +376,29 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     else if (sStr == "list") {   //say owner, secowners, group
         if (iNum == CMD_OWNER || kID == g_sWearerID) {
             //Do Owners list
-            integer iLength = ~llGetListLength(g_lOwner);
+            integer iLength = llGetListLength(g_lOwner);
             string sOutput="";
-            while (iLength < -1) {
-                sOutput += "\n" + NameURI(llList2String(g_lOwner, ++iLength));
-                if (llStringLength(sOutput) > 948) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Owners: "+sOutput,kID);
-                    sOutput = "";
-                }
-            }
+            while (iLength)
+                sOutput += "\n" + NameURI(llList2String(g_lOwner, --iLength));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Owners: "+sOutput,kID);
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Owners: none",kID);
-            if (g_lTempOwner)
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Temporary Owner: "+"\n" + NameURI(llList2String(g_lTempOwner,0)),kID);
-            iLength = ~llGetListLength(g_lTrust);
-            sOutput = "";
-            while (iLength < -1) {
-                sOutput += "\n" + NameURI(llList2String(g_lTrust,++iLength));
-                if (llStringLength(sOutput) > 948) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Trusted: "+sOutput,kID);
-                    sOutput = "";
-                }
-            }
+            iLength = llGetListLength(g_lTempOwner);
+            sOutput="";
+            while (iLength)
+                sOutput += "\n" + NameURI(llList2String(g_lTempOwner, --iLength));
+            if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Temporary Owner: "+sOutput,kID);
+            iLength = llGetListLength(g_lTrust);
+            sOutput="";
+            while (iLength)
+                sOutput += "\n" + NameURI(llList2String(g_lTrust, --iLength));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Trusted: "+sOutput,kID);
-            iLength = ~llGetListLength(g_lBlock);
-            sOutput = "";
-            while (iLength < -1) {
-                sOutput += "\n" + NameURI(llList2String(g_lBlock,++iLength));
-                if (llStringLength(sOutput) > 948) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Blocked: "+sOutput,kID);
-                    sOutput = "";
-                }
-            }
+            iLength = llGetListLength(g_lBlock);
+            sOutput="";
+            while (iLength)
+                sOutput += "\n" + NameURI(llList2String(g_lBlock, --iLength));
             if (sOutput) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Blocked: "+sOutput,kID);
             //if (g_sGroupName) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: "+g_sGroupName,kID);
             if (g_kGroup) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Group: secondlife:///app/group/"+(string)g_kGroup+"/about",kID);
-            if (g_iOwnSelf) sOutput = g_sFlavor+" Mode: enabled";
-            else sOutput = g_sFlavor+" Mode: disabled";
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOutput,kID);
             sOutput="closed";
             if (g_iOpenAccess) sOutput="open";
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public Access: "+ sOutput,kID);
@@ -388,24 +408,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     } else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
-                g_iOwnSelf = TRUE;
-                //UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
-                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"ownself=1","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"OwnSelf enabled.",kID);
+                //g_iOwnSelf = TRUE;
+                UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
             } else if (sAction == "off") {
                 g_iOwnSelf = FALSE;
-                //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
-                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"ownself","");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"OwnSelf disabled.",kID);
-                if (iRemenu && kID == g_sWearerID) iNum = Auth(kID);
-            } else {
-                sStr = "disabled.";
-                if (g_iOwnSelf) sStr = "enabled.";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"OwnSelf is currently "+sStr,kID);
+                UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
             }
-            
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%", kID);
-        if (iRemenu) AuthMenu(kID, iNum);
+         if (iRemenu) AuthMenu(kID, iNum);
     } else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
@@ -534,16 +544,13 @@ default {
         }*/
         //llSetMemoryLimit(65536);
         g_sWearerID = llGetOwner();
-        if (!llSubStringIndex(llGetObjectDesc(),"LED")) g_iIsLED = TRUE;
         llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
-            if (g_iIsLED) {
-                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-                llSetTimerEvent(0.22);
-            }
+            llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+            llSetTimerEvent(0.22);
             integer iAuth = Auth(kID);
             if ( kID == g_sWearerID && sStr == "runaway") {   // note that this will work *even* if the wearer is blacklisted or locked out
                 if (g_iRunawayDisable)
@@ -565,12 +572,13 @@ default {
             integer i = llSubStringIndex(sToken, "_");
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 sToken = llGetSubString(sToken, i + 1, -1);
-                if (sToken == "owner")
+                if (sToken == "owner") {
                     g_lOwner = llParseString2List(sValue, [","], []);
-                else if (sToken == "tempowner")
+                    if (~llSubStringIndex(sValue,g_sWearerID)) g_iOwnSelf = TRUE;
+                    else g_iOwnSelf = FALSE;
+                } else if (sToken == "tempowner")
                     g_lTempOwner = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
-                else if (sToken == "ownself") g_iOwnSelf = (integer)sValue;
                 else if (sToken == "group") {
                     g_kGroup = (key)sValue;
                     //check to see if the object's group is set properly
