@@ -1,7 +1,9 @@
 # OpenCollar Release Notes
 
-## 7.0.dev4 (In development)
+## 7.0.dev5 (In development)
 
+- Remove the limits of 3 owners, 15 trusted, 9 blocked, and 1 tempowner.
+  Replace with shared limit of 28 people across all those lists.
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
 - Added new STOPPEDSCRIPT item type to bundles, for handling scripts that need to
