@@ -4,6 +4,8 @@
 // Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+//do not adjust below this line
 
 string g_sParentMenu = "RLV";
 
