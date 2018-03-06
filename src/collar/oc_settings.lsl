@@ -5,6 +5,9 @@
 // littlemousy et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+integer secondlife = TRUE; //TRUE or FALSE
+//Do not change anything below here
 
 // Central storage for settings of other plugins in the device.
 
@@ -20,6 +23,7 @@ key g_kWearer;
 
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
+string HTTP_TYPE = ".txt"; // can be raw, text/plain or text/*
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -311,7 +315,8 @@ UserCommand(integer iAuth, string sStr, key kID) {
 default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-        if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
+        if (llGetNumberOfPrims()>5 && secondlife == TRUE)
+            g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -393,7 +398,7 @@ default {
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
             if (sToken == "intern_news") {
                 g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
         }
         else if (iNum == LM_SETTING_REQUEST) {
@@ -425,7 +430,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {
