@@ -4,6 +4,8 @@
 // Romka Swallowtail, Garvin Twine et al.                 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+//do not adjust below this line
 
 string g_sAppVersion = "1.3";
 
@@ -108,10 +110,6 @@ PermsCheck() {
 
 UserCommand(integer iNum, string sStr, key kID) {
     // So commands can accept a value
-    if (iNum==CMD_GROUP) {  // Do not permit Group Access (Public Access)
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-            return;
-    }
     if (sStr == "reset") {
         // it is a request for a reset
         if(iNum == CMD_WEARER || iNum == CMD_OWNER)
@@ -120,11 +118,15 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr == "rm bookmarks") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         else Dialog(kID,"\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmbookmarks");
-    } else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
+    }else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
+        if (iNum==CMD_GROUP)
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         // an authorized user requested the plugin menu by typing the menus chat command
         DoMenu(kID, iNum);
-    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {
-        //grab partial string match to capture destination name
+    } else if(llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " save") - 1) == PLUGIN_CHAT_CMD + " save") {           if (iNum==CMD_GROUP){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        }
+//grab partial string match to capture destination name
         if(llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " save")) {
             string sAdd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD + " save") + 1, -1), STRING_TRIM);
             if(llListFindList(g_lVolatile_Destinations, [sAdd]) >= 0 || llListFindList(g_lDestinations, [sAdd]) >= 0)
@@ -143,7 +145,9 @@ You can enter:
 
         }
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " remove") - 1) == PLUGIN_CHAT_CMD + " remove") { //grab partial string match to capture destination name
-        if (llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
+        if (iNum==CMD_GROUP)
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else if (llStringLength(sStr) > llStringLength(PLUGIN_CHAT_CMD + " remove")) {
             string sDel = llStringTrim(llGetSubString(sStr,  llStringLength(PLUGIN_CHAT_CMD + " remove"), -1), STRING_TRIM);
             if (llListFindList(g_lVolatile_Destinations, [sDel]) < 0) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Can't find bookmark " + (string)sDel + " to be deleted.",kID);
@@ -158,8 +162,12 @@ You can enter:
         } else
             Dialog(kID, "Select a bookmark to be removed...", g_lVolatile_Destinations, [UPMENU], 0, iNum,"RemoveMenu");
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD + " print") - 1) == PLUGIN_CHAT_CMD + " print") { //grab partial string match to capture destination name
-        PrintDestinations(kID);
+        if (iNum==CMD_GROUP)
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else PrintDestinations(kID);
     } else if (llGetSubString(sStr, 0, llStringLength(PLUGIN_CHAT_CMD) - 1) == PLUGIN_CHAT_CMD) {
+        if (iNum==CMD_GROUP)
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         string sCmd = llStringTrim(llGetSubString(sStr, llStringLength(PLUGIN_CHAT_CMD) + 1, -1), STRING_TRIM);
         g_kCommander = kID;
         if (llListFindList(g_lVolatile_Destinations, [sCmd]) >= 0) {
