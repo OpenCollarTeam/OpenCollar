@@ -4,6 +4,8 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+//Do not change anything below here
 
 string g_sAppVersion = "1.5";
 
@@ -44,8 +46,7 @@ integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 
-
-integer g_iLastRank = CMD_EVERYONE ;
+integer g_iLastRank;
 integer g_iOn = FALSE;
 string g_sText;
 vector g_vColor = <1.0,1.0,1.0>; // default white
@@ -72,20 +73,17 @@ float min_z = 0.25 ; // min height
 float max_z = 1.0 ; // max height
 vector g_vPrimScale = <0.08,0.08,0.4>; // prim size, initial value (z - text offset height)
 
-list ATTACH_POINT_ROTATIONS = [
-    ATTACH_BACK, <-90,0,0>,
-    ATTACH_CHEST, <90,0,0>
-];
-
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    //Debug("Made menu.");
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
 ShowHideTitle() {
+    //Debug("ShowHideTitle");
     if (g_iTextPrim >0){
         if (g_sText == "") g_iOn = FALSE;
         llSetLinkPrimitiveParamsFast(g_iTextPrim, [PRIM_TEXT,g_sText,g_vColor,(float)g_iOn, PRIM_SIZE,g_vPrimScale, PRIM_SLICE,<0.490,0.51,0.0>]);
@@ -99,14 +97,8 @@ ShowHideTitle() {
           }
         }
         else {
-            rotation start = ZERO_ROTATION;
-            integer idx = llListFindList(ATTACH_POINT_ROTATIONS, [llGetAttached()]);
-            if (~idx) {
-                start = llEuler2Rot(llList2Vector(ATTACH_POINT_ROTATIONS, idx + 1) * DEG_TO_RAD);
-            }
-            vector pos = (g_vPartOffset + <0.,0, g_vPrimScale.z>)/(start * llGetLocalRot());
             llSetLinkPrimitiveParamsFast(g_iPartPrim, [
-                PRIM_POS_LOCAL, pos
+                PRIM_POS_LOCAL, (g_vPartOffset + <0.,0, g_vPrimScale.z>)/llGetLocalRot()
             ]);
             llLinkParticleSystem(g_iPartPrim, [
                 PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
@@ -282,6 +274,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 
 default{
     state_entry(){
+        g_iLastRank = CMD_EVERYONE ; // moved to state_entry since "A field initializer cannot referance the non-static field"
         g_iTextPrim = -1 ;
         integer linkNumber = llGetNumberOfPrims()+1;
         while (linkNumber-- >2){
@@ -305,6 +298,7 @@ default{
         }
         g_kWearer = llGetOwner();
         AssembleTextures();
+        //Debug("State Entry Event ended");
 
         if (g_iTextPrim < 0 && llSubStringIndex(llGetObjectName(), "Updater") == -1) {
             llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -314,6 +308,7 @@ default{
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
+        //Debug("Link Message Event");
         if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -364,7 +359,6 @@ default{
                     UserCommand(iAuth, "image", kAv);
                   } else if (sMessage == UPMENU) {
                     TitlerMenu(kAv, iAuth);
-                    return;
                   } else if (sMessage == "BIGGER") {
                     UserCommand(iAuth, "image bigger", kAv);
                   } else if (sMessage == "SMALLER") {
