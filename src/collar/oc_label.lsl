@@ -6,6 +6,16 @@
 // Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+list g_lFonts = [
+    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
+    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc", //not ideally aligned
+    "Serif 1", "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c",
+    "Serif 2", "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe",
+    "LCD", "014291dc-7fd5-4587-413a-0d690a991ae1"
+        ];
+
+//do not adjust below this line
 
 string g_sAppVersion = "¹⋅⁶";
 
@@ -104,13 +114,6 @@ vector g_vOffset;
 integer FACE          = -1;
 
 key g_kFontTexture = NULL_KEY;
-list g_lFonts = [
-    "Andale 1", "ccc5a5c9-6324-d8f8-e727-ced142c873da", //
-    "Andale 2", "8e10462f-f7e9-0387-d60b-622fa60aefbc", //not ideally aligned
-    "Serif 1", "2c1e3fa3-9bdb-2537-e50d-2deb6f2fa22c",
-    "Serif 2", "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe",
-    "LCD", "014291dc-7fd5-4587-413a-0d690a991ae1"
-        ];
 
 // All displayable characters.  Default to ASCII order.
 string g_sCharIndex;
@@ -301,7 +304,7 @@ SetOffsets(key font) {
         }
         integer o = llListFindList(g_lFonts, [(string)g_kFontTexture]);
         integer n = llListFindList(g_lFonts, [(string)font]);
-        if (~o && o != n) {// changing fonts - adjust for differences in font offsets
+        if (o != -1 && o != n) {// changing fonts - adjust for differences in font offsets
             if (n < 8 && o == 9) g_vOffset.y += 0.0015;
             else if (o < 8 && n == 9) g_vOffset.y -= 0.0015;
         }
