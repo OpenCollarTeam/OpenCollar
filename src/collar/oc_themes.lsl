@@ -4,6 +4,9 @@
 // Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+
+//Do not change anything below here
 
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
@@ -150,7 +153,7 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
                     lElementTextures=[];
                     iNumTextures=llGetListLength(g_lTextures);
                 }
-            } else if (!~llSubStringIndex(sTextureName,"~") && !iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
+            } else if (llSubStringIndex(sTextureName,"~") == -1 && !iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
                 lElementTextures+=llList2String(g_lTextureShortNames,iNumTextures);
             }
         }
@@ -250,7 +253,7 @@ BuildElementsList(){
     integer iLinkNum = llGetNumberOfPrims()+1;
     while (iLinkNum-- > 2) {  //root prim is 1, so stop at 2
         string sElement = llList2String(llGetLinkPrimitiveParams(iLinkNum, [PRIM_DESC]),0);
-        if (~llSubStringIndex(llToLower(sElement),"floattext") || ~llSubStringIndex(llToLower(sElement),"leashpoint")) {
+        if (llSubStringIndex(llToLower(sElement),"floattext") != -1 || llSubStringIndex(llToLower(sElement),"leashpoint") != -1) {
              } //do nothing, these are alwasys no-anything
         else if (sElement != "" && sElement != "(No Description)") {  //element has a description, so parse it
             //prim desc will be elementtype~notexture(maybe)
@@ -287,7 +290,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
     list lParams = llParseString2List(sStrLower, [" "], []);
-    if (~llListFindList(commands, [llList2String(lParams,0)]) || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
+    if (llListFindList(commands, [llList2String(lParams,0)]) != -1 || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
         if (kID == g_kWearer || iNum == CMD_OWNER) {  //only allowed users can...
             lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
@@ -692,7 +695,7 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
-            else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
+            else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID = "";
             if (llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sThemesCard)!=g_kThemesCardUUID) BuildThemesList();
             else if (!llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD) g_kThemesCardUUID = "";
         }
