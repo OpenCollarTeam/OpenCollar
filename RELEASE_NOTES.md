@@ -1,9 +1,14 @@
 # OpenCollar Release Notes
 
-## 7.0.dev5 (In development)
+## 7.1
 
 - Remove the limits of 3 owners, 15 trusted, 9 blocked, and 1 tempowner.
   Replace with shared limit of 28 people across all those lists.
+- Add new "Detach" button to the RLV menu, and associated "detach" command.
+  This feature shows the user a list of the collar wearer's attachments, and
+  allows you to detach them.
+- Added a new "image" command that uses the titler prim to show an image
+  above the wearer's head.  Thank you Mano Nevadan for the pull request.
 - Added OPTIONAL bundle type to the installer, for addons like oc_bookmarks that
   users might have intentionally removed.
 - Added new STOPPEDSCRIPT item type to bundles, for handling scripts that need to
@@ -13,11 +18,6 @@
   spam for users of closed source third party plugins that use that prefix.
 - Fixed upgradeability of collar versions 3.0 through 3.2.  Thank you
   Nataliaa Wirefly for the bug report and testing.
-- Add new "Detach" button to the RLV menu, and associated "detach" command.
-  This feature shows the user a list of the collar wearer's attachments, and
-  allows you to detach them.
-- Added a new "image" command that uses the titler prim to show an image
-  above the wearer's head.  Thank you Mano Nevadan for the pull request.
 
 ## 7.0
 
