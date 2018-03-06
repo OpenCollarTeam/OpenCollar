@@ -4,6 +4,8 @@
 // Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+//do not adjust below this line
 
 list g_lMenuIDs;  //menu information
 integer g_iMenuStride=3;
@@ -181,7 +183,7 @@ ExMenu(key kID, string sWho, integer iAuth) {
         iExSettings = g_iOwnerDefault;
     else if (sWho == "trusted" || ~llListFindList(g_lSecOwners, [sWho]))
         iExSettings = g_iTrustedDefault;
-    if (~iInd = llListFindList(g_lSettings, [sWho])) // replace deefault with custom
+    if (~iInd == llListFindList(g_lSettings, [sWho])) // replace deefault with custom
         iExSettings = llList2Integer(g_lSettings, iInd + 1);
 
     string sPrompt = "\nCurrent Settings for "+sWho+": "+"\n";
@@ -350,7 +352,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         for (iC = 0; iC < llGetListLength(lCom); iC++) {// cycle through strided entries
             sCom = llList2String(lCom, iC);
             if (sCom == "clear") jump nextcom; // do we want anything here this is for excpetions
-            if (~iNames = llSubStringIndex(sCom, "=")) {
+            if (~iNames == llSubStringIndex(sCom, "=")) {
                 sVal = llGetSubString(sCom, iNames + 1, -1);
                 sCom = llGetSubString(sCom, 0, iNames -1);
             } else sVal = "";
