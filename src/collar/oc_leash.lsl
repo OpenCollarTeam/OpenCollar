@@ -5,6 +5,12 @@
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+SecondLife()
+{
+    llMinEventDelay(0.44); //edit out this line for OS and IW
+}
+//Do not change anything below here
 
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
@@ -571,7 +577,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        llMinEventDelay(0.44);
+        SecondLife();
         DoUnleash(FALSE);
         //Debug("Starting");
     }
