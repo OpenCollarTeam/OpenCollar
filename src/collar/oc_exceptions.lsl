@@ -226,62 +226,72 @@ SaveSettings() {
 
 SetAllExs() {
     if (!g_iRLVOn) return;
+    ClearEx(); //Previously this script sets every exception to y or n. It only needs to set y if the exception is already set to n. Either we a: spam the viewer with unset commands as current, b: get current exceptions and parse the list to remove / set as needed, or c: clear exceptions and start from scratch, which is frankly a lot simpler.
     integer iStop = llGetListLength(g_lRLVcmds);
     integer n;
     integer i;
-    string sRLVCmd = "@";
+    //string sRLVCmd = "@";
+    list lRLVCmd; // Combined RLV commands need comma separation, so let's do it with a list for ease. It's lucky the llOwnerSay commands were being accidentally issued inside the loop for owner/secowner as commas weren't being added, which breaks things. So... yay, a bug that fixed another bug! Let's fix both though.
     integer iLength = llGetListLength(g_lSecOwners);
     for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lSecOwners, n);
-        if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
-            for (i = 0; i<iStop; i++) {
+        if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) 
+        {
+            for (i = 0; i<iStop; i++) 
+            {
                 if (g_iTrustedDefault & llList2Integer(g_lBinCmds, i) )
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
-                else
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
-                llOwnerSay(sRLVCmd);
-                sRLVCmd = "@";
+                    lRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
+                //else
+                    //sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
+                //llOwnerSay(sRLVCmd);
+                //sRLVCmd = "@";
             }
+            if((string)lRLVCmd!="") llOwnerSay("@"+llDumpList2String(lRLVCmd,","));
+            lRLVCmd=[];
         }
     }
     iLength = llGetListLength(g_lOwners+g_lTempOwners);
     for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lOwners+g_lTempOwners, n);
-        if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
-            for (i = 0; i<iStop; i++) {
+        if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) 
+        {
+            for (i = 0; i<iStop; i++) 
+            {
                 if (g_iOwnerDefault & llList2Integer(g_lBinCmds, i) )
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
-                else
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
-                llOwnerSay(sRLVCmd);
-                sRLVCmd = "@";
+                    lRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
+               // else
+               //     sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
+               // llOwnerSay(sRLVCmd);
+               // sRLVCmd = "@";
             }
+            if((string)lRLVCmd!="") llOwnerSay("@"+llDumpList2String(lRLVCmd,","));
+            lRLVCmd=[];
         }
     }
     iLength = llGetListLength(g_lSettings);
-    for (n = 0; n < iLength; n += 2) {
+    for (n = 0; n < iLength; n += 2) 
+    {
         string sTmpOwner = llList2String(g_lSettings, n);
-        if(sTmpOwner!=g_kWearer) {
+        if(sTmpOwner!=g_kWearer) 
+        {
             integer iTmpOwner = llList2Integer(g_lSettings, n+1);
-            for (i = 0; i<iStop; i++) {
+            for (i = 0; i<iStop; i++) 
+            {
                 if (iTmpOwner & llList2Integer(g_lBinCmds, i) )
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
-                else
-                    sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
+                    lRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
+                //else
+                    //sRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=y";
             }
-            llOwnerSay(sRLVCmd);
-            sRLVCmd = "@";
+            //llOwnerSay(sRLVCmd);
+            //sRLVCmd = "@";
+            if((string)lRLVCmd!="") llOwnerSay("@"+llDumpList2String(lRLVCmd,","));
+            lRLVCmd=[];
         }
     }
 }
 
 ClearEx() {
-    if (g_iRLVOn) {
-        integer i = llGetListLength(g_lRLVcmds);
-        do { i--;
-            llOwnerSay("@clear="+llList2String(g_lRLVcmds,i));
-        } while (i);
-    }
+     if (g_iRLVOn) llOwnerSay("@clear="+llDumpList2String(g_lRLVcmds,",clear=")); //several times more efficient than looping through the list.
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -430,7 +440,7 @@ default {
                 if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
                 else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);
                 else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []);
-                ClearEx();
+               // ClearEx();  done in SetAllExs() Now
                 SetAllExs();
             } else if (sToken == "settings") {
                 if (sValue == "sent") SetAllExs();//sendcommands
