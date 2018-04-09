@@ -235,11 +235,9 @@ SetAllExs() {
     for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lSecOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
-            for (i = 0; i<iStop; i++) 
-            {
+            for (i = 0; i<iStop; i++) {
                 if (g_iTrustedDefault & llList2Integer(g_lBinCmds, i) )
                     lRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
-                
             }
             if((string)lRLVCmd!="") llOwnerSay("@"+llDumpList2String(lRLVCmd,","));
             lRLVCmd=[];
@@ -249,8 +247,7 @@ SetAllExs() {
     for (n = 0; n < iLength; ++n) {
         string sTmpOwner = llList2String(g_lOwners+g_lTempOwners, n);
         if (llListFindList(g_lSettings, [sTmpOwner]) == -1 && sTmpOwner!=g_kWearer) {
-            for (i = 0; i<iStop; i++) 
-            {
+            for (i = 0; i<iStop; i++) {
                 if (g_iOwnerDefault & llList2Integer(g_lBinCmds, i) )
                     lRLVCmd += llList2String(g_lRLVcmds, i) + ":" + sTmpOwner + "=n";
             }
@@ -259,8 +256,7 @@ SetAllExs() {
         }
     }
     iLength = llGetListLength(g_lSettings);
-    for (n = 0; n < iLength; n += 2) 
-    {
+    for (n = 0; n < iLength; n += 2) {
         string sTmpOwner = llList2String(g_lSettings, n);
         if(sTmpOwner!=g_kWearer) {
             integer iTmpOwner = llList2Integer(g_lSettings, n+1);
