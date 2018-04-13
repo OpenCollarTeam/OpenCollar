@@ -33,6 +33,7 @@ integer g_iPosture;  //posture lock on/off
 list g_lHeightAdjustments;
 integer g_iRLVA_ON;
 integer g_iHoverOn = TRUE;
+integer g_iCount;
 float g_fHoverIncrement = 0.02;
 string g_sPose2Remove;
 //MESSAGE MAP
@@ -259,7 +260,13 @@ StartAnim(string sAnim) {  //adds anim to queue, calls PlayAnim to play it, and 
         }
     } else  llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.",g_kWearer);
 }
-
+StartAnimIfNone(string sAnim){// calls startanim if scurrent is none
+    if(g_sCurrentPose ==""&&g_sLastPose!=""){
+        StartAnim(g_sLastPose);
+        g_sCurrentPose=g_sLastPose;
+        g_sLastPose="";
+    }
+}
 PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods configured for each
     if (g_iTweakPoseAO) {
         if (g_sPoseMoveWalk) llSetAnimationOverride( "Walking", g_sPoseMoveWalk);
@@ -440,7 +447,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if ((sStr == "hide animator")&&(iNum == CMD_OWNER || kID == g_kWearer))
         llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
 }
-
+string g_sLastPose;
 default {
     on_rez(integer iNum) {
         if (iNum == 825) llSetRemoteScriptAccessPin(0);
@@ -453,17 +460,11 @@ default {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
        // llSetMemoryLimit(49152);  //2015-05-06 (5490 bytes free)
         g_kWearer = llGetOwner();
-        if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS );
+        if (llGetAttached()) llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS |PERMISSION_TAKE_CONTROLS);
         CreateAnimList();
         //Debug("Starting");
         if (llGetLinkNumber() > LINK_ROOT) {
           llMessageLinked(LINK_ALL_OTHERS, MVANIM_INIT, "", "");
-        }
-    }
-
-    run_time_permissions(integer iPerm) {
-        if (iPerm & PERMISSION_TRIGGER_ANIMATION) {
-            if (g_iPosture) llStartAnimation("~stiff");
         }
     }
 
@@ -472,7 +473,7 @@ default {
             //MessageAOs("ON","STAND");
             g_lAnims = [];
         }
-        else llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS);
+        else llRequestPermissions(g_kWearer, PERMISSION_TRIGGER_ANIMATION | PERMISSION_OVERRIDE_ANIMATIONS|PERMISSION_TAKE_CONTROLS);
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -672,9 +673,66 @@ default {
         if (iChange & CHANGED_REGION) {
             if (g_iProfiled) {
                 llScriptProfiler(1);
-                Debug("profiling restarted");
+                //Debug("profiling restarted");
             }
         }
 */
+    }
+    run_time_permissions(integer p){
+        if(p & PERMISSION_TAKE_CONTROLS){
+            
+            llTakeControls(
+                            CONTROL_FWD |
+                            CONTROL_BACK |
+                            CONTROL_LEFT |
+                            CONTROL_RIGHT |
+                            CONTROL_ROT_LEFT |
+                            CONTROL_ROT_RIGHT |
+                            CONTROL_UP |
+                            CONTROL_DOWN |
+                            0, TRUE, TRUE);
+                            
+        }
+        
+        
+        if (p & PERMISSION_TRIGGER_ANIMATION) {
+            if (g_iPosture) llStartAnimation("~stiff");
+        }
+    }
+    control(key i, integer e,integer l){
+        if(g_iTweakPoseAO){ // double check incase controls are still established when disabled
+            // Now then.. check if running if not play the walk animation
+            integer s=llGetAgentInfo(g_kWearer);
+            if(s&AGENT_WALKING){ // DOES NOT TRIGGER ON TURNING. Perfect for smooth roleplay situations
+                if(g_sCurrentPose!=""){
+                    //Debug("Requested stop of "+g_sCurrentPose);
+                
+                    StopAnim(g_sCurrentPose);
+                    g_sLastPose=g_sCurrentPose;
+                    g_sCurrentPose="";
+                    llSetTimerEvent(1);
+                    g_iCount=3;
+                } else {
+                    //Debug("Agent is walking but the pose is none");
+                    g_iCount=3;
+                }
+            }else{
+                if(g_sLastPose!=""){
+                    //Debug("Requesting startup of "+g_sLastPose);
+                    // If pose is empty, restore last pose and start it up now
+                    StartAnimIfNone(g_sLastPose);
+                    llSetTimerEvent(0);
+                }
+            }
+        }
+    }
+    timer(){
+        if(g_iCount<=0){
+            //Debug("Timer is requesting animation startup");
+            StartAnimIfNone(g_sLastPose);
+            llSetTimerEvent(0);
+        }else{
+            g_iCount--;
+        }
     }
 }
