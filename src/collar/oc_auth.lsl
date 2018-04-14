@@ -7,13 +7,14 @@
 // change here for OS and IW grids
 integer secondlife = TRUE; //TRUE or FALSE
 string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";//change to your own grids sound
-//do not adjust below this line
+// do not adjust below this line
 
 string g_sWearerID;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;//list of blacklisted UUID
 list g_lTempOwner;//list of temp owners UUID.  Temp owner is just like normal owner, but can't add new owners.
+integer g_iPeopleCap = 28; // we'll only store this many people across owner, trusted, blocked, and tempowner lists
 
 key g_kGroup = "";
 integer g_iGroupEnabled = FALSE;
@@ -21,6 +22,8 @@ integer g_iGroupEnabled = FALSE;
 string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
 integer g_iRunawayDisable=0;
+
+string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
 
 //MESSAGE MAP
 integer CMD_ZERO = 0;
@@ -216,18 +219,26 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
     if (llListFindList(g_lTempOwner,[(string)kID]) != -1 && llListFindList(g_lOwner,[(string)kID]) == -1 && sToken != "tempowner")
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
     else {
+        // Put a cap on how many people we'll remember, to avoid running out of
+        // memory.
+        integer peopleStored = llGetListLength(g_lOwner) +
+            llGetListLength(g_lTrust) + 
+            llGetListLength(g_lTempOwner) +
+            llGetListLength(g_lBlock);
+        if (peopleStored >= g_iPeopleCap) {
+            llMessageLinked(
+                LINK_DIALOG,
+                NOTIFY,
+                "0\n\nSorry, we reached a limit!\n\nYou have stored 28 people in the collar's lists. (owners+trusted+tempowners+blocked)\n",
+                kID
+            );
+            return;
+        }
         if (sToken=="owner") {
             lPeople=g_lOwner;
-            if (llGetListLength (lPeople) >=3) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\nThree people at a time can have this role.\n",kID);
-                return;
-            }
         } else if (sToken=="trust") {
             lPeople=g_lTrust;
-            if (llGetListLength (lPeople) >=15) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry, we reached a limit!\n\n15 people at a time can have this role.\n",kID);
-                return;
-            } else if (~llListFindList(g_lOwner,[sPersonID])) {
+            if (~llListFindList(g_lOwner,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
                 return;
             } else if (sPersonID==g_sWearerID) {
@@ -236,16 +247,9 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
             }
         } else if (sToken=="tempowner") {
             lPeople=g_lTempOwner;
-            if (llGetListLength (lPeople) >=1) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nSorry!\n\nYou can only be captured by one person at a time.\n",kID);
-                return;
-            }
         } else if (sToken=="block") {
             lPeople=g_lBlock;
-            if (llGetListLength (lPeople) >=9) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\nYour Blocklist is already full.\n",kID);
-                return;
-            } else if (~llListFindList(g_lTrust,[sPersonID])) {
+            if (~llListFindList(g_lTrust,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\nYou trust "+NameURI(sPersonID)+". If you really want to block "+NameURI(sPersonID)+" then you should remove them as trusted first.\n",kID);
                 return;
             } else if (~llListFindList(g_lOwner,[sPersonID])) {
@@ -350,13 +354,13 @@ integer Auth(string sObjID) {
         iNum = CMD_TRUSTED;
     else if (sID == g_sWearerID)
         iNum = CMD_WEARER;
-    else if (g_iOpenAccess)
-    {
-        if (in_range((key)sID))
-            iNum = CMD_GROUP;
-        else
-            iNum = CMD_EVERYONE;
-    }
+	else if (g_iOpenAccess)
+	{
+		if (in_range((key)sID))
+			iNum = CMD_GROUP;
+		else
+			iNum = CMD_EVERYONE;
+	}
     else if (g_iGroupEnabled && (string)llGetObjectDetails((key)sObjID, [OBJECT_GROUP]) == (string)g_kGroup && (key)sID != g_sWearerID)  //meaning that the command came from an object set to our control group, and is not owned by the wearer
         iNum = CMD_GROUP;
     else if (llSameGroup(sID) && g_iGroupEnabled && sID != g_sWearerID) {
