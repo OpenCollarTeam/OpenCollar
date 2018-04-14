@@ -324,9 +324,8 @@ MoveItem(integer iLink, string sItem) {
     
     // this is used for the .couples notecard as well as animations
     // don't try giving things we don't have    
-    if (llGetInventoryType(sItem) == INVENTORY_NONE) {
+    if (llGetInventoryType(sItem) == INVENTORY_NONE)
         return;
-    }
     //llWhisper(DEBUG_CHANNEL, "Giving " + sItem);    
     llGiveInventory(llGetLinkKey(iLink), sItem);
     SafeDelete(sItem);
