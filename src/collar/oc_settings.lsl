@@ -398,7 +398,7 @@ default {
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
             if (sToken == "intern_news") {
                 g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
         }
         else if (iNum == LM_SETTING_REQUEST) {
@@ -430,7 +430,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn"+HTTP_TYPE,[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
     }
 
     changed(integer iChange) {
