@@ -317,7 +317,6 @@ CreateAnimList() {
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
 
-
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.
 
