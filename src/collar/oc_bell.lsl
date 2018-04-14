@@ -127,7 +127,6 @@ BellMenu(key kID, integer iAuth) {
     }
     sPrompt += "Bell Volume:  \t"+(string)((integer)(g_fVolume*10))+"/10\n";
     sPrompt += "Active Sound:\t"+(string)(g_iCurrentBellSound+1)+"/"+(string)g_iBellSoundCount+"\n";
-
     lMyButtons += ["Next Sound","Vol +","Vol -"];
 
     Dialog(kID, sPrompt, lMyButtons, [UPMENU], 0, iAuth, "BellMenu");
