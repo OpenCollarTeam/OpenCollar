@@ -4,13 +4,14 @@
 // Sumi Perl, Romka Swallowtail, littlemousy, North Glenwalker et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+
 //needs to handle anim requests from sister scripts as well
 //this script as essentially two layers
 //lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
 //upper layer: use the link message anim api to provide a pose menu
 
 // change here for OS and IW grids
-//do not adjust below this line
+// do not adjust below this line
 
 list g_lAnims;  //list of queued anims
 list g_lPoseList;  //list of standard poses to use in the menu
