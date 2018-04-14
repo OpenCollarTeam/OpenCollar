@@ -392,6 +392,7 @@ default {
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
+    
     not_at_target() {
         llTargetRemove(g_iTargetID);
         MoveToPartner();
