@@ -6,7 +6,7 @@
 
 // change here for OS and IW grids
 
-//Do not change anything below here
+// Do not change anything below here
 
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
