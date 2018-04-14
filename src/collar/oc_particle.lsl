@@ -9,7 +9,7 @@ key silk = "cdb7025a-9283-17d9-8d20-cee010f36e90";
 key chain = "4cde01ac-4279-2742-71e1-47ff81cc3529";
 key leather = "8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
 key rope = "9a342cda-d62a-ae1f-fc32-a77a24a85d73";
-//Do not change anything below here
+// Do not change anything below here
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
