@@ -50,7 +50,6 @@ integer MENUNAME_RESPONSE   = 3001;
 //integer MENUNAME_REMOVE     = 3003;
 
 integer RLV_CMD = 6000;
-
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
 
