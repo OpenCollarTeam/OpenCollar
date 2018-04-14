@@ -3,7 +3,7 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 // change here for OS and IW grids
-//Do not change anything below here
+// Do not change anything below here
 
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
