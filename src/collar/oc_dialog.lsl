@@ -6,8 +6,8 @@
 
 // change here for OS and IW grids
 integer secondlife = TRUE; //TRUE or FALSE
-//DO NOT USE THIS SCRIPT ON TAG BUILDS (crashes on UUID error)
-//do not adjust below this line
+// DO NOT USE THIS SCRIPT ON TAG BUILDS (crashes on UUID error)
+// do not adjust below this line
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
