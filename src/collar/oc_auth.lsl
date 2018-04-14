@@ -23,8 +23,6 @@ string g_sParentMenu = "Main";
 string g_sSubMenu = "Access";
 integer g_iRunawayDisable=0;
 
-string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
-
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
