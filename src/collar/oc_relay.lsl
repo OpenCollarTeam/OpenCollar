@@ -6,7 +6,7 @@
 // change here for OS and IW grids
 integer secondlife = TRUE; //TRUE or FALSE
 
-//Do not change anything below here
+// Do not change anything below here
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
