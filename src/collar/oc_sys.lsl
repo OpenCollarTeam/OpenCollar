@@ -10,7 +10,7 @@ string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
 string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
-//Do not change anything below here
+// Do not change anything below here
 
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -18,7 +18,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.0.dev4";
+string g_sCollarVersion="7.1.1";
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
