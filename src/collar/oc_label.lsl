@@ -14,7 +14,6 @@ list g_lFonts = [
     "Serif 2", "bf2b6c21-e3d7-877b-15dc-ad666b6c14fe",
     "LCD", "014291dc-7fd5-4587-413a-0d690a991ae1"
         ];
-
 //do not adjust below this line
 
 string g_sAppVersion = "¹⋅⁶";
