@@ -18,7 +18,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.1.1";
+string g_sCollarVersion="7.1";
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
