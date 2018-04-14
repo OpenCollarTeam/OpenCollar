@@ -13,7 +13,7 @@ list g_lFonts = [
     ];
 key g_kFontTexture = "91b730bc-b763-52d4-d091-260eddda3198";
 
-//Do not change anything below here
+// Do not change anything below here
 
 string g_sAppVersion = "¹⋅¹";
 
