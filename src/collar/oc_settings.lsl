@@ -7,7 +7,7 @@
 
 // change here for OS and IW grids
 integer secondlife = TRUE; //TRUE or FALSE
-//Do not change anything below here
+// Do not change anything below here
 
 // Central storage for settings of other plugins in the device.
 
