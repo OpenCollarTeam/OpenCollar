@@ -756,8 +756,8 @@ default {
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
             if (g_vPos != ZERO_VECTOR){
-                vector tv = (llGetAgentSize(g_kOwner) - llGetAgentSize(g_kjLeashedTo))/2;
-                g_vPos = <g_vPos.x, g_vPos.y, tv.z>;
+                vector tv = (llGetAgentSize(g_kWearer) - llGetAgentSize(g_kLeashedTo))/2;
+                g_vPos += <0, 0, tv.z>;
                 llMoveToTarget(g_vPos,1.0);
             }
             else llStopMoveToTarget();
