@@ -214,13 +214,13 @@ AOMenu(key kID, integer iAuth) {  // wrapper to send menu back to the AO's menu
 
 integer SetPosture(integer iOn, key kCommander) {
     if (llGetInventoryType("~stiff")!=INVENTORY_ANIMATION) return FALSE;
-    if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) {
+    if (llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
         if (iOn && !g_iPosture) {
-            llStartAnimation("~stiff");
+            llSetAnimationOverride("Standing", "~stiff");
             if (kCommander) llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Posture override active.", kCommander);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"posture=1","");
         } else if (!iOn) {
-            llStopAnimation("~stiff");
+            llResetAnimationOverride("Standing");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"posture", "");
         }
         g_iPosture=iOn;
@@ -240,7 +240,7 @@ MessageAOs(string sONOFF, string sWhat){ //send string as "ON"  / "OFF" saves 2 
 RefreshAnim() {  //g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and call this function in "changed" event on TP
     if (llGetListLength(g_lAnims)) {
         if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
-            if (g_iPosture) llStartAnimation("~stiff");
+            if (g_iPosture) llSetAnimationOverride("Standing","~stiff");
             if (g_iTweakPoseAO) llResetAnimationOverride("ALL");
             StartAnim(llList2String(g_lAnims, 0));
            // string sAnim = llList2String(g_lAnims, 0);
@@ -275,7 +275,8 @@ PlayAnim(string sAnim){  //plays anim and heightfix, depending on methods config
         else if (g_fStandHover)
             llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
     }
-    llStartAnimation(sAnim);
+    if(llGetPermissions()&PERMISSION_OVERRIDE_ANIMATIONS)
+        llSetAnimationOverride("Standing", sAnim);  
 }
 
 StopAnim(string sAnim) {  //deals with removing anim from queue, calls UnPlayAnim to stop it, calls AO as nexessary
@@ -296,7 +297,7 @@ UnPlayAnim(string sAnim){  //stops anim and heightfix, depending on methods conf
    if (g_iTweakPoseAO && llGetAnimationOverride("Standing") != "") llResetAnimationOverride("ALL");
     if (g_iRLVA_ON && g_iHoverOn) 
         llMessageLinked(LINK_RLV,RLV_CMD,"adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
-    llStopAnimation(sAnim);
+    llResetAnimationOverride("ALL");
 }
 
 CreateAnimList() {
