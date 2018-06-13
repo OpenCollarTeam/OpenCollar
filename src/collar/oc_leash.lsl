@@ -314,6 +314,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints) {
     // change to llTarget events by Lulu Pink
     g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo, [OBJECT_POS]), 0);
     //to prevent multiple target events and llMoveToTargets
+    
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
@@ -740,6 +741,9 @@ default {
     }
 
     not_at_target() {
+        
+        // Check z height of wearer and target. If above by more than 0.5, set target length to 0.1
+        
         g_iJustMoved = 1;
         // i ran into a problem here which seems to be "speed" related, specially when using the menu to unleash this event gets triggered together or just after the CleanUp() function
         //to prevent to get stay in the target events i added a check on g_kLeashedTo is NULL_KEY
@@ -748,11 +752,13 @@ default {
             if (g_vPos != vNewPos) {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vNewPos;
+                
+                vector myPos = llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0);
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
             if (g_vPos != ZERO_VECTOR){
                 vector currentPos = llGetPos();
-                g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
+                g_vPos = <g_vPos.x, g_vPos.y, g_vPos.z>;
                 llMoveToTarget(g_vPos,1.0);
             }
             else llStopMoveToTarget();
