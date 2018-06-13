@@ -753,14 +753,10 @@ default {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vNewPos;
                 
-                vector myPos = llList2Vector(llGetObjectDetails(llGetOwner(),[OBJECT_POS]),0);
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-            if (g_vPos != ZERO_VECTOR){
-                vector currentPos = llGetPos();
-                g_vPos = <g_vPos.x, g_vPos.y, g_vPos.z>;
-                llMoveToTarget(g_vPos,1.0);
-            }
+            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
+            
             else llStopMoveToTarget();
         } else {
             DoUnleash(FALSE);
