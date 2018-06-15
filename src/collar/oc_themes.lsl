@@ -454,7 +454,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             integer iFace ;
                             for (iFace = 0; iFace < iSides; iFace++) {
                                 list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                                lPrimParams = llDeleteSubList(lParams,0,0); // get texture params
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
                                 llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
                             }
                         //} else {
