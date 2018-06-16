@@ -4,9 +4,6 @@
 // Romka Swallowtail et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-
-// Do not change anything below here
 
 // Based on a merge of all OpenCollar appearance plugins by littlemousy
 // Virtual Disgrace - Paint is derivate of Virtual Disgrace - Customize
@@ -153,7 +150,7 @@ TextureMenu(key kID, integer iPage, integer iAuth, string sElement) {
                     lElementTextures=[];
                     iNumTextures=llGetListLength(g_lTextures);
                 }
-            } else if (llSubStringIndex(sTextureName,"~") == -1 && !iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
+            } else if (!~llSubStringIndex(sTextureName,"~") && !iCustomTextureFound) {  //a texture with no ~ in it is a general texture.  Add it unless we have custom textures
                 lElementTextures+=llList2String(g_lTextureShortNames,iNumTextures);
             }
         }
@@ -178,7 +175,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         sTypeNice = "Color";
     } else if (sType == "shiny") {
         iMask=4;
-        sTypeNice = "Shininess";
+        sTypeNice = "Shiny";
     } else if (sType == "glow") {
         iMask=8;
         sTypeNice = "Glow";
@@ -253,7 +250,7 @@ BuildElementsList(){
     integer iLinkNum = llGetNumberOfPrims()+1;
     while (iLinkNum-- > 2) {  //root prim is 1, so stop at 2
         string sElement = llList2String(llGetLinkPrimitiveParams(iLinkNum, [PRIM_DESC]),0);
-        if (llSubStringIndex(llToLower(sElement),"floattext") != -1 || llSubStringIndex(llToLower(sElement),"leashpoint") != -1) {
+        if (~llSubStringIndex(llToLower(sElement),"floattext") || ~llSubStringIndex(llToLower(sElement),"leashpoint")) {
              } //do nothing, these are alwasys no-anything
         else if (sElement != "" && sElement != "(No Description)") {  //element has a description, so parse it
             //prim desc will be elementtype~notexture(maybe)
@@ -290,7 +287,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
     list lParams = llParseString2List(sStrLower, [" "], []);
-    if (llListFindList(commands, [llList2String(lParams,0)]) != -1 || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
+    if (~llListFindList(commands, [llList2String(lParams,0)]) || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
         if (kID == g_kWearer || iNum == CMD_OWNER) {  //only allowed users can...
             lParams = llParseString2List(sStr, [" "], []);
             string sCommand=llToLower(llList2String(lParams,0));
@@ -374,7 +371,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                                 llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)TEXTURE_BLANK, <1,1,0>,<0,0,0>,0.0,<1,1,1>,80,2]);
                         }
                     }
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shiny_" + sElement + "=" + (string)iShiny, "");
                     if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
                 }
             }
@@ -454,7 +451,8 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             integer iFace ;
                             for (iFace = 0; iFace < iSides; iFace++) {
                                 list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params **** error on this line called lPrim not lPrimParams
+                                
                                 llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
                             }
                         //} else {
@@ -504,7 +502,7 @@ default {
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
                 else g_lTextureDefaults += [sToken, sValue];
             }
-            else if (sCategory == "shininess_") {
+            else if (sCategory == "shiny_") {
                 i = llListFindList(g_lShinyDefaults, [sToken]);
                 if (~i) g_lShinyDefaults = llListReplaceList(g_lShinyDefaults, [sValue], i + 1, i + 1);
                 else g_lShinyDefaults += [sToken, sValue];
@@ -519,6 +517,7 @@ default {
                 if (~i) g_lColorDefaults = llListReplaceList(g_lColorDefaults, [sValue], i + 1, i + 1);
                 else g_lColorDefaults += [sToken, sValue];
             }
+            UserCommand(500, llList2String(llParseString2List(sID, ["_"], []),0) + " " + llList2String(llParseString2List(sID, ["_"], []),1) +" "+sValue, kID, FALSE);//NG added
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
@@ -695,7 +694,7 @@ default {
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_INVENTORY) {
             if (llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sTextureCard)!=g_kTextureCardUUID) BuildTexturesList();
-            else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID = "";
+            else if (!llGetInventoryType(g_sTextureCard)==INVENTORY_NOTECARD) g_kTextureCardUUID == "";
             if (llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD && llGetInventoryKey(g_sThemesCard)!=g_kThemesCardUUID) BuildThemesList();
             else if (!llGetInventoryType(g_sThemesCard)==INVENTORY_NOTECARD) g_kThemesCardUUID = "";
         }
