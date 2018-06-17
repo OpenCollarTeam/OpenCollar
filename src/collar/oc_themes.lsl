@@ -228,7 +228,7 @@ BuildTexturesList() {
            // if(llStringLength(sShortName)>23) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
             //else {
             g_lTextures += sTextureName;
-            g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
+            g_lTextureKeys += llGetInventoryKey(sTextureName);  //add name of texture inside collar as the key, to match notecard lists format
             g_lTextureShortNames+=sShortName;
            // }
         }
@@ -460,7 +460,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         }
                     }
                     //save to settings
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureKey, "");
                     if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             }
