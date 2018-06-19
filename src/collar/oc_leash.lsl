@@ -618,7 +618,7 @@ default {
             }
         }
         // check leash holder online status
-        if(g_iLHOC<=0){
+        if(g_iLHOC<=0 && llGetOwnerKey(g_kLeashedTo) == g_kLeashedTo){ // if ticks and not object
             g_iLHOC = 60; // should be 60 ticks
             g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
         } else
