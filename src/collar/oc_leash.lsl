@@ -564,7 +564,8 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         }
     }
 }
-
+key g_kLHOC;
+integer g_iLHOC;
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
@@ -614,6 +615,22 @@ default {
             //slow down the sensor:
                 g_iAwayCounter = 1;
                 llSetTimerEvent(11.0);
+            }
+        }
+        // check leash holder online status
+        if(g_iLHOC<=0){
+            g_iLHOC = 60; // should be 60 ticks
+            g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
+        } else
+            g_iLHOC--;
+        
+    }
+    
+    dataserver(key r, string d){
+        if(r == g_kLHOC){
+            if((integer)d ==FALSE){
+                llOwnerSay("UNLEASH: Your leash holder has gone offline. You are now unleashed");
+                llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kLeashedTo);
             }
         }
     }
