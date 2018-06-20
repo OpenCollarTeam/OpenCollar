@@ -118,7 +118,7 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
-
+integer g_iFinalUnleashTimestamp;
 string NameURI(key kID){
     if (llGetAgentSize(kID))
         return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -394,7 +394,8 @@ YankTo(key kIn){
     llSleep(2.0);
     llStopMoveToTarget();
 }
-
+key g_kFormerlyLeashedTo;
+integer g_iFinalUnleashTimestampNotSet;
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_EVERYONE) {
@@ -618,19 +619,42 @@ default {
             }
         }
         // check leash holder online status
-        if(g_iLHOC<=0 && llGetOwnerKey(g_kLeashedTo) == g_kLeashedTo){ // if ticks and not object
+        if(g_bLeashedToAvi&&g_iLHOC<=0 && llGetOwnerKey(g_kLeashedTo) == g_kLeashedTo){ // if ticks and not object
             g_iLHOC = 60; // should be 60 ticks
+            g_kFormerlyLeashedTo = g_kLeashedTo;
             g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
         } else
             g_iLHOC--;
+            
+        if(g_iFinalUnleashTimestamp>0 && g_iLHOC<=0){
+            g_kLHOC= llRequestAgentData(g_kFormerlyLeashedTo,DATA_ONLINE);
+        }else
+            g_iLHOC--;
+            
         
+        if(llGetUnixTime()>g_iFinalUnleashTimestamp && g_iFinalUnleashTimestampNotSet==FALSE){
+            g_iFinalUnleashTimestampNotSet=TRUE;
+            g_kFormerlyLeashedTo=NULL_KEY;
+            g_iFinalUnleashTimestamp=0;
+        }
     }
     
     dataserver(key r, string d){
-        if(r == g_kLHOC){
+        if(r == g_kLHOC && g_kLeashedTo!=NULL_KEY){
             if((integer)d ==FALSE){
+                if(g_iFinalUnleashTimestampNotSet){
+                    g_iFinalUnleashTimestampNotSet=FALSE;
+                    g_iFinalUnleashTimestamp = llGetUnixTime()+(5*60);
+                    llOwnerSay("UNLEASH: You will be releashed if your leash holder reappears in 5 minutes.");
+                }
                 llOwnerSay("UNLEASH: Your leash holder has gone offline. You are now unleashed");
                 llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kLeashedTo);
+            }
+        } else {
+            if((integer)d == TRUE){
+                llOwnerSay("LEASH: Your leash is being given back to who heeld it before");
+                llMessageLinked(LINK_SET, CMD_OWNER, "leash", g_kFormerlyLeashedTo);
+                g_kFormerlyLeashedTo=NULL_KEY;
             }
         }
     }
