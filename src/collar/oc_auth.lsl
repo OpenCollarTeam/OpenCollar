@@ -181,7 +181,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
         if (~index) {
             if (sToken == "owner" && sPersonID == g_sWearerID && g_iGrantRemoval==FALSE){
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
-                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|Are you sure you want to be removed as owner?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+llGetDisplayName(kCmdr)+" wants to remove you as an owner do you agree?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
                 
             } else {
                 //OwnSelfOff(kCmdr);
@@ -192,7 +192,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
         } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
             if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])){
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
-                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|Are you sure you want to be removed as owner?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+llGetDisplayName(kCmdr)+" wants to remove you as an owner do you agree?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
             } else {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
                 lPeople = [];
