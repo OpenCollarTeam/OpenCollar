@@ -2,7 +2,7 @@
 // Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
 // Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
 // Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
-// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
+// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow , tiff589, et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -383,8 +383,7 @@ DoUnleash(integer iDelSettings) {
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = CMD_EVERYONE;
     if (iDelSettings) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
-    //llSetTimerEvent(0.0);   //stop checking for leasher out of range
-    // Commented out to allow for checking online status of a potentially offline leash holder. If this was not the case my functions will set timer to zero.
+    llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
     ApplyRestrictions();
 }
@@ -571,14 +570,12 @@ integer g_iLHOC;
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
-        llSetTimerEvent(0.0);
     }
 
     state_entry() {
         g_kWearer = llGetOwner();
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
-        llSetTimerEvent(0.0);
         //Debug("Starting");
     }
 
@@ -622,37 +619,25 @@ default {
             }
         }
         // check leash holder online status
-        if(g_iFinalUnleashTimestamp!=0 && g_iLHOC<=0){
-            //llOwnerSay("DEBUG: Requesting online status of target...");
-            g_iLHOC=10;
-            g_kLHOC= llRequestAgentData(g_kFormerlyLeashedTo,DATA_ONLINE); ////// CHECK LEASH HOLDER ONLINE STATUS
-        }
-            else g_iLHOC--;
-        // Incase of confusion: LHOC = Leash Holder Online Check
         if(g_bLeashedToAvi&&g_iLHOC<=0 && llGetOwnerKey(g_kLeashedTo) == g_kLeashedTo){ // if ticks and not object
-            //llOwnerSay("DEBUG: TICK");
-            if(g_iFinalUnleashTimestamp==0){ 
-                g_kFormerlyLeashedTo = g_kLeashedTo;
-                g_iLHOC = 30; // should be 30 ticks
-                g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
-            }
+            g_iLHOC = 60; // should be 60 ticks
+            g_kFormerlyLeashedTo = g_kLeashedTo;
+            g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
         } else
             g_iLHOC--;
             
+        if(g_iFinalUnleashTimestamp>0 && g_iLHOC<=0){
+            g_kLHOC= llRequestAgentData(g_kFormerlyLeashedTo,DATA_ONLINE);
+        }else
+            g_iLHOC--;
             
         
-        if(llGetUnixTime()>=g_iFinalUnleashTimestamp && g_iFinalUnleashTimestampNotSet==FALSE){
+        if(llGetUnixTime()>g_iFinalUnleashTimestamp && g_iFinalUnleashTimestampNotSet==FALSE){
             g_iFinalUnleashTimestampNotSet=TRUE;
             g_kFormerlyLeashedTo=NULL_KEY;
             g_iFinalUnleashTimestamp=0;
             llOwnerSay("Leash target is gone. Time is up");
             
-        }
-        
-        if(g_iFinalUnleashTimestampNotSet && g_kLeashedTo == NULL_KEY){
-            llSetTimerEvent(0.0);
-            g_kFormerlyLeashedTo=NULL_KEY;
-            //llOwnerSay("Debug: Setting Timer to zero");
         }
     }
     
@@ -660,20 +645,15 @@ default {
         if(r == g_kLHOC && g_kLeashedTo!=NULL_KEY){
             if((integer)d ==FALSE){
                 if(g_iFinalUnleashTimestampNotSet){
-                    g_iFinalUnleashTimestamp = llGetUnixTime()+(5*60);
                     g_iFinalUnleashTimestampNotSet=FALSE;
-                    llOwnerSay("Leash Target is gone. You will be leashed if the target reappears soon.");
-                } else{
-                    g_iFinalUnleashTimestampNotSet=TRUE;
-                    g_iFinalUnleashTimestamp=0;
+                    g_iFinalUnleashTimestamp = llGetUnixTime()+(5*60);
+                    llOwnerSay("Leash Target is gone. You will be re-leashed if the target reappears within five minutes.");
+                } else
                     llOwnerSay("Leash Target is gone. You will be unleashed.");
-                }
                 llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kLeashedTo);
             }
-        } else {
+        } else if(r==g_kLHOC && g_kLeashedTo == NULL_KEY){
             if((integer)d == TRUE){
-                g_iFinalUnleashTimestampNotSet=TRUE;
-                g_iFinalUnleashTimestamp=0;
                 llOwnerSay("Leash Target found. Leashing now.");
                 llMessageLinked(LINK_SET, CMD_OWNER, "leash", g_kFormerlyLeashedTo);
                 g_kFormerlyLeashedTo=NULL_KEY;
