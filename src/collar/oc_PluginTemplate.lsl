@@ -113,7 +113,7 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
-                if(sMenu == "Menu-Main"){
+                if(sMenu == "Menu~Main"){
                     if(sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if(sMsg == "A Button") llSay(0, "This is a example plugin.");
                 }
