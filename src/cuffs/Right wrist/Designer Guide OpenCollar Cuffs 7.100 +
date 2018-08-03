@@ -1,0 +1,213 @@
+OpenCollar Cuffs 7.1000+ - Read me for Designers
+================================================
+This is just an updated version of the OpenNC cuffs 3.980+ guide.
+
+This is a help for people who want to use the OpenCollar Cuffs script set to create  their own cuffs.
+
+Table of contents
+------------------------
+1) Different parts of the cuffs
+2) Walkthrough of creating a cuff
+3) Naming convention
+4) Script sets
+5) Delivery box
+
+
+1) Different parts of the cuffs:
+-----------------------------------------
+
+Main cuff (rlac):
+There are 3 different functional prims needed for the main cuff (as well as for the slaves, but with a different set of scripts in the root prim there):
+Root prim (should be an invisible prim in the mid of the cuff):
+The root prim and 5 child prims should be invisible in the mid of the cuff. It contains all command scripts as well as the animations, textures and sounds needed. For easier configuration this prim also contains at least 2 notecards, in which you can set the animations and the chains for the arm and leg modules (Notecards for Collar poses chains and also Wings and Tail chains are available). The following format is used in the "Arm Cuffs" and "Leg Cuffs" notecards:
+Label|Animation|point1=point2~point3=point4~etc.
+Label is the label to show on the menu.
+Animation is the name of the animation to play, or *none* for no animation, if only chains are to be shown.
+And the final part is a tilde separated list of points to connect.  They tell the first point to send a lockguard command to the second point telling it to connect to itself.
+You need to include as well this Designer Guide, .license, .info, and .help notecards
+Note: the ".settings" notecards can contain some default settings for the cuffs. It is best to use the "Settings Dump" to set the notecard. and it is placed in the settings child prim along with the oc_settings script
+
+OpenCollar Cuff chain points:
+The prim need to be named like the chain point (see list above for currently used chain points). Example: illac (Inside Left Lower Arm Cuff), orulc (Outside Right Upper Leg Cuff) etc
+LockGuard/LockMeister points for devices to attach chains to:
+OpenColalr cuffs use an invisible prim place over a ring to attach the chains from devices to. This allows the chains from the cuffs to be active, while the sub is on a device. The prim needs to be named like the LockMeister point (Example: lcuff).
+
+Graphic:   􀀁 (use for basic reference only now until we make new ones)
+
+
+
+Slave cuffs (llac, ruac, luac, rllc, lllc, rulc, lulc, ocbelt):
+There are 3 different functional prims needed for the slave cuffs as well as for the belt:
+Root prim (should be an invisible prim in the mid of the cuff):
+Needs to contain the 2 scripts  To keep the colors in sync to the main cuff, the descriptions should use identical naming schemes.
+
+OpenCollar Cuff chain points and LockGuard/LockMeister points for devices to attach chains to:
+See Main cuff.
+
+Graphic slave cuff:   􀀀 (Again these are for basic reference only the best way to learn is to get a set of full perm Opencollar cuffs and look at all the chaining prim names
+Graphic slave belt:   􀀃
+
+
+Collar (occollar): (this section is not currently up to date as we are unsure if to include the collar points now)
+The collar can contain the cuff addon, but this is not essential needed. If you want to add more OC Chain points or LM/LG chain points, you need to add the listen as well and can add additional prims for chaining like in the main/slave cuffs.
+
+Graphic:    􀀂
+
+
+
+2) Walk through of creating a cuff
+--------------------------------------------
+
+Walk through for those wanting to use the OpenCollar Cuffs scripts in their own prim designs.
+ 
+ A) - CREATE A ROOT PRIM AND 5 CHILD PRIMS FOR THE MAIN (Further to be Root Prim Set)
+- This should be an invisible Sphere in the mid of the cuff, 4 square blocks and 1 ring (left visable unless you have your own front Leashing point, and is also required by the coloring and texturing scripts. To make it invisible apply a fully transparent texture, such as the one provided within the OpenCollar full set.
+
+
+ B) - NAME THE ELEMENTS OF THE CUFF
+•    The color and texture changing scripts can apply color or texture to a group of prims at once. To enable this feature, give all matching elements in your cuff the same Description. For example, you could put the word "Jewels" in the description of all prims in your cuff which look like jewels. Then their colors could be set all together by the color script. The texture scripts behave similarly. IMPORTANT: The slave cuffs need to use the same naming convention. The color and texture scripts will only look for the Group names in the main cuff (right forearm. All color and texture changes from the script will be send on a per AV personalized chat channel to the slave cuffs, which than change colors. The main difference between the main cuff and the sub cuff is the set of scripts in the root prim. The right forearm cuff is the “brain” of the cuff set.
+    
+NOTES 
+   1.    The root prim set. The coloring and texturing scripts will not set color or texture for the root prim. This is another reason to have the root prim set be an invisible ball in the mid of the main cuff and a single ball the slave cuffs. 
+   2.    Disabling the texture and color features. If you wish to prevent a group of prims from being colored, or textured, you can add "~nocolor ", or "~notexture" to the description as well. (It is a good idea to look how the single prims of the OpenNC Cuffs are named, in Object Name and Description.) In our "Jewels" example, you would probably want to have the description be "Jewels~notexture", so that the texture script will leave your jewel textures alone, but the color script will still be able to tint the jewel prims. 
+   3.    OC Chain prims. The default OpenColalr cuffs have 3 chain points for the internal chain system of the cuffs. Those chain points can be visible parts of the cuff or invisible spheres. Each requires the correctly named prim, as all points are controlled from the main script in the root prim of the cuffs. The prim needs to be named like the OC Chain point. For the right forearm the cuff point at the back would be called “rlac” (right lower arm cuff), the outer one gets the name “orlac” (outer right lower arm cuff), the inner one “irlac” (inner right lower arm cuff). The cuff for the left upper leg would get OC chain points as follows: the cuff point at the back would be called “lulc” (left upper leg cuff), the outer one gets the name “olulc” (outer left upper leg cuff), the inner one “ilulc” (inner left upper leg cuff).
+   4.    LockGuard/LockMeister chain prim. Those chain points can be visible parts of the cuff or invisible spheres. Usually every cuff part has only 1 of those, exceptions are the collar and the belt, which can have more. See the LockMeister or LockGuard API descriptions for more info. The main script in the slave cuffs builds a set of standard multiple LockGuard ID's from the LG named chaining point. For the right forearm cuff the LockMeister ID is “rcuff”, so the prim needs to be named “rcuff”. For LockGuard this cuff usually gets 3 IDs: “ID rightwrist” for the right forarm, “ID wrists” so a device can grab both forearm cuffs with one command, and “ID allfour” so the wrist and ankle cuffs can be grabbed with one command.
+
+Examples: 
+   1.    Description: spike — this groups these prims together and they can be recolored/textured 
+   2.    Description: heart~notexture — lets say you have one or 3 prims that form a heart on your cuffs. Putting this description in each of these prims will group them (if only one it is a one member group but without the description it is not recognized as "element" of your color in the scripts) So now the heart color can be changed but the texture cannot!! 
+   3.    Description: padlock~nocolor~ here all padlock prims get grouped and they can later be changed by the cuffs user only at their texture. 
+The "~" symbols a new tag for this prim, remember ALL prims that belong to one kind of element of your cuffs need this. Most likely I can imagine to use for things like spikes a description as: spike~notexture —- so they can be colored but the texture you chose within reason cannot be changed 
+
+
+ C) - COPY THE CONTENTS
+Main cuff:
+Use a standard Root Prim Set as these contain all scripts requiredwhich can then be linked into your design of the basic right forearm OpenCollar Cuff.
+
+Slave cuffs and belt:
+Copy the scripts included in the contents of the root prim  of the basic left forearm OpenCollar Cuff -- from here on known as the OpenCollar Cuff slave cuff guts -- into the root prim of your slave cuff (ie, the invisible ball in the middle of the left forarm cuff or of the belt).
+
+Collar: (this section is currently under build review if to be included)
+If you want to deliver a collar with your cuff set, please make sure it is built like as described here: http://code.google.com/p/opencollar/wiki/DesignerInstructions.
+Add the cuffs addon from script set 3 and if you want to use additional OpenCollar and/or LM/LG chain points as well the _slave script from script set 3.
+Copy the script set 4 to all OC chain point sub prims and the script set 5 to all LM/LG chain point sub prims you added to the collar.
+Attention: The collar itself already supports the LockMeister chain point “collar” itself, so please do NOT add a chain point for this ID.
+
+
+ D) - RECORD THE SCRIPT VERSION AND DATABASE PREFIX
+Several OpenCollar features depend on the object's Description being properly formatted. It should look something like this: 
+SteelCuffs~stc_ 
+As you can see, the description is divided into 3 parts, separated by a tilde ("~") character. The first part (SteelCuffs, in this example) is the product's name. It can be anything you want. 
+The Second part ("stc _") is the database prefix. OpenNC Cuffs use an internal database to save the settings. 
+In the Description field of the root prim, change "stc_" to something that is likely to be unique. A good rule is to use your initials, plus the product initials. So if Cleo Collins made "Super Fancy Cuffs", she might put "ccfc_" as the prefix. 
+
+
+ E) - RESET THE SCRIPTS
+Select your collar object using the Edit tools and click "Tools->Reset Scripts in Selection" in the SL menu. 
+
+
+ F) - CHECK PERMISSIONS
+Make sure you have left all of the OpenCollar guts full perms. You can apply whatever permissions you want to the prims containing the OpenCollar system, but the scripts, notecards, textures, animations, etc, must always remain full perms. All Scripts should be signed with the OpenCollar experience to show they are unaltered scripts.
+
+G) - DELIVERING TO CUSTOMERS
+If your cuff set does not have a own collar version, you should deliver the plugin to your customers as well, as it synchronizes the cuffs and the collar.  The plugin has a version check build in so it complains if
+- the version of the collar is too old
+- there is more than one plugin, because the user had already a cuff plugin in the collar
+To make sure these check do not get performed when rezzing the distributor box, when  the script is in your delivery box, please start the description of you box with "Delivery Box".
+
+
+3) Naming convention:
+-------------------------------
+
+The different objects of the cuffs follow this naming conventions
+
+Right lower arm (this is the "master" cuff, which controls the animation, the locking etc):
+Command Token: rlac (right lower arm cuff)
+OpenCollar chain points: rlac, orlac(outer right lower arm cuff), irlac (inner right lower arm cuff)
+LockMeister point: rcuff
+LockGuard points: [rightwrist, wrists, allfour]
+
+OpenCollar Collar (needs a plugin to controll the cuffs as well as a listener scripts for the additional LockGuard/LockMeister Points):
+Command Token: occ (opencollar command)
+OpenCollar chain points: foccollar (front), loccollar (left side), roccollar (right side), boccollar (back side)
+LockMeister point: lcollar, rcollar, bcollar. None for the front, as the OpenCollar itself supports that already.
+LockGuard points: collarfrontloop, collarleftloop, collarrightloop, collarbackloop
+
+Left lower arm:
+Command Token: llac (left lower arm cuff)
+OpenCollar chain points: llac, ollac (outer left lower arm cuff), illac
+LockMeister point: lcuff
+LockGuard points: [leftwrist, wrists, allfour]
+
+Right upper arm:
+Command Token: ruac (right upper arm cuff)
+OpenCollar chain points: ruac, oruac (outer right upper arm cuff), iruac
+LockMeister point: rbiceps
+LockGuard points: [rightupperarm, arms]
+
+Left upper arm:
+Command Token: luac (left upper arm cuff)
+OpenCollar chain points: luac, oluac (outer right upper arm cuff), iluac
+LockMeister point: lbiceps
+LockGuard points: [leftupperarm, arms]
+
+Right lower leg:
+Command Token: rllc (right lower leg cuff)
+OpenCollar chain points: rllc, orllc (outer right lower leg cuff), irllc
+LockMeister point: rlcuff
+LockGuard points: [rightankle, ankles, allfour]
+
+Left lower leg:
+Command Token: lllc (left lower leg cuff)
+OpenCollar chain points: lllc, olllc (outer left lower leg cuff), illlc
+LockMeister point: llcuff
+LockGuard points: [leftankle, ankles, allfour]
+
+Right upper leg:
+Command Token: rulc (right upper leg cuff)
+OpenNC chain points: rulc, orulc (outer right upper leg cuff), irulc
+LockMeister point: rthigh
+LockGuard points: [rightupperthigh, thighs]
+
+Left upper leg:
+Command Token: lulc (left upper leg cuff)
+OpenCollar chain points: lulc, olulc (outer right upper leg cuff), ilulc
+LockMeister point: lthigh
+LockGuard points: [leftupperthigh, thighs]
+
+Belt (can be attached to stomach or pelvis, uses the same tokens for both points)
+Command Token: ocbelt (OpenCollar Cuff Belt)
+OpenCollar chain points: focbelt, bocbelt, rocbelt, locbelt (front, back, right and left points)
+LockMeister point: fbelt, bbelt, rfbelt, rbbelt, lfbelt, lbbelt
+LockGuard points: frontbeltloop, backbeltloop, rightbeltloop, leftbeltloop
+
+Wings:
+Command Token: wing
+OpenCollar chain points: wingl, wingr
+
+Tail:
+Command Token:tail
+OpenCollar chain points: taill, tailr
+
+You can add more chain points if you want to the cuffs, following the given systematic and using the scripts as described under 2.
+
+
+4) Script sets
+------------------
+
+Version has recently increased to 7.1000. 
+Scripts beginning with occ_ are specific to the Cuffs. Scripts beginning oc_ are standard OpenCollar collar scripts
+
+Scripts can be copied from a free cuff set or from the latest updater
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+Thanks go out to Anne Karas (inital communications and poses system), Pol McLaglen (starting the project and initial cuff design), Jesrad Seraph (additional poses), Winter Seale (some script improvements and bug fixings), Sandra Merilouto (testing) and Garvin Twine (testing and advise). Don’t forget Athaliah Opus and Nandana Singh, who started that OC madness and the mayn scripter involved in the OC project, on which this cuffs scripts are based on. You rock! 
+Updated by North Glenwalker, OpenNC Resident, and members of the OpenNC group.
+Rebuilt, and updated to OpenCollar V7.1 code by North Glenwalker, special thanks to all the Alpha and Beta Testers especially JB Bakerly
+
+Thanks as well for all who contributed and are not mentioned here. We hope, you like the cuffs and find this documentation useful.
+
+The cuffs use the LockMeister protocol by Kyrah Abattoir, which is under GPL3. Find more infos here: http://wiki.secondlife.com/wiki/LSL_Protocol/LockMeister_System.
+The cuffs use the  LockGuard V2 System Protocol by Lillani Lowell.
