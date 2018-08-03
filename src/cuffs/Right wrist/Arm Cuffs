@@ -1,0 +1,17 @@
+# OpenCollar 8Cuffs Arms 7.100
+Armsup|cuff-armsup|illac=irlac~oruac=oluac
+Back|cuff-back|illac=irlac~iruac=iluac
+Back2|cuff-back2|llac=rlac~ruac=luac~ollac=bocbelt~orlac=bocbelt
+Belly|belly|irlac=orulc~illac=olulc~iruac=iluac
+Belt|cuff-belt2|orlac=rocbelt~ollac=locbelt~ruac=luac~bocbelt=irlac~bocbelt=illac
+Belt2|cuff-belt2|rlac=rocbelt~llac=locbelt~luac=ruac~ruac=bocbelt~bocbelt=luac
+Display|display|illac=irlac~iruac=iluac~ollac=illlc~orlac=irllc
+Front|cuff-front|irlac=illac
+Front2|cuff-front2|irlac=ollac~orlac=illac~iluac=iruac
+Hang|cuff-hang|orlac=illac~oluac=oruac
+Hang2|cuff-hanging|orlac=illac~oluac=oruac
+Head|cuff-head|rlac=llac~orlac=oruac~iluac=iruac~ollac=oluac
+Pinion|cuff-pinion|orlac=rocbelt~ollac=locbelt~bocbelt=ruac~luac=bocbelt~ruac=luac~ollac=oluac~orlac=oruac
+Pony|Cuff-PonyFront*|orlac=oruac~ollac=oluac~foccollar=rlac~foccollar=llac
+PonyLink|*none*|orlac=oruac~ollac=oluac~foccollar=rlac~foccollar=llac
+UShape|winter seale - u-shape2|rlac=llac~illac=iluac~iruac=irlac~bocbelt=ollac~bocbelt=orlac
