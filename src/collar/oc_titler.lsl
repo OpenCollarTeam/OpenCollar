@@ -4,6 +4,8 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+// Do not change anything below here
 
 string g_sAppVersion = "1.5";
 

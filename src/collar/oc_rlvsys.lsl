@@ -4,6 +4,8 @@
 // Sumi Perl et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+// Do not change anything below here
 
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
@@ -230,7 +232,7 @@ RemRestriction(key kID, string sBehav) {
     if (~iSource) { //if this source set any restrictions
         list lSrcRestr = llParseString2List(llList2String(g_lRestrictions,iSource+1),["§"],[]); //get a list of this source's restrictions
         integer iRestr=llListFindList(lSrcRestr,[sBehav]);  //get index of this restriction from that list
-        if (~iRestr || sBehav=="ALL") {   //if the restriction is in the list
+        if (iRestr != -1 || sBehav=="ALL") {   //if the restriction is in the list
             if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
                 g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
                 if ((key)kID) llMessageLinked(LINK_ALL_OTHERS, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
@@ -527,7 +529,7 @@ default {
                     } else {         //perform other command
                         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
                         if (llSubStringIndex(sCom,"tpto")==0) {
-                            if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
+                            if ( llListFindList(g_lBaked,["tploc"]) != -1 || llListFindList(g_lBaked,["unsit"]) != -1 ) {
                                 if ((key)kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
                                 return;
                             }

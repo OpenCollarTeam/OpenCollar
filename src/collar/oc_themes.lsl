@@ -175,7 +175,7 @@ ElementMenu(key kAv, integer iPage, integer iAuth, string sType) {
         sTypeNice = "Color";
     } else if (sType == "shiny") {
         iMask=4;
-        sTypeNice = "Shininess";
+        sTypeNice = "Shiny";
     } else if (sType == "glow") {
         iMask=8;
         sTypeNice = "Glow";
@@ -228,7 +228,7 @@ BuildTexturesList() {
            // if(llStringLength(sShortName)>23) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Texture name "+sTextureName+" in %DEVICETYPE% is too long, dropping.",g_kWearer);
             //else {
             g_lTextures += sTextureName;
-            g_lTextureKeys += sTextureName;  //add name of texture inside collar as the key, to match notecard lists format
+            g_lTextureKeys += llGetInventoryKey(sTextureName);  //add name of texture inside collar as the key, to match notecard lists format
             g_lTextureShortNames+=sShortName;
            // }
         }
@@ -371,7 +371,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                                 llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)TEXTURE_BLANK, <1,1,0>,<0,0,0>,0.0,<1,1,1>,80,2]);
                         }
                     }
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shiny_" + sElement + "=" + (string)iShiny, "");
                     if (reMenu) ShinyMenu(kID, iNum, "shiny "+sElement);
                 }
             }
@@ -451,7 +451,8 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                             integer iFace ;
                             for (iFace = 0; iFace < iSides; iFace++) {
                                 list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                                lPrimParams = llDeleteSubList(lParams,0,0); // get texture params
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params **** error on this line called lPrim not lPrimParams
+                                
                                 llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
                             }
                         //} else {
@@ -459,7 +460,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         }
                     }
                     //save to settings
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureShortName, "");
+                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "texture_" + sElement + "=" + sTextureKey, "");
                     if (reMenu) TextureMenu(kID, 0, iNum, sCommand+" "+sElement);
                 }
             }
@@ -501,7 +502,7 @@ default {
                 if (~i) g_lTextureDefaults = llListReplaceList(g_lTextureDefaults, [sValue], i + 1, i + 1);
                 else g_lTextureDefaults += [sToken, sValue];
             }
-            else if (sCategory == "shininess_") {
+            else if (sCategory == "shiny_") {
                 i = llListFindList(g_lShinyDefaults, [sToken]);
                 if (~i) g_lShinyDefaults = llListReplaceList(g_lShinyDefaults, [sValue], i + 1, i + 1);
                 else g_lShinyDefaults += [sToken, sValue];
@@ -516,6 +517,7 @@ default {
                 if (~i) g_lColorDefaults = llListReplaceList(g_lColorDefaults, [sValue], i + 1, i + 1);
                 else g_lColorDefaults += [sToken, sValue];
             }
+            UserCommand(500, llList2String(llParseString2List(sID, ["_"], []),0) + " " + llList2String(llParseString2List(sID, ["_"], []),1) +" "+sValue, kID, FALSE);//NG added
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {

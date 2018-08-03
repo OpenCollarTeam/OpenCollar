@@ -5,6 +5,12 @@
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+SecondLife()
+{
+    llMinEventDelay(0.44); //edit out this line for OS and IW
+}
+//Do not change anything below here
 
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
@@ -44,7 +50,6 @@ integer MENUNAME_RESPONSE   = 3001;
 //integer MENUNAME_REMOVE     = 3003;
 
 integer RLV_CMD = 6000;
-
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
 
@@ -571,7 +576,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        llMinEventDelay(0.44);
+        SecondLife();
         DoUnleash(FALSE);
         //Debug("Starting");
     }
@@ -751,8 +756,8 @@ default {
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
             if (g_vPos != ZERO_VECTOR){
-                vector currentPos = llGetPos();
-                g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
+                vector tv = (llGetAgentSize(g_kWearer) - llGetAgentSize(g_kLeashedTo))/2;
+                g_vPos += <0, 0, tv.z>;
                 llMoveToTarget(g_vPos,1.0);
             }
             else llStopMoveToTarget();
