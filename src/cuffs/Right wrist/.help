@@ -1,0 +1,260 @@
+=========================
+OpenCollar (cuffs) Help Card
+=========================
+
+==========
+The Very Basics
+==========
+
+Making use of the many, many features in your collar can be done by touching your neck, by touching your collar directly, by using a remote or with individual chat commands.
+
+-------------
+The Prefix:
+-------------
+
+Your [prefix] are the first two letters of your username
+
+    Athaliah Opus's prefix is: at
+    nirea's prefix is: ni
+    Iala (jwenting)'s prefix is: jw
+
+Your prefix is used to issue commands in the Nearby Chat.
+
+    [prefix] menu
+    [prefix] kneel
+    [prefix] stop
+
+If you don’t like your prefix, you can change it. Only the owner can change the prefix, and the wearer if there is no owner set.
+
+    ws prefix wen
+    wr prefix we
+    js prefix sex
+
+There are two special prefixes. * issues commands to everyone nearby and # issues commands to everyone except yourself.
+
+    *trauma
+    #grab
+
+------------
+Channels:
+------------
+
+You can also issue commands on channel 1.
+
+    /1 [prefix] menu
+
+Or if you don’t like channel 1 set a different channel.
+
+    [prefix] channel 2
+    [prefix] channel 3
+    [prefix] channel 69
+    [prefix] channel 9001
+
+If you are considerate about lag, you can also turn off the Nearby Chat listener.
+
+    [prefix] channel -1
+
+Too much hassle to always type a slash after all?
+
+    /1 [prefix] channel 0
+
+------------
+Safeword:
+------------
+
+Your collar also has a safeword which you simply type in the nearby chat. This will lift all RLV restrictions, unpose and unleash you. It will also send your Owner a message to check for your well being. RED in capital letters is the default safeword.
+
+    RED
+    /1RED
+    ((RED))
+
+If that’s too hard to remember you can easily change it.
+
+    [prefix] safeword Mayday!
+    [prefix] safeword taxi
+    [prefix] safeword BANANA
+
+
+===============
+List of Chat Commands
+===============
+
+Alright, many asked for this and here it is, the ultimate list of nerdy chat commands for those of you who prefer them over menus, touch or HUDs! Assumed here is that you know what a prefix is. We will indicate each prefix with a hash key. 
+
+To use any of these commands, say your prefix and then the command on the same
+line.  For example if your prefix is 'az' and you want to give the menu command,
+you would say "az menu".
+
+-----------------------
+General Commands:
+-----------------------
+
+    menu
+
+    lock
+    unlock
+
+    apps
+
+    channel [positive number]
+    channel -1
+    channel 0
+
+    prefix [custom prefix]
+
+    RED
+    /1RED
+    ((RED))
+
+    safeword [custom safeword]
+
+    CustomSafeword
+    /1CustomSafeword
+    ((CustomSafeword))
+
+--------------
+Bookmarks:
+--------------
+
+    bookmarks
+    tp
+
+    tp [name of bookmark]
+
+    tp save
+    tp print
+    tp remove
+
+----------------------------
+Poses (stock selection):
+----------------------------
+
+    pose
+
+    back
+    beautystand
+    belly
+    booty
+
+    bop
+    bracelets
+    cutie
+    display
+
+    doggie
+    kneel
+    nadu
+    rise
+
+    shy
+    submit
+    table
+    tower
+
+    stop
+
+-------
+Leash:
+-------
+
+    menu leash
+
+    leash
+    grab
+    yank
+    unleash
+
+    follow
+    beckon
+    unfollow
+
+    stay
+    move
+
+    anchor
+    park
+
+    pass
+
+    length
+
+    leash configure
+
+-----
+RLV:
+-----
+
+    rlv
+
+    rlv on
+    rlv off
+
+    rlv handshakes
+
+    terminal
+
+    clear
+
+---------
+Access:
+---------
+
+    access
+
+    add owner [UUID or name]
+    rm owner [name]
+
+    add trust [UUID or name]
+    rm trust [name]
+
+    add block [UUID or name]
+    rm block [name]
+
+    public on
+    public off
+
+    flavor
+
+    ownself on
+    ownself off
+
+    runaway
+
+----------
+Settings:
+----------
+
+    settings
+
+    print settings
+    load url [url]
+
+    fix
+    verify
+
+    stealth
+
+    themes
+    looks
+
+--------------
+Help/About:
+--------------
+
+    about
+
+    help
+    license
+
+    news
+    news on
+    news off
+
+    version
+    info
+
+    update
+
+    reboot
+
+==================================
