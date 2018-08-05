@@ -180,8 +180,12 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
             if (sToken == "owner" && sPersonID == g_sWearerID && g_iGrantRemoval==FALSE){
+                
+                string msg;
+                if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
-                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+llGetDisplayName(kCmdr)+" wants to remove you as an owner do you agree?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
                 
             } else {
                 //OwnSelfOff(kCmdr);
@@ -191,8 +195,11 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
             }
         } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
             if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])){
+                string msg;
+                if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
-                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+llGetDisplayName(kCmdr)+" wants to remove you as an owner do you agree?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
             } else {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
                 lPeople = [];
@@ -423,7 +430,10 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
             } else if (sAction == "off") {
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
-                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|Are you sure you no longer want to own yourself?|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                string msg;
+                if(g_sWearerID==kID)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kID)+" wants to remove you as owner do you agree?";
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
                 //g_iOwnSelf = FALSE;
                 iRemenu=FALSE;
                 //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
