@@ -4,6 +4,8 @@
 // Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+//do not adjust below this line
 
 string g_sParentMenu = "RLV";
 
@@ -33,7 +35,6 @@ integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
-
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;

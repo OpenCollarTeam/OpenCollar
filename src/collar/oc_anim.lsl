@@ -10,6 +10,9 @@
 //lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
 //upper layer: use the link message anim api to provide a pose menu
 
+// change here for OS and IW grids
+// do not adjust below this line
+
 list g_lAnims;  //list of queued anims
 list g_lPoseList;  //list of standard poses to use in the menu
 list g_lOtherAnims; //list of animations not in g_lPoseList to forward to requesting scripts
@@ -313,7 +316,6 @@ CreateAnimList() {
     } while (g_iNumberOfAnims > ++i);
     llMessageLinked(LINK_SET,ANIM_LIST_RESPONSE,llDumpList2String(g_lPoseList+g_lOtherAnims,"|"),"");
 }
-
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum == CMD_EVERYONE) return;  // No command for people with no privilege in this plugin.

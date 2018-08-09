@@ -4,6 +4,13 @@
 // Sumi Perl et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
+string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
+
+// Do not change anything below here
 
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -111,10 +118,6 @@ list g_lClosedLockElements; //to store the locks prim to hide or show //EB
 list g_lOpenLockElements; //to store the locks prim to hide or show //EB
 list g_lClosedLockGlows;
 list g_lOpenLockGlows;
-string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
-string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
@@ -156,7 +159,7 @@ integer compareVersions(string v1, string v2) { //compares two symantic version 
     integer v1a=(integer)llGetSubString(v1,0,v1Index);
     integer v2a=(integer)llGetSubString(v2,0,v2Index);
     if (v1a == v2a) {
-        if (~v1Index || ~v2Index) {
+        if (v1Index != -1 || v2Index != -1) {
             string v1b;
             if (v1Index == -1 || v1Index==llStringLength(v1)) v1b="0";
             else v1b=llGetSubString(v1,v1Index+1,-1);

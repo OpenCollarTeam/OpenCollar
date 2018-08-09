@@ -4,6 +4,10 @@
 // Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+integer secondlife = TRUE; //TRUE or FALSE
+// DO NOT USE THIS SCRIPT ON TAG BUILDS (crashes on UUID error)
+// do not adjust below this line
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
 
@@ -125,32 +129,35 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
-
-string NameURI(key kID){
-    return "secondlife:///app/agent/"+(string)kID+"/about";
+string NameURI(string sID){
+    if (secondlife == TRUE)
+        return "secondlife:///app/agent/"+sID+"/about";
+    else
+        return llKey2Name((key)sID);
 }
 
 string SubstitudeVars(string sMsg) {
-        if (sMsg == "%NOACCESS%") return "Access denied.";
-        if (~llSubStringIndex(sMsg, "%PREFIX%"))
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
-        if (~llSubStringIndex(sMsg, "%CHANNEL%"))
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
-        if (~llSubStringIndex(sMsg, "%DEVICETYPE%"))
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
-        if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
-            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
-        return sMsg;
+    string sMsg_out; // Orig sMsg was used which can cause problems "results may differ between LSL and OSSL"
+    if (sMsg == "%NOACCESS%") return "Access denied.";
+    if (~llSubStringIndex(sMsg, "%PREFIX%"))
+        sMsg_out = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
+    if (~llSubStringIndex(sMsg, "%CHANNEL%"))
+        sMsg_out += llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%CHANNEL%"], []), (string)g_iListenChan);
+    if (~llSubStringIndex(sMsg, "%DEVICETYPE%"))
+        sMsg_out += llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
+    if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
+        sMsg_out += llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+    return sMsg_out;
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    if ((key)kID){
+    if (llStringLength( (string) kID) == 36 &&  kID != NULL_KEY){
         sMsg = SubstitudeVars(sMsg);
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
         if (kID == g_kWearer) llOwnerSay(sMsg);
         else {
-            if (llGetAgentSize(kID)) llRegionSayTo(kID,0,sMsg);
+            if (llGetAgentSize(kID)!=ZERO_VECTOR) llRegionSayTo(kID,0,sMsg);
             else llInstantMessage(kID, sMsg);
             if (iAlsoNotifyWearer) llOwnerSay(sMsg);
         }
@@ -243,7 +250,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sNumberedButtons="\n"; //let's make this a linebreak instead
         for (iCur = iStart; iCur <= iEnd; iCur++) {
             string sButton = llList2String(lMenuItems, iCur);
-            if ((key)sButton) {
+            if (llStringLength( sButton) == 36 && (key) sButton != NULL_KEY) {
                 //fixme: inlined single use key2name function
                 if (g_iSelectAviMenu) sButton = NameURI((key)sButton);
                 else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);

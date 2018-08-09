@@ -4,6 +4,8 @@
 // Romka Swallowtail et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// change here for OS and IW grids
+// Do not change anything below here
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
