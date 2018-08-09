@@ -77,7 +77,8 @@ string g_sFlavor = "OwnSelf";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
-
+key g_kConfirmOwnSelfOffDialogID;
+integer g_iGrantRemoval;
 //key REQUEST_KEY;
 integer g_iFirstRun;
 
@@ -178,15 +179,32 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     } else {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
-            if (sToken == "owner" && sPersonID == g_sWearerID) OwnSelfOff(kCmdr);
-            lPeople = llDeleteSubList(lPeople,index,index);
-            if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
-            iFound = TRUE;
-        } else if (llToLower(sPersonID) == "remove all") {
-            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])) OwnSelfOff(kCmdr);
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
-            lPeople = [];
-            iFound = TRUE;
+            if (sToken == "owner" && sPersonID == g_sWearerID && g_iGrantRemoval==FALSE){
+                
+                string msg;
+                if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
+                g_kConfirmOwnSelfOffDialogID = llGenerateKey();
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                
+            } else {
+                //OwnSelfOff(kCmdr);
+                lPeople = llDeleteSubList(lPeople,index,index);
+                if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
+                iFound = TRUE;
+            }
+        } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
+            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])){
+                string msg;
+                if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
+                g_kConfirmOwnSelfOffDialogID = llGenerateKey();
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+            } else {
+                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
+                lPeople = [];
+                iFound = TRUE;
+            }
         }
     }
     if (iFound){
@@ -411,8 +429,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 //g_iOwnSelf = TRUE;
                 UserCommand(iNum, "add owner " + g_sWearerID, kID, FALSE);
             } else if (sAction == "off") {
-                g_iOwnSelf = FALSE;
-                UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
+                g_kConfirmOwnSelfOffDialogID = llGenerateKey();
+                string msg;
+                if(g_sWearerID==kID)msg="Are you sure you no longer wish to own yourself?";
+                else msg = llGetDisplayName(kID)+" wants to remove you as owner do you agree?";
+                llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                //g_iOwnSelf = FALSE;
+                iRemenu=FALSE;
+                //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%", kID);
          if (iRemenu) AuthMenu(kID, iNum);
@@ -548,6 +572,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
+        
         if (iNum == CMD_ZERO) { //authenticate messages on CMD_ZERO
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
@@ -656,6 +681,16 @@ default {
                         AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
                     else if (sMessage == "BACK")
                         AuthMenu(kAv,iAuth);
+                }
+            }
+            
+            if(kID == g_kConfirmOwnSelfOffDialogID){
+                list  MenuParams = llParseString2List(sStr,["|"],[]);
+                if(llList2String(MenuParams,1)=="Yes"){
+                    // truly disable ownself now
+                    g_iOwnSelf=FALSE;
+                    g_iGrantRemoval=TRUE;
+                    RemovePerson(g_sWearerID, "owner", llGetKey(), TRUE);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {

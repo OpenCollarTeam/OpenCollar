@@ -2,6 +2,7 @@
 // Copyright (c) 2008 - 2017 Nandana Singh, Lulu Pink, Garvin Twine,    
 // Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy, 
 // Romka Swallowtail et al.  
+// 2018 Restless Swords added (optional) support for faces=n and/or specular=xxxx and/or normal=yyyy
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -21,6 +22,9 @@ string g_sDeviceType = "collar";
 list g_lTextures;  //stores names of all textures in collar and notecard
 list g_lTextureShortNames;  //stores names of all textures in collar and notecard
 list g_lTextureKeys;  //stores keys of notecard textures, and names of textures in collar, indexed by the names in g_lTextures
+integer iTextureFace;
+string  sNormalMap;
+string  sSpecularMap;
 integer g_iTexturesNotecardLine;  //current number in notecard read
 key g_kTextureCardUUID;  //UUID of textures notecard, used to determine when it changed so it can be re-read only when needed
 string g_sTextureCard;  //stores name of current textures card.  Might be "textures" or ="textures_custom", set in BuildTexturesList()
@@ -86,7 +90,7 @@ integer g_iLeashParticle;
 integer g_iLooks;
 
 //command list - used for check in UserCommand()
-list commands = ["themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks"];
+list commands = ["themes", "hide", "show", "stealth", "color", "texture", "shiny", "glow", "looks","normal","specular"];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -287,6 +291,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
     list lParams = llParseString2List(sStrLower, [" "], []);
+    integer iFace;
     if (~llListFindList(commands, [llList2String(lParams,0)]) || (llList2String(lParams,0)=="menu" && ~llListFindList(commands, [llList2String(lParams,1)])) ) {  //this is for us....
         if (kID == g_kWearer || iNum == CMD_OWNER) {  //only allowed users can...
             lParams = llParseString2List(sStr, [" "], []);
@@ -366,9 +371,9 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         string sLinkType=LinkType(iLinkCount, "no"+sCommand);
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
                             if (iShiny < 4 )
-                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)NULL_KEY, <1,1,0>,<0,0,0>,0.0,<1,1,1>,0,0,PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
+                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,iTextureFace,(string)NULL_KEY, <1,1,0>,<0,0,0>,0.0,<1,1,1>,0,0,PRIM_BUMP_SHINY,ALL_SIDES,iShiny,0]);
                             else
-                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,ALL_SIDES,(string)TEXTURE_BLANK, <1,1,0>,<0,0,0>,0.0,<1,1,1>,80,2]);
+                                llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_SPECULAR,iTextureFace,(string)TEXTURE_BLANK, <1,1,0>,<0,0,0>,0.0,<1,1,1>,80,2]);
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "shininess_" + sElement + "=" + (string)iShiny, "");
@@ -391,7 +396,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         string sLinkType=LinkType(iLinkCount, "no"+sCommand);
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
                            //Debug("Setting Glow for link "+(string)iLinkCount+" to "+(string)fGlow);
-                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,ALL_SIDES,fGlow]);
+                            llSetLinkPrimitiveParamsFast(iLinkCount,[PRIM_GLOW,iTextureFace,fGlow]);
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "glow_" + sElement + "=" + (string)fGlow, "");
@@ -406,13 +411,57 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     while (iLinkCount-- > 2) {
                         string sLinkType=LinkType(iLinkCount, "nocolor");
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
-                            llSetLinkColor(iLinkCount, vColorValue, ALL_SIDES);  //set link to new color
+                            llSetLinkColor(iLinkCount, vColorValue, iTextureFace);  //set link to new color
                         }
                     }
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "color_"+sElement+"="+sColor, "");
                     if (reMenu) ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
                 } else {
                     ColorMenu(kID, 0, iNum, sCommand+" "+sElement);
+                }
+            } else if (sCommand=="normal") {                
+                integer iTextureIndex=llListFindList(g_lTextures,[sNormalMap]); 
+                if(iTextureIndex >=0) sNormalMap=llList2String(g_lTextureKeys,iTextureIndex);
+                integer iLinkCount = llGetNumberOfPrims()+1;
+                while (iLinkCount-- > 2) {
+                    string sLinkType=LinkType(iLinkCount, "notexture");
+                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                        if(iTextureFace != -1 ) {  // ! ALL_FACES
+                            list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_NORMAL, iTextureFace ]);
+                            lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                            llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_NORMAL, iTextureFace, sNormalMap]+lPrimParams);
+                        } else {
+                            integer iSides = llGetLinkNumberOfSides(iLinkCount);
+                            integer iFace ;
+                            for (iFace = 0; iFace < iSides; iFace++) {
+                                list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_NORMAL, iFace ]);
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_NORMAL, iFace, sNormalMap]+lPrimParams);
+                            }
+                        }
+                    }
+                }
+            } else if (sCommand=="specular") {
+                integer iTextureIndex=llListFindList(g_lTextures,[sSpecularMap]); 
+                if(iTextureIndex >=0) sSpecularMap=llList2String(g_lTextureKeys,iTextureIndex);
+                integer iLinkCount = llGetNumberOfPrims()+1;
+                while (iLinkCount-- > 2) {
+                    string sLinkType=LinkType(iLinkCount, "notexture");
+                    if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
+                        if(iTextureFace != -1 ) {  // ! ALL_FACES
+                            list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_SPECULAR, iTextureFace ]);
+                            lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                            llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_SPECULAR, iTextureFace, sSpecularMap]+lPrimParams);
+                        } else {
+                            integer iSides = llGetLinkNumberOfSides(iLinkCount);
+                            integer iFace ;
+                            for (iFace = 0; iFace < iSides; iFace++) {
+                                list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_SPECULAR, iFace ]);
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_SPECULAR, iFace, sSpecularMap]+lPrimParams);
+                            }
+                        }
+                    }
                 }
             } else if (sCommand=="texture") {
                 //Debug("Texture command:"+sStr);
@@ -438,7 +487,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                     //Debug("Texture command is good:"+sStr);
                     string sTextureKey;
                     if ((key)sTextureShortName) sTextureKey=sTextureShortName;
-                    else sTextureKey=llList2String(g_lTextureKeys,iTextureIndex);
+                    else sTextureKey=llList2String(g_lTextureKeys,iTextureIndex);   
                     //Debug("Key for "+sTextureShortName+" is "+sTextureKey);
                     //loop through prims and apply texture key
                     integer iLinkCount = llGetNumberOfPrims()+1;
@@ -447,12 +496,18 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                         if (sLinkType == sElement || (sLinkType != "immutable" && sLinkType != "" && sElement=="ALL")) {
                             //Debug("Applying texture to element number "+(string)iLinkCount);
                             // update prim texture for each face with save texture repeats, offsets and rotations
-                            integer iSides = llGetLinkNumberOfSides(iLinkCount);
-                            integer iFace ;
-                            for (iFace = 0; iFace < iSides; iFace++) {
-                                list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
-                                lPrimParams = llDeleteSubList(lParams,0,0); // get texture params
-                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
+                            if(iTextureFace != -1 ) {  // !ALL_FACES
+                                list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iTextureFace ]);
+                                lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                                llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iTextureFace, sTextureKey]+lPrimParams);
+                            } else {
+                                integer iSides = llGetLinkNumberOfSides(iLinkCount);
+                                integer iFace ;
+                                for (iFace = 0; iFace < iSides; iFace++) {
+                                    list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
+                                    lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params
+                                    llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
+                                }
                             }
                         //} else {
                             //Debug("Not applying texture to element number "+(string)iLinkCount);
@@ -624,6 +679,7 @@ default {
                             UserCommand(g_iSetThemeAuth,"themes",g_kSetThemeUser,TRUE);
                             return;
                         }
+                        iTextureFace = -1;
                         g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
                     } else {
                         if (g_sThemesNotecardReadType=="processing"){
@@ -644,7 +700,7 @@ default {
                                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "theme particle sent","");
                                     g_iLeashParticle = TRUE;
                                 } else {
-                                    list subcommands = ["texture","color","shiny","glow","hide","show"];
+                                    list subcommands = ["texture","color","shiny","glow","hide","show","face","normal","specular"];
                                     integer succes = 0;
                                     integer i;
                                     for (i = 1; i < llGetListLength(lParams); i++) {
@@ -654,8 +710,21 @@ default {
                                             string cmd = llList2String(params,0);
                                             sData = llList2String(params,1);
                                             if (llListFindList(subcommands, [cmd])!=-1) {
+                                                if(cmd == "face") {
+                                                    lParams = llDeleteSubList(lParams,i,i);
+                                                    iTextureFace = (integer)sData;
+                                                    i -= 1;
+                                                } else if(cmd == "normal") {
+                                                    lParams = llDeleteSubList(lParams,i,i);
+                                                    sNormalMap = sData;
+                                                    i -= 1;
+                                                } else if(cmd == "specular") {
+                                                    lParams = llDeleteSubList(lParams,i,i);
+                                                    sSpecularMap = sData;
+                                                    i -= 1;
+                                                }else
+                                                    succes++;
                                                 UserCommand(g_iSetThemeAuth, cmd+" "+element+" "+sData, g_kSetThemeUser, FALSE);
-                                                succes++;
                                             }
                                         }
                                     }
@@ -667,6 +736,9 @@ default {
                                         }
                                     }
                                 }
+                                iTextureFace = -1;
+                                string  sNormalMap = "";
+                                string  sSpecularMap = "";
                             }
                         }
                         g_kThemesNotecardRead=llGetNotecardLine(g_sThemesCard,++g_iThemesNotecardLine);
