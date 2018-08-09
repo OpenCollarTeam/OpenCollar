@@ -3,13 +3,11 @@
 // Garvin Twine 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-integer secondlife = TRUE; //TRUE or FALSE
-//do not adjust below this line
 
 // Based on OpenCollar - takeme 3.980
 
 key     g_kWearer;
+
 list    g_lMenuIDs;      //menu information, 4 strided list, userKey, menuKey, menuName, captorKey
 
 //MESSAGE MAP
@@ -67,10 +65,7 @@ Debug(string sStr) {
 */
 
 string NameURI(string sID){
-    if (secondlife == TRUE)
-        return "secondlife:///app/agent/"+sID+"/about";
-    else
-        return llKey2Name((key)sID);
+    return "secondlife:///app/agent/"+sID+"/about";
 }
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenu, key kCaptor) {

@@ -3,10 +3,6 @@
 // Sumi Perl, littlemousy, Romka Swallowtail, Garvin Twine et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-integer secondlife = TRUE; //TRUE or FALSE
-
-// Do not change anything below here
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
@@ -132,7 +128,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 // Sanitizes a key coming from the outside, so that only valid
 // keys are returned, and invalid ones are mapped to NULL_KEY
 key SanitizeKey(string uuid) {
-    if (llStringLength( uuid ) == 36 && (key) uuid != NULL_KEY) return llToLower(uuid);
+    if ((key)uuid) return llToLower(uuid);
     return NULL_KEY;
 }
 
@@ -223,11 +219,8 @@ integer Auth(key object, key user) {
     return iAuth;
 }
 
-string NameURI(string sID){
-    if (secondlife == TRUE)
-        return "secondlife:///app/agent/"+sID+"/about";
-    else
-        return llKey2Name((key)sID);
+string NameURI(string sID) {
+    return "secondlife:///app/agent/"+sID+"/inspect";
 }
 
 Dequeue() {
@@ -493,7 +486,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     if (!g_iRLV) {
         llMessageLinked(LINK_RLV, iNum, "menu RLV", kID);
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\nThe relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
     } else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else if ((sStr=llGetSubString(sStr,6,-1))=="safeword") SafeWord(); // cut "relay " off sStr
