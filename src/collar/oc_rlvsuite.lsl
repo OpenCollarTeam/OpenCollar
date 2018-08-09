@@ -3,8 +3,6 @@
 // Garvin Twine, Romka Swallowtail et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-// Do not change anything below here
 
 //menu setup
 string  RESTRICTION_BUTTON          = "Restrictions"; // Name of the submenu

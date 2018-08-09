@@ -4,9 +4,6 @@
 // littlemousy, Romka Swallowtail, Sumi Perl et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-//DO NOT INCLUDE THIS SCRIPT ON IW GRID BUILDS (Global not per script not_at_target issue)
-//do not adjust below this line
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
@@ -394,7 +391,6 @@ default {
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
-    
     not_at_target() {
         llTargetRemove(g_iTargetID);
         MoveToPartner();

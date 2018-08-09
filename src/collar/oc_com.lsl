@@ -4,9 +4,6 @@
 // Romka Swallowtail, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// change here for OS and IW grids
-integer secondlife = TRUE; //TRUE or FALSE
-//do not adjust below this line
 
 integer g_iPrivateListenChan = 1;
 integer g_iPublicListenChan = TRUE;
@@ -106,11 +103,8 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
-string NameURI(string sID){
-    if (secondlife == TRUE)
-        return "secondlife:///app/agent/"+sID+"/about";
-    else
-        return llKey2Name((key)sID);
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
 }
 
 //functions from touch script
@@ -324,8 +318,9 @@ MoveItem(integer iLink, string sItem) {
     
     // this is used for the .couples notecard as well as animations
     // don't try giving things we don't have    
-    if (llGetInventoryType(sItem) == INVENTORY_NONE)
+    if (llGetInventoryType(sItem) == INVENTORY_NONE) {
         return;
+    }
     //llWhisper(DEBUG_CHANNEL, "Giving " + sItem);    
     llGiveInventory(llGetLinkKey(iLink), sItem);
     SafeDelete(sItem);
