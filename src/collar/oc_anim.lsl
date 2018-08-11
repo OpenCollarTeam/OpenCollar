@@ -16,7 +16,7 @@ list g_lOtherAnims; // List of animations not in g_lPoseList to forward to reque
 integer g_iNumberOfAnims; // We store this to avoid running createanimlist() every time inventory is changed...
 
 //PoseMove tweak stuff
-integer g_iTweakPoseAO = 0; // Disable/Enable AO for posed animations - set it to 1 to default PoseMove tweak to ON
+integer g_bTweakPoseAO = FALSE; // Disable/Enable AO for posed animations - set it to 1 to default PoseMove tweak to ON
 string g_sPoseMoveWalk; // Variable to hold our current Walk animation
 string g_sPoseMoveRun; // Variable to hold our run animation
 string g_sWalkButtonPrefix = ""; // This can be changed to prefix walks in the PoseMove menu
@@ -28,15 +28,16 @@ integer g_iLastPostureRank = 504;
 integer g_iLastPoselockRank = 504;
 list g_lAnimButtons; // Initialized in state_entry for OpenSim compatibility (= ["Pose", "AO Menu", g_sGiveAO, "AO ON", "AO OFF"];)
 
-integer g_iAnimLock = FALSE;
-integer g_iPosture; // Posture lock on/off
+integer g_bAnimLock = FALSE;
+integer g_bPosture; // Posture lock on/off
 list g_lHeightAdjustments;
-integer g_iRlvaOn;
-integer g_iHoverOn = TRUE;
+integer g_bRLVaOn;
+integer g_bHoverOn = TRUE;
 float g_fHoverIncrement = 0.02;
+float g_fStandHover = 0.0;
 string g_sPose2Remove;
 
-//MESSAGE MAP
+// MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -47,7 +48,7 @@ integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
 
-//EXTERNAL MESSAGE MAP
+// EXTERNAL MESSAGE MAP
 integer EXT_CMD_COLLAR = 499; // Added for collar or cuff commands to put ao to pause or standOff
 integer ATTACHMENT_RESPONSE = 601;
 
@@ -66,13 +67,12 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer RLV_CMD = 6000;
 integer RLV_OFF = 6100;
-// integer RLV_ON  = 6101;
+//integer RLV_ON  = 6101;
 integer RLVA_VERSION = 6004;
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
 integer ANIM_LIST_REQUEST = 7002;
 integer ANIM_LIST_RESPONSE =7003;
-float g_fStandHover = 0.0;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -128,7 +128,7 @@ AnimMenu(key kID, integer iAuth) {
   string sPrompt = "\n[Animations]\n\n%WEARERNAME%";
   list lButtons;
 
-  if (g_iAnimLock) {
+  if (g_bAnimLock) {
     sPrompt += " is forbidden to change or stop poses on their own";
     lButtons = ["☑ AnimLock"];
   } else {
@@ -137,16 +137,16 @@ AnimMenu(key kID, integer iAuth) {
   }
 
   if (llGetInventoryType("~stiff") == INVENTORY_ANIMATION) {
-    if (g_iPosture) {
-      sPrompt +=" and has their neck forced stiff.";
+    if (g_bPosture) {
+      sPrompt += " and has their neck forced stiff.";
       lButtons += ["☑ Posture"];
     } else {
-      sPrompt +=" and can relax their neck.";
+      sPrompt += " and can relax their neck.";
       lButtons += ["☐ Posture"];
     }
   }
 
-  lButtons += Checkbox(g_iTweakPoseAO, "AntiSlide");
+  lButtons += Checkbox(g_bTweakPoseAO, "AntiSlide");
   lButtons += ["AO Menu", "AO ON", "AO OFF", "Pose"];
 
   Dialog(kID, sPrompt, lButtons + g_lAnimButtons, ["BACK"], 0, iAuth, "Anim");
@@ -159,7 +159,7 @@ PoseMenu(key kID, integer iPage, integer iAuth) { // Create a list
     sPrompt += "-\n";
   } else {
     string sActivePose = g_sCurrentPose;
-    if (g_iRlvaOn && g_iHoverOn) {
+    if (g_bRLVaOn && g_bHoverOn) {
       integer iIndex = llListFindList(g_lHeightAdjustments, [g_sCurrentPose]);
       if (~iIndex) {
         string sAdjustment = llList2String(g_lHeightAdjustments, iIndex + 1);
@@ -178,7 +178,7 @@ PoseMenu(key kID, integer iPage, integer iAuth) { // Create a list
     sPrompt += sActivePose + "\n";
   }
 
-  if (g_fStandHover != 0.0 && g_iRlvaOn && g_iHoverOn) {
+  if (g_fStandHover != 0.0 && g_bRLVaOn && g_bHoverOn) {
     string sAdjustment;
 
     if (g_fStandHover > 0.0) {
@@ -190,9 +190,9 @@ PoseMenu(key kID, integer iPage, integer iAuth) { // Create a list
     sPrompt += "Default Hover = " + sAdjustment;
   }
 
-  //sPrompt += "Current Height Adjustment: "+ g_sHeightAdjustment + "\n";
+  //sPrompt += "Current Height Adjustment: " + g_sHeightAdjustment + "\n";
   list lStaticButtons = ["STOP", "BACK"];
-  if (g_iRlvaOn && g_iHoverOn) {
+  if (g_bRLVaOn && g_bHoverOn) {
     lStaticButtons = ["↑", "↓"] + lStaticButtons;
   }
 
@@ -203,7 +203,7 @@ PoseMoveMenu(key kID, integer iAuth) {
   string sPrompt;
   list lButtons;
 
-  if (g_iTweakPoseAO) {
+  if (g_bTweakPoseAO) {
     sPrompt += "\nThe AntiSlide tweak is enabled.";
     lButtons += ["OFF"];
   } else {
@@ -212,7 +212,7 @@ PoseMoveMenu(key kID, integer iAuth) {
   }
 
   if (g_sPoseMoveWalk != "") {
-    if (g_iTweakPoseAO) {
+    if (g_bTweakPoseAO) {
       sPrompt += "\n\nSelected Walk: " + g_sPoseMoveWalk;
       if (llGetInventoryType(g_sPoseMoveRun) == INVENTORY_ANIMATION) {
         sPrompt += "\nSelected Run: " + g_sPoseMoveRun;
@@ -247,23 +247,23 @@ AOMenu(key kID, integer iAuth) { // Wrapper to send menu back to the AO's menu
   llRegionSayTo(g_kWearer, g_iAOChannel, "ZHAO_MENU|" + (string)kID);
 }
 
-integer SetPosture(integer iOn, key kCommander) {
+integer SetPosture(integer bOn, key kCommander) {
   if (llGetInventoryType("~stiff") != INVENTORY_ANIMATION) {
     return FALSE;
   }
 
   if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) {
-    if (iOn && !g_iPosture) {
+    if (bOn && !g_bPosture) {
       llStartAnimation("~stiff");
       if (kCommander) {
         llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "Posture override active.", kCommander);
       }
       llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "posture=1","");
-    } else if (!iOn) {
+    } else if (!bOn) {
       llStopAnimation("~stiff");
       llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "posture", "");
     }
-    g_iPosture = iOn;
+    g_bPosture = bOn;
     return TRUE;
   } else {
     llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
@@ -280,11 +280,11 @@ MessageAOs(string sONOFF, string sWhat) { // send string as "ON" / "OFF" saves 2
 RefreshAnim() { // g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and call this function in "changed" event on TP
   if (g_lAnims) {
     if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION && llGetPermissions() & PERMISSION_OVERRIDE_ANIMATIONS) {
-      if (g_iPosture) {
+      if (g_bPosture) {
         llStartAnimation("~stiff");
       }
 
-      if (g_iTweakPoseAO) {
+      if (g_bTweakPoseAO) {
         llResetAnimationOverride("ALL");
       }
 
@@ -314,7 +314,7 @@ StartAnim(string sAnim) { // Adds anim to queue, calls PlayAnim to play it, and 
 }
 
 PlayAnim(string sAnim) { // Plays anim and heightfix, depending on methods configured for each
-  if (g_iTweakPoseAO) {
+  if (g_bTweakPoseAO) {
     if (g_sPoseMoveWalk) {
       llSetAnimationOverride("Walking", g_sPoseMoveWalk);
     }
@@ -328,7 +328,7 @@ PlayAnim(string sAnim) { // Plays anim and heightfix, depending on methods confi
     }
   }
 
-  if (g_iRlvaOn && g_iHoverOn) {
+  if (g_bRLVaOn && g_bHoverOn) {
     integer iIndex = llListFindList(g_lHeightAdjustments, [sAnim]);
     if (~iIndex) {
       llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + llList2String(g_lHeightAdjustments, iIndex + 1) + "=force", g_kWearer);
@@ -361,11 +361,11 @@ StopAnim(string sAnim) { // Deals with removing anim from queue, calls UnPlayAni
 }
 
 UnPlayAnim(string sAnim) { // Stops anim and heightfix, depending on methods configured for each
-  if (g_iTweakPoseAO && llGetAnimationOverride("Standing") != "") {
+  if (g_bTweakPoseAO && llGetAnimationOverride("Standing") != "") {
     llResetAnimationOverride("ALL");
   }
 
-  if (g_iRlvaOn && g_iHoverOn) {
+  if (g_bRLVaOn && g_bHoverOn) {
     llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + (string)g_fStandHover + "=force", g_kWearer);
   }
 
@@ -414,7 +414,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       AnimMenu(kID, iNum);
     }
   } else if (sStr == "release" || sStr == "stop") { // Only release if person giving command outranks person who posed us
-    if (iNum <= g_iLastRank || !g_iAnimLock) {
+    if (iNum <= g_iLastRank || !g_bAnimLock) {
       g_iLastRank = 0;
       StopAnim(g_sCurrentPose);
       g_sCurrentPose = "";
@@ -456,7 +456,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       }
     }
   } else if (sCommand == "rm" && sValue == "pose") {
-    if (kID != g_kWearer || g_iAnimLock) {
+    if (kID != g_kWearer || g_bAnimLock) {
       llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
       return;
     }
@@ -476,7 +476,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       if (iNum <= CMD_WEARER) {
         g_iLastPoselockRank = iNum;
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PoselockRank=" + (string)g_iLastPoselockRank, "");
-        g_iAnimLock = TRUE;
+        g_bAnimLock = TRUE;
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "animlock=1", "");
         llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Only owners can change or stop your poses now.", g_kWearer);
         if (kID != g_kWearer) {
@@ -487,7 +487,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       }
     } else if (sValue == "off") {
       if (iNum <= g_iLastPoselockRank) {
-        g_iAnimLock = FALSE;
+        g_bAnimLock = FALSE;
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "PoselockRank", "");
         llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "You are now free to change or stop poses on your own.", g_kWearer);
@@ -511,7 +511,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       string sValueNotLower = llList2String(lParams, 1);
       if (sValue == "on") {
         if (llGetAnimationOverride("Standing") != "") {
-          g_iTweakPoseAO = 1;
+          g_bTweakPoseAO = TRUE;
           llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "TweakPoseAO=1" , "");
           RefreshAnim();
           llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "AntiSlide is now enabled.", kID);
@@ -519,7 +519,7 @@ UserCommand(integer iNum, string sStr, key kID) {
           llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required.\n", kID);
         }
       } else if (sValue == "off") {
-        g_iTweakPoseAO = 0;
+        g_bTweakPoseAO = FALSE;
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "TweakPoseAO", "");
         RefreshAnim();
         if (llList2String(lParams,2) == "") {
@@ -547,7 +547,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Only owners or the wearer can change antislide settings.", g_kWearer);
     }
   } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
-    if (iNum <= g_iLastRank || !g_iAnimLock || g_sCurrentPose == "") {
+    if (iNum <= g_iLastRank || !g_bAnimLock || g_sCurrentPose == "") {
       StopAnim(g_sCurrentPose);
       g_sCurrentPose = sStr;
       g_iLastRank = iNum;
@@ -580,7 +580,7 @@ default {
       llResetScript();
     }
 
-    g_iRlvaOn = FALSE;
+    g_bRLVaOn = FALSE;
 
     /*
     if (llGetAttached()) {
@@ -607,7 +607,7 @@ default {
 
   run_time_permissions(integer iPerm) {
     if (iPerm & PERMISSION_TRIGGER_ANIMATION) {
-      if (g_iPosture) {
+      if (g_bPosture) {
         llStartAnimation("~stiff");
       }
     }
@@ -643,7 +643,7 @@ default {
       if (llGetInventoryType(g_sCurrentPose) == INVENTORY_ANIMATION) {
         g_iLastRank = 0;
         StopAnim(g_sCurrentPose);
-        g_iAnimLock = FALSE;
+        g_bAnimLock = FALSE;
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
         g_sCurrentPose = "";
@@ -664,22 +664,22 @@ default {
           g_iLastRank = (integer)llList2String(lAnimParams, 1);
           StartAnim(g_sCurrentPose);
         }
-        else if (sToken == "animlock") g_iAnimLock = (integer)sValue;
-        else if (sToken =="posture") SetPosture((integer)sValue,NULL_KEY);
+        else if (sToken == "animlock") g_bAnimLock = (integer)sValue;
+        else if (sToken =="posture") SetPosture((integer)sValue, NULL_KEY);
         else if (sToken == "PoseMoveWalk") g_sPoseMoveWalk = sValue;
         else if (sToken == "PoseMoveRun") g_sPoseMoveRun = sValue;
-        // else if (sToken == "TweakPoseAO") g_iTweakPoseAO = (integer)sValue;
-        else if (sToken == "PostureRank") g_iLastPostureRank= (integer)sValue;
-        else if (sToken == "PoselockRank") g_iLastPoselockRank= (integer)sValue;
+        // else if (sToken == "TweakPoseAO") g_bTweakPoseAO = (integer)sValue;
+        else if (sToken == "PostureRank") g_iLastPostureRank = (integer)sValue;
+        else if (sToken == "PoselockRank") g_iLastPoselockRank = (integer)sValue;
         else if (sToken == "TweakPoseAO") {
           if (llGetAnimationOverride("Standing") != "") {
-            g_iTweakPoseAO = (integer)sValue;
+            g_bTweakPoseAO = (integer)sValue;
           }
         }
       } else if (llGetSubString(sToken, 0, i) == "offset_") {
         sToken = llGetSubString(sToken, i + 1, -1);
         if (sToken == "AllowHover") {
-          g_iHoverOn = (integer)llGetSubString(sValue, 0, 0);
+          g_bHoverOn = (integer)llGetSubString(sValue, 0, 0);
           g_fHoverIncrement = (float)llGetSubString(sValue, 2, -1);
           if (g_fHoverIncrement == 0.0) {
             g_fHoverIncrement = 0.02;
@@ -701,7 +701,7 @@ default {
         string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
         g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
         if (sMenuType == "Anim") {
-          //Debug("Got message "+sMessage);
+          //Debug("Got message " + sMessage);
           if (sMessage == "BACK") {
             llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu Main", kAv);
           } else if (sMessage == "Pose") {
@@ -819,9 +819,9 @@ default {
     } else if (iNum == REBOOT && sStr == "reboot") {
       llResetScript();
     } else if (iNum == RLVA_VERSION) {
-      g_iRlvaOn = TRUE;
+      g_bRLVaOn = TRUE;
     } else if (iNum == RLV_OFF) {
-      g_iRlvaOn = FALSE;
+      g_bRLVaOn = FALSE;
     } else if (iNum == MVANIM_ANNOUNCE) {
       // avoid flooding the event queue
       llSleep(0.1);
