@@ -93,14 +93,14 @@ list g_lMenuIDs; // Three strided list of kAvatar, kDialogID, sMenuName
 integer g_iMenuStride = 3;
 
 /*
-integer g_iProfiled;
+integer g_bProfiled;
 Debug(string sStr) {
   // If you delete the first // from the preceeding and following  lines,
   // profiling is off, debug is off, and the compiler will remind you to
   // remove the debug calls from the code, we're back to production mode
-  if (!g_iProfiled) {
-    g_iProfiled = 1;
-    llScriptProfiler(1);
+  if (!g_bProfiled) {
+    g_bProfiled = TRUE;
+    llScriptProfiler(TRUE);
   }
   llOwnerSay(llGetScriptName() + "(min free:" + (string)(llGetMemoryLimit() - llGetSPMaxMemory()) + ")[" + (string)llGetFreeMemory() + "] :\n" + sStr);
 }
@@ -860,8 +860,8 @@ default {
 
     /*
     if (iChange & CHANGED_REGION) {
-      if (g_iProfiled) {
-        llScriptProfiler(1);
+      if (g_bProfiled) {
+        llScriptProfiler(TRUE);
         Debug("profiling restarted");
       }
     }
