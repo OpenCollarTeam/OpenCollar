@@ -52,38 +52,42 @@ integer CMD_SAFEWORD = 510;
 integer EXT_CMD_COLLAR = 499; // Added for collar or cuff commands to put ao to pause or standOff
 integer ATTACHMENT_RESPONSE = 601;
 
-integer NOTIFY = 1002;
+integer NOTIFY  =  1002;
 integer LOADPIN = -1904;
-integer REBOOT = -1000;
+integer REBOOT  = -1000;
+
 integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
+integer LINK_RLV    = 4;
+integer LINK_SAVE   = 5;
 integer LINK_UPDATE = -10;
-integer LM_SETTING_SAVE = 2000;
+
+integer LM_SETTING_SAVE     = 2000;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE   = 2003;
 
-integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_REQUEST  = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer RLV_CMD = 6000;
-integer RLV_OFF = 6100;
-//integer RLV_ON  = 6101;
-integer RLVA_VERSION = 6004;
-integer ANIM_START = 7000;
-integer ANIM_STOP = 7001;
-integer ANIM_LIST_REQUEST = 7002;
-integer ANIM_LIST_RESPONSE =7003;
 
-integer DIALOG = -9000;
+integer RLV_CMD      = 6000;
+integer RLV_OFF      = 6100;
+//integer RLV_ON       = 6101;
+integer RLVA_VERSION = 6004;
+
+integer ANIM_START         = 7000;
+integer ANIM_STOP          = 7001;
+integer ANIM_LIST_REQUEST  = 7002;
+integer ANIM_LIST_RESPONSE = 7003;
+
+integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT  = -9002;
 
 integer g_iAOChannel = -782690;
 
-integer MVANIM_INIT = 13000;
+integer MVANIM_INIT     = 13000;
 integer MVANIM_ANNOUNCE = 13001;
-integer MVANIM_SKIP = 13002;
-integer MVANIM_GIVE = 13003;
+integer MVANIM_SKIP     = 13002;
+integer MVANIM_GIVE     = 13003;
 
 string g_sSettingToken = "anim_";
 //string g_sGlobalToken = "global_";

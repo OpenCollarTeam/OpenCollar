@@ -13,36 +13,38 @@ string g_sPrimDesc = "FloatText"; // Description text of the hovertext prim. Nee
 string g_sPartDesc = "FloatPart"; // Description text of the particle-emitting prim.
 
 // MESSAGE MAP
-//integer CMD_ZERO = 0;
-integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
-integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
+//integer CMD_ZERO           = 0;
+integer CMD_OWNER          = 500;
+//integer CMD_TRUSTED        = 501;
+//integer CMD_GROUP          = 502;
+integer CMD_WEARER         = 503;
+integer CMD_EVERYONE       = 504;
+//integer CMD_RLV_RELAY      = 507;
+//integer CMD_SAFEWORD       = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED = 520;
+//integer CMD_BLOCKED        = 520;
 
 integer NOTIFY = 1002;
-//integer SAY = 1004;
+//integer SAY    = 1004;
 integer REBOOT = -1000;
+
 integer LINK_DIALOG = 3;
-//integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
+//integer LINK_RLV    = 4;
+integer LINK_SAVE   = 5;
 integer LINK_UPDATE = -10;
-integer LM_SETTING_SAVE = 2000;
-//integer LM_SETTING_REQUEST = 2001;
+
+integer LM_SETTING_SAVE     = 2000;
+//integer LM_SETTING_REQUEST  = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_DELETE   = 2003;
 
-integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_REQUEST  = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+integer MENUNAME_REMOVE   = 3003;
 
-integer DIALOG = -9000;
+integer DIALOG          = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT  = -9002;
 
 
 integer g_iLastRank = CMD_EVERYONE;
@@ -62,12 +64,13 @@ string g_sSettingToken = "titler_";
 list g_lMenuIDs; // Three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 
-string SET = "Set Title";
-string UP = "↑ Up";
-string DN = "↓ Down";
-string ON = "☑ Show";
-string OFF = "☐ Show";
+string SET    = "Set Title";
+string UP     = "↑ Up";
+string DN     = "↓ Down";
+string ON     = "☑ Show";
+string OFF    = "☐ Show";
 string UPMENU = "BACK";
+
 float MIN_Z = 0.25; // min height
 float MAX_Z = 1.0; // max height
 vector g_vPrimScale = <0.08, 0.08, 0.4>; // prim size, initial value (z - text offset height)

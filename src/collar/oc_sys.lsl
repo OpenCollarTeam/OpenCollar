@@ -779,7 +779,7 @@ default {
           llOwnerSay("@detach=n");
         }
         SetLockElementAlpha();
-      } else if(sToken == "lock_locksound") {
+      } else if (sToken == "lock_locksound") {
         if (sValue == "default") {
           g_sLockSound = g_sDefaultLockSound;
         } else if ((key)sValue != NULL_KEY || llGetInventoryType(sValue) == INVENTORY_SOUND) {
@@ -855,7 +855,7 @@ default {
 
   attach(key kID) {
     if (g_bLocked) {
-      if(kID == NULL_KEY) {
+      if (kID == NULL_KEY) {
         g_bDetached = TRUE;
         llMessageLinked(LINK_DIALOG, NOTIFY_OWNERS, "%WEARERNAME% has attached me while locked at " + GetTimestamp() + "!", kID);
       } else if (g_bDetached) {
