@@ -28,56 +28,56 @@ integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 // MESSAGE MAP
-//integer CMD_ZERO           = 0;
-integer CMD_OWNER          = 500;
-//integer CMD_TRUSTED        = 501;
-//integer CMD_GROUP          = 502;
-integer CMD_WEARER         = 503;
-//integer CMD_EVERYONE       = 504;
-integer CMD_RLV_RELAY      = 507;
-integer CMD_SAFEWORD       = 510;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED        = 520;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
-integer NOTIFY     = 1002;
+integer NOTIFY = 1002;
 
 integer LINK_DIALOG = 3;
-integer LINK_SAVE   = 5;
+integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
 
-integer REBOOT  = -1000;
+integer REBOOT = -1000;
 integer LOADPIN = -1904;
 
-integer LM_SETTING_SAVE     = 2000;
-integer LM_SETTING_REQUEST  = 2001;
+integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE   = 2003;
-//integer LM_SETTING_EMPTY    = 2004;
+//integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
-integer MENUNAME_REQUEST  = 3000;
+integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE   = 3003;
+integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD      = 6000;
-integer RLV_REFRESH  = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR    = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
-integer RLV_VERSION  = 6003; // RLV Plugins can recieve the used RLV viewer version upon receiving this message..
+integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_VERSION = 6003; // RLV Plugins can recieve the used RLV viewer version upon receiving this message..
 integer RLVA_VERSION = 6004; // RLV Plugins can recieve the used RLVa viewer version upon receiving this message..
 
-integer RLV_OFF      = 6100;
-integer RLV_ON       = 6101;
-integer RLV_QUERY    = 6102;
+integer RLV_OFF = 6100;
+integer RLV_ON = 6101;
+integer RLV_QUERY = 6102;
 integer RLV_RESPONSE = 6103;
 
-integer DIALOG          = -9000;
+integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT  = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
-string UPMENU  = "BACK";
-string TURNON  = "  ON";
+string UPMENU = "BACK";
+string TURNON = "  ON";
 string TURNOFF = " OFF";
-string CLEAR   = "CLEAR ALL";
+string CLEAR = "CLEAR ALL";
 
 key g_kWearer;
 

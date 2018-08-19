@@ -36,42 +36,42 @@ list g_lMenuIDs; // Menu information
 integer g_iMenuStride = 3;
 
 // MESSAGE MAP
-//integer CMD_ZERO           = 0;
-integer CMD_OWNER          = 500;
-//integer CMD_TRUSTED        = 501;
-//integer CMD_GROUP          = 502;
-integer CMD_WEARER         = 503;
-//integer CMD_EVERYONE       = 504;
-//integer CMD_RLV_RELAY      = 507;
-//integer CMD_SAFEWORD       = 510;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED        = 520;
+//integer CMD_BLOCKED = 520;
 
-integer LM_SETTING_SAVE     = 2000;
+integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE   = 2003;
+//integer LM_SETTING_DELETE = 2003;
 
 integer NOTIFY = 1002;
-//integer SAY    = 1004;
+//integer SAY = 1004;
 
 integer REBOOT = -1000;
 
 integer LINK_DIALOG = 3;
-//integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
+//integer LINK_RLV = 4;
+integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
 
-//integer MENUNAME_REQUEST  = 3000;
+//integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
 
-integer DIALOG          = -9000;
+integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT  = -9002;
+integer DIALOG_TIMEOUT = -9002;
 
-//integer TOUCH_REQUEST  = -9500;
-//integer TOUCH_CANCEL   = -9501;
+//integer TOUCH_REQUEST = -9500;
+//integer TOUCH_CANCEL = -9501;
 integer TOUCH_RESPONSE = -9502;
-//integer TOUCH_EXPIRE   = -9503;
+//integer TOUCH_EXPIRE = -9503;
 
 key g_kWearer;
 

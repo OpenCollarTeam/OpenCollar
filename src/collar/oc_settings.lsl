@@ -22,34 +22,34 @@ key g_kWearer;
 //string g_sGlobalToken = "global_";
 
 // MESSAGE MAP
-//integer CMD_ZERO           = 0;
-integer CMD_OWNER          = 500;
-//integer CMD_TRUSTED        = 501;
-//integer CMD_GROUP          = 502;
-//integer CMD_WEARER         = 503;
-//integer CMD_EVERYONE       = 504;
-//integer CMD_RLV_RELAY      = 507;
-//integer CMD_SAFEWORD       = 510;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+//integer CMD_TRUSTED = 501;
+//integer CMD_GROUP = 502;
+//integer CMD_WEARER = 503;
+//integer CMD_EVERYONE = 504;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED        = 520;
+//integer CMD_BLOCKED = 520;
 
 //integer POPUP_HELP = 1001;
-integer NOTIFY     = 1002;
-//integer SAY        = 1004;
+integer NOTIFY = 1002;
+//integer SAY = 1004;
 
-integer LM_SETTING_SAVE     = 2000;
-integer LM_SETTING_REQUEST  = 2001;
+integer LM_SETTING_SAVE = 2000;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE   = 2003;
-integer LM_SETTING_EMPTY    = 2004;
+integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;
 
-integer DIALOG          = -9000;
+integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 
 integer LINK_DIALOG = 3;
 integer LINK_UPDATE = -10;
 
-integer REBOOT  = -1000;
+integer REBOOT = -1000;
 integer LOADPIN = -1904;
 
 integer g_bRebootConfirmed;

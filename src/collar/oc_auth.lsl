@@ -21,54 +21,54 @@ integer g_bRunawayDisabled = FALSE;
 string g_sDrop = "f364b699-fb35-1640-d40b-ba59bdd5f7b7";
 
 // MESSAGE MAP
-integer CMD_ZERO      = 0;
-integer CMD_OWNER     = 500;
-integer CMD_TRUSTED   = 501;
-integer CMD_GROUP     = 502;
-integer CMD_WEARER    = 503;
-integer CMD_EVERYONE  = 504;
+integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD  = 510;
-integer CMD_BLOCKED   = 520;
+//integer CMD_SAFEWORD = 510;
+integer CMD_BLOCKED = 520;
 
-//integer POPUP_HELP    = 1001;
-integer NOTIFY        = 1002;
+//integer POPUP_HELP = 1001;
+integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
 
 integer LOADPIN = -1904;
-integer REBOOT  = -1000;
+integer REBOOT = -1000;
 
 integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
+integer LINK_RLV = 4;
+integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
 
-integer LM_SETTING_SAVE     = 2000;
-//integer LM_SETTING_REQUEST  = 2001;
+integer LM_SETTING_SAVE = 2000;
+//integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-integer LM_SETTING_DELETE   = 2003;
-//integer LM_SETTING_EMPTY    = 2004;
+integer LM_SETTING_DELETE = 2003;
+//integer LM_SETTING_EMPTY = 2004;
 
-//integer MENUNAME_REQUEST  = 3000;
+//integer MENUNAME_REQUEST = 3000;
 //integer MENUNAME_RESPONSE = 3001;
-//integer MENUNAME_REMOVE   = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD     = 6000;
-//integer RLV_REFRESH = 6001; //RLV plugins should reinstate their restrictions upon receiving this message.
-//integer RLV_CLEAR   = 6002; //RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_CMD = 6000;
+//integer RLV_REFRESH = 6001; // RLV plugins should reinstate their restrictions upon receiving this message.
+//integer RLV_CLEAR = 6002; // RLV plugins should clear their restriction lists upon receiving this message.
 
 //integer ANIM_START = 7000; // Send this with the name of an anim in the string part of the message to play the anim
-//integer ANIM_STOP  = 7001; // Send this with the name of an anim in the string part of the message to stop the anim
+//integer ANIM_STOP = 7001; // Send this with the name of an anim in the string part of the message to stop the anim
 
-integer DIALOG          = -9000;
+integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT  = -9002;
-integer SENSORDIALOG    = -9003;
-//integer FIND_AGENT      = -9005;
+integer DIALOG_TIMEOUT = -9002;
+integer SENSORDIALOG = -9003;
+//integer FIND_AGENT = -9005;
 
 // Added for attachment auth (garvin)
 integer AUTH_REQUEST = 600;
-integer AUTH_REPLY   = 601;
+integer AUTH_REPLY = 601;
 
 string UPMENU = "BACK";
 
@@ -811,7 +811,9 @@ default {
         // integer iPage = (integer)llList2String(lMenuParams, 2);
         integer iAuth = (integer)llList2String(lMenuParams, 3);
         string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
+
         g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+
         //Debug(sMessage);
         if (sMenu == "Auth") {
           if (sMessage == UPMENU) {
