@@ -55,24 +55,28 @@ integer ATTACHMENT_RESPONSE = 601;
 integer NOTIFY = 1002;
 integer LOADPIN = -1904;
 integer REBOOT = -1000;
+
 integer LINK_DIALOG = 3;
 integer LINK_RLV = 4;
 integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
+
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
+
 integer RLV_CMD = 6000;
 integer RLV_OFF = 6100;
-//integer RLV_ON  = 6101;
+//integer RLV_ON = 6101;
 integer RLVA_VERSION = 6004;
+
 integer ANIM_START = 7000;
 integer ANIM_STOP = 7001;
 integer ANIM_LIST_REQUEST = 7002;
-integer ANIM_LIST_RESPONSE =7003;
+integer ANIM_LIST_RESPONSE = 7003;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -93,14 +97,14 @@ list g_lMenuIDs; // Three strided list of kAvatar, kDialogID, sMenuName
 integer g_iMenuStride = 3;
 
 /*
-integer g_iProfiled;
+integer g_bProfiled;
 Debug(string sStr) {
   // If you delete the first // from the preceeding and following  lines,
   // profiling is off, debug is off, and the compiler will remind you to
   // remove the debug calls from the code, we're back to production mode
-  if (!g_iProfiled) {
-    g_iProfiled = 1;
-    llScriptProfiler(1);
+  if (!g_bProfiled) {
+    g_bProfiled = TRUE;
+    llScriptProfiler(TRUE);
   }
   llOwnerSay(llGetScriptName() + "(min free:" + (string)(llGetMemoryLimit() - llGetSPMaxMemory()) + ")[" + (string)llGetFreeMemory() + "] :\n" + sStr);
 }
@@ -699,7 +703,9 @@ default {
         integer iPage = (integer)llList2String(lMenuParams, 2);
         integer iAuth = llList2Integer(lMenuParams, 3);
         string sMenuType = llList2String(g_lMenuIDs, iMenuIndex + 1);
+
         g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+
         if (sMenuType == "Anim") {
           //Debug("Got message " + sMessage);
           if (sMessage == "BACK") {
@@ -860,8 +866,8 @@ default {
 
     /*
     if (iChange & CHANGED_REGION) {
-      if (g_iProfiled) {
-        llScriptProfiler(1);
+      if (g_bProfiled) {
+        llScriptProfiler(TRUE);
         Debug("profiling restarted");
       }
     }
