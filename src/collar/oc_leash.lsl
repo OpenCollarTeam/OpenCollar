@@ -567,12 +567,16 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
+        llListen(0x89a, "", "", "");
     }
 
     state_entry() {
         g_kWearer = llGetOwner();
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
+        
+        llListen(0x89a, "", "", "");
+        
         //Debug("Starting");
     }
 
@@ -682,7 +686,10 @@ default {
                         llMessageLinked(LINK_ROOT, iAuth, "menu "+sButton, kAV);
                     else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
-                else if (sMenu == "PostTarget") UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
+                else if (sMenu == "PostTarget"){
+                    UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
+                    llSay(0x89a, llList2Json(JSON_OBJECT, ["type", "leash", "name", sButton]));
+                }
                 else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
                 // added for Confirmation Request 15-04-17 Otto
                 else if (sMenu == "LeashTarget") {
@@ -775,6 +782,13 @@ default {
     changed (integer iChange){
         if (iChange & CHANGED_OWNER){
             g_kWearer = llGetOwner();
+        }
+    }
+    
+    listen(integer iChannel, string sName, key kID, string sMsg){
+        if(llGetOwnerKey(kID)!=llGetOwner())return;
+        if(llJsonGetValue(sMsg,["type"])=="confirm_leash"){
+            DoLeash((key)llJsonGetValue(sMsg, ["key"]), g_iLastRank, []);
         }
     }
 }
