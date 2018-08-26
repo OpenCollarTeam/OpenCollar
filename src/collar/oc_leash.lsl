@@ -558,6 +558,8 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 if (llGetAgentSize((key)sVal)) g_iPassConfirmed = FALSE;
                 else g_iPassConfirmed = TRUE;
                 LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
+                
+                llSay(0x89a, llList2Json(JSON_OBJECT, ["type", "leash", "name", sVal]));
             } else
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
         }
@@ -686,10 +688,7 @@ default {
                         llMessageLinked(LINK_ROOT, iAuth, "menu "+sButton, kAV);
                     else UserCommand(iAuth, llToLower(sButton), kAV, TRUE);
                 }
-                else if (sMenu == "PostTarget"){
-                    UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
-                    llSay(0x89a, llList2Json(JSON_OBJECT, ["type", "leash", "name", sButton]));
-                }
+                else if (sMenu == "PostTarget") UserCommand(iAuth, "anchor " + sButton, kAV, TRUE);
                 else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
                 // added for Confirmation Request 15-04-17 Otto
                 else if (sMenu == "LeashTarget") {
