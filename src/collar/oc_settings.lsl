@@ -400,7 +400,7 @@ default {
                 g_fLastNewsStamp = (float)sValue;
                 g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
-            SendValues();
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
@@ -413,7 +413,6 @@ default {
         else if (iNum == LM_SETTING_DELETE){
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_DELETE,sStr,"");
             DelSetting(sStr);
-            SendValues();
         }
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
