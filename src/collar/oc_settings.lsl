@@ -400,6 +400,7 @@ default {
                 g_fLastNewsStamp = (float)sValue;
                 g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sToken+"="+GetSetting(sStr), "");
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
@@ -409,7 +410,10 @@ default {
                 llSetTimerEvent(2.0);
             } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
-        else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
+        else if (iNum == LM_SETTING_DELETE){
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_DELETE,sStr,"");
+            DelSetting(sStr);
+        }
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
