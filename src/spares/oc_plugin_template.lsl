@@ -1,6 +1,6 @@
 /*
 THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
-This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugins to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script without the accompanying GPLv2 license.
+This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugin creators to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script,  without the accompanying GPLv2 license.
 -Authors Attribution-
 Aria (tiff589) - (July 2018-September 2018)
 roan (Silkie Sabra) - (September 2018)
