@@ -1,7 +1,9 @@
 /*
 THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
+This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugins to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script without the accompanying GPLv2 license.
 -Authors Attribution-
-Aria (tiff589) - (July 2018)
+Aria (tiff589) - (July 2018-September 2018)
+roan (Silkie Sabra) - (September 2018)
 */
 
 
@@ -90,6 +92,7 @@ integer g_iMenuStride;
 list g_lOwner;
 list g_lTrust;
 list g_lBlock;
+integer g_iLocked=FALSE;
 default
 {
     on_rez(integer t){
@@ -98,6 +101,7 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
@@ -122,7 +126,20 @@ default
             if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
             if(sStr == "LINK_RLV") LINK_RLV=iSender;
             if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        } 
+        } else if(iNum == LM_SETTING_RESPONSE){
+            // Detect here the Settings
+            list lSettings = llParseString2List(sStr, ["_","="],[]);
+            if(llList2String(lSettings,0)=="global"){
+                if(llList2String(lSettings,1)=="locked"){
+                    g_iLocked=llList2Integer(lSettings,2);
+                }
+            }
+        } else if(iNum == LM_SETTING_DELETE){
+            // This is recieved back from settings when a setting is deleted
+            list lSettings = llParseString2List(sStr, ["_"],[]);
+            if(llList2String(lSettings,0)=="global")
+                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+        }
         llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
