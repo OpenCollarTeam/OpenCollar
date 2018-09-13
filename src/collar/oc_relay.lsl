@@ -507,8 +507,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sStr=="access") AccessList(kID, iNum);
     else {
         integer iWSuccess = 0; //0: successful, 1: forbidden because of minmode, 2: forbidden because grabbed, 3: unrecognized commad
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        list lParams = llParseString2List(sStr, [" "], []);
+        string sChangetype = llList2String(lParams, 1);
+        string sChangevalue = llList2String(lParams, 2);
         string sText;
         if (sChangetype=="helpless") {
             if (g_lSources!=[]) iWSuccess = 2;
