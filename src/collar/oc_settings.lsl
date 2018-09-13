@@ -400,7 +400,7 @@ default {
                 g_fLastNewsStamp = (float)sValue;
                 g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
-            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sToken+"="+GetSetting(sStr), "");
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr, "");
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
