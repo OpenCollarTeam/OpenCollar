@@ -1,6 +1,6 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2013 - 2015 Toy Wylie et. al               
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2013 - 2015 Toy Wylie et. al
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 // Needs OpenCollar 6.x or higher to work
@@ -9,21 +9,21 @@
 // Collar answers with "<wearer_uuid>:pong"
 // Sends a anchor command on the collar command channel to grab them
 
-// constants
-float RANGE=20.0;       // scanning range
-float TIMEOUT=30.0;     // menu timeout
-float WAIT_TIME=2.0;    // waiting time after the last confirmed collar
-float LEASH_LENGTH=2.5; // leash length when grabbing
+// Constants
+float RANGE = 20.0; // Scanning range
+float TIMEOUT = 30.0; // Menu timeout
+float WAIT_TIME = 2.0; // waiting time after the last confirmed collar
+float LEASH_LENGTH = 2.5; // Leash length when grabbing
 
 // menu system
-integer menuListener=0;
-integer menuChannel=0;
-key menuUser=NULL_KEY;
-integer scanning=FALSE;
+integer g_iMenuListener = 0;
+integer g_iMenuChannel = 0;
+key g_kMenuUser = NULL_KEY;
+integer g_bScanning = FALSE;
 
-list victimNames=[];    // list of victim names
-list victimKeys=[];     // corresponding list of keys
-list listeners=[];      // collar pong listeners per victim
+list g_lVictimNames = []; // List of victim names
+list g_lVictimKeys = []; // Corresponding list of keys
+list g_lListeners = []; // Collar pong listeners per victim
 
 //===============================================================================
 //= parameters   :    key owner            key of the person to send the sMessage to
@@ -34,212 +34,180 @@ list listeners=[];      // collar pong listeners per victim
 //= returns      : Channel iNumber to be used
 //===============================================================================
 integer PersonalChannel(string sID, integer iOffset) {
-    return -llAbs((integer)("0x"+llGetSubString(sID,-7,-1)) + iOffset);
+    return -llAbs((integer)("0x" + llGetSubString(sID, -7, -1)) + iOffset);
 }
 
-// resets the menu dialog
-resetDialog()
-{
-    // clear out any remaining collar listeners
-    integer num=llGetListLength(listeners);
-    integer index;
-    for(index=0;index<num;index++)
-    {
-        llListenRemove(llList2Integer(listeners,index));
+// Resets the menu dialog
+ResetDialog() {
+    // Clear out any remaining collar listeners
+    integer iNum = llGetListLength(g_lListeners);
+    integer iIndex;
+    for (; iIndex < iNum; iIndex++) {
+        llListenRemove(llList2Integer(g_lListeners, iIndex));
     }
-    listeners=[];
+    g_lListeners = [];
 
-    // clear out menu system data if needed
-    if(menuListener)
-    {
-        llListenRemove(menuListener);
-        menuListener=0;
-        menuUser=NULL_KEY;
+    // Clear out menu system data if needed
+    if (g_iMenuListener) {
+        llListenRemove(g_iMenuListener);
+        g_iMenuListener = 0;
+        g_kMenuUser = NULL_KEY;
 
         llSetTimerEvent(0.0);
-        victimNames=[];
-        victimKeys=[];
+        g_lVictimNames = [];
+        g_lVictimKeys = [];
     }
 }
 
-// send "No victims found" message to a person
-notFound(key k)
-{
-    llRegionSayTo(k,0,"No victims were found within "+(string) ((integer) RANGE)+" m.");
+// Send "No victims found" message to a person
+NotFound(key kId) {
+    llRegionSayTo(kId, 0, "No victims were found within " + (string)((integer)RANGE) + " m.");
 }
 
-// leash a victim
-leash(key k)
-{
-    integer channel=PersonalChannel((string)k,0);
-    llRegionSayTo(k,channel,"length "+(string) LEASH_LENGTH);
-    llRegionSayTo(k,channel,"anchor "+(string) llGetKey());
+// Leash a victim
+Leash(key kId) {
+    integer iChannel = PersonalChannel((string)kId, 0);
+    llRegionSayTo(kId, iChannel, "length " + (string)LEASH_LENGTH);
+    llRegionSayTo(kId, iChannel, "anchor " + (string)llGetKey());
 }
 
-default
-{
-    state_entry()
-    {
+default {
+    state_entry() {
     }
 
-    touch_start(integer num)
-    {
-        key toucher=llDetectedKey(0);
+    touch_start(integer iNum) {
+        key kToucher = llDetectedKey(0);
 
-        // lock the menu to the current menu user
-        if(menuListener!=0 && menuUser!=toucher)
-        {
-            llRegionSayTo(toucher,0,"This menu is currently in use. Plesase wait a moment before trying again.");
+        // Lock the menu to the current menu user
+        if(g_iMenuListener != 0 && g_kMenuUser != kToucher) {
+            llRegionSayTo(kToucher, 0, "This menu is currently in use. Plesase wait a moment before trying again.");
             return;
         }
 
-        // don't allow menu usage while scanning for collars
-        if(scanning)
-        {
-            llRegionSayTo(toucher,0,"There is already a scan in progress, please wait for it to finish.");
+        // Don't allow menu usage while scanning for collars
+        if(g_bScanning) {
+            llRegionSayTo(kToucher, 0, "There is already a scan in progress, please wait for it to finish.");
             return;
         }
 
-        // start with a fresh menu
-        resetDialog();
+        // Start with a fresh menu
+        ResetDialog();
 
-        // remember menu user, get a new channel and set up listener
-        menuUser=toucher;
-        menuChannel=- ((integer) llFrand(1000000.0)+100000);
-        menuListener=llListen(menuChannel,"",menuUser,"");
+        // Remember menu user, get a new channel and set up listener
+        g_kMenuUser = kToucher;
+        g_iMenuChannel = -((integer)llFrand(1000000.0) + 100000);
+        g_iMenuListener = llListen(g_iMenuChannel, "", g_kMenuUser, "");
 
-        // display the menu
-        llDialog(menuUser,"Do you want to scan for nearby victims?\n\nScan radius is "+(string) ((integer) RANGE)+" m",["Scan"," ","Cancel"],menuChannel);
+        // Display the menu
+        llDialog(g_kMenuUser, "Do you want to scan for nearby victims?\n\nScan radius is " + (string)((integer)RANGE) + " m", ["Scan", " ", "Cancel"], g_iMenuChannel);
 
-        // menu timeout
+        // Menu timeout
         llSetTimerEvent(TIMEOUT);
     }
 
-    timer()
-    {
-        // if not scanning this was a menu timeout
-        if(!scanning)
-        {
-            resetDialog();
+    timer() {
+        // If not scanning this was a menu timeout
+        if(!g_bScanning) {
+            ResetDialog();
             return;
         }
 
-        // reset scanning mode
+        // Reset scanning mode
         llSetTimerEvent(0.0);
-        scanning=FALSE;
+        g_bScanning = FALSE;
 
-        // check if anyone was picked up at all
-        if(victimNames==[])
-        {
-            notFound(menuUser);
-            resetDialog();
+        // Check if anyone was picked up at all
+        if(g_lVictimNames == []) {
+            NotFound(g_kMenuUser);
+            ResetDialog();
             return;
         }
 
-        // cut button list so llDialog doesn't fail
-        victimNames=llList2List(victimNames,0,9);
-        victimKeys=llList2List(victimKeys,0,9);
+        // Cut button list so llDialog doesn't fail
+        g_lVictimNames = llList2List(g_lVictimNames, 0, 9);
+        g_lVictimKeys = llList2List(g_lVictimKeys, 0, 9);
 
-        // list potential victims, watch 500 character limit on llDialog
-        string body=llGetSubString("Select a target, or \"All\" to grab all those listed:\n\n"+llDumpList2String(victimNames,"\n"),0,500);
+        // List potential victims, watch 500 character limit on llDialog
+        string sBody = llGetSubString("Select a target, or \"All\" to grab all those listed:\n\n" + llDumpList2String(g_lVictimNames, "\n"), 0, 500);
 
-        // show list of potential victims
-        llDialog(menuUser,body,["All", "Cancel"]+victimNames,menuChannel);
+        // Show list of potential victims
+        llDialog(g_kMenuUser, sBody, ["All", "Cancel"] + g_lVictimNames, g_iMenuChannel);
 
-        // menu timeout
+        // Menu timeout
         llSetTimerEvent(TIMEOUT);
     }
 
-    listen(integer c,string name,key k,string message)
-    {
-        // process menu button replies
-        if(c==menuChannel)
-        {
-            // scan for victims
-            if(message=="Scan")
-            {
-                llRegionSayTo(menuUser,0,"Scanning for OpenCollar compatible victims, please wait ...");
-                llSensor("",NULL_KEY,AGENT,RANGE,PI);
+    listen(integer iChannel, string sName, key kId, string sMessage) {
+        // Process menu button replies
+        if (iChannel == g_iMenuChannel) {
+            // Scan for victims
+            if (sMessage == "Scan") {
+                llRegionSayTo(g_kMenuUser, 0, "Scanning for OpenCollar compatible victims, please wait ...");
+                llSensor("", NULL_KEY, AGENT, RANGE, PI);
 
-                // set up scanning mode
-                scanning=TRUE;
+                // Set up scanning mode
+                g_bScanning = TRUE;
                 return;
-            }
-            // grab all victims
-            else if(message=="All")
-            {
-                integer num=llGetListLength(victimKeys);
-                integer index;
-                for(index=0;index<num;index++)
-                {
-                    leash(llList2Key(victimKeys,index));
+            } else if (sMessage == "All") { // Grab all victims
+                integer iNum = llGetListLength(g_lVictimKeys);
+                integer iIndex;
+                for(; iIndex < iNum; iIndex++) {
+                    Leash(llList2Key(g_lVictimKeys, iIndex));
                 }
-            }
-            // clicked on a name or empty button
-            else if(message!="Cancel")
-            {
-                // grab selected victim, if available in the list
-                integer pos=llListFindList(victimNames,[message]);
-                if(pos!=-1)
-                {
-                    leash(llList2Key(victimKeys,pos));
+            } else if (sMessage != "Cancel") { // Clicked on a name or empty button
+                // Grab selected victim, if available in the list
+                integer iPos = llListFindList(g_lVictimNames, [sMessage]);
+                if(~iPos) {
+                    Leash(llList2Key(g_lVictimKeys, iPos));
                 }
             }
 
-            // reset menu
-            resetDialog();
+            // Reset menu
+            ResetDialog();
             return;
         }
 
-        // not a menu listener event, so this is a collar pong
-        key wearer=llGetOwnerKey(k);
+        // Not a menu listener event, so this is a collar pong
+        key kWearer = llGetOwnerKey(kId);
 
-        // check for proper "<key>:pong" message
-        if(message==((string) wearer+":pong"))
-        {
-            // get the collar wearer's name
-            string wearerName=llKey2Name(wearer);
+        // Check for proper "<key>:pong" message
+        if (sMessage == ((string)kWearer + ":pong")) {
+            // Get the collar wearer's name
+            string sWearerName = llKey2Name(kWearer);
 
-            // cut to max. 24 characters and add to the list of names
-            victimNames+=[llGetSubString(wearerName,0,23)];
-            // add to the list of keys
-            victimKeys+=[wearer];
+            // Cut to max. 24 characters and add to the list of names
+            g_lVictimNames += llGetSubString(sWearerName, 0, 23);
+            // Add to the list of keys
+            g_lVictimKeys += kWearer;
 
-            // reset waiting time
+            // Reset waiting time
             llSetTimerEvent(WAIT_TIME);
         }
     }
 
-    no_sensor()
-    {
-        // nobody in scanning range
-        notFound(menuUser);
-        resetDialog();
+    no_sensor() {
+        // Nobody in scanning range
+        NotFound(g_kMenuUser);
+        ResetDialog();
     }
 
-    sensor(integer num)
-    {
-        key k;
-        integer channel;
-        integer index;
+    sensor(integer iNum) {
+        key kId;
+        integer iChannel;
+        integer iIndex;
 
-        // go through the list of scanned avatars
-        for(index=0;index<num;index++)
-        {
-            k=llDetectedKey(index);
+        // Go through the list of scanned avatars
+        for(; iIndex < iNum; iIndex++) {
+            kId = llDetectedKey(iIndex);
 
-            // do not include scanning user in the list
-            if(k!=menuUser)
-            {
-                // calculate collar channel per victim and add a listener
-                channel=PersonalChannel((string)k,0);
-                listeners+=
-                [
-                    llListen(channel,"",NULL_KEY,"")
-                ];
+            // Do not include scanning user in the list
+            if(kId != g_kMenuUser) {
+                // Calculate collar channel per victim and add a listener
+                iChannel = PersonalChannel((string)kId, 0);
+                g_lListeners += llListen(iChannel, "", NULL_KEY, "");
 
-                // ping victim's collar
-                llRegionSayTo(k,channel,(string)k+":ping");
+                // Ping victim's collar
+                llRegionSayTo(kId, iChannel, (string)kId + ":ping");
             }
         }
 
@@ -247,9 +215,8 @@ default
         llSetTimerEvent(WAIT_TIME);
     }
 
-    collision_start(integer num)
-    {
-        // grab bumping avatar
-        leash(llDetectedKey(0));
+    collision_start(integer iNum) {
+        // Grab bumping avatar
+        Leash(llDetectedKey(0));
     }
 }

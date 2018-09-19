@@ -1,6 +1,6 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2016 - 2017 Garvin Twine, Nirea Resident
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 // oc remote - LeashPost rez script 160112.1
@@ -9,8 +9,8 @@
 
 integer g_iListener;
 
-integer RemoteChannel(string sID,integer iOffset) {
-    integer iChan = -llAbs((integer)("0x"+llGetSubString(sID,-7,-1)) + iOffset);
+integer RemoteChannel(string sID, integer iOffset) {
+    integer iChan = -llAbs((integer)("0x" + llGetSubString(sID, -7, -1)) + iOffset);
     return iChan;
 }
 
@@ -43,26 +43,29 @@ default {
     state_entry() {
         llSetMemoryLimit(16384);
         PermsCheck();
-        g_iListener = llListen(RemoteChannel(llGetOwner(),1234),"","","");
-        list lTemp = llParseString2List(llGetObjectDesc(),["@"],[]);
-        vector vRot = (vector)("<"+llList2String(lTemp,1)+">");
-        vector vPos = (vector)("<"+llList2String(lTemp,2)+">");
+        g_iListener = llListen(RemoteChannel(llGetOwner(), 1234), "", "", "");
+        list lTemp = llParseString2List(llGetObjectDesc(), ["@"], []);
+        vector vRot = (vector)("<" + llList2String(lTemp, 1) + ">");
+        vector vPos = (vector)("<" + llList2String(lTemp, 2) + ">");
         llSetRot(llEuler2Rot(vRot * DEG_TO_RAD));
-        llSetPos(llGetPos()+vPos);
+        llSetPos(llGetPos() + vPos);
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
         llListenRemove(g_iListener);
         string sObjectID = (string)llGetKey();
-        list lToLeash = llParseString2List(sMessage,[","],[]);
+        list lToLeash = llParseString2List(sMessage, [","], []);
         integer i = llGetListLength(lToLeash);
         key kLeashToID;
         while (i) {
-            kLeashToID = llList2Key(lToLeash,--i);
-            llRegionSayTo(kLeashToID,RemoteChannel(kLeashToID,0),"anchor "+sObjectID);
+            kLeashToID = llList2Key(lToLeash, --i);
+            llRegionSayTo(kLeashToID, RemoteChannel(kLeashToID, 0), "anchor " + sObjectID);
         }
     }
+
     changed(integer iChange) {
-        if (iChange & CHANGED_INVENTORY) PermsCheck();
+        if (iChange & CHANGED_INVENTORY) {
+            PermsCheck();
+        }
     }
 }

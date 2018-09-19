@@ -15,7 +15,7 @@
 // 3. Rez an OpenCollar Updater (7.0 or later) near your unscripted object.
 // 4. Drop this script into the root prim of your unscripted object.  When asked
 //    for permission to link objects, click Yes.
-// 
+//
 // Several new child prims will be rezzed and linked to your object.  Then a
 // regular OpenCollar update process will be performed.  At the end, you may
 // wish to reposition the newly-rezzed child prims, particularly the leashpoint
@@ -24,23 +24,26 @@
 integer g_iUpdateChan = -7483214;
 
 default {
-  state_entry() {
-    llListen(g_iUpdateChan, "", "", "get ready");
-    llWhisper(g_iUpdateChan, "UPDATE");
-    llSetTimerEvent(30);
-  }
+    state_entry() {
+        llListen(g_iUpdateChan, "", "", "get ready");
+        llWhisper(g_iUpdateChan, "UPDATE");
+        llSetTimerEvent(30);
+    }
 
-  listen(integer channel, string name, key id, string msg) {
-    if (llGetOwnerKey(id) != llGetOwner()) return;
-    llOwnerSay("Commencing collarization!");
-    integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
-    llSetRemoteScriptAccessPin(pin);
-    llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin);
-    llRemoveInventory(llGetScriptName());
-  }
+    listen(integer iChannel, string sName, key kId, string sMsg) {
+        if (llGetOwnerKey(kId) != llGetOwner()) {
+            return;
+        }
 
-  timer() {
-    // if we haven't gotten started by now, clean ourself up
-    llRemoveInventory(llGetScriptName());
-  }
+        llOwnerSay("Commencing collarization!");
+        integer iPin = (integer)llFrand(99999998.0) + 1; // Set a random pin
+        llSetRemoteScriptAccessPin(iPin);
+        llRegionSayTo(kId, g_iUpdateChan, "ready|" + (string)iPin);
+        llRemoveInventory(llGetScriptName());
+    }
+
+    timer() {
+        // If we haven't gotten started by now, clean ourself up
+        llRemoveInventory(llGetScriptName());
+    }
 }

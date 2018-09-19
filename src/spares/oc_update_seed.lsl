@@ -11,8 +11,7 @@
 
 integer g_iUpdateChan = -7483213;
 
-default
-{
+default {
     state_entry() {
         llOwnerSay("Initializing update.");
         llListen(g_iUpdateChan, "", "", "");
@@ -20,19 +19,22 @@ default
         llSetTimerEvent(30);
     }
 
-    listen(integer channel, string name, key id, string msg) {
-        if (llGetOwnerKey(id) != llGetOwner()) return;
-        if (llSubStringIndex(msg, "-.. ---|") == 0) { // why morse code? sigh.  Let's keep things readable, people.
+    listen(integer iChannel, string sName, key kId, string sMsg) {
+        if (llGetOwnerKey(kId) != llGetOwner()) {
+            return;
+        }
+
+        if (llSubStringIndex(sMsg, "-.. ---|") == 0) { // Why morse code? sigh. Let's keep things readable, people.
             llOwnerSay("Updater found.  Beginning update!");
-            integer pin = (integer)llFrand(99999998.0) + 1; //set a random pin
-            llSetRemoteScriptAccessPin(pin);
-            llRegionSayTo(id, g_iUpdateChan, "ready|" + (string)pin );
+            integer iPin = (integer)llFrand(99999998.0) + 1; // Set a random pin
+            llSetRemoteScriptAccessPin(iPin);
+            llRegionSayTo(kId, g_iUpdateChan, "ready|" + (string)iPin);
             llRemoveInventory(llGetScriptName());
         }
     }
 
     timer() {
-        // if we haven't gotten started by now, clean ourself up
+        // If we haven't gotten started by now, clean ourself up
         llRemoveInventory(llGetScriptName());
     }
 }

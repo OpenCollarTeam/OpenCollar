@@ -142,11 +142,8 @@ Notes:
 
 */
 
-
-//OpenCollar Plugin Template
-
-string  g_sParentMenu = "Apps";
-string  g_sSubMenu = "Cage Home";
+string g_sParentMenu = "Apps";
+string g_sSubMenu = "Cage Home";
 
 // MESSAGE MAP
 integer CMD_OWNER = 500;
@@ -158,11 +155,13 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 
-integer NOTIFY      = 1002;
-integer REBOOT      = -1000;
+integer NOTIFY = 1002;
+
+integer REBOOT = -1000;
+
 integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
+integer LINK_RLV = 4;
+integer LINK_SAVE = 5;
 integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;
@@ -171,16 +170,16 @@ integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 
-integer MENUNAME_REQUEST  = 3000;
+integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE   = 3003;
+integer MENUNAME_REMOVE = 3003;
 
-integer RLV_CMD     = 6000;
+integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;
-integer RLV_CLEAR   = 6002;
+integer RLV_CLEAR = 6002;
 integer RLV_VERSION = 6003;
-integer RLV_OFF     = 6100;
-integer RLV_ON      = 6101;
+integer RLV_OFF = 6100;
+integer RLV_ON = 6101;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -189,160 +188,212 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string TEXTBOX = "Text Input";
 
-// default settings, will be loaded upon script start. leave landing point values blank!
+// Default settings, will be loaded upon script start. leave landing point values blank!
 string g_sDefaultSettings = "45|5|30|-1|arrived|released|@ will be summoned away in # seconds";
 
 // State enumeration:
-integer iDEFAULT  = 0;
-integer iDISARMED = 1;
-integer iARMED    = 2;
-integer iWARNING  = 3;
-integer iTELEPORT = 4;
-integer iCAGED    = 5;
-integer iRELEASED = 6;
+integer STATE_DEFAULT = 0;
+integer STATE_DISARMED = 1;
+integer STATE_ARMED = 2;
+integer STATE_WARNING = 3;
+integer STATE_TELEPORT = 4;
+integer STATE_CAGED = 5;
+integer STATE_RELEASED = 6;
 
 // Dialog BUTtons:
-string  sCAGEHERE = "Cage Here";
-string  sARM      = "Arm";
-string  sDISARM   = "Disarm";
-string  sRELEASE  = "Release";
-string  sSETTINGS = "Settings";
-string  sCOMMANDS = "Commands";
-string  sCLEAR    = "Clear";
-string  sOPTIONS  = "Options";
+string BTN_CAGEHERE = "Cage Here";
+string BTN_ARM = "Arm";
+string BTN_DISARM = "Disarm";
+string BTN_RELEASE = "Release";
+string BTN_SETTINGS = "Settings";
+string BTN_COMMANDS = "Commands";
+string BTN_CLEAR = "Clear";
+string BTN_OPTIONS = "Options";
 
-string  sTIME     = "Cage Time";
-string  sRADIUS   = "Cage Radius";
-string  sWARNTIME = "Warning Time";
-string  sCHANNEL  = "Channel";
-string  sARRIVED  = "Arrived Msg";
-string  sRELEASED = "Released Msg";
-string  sWARNING  = "Warning Msg";
+string BTN_TIME = "Cage Time";
+string BTN_RADIUS = "Cage Radius";
+string BTN_WARNTIME = "Warning Time";
+string BTN_CHANNEL = "Channel";
+string BTN_ARRIVED = "Arrived Msg";
+string BTN_RELEASED = "Released Msg";
+string BTN_WARNING = "Warning Msg";
 
-string  sBLANK     = " ";
-string  sDEFAULT   = "DEFAULT";
+string BTN_BLANK = " ";
+string BTN_DEFAULT = "DEFAULT";
 
-string  g_sChatCmd = "ch";        // so the user can easily access it by type for instance *plugin
-string  g_sPluginTitle = "Cage Home"; // to be used in various strings
-string  CANT_DO = "Can not do - "; // used in various responses (to specify a negative response to an issued command)
+string g_sChatCmd = "ch"; // So the user can easily access it by type for instance *plugin
+string g_sPluginTitle = "Cage Home"; // To be used in various strings
+string CANT_DO = "Can not do - "; // Used in various responses (to specify a negative response to an issued command)
 
 list g_lMenuButtons = [
-    sCAGEHERE, sARM, sDISARM, sRELEASE, sSETTINGS, sCOMMANDS,
-    sTIME, sRADIUS, sWARNTIME, sCHANNEL,
-    sARRIVED, sRELEASED, sWARNING
+    BTN_CAGEHERE, BTN_ARM, BTN_DISARM, BTN_RELEASE, BTN_SETTINGS, BTN_COMMANDS,
+    BTN_TIME, BTN_RADIUS, BTN_WARNTIME, BTN_CHANNEL,
+    BTN_ARRIVED, BTN_RELEASED, BTN_WARNING
 ];
 
-// available chat commands
+// Available chat commands
 list g_lChatCommands = [
   "here", "arm", "disarm", "release", "settings", "commands", // no-arg commands
-  "cagetime", "radius", "warntime", "notifychannel",          // integer-arg commands
-  "notifyarrive", "notifyrelease", "warnmessage"              // string-arg commands
+  "cagetime", "radius", "warntime", "notifychannel", // integer-arg commands
+  "notifyarrive", "notifyrelease", "warnmessage" // string-arg commands
 ];
 
-integer CAGEHOME_NOTIFY = -11552; // internal link num to announce arrivals and releases on
+integer CAGEHOME_NOTIFY = -11552; // Internal link num to announce arrivals and releases on
 
-integer g_iTimerOnLine  = 60;  // check every .. seconds for on-line  (timer/dataserver)
-integer g_iTimerOffLine = 15;  // check every .. seconds for off-line (timer/dataserver)
-integer g_iSensorTimer  = 3;   // check every .. seconds to see if cage owner is near (sensor)
-integer g_iMaxTPtries   = 5;   // ...until exhausted tries
+integer g_iTimerOnLine = 60;  // Check every .. seconds for on-line  (timer/dataserver)
+integer g_iTimerOffLine = 15;  // Check every .. seconds for off-line (timer/dataserver)
+integer g_iSensorTimer = 3;   // Check every .. seconds to see if cage owner is near (sensor)
+integer g_iMaxTPtries = 5;   // ...until exhausted tries
 
-// plugin settings (dont change order as listed here, it's in 'protocol order'. see defaults below)
-string  g_sCageRegion;      // landing point sim name
-vector  g_vCagePos;         // landing point within region
-vector  g_vRegionPos;       // regions global position.
+// Plugin settings (dont change order as listed here, it's in 'protocol order'. see defaults below)
+string g_sCageRegion; // Landing point sim name
+vector g_vCagePos; // Landing point within region
+vector g_vRegionPos; // Regions global position.
 
-vector  g_vLocalPos;        // used when caged
+vector  g_vLocalPos; // Used when caged
 
-integer g_iCageTime;        // Time in minutes before the wearer is released, even if the owner is still online. Can be set to 0 for no auto release
-integer g_iCageRadius;      // how far the wearer may wander from the cage point, and how close the owner must be to auto release = g_fCageRadius+1
-integer g_iWarningTime;     // how much warning in seconds the wearer gets before being tped
-integer g_iNotifyChannel;   // what channel to send captured and released messages on
-string  g_sNotifyArrive;    // the message said on g_iNotifyChannel after the wearer has been TPed to the cage home
-string  g_sNotifyRelease;   // the message said on g_iNotifyChannel after the wearer has been released from the cage home
-string  g_sWarningMessage;  // the warning message, @ is replaced by the wearer full name, and # by g_iWarningTime
+integer g_iCageTime; // Time in minutes before the wearer is released, even if the owner is still online. Can be set to 0 for no auto release
+integer g_iCageRadius; // How far the wearer may wander from the cage point, and how close the owner must be to auto release = g_fCageRadius+1
+integer g_iWarningTime; // How much warning in seconds the wearer gets before being tped
+integer g_iNotifyChannel; // What channel to send captured and released messages on
+string g_sNotifyArrive; // The message said on g_iNotifyChannel after the wearer has been TPed to the cage home
+string g_sNotifyRelease; // The message said on g_iNotifyChannel after the wearer has been released from the cage home
+string g_sWarningMessage; // The warning message, @ is replaced by the wearer full name, and # by g_iWarningTime
 
-integer g_iState;        // keep track of current state
+integer g_iState; // Keep track of current state
 integer g_iCageAuth;
-key     g_kCageOwnerKey;
+key g_kCageOwnerKey;
 
 integer g_iLoadState;
 
-// global boolean setting
-integer g_iRlvActive = TRUE; // we'll get updates from the rlv script(s)
+// Global boolean setting
+integer g_bRLVActive = TRUE; // We'll get updates from the RLV script(s)
 
-// handles
-list    g_lMenuIDs;
+// Handles
+list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
-key     g_kSimPosRequestHandle; // UUID of the dataserver request
-key     g_kOwnerRequestHandle;
+key g_kSimPosRequestHandle; // UUID of the dataserver request
+key g_kOwnerRequestHandle;
 
 integer g_iTargetHandle;
-integer g_iTpTries;      // keep track of the number of TP attempts
+integer g_iTpTries; // Keep track of the number of TP attempts
 integer g_iTimer ;
 
-key     g_kWearer;
-list    g_lLocalButtons = []; // extra buttons that we get inserted "from above"
+key g_kWearer;
+list g_lLocalButtons = []; // Extra buttons that we get inserted "from above"
 
+list STATES = ["UNSET", "DISARMED", "ARMED", "WARNING", "TELEPORT", "CAGED", "RELEASED"];
 
-list lSTATES = ["UNSET","DISARMED","ARMED","WARNING","TELEPORT","CAGED","RELEASED"];
+list g_lSetButtons = [
+    "30 min", "1 hour", "1 day",
+    "+10 min", "+1 hour", "+1 day",
+    "-10 min", "-1 hour", "-1 day",
+    "0", "1", "5",
+    "10", "+1", "+5",
+    "+10", "-1", "-5",
+    "-10"
+];
 
+list g_lNums = [
+    30, 60, 1440,
+    10, 60, 1440,
+    10, 60, 1440,
+    0, 1, 5,
+    10, 1, 5,
+    10, 1, 5,
+    10
+];
 
-Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+Notify(key kID, string sMsg, integer bAlsoNotifyWearer) {
+    llMessageLinked(LINK_DIALOG, NOTIFY, (string)bAlsoNotifyWearer + sMsg, kID);
 }
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" +
-    llDumpList2String(lChoices,"`") + "|" + llDumpList2String(lUtility,"`")+"|"+(string)iAuth,kMenuID);
-    integer i = llListFindList(g_lMenuIDs, [kID]);
-    if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
-    else g_lMenuIDs += [kID, kMenuID, sName];
+    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices,"`") + "|" + llDumpList2String(lUtility,"`") + "|" + (string)iAuth, kMenuID);
+
+    integer iIndex = llListFindList(g_lMenuIDs, [kID]);
+    if (~iIndex) {
+        g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
+    } else {
+        g_lMenuIDs += [kID, kMenuID, sName];
+    }
 }
 
 MenuMain(key kID, integer iAuth) {
     string sPrompt = "\n";
     list lButtons;
-    list lUtility = [sSETTINGS,UPMENU];
+    list lUtility = [BTN_SETTINGS, UPMENU];
 
-    if (CheckAuth(iAuth)==TRUE && iAuth<CMD_WEARER) {
-        if (g_sCageRegion=="") sPrompt +=
-            "Have your sub auto teleport and caged the moment you log on again. The sub will be released if:" +
-            "\n\tYou approach the cage\n\tYou summon the sub\n\tThe timer runs out\n";
-        if (g_iState == iDEFAULT) lButtons = [sCAGEHERE,sBLANK,sBLANK];
-        else if (g_iState == iDISARMED) {
-            if (g_sCageRegion) lButtons = [sCAGEHERE,sARM,sCLEAR];
-            else lButtons = [sCAGEHERE,sBLANK,sBLANK];
+    if (CheckAuth(iAuth) == TRUE && iAuth < CMD_WEARER) {
+        if (g_sCageRegion == "") {
+            sPrompt += "Have your sub auto teleport and caged the moment you log on again. The sub will be released if:\n\tYou approach the cage\n\tYou summon the sub\n\tThe timer runs out\n";
         }
-        else if (g_iState == iCAGED) lButtons = [sBLANK,sRELEASE,sBLANK];
-        else lButtons = [sBLANK,sDISARM,sBLANK];
-        if (g_iState < iARMED) lUtility = [sOPTIONS]+lUtility;
+
+        if (g_iState == STATE_DEFAULT) {
+            lButtons = [BTN_CAGEHERE, BTN_BLANK, BTN_BLANK];
+        } else if (g_iState == STATE_DISARMED) {
+            if (g_sCageRegion) {
+                lButtons = [BTN_CAGEHERE, BTN_ARM, BTN_CLEAR];
+            } else {
+                lButtons = [BTN_CAGEHERE, BTN_BLANK, BTN_BLANK];
+            }
+        } else if (g_iState == STATE_CAGED) {
+            lButtons = [BTN_BLANK, BTN_RELEASE, BTN_BLANK];
+        } else {
+            lButtons = [BTN_BLANK, BTN_DISARM, BTN_BLANK];
+        }
+
+        if (g_iState < STATE_ARMED) {
+            lUtility = [BTN_OPTIONS] + lUtility;
+        }
     }
+
     string sSub;
     string sOwner;
-    if (iAuth == CMD_WEARER) {sSub = "you"; sOwner = "your";}
-    else {sSub = "the sub"; sOwner = "the";}
-    sPrompt += "This feature will teleport " + sSub + " to a predefined location, set by " +
-        sOwner + " owner, once " + sOwner + " owner logs on again.\n";
 
-    sPrompt += "\nFeature currently: " + llList2String(lSTATES, g_iState) + " ";
-    if (g_iState == iCAGED) {
-        if (g_iCageTime > 0) sPrompt += " time is " + (string)g_iTimer + " min.";
-        else sPrompt += "no timer release";
+    if (iAuth == CMD_WEARER) {
+        sSub = "you";
+        sOwner = "your";
+    } else {
+        sSub = "the sub";
+        sOwner = "the";
     }
-    if (g_sCageRegion) sPrompt += "\nCage location: " + Map(g_sCageRegion, g_vCagePos);
-    if (g_kCageOwnerKey) sPrompt += "\nCage owner: " + Name(g_kCageOwnerKey);
 
-    Dialog(kID, sPrompt, lButtons+g_lLocalButtons, lUtility, 0, iAuth, "menu~main");
+    sPrompt += "This feature will teleport " + sSub + " to a predefined location, set by " + sOwner + " owner, once " + sOwner + " owner logs on again.\n";
+    sPrompt += "\nFeature currently: " + llList2String(STATES, g_iState) + " ";
+
+    if (g_iState == STATE_CAGED) {
+        if (g_iCageTime > 0) {
+            sPrompt += " time is " + (string)g_iTimer + " min.";
+        } else {
+            sPrompt += "no timer release";
+        }
+    }
+
+    if (g_sCageRegion) {
+        sPrompt += "\nCage location: " + Map(g_sCageRegion, g_vCagePos);
+    }
+
+    if (g_kCageOwnerKey) {
+        sPrompt += "\nCage owner: " + Name(g_kCageOwnerKey);
+    }
+
+    Dialog(kID, sPrompt, lButtons + g_lLocalButtons, lUtility, 0, iAuth, "menu~main");
+
     sPrompt = "";
     lButtons = [];
 }
 
 MenuSettings(key kID, integer iAuth) {
     string sPrompt = "Cage settings:\nCage Time: ";
-    if (g_iCageTime > 0) sPrompt += (string)g_iCageTime + " min";
-    else sPrompt += "no timer release";
+    if (g_iCageTime > 0) {
+        sPrompt += (string)g_iCageTime + " min";
+    } else {
+        sPrompt += "no timer release";
+    }
+
     sPrompt +=
         "\tCage Radius: " + (string)g_iCageRadius + " m" +
         "\nWarning Time: " + (string)g_iWarningTime + " sec" +
@@ -350,67 +401,93 @@ MenuSettings(key kID, integer iAuth) {
         "\nArrived Message: " + g_sNotifyArrive +
         "\nReleased Message: " + g_sNotifyRelease +
         "\nWarning Message: " + g_sWarningMessage;
-    list lButtons = llList2List(g_lMenuButtons, 6, -1);  // use settings buttons only
-    Dialog(kID, sPrompt, lButtons, [sDEFAULT,UPMENU], 0, iAuth, "menu~settings");
-    sPrompt="";
-    lButtons=[];
+
+    list lButtons = llList2List(g_lMenuButtons, 6, -1); // Use settings buttons only
+    Dialog(kID, sPrompt, lButtons, [BTN_DEFAULT, UPMENU], 0, iAuth, "menu~settings");
+
+    sPrompt = "";
+    lButtons = [];
 }
-
-list g_lSetButtons =
-["30 min","1 hour","1 day","+10 min","+1 hour","+1 day","-10 min","-1 hour","-1 day","0","1","5","10","+1","+5","+10","-1","-5","-10"];
-
-list g_lNums = [30,60,1440,10,60,1440,10,60,1440,0,1,5,10,1,5,10,1,5,10];
 
 MenuSet(key kID, integer iAuth, string sMenuButton) {
     list lButtons;
     string sPrompt = sMenuButton + ": ";
     integer i = llListFindList(g_lMenuButtons, [sMenuButton]);
-    if (i == 6) sPrompt += (string)g_iCageTime+" min";
+
+    if (i == 6) sPrompt += (string)g_iCageTime + " min";
     else if (i == 7) sPrompt += (string)g_iCageRadius + " m";
     else if (i == 8) sPrompt += (string)g_iWarningTime + " sec";
     else if (i == 9) sPrompt += (string)g_iNotifyChannel;
     else if (i == 10) sPrompt += g_sNotifyArrive;
     else if (i == 11) sPrompt += g_sNotifyRelease;
     else if (i == 12) sPrompt += g_sWarningMessage;
-    if (i == 6) lButtons = llList2List(g_lSetButtons,0,9);  // buttons for Cage ime
-    else if (6 < i < 10) lButtons = llList2List(g_lSetButtons,10,-1); // buttons for others params
-    if (i > 9) Dialog(kID,sPrompt,[],[],0,iAuth,"set~"+sMenuButton); // use textbox input directly
-    else Dialog(kID,sPrompt,lButtons,[TEXTBOX,UPMENU],0,iAuth,"set~"+sMenuButton);
-    sPrompt="";
-    lButtons=[];
+
+    if (i == 6) {
+        lButtons = llList2List(g_lSetButtons, 0, 9);  // Buttons for Cage ime
+    } else if (6 < i < 10) {
+        lButtons = llList2List(g_lSetButtons, 10, -1); // Buttons for others params
+    }
+
+    if (i > 9) {
+        Dialog(kID, sPrompt, [], [], 0, iAuth, "set~" + sMenuButton); // Use textbox input directly
+    } else {
+        Dialog(kID, sPrompt, lButtons, [TEXTBOX, UPMENU], 0, iAuth, "set~" + sMenuButton);
+    }
+
+    sPrompt = "";
+    lButtons = [];
 }
 
 Set(key kID, integer iAuth, string sMenuButton, string sButton) {
-    sButton = llStringTrim(sButton,STRING_TRIM);
-    if (sButton==TEXTBOX) Dialog(kID,sMenuButton,[],[],0,iAuth,"set~"+sMenuButton);
-    else {
+    sButton = llStringTrim(sButton, STRING_TRIM);
+    if (sButton == TEXTBOX) {
+        Dialog(kID, sMenuButton, [], [], 0, iAuth, "set~" + sMenuButton);
+    } else {
         integer iMenu = llListFindList(g_lMenuButtons, [sMenuButton]);
         if (iMenu > 9) {
             //if (sButton)
-            UserCommand(iAuth, g_sChatCmd +" "+ llList2String(g_lChatCommands,iMenu)+" "+sButton, kID);
+            UserCommand(iAuth, g_sChatCmd + " " + llList2String(g_lChatCommands, iMenu) + " " + sButton, kID);
             MenuSettings(kID, iAuth);
         } else if (iMenu < 10) {
             string sParam;
-            integer iParam ;
+            integer iParam;
+
             if (iMenu == 6) iParam = g_iCageTime;
             else if (iMenu == 7) iParam = g_iCageRadius;
             else if (iMenu == 8) iParam = g_iWarningTime;
             else if (iMenu == 9) iParam = g_iNotifyChannel;
-            integer i = llListFindList(g_lSetButtons,[sButton]);
+
+            integer i = llListFindList(g_lSetButtons, [sButton]);
             if (~i) {
-                integer iNum = llList2Integer(g_lNums,i);
-                if (llGetSubString(sButton,0,0)=="-") {
+                integer iNum = llList2Integer(g_lNums, i);
+                if (llGetSubString(sButton, 0, 0) == "-") {
                     iParam -= iNum;
-                    if (iParam<0) iParam=0;
-                } else if (llGetSubString(sButton,0,0)=="+") iParam += iNum;
-                else iParam = iNum;
+                    if (iParam < 0) {
+                        iParam = 0;
+                    }
+                } else if (llGetSubString(sButton, 0, 0)=="+") {
+                    iParam += iNum;
+                } else {
+                    iParam = iNum;
+                }
+
                 sParam = (string)iParam;
             } else {
-                if ((integer)sButton) sParam = sButton;
-                else sParam = "";
+                if ((integer)sButton) {
+                    sParam = sButton;
+                } else {
+                    sParam = "";
+                }
             }
-            if (iMenu > 6 && iMenu < 10 && sParam=="0") sParam = "";
-            if (sParam) UserCommand(iAuth, g_sChatCmd+" "+llList2String(g_lChatCommands,iMenu)+" "+sParam, kID);
+
+            if (iMenu > 6 && iMenu < 10 && sParam == "0") {
+                sParam = "";
+            }
+
+            if (sParam) {
+                UserCommand(iAuth, g_sChatCmd + " " + llList2String(g_lChatCommands, iMenu) + " " + sParam, kID);
+            }
+
             MenuSet(kID, iAuth, sMenuButton);
         }
     }
@@ -419,17 +496,17 @@ Set(key kID, integer iAuth, string sMenuButton, string sButton) {
 // Stores all settings (using the settings or database script, or whatever)
 SaveSettings() {
     string sSaveString = llDumpList2String([g_iCageTime, g_iCageRadius, g_iWarningTime, g_iNotifyChannel, g_sNotifyArrive, g_sNotifyRelease, g_sWarningMessage], "|");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_settings="+sSaveString, "");
+    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_settings=" + sSaveString, "");
 }
 
 SaveRegion() {
     string sSaveString = llDumpList2String([g_sCageRegion, g_vCagePos, g_vRegionPos], "|");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_region="+sSaveString, "");
+    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_region=" + sSaveString, "");
 }
 
 SaveState() {
-    string sSaveString = (string)g_iState+"|"+(string)g_iCageAuth+"|"+(string)g_kCageOwnerKey;
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_state="+sSaveString, "");
+    string sSaveString = (string)g_iState + "|" + (string)g_iCageAuth + "|" + (string)g_kCageOwnerKey;
+    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_state=" + sSaveString, "");
 }
 
 // Parses sValue, that we received from the settings or database script earlier,
@@ -437,12 +514,12 @@ SaveState() {
 ParseSettings(string sValue) {
     list lValues = llParseStringKeepNulls(sValue, ["|"], []);
     if (llGetListLength(lValues) == 7) {
-        g_iCageTime       = (integer)llList2String(lValues, 0);
-        g_iCageRadius     = (integer)llList2String(lValues, 1);
-        g_iWarningTime    = (integer)llList2String(lValues, 2);
-        g_iNotifyChannel  = (integer)llList2String(lValues, 3);
-        g_sNotifyArrive   = llList2String(lValues, 4);
-        g_sNotifyRelease  = llList2String(lValues, 5);
+        g_iCageTime = (integer)llList2String(lValues, 0);
+        g_iCageRadius = (integer)llList2String(lValues, 1);
+        g_iWarningTime = (integer)llList2String(lValues, 2);
+        g_iNotifyChannel = (integer)llList2String(lValues, 3);
+        g_sNotifyArrive = llList2String(lValues, 4);
+        g_sNotifyRelease = llList2String(lValues, 5);
         g_sWarningMessage = llList2String(lValues, 6);
     }
     //else Debug("parse error");
@@ -451,9 +528,9 @@ ParseSettings(string sValue) {
 ParseRegion(string sValue) {
     list lValues = llParseStringKeepNulls(sValue, ["|"], []);
     if (llGetListLength(lValues) == 3) {
-        g_sCageRegion         = llList2String(lValues, 0);
-        g_vCagePos    = (vector)llList2String(lValues, 1);
-        g_vRegionPos  = (vector)llList2String(lValues, 2);
+        g_sCageRegion = llList2String(lValues, 0);
+        g_vCagePos = (vector)llList2String(lValues, 1);
+        g_vRegionPos = (vector)llList2String(lValues, 2);
     }
 }
 
@@ -469,46 +546,70 @@ ParseState(string sValue) {
 ReportSettings(key kAv) {
     string sMsg = g_sPluginTitle + " Settings:\nLocation: ";
 
-    if (g_sCageRegion) sMsg += Map(g_sCageRegion, g_vCagePos) ;
-    else sMsg += " not set," ;
-    sMsg += "\nCurrent state: " + llList2String(lSTATES,g_iState);
-    if (g_kCageOwnerKey) sMsg += "\nCage Owner: " + Name(g_kCageOwnerKey);
+    if (g_sCageRegion) {
+        sMsg += Map(g_sCageRegion, g_vCagePos);
+    } else {
+        sMsg += " not set,";
+    }
+
+    sMsg += "\nCurrent state: " + llList2String(STATES, g_iState);
+
+    if (g_kCageOwnerKey) {
+        sMsg += "\nCage Owner: " + Name(g_kCageOwnerKey);
+    }
+
     sMsg += "\nCage Wait: ";
-    if (g_iCageTime > 0) sMsg += (string)g_iCageTime + " min";
-    else sMsg += "no timer release";
+    if (g_iCageTime > 0) {
+        sMsg += (string)g_iCageTime + " min";
+    } else {
+        sMsg += "no timer release";
+    }
+
     sMsg += "\nCage Radius: " + (string)g_iCageRadius + " m" +
         "\nWarning Time: " + (string)g_iWarningTime + " sec" +
         "\nCage Notify Channel: " + (string)g_iNotifyChannel +
         "\nArrived Message: " + g_sNotifyArrive +
         "\nReleased Message: " + g_sNotifyRelease +
         "\nWarning Message: " + g_sWarningMessage;
-    // we're using the new llRegionSayTo() instead of llInstantMessage(), for it has no delay penalty
+
+    // We're using the new llRegionSayTo() instead of llInstantMessage(), for it has no delay penalty
     // and we know kAv is near
     llRegionSayTo(kAv, 0, sMsg);
 }
 
 ShowCommands(key kID) {
-    // we're using the new llRegionSayTo() instead of llInstantMessage(), for it has no delay penalty
+    // We're using the new llRegionSayTo() instead of llInstantMessage(), for it has no delay penalty
     llRegionSayTo(kID, 0, llDumpList2String([g_sPluginTitle + " Commands:"] + g_lChatCommands, "\n"));
 }
 
-SetRlvRestrictions() {
-    SendRlvCommands(["tplm=n","tploc=n","tplure=n","tplure:"+(string)g_kCageOwnerKey+"=add", "sittp=n","rez=n"
-        // ,"standtp=n"
+SetRLVRestrictions() {
+    SendRLVCommands([
+        "tplm=n",
+        "tploc=n",
+        "tplure=n",
+        "tplure:" + (string)g_kCageOwnerKey + "=add",
+        "sittp=n",
+        "rez=n"
+        //, "standtp=n"
     ]);
 }
 
-ClearRlvRestrictions() {
-    SendRlvCommands(["tplm=y","tploc=y","tplure=y","sittp=y","rez=y"
-        // ,"standtp=y"
+ClearRLVRestrictions() {
+    SendRLVCommands([
+        "tplm=y",
+        "tploc=y",
+        "tplure=y",
+        "sittp=y",
+        "rez=y"
+        //, "standtp=y"
     ]);
 }
 
 // Sends a list of RLV-commands to the collar script(s), one by one.
-SendRlvCommands(list lRlvCommands) {
+SendRLVCommands(list lRLVCommands) {
     integer i;
-    for (i = 0; i < llGetListLength(lRlvCommands); i++) {
-        llMessageLinked(LINK_RLV, RLV_CMD, llList2String(lRlvCommands, i), "cagehome");
+    for (i = 0; i < llGetListLength(lRLVCommands); i++) {
+        llMessageLinked(LINK_RLV, RLV_CMD, llList2String(lRLVCommands, i), "cagehome");
     }
 }
 
@@ -518,8 +619,9 @@ string StrReplace(string sSource, string sSearch, string sReplace) {
 }
 
 string Name(key kID) {
-    return "secondlife:///app/agent/"+(string)kID+"/inspect";
+    return "secondlife:///app/agent/" + (string)kID + "/inspect";
 }
+
 // Returns vector vVec in a string with form "x/y/z", where x, y and z are
 // rounded down to the nearest integer.
 string Vector2UrlCoordinates(vector vVec) {
@@ -527,77 +629,96 @@ string Vector2UrlCoordinates(vector vVec) {
 }
 
 string Map(string sRegion, vector vPos) {
-    return "http://maps.secondlife.com/secondlife/" + llEscapeURL(sRegion) +"/"+ Vector2UrlCoordinates(vPos);
+    return "http://maps.secondlife.com/secondlife/" + llEscapeURL(sRegion) + "/" + Vector2UrlCoordinates(vPos);
 }
 
 // Sends a message to kActor and the wearer about the captive change (armed, released, disarmed).
 // A copy is sent to the wearer. If kActor is not the Cage Owner, the Cage Owner will receive a copy as well.
-//
 NotifyCaptiveChange(key kActor, integer iState) {
     string sActor = Name(kActor);
     string sMsg;
-    if (iState == iARMED) sMsg = sActor+" armed "+g_sPluginTitle+" for %WEARERNAME%";
-    else if (iState == iDISARMED) sMsg = sActor+" disarmed %WEARERNAME%'s "+g_sPluginTitle;
-    else if (iState == iRELEASED) sMsg = sActor+" released %WEARERNAME% from "+g_sPluginTitle;
+
+    if (iState == STATE_ARMED) {
+        sMsg = sActor + " armed " + g_sPluginTitle + " for %WEARERNAME%";
+    } else if (iState == STATE_DISARMED) {
+        sMsg = sActor +" disarmed %WEARERNAME%'s " + g_sPluginTitle;
+    } else if (iState == STATE_RELEASED) {
+        sMsg = sActor + " released %WEARERNAME% from " + g_sPluginTitle;
+    }
+
     Notify(kActor, sMsg, TRUE);
-    if (kActor != g_kCageOwnerKey) Notify(g_kCageOwnerKey, sMsg, FALSE);
+
+    if (kActor != g_kCageOwnerKey) {
+        Notify(g_kCageOwnerKey, sMsg, FALSE);
+    }
 }
 
 NotifyLocationSet(key kActor) {
-    Notify(kActor, g_sPluginTitle+" Location set to "+Map(g_sCageRegion,g_vCagePos), TRUE);
+    Notify(kActor, g_sPluginTitle + " Location set to " + Map(g_sCageRegion, g_vCagePos), TRUE);
 }
 
 CheckState() {
-    if (g_iLoadState == iCAGED) {
-        if (llGetRegionName()==g_sCageRegion && llVecDist(g_vCagePos,llGetPos()) < 10) SetState(iCAGED);
-        else SetState(iTELEPORT);
-    } else SetState(g_iLoadState);
+    if (g_iLoadState == STATE_CAGED) {
+        if (llGetRegionName() == g_sCageRegion && llVecDist(g_vCagePos, llGetPos()) < 10) {
+            SetState(STATE_CAGED);
+        } else {
+            SetState(STATE_TELEPORT);
+        }
+    } else {
+        SetState(g_iLoadState);
+    }
 }
 
 CheckTeleport() {
     //DebugCurrentState("CheckTeleport");
-    if (g_iState == iTELEPORT) {
-        if (llGetRegionName()==g_sCageRegion && llVecDist(g_vCagePos,llGetPos()) < 10) {
+    if (g_iState == STATE_TELEPORT) {
+        if (llGetRegionName() == g_sCageRegion && llVecDist(g_vCagePos,llGetPos()) < 10) {
             llSetTimerEvent(0);
             llResetTime();
-            SetState(iCAGED);
+            SetState(STATE_CAGED);
             return;
         } else {
-            //llSetTimerEvent(g_iTP_Timer); // try tp every ... seconds
-            SendRlvCommands(["tploc=y","unsit=y"]);
-            //llOwnerSay("@tpto:"+Vector2UrlCoordinates(g_vRegionPos+g_vCagePos)+"=force");
-            SendRlvCommands(["tpto:"+Vector2UrlCoordinates(g_vRegionPos+g_vCagePos)+"=force"]);
+            //llSetTimerEvent(g_iTP_Timer); // Try tp every ... seconds
+            SendRLVCommands(["tploc=y", "unsit=y"]);
+            //llOwnerSay("@tpto:" + Vector2UrlCoordinates(g_vRegionPos + g_vCagePos) + "=force");
+            SendRLVCommands(["tpto:" + Vector2UrlCoordinates(g_vRegionPos + g_vCagePos) + "=force"]);
         }
-    } else if (g_iState == iCAGED) {
-        if (llGetRegionName()!=g_sCageRegion || llVecDist(g_vCagePos,llGetPos())>10) {
+    } else if (g_iState == STATE_CAGED) {
+        if (llGetRegionName() != g_sCageRegion || llVecDist(g_vCagePos, llGetPos()) > 10) {
             // TP has been blocked, expect for summons by cage owner
-            //SetState(iRELEASED);
-            SetState(iDISARMED);
-            NotifyCaptiveChange(g_kCageOwnerKey, iRELEASED);
+            //SetState(STATE_RELEASED);
+            SetState(STATE_DISARMED);
+            NotifyCaptiveChange(g_kCageOwnerKey, STATE_RELEASED);
         }
-    } else if (g_iState == iARMED) {
-       // if (llGetRegionName()==g_sCageRegion && llVecDist(g_vCagePos,llGetPos())<10) {
-           //SetState(iCAGED);
-       // }
+    } else if (g_iState == STATE_ARMED) {
+        /*
+        if (llGetRegionName() == g_sCageRegion && llVecDist(g_vCagePos, llGetPos()) < 10) {
+            SetState(STATE_CAGED);
+        }
+        */
     }
 }
 
 SetState(integer iState) {
     @again;
     //DebugCurrentState("SetState");
-    if (iState == g_iState) return;
+
+    if (iState == g_iState) {
+        return;
+    }
+
     g_iState = iState;
-    if (iState <= iDISARMED) {
+    if (iState <= STATE_DISARMED) {
         g_iCageAuth = CMD_EVERYONE;
         g_kCageOwnerKey = "";
         llSetTimerEvent(0);
         llSensorRemove();
         llTargetRemove(g_iTargetHandle);
         llStopMoveToTarget();
-        ClearRlvRestrictions();
-    } else if (iState == iARMED) {
+        ClearRLVRestrictions();
+    } else if (iState == STATE_ARMED) {
         g_kOwnerRequestHandle = llRequestAgentData(g_kCageOwnerKey, DATA_ONLINE);
-    } else if (iState == iWARNING) {
+    } else if (iState == STATE_WARNING) {
         if (g_iWarningTime > 1) {
             string sMsg = StrReplace(g_sWarningMessage, "@", Name(g_kWearer));
             sMsg = StrReplace(sMsg, "#", (string)g_iWarningTime);
@@ -607,44 +728,58 @@ SetState(integer iState) {
             llSetObjectName(sObjectName);
             llSetTimerEvent(g_iWarningTime);
         } else {
-            iState = iTELEPORT;
+            iState = STATE_TELEPORT;
             jump again;
         }
-    } else if (iState == iTELEPORT) {
-        if (!g_iRlvActive || llGetAttached() == 0) {
+    } else if (iState == STATE_TELEPORT) {
+        if (!g_bRLVActive || llGetAttached() == 0) {
             string sMsg = g_sPluginTitle + " can not teleport %WEARERNAME% for ";
-            if (!g_iRlvActive) sMsg += "RLV was not detected.";
-            else sMsg += "%DEVICETYPE% seems not attached.";
+            if (!g_bRLVActive) {
+                sMsg += "RLV was not detected.";
+            } else {
+                sMsg += "%DEVICETYPE% seems not attached.";
+            }
             Notify(g_kCageOwnerKey, sMsg + " AddOn now disarming itself.", TRUE);
-            iState = iDISARMED;
+            iState = STATE_DISARMED;
             jump again;
         } else {
             g_iTpTries = g_iMaxTPtries;
-            llSetTimerEvent(5); // let the timer event do the TP thing
+            llSetTimerEvent(5); // Let the timer event do the TP thing
         }
-    } else if (iState == iCAGED) {
-        SetRlvRestrictions();
-        if (llGetRegionName()==g_sCageRegion) g_vLocalPos = g_vCagePos;
-        else g_vLocalPos = llGetPos();
-        Notify(g_kCageOwnerKey, "Your sub %WEARERNAME% has just been teleported by the "+g_sPluginTitle+
-            " feature and is now waiting for you at "+Map(llGetRegionName(),g_vLocalPos), FALSE);
+    } else if (iState == STATE_CAGED) {
+        SetRLVRestrictions();
+        if (llGetRegionName() == g_sCageRegion) {
+            g_vLocalPos = g_vCagePos;
+        } else {
+            g_vLocalPos = llGetPos();
+        }
+        Notify(g_kCageOwnerKey, "Your sub %WEARERNAME% has just been teleported by the " + g_sPluginTitle + " feature and is now waiting for you at " + Map(llGetRegionName(), g_vLocalPos), FALSE);
+
         g_iTargetHandle = llTarget(g_vLocalPos, (float)g_iCageRadius);
+
         string sMsg = g_sPluginTitle + " now active ";
         if (g_iCageTime > 0) {
             g_iTimer = g_iCageTime;
             llSetTimerEvent(60);
             sMsg += "on a " + (string)g_iCageTime + " minutes timer";
-        } else sMsg += "with no time limit";
+        } else {
+            sMsg += "with no time limit";
+        }
         Notify(g_kWearer, sMsg, FALSE);
-        llSensorRepeat("", g_kCageOwnerKey, AGENT, g_iCageRadius+1, PI, g_iSensorTimer);
-        if (g_iNotifyChannel != 0) llSay(g_iNotifyChannel, g_sNotifyArrive);
+
+        llSensorRepeat("", g_kCageOwnerKey, AGENT, g_iCageRadius + 1, PI, g_iSensorTimer);
+        if (g_iNotifyChannel != 0) {
+            llSay(g_iNotifyChannel, g_sNotifyArrive);
+        }
         llMessageLinked(LINK_THIS, CAGEHOME_NOTIFY, g_sNotifyArrive, "");
-    } else if (iState == iRELEASED) {
-        ClearRlvRestrictions();
+    } else if (iState == STATE_RELEASED) {
+        ClearRLVRestrictions();
         llSensorRemove();
         llStopMoveToTarget();
         llTargetRemove(g_iTargetHandle);
-        if (g_iNotifyChannel != 0) llSay(g_iNotifyChannel, g_sNotifyRelease);
+        if (g_iNotifyChannel != 0) {
+            llSay(g_iNotifyChannel, g_sNotifyRelease);
+        }
         llMessageLinked(LINK_THIS, CAGEHOME_NOTIFY, g_sNotifyRelease, "");
         llSetTimerEvent(g_iTimerOnLine);
     }
@@ -652,27 +787,40 @@ SetState(integer iState) {
     SaveState();
 }
 
-// return TRUE if Auth rank above Cage owner
+// Return TRUE if Auth rank above Cage owner
 integer CheckAuth(integer iAuth) {
-    if ((iRELEASED>g_iState>iDISARMED) && (g_iCageAuth>0) && (iAuth>g_iCageAuth)) return FALSE;
-    else return TRUE;
+    if ((STATE_RELEASED > g_iState > STATE_DISARMED) && (g_iCageAuth > 0) && (iAuth > g_iCageAuth)) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
 }
 
 UserCommand(integer iAuth, string sStr, key kID) {
-    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return;
+    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) {
+        return;
+    }
 
-    if (sStr=="menu "+g_sSubMenu || sStr==g_sSubMenu || sStr==g_sChatCmd) MenuMain(kID,iAuth);
-    else if (llToLower(sStr) == "rm cagehome") {
-        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
-        else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmcagehome");        
-    } else if (sStr == "settings") { // collar's command to request settings of all modules
-        string sMsg = g_sPluginTitle+": "+llList2String(lSTATES, g_iState);
-        if (g_sCageRegion!="") sMsg += ", TP Location: "+Map(g_sCageRegion, g_vCagePos);
+    if (sStr == "menu " + g_sSubMenu || sStr == g_sSubMenu || sStr == g_sChatCmd) {
+        MenuMain(kID, iAuth);
+    } else if (llToLower(sStr) == "rm cagehome") {
+        if (kID != g_kWearer && iAuth != CMD_OWNER) {
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+        } else {
+            Dialog(kID, "\nDo you really want to uninstall the " + g_sSubMenu + " App?", ["Yes", "No", "Cancel"], [], 0, iAuth, "rmcagehome");
+        }
+    } else if (sStr == "settings") { // Collar's command to request settings of all modules
+        string sMsg = g_sPluginTitle + ": " + llList2String(STATES, g_iState);
+        if (g_sCageRegion != "") {
+            sMsg += ", TP Location: " + Map(g_sCageRegion, g_vCagePos);
+        }
         llSleep(0.5);
         Notify(kID, sMsg, FALSE);
     } else {
         // PLUGIN CHAT g_lChatCommands
-        if (llSubStringIndex(sStr, g_sChatCmd+" ") != 0) return;
+        if (llSubStringIndex(sStr, g_sChatCmd + " ") != 0) {
+            return;
+        }
         sStr = llDeleteSubString(sStr, 0, llStringLength(g_sChatCmd));
         string sCommand = sStr;
         string sValue = "";
@@ -681,50 +829,70 @@ UserCommand(integer iAuth, string sStr, key kID) {
             sCommand = llDeleteSubString(sStr, i, -1);
             sValue = llDeleteSubString(sStr, 0, i);
         }
+
         sStr = "";
         i = llListFindList(g_lChatCommands, [sCommand]); // re-use variable i
-        if (!~i) return;
-        if (CheckAuth(iAuth)==FALSE) {
+        if (!~i) {
+            return;
+        }
+
+        if (CheckAuth(iAuth) == FALSE) {
             Notify(kID, "%NOACCESS", FALSE);
             return;
         }
+
         if (i == 0) { // chhere
-            if (g_iState <= iDISARMED) {
+            if (g_iState <= STATE_DISARMED) {
                 g_vCagePos = llGetPos();
                 g_sCageRegion = llGetRegionName();
                 g_kSimPosRequestHandle = llRequestSimulatorData(g_sCageRegion, DATA_SIM_POS);
-                // script sleep 1.0 seconds
-                if (g_iState == iDEFAULT) SetState(iDISARMED);
+                // Script sleep 1.0 seconds
+                if (g_iState == STATE_DEFAULT) {
+                    SetState(STATE_DISARMED);
+                }
                 NotifyLocationSet(kID);
-            } else Notify(kID, CANT_DO+"still armed, disarm first", FALSE);
+            } else {
+                Notify(kID, CANT_DO + "still armed, disarm first", FALSE);
+            }
         } else if (i == 1) { // charm
-            if (g_iState <= iDISARMED) {
+            if (g_iState <= STATE_DISARMED) {
                 g_kCageOwnerKey = kID;
                 g_iCageAuth = iAuth;
-                SetState(iARMED);
-                NotifyCaptiveChange(kID, iARMED);
-            } else if (g_iState >= iARMED) Notify(kID,CANT_DO+"already armed",FALSE);
-            else if (g_iState < iDISARMED) Notify(kID,CANT_DO+g_sPluginTitle+" Location not set",FALSE);
+                SetState(STATE_ARMED);
+                NotifyCaptiveChange(kID, STATE_ARMED);
+            } else if (g_iState >= STATE_ARMED) {
+                Notify(kID, CANT_DO + "already armed", FALSE);
+            } else if (g_iState < STATE_DISARMED) {
+                Notify(kID, CANT_DO + g_sPluginTitle + " Location not set", FALSE);
+            }
         } else if (i == 2) { // chdisarm
-            if (g_iState <= iDISARMED) Notify(kID,CANT_DO+"already disarmed",FALSE);
-            else if ((g_iState > iDISARMED && g_iState < iCAGED) || g_iState == iRELEASED) {
-                SetState(iDISARMED);
-                NotifyCaptiveChange(kID, iDISARMED);
-            } else if (g_iState == iCAGED) Notify(kID,CANT_DO+"release sub first",FALSE);
+            if (g_iState <= STATE_DISARMED) {
+                Notify(kID, CANT_DO + "already disarmed", FALSE);
+            } else if ((g_iState > STATE_DISARMED && g_iState < STATE_CAGED) || g_iState == STATE_RELEASED) {
+                SetState(STATE_DISARMED);
+                NotifyCaptiveChange(kID, STATE_DISARMED);
+            } else if (g_iState == STATE_CAGED) {
+                Notify(kID, CANT_DO + "release sub first", FALSE);
+            }
         } else if (i == 3) { // chrelease
-            if (g_iState >= iTELEPORT && g_iState <= iCAGED) {
-                SetState(iRELEASED);
-                NotifyCaptiveChange(kID, iRELEASED);
-            } else if (g_iState <= iWARNING) Notify(kID,CANT_DO+"sub not caged",FALSE);
-        } else if (i == 4) ReportSettings(kID); // chsettings
-        else if (i == 5) ShowCommands(kID); // chcommands
-        // next commands need an argument. check first for its existance:
-        else if (i > 5 && sValue == "") Notify(kID, "Command "+sCommand+" requires an argument", FALSE);
-        else {
-            // notify once, created with strings sDescr and sAppend:
+            if (g_iState >= STATE_TELEPORT && g_iState <= STATE_CAGED) {
+                SetState(STATE_RELEASED);
+                NotifyCaptiveChange(kID, STATE_RELEASED);
+            } else if (g_iState <= STATE_WARNING) {
+                Notify(kID, CANT_DO + "sub not caged", FALSE);
+            }
+        } else if (i == 4) {
+            ReportSettings(kID); // chsettings
+        } else if (i == 5) {
+            ShowCommands(kID); // chcommands
+        } else if (i > 5 && sValue == "") {
+            // Next commands need an argument. check first for its existance:
+            Notify(kID, "Command " + sCommand + " requires an argument", FALSE);
+        } else {
+            // Notify once, created with strings sDescr and sAppend:
             string sDescr = "";
             string sAppend = "";
-            // within this else-block: things with an argument (and then save)
+            // Within this else-block: things with an argument (and then save)
             if (i == 6) { // chcagetime
                 g_iCageTime = (integer)sValue;
                 sDescr = "Cage Wait";
@@ -752,9 +920,14 @@ UserCommand(integer iAuth, string sStr, key kID) {
                     g_sWarningMessage = sValue;
                     sDescr = "Cage Warning Message";
                 }
+
                 sAppend = "'" + sValue + "'";
             }
-            if (sDescr != "") Notify(kID, sDescr+" set to "+sAppend, TRUE);
+
+            if (sDescr != "") {
+                Notify(kID, sDescr + " set to " + sAppend, TRUE);
+            }
+
             SaveSettings();
         }
     }
@@ -762,42 +935,51 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 
 default {
-
     on_rez(integer iParam) {
-        g_iRlvActive = TRUE; // let the collar send new RLV-information upon rez
-        g_iState = iDEFAULT;
+        g_bRLVActive = TRUE; // Let the collar send new RLV-information upon rez
+        g_iState = STATE_DEFAULT;
     }
 
     state_entry() {
-        g_iState = iDEFAULT;
+        g_iState = STATE_DEFAULT;
         g_iCageAuth = CMD_EVERYONE;
         g_kWearer = llGetOwner();
-        ParseSettings(g_sDefaultSettings); // default settings do not include the home location
+        ParseSettings(g_sDefaultSettings); // Default settings do not include the home location
         //DebugCurrentStateFreeMemory();
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum,sStr,kID);
-        else if (iNum == RLV_REFRESH && g_iState == iCAGED) SetRlvRestrictions();
-        else if (iNum == RLV_VERSION) g_iRlvActive = TRUE;
-        else if (iNum == RLV_CLEAR && g_iState == iCAGED) SetState(iRELEASED);
-        else if (iNum == RLV_ON) g_iRlvActive = TRUE;
-        else if (iNum == RLV_OFF) g_iRlvActive = FALSE;
-        else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+g_sSubMenu, "");
-            g_lLocalButtons = [] ; // flush submenu buttons
+        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
+            UserCommand(iNum,sStr,kID);
+        } else if (iNum == RLV_REFRESH && g_iState == STATE_CAGED) {
+            SetRLVRestrictions();
+        } else if (iNum == RLV_VERSION) {
+            g_bRLVActive = TRUE;
+        } else if (iNum == RLV_CLEAR && g_iState == STATE_CAGED) {
+            SetState(STATE_RELEASED);
+        } else if (iNum == RLV_ON) {
+            g_bRLVActive = TRUE;
+        } else if (iNum == RLV_OFF) {
+            g_bRLVActive = FALSE;
+        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
+            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            g_lLocalButtons = []; // Flush submenu buttons
             llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubMenu, "");
-        } else if (iNum == MENUNAME_RESPONSE) { // a button is sent to be added to a menu
+        } else if (iNum == MENUNAME_RESPONSE) { // A button is sent to be added to a menu
             list lParts = llParseString2List(sStr, ["|"], []);
-            if (llList2String(lParts, 0) == g_sSubMenu) { // someone wants to stick something in our menu
-                string button = llList2String(lParts, 1);
-                if (llListFindList(g_lLocalButtons,[button])==-1) g_lLocalButtons=llListSort(g_lLocalButtons+[button],1,TRUE);
+            if (llList2String(lParts, 0) == g_sSubMenu) { // Someone wants to stick something in our menu
+                string sButton = llList2String(lParts, 1);
+                if (llListFindList(g_lLocalButtons, [sButton]) == -1) {
+                    g_lLocalButtons = llListSort(g_lLocalButtons + [sButton], 1, TRUE);
+                }
             }
-        } else if (iNum == MENUNAME_REMOVE) { // a button is sent to be added to a menu
+        } else if (iNum == MENUNAME_REMOVE) { // A button is sent to be added to a menu
             list lParts = llParseString2List(sStr, ["|"], []);
             if (llList2String(lParts, 0) == g_sSubMenu) {
-                integer i = llListFindList(g_lLocalButtons,[llList2String(lParts, 1)]);
-                if (~i) g_lLocalButtons=llDeleteSubList(g_lLocalButtons, i, i);
+                integer iIndex = llListFindList(g_lLocalButtons, [llList2String(lParts, 1)]);
+                if (~iIndex) {
+                    g_lLocalButtons = llDeleteSubList(g_lLocalButtons, iIndex, iIndex);
+                }
             }
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -807,30 +989,39 @@ default {
             else if (sToken == "cagehome_region") ParseRegion(sValue);
             else if (sToken == "cagehome_state") ParseState(sValue);
             else if (sStr == "settings=sent") CheckState();
-        } else if (iNum == CMD_SAFEWORD && g_iState == iCAGED) {
-            SetState(iRELEASED);
-            NotifyCaptiveChange(g_kCageOwnerKey, iRELEASED);
+        } else if (iNum == CMD_SAFEWORD && g_iState == STATE_CAGED) {
+            SetState(STATE_RELEASED);
+            NotifyCaptiveChange(g_kCageOwnerKey, STATE_RELEASED);
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (iMenuIndex == -1) return;
-            string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-            // got a menu response meant for us, extract the sValues
+            if (iMenuIndex == -1) {
+                return;
+            }
+
+            string sMenu = llList2String(g_lMenuIDs, iMenuIndex + 1);
+            // Got a menu response meant for us, extract the sValues
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             key kAv = (key)llList2String(lMenuParams, 0);
             string sMsg = llList2String(lMenuParams, 1);
             //integer iPage = (integer)llList2String(lMenuParams, 2);
             integer iAuth = (integer)llList2String(lMenuParams, 3);
+
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+
             if (sMenu == "menu~main") {
-                // request to change to parent menu
-                if (sMsg == UPMENU) llMessageLinked(LINK_THIS,iAuth,"menu "+g_sParentMenu,kAv);
-                else if (~llListFindList(g_lLocalButtons,[sMsg])) llMessageLinked(LINK_THIS,iAuth,"menu "+sMsg,kAv);
-                else if (sMsg == sOPTIONS) MenuSettings(kAv, iAuth);
-                else {
+                // Request to change to parent menu
+                if (sMsg == UPMENU) {
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
+                } else if (~llListFindList(g_lLocalButtons, [sMsg])) {
+                    llMessageLinked(LINK_THIS, iAuth, "menu " + sMsg, kAv);
+                } else if (sMsg == BTN_OPTIONS) {
+                    MenuSettings(kAv, iAuth);
+                } else {
                     integer i = llListFindList(g_lMenuButtons, [sMsg]);
-                    if (~i) UserCommand(iAuth, g_sChatCmd+" "+llList2String(g_lChatCommands, i), kAv);
-                    else if (sMsg == sCLEAR && g_iState == iDISARMED) {
-                        g_iState = iDEFAULT;
+                    if (~i) {
+                        UserCommand(iAuth, g_sChatCmd + " " + llList2String(g_lChatCommands, i), kAv);
+                    } else if (sMsg == BTN_CLEAR && g_iState == STATE_DISARMED) {
+                        g_iState = STATE_DEFAULT;
                         g_iCageAuth = CMD_EVERYONE;
                         g_kCageOwnerKey = NULL_KEY;
                         g_sCageRegion = "";
@@ -839,90 +1030,116 @@ default {
                         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "cagehome_state", "");
                         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "cagehome_region", "");
                     }
+
                     MenuMain(kAv, iAuth);
                 }
             } else if (sMenu == "menu~settings") {
-                if (sMsg == UPMENU) MenuMain(kAv, iAuth);
-                else if (sMsg == sDEFAULT) {
+                if (sMsg == UPMENU) {
+                    MenuMain(kAv, iAuth);
+                } else if (sMsg == BTN_DEFAULT) {
                     ParseSettings(g_sDefaultSettings);
                     SaveSettings();
                     MenuSettings(kAv, iAuth);
-                } else MenuSet(kAv, iAuth, sMsg);
-            } else if (llSubStringIndex(sMenu,"set~") == 0) {
-                string sMenuButton = llDeleteSubString(sMenu,0,llStringLength("set~")-1);
-                if (sMsg == UPMENU) MenuSettings(kAv, iAuth);
-                else Set(kAv, iAuth, sMenuButton, sMsg);
+                } else {
+                    MenuSet(kAv, iAuth, sMsg);
+                }
+            } else if (llSubStringIndex(sMenu, "set~") == 0) {
+                string sMenuButton = llDeleteSubString(sMenu, 0, llStringLength("set~") - 1);
+                if (sMsg == UPMENU) {
+                    MenuSettings(kAv, iAuth);
+                } else {
+                    Set(kAv, iAuth, sMenuButton, sMsg);
+                }
             } else if (sMenu == "rmcagehome") {
                 if (sMsg == "Yes") {
-                    llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                    llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
-                if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
-            }         
+                    llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "1" + g_sSubMenu + " App has been removed.", kAv);
+
+                    if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) {
+                        llRemoveInventory(llGetScriptName());
+                    }
+                } else {
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "0" + g_sSubMenu + " App remains installed.", kAv);
+                }
+            }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
+            if (~iMenuIndex) {
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            }
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        } else if (iNum == REBOOT && sStr == "reboot") {
+            llResetScript();
+        }
     }
 
     dataserver(key kQueryid, string data) {
         if (kQueryid == g_kSimPosRequestHandle) {
             g_vRegionPos = (vector)data;
             SaveRegion();
-        } else if (kQueryid == g_kOwnerRequestHandle) { // cage owner went offline
+        } else if (kQueryid == g_kOwnerRequestHandle) { // Cage owner went offline
             if (data == "0") {
                 llSetTimerEvent(g_iTimerOffLine);
-                SetState(iARMED);
+                SetState(STATE_ARMED);
             }
-            if (data == "1" && g_iState != iRELEASED) {
+            if (data == "1" && g_iState != STATE_RELEASED) {
                 llSetTimerEvent(g_iTimerOnLine);
-                SetState(iWARNING);
+                SetState(STATE_WARNING);
             }
         }
     }
 
     timer() {
-        if (g_iState == iARMED || g_iState == iRELEASED) {
+        if (g_iState == STATE_ARMED || g_iState == STATE_RELEASED) {
             g_kOwnerRequestHandle = llRequestAgentData(g_kCageOwnerKey, DATA_ONLINE);
-        } else if (g_iState == iWARNING) SetState(iTELEPORT);
-        else if (g_iState == iTELEPORT) {
+        } else if (g_iState == STATE_WARNING) {
+            SetState(STATE_TELEPORT);
+        } else if (g_iState == STATE_TELEPORT) {
             if (g_iTpTries > 0) {
                 g_iTpTries--;
                 CheckTeleport();
             } else {
                 Notify(g_kWearer, "Number of TP tries exhausted. Caging you here.", FALSE);
-                SetState(iCAGED);
+                SetState(STATE_CAGED);
             }
-        } else if (g_iState == iCAGED) {
+        } else if (g_iState == STATE_CAGED) {
             g_iTimer--;
             if (g_iTimer <= 0) {
-                Notify(g_kCageOwnerKey, "Time's up! %WEARERNAME% released from "+g_sPluginTitle, TRUE);
-                SetState(iRELEASED);
+                Notify(g_kCageOwnerKey, "Time's up! %WEARERNAME% released from " + g_sPluginTitle, TRUE);
+                SetState(STATE_RELEASED);
             }
         }
     }
 
     changed(integer iChange) {
-        if (iChange & CHANGED_OWNER) llResetScript();
-        if (iChange & CHANGED_TELEPORT) CheckTeleport();
+        if (iChange & CHANGED_OWNER) {
+            llResetScript();
+        }
+
+        if (iChange & CHANGED_TELEPORT) {
+            CheckTeleport();
+        }
     }
 
     sensor(integer iNum) {
-        if (g_iState == iCAGED) {
-            Notify(g_kCageOwnerKey, "%WEARERNAME% released from "+g_sPluginTitle, TRUE);
-            SetState(iRELEASED);
+        if (g_iState == STATE_CAGED) {
+            Notify(g_kCageOwnerKey, "%WEARERNAME% released from " + g_sPluginTitle, TRUE);
+            SetState(STATE_RELEASED);
         }
     }
 
     not_at_target() {
-        if (g_iState == iCAGED) llMoveToTarget(g_vLocalPos, 0.5);
+        if (g_iState == STATE_CAGED) {
+            llMoveToTarget(g_vLocalPos, 0.5);
+        }
     }
 
     at_target(integer iNum, vector vTargetPos, vector vOurPos) {
-        if (g_iState == iCAGED) llStopMoveToTarget();
+        if (g_iState == STATE_CAGED) {
+            llStopMoveToTarget();
+        }
     }
 }
