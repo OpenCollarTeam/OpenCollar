@@ -220,7 +220,7 @@ UpdateConfirmMenu() {
 HelpMenu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar Version: " + g_sCollarVersion + g_sDevStage;
     sPrompt += "\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: " + g_sSafeWord;
-    sPrompt += "\n\nDocumentation: https://github.com/OpenCollarTeam/OpenCollar/wiki";
+    sPrompt += "\n\nDocumentation: https://opencollar.cc/";
     if (!g_bLatestVersion) {
         sPrompt += "\n\n[Update available!]";
     }
