@@ -2,7 +2,7 @@
 // Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
 // Joy Stipe, Cleo Collins, Satomi Ahn, Master Starship, Toy Wylie,    
 // Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
-// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
+// Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow , tiff589, et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
@@ -118,7 +118,7 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }
 */
-
+integer g_iFinalUnleashTimestamp;
 string NameURI(key kID){
     if (llGetAgentSize(kID))
         return "secondlife:///app/agent/"+(string)kID+"/about";
@@ -314,6 +314,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints) {
     // change to llTarget events by Lulu Pink
     g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo, [OBJECT_POS]), 0);
     //to prevent multiple target events and llMoveToTargets
+    
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
@@ -393,7 +394,8 @@ YankTo(key kIn){
     llSleep(2.0);
     llStopMoveToTarget();
 }
-
+key g_kFormerlyLeashedTo;
+integer g_iFinalUnleashTimestampNotSet=1;
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_EVERYONE) {
@@ -563,7 +565,8 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         }
     }
 }
-
+key g_kLHOC;
+integer g_iLHOC;
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
@@ -613,6 +616,47 @@ default {
             //slow down the sensor:
                 g_iAwayCounter = 1;
                 llSetTimerEvent(11.0);
+            }
+        }
+        // check leash holder online status
+        if(g_bLeashedToAvi&&g_iLHOC<=0 && llGetOwnerKey(g_kLeashedTo) == g_kLeashedTo){ // if ticks and not object
+            g_iLHOC = 60; // should be 60 ticks
+            g_kFormerlyLeashedTo = g_kLeashedTo;
+            g_kLHOC =  llRequestAgentData(g_kLeashedTo, DATA_ONLINE);
+        } else
+            g_iLHOC--;
+            
+        if(g_iFinalUnleashTimestamp>0 && g_iLHOC<=0){
+            g_kLHOC= llRequestAgentData(g_kFormerlyLeashedTo,DATA_ONLINE);
+        }else
+            g_iLHOC--;
+            
+        
+        if(llGetUnixTime()>g_iFinalUnleashTimestamp && g_iFinalUnleashTimestampNotSet==FALSE){
+            g_iFinalUnleashTimestampNotSet=TRUE;
+            g_kFormerlyLeashedTo=NULL_KEY;
+            g_iFinalUnleashTimestamp=0;
+            llOwnerSay("Leash target is gone. Time is up");
+            
+        }
+    }
+    
+    dataserver(key r, string d){
+        if(r == g_kLHOC && g_kLeashedTo!=NULL_KEY){
+            if((integer)d ==FALSE){
+                if(g_iFinalUnleashTimestampNotSet){
+                    g_iFinalUnleashTimestampNotSet=FALSE;
+                    g_iFinalUnleashTimestamp = llGetUnixTime()+(5*60);
+                    llOwnerSay("Leash Target is gone. You will be re-leashed if the target reappears within five minutes.");
+                } else
+                    llOwnerSay("Leash Target is gone. You will be unleashed.");
+                llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kLeashedTo);
+            }
+        } else if(r==g_kLHOC && g_kLeashedTo == NULL_KEY){
+            if((integer)d == TRUE){
+                llOwnerSay("Leash Target found. Leashing now.");
+                llMessageLinked(LINK_SET, CMD_OWNER, "leash", g_kFormerlyLeashedTo);
+                g_kFormerlyLeashedTo=NULL_KEY;
             }
         }
     }
@@ -740,6 +784,9 @@ default {
     }
 
     not_at_target() {
+        
+        // Check z height of wearer and target. If above by more than 0.5, set target length to 0.1
+        
         g_iJustMoved = 1;
         // i ran into a problem here which seems to be "speed" related, specially when using the menu to unleash this event gets triggered together or just after the CleanUp() function
         //to prevent to get stay in the target events i added a check on g_kLeashedTo is NULL_KEY
@@ -748,13 +795,11 @@ default {
             if (g_vPos != vNewPos) {
                 llTargetRemove(g_iTargetHandle);
                 g_vPos = vNewPos;
+                
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
-            if (g_vPos != ZERO_VECTOR){
-                vector currentPos = llGetPos();
-                g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
-                llMoveToTarget(g_vPos,1.0);
-            }
+            if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos,1.0);
+            
             else llStopMoveToTarget();
         } else {
             DoUnleash(FALSE);
