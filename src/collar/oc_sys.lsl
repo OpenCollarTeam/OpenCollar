@@ -218,7 +218,6 @@ UpdateConfirmMenu() {
 }
 
 HelpMenu(key kID, integer iAuth) {
-<<<<<<< HEAD
     string sPrompt = "\nOpenCollar Version: " + g_sCollarVersion + g_sDevStage;
     sPrompt += "\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: " + g_sSafeWord;
     sPrompt += "\n\nDocumentation: https://opencollar.cc/";

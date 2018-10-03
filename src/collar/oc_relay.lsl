@@ -593,7 +593,7 @@ CleanQueue() {
         integer iAuth = Auth(kObj, kUser);
         if (~llListFindList(lOnHold, [kObj])) {
             ++i;
-        } else if (iAuth == 1 && (kUser != NULL_KEY || !nGotWho)) { // !x-who/NULL_KEY means unknown user
+        } else if (iAuth == 1 && (kUser != NULL_KEY || !bGotWho)) { // !x-who/NULL_KEY means unknown user
             g_lQueue = llDeleteSubList(g_lQueue, i, i + QSTRIDES - 1); // DeleteQItem(i);
             HandleCommand(sIdent, kObj, sCommand, TRUE);
         } else if(iAuth == -1) {
@@ -963,7 +963,7 @@ default {
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
         if (iChannel == SAFETY_CHANNEL) {
-            llMessageLinked(LINK_DIALOG, NOTIFY, "0\n\n⚠ " + sWho + " detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use "+who+" anyway, type \"/%CHANNEL% %PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL% %PREFIX% rm relay\" to permanently uninstall the relay plugin.\n", g_kWearer);
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0\n\n⚠ " + sWho + " detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use " + sWho + " anyway, type \"/%CHANNEL% %PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL% %PREFIX% rm relay\" to permanently uninstall the relay plugin.\n", g_kWearer);
             llRegionSayTo(g_kWearer, SAFETY_CHANNEL, "SafetyDenied!");
         }
 
