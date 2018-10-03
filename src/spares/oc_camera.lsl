@@ -87,7 +87,7 @@ Debug(string sStr) {
 // vectors get converted into strings and need to be reconverted to vectors.
 // For this to work easiest seems to just put for any mode which contains a vector,
 // the vector as last entry (if there shall be a mode which contains 2 vectors,
-// this needs to be addressed and handles as excetion in the list JsonModes function
+// this needs to be addressed and handles as excetion in the list JsonModeToList function
 string JsonModes() {
     string sDefault = llList2Json(JSON_ARRAY, [
         CAMERA_ACTIVE, FALSE
@@ -152,7 +152,7 @@ string JsonModes() {
     ]);
 }
 
-list JsonModes(string sMode) {
+list JsonModeToList(string sMode) {
     string sJsonTmp = llJsonGetValue(g_sJsonModes, [sMode]);
     list lTest = llJson2List(sJsonTmp);
     integer iIndex = llGetListLength(lTest) - 1;
@@ -177,7 +177,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 CamMode(string sMode) {
     llClearCameraParams();
-    llSetCameraParams(JsonModes(sMode));
+    llSetCameraParams(JsonModeToList(sMode));
 }
 
 ClearCam() {
