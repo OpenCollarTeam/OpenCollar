@@ -1,9 +1,23 @@
-// This file is part of OpenCollar.
-// Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,  
-// Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy, Romka Swallowtail, 
-// Sumi Perl et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                              occ_sys                                           //
+//                              version 7.1000                                    //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+// and other virtual metaverse environments.                                      //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2013 - 2018  OpenNC                                                        //
+// ©   2018 -       North Glenwalker and OpenCollar                               //
+////////////////////////////////////////////////////////////////////////////////////
 
+// change here for OS and IW grids
+string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
+string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
+string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
+
+// Do not change anything below here
 
 //on start, send request for submenu names
 //on getting submenu name, add to list if not already present
@@ -23,18 +37,10 @@ integer g_iMenuStride = 3;
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
-//integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED = 520;
 
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
-//integer SAY = 1004;
 
 integer REBOOT = -1000;
 integer LINK_AUTH = 2;
@@ -46,7 +52,6 @@ integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -55,6 +60,8 @@ integer MENUNAME_REMOVE = 3003;
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+
+integer LM_CUFF_CMD = -551001; // cuff command channel
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -68,29 +75,14 @@ string CONTACT = "Contact";
 string LICENSE = "License";
 
 list OC_SCRIPTS = [
-    "oc_anim",
     "oc_auth",
-    "oc_bell",
-    "oc_bookmarks",
-    "oc_capture",
     "oc_com",
-    "oc_couples",
     "oc_dialog",
-    "oc_exceptions",
-    "oc_folders",
-    "oc_label",
     "oc_leash",
-    "oc_meshlabel",
-    "oc_meshthemes",
     "oc_particle",
-    "oc_relay",
-    "oc_resizer",
-    "oc_rlvsuite",
-    "oc_rlvsys",
     "oc_settings",
     "oc_sys",
-    "oc_themes",
-    "oc_titler"
+    "oc_themes"
 ];
 
 key g_kWebLookup;
@@ -111,10 +103,6 @@ list g_lClosedLockElements; //to store the locks prim to hide or show //EB
 list g_lOpenLockElements; //to store the locks prim to hide or show //EB
 list g_lClosedLockGlows;
 list g_lOpenLockGlows;
-string g_sDefaultLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sDefaultUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
-string g_sLockSound="dec9fb53-0fef-29ae-a21d-b3047525d312";
-string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
@@ -150,13 +138,92 @@ string g_sGlobalToken = "global_";
 integer g_iWaitUpdate;
 integer g_iWaitRebuild;
 
+//size adust
+float MIN_DIMENSION=0.001; // the minimum scale of a prim allowed, in any dimension
+float MAX_DIMENSION=1.0; // the maximum scale of a prim allowed, in any dimension
+float max_scale;
+float min_scale;
+float   cur_scale = 1.0;
+integer handle;
+integer menuChan;
+float min_original_scale=10.0; // minimum x/y/z component of the scales in the linkset
+float max_original_scale=0.0; // minimum x/y/z component of the scales in the linkset
+list link_scales = [];
+list link_positions = [];
+integer resize = TRUE; //Disable Resize when false
+ 
+makeMenu()
+{
+    llDialog(g_kWearer,"Max scale: "+(string)max_scale+"\nMin scale: "+(string)min_scale+"\n \nCurrent scale: "+
+        (string)cur_scale,["-0.01","-0.05","MIN  SIZE","+0.01","+0.05","MAX  SIZE","-0.10","-0.25","RESTORE","+0.10","+0.25"],menuChan);
+}
+ 
+integer scanLinkset()
+{
+    integer link_qty = llGetNumberOfPrims();
+    integer link_idx;
+    vector link_pos;
+    vector link_scale;
+    //script made specifically for linksets, not for single prims
+    if (link_qty > 1)
+    {
+        //link numbering in linksets starts with 1
+        for (link_idx=1; link_idx <= link_qty; link_idx++)
+        {
+            link_pos=llList2Vector(llGetLinkPrimitiveParams(link_idx,[PRIM_POSITION]),0);
+            link_scale=llList2Vector(llGetLinkPrimitiveParams(link_idx,[PRIM_SIZE]),0);
+            // determine the minimum and maximum prim scales in the linkset,
+            // so that rescaling doesn't fail due to prim scale limitations
+            if(link_scale.x<min_original_scale) min_original_scale=link_scale.x;
+            else if(link_scale.x>max_original_scale) max_original_scale=link_scale.x;
+            if(link_scale.y<min_original_scale) min_original_scale=link_scale.y;
+            else if(link_scale.y>max_original_scale) max_original_scale=link_scale.y;
+            if(link_scale.z<min_original_scale) min_original_scale=link_scale.z;
+            else if(link_scale.z>max_original_scale) max_original_scale=link_scale.z;
+            link_scales    += [link_scale];
+            link_positions += [(link_pos-llGetRootPosition())/llGetRootRotation()];
+        }
+    }
+    else
+    {
+        llOwnerSay("error: this script doesn't work for non-linked objects");
+        return FALSE;
+    }
+    max_scale = MAX_DIMENSION/max_original_scale;
+    min_scale = MIN_DIMENSION/min_original_scale;
+    return TRUE;
+}
+ 
+resizeObject(float scale)
+{
+    integer link_qty = llGetNumberOfPrims();
+    integer link_idx;
+    vector new_size;
+    vector new_pos;
+    if (link_qty > 1)
+    {
+        //link numbering in linksets starts with 1
+        for (link_idx=1; link_idx <= link_qty; link_idx++)
+        {
+            new_size   = scale * llList2Vector(link_scales, link_idx-1);
+            new_pos    = scale * llList2Vector(link_positions, link_idx-1);
+            if (link_idx == 1)
+                //because we don't really want to move the root prim as it moves the whole object
+                llSetLinkPrimitiveParamsFast(link_idx, [PRIM_SIZE, new_size]);
+            else
+                llSetLinkPrimitiveParamsFast(link_idx, [PRIM_SIZE, new_size, PRIM_POSITION, new_pos]);
+        }
+    }
+}
+//end of size adjust
+
 integer compareVersions(string v1, string v2) { //compares two symantic version strings, true if v1 >= v2
     integer v1Index=llSubStringIndex(v1,".");
     integer v2Index=llSubStringIndex(v2,".");
     integer v1a=(integer)llGetSubString(v1,0,v1Index);
     integer v2a=(integer)llGetSubString(v2,0,v2Index);
     if (v1a == v2a) {
-        if (~v1Index || ~v2Index) {
+        if (v1Index != -1 || v2Index != -1) {
             string v1b;
             if (v1Index == -1 || v1Index==llStringLength(v1)) v1b="0";
             else v1b=llGetSubString(v1,v1Index+1,-1);
@@ -204,7 +271,7 @@ UpdateConfirmMenu() {
 HelpMenu(key kID, integer iAuth) {
     string sPrompt="\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage;
     sPrompt+="\n\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
-    sPrompt+="\n\nDocumentation: https://opencollar.cc/";
+    sPrompt+="\n\nDocumentation: https://github.com/OpenCollarTeam/OpenCollar/wiki";
     if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
@@ -254,7 +321,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
     } else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/LICENSE here].",kID);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this cuff. Please find the recent revision [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/LICENSE here].",kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sStr == "help") {
         llGiveInventory(kID, HELPCARD);
@@ -283,7 +350,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_RLV, RLV_CMD, "detach=n", "main");
             llPlaySound(g_sLockSound, 1.0);
             SetLockElementAlpha();//EB
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been locked.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s cuff has been locked.",kID);
+            llMessageLinked(LINK_ROOT,LM_CUFF_CMD,"Lock=on","");//Line added to control slave cuffs locks
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);;
         if (fromMenu) MainMenu(kID, iNum);
@@ -295,7 +363,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_RLV, RLV_CMD, "detach=y", "main");
             llPlaySound(g_sUnlockSound, 1.0);
             SetLockElementAlpha(); //EB
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been unlocked.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s cuff has been unlocked.",kID);
+            llMessageLinked(LINK_ROOT,LM_CUFF_CMD,"Lock=off","");//line added to control slave cuffs locks
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
         if (fromMenu) MainMenu(kID, iNum);
@@ -333,7 +402,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             g_iWaitUpdate = TRUE;
             llSetTimerEvent(5.0); //set a timer to wait for responses from updaters
         } else {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Only the wearer can update the %DEVICETYPE%.",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Only the wearer can update the cuff.",kID);
             if (fromMenu) HelpMenu(kID, iNum);
         }
     } else if (!llSubStringIndex(sStr,".- ... -.-")) {
@@ -350,19 +419,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")";
         if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
-    }/* else if (sCmd == "objectversion") {
-        // ping from an object, we answer to it on the object channel
-        // inlined single use GetOwnerChannel(key kOwner, integer iOffset) function
-        integer iChan = (integer)("0x"+llGetSubString((string)g_kWearer,2,7)) + 1111;
-        if (iChan>0) iChan=iChan*(-1);
-        if (iChan > -10000) iChan -= 30000;
-        llSay(iChan,(string)g_kWearer+"\\version="+g_sCollarVersion);
-    } else if (sCmd == "attachmentversion") {
-        // Reply to version request from "garvin style" attachment
-        integer iInterfaceChannel = (integer)("0x" + llGetSubString(g_kWearer,30,-1));
-        if (iInterfaceChannel > 0) iInterfaceChannel = -iInterfaceChannel;
-        llRegionSayTo(g_kWearer, iInterfaceChannel, "version="+g_sCollarVersion);
-    }*/
+    }
 }
 
 string GetTimestamp() { // Return a string of the date and time
@@ -492,7 +549,7 @@ RebuildMenu() {
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
-    llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
+    llMessageLinked(LINK_SET, LINK_UPDATE,"LINK_REQUEST","");
 }
 
 init (){
@@ -500,6 +557,10 @@ init (){
     g_iWaitRebuild = TRUE;
     PermsCheck();
     llSetTimerEvent(1.0);
+    //resize
+    llListenRemove(handle);
+    menuChan = 50000 + (integer)llFrand(50000.00);
+    handle = llListen(menuChan,"",g_kWearer,"");
 }
 
 StartUpdate(){
@@ -515,8 +576,23 @@ default {
             news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
         init();
-        //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
-        //Debug("Starting");
+        if (scanLinkset())
+        { // llOwnerSay("resizer script ready");
+        }
+    }
+    
+    touch_start(integer num)//so we can touch the cuff
+    {
+        key id = llDetectedKey(0);
+        if ((llGetAttached() == 0)&& (id == g_kWearer)) // If not attached then wake up update script then do nothing
+        {
+            llSetScriptState("OpenNC - update",TRUE);
+            return;
+        }
+        if (id == g_kWearer && resize == TRUE)// if we are wearer then allow to resize
+            llDialog(g_kWearer,"Select if you want to Resize this item or the main Cuff Menu ",["Resizer","Cuff Menu", "Disable Resize"],menuChan);
+        else
+            llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", id);//else just give cuff menu
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -673,12 +749,6 @@ default {
             llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
             BuildLockElementList(); // need rebuils lockelements list
         }
-     /*  if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }*/
     }
 
     attach(key kID) {
@@ -714,7 +784,7 @@ default {
     }
 
     listen(integer channel, string name, key id, string message) {
-        if (llGetOwnerKey(id) == g_kWearer) {   //collar and updater have to have the same Owner else do nothing!
+        if (llGetOwnerKey(id) == g_kWearer && channel == g_iUpdateChan) {   //collar and updater have to have the same Owner else do nothing!
             list lTemp = llParseString2List(message, ["|"],[]);
             string sCommand = llList2String(lTemp, 0);
             string sOption = llList2String(lTemp, 1);
@@ -730,6 +800,36 @@ default {
                 }
             }
         }
+        if (id == g_kWearer && channel == menuChan)
+        {
+            if (message == "Cuff Menu")
+                llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", id);
+            else if (message == "Disable Resize")
+            {
+                llListenRemove(menuChan);
+                resize = FALSE;
+            }
+            else if (message == "Resizer")
+                makeMenu();
+            else
+            {
+                if (message == "RESTORE")
+                    cur_scale = 1.0;
+                else if (message == "MIN SIZE")
+                    cur_scale = min_scale;
+                else if (message == "MAX SIZE")
+                    cur_scale = max_scale;
+                else
+                    cur_scale += (float)message;
+                //check that the scale doesn't go beyond the bounds
+                if (cur_scale > max_scale)
+                    cur_scale = max_scale;
+                if (cur_scale < min_scale)
+                    cur_scale = min_scale;
+                resizeObject(cur_scale);
+                makeMenu();
+            }
+        }
     }
 
     timer() {
@@ -742,7 +842,6 @@ default {
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
             } else StartUpdate();  //update
-           // else UpdateConfirmMenu();  //perform update
         }
         if (g_iWaitRebuild) {
             g_iWaitRebuild = FALSE;

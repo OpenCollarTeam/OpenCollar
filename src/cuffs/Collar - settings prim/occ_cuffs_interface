@@ -1,0 +1,224 @@
+////////////////////////////////////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------ //
+//                            occ_cuffs_interface                                 //
+//                            version 7.1000                                      //
+// ------------------------------------------------------------------------------ //
+// Licensed under the GPLv2 with additional requirements specific to Second Life® //
+//                   and other virtual metaverse environments.                    //
+// ------------------------------------------------------------------------------ //
+// ©   2008 - 2013  Individual Contributors and OpenCollar - submission set free™ //
+// ©   2013 - 2018  OpenNC North Glenwalker                                       //
+// ©   2018 -       OpenCollar North Glenwalker                                   //
+////////////////////////////////////////////////////////////////////////////////////
+
+integer    g_nCmdHandle    = 0;            // command listen handler
+integer g_nCmdChannelOffset = 0xCC0CC;       // offset to be used to make sure we do not interfere with other items using the same technique for
+integer CUFF_CHANNEL; //custom channel to send to cuffs (our channel +1)
+
+key kID;
+string submenu = "Cuffs";
+string parentmenu = "Apps";
+key g_kDialogID;
+list localbuttons = ["Cuff Menu", "ReSync"];
+
+// chat command for opening the menu of the cuffs directly
+key wearer;
+string TURNON = "Sync  ON";
+string TURNOFF = "Sync OFF";
+string HIDEON = "Hide Cuffs";
+string HIDEOFF = "Show Cuffs";
+integer sync;
+integer hide = FALSE;
+integer wait = FALSE; //maybe not needed now but will leave in for this release
+//MESSAGE MAP
+integer COMMAND_OWNER = 500;
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;
+integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_RESPONSE = 3001;
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+string UPMENU = "BACK";
+
+key Dialog(key rcpt, string prompt, list choices, list utilitybuttons, integer page)
+{
+    key id = llGenerateKey();
+    llMessageLinked(LINK_ALL_OTHERS, DIALOG, (string)rcpt + "|" + prompt + "|" + (string)page + "|" + llDumpList2String(choices, "`") + "|" + llDumpList2String(utilitybuttons, "`"), id);
+    return id;
+}
+
+DoMenu(key id) //build our menu here
+{
+    string prompt = "\n\nCollar to Cuff interface\n";
+    list mybuttons = localbuttons;
+    if (sync == TRUE)
+    {
+        mybuttons += TURNOFF;
+        prompt += "The Collar will try and update the cuffs.\n";
+    }
+    else
+    {
+        mybuttons += TURNON;
+        prompt += "The Collar will NOT update the cuffs.\n";
+    }
+    if (hide == FALSE)
+    {
+        mybuttons += HIDEON;
+        prompt += "The Cuffs are not hidden from this menu.\n";
+    }
+    else
+    {
+        mybuttons += HIDEOFF;
+        prompt += "The Cuffs ARE hidden from this menu.\n";
+    }
+    prompt += "Sync must be turned ON to ReSync.\n";
+    prompt += "Pick an option.";
+    g_kDialogID=Dialog(id, prompt, mybuttons, [UPMENU], 0);
+}
+
+integer nGetOwnerChannel(key wearer,integer nOffset)//This is the cuffs channel built from our UUID
+{
+    integer chan = (integer)("0x"+llGetSubString((string)wearer,2,7)) + nOffset;
+    if (chan>0)
+        chan=chan*(-1);
+    if (chan > -10000)
+        chan -= 30000;
+    return chan;
+}
+
+default
+{
+    state_entry()
+    {
+        if (wearer != llGetOwner())
+            sync = TRUE; //on new owener set sync to ON
+        // wait for all script to be ready
+        llSleep(0.6);
+        wearer = llGetOwner();//who owns us
+        llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "C_Sync", wearer);
+        CUFF_CHANNEL = nGetOwnerChannel(wearer,1110);//lets get our channel (same as collar +1)
+        llMessageLinked(LINK_ALL_OTHERS, MENUNAME_REQUEST, submenu, NULL_KEY);
+        llMessageLinked(LINK_ALL_OTHERS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+    }
+
+    on_rez(integer iParam)
+    {
+        if (wearer != llGetOwner())
+            llResetScript();//on new owner reset script
+    }
+    //
+    //NG Main block of listen to link messages, and then forward to cuffs is required
+    //
+    link_message(integer sender, integer num, string str, key id)
+    {
+        list lParams = llParseString2List(str, ["|"], []);
+        key user = llList2Key(lParams, 0);
+        string str1 = llList2String(lParams, 1);
+        if (num == MENUNAME_REQUEST && str == parentmenu)//adds us to the apps menu**
+            llMessageLinked(LINK_ALL_OTHERS, MENUNAME_RESPONSE, parentmenu + "|" + submenu, NULL_KEY);
+        if ((num == COMMAND_OWNER) && (str == "runaway"))
+            llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":runaway"); //ok full runaway seen!**
+        else if (str == "menu " + submenu)//lets give our menu**
+            DoMenu(id);
+        else if ((str1 =="LOCK") && (num == DIALOG_RESPONSE))//Lock our cuffs with the collar**
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "C_lock=1", NULL_KEY);
+        else if ((str1 =="UNLOCK") && (num == DIALOG_RESPONSE))//Unlock our cuffs with the collar**
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "C_lock=0", NULL_KEY);
+        else if (str == "C_Sync=0")//Sync off (our own syncing)**
+            sync = FALSE;
+        else if (str == "C_Sync=1")//Sync on (our own syncing)**
+            sync = TRUE;
+
+        if (sync == TRUE)//only do this bit if sync is turned on
+        {
+            if (str == "rlvsys_on=1" && num == LM_SETTING_SAVE)//RLV on
+                llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":rlv on");  //Turn our cuffs RLV on**
+            else if (str == "rlvsys_on=0" && num == LM_SETTING_SAVE)//RLV off
+                llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":rlv off"); //Turn our cuffs RLV off**
+            else if ((str == "C_lock=1") || (str == "Global_locked=1"))//Lock on
+                llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":lock"); //Lock our cuffs**
+            else if ((str == "C_lock=0") || (str == "Global_locked"))//Lock off
+                llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":unlock"); //Unlock oour cuffs**
+            else
+            {
+                //Lets chop up at "=" to see if we want it
+                list lParam = llParseString2List(str, ["="], []);
+                integer h = llGetListLength(lParam);
+                string str1a= llList2String(lParam, 0);
+                if ( (str1a == "auth_owner") || (str1a == "auth_trust") || (str1a == "auth_block") || (str1a == "auth_group") || (str1a == "auth_public"))
+                    llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":" + str);//Set access**
+                else if (str1a == "anim_currentpose")
+                    llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":" + str);//Send Animations**
+                else
+                {
+                    list lParam1 = llParseString2List(str1a, ["_"], []);
+                    string str1b= llList2String(lParam1, 0);
+                    //Lets see if it's Themes info
+                    if(str1b == "color" || str1b == "glow" || str1b == "shiny" || str1b == "texture")
+                        llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":"+ str);
+                    else
+                    {
+                        list lParams = llParseString2List(str, ["|"], []);
+                        integer i = llGetListLength(lParams);
+                        str1= llList2String(lParams, 1);
+//                        llOwnerSay(str1);
+                        if (str1 =="☑ Stealth")
+                        {
+                            llRegionSayTo(wearer,CUFF_CHANNEL,(string)id + ":show");//Show our cuffs **
+                            hide = FALSE;
+                        }
+                        else if (str1 =="☐ Stealth")
+                        {
+                            llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":hide"); //hide our cuffs **
+                            hide = TRUE;
+                        }
+                    }
+                }
+            }
+        }
+        if ( num == DIALOG_RESPONSE)
+        {
+            if (id==g_kDialogID)
+            {
+                list menuparams = llParseString2List(str, ["|"], []);
+                key AV = (key)llList2String(menuparams, 0);
+                string message = llList2String(menuparams, 1);
+                integer page = (integer)llList2String(menuparams, 2);
+                if (message == UPMENU)
+                    llMessageLinked(LINK_ALL_OTHERS, 500, "menu "+ parentmenu, AV);//forcing to Auth level 500 to do a BACK
+                else if (message == "Cuff Menu")//ask for the cuff menu
+                    llRegionSayTo(wearer,CUFF_CHANNEL,(string)AV + ":menu|"+(string)AV);
+                else if (message == TURNON)
+                {
+                    sync = TRUE;
+                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "C_Sync=1", NULL_KEY);
+                    DoMenu(AV);
+                }
+                else if (message == TURNOFF)
+                {
+                    sync = FALSE;
+                    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "C_Sync=0", NULL_KEY);
+                    DoMenu(AV);
+                }
+                else if (message == HIDEON)
+                {
+                    llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + "chide");
+                    hide = TRUE;
+                    DoMenu(AV);
+                }
+                else if (message == HIDEOFF)
+                {
+                    llRegionSayTo(wearer,CUFF_CHANNEL,(string)wearer + ":show");
+                    hide = FALSE;
+                    DoMenu(AV);
+                }
+                else if (message == "ReSync")
+                {//lets grab the saved settings so we can forward them on
+                    llMessageLinked(LINK_THIS, LM_SETTING_REQUEST,"ALL","");
+                    DoMenu(AV);
+                }
+            }
+        }
+    }
+}
