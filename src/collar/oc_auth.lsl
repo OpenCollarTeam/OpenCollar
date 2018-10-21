@@ -453,11 +453,16 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else if ((key)sTmpID){
             AddUniquePerson(sTmpID, sAction, kID);
             if (iRemenu) Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,Auth(kID),"AddAvi"+sAction, TRUE);
-        } else
-            Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
+        } else {
+            string sTmpID2 = llList2String(lParams,3);
+            if(sTmpID2 != ""){
+                g_lRequests = [llHTTPRequest("http://w-hat.com/name2key/"+sTmpID+"."+sTmpID2,[],""), sCommand, sAction, kID];
+            } else
+                Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
+        }
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
-        string sTmpID = llDumpList2String(llDeleteSubList(lParams,0,1), " "); //get full name
+        string sTmpID = llList2String(lParams,2); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
@@ -467,7 +472,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else if (llToLower(sTmpID) == "remove all") {
             RemovePerson(sTmpID, sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
-        } else RemPersonMenu(kID, sAction, iNum);
+        } else {
+            string sTmpID2 = llList2String(lParams,3);
+            if(sTmpID2 != ""){
+                g_lRequests = [llHTTPRequest("http://w-hat.com/name2key/"+sTmpID+"."+sTmpID2,[],""), sCommand, sAction, kID];
+            } else {
+                RemPersonMenu(kID, sAction, iNum);
+            }
+        }
      } else if (sCommand == "group") {
          if (iNum==CMD_OWNER){
              if (sAction == "on") {
@@ -540,20 +552,28 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour current flavor is \""+g_sFlavor+"\".\n\nTo set a new flavor type \"/%CHANNEL% %PREFIX% flavor MyFlavor\". Flavors must be single names and can only be a maximum of 9 characters.\n",kID);
     }
 }
-
+DeleteAndResend(string sToken){
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken+sToken+"=",""); //// LEGACY OPTION. New scripts will hear LM_SETTING_DELETE
+    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+sToken,"");
+}
 RunAway() {
     llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"%WEARERNAME% ran away!","");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + "owner=", "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "owner", "");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + "tempowner=", "");    
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "tempowner", "");
+    list lOpts = ["owner","tempowner","trust","block", "group", "public"];
+    integer i=0;
+    integer end=llGetListLength(lOpts);
+    for(i=0;i<end;i++){
+        DeleteAndResend(llList2String(lOpts,i));
+    }
+    
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "GLOBAL_locked=","");
+    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "GLOBAL_locked","");
     // moved reset request from settings to here to allow noticifation of owners.
     llMessageLinked(LINK_ALL_OTHERS, CMD_OWNER, "clear", g_sWearerID);
     llMessageLinked(LINK_ALL_OTHERS, CMD_OWNER, "runaway", g_sWearerID); // this is not a LM loop, since it is now really authed
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway finished.",g_sWearerID);
     llResetScript();
 }
-
+list g_lRequests;
 default {
     on_rez(integer iParam) {
         llResetScript();
@@ -724,4 +744,17 @@ default {
         }
 */
     }
+
+    http_response(key kRequest, integer iStatus, list lMeta, string sBody){
+        integer iPos = llListFindList(g_lRequests,[kRequest]);
+        if(iPos!=-1){
+            if(llList2String(g_lRequests,iPos+1)=="add")
+                AddUniquePerson((key)sBody, llList2String(g_lRequests,iPos+2), (key)llList2String(g_lRequests,iPos+3));
+            else
+                RemovePerson((key)sBody, llList2String(g_lRequests,iPos+2), (key)llList2String(g_lRequests,iPos+3), FALSE);
+            
+            g_lRequests=llDeleteSubList(g_lRequests, iPos,iPos+3);
+        }
+    }
 }
+
