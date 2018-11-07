@@ -6,7 +6,6 @@ integer g_iMychannel = -8888;
 string g_sListenfor;
 string g_sResponse;
 string g_sWearerID;
-integer g_i;
 
 PermsCheck() {
     string sName = llGetScriptName();
@@ -37,13 +36,10 @@ default {
         g_sListenfor = g_sWearerID + "handle";
         g_sResponse = g_sWearerID + "handle ok";
         llListen(g_iMychannel, "", NULL_KEY, g_sListenfor);
-        llSay(g_iMychannel, g_sResponse);
-        llSetTimerEvent(2.0);
     }
 
     listen(integer channel, string name, key id, string message) {
         llSay(g_iMychannel, g_sResponse);
-        llSetTimerEvent(2.0);
     }
     attach(key kAttached) {
         if (kAttached == NULL_KEY)
@@ -51,20 +47,6 @@ default {
     }
     changed(integer change) {
         if (change & CHANGED_INVENTORY) PermsCheck();
-        if (change & CHANGED_TELEPORT) {
-            llSay(g_iMychannel, g_sResponse);
-            llSetTimerEvent(2.0);
-        }
-    }
-    timer() {
-        if (g_i) {
-            g_i = FALSE;
-            llSetTimerEvent(0.0);
-            llSay(g_iMychannel, g_sResponse);
-        } else {
-            g_i = TRUE;
-            llSay(g_iMychannel, g_sResponse);
-        }
     }
     on_rez(integer param) {
         llResetScript();
