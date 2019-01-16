@@ -279,7 +279,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     g_bFollowMode = iFollowMode; // leashing, or following
     if (bTargetIsAvi) g_bLeashedToAvi = TRUE;
     if (llGetOwnerKey(kCmdGiver)==g_kWearer) iAuth=CMD_WEARER;   //prevents owner-wearer with public access creating an unbreakable leash to an unwilling participant
-    DoLeash(kTarget, iAuth, lPoints);
+    DoLeash(kTarget, iAuth, lPoints,TRUE);
     g_iPassConfirmed = FALSE;
     // Notify Target how to unleash, only if:
     // Avatar
@@ -295,7 +295,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
     return TRUE;
 }
 
-DoLeash(key kTarget, integer iAuth, list lPoints) {
+DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
     g_iLastRank = iAuth;
     g_kLeashedTo = kTarget;
     if (g_bFollowMode)
@@ -320,7 +320,8 @@ DoLeash(key kTarget, integer iAuth, list lPoints) {
     if (g_vPos != ZERO_VECTOR) {
         llMoveToTarget(g_vPos, 0.7);
     }
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
+    if(bSave)
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
     g_iLeasherInRange=TRUE;
     ApplyRestrictions();
 }
@@ -650,7 +651,7 @@ default {
                     if (g_bLeashedToAvi) lPoints = ["collar", "handle"];
                     // if PostedTo object has vanished, clear out the leash settings
                     if (!llGetObjectPrimCount(kTarget) && !g_bLeashedToAvi) DoUnleash(TRUE);
-                    else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints);
+                    else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints,FALSE);
                 } else if (sToken == TOK_LENGTH) SetLength((integer)sValue);
                 else if (sToken=="strict"){
                     list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
@@ -751,8 +752,11 @@ default {
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
             }
             if (g_vPos != ZERO_VECTOR){
-                vector currentPos = llGetPos();
-                g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
+                // The below code was causing users to fly if the z height of the person holding the leash was different.
+                
+                
+                //vector currentPos = llGetPos();
+                //g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
                 llMoveToTarget(g_vPos,1.0);
             }
             else llStopMoveToTarget();
@@ -768,8 +772,9 @@ default {
         }
     }
     object_rez(key id) {
-        g_iLength=3;
-        DoLeash(id, g_iRezAuth, []);
+        //g_iLength=3;
+        // The above code overrides user preferences for leash length.
+        DoLeash(id, g_iRezAuth, [],TRUE);
     }
 
     changed (integer iChange){
