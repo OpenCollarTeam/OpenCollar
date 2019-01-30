@@ -26,6 +26,8 @@ integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY = 601;
 integer NOTIFY                = 1002;
 //integer SAY                   = 1004;
 integer REBOOT                = -1000;
@@ -67,7 +69,7 @@ string BUTTON_SUBMENU      = "Leash";
 
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
-
+integer g_iPreviousAuth;
 key g_kLeashCmderID;
 
 list g_lButtons;
@@ -209,9 +211,10 @@ ApplyRestrictions() {
     //Debug("Releasing restrictions");
     llMessageLinked(LINK_RLV, RLV_CMD, "clear", "realleash");     //release all restrictions
 }
-
+key g_kPassLeashFrom;
+list g_lPasslPoints;
 // Wrapper for DoLeash with notifications
-integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer iFollowMode ){
+integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer iFollowMode, integer iPreviousAuthority ){
     // can't leash wearer to self.
     if (kTarget == g_kWearer) return FALSE;
     if (!g_iPassConfirmed) {
@@ -223,13 +226,14 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
         }
         return FALSE;
     }
-    if (!CheckCommandAuth(kCmdGiver, iAuth)) return FALSE;
+    if(iPreviousAuthority==0)iPreviousAuthority=iAuth;
+    if (!CheckCommandAuth(kCmdGiver, iPreviousAuthority)) return FALSE; // If this is not a pass, it expects iAuth == iPreviousAuthority
     //if (g_kLeashedTo==kTarget) return TRUE;
     if (g_kLeashedTo) DoUnleash(TRUE);
 
     integer bCmdGiverIsAvi=llGetAgentSize(kCmdGiver) != ZERO_VECTOR;
     integer bTargetIsAvi=llGetAgentSize(kTarget) != ZERO_VECTOR;
-
+    
     // Send notices to wearer, leasher, and target
     // Only send notices if Leasher is an AV, as objects normally handle their own messages for such things
     if (bCmdGiverIsAvi) {
@@ -308,6 +312,7 @@ DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
         }
         //Send link message to the particle script
         //Debug("leashing with "+g_sCheck);
+        llSay(0, "Starting particle chain");
         llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
         llSetTimerEvent(3.0);   //check for leasher out of range
     }
@@ -439,7 +444,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             if (sVal==llToLower(BUTTON_UPMENU)) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else  if (sMessage == "grab" || sMessage == "leash" || (sMessage == "toggleleash" && NULL_KEY == g_kLeashedTo)) {
             g_iPassConfirmed = TRUE;
-            LeashTo(kMessageID, kMessageID, iAuth, ["handle"], FALSE);
+            LeashTo(kMessageID, kMessageID, iAuth, ["handle"], FALSE, 0);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
         } else if(sComm == "follow" || sComm == "followtarget") {
             //Debug("Got a follow command:"+sMessage);
@@ -448,10 +453,18 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 UserCommand(iAuth, "leash", kMessageID ,bFromMenu);
             else if (sVal == "me") {
                 g_iPassConfirmed = TRUE;
-                LeashTo(kMessageID, kMessageID, iAuth, [], TRUE);
+                g_kPassLeashFrom = kMessageID;
+                g_lPasslPoints=[];
+                g_iPreviousAuth=iAuth;
+                llMessageLinked(LINK_SET,AUTH_REQUEST, "followPass", kMessageID);
+                //LeashTo(kMessageID, kMessageID, iAuth, [], TRUE,0);
             } else if ((key)sVal) {
                 g_iPassConfirmed = TRUE;
-                LeashTo((key)sVal, kMessageID, iAuth, [], TRUE);
+                g_kPassLeashFrom = kMessageID;
+                g_lPasslPoints=[];
+                g_iPreviousAuth=iAuth;
+                llMessageLinked(LINK_SET,AUTH_REQUEST, "followPass", sVal);
+                //LeashTo((key)sVal, kMessageID, iAuth, [], TRUE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall be followed?\n", sVal,iAuth,"FollowTarget", AGENT);
         } else if (sMessage == "runaway" && iAuth == CMD_OWNER) {
@@ -520,14 +533,19 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
         } else if (sComm == "pass") {
+            llSay(0, "Checking command authority");
             if (!CheckCommandAuth(kMessageID, iAuth)) return;
             if (sVal==llToLower(BUTTON_UPMENU))
                 UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             else if((key)sVal) {
                 list lPoints;
                 if (llGetListLength(lParam) > 2) lPoints = llList2List(lParam, 2, -1);
+                g_kPassLeashFrom = kMessageID;
+                g_lPasslPoints = lPoints;
+                g_iPreviousAuth=iAuth;
                 //debug("leash target is key");//could be a post, or could be we specified an av key
-                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
+                llMessageLinked(LINK_SET, AUTH_REQUEST, "passLeash", sVal); // All this does, is recalculate the authorization level of the leash so that the leash holder has proper permissions and could unleash it themselves if they wanted to.
+//                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
         } else if (sComm == "length") {
@@ -558,7 +576,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 //debug("leash target is key");//could be a post, or could be we specified an av key
                 if (llGetAgentSize((key)sVal)) g_iPassConfirmed = FALSE;
                 else g_iPassConfirmed = TRUE;
-                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE);
+                LeashTo((key)sVal, kMessageID, iAuth, lPoints, FALSE,0);
             } else
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
         }
@@ -700,7 +718,9 @@ default {
                     }
                     g_kLeashCmderID = "";
                 } else if (sMenu == "FollowTarget") {
-                    if (kAV == (key)sButton) UserCommand(iAuth, "follow " + (string)kAV, kAV, TRUE);
+                    if (kAV == (key)sButton){
+                        UserCommand(iAuth, "follow " + (string)kAV, kAV, TRUE);
+                    }
                     else {
                         g_kLeashCmderID = kAV;
                         ConfirmDialog((key)sButton, kAV, "FollowTarget", iAuth);
@@ -711,8 +731,8 @@ default {
                         if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
                         UserCommand(iAuth, "follow " + (string)kAV, g_kLeashCmderID, TRUE);
                     } else {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kAV)+" denied %WEARERNAME% to follow them.",g_kLeashCmderID);
-                    g_iPassConfirmed = FALSE;
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kAV)+" denied %WEARERNAME% to follow them.",g_kLeashCmderID);
+                        g_iPassConfirmed = FALSE;
                     }
                     g_kLeashCmderID = "";
                 }
@@ -725,6 +745,16 @@ default {
             else if (sMessage == "LINK_RLV") LINK_RLV = iSender;
             else if (sMessage == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
+        else if(iNum == AUTH_REPLY){
+            list lParams = llParseString2List(sMessage, ["|"],[]);
+            key kTarget = (key)llList2String(lParams,1);
+            integer iNewAuth = (integer)llList2String(lParams,2);
+            if(llList2String(lParams,0)=="AuthReply" && kMessageID == "passLeash"){
+                LeashTo(kTarget, g_kPassLeashFrom, iNewAuth, g_lPasslPoints,FALSE, g_iPreviousAuth);
+            } else if(llList2String(lParams,0) == "AuthReply" && kMessageID=="followPass"){
+                LeashTo(kTarget, g_kPassLeashFrom, iNewAuth, g_lPasslPoints,TRUE, g_iPreviousAuth);
+            }
+        }
     }
 
     at_target(integer iNum, vector vTarget, vector vMe) {
