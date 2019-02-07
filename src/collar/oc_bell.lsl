@@ -231,7 +231,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                     llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell rings now.",kID);
                 }
-            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to bell",kID);
         } else if (sToken=="off") {
             if ((g_iBellOn>0)&&(iNum!=CMD_GROUP)) {
                 g_iBellOn=0;
@@ -241,7 +241,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
                 }
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=" + (string)g_iBellOn, "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The bell is now quiet.",kID);
-            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to bell",kID);
         } else if (sToken=="nextsound") {
             g_iCurrentBellSound++;
             if (g_iCurrentBellSound>=g_iBellSoundCount) g_iCurrentBellSound=0;
@@ -254,7 +254,7 @@ UserCommand(integer iNum, string sStr, key kID) { // here iNum: auth value, sStr
             llPlaySound(g_kCurrentBellSound,g_fVolume);
         }
     } else if (sStr == "rm bell") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to remove bell",kID);
         else  Dialog(kID,"\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmbell");
     }
     //Debug("command executed");
