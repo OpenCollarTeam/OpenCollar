@@ -300,12 +300,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iRLVOff = TRUE;
             setRlvState();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing rlv",kID);
     } else if (sStr == "clear") {
         if (iNum == CMD_OWNER) SafeWord(kID);
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS% to clearing RLV",kID);
     } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
-        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing handshake count",kID);
         else {
             if ((integer)llGetSubString(sStr,-2,-1)) {
                 g_iMaxViewerChecks = (integer)llGetSubString(sStr,-2,-1);
