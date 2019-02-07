@@ -207,7 +207,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
             }
             if (sValue) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
         } else if (sCommand == "name") {
-            if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing the name",kID);
             else {
                 string sMessage;
                 if (sValue=="") {  //Just let them know their current name

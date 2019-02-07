@@ -176,7 +176,7 @@ integer CheckCommandAuth(key kCmdGiver, integer iAuth) {
     if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return FALSE;
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kCmdGiver);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to leash",kCmdGiver);
         return FALSE;
     }
     return TRUE;
@@ -520,7 +520,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 ApplyRestrictions();
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Strict leashing disabled.",kMessageID);
             } else {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to strict leash",kMessageID);
             }
         } else if (sMessage == "turn on") {
             g_iTurnModeOn=TRUE;

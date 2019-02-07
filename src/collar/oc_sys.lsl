@@ -242,7 +242,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else if (sSubmenu == "help/about") HelpMenu(kID, iNum);
         else if (sSubmenu == "settings") {
             if (iNum != CMD_OWNER && iNum != CMD_WEARER) {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to settings",kID);
                 MainMenu(kID, iNum);
             } else SettingsMenu(kID, iNum);
         }
@@ -285,7 +285,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             SetLockElementAlpha();//EB
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been locked.",kID);
         }
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);;
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to lock",kID);;
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
         if (iNum == CMD_OWNER)  {
@@ -297,13 +297,13 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             SetLockElementAlpha(); //EB
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%WEARERNAME%'s %DEVICETYPE% has been unlocked.",kID);
         }
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to unlock",kID);
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fix") {
-        if (kID == g_kWearer){
+        if (kID == g_kWearer || iNum == CMD_OWNER){
             RebuildMenu();
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "news"){
         if (kID == g_kWearer || iNum==CMD_OWNER){
             if (sStr=="news off"){
@@ -319,7 +319,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
                 g_sLastNewsTime="0";
                 news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to news",kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
         if (kID == g_kWearer) {

@@ -628,7 +628,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                         updateFolderLocks(g_sCurrentFolder, 0, 0x88);
                         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now there is no restriction or exception on removing "+g_sCurrentFolder+ " and its subfolders.",kAv);
                     } else if (llGetSubString(sMessage, 0, 0) == "(")
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS%",kAv);
+                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS% to folders",kAv);
                     if (sMessage != UPMENU) { addToHistory(g_sCurrentFolder); llSleep(1.0);} //time for command to take effect so that we see the result in menu
                     //Return to browse menu
                     if (llGetSubString(g_sFolderType, 0, 14) == "history_actions" && sMessage != "Browse") {HistoryMenu(kAv, iAuth); return;}

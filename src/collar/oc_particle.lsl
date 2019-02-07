@@ -385,11 +385,11 @@ default {
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
             if (llToLower(sMessage) == "leash configure") {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
-                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
+                else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to configuring the leash particles",kMessageID);
             } else if (sMessage == "menu "+SUBMENU) {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kMessageID);
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to leash configure menu",kMessageID);
                     llMessageLinked(LINK_THIS, iNum, "menu "+PARENTMENU, kMessageID);
                 }
             } else if (llToLower(sMessage) == "particle reset") {
@@ -441,7 +441,7 @@ default {
                             g_iStrictMode = FALSE;
                             g_iStrictRank = iAuth;
                             llMessageLinked(LINK_THIS, iAuth, "strict off", kAv);
-                        } else llMessageLinked(LINK_DIALOG, NOTIFY,"0%NOACCESS%",kAv);
+                        } else llMessageLinked(LINK_DIALOG, NOTIFY,"0%NOACCESS% to changing strict settings",kAv);
                     } else if(sButtonType == L_RIBBON_TEX) {
                         if (sButtonCheck == "☐") {
                             g_sParticleMode = "Ribbon";

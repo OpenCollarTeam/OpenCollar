@@ -171,7 +171,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     else return;
 // ~ is bitwise NOT which is used for the llListFindList function to simply turn the result "-1" for "not found" into a 0 (FALSE)
     if (~llListFindList(g_lTempOwner,[(string)kCmdr]) && ! ~llListFindList(g_lOwner,[(string)kCmdr]) && sToken != "tempowner"){
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kCmdr);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removing person",kCmdr);
         return;
     }
     integer iFound;
@@ -229,7 +229,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
     list lPeople;
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
     if (~llListFindList(g_lTempOwner,[(string)kID]) && ! ~llListFindList(g_lOwner,[(string)kID]) && sToken != "tempowner")
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% adding a user to a list",kID);
     else {
         // Put a cap on how many people we'll remember, to avoid running out of
         // memory.
@@ -421,7 +421,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if (g_iOpenAccess) sOutput="open";
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Public Access: "+ sOutput,kID);
         }
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to listing access",kID);
         if (iRemenu) AuthMenu(kID, iNum);
     } else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
@@ -438,7 +438,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 iRemenu=FALSE;
                 //UserCommand(iNum, "rm owner " + g_sWearerID, kID, FALSE);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%", kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to ownself", kID);
          if (iRemenu) AuthMenu(kID, iNum);
     } else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
         AuthMenu(kID, iNum);
@@ -448,7 +448,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to adding a trusted user",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID){
             AddUniquePerson(sTmpID, sAction, kID);
@@ -464,7 +464,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removal menu",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID) {
             RemovePerson(sTmpID, sAction, kID, FALSE);
@@ -500,7 +500,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group unset.",kID);
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing group access",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
@@ -513,7 +513,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "public", "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The %DEVICETYPE% is closed to the public.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing public access",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "limitrange") {
         if (iNum==CMD_OWNER){
@@ -528,14 +528,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "limitrange=" + (string) g_iLimitRange, "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Public access range is simwide.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to limit range",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sMessage == "runaway"){
        // list lButtons=[];
       // string message;//="\nOnly the wearer or an Owner can access this menu";
         if (kID == g_sWearerID){  //wearer called for menu
             if (g_iRunawayDisable)
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to runaway",kID);
             else {
                 Dialog(kID, "\nDo you really want to run away from all owners?", ["Yes", "No"], [UPMENU], 0, iNum, "runawayMenu",FALSE);
                 return;
@@ -543,7 +543,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This feature is only for the wearer of the %DEVICETYPE%.",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "flavor") {
-        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%. Cannot change flavor",kID);
         else if (sAction) {
             g_sFlavor = llGetSubString(sStr,7,15);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour new flavor is \""+g_sFlavor+"\".\n",kID);
@@ -744,7 +744,6 @@ default {
         }
 */
     }
-
     http_response(key kRequest, integer iStatus, list lMeta, string sBody){
         integer iPos = llListFindList(g_lRequests,[kRequest]);
         if(iPos!=-1){

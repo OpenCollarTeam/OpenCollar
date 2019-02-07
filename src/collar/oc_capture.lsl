@@ -137,7 +137,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     else if (sStrLower == "capture" || sStrLower == "menu capture") {
         if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
             if (g_iCaptureOn) Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", kID);
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);//Notify(kID,g_sAuthError, FALSE);
+            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",kID);//Notify(kID,g_sAuthError, FALSE);
         } else CaptureMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
     else if (iNum!=CMD_OWNER && iNum != CMD_WEARER){
@@ -145,7 +145,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     }
     else if (llSubStringIndex(sStrLower,"capture")==0) {
         if (g_sTempOwnerID != "" && kID==g_kWearer) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",g_kWearer);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",g_kWearer);
             return;
         } else if (sStrLower == "capture on") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);

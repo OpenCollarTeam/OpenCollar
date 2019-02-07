@@ -440,7 +440,7 @@ UserCommand(integer iNum, string sStr, key kID) {
           llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME%'s neck is locked in place.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
       }
     } else if ( sValue=="off") {
       if (iNum <= g_iLastPostureRank) {
@@ -452,12 +452,12 @@ UserCommand(integer iNum, string sStr, key kID) {
           llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% is free to move their neck.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
       }
     }
   } else if (sCommand == "rm" && sValue == "pose") {
     if (kID != g_kWearer || g_bAnimLock) {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to delete pose", kID);
       return;
     }
 
@@ -483,7 +483,7 @@ UserCommand(integer iNum, string sStr, key kID) {
           llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
       }
     } else if (sValue == "off") {
       if (iNum <= g_iLastPoselockRank) {
@@ -495,7 +495,7 @@ UserCommand(integer iNum, string sStr, key kID) {
           llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% is free to change or stop poses on their own.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
       }
     }
   } else if (sCommand == "ao") {
@@ -554,7 +554,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       StartAnim(g_sCurrentPose);
       llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
     } else {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS%", kID);
+      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change pose", kID);
     }
   } else if ((sStr == "show animator") && (iNum == CMD_OWNER || kID == g_kWearer)) {
     llSetPrimitiveParams([

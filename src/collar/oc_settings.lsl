@@ -293,7 +293,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to load",kID);
     } else if (sStrLower == "reboot" || sStrLower == "reboot --f") {
         if (g_iRebootConfirmed || sStrLower == "reboot --f") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);

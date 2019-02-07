@@ -131,7 +131,8 @@ string NameURI(key kID){
 }
 
 string SubstitudeVars(string sMsg) {
-        if (sMsg == "%NOACCESS%") return "Access denied.";
+        if (~llSubStringIndex(sMsg, "%NOACCESS"))
+            sMsg = llDumpList2String(llParseStringKeepNulls(sMsg, ["%NOACCESS%"], []), "Access Denied");
         if (~llSubStringIndex(sMsg, "%PREFIX%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%PREFIX%"], []), g_sPrefix);
         if (~llSubStringIndex(sMsg, "%CHANNEL%"))
@@ -140,6 +141,7 @@ string SubstitudeVars(string sMsg) {
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
         if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+        
         return sMsg;
 }
 

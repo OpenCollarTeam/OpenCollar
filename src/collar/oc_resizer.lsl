@@ -266,23 +266,23 @@ UserCommand(integer iNum, string sStr, key kID) {
     // string sValue = llToLower(llList2String(lParams, 1));
     if (sCommand == "menu" && llGetSubString(sStr, 5, -1) == g_sSubMenu) {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to resizer",kID);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         } else DoMenu(kID, iNum);
     } else if (sStr == "appearance") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to appearance",kID);
         else DoMenu(kID, iNum);
     } else if (sStr == "rotation") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to rotation",kID);
         else RotMenu(kID, iNum);
     } else if (sStr == "position") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to position",kID);
         else PosMenu(kID, iNum);
     } else if (sStr == "size") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to size",kID);
         else SizeMenu(kID, iNum);
     } else if (sStr == "rm resizer") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to uninstall resizer",kID);
         else Dialog(kID, "\nDo you really want to remove the Resizer?", ["Yes","No","Cancel"], [], 0, iNum,"rmresizer");
     }
 }
