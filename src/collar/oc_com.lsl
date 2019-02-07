@@ -207,7 +207,7 @@ UserCommand(key kID, integer iAuth, string sStr) {
             }
             if (sValue) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
         } else if (sCommand == "name") {
-            if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing the name",kID);
             else {
                 string sMessage;
                 if (sValue=="") {  //Just let them know their current name
@@ -413,7 +413,7 @@ default {
             if (llGetSubString(sw, 0, 3) == "/me ") sw = llGetSubString(sw, 4, -1);
             // Allow for Firestorm style "(( SAFEWORD ))" by trimming.
             if (llGetSubString(sw, 0, 1) == "((" && llGetSubString(sw, -2, -1) == "))") sw = llStringTrim(llGetSubString(sw, 2, -3), STRING_TRIM);
-            if (llSubStringIndex(sw, g_sPrefix)==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
+            if (llSubStringIndex(llToLower(sw), llToLower(g_sPrefix))==0) sw = llGetSubString(sw, llStringLength(g_sPrefix), -1);
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
@@ -441,8 +441,8 @@ default {
                 }
             }
         } else { //check for our prefix, or *
-            if (!llSubStringIndex(sMsg, g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
-            else if (!llSubStringIndex(sMsg, "/"+g_sPrefix)) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
+            if (!llSubStringIndex(llToLower(sMsg), llToLower(g_sPrefix))) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix), -1); //strip our prefix from command
+            else if (!llSubStringIndex(llToLower(sMsg), "/"+llToLower(g_sPrefix))) sMsg = llGetSubString(sMsg, llStringLength(g_sPrefix)+1, -1); //strip our prefix plus a / from command
             else if (llGetSubString(sMsg, 0, 0) == "*") sMsg = llGetSubString(sMsg, 1, -1); //strip * (all collars wildcard) from command
             else if ((llGetSubString(sMsg, 0, 0) == "#") && (kID != g_kWearer)) sMsg = llGetSubString(sMsg, 1, -1); //strip # (all collars but me) from command
             else return;
