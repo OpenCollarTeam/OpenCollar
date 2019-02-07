@@ -97,7 +97,7 @@ integer g_iMinLandMode = FALSE;
 integer g_iMinLiteMode = FALSE;
 integer g_iBaseMode = 2;
 integer g_iHelpless = 0;
-integer g_iLandMode = 1;
+integer g_iLandMode = 0;
 integer g_iLiteMode = 0;
 
 integer g_iSmartStrip = TRUE; // Convert @remoutfit to @detachallthis.
