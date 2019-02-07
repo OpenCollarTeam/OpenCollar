@@ -278,7 +278,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     string sLower = llToLower(sStr);
     if (iNum != CMD_OWNER) {
         if (sLower == "ex" || sLower == "menu exceptions") {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to exceptions",kID);
             llMessageLinked(LINK_RLV, iNum, "menu rlv", kID);
         }
         return;
