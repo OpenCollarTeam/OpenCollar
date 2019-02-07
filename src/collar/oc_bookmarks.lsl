@@ -109,7 +109,7 @@ PermsCheck() {
 UserCommand(integer iNum, string sStr, key kID) {
     // So commands can accept a value
     if (iNum==CMD_GROUP) {  // Do not permit Group Access (Public Access)
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% for group in bookmarks",kID);
             return;
     }
     if (sStr == "reset") {
@@ -118,7 +118,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             //only owner and wearer may reset
             llResetScript();
     } else if (sStr == "rm bookmarks") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to uninstall bookmarks",kID);
         else Dialog(kID,"\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmbookmarks");
     } else if(sStr == PLUGIN_CHAT_CMD || llToLower(sStr) == "menu " + PLUGIN_CHAT_CMD_ALT || llToLower(sStr) == PLUGIN_CHAT_CMD_ALT) {
         // an authorized user requested the plugin menu by typing the menus chat command
