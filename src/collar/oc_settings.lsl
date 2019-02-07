@@ -17,6 +17,8 @@ list g_lExceptionTokens = ["texture","glow","shininess","color","intern"];
 key g_kLoadFromWeb;
 key g_kURLLoadRequest;
 key g_kWearer;
+string g_sURL;
+key g_kConfirmLoadDialogID;
 
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
@@ -280,7 +282,10 @@ UserCommand(integer iAuth, string sStr, key kID) {
                 if (!llSubStringIndex(sURL,"http")) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Fetching settings from "+sURL,kID);
                     g_kURLLoadRequest = kID;
-                    g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
+                    g_kConfirmLoadDialogID = llGenerateKey();
+                    g_sURL = sURL;
+                    llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|Settings are about to be loaded from a URL and may revoke your access to the collar. Only allow this action if you trust the person. Read the settings first: "+sURL+"|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmLoadDialogID);
+                    //g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
             } else if (sStrLower == "load card" || sStrLower == "load") {
                 if (llGetInventoryKey(g_sCard)) {
@@ -288,7 +293,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to load",kID);
     } else if (sStrLower == "reboot" || sStrLower == "reboot --f") {
         if (g_iRebootConfirmed || sStrLower == "reboot --f") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
@@ -395,6 +400,7 @@ default {
                 g_fLastNewsStamp = (float)sValue;
                 g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr, "");
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
@@ -404,7 +410,10 @@ default {
                 llSetTimerEvent(2.0);
             } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
         }
-        else if (iNum == LM_SETTING_DELETE) DelSetting(sStr);
+        else if (iNum == LM_SETTING_DELETE){
+            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_DELETE,sStr,"");
+            DelSetting(sStr);
+        }
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
@@ -412,6 +421,12 @@ default {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
             } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Reboot aborted.",kID);
+        } else if(iNum == DIALOG_RESPONSE && kID == g_kConfirmLoadDialogID){
+            list MenuParams = llParseString2List(sStr, ["|"],[]);
+            if(llList2String(MenuParams,1) == "Yes"){
+                g_kLoadFromWeb = llHTTPRequest(g_sURL,[HTTP_METHOD, "GET"],"");
+            } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Load aborted", kID);
+            g_sURL="";
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
