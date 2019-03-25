@@ -98,9 +98,11 @@ saveTempOwners() {
     if (g_sTempOwnerID) {
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner="+g_sTempOwnerID, "");
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner="+g_sTempOwnerID, "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"isActive=1","");
     } else {
         llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "auth_tempowner=", "");
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "auth_tempowner", "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"isActive","");
     }
 }
 
