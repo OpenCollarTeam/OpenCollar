@@ -666,6 +666,8 @@ default {
             string sVariable = llList2String(lParams,1);
             if(sToken=="capture"){
                 if(sVariable=="isActive")g_iCaptureIsActive=FALSE;
+            } else if(sToken == "auth"){
+                if(sVariable=="tempowner")g_lTempOwner=[];
             }
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
