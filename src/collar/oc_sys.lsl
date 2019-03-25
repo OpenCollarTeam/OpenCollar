@@ -12,6 +12,7 @@
 
 string g_sDevStage="";
 string g_sCollarVersion="7.1";
+integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
@@ -274,6 +275,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             else  llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kAv);   //else send an auth request for the menu
         }
     } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) { // the remote uses togglelock
+        if(g_iCaptureIsActive){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            return;
+        }
         //Debug("User command:"+sCmd);
         if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function
@@ -288,6 +293,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to lock",kID);;
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
+        if(g_iCaptureIsActive){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            return;
+        }
         if (iNum == CMD_OWNER)  {
             g_iLocked = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");
@@ -565,9 +574,15 @@ default {
                 //process response
                 if (sMenu=="Main"){
                     //Debug("Main menu response: '"+sMessage+"'");
-                    if (sMessage == "LOCK" || sMessage== "UNLOCK")
+                    if (sMessage == "LOCK" || sMessage== "UNLOCK"){
+                        
+                        if(g_iCaptureIsActive){
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kAv);
+                            return;
+                        }
                         //Debug("doing usercommand for lock/unlock");
                         UserCommand(iAuth, sMessage, kAv, TRUE);
+                    }
                     else if (sMessage == "Help/About") HelpMenu(kAv, iAuth);
                     else if (sMessage == "Apps")  AppsMenu(kAv, iAuth);
                     else llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
@@ -639,7 +654,11 @@ default {
             else if (sToken == "intern_dist") g_sOtherDist = sValue;
             else if (sStr == "settings=sent") {
                 if (g_iNews) news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+            } else if(sToken == "capture_isActive"){
+                g_iCaptureIsActive=TRUE;
             }
+        } else if(iNum == LM_SETTING_DELETE){
+            if(sStr == "capture_isActive") g_iCaptureIsActive=FALSE;
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);

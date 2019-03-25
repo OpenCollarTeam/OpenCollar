@@ -70,6 +70,7 @@ integer AUTH_REQUEST = 600;
 integer AUTH_REPLY = 601;
 string UPMENU = "BACK";
 
+integer g_iCaptureIsActive=FALSE; // If this flag is set, then auth will deny access to it's menus
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
 integer g_iOwnSelf; // self-owned wearers
@@ -117,6 +118,10 @@ Dialog(string sID, string sPrompt, list lChoices, list lUtilityButtons, integer 
 }
 
 AuthMenu(key kAv, integer iAuth) {
+    if(g_iCaptureIsActive){
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kAv);
+        return;
+    }
     string sPrompt = "\n[Access & Authorization]";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
 
@@ -171,7 +176,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     else return;
 // ~ is bitwise NOT which is used for the llListFindList function to simply turn the result "-1" for "not found" into a 0 (FALSE)
     if (~llListFindList(g_lTempOwner,[(string)kCmdr]) && ! ~llListFindList(g_lOwner,[(string)kCmdr]) && sToken != "tempowner"){
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removing person",kCmdr);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing tempowner",kCmdr);
         return;
     }
     integer iFound;
@@ -229,7 +234,7 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
     list lPeople;
     //Debug(llKey2Name(kAv)+" is adding "+llKey2Name(kPerson)+" to list "+sToken);
     if (~llListFindList(g_lTempOwner,[(string)kID]) && ! ~llListFindList(g_lOwner,[(string)kID]) && sToken != "tempowner")
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% adding a user to a list",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to adding new user",kID);
     else {
         // Put a cap on how many people we'll remember, to avoid running out of
         // memory.
@@ -390,7 +395,14 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     list lParams = llParseString2List(sStr, [" "], []);
     string sCommand = llToLower(llList2String(lParams, 0));
     string sAction = llToLower(llList2String(lParams, 1));
-    if (sStr == "menu "+g_sSubMenu) AuthMenu(kID, iNum);
+    if (sStr == "menu "+g_sSubMenu){
+        
+        if(g_iCaptureIsActive){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            return;
+        }
+        AuthMenu(kID, iNum);
+    }
     else if (sStr == "list") {   //say owner, secowners, group
         if (iNum == CMD_OWNER || kID == g_sWearerID) {
             //Do Owners list
@@ -448,7 +460,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to adding a trusted user",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to adding new person",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID){
             AddUniquePerson(sTmpID, sAction, kID);
@@ -464,7 +476,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removal menu",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removing user from list",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID) {
             RemovePerson(sTmpID, sAction, kID, FALSE);
@@ -500,7 +512,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Group unset.",kID);
                 llMessageLinked(LINK_RLV, RLV_CMD, "setgroup=y", "auth");
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing group access",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to toggling group",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "public") {
         if (iNum==CMD_OWNER){
@@ -513,7 +525,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
                 llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "public", "");
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The %DEVICETYPE% is closed to the public.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing public access",kID);
+        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to toggling public access",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "limitrange") {
         if (iNum==CMD_OWNER){
@@ -543,7 +555,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This feature is only for the wearer of the %DEVICETYPE%.",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
     } else if (sCommand == "flavor") {
-        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%. Cannot change flavor",kID);
+        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to change flavor",kID);
         else if (sAction) {
             g_sFlavor = llGetSubString(sStr,7,15);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour new flavor is \""+g_sFlavor+"\".\n",kID);
@@ -643,6 +655,19 @@ default {
                     SayOwners();
                     g_iFirstRun = FALSE;
                 }
+            } else if(llGetSubString(sToken,0,i)=="capture_"){
+                if(llGetSubString(sToken,i+1,-1)=="isActive"){
+                    g_iCaptureIsActive=TRUE;
+                }
+            }
+        } else if( iNum == LM_SETTING_DELETE){
+            list lParams = llParseString2List(sStr, ["_"],[]);
+            string sToken = llList2String(lParams,0);
+            string sVariable = llList2String(lParams,1);
+            if(sToken=="capture"){
+                if(sVariable=="isActive")g_iCaptureIsActive=FALSE;
+            } else if(sToken == "auth"){
+                if(sVariable=="tempowner")g_lTempOwner=[];
             }
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
@@ -744,6 +769,7 @@ default {
         }
 */
     }
+
     http_response(key kRequest, integer iStatus, list lMeta, string sBody){
         integer iPos = llListFindList(g_lRequests,[kRequest]);
         if(iPos!=-1){
@@ -756,4 +782,3 @@ default {
         }
     }
 }
-
