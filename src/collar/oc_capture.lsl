@@ -123,7 +123,7 @@ doCapture(string sCaptorID, integer iIsConfirmed) {
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You are at "+NameURI(sCaptorID)+"'s whim.",g_kWearer);
         llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\n%WEARERNAME% is at your mercy.\n\nNOTE: During capture RP %WEARERNAME% cannot refuse your teleport offers and you will keep full control. Type \"/%CHANNEL% %PREFIX% grab\" to attach a leash or \"/%CHANNEL% %PREFIX% capture release\" to relinquish capture access to %WEARERNAME%'s %DEVICETYPE%.\n\nHave fun! For basic instructions click [here].\n", sCaptorID);
         g_sTempOwnerID = sCaptorID;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sSettingToken+"capture=1", "");
+        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sSettingToken+"isActive=1", "");
         saveTempOwners();
         llSetTimerEvent(0.0);
     }
@@ -152,6 +152,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             return;
         } else if (sStrLower == "capture on") {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);
+            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"capture=1","");
             g_iCaptureOn=TRUE;
             if (g_iRiskyOn && g_iCaptureInfo) {
                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
@@ -161,12 +162,13 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             if(g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode deactivated",kID);
             g_sTempOwnerID = "";
             g_iCaptureOn=FALSE;
+            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"capture", "");
             saveTempOwners();
             llSetTimerEvent(0.0);
         } else if (sStrLower == "capture release") {
             llMessageLinked(LINK_SET, CMD_OWNER, "unleash", kID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kID)+" has released you.",g_kWearer);
-            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"capture", "");
+            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"isActive", "");
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You have released %WEARERNAME%.",kID);
             g_sTempOwnerID = "";
             saveTempOwners();
