@@ -312,7 +312,6 @@ DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
         }
         //Send link message to the particle script
         //Debug("leashing with "+g_sCheck);
-        llSay(0, "Starting particle chain");
         llMessageLinked(LINK_THIS, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
         llSetTimerEvent(3.0);   //check for leasher out of range
     }
@@ -533,7 +532,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken + "turn=0,"+ (string)iAuth,kMessageID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Turning towards leasher disabled.",kMessageID);
         } else if (sComm == "pass") {
-            llSay(0, "Checking command authority");
             if (!CheckCommandAuth(kMessageID, iAuth)) return;
             if (sVal==llToLower(BUTTON_UPMENU))
                 UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
@@ -552,7 +550,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
                 UserCommand(iAuth, "leash", kMessageID ,bFromMenu);
-            } else if(iNewLength > 0 && iNewLength <= 20){
+            } else if(iNewLength > 0 && iNewLength <= 60){
                 //Person holding the leash can always set length.
                 if (kMessageID == g_kLeashedTo || CheckCommandAuth(kMessageID, iAuth)) {
                     SetLength(iNewLength);
@@ -562,8 +560,8 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
                 if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
             } else { //no value, or value out of bounds
                 if (sVal != "")  //value out of range
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Oops! The leash can only reach 20 meters at most.",kMessageID);
-                Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth,"SetLength");
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Oops! The leash can only reach 60 meters at most.",kMessageID);
+                Dialog(kMessageID, "\nCurrently the leash reaches " + (string)g_iLength + "m.\nTo set a length up to 60 meters, use the length chat command.", ["1", "2", "3", "4", "5", "6", "8", "10", "12", "15", "20"], [BUTTON_UPMENU], 0, iAuth,"SetLength");
             }
         } else if (sComm == "anchor") {
             if (!CheckCommandAuth(kMessageID, iAuth)) {
