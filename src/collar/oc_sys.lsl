@@ -12,6 +12,7 @@
 
 string g_sDevStage="";
 string g_sCollarVersion="7.1";
+integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
@@ -217,7 +218,7 @@ HelpMenu(key kID, integer iAuth) {
 MainMenu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar\t\t"+g_sCollarVersion;
     sPrompt += "\n\n[secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about Join the official OpenCollar group to become part of our community.]";
-    if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!";
+    if(!g_iLatestVersion) sPrompt+="\n\nUPDATE AVAILABLE: A new version has been released. You can obtain an updater from the OpenCollar group.";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
@@ -264,7 +265,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
     else if (sStr == "settings") {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) SettingsMenu(kID, iNum);
     } else if (sStr == "contact") {
-        g_kWebLookup = llHTTPRequest(g_sWeb+"contact.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+        g_kWebLookup = llHTTPRequest(g_sWeb+"~contact", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         g_kCurrentUser = kID;
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "menuto") {
@@ -274,6 +275,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             else  llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kAv);   //else send an auth request for the menu
         }
     } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) { // the remote uses togglelock
+        if(g_iCaptureIsActive){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            return;
+        }
         //Debug("User command:"+sCmd);
         if (iNum == CMD_OWNER || kID == g_kWearer ) {   //primary owners and wearer can lock and unlock. no one else
             //inlined old "Lock()" function
@@ -288,6 +293,10 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to lock",kID);;
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sStr == "runaway" || sCmd == "unlock" || (g_iLocked && sStr == "togglelock")) {
+        if(g_iCaptureIsActive){
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            return;
+        }
         if (iNum == CMD_OWNER)  {
             g_iLocked = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"locked", "");
@@ -305,21 +314,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "news"){
-        if (kID == g_kWearer || iNum==CMD_OWNER){
-            if (sStr=="news off"){
-                g_iNews=FALSE;
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"News feature disabled.",kID);
-                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,"intern_news=0","");
-            } else if (sStr=="news on"){
-                g_iNews=TRUE;
-                llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,"intern_news","");
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            } else {
-                g_sLastNewsTime="0";
-                news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
-            }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to news",kID);
+        llMessageLinked(LINK_DIALOG,NOTIFY, "0News is deprecated in this version", kID);
         if (fromMenu) HelpMenu(kID, iNum);
     } else if (sCmd == "update") {
         if (kID == g_kWearer) {
@@ -491,12 +486,13 @@ RebuildMenu() {
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
+    llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
     llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
 }
 
 init (){
-    github_version_request = llHTTPRequest(g_sWeb+"version.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+    github_version_request = llHTTPRequest(g_sWeb+"~version", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
     g_iWaitRebuild = TRUE;
     PermsCheck();
     llSetTimerEvent(1.0);
@@ -511,8 +507,6 @@ StartUpdate(){
 default {
     state_entry() {
         g_kWearer = llGetOwner();
-        if (!llGetStartParameter())
-            news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
         BuildLockElementList();
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
@@ -565,9 +559,15 @@ default {
                 //process response
                 if (sMenu=="Main"){
                     //Debug("Main menu response: '"+sMessage+"'");
-                    if (sMessage == "LOCK" || sMessage== "UNLOCK")
+                    if (sMessage == "LOCK" || sMessage== "UNLOCK"){
+                        
+                        if(g_iCaptureIsActive){
+                            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kAv);
+                            return;
+                        }
                         //Debug("doing usercommand for lock/unlock");
                         UserCommand(iAuth, sMessage, kAv, TRUE);
+                    }
                     else if (sMessage == "Help/About") HelpMenu(kAv, iAuth);
                     else if (sMessage == "Apps")  AppsMenu(kAv, iAuth);
                     else llMessageLinked(LINK_SET, iAuth, "menu "+sMessage, kAv);
@@ -638,8 +638,11 @@ default {
             } else if (sToken == g_sGlobalToken+"safeword") g_sSafeWord = sValue;
             else if (sToken == "intern_dist") g_sOtherDist = sValue;
             else if (sStr == "settings=sent") {
-                if (g_iNews) news_request = llHTTPRequest(g_sWeb+"news.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+            } else if(sToken == "capture_isActive"){
+                g_iCaptureIsActive=TRUE;
             }
+        } else if(iNum == LM_SETTING_DELETE){
+            if(sStr == "capture_isActive") g_iCaptureIsActive=FALSE;
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -700,16 +703,7 @@ default {
             } else if (id == github_version_request) {  // strip the newline off the end of the text
                 if (compareVersions(llStringTrim(body, STRING_TRIM),g_sCollarVersion)) g_iLatestVersion=FALSE;
                 else g_iLatestVersion=TRUE;
-            } else if (id == news_request) {  // We got a response back from the news page on Github.  See if it's new enough to report to the user.
-                // The first line of a news item should be space delimited list with timestamp in format yyyymmdd.n as the last field, where n is the number of messages on this day
-                integer index = llSubStringIndex(body,"\n");
-                string this_news_time = llGetSubString(body,0,index-1);
-                if (compareVersions(this_news_time,g_sLastNewsTime)) {
-                    body = llGetSubString(body,index,-1);
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+body+"\n\nTo unsubscribe please type: /%CHANNEL% %PREFIX% news off\n",g_kWearer);
-                    g_sLastNewsTime = this_news_time;
-                }
-            }
+            } 
         }
     }
 
@@ -737,7 +731,7 @@ default {
             g_iWaitUpdate = FALSE;
             llListenRemove(g_iUpdateHandle);
             if (!g_iWillingUpdaters) {   //if no updaters responded, get upgrader info from web and remenu
-                g_kWebLookup = llHTTPRequest(g_sWeb+"update.txt", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
+                g_kWebLookup = llHTTPRequest(g_sWeb+"~update", [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE], "");
                 if (g_iUpdateFromMenu) HelpMenu(g_kCurrentUser,g_iUpdateAuth);
             } else if (g_iWillingUpdaters > 1) {    //if too many updaters, PANIC!
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Multiple updaters were found nearby. Please remove all but one and try again.",g_kCurrentUser);
