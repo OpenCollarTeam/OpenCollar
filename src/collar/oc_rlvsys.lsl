@@ -272,7 +272,8 @@ SafeWord(key kID) {
         if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0)
             llMessageLinked(LINK_THIS,RLV_CMD,"clear",kSource);
     }
-    llMessageLinked(LINK_THIS,RLV_CMD,"unsit=force","");
+    //llMessageLinked(LINK_THIS,RLV_CMD,"unsit=force",""); Removed to fix issue #146, adding a delay to relay accepting new commands
+    llMessageLinked(LINK_DIALOG, NOTIFY, "0RLV was cleared and you may now stand up", g_kWearer);
     llMessageLinked(LINK_ALL_OTHERS,RLV_CLEAR,"","");
     if (kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"RLV restrictions cleared.",kID);
 }

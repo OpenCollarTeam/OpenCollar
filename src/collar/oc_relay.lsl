@@ -20,7 +20,7 @@ integer CMD_TRUSTED = 501;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
-//integer CMD_SAFEWORD = 510;
+integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
@@ -252,6 +252,11 @@ Dequeue() {
 }
 
 string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
+    
+    if(llGetUnixTime()<g_iWaitTarget && g_iWaitTarget!=-1)return "";
+    else if(llGetUnixTime()>g_iWaitTarget && g_iWaitTarget!=-1){
+        g_iWaitTarget =-1;
+    }
     list lCommands=llParseString2List(sCom,["|"],[]);
     sCom = llList2String(lCommands, 0);
     integer iGotWho = FALSE; // has the user been specified up to now?
@@ -308,11 +313,13 @@ sendrlvr(string sIdent, key kID, string sCom, string sAck) {
     if (g_kDebugRcpt == g_kWearer) llOwnerSay("From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
     else if (g_kDebugRcpt) llRegionSayTo(g_kDebugRcpt, DEBUG_CHANNEL, "From relay: "+sIdent+","+(string)kID+","+sCom+","+sAck);
 }
-
+integer g_iWaitTarget=-1; // Default is -1, if this value is anything but -1, wait until unix time is greater than the target and reset it to -1, during wait time, no restrictions should be accepted. Infact the relay should be on pause mode, and not acknowledge any requests to it.
 SafeWord() {
     if (!g_iHelpless) {
+        // Fix for issue #146, add 30 (revised it to be 20) seconds to the current unix time, and make the relay wait to act upon any new restrictions until time is greater than expected unix target.
+        g_iWaitTarget=(llGetUnixTime()+20);
         llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
-        RelayNotify(g_kWearer,"Restrictions lifted.",0);
+        RelayNotify(g_kWearer,"Restrictions lifted. Relay is now paused for 30 seconds",0);
         g_lTempBlockObj=[];
         g_lTempTrustObj=[];
         g_lTempBlockUser=[];
@@ -624,7 +631,8 @@ default {
         } else if (iNum==RLV_REFRESH) {
             g_iRLV=TRUE;
             refreshRlvListener();
-        } else if (iNum == DIALOG_RESPONSE) {
+        } else if( iNum == CMD_SAFEWORD)SafeWord();
+        else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
                 string sMenu = llList2String(g_lMenuIDs, iMenuIndex+1);
@@ -758,6 +766,12 @@ default {
         else
         { //in other cases we analyze the command here
 */
+        if(llGetUnixTime()<g_iWaitTarget && g_iWaitTarget!=-1){
+            return;
+        }
+        else if(llGetUnixTime()>g_iWaitTarget && g_iWaitTarget!=-1){
+            g_iWaitTarget =-1;
+        }
         list lArgs=llParseString2List(sMsg,[","],[]);
         sMsg = "";  // free up memory in case of large messages
         if ((lArgs!=[])!=3) return;
