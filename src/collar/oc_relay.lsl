@@ -316,9 +316,8 @@ sendrlvr(string sIdent, key kID, string sCom, string sAck) {
 integer g_iWaitTarget=-1; // Default is -1, if this value is anything but -1, wait until unix time is greater than the target and reset it to -1, during wait time, no restrictions should be accepted. Infact the relay should be on pause mode, and not acknowledge any requests to it.
 SafeWord() {
     if (!g_iHelpless) {
-        // Fix for issue #146, add 30 seconds to the current unix time, and make the relay wait to act upon any new restrictions until time is greater than expected unix target.
-        g_iWaitTarget=llGetUnixTime();
-        g_iWaitTarget+=30;
+        // Fix for issue #146, add 30 (revised it to be 20) seconds to the current unix time, and make the relay wait to act upon any new restrictions until time is greater than expected unix target.
+        g_iWaitTarget=(llGetUnixTime()+20);
         llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
         RelayNotify(g_kWearer,"Restrictions lifted. Relay is now paused for 30 seconds",0);
         g_lTempBlockObj=[];
