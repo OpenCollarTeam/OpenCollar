@@ -1,4 +1,5 @@
-# OpenCollar 8Cuffs legs 7.100
+# OpenCollar Cuffs
+#Chain Only|*none*|rllc=lllc
 Chainonly|chainonly|rllc=lllc
 Belly|cuff-belly|irllc=illlc~rulc=lulc
 Butterfly|cuff-butterfly|rllc=lllc~lllc=lulc~rllc=rulc~ilulc=locbelt~irulc=rocbelt

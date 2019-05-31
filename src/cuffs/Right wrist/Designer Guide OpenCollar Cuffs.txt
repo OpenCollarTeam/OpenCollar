@@ -1,6 +1,6 @@
-OpenCollar Cuffs 7.1000+ - Read me for Designers
-================================================
-This is just an updated version of the OpenNC cuffs 3.980+ guide.
+﻿OpenCollar Cuffs 7.1000+ - Read me for Designers
+==================================
+This is just an updated version of the OpenCollar cuffs 3.980+ guide.
 
 This is a help for people who want to use the OpenCollar Cuffs script set to create  their own cuffs.
 
@@ -32,7 +32,7 @@ The prim need to be named like the chain point (see list above for currently use
 LockGuard/LockMeister points for devices to attach chains to:
 OpenColalr cuffs use an invisible prim place over a ring to attach the chains from devices to. This allows the chains from the cuffs to be active, while the sub is on a device. The prim needs to be named like the LockMeister point (Example: lcuff).
 
-Graphic:   􀀁 (use for basic reference only now until we make new ones)
+Graphic:   (see inworld NC for texture) (use for basic reference only now until we make new ones)
 
 
 
@@ -44,14 +44,14 @@ Needs to contain the 2 scripts  To keep the colors in sync to the main cuff, the
 OpenCollar Cuff chain points and LockGuard/LockMeister points for devices to attach chains to:
 See Main cuff.
 
-Graphic slave cuff:   􀀀 (Again these are for basic reference only the best way to learn is to get a set of full perm Opencollar cuffs and look at all the chaining prim names
-Graphic slave belt:   􀀃
+Graphic slave cuff:   (see inworld NC for texture) (Again these are for basic reference only the best way to learn is to get a set of full perm Opencollar cuffs and look at all the chaining prim names
+Graphic slave belt:   (see inworld NC for texture)
 
 
 Collar (occollar): (this section is not currently up to date as we are unsure if to include the collar points now)
 The collar can contain the cuff addon, but this is not essential needed. If you want to add more OC Chain points or LM/LG chain points, you need to add the listen as well and can add additional prims for chaining like in the main/slave cuffs.
 
-Graphic:    􀀂
+Graphic:    (see inworld NC for texture)
 
 
 
@@ -69,7 +69,7 @@ Walk through for those wanting to use the OpenCollar Cuffs scripts in their own 
     
 NOTES 
    1.    The root prim set. The coloring and texturing scripts will not set color or texture for the root prim. This is another reason to have the root prim set be an invisible ball in the mid of the main cuff and a single ball the slave cuffs. 
-   2.    Disabling the texture and color features. If you wish to prevent a group of prims from being colored, or textured, you can add "~nocolor ", or "~notexture" to the description as well. (It is a good idea to look how the single prims of the OpenNC Cuffs are named, in Object Name and Description.) In our "Jewels" example, you would probably want to have the description be "Jewels~notexture", so that the texture script will leave your jewel textures alone, but the color script will still be able to tint the jewel prims. 
+   2.    Disabling the texture and color features. If you wish to prevent a group of prims from being colored, or textured, you can add "~nocolor ", or "~notexture" to the description as well. (It is a good idea to look how the single prims of the OpenCollar Cuffs are named, in Object Name and Description.) In our "Jewels" example, you would probably want to have the description be "Jewels~notexture", so that the texture script will leave your jewel textures alone, but the color script will still be able to tint the jewel prims. 
    3.    OC Chain prims. The default OpenColalr cuffs have 3 chain points for the internal chain system of the cuffs. Those chain points can be visible parts of the cuff or invisible spheres. Each requires the correctly named prim, as all points are controlled from the main script in the root prim of the cuffs. The prim needs to be named like the OC Chain point. For the right forearm the cuff point at the back would be called “rlac” (right lower arm cuff), the outer one gets the name “orlac” (outer right lower arm cuff), the inner one “irlac” (inner right lower arm cuff). The cuff for the left upper leg would get OC chain points as follows: the cuff point at the back would be called “lulc” (left upper leg cuff), the outer one gets the name “olulc” (outer left upper leg cuff), the inner one “ilulc” (inner left upper leg cuff).
    4.    LockGuard/LockMeister chain prim. Those chain points can be visible parts of the cuff or invisible spheres. Usually every cuff part has only 1 of those, exceptions are the collar and the belt, which can have more. See the LockMeister or LockGuard API descriptions for more info. The main script in the slave cuffs builds a set of standard multiple LockGuard ID's from the LG named chaining point. For the right forearm cuff the LockMeister ID is “rcuff”, so the prim needs to be named “rcuff”. For LockGuard this cuff usually gets 3 IDs: “ID rightwrist” for the right forarm, “ID wrists” so a device can grab both forearm cuffs with one command, and “ID allfour” so the wrist and ankle cuffs can be grabbed with one command.
 
@@ -98,7 +98,7 @@ Attention: The collar itself already supports the LockMeister chain point “col
 Several OpenCollar features depend on the object's Description being properly formatted. It should look something like this: 
 SteelCuffs~stc_ 
 As you can see, the description is divided into 3 parts, separated by a tilde ("~") character. The first part (SteelCuffs, in this example) is the product's name. It can be anything you want. 
-The Second part ("stc _") is the database prefix. OpenNC Cuffs use an internal database to save the settings. 
+The Second part ("stc _") is the database prefix. OpenCollar Cuffs use an internal database to save the settings. 
 In the Description field of the root prim, change "stc_" to something that is likely to be unique. A good rule is to use your initials, plus the product initials. So if Cleo Collins made "Super Fancy Cuffs", she might put "ccfc_" as the prefix. 
 
 
@@ -165,7 +165,7 @@ LockGuard points: [leftankle, ankles, allfour]
 
 Right upper leg:
 Command Token: rulc (right upper leg cuff)
-OpenNC chain points: rulc, orulc (outer right upper leg cuff), irulc
+OpenCollar chain points: rulc, orulc (outer right upper leg cuff), irulc
 LockMeister point: rthigh
 LockGuard points: [rightupperthigh, thighs]
 
@@ -204,7 +204,7 @@ Scripts can be copied from a free cuff set or from the latest updater
 ---------------------------------------------------------------------------------------------------------------------------
 
 Thanks go out to Anne Karas (inital communications and poses system), Pol McLaglen (starting the project and initial cuff design), Jesrad Seraph (additional poses), Winter Seale (some script improvements and bug fixings), Sandra Merilouto (testing) and Garvin Twine (testing and advise). Don’t forget Athaliah Opus and Nandana Singh, who started that OC madness and the mayn scripter involved in the OC project, on which this cuffs scripts are based on. You rock! 
-Updated by North Glenwalker, OpenNC Resident, and members of the OpenNC group.
+Updated by North Glenwalker, OpenCollar Resident, and members of the OpenCollar group.
 Rebuilt, and updated to OpenCollar V7.1 code by North Glenwalker, special thanks to all the Alpha and Beta Testers especially JB Bakerly
 
 Thanks as well for all who contributed and are not mentioned here. We hope, you like the cuffs and find this documentation useful.
