@@ -1,4 +1,4 @@
-# OpenCollar 8Cuffs Arms 7.100
+# OpenCollar Cuffs
 Armsup|cuff-armsup|illac=irlac~oruac=oluac
 Back|cuff-back|illac=irlac~iruac=iluac
 Back2|cuff-back2|llac=rlac~ruac=luac~ollac=bocbelt~orlac=bocbelt

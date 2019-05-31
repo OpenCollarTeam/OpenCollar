@@ -1,12 +1,12 @@
-# OpenCollar 8Cuffs Collar Pose 7.100
+# OpenCollar Cuffs
 #
 arch|*none*|irllc=lllc~irulc=ilulc~iruac=iluac~orllc=orlac~olllc=ollac~orulc=oruac~olulc=oluac~roccollar=ruac~loccollar=luac
 attention|*none*|irllc=lllc~illac=irlac~irulc=ilulc~iruac=iluac~roccollar=iruac~loccollar=iluac
 back|*none*|irulc=ilulc~irllc=illlc~ollac=ollc~orlac=orlc~illac=irlac~luac=ruac
 beautystand|*none*|irllc=illlc
 belly|*none*|irllc=illlc~rulc=lulc~orulc=orlac~olulc=ollac~iruac=rocbelt~iluac=locbelt
-#bop
 booty|*none*|irllc=illlc~illac=irlac~orlac=orulc~ilulc=irulc~ollac=olulc~locbelt=llac~rocbelt=rlac
+bop
 bracelets|*none*|illac=irlac~illlc=irllc~olllc=ollac~orllc=orllc
 cutie|*none*|irllc=illlc~ollac=orlac~ruac=rocbelt~luac=locbelt
 davinci|*none*|irllc=illlc~rocbelt=irlac~illac=locbelt~oruac=roccollar~oluac=loccollar~lulc=llac~rulc=rlac
@@ -34,6 +34,9 @@ tower|*none*|irulc=ilulc~rllc=lllc~focbelt=illac~focbelt=irlac~ollac=orlac~luac=
 #These next block are for the older poses and may need more work
 naduw|*none*|irllc=illlc~locbelt=ollac~rocbelt=orlac~luac=ruac
 plead|*none*|irulc=ilulc~irllc=illlc
+
+
+
 kneelAndEat|*none*|irllc=illlc
 open|*none*|illac=irlac~orllc=orlac~olllc=ollac
 shock|*none*|irllc=illlc
