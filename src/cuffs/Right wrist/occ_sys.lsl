@@ -586,7 +586,6 @@ default {
         key id = llDetectedKey(0);
         if ((llGetAttached() == 0)&& (id == g_kWearer)) // If not attached then wake up update script then do nothing
         {
-            llSetScriptState("OpenNC - update",TRUE);
             return;
         }
         if (id == g_kWearer && resize == TRUE)// if we are wearer then allow to resize
