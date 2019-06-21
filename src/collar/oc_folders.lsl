@@ -15,7 +15,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -491,7 +491,7 @@ default {
         else if (iNum == RLV_CLEAR) { //this triggers for safeword as well
             g_lFolderLocks = [];
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,  g_sSettingToken + "Locks", NULL_KEY);
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
         else if (iNum == DIALOG_RESPONSE) {
 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
