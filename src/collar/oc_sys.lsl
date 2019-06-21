@@ -310,8 +310,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fix") {
         if (kID == g_kWearer || iNum == CMD_OWNER){
-            RebuildMenu();
+            RebuildMenu(fromMenu, kID, iNum);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
+            
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "news"){
         llMessageLinked(LINK_DIALOG,NOTIFY, "0News is deprecated in this version", kID);
@@ -477,7 +478,7 @@ UpdateGlow(integer iLink, integer iAlpha) {
     }
 }
 
-RebuildMenu() {
+RebuildMenu(integer iRemenu, key kLastUser, integer iLastAuth) {
     //Debug("Rebuild Menu");
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
@@ -489,6 +490,9 @@ RebuildMenu() {
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
     llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
+    
+    if(iRemenu)
+        SettingsMenu(kLastUser, iLastAuth); // test fix
 }
 
 init (){
@@ -740,7 +744,7 @@ default {
         }
         if (g_iWaitRebuild) {
             g_iWaitRebuild = FALSE;
-            RebuildMenu();
+            RebuildMenu(FALSE, "",0);
         }
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
