@@ -25,6 +25,7 @@ integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
+integer CMD_NOACCESS = 599;
 
 integer AUTH_REQUEST = 600;
 integer AUTH_REPLY = 601;
@@ -173,7 +174,7 @@ ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
 
 integer CheckCommandAuth(key kCmdGiver, integer iAuth) {
     // Check for invalid auth
-    if (iAuth < CMD_OWNER || iAuth > CMD_WEARER) return FALSE;
+    if (iAuth < CMD_OWNER || iAuth > CMD_EVERYONE) return FALSE;
     // If leashed, only move leash if Comm Giver outranks current leasher
     if (g_kLeashedTo != NULL_KEY && iAuth > g_iLastRank){
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to leash",kCmdGiver);
@@ -385,7 +386,7 @@ DoUnleash(integer iDelSettings) {
     llStopMoveToTarget();
     llMessageLinked(LINK_THIS, CMD_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
-    g_iLastRank = CMD_EVERYONE;
+    g_iLastRank = CMD_NOACCESS;
     if (iDelSettings) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
@@ -401,13 +402,13 @@ YankTo(key kIn){
 
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
-    if (iAuth == CMD_EVERYONE) {
+    if (iAuth == CMD_NOACCESS) {
         if (kMessageID == g_kLeashedTo) {
             sMessage = llToLower(sMessage);
             if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) Unleash(kMessageID);
             else if (sMessage == "yank") YankTo(kMessageID);
         }
-    } else { //(iAuth >= CMD_OWNER && iAuth <= CMD_WEARER)
+    } else { //(iAuth >= CMD_OWNER && iAuth <= CMD_EVERYONE ) ~ For reference.. the levels were messed up in oc_auth.. it assigned public to CMD_GROUP
         g_kCmdGiver = kMessageID;
         list lParam = llParseString2List(sMessage, [" "], []);
         string sComm = llToLower(llList2String(lParam, 0));
