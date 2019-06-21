@@ -32,6 +32,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_BLOCKED = 520;
+integer CMD_NOACCESS = 599;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
@@ -360,9 +361,10 @@ integer in_range(key kID) {
 integer Auth(string sObjID) {
     string sID = (string)llGetOwnerKey(sObjID); // if sObjID is an avatar key, then sID is the same key
     integer iNum;
-    if (~llListFindList(g_lOwner+g_lTempOwner, [sID]))
+    if (~llListFindList(g_lOwner, [sID]))
         iNum = CMD_OWNER;
-    else if (llGetListLength(g_lOwner+g_lTempOwner) == 0 && sID == g_sWearerID)
+    else if(~llListFindList(g_lTempOwner, [sID])) iNum = CMD_TRUSTED; // TODO: Evaluate whether we want to keep the temporary owner level as trusted, full owner auth level, or make a dedicated CMD_TEMPORARY for this role.
+    else if (llGetListLength(g_lOwner) == 0 && sID == g_sWearerID)
         //if no owners set, then wearer's cmds have owner auth
         iNum = CMD_OWNER;
     else if (~llListFindList(g_lBlock, [sID]))
@@ -373,7 +375,7 @@ integer Auth(string sObjID) {
         iNum = CMD_WEARER;
     else if (g_iOpenAccess)
         if (in_range((key)sID))
-            iNum = CMD_GROUP;
+            iNum = CMD_EVERYONE; // TODO: Change this ! If we REALLY want a different auth level for public & in_range, then we need to create a special level for that, not be assigning it to cmd_group. It caused a issue in the bookmarks script as that disallows group access, however it would also still present the menu. So all actions a user would do would be met with "ACCESS DENIED"
         else
             iNum = CMD_EVERYONE;
     else if (g_iGroupEnabled && (string)llGetObjectDetails((key)sObjID, [OBJECT_GROUP]) == (string)g_kGroup && (key)sID != g_sWearerID)  //meaning that the command came from an object set to our control group, and is not owned by the wearer
@@ -382,9 +384,9 @@ integer Auth(string sObjID) {
         if (in_range((key)sID))
             iNum = CMD_GROUP;
         else
-            iNum = CMD_EVERYONE;
+            iNum = CMD_GROUP;
     } else
-        iNum = CMD_EVERYONE;
+        iNum = CMD_NOACCESS;
     //Debug("Authed as "+(string)iNum);
     return iNum;
 }
@@ -619,7 +621,7 @@ default {
             else llMessageLinked(LINK_SET, iAuth, sStr, kID);
             //Debug("noauth: " + sStr + " from " + (string)kID + " who has auth " + (string)iAuth);
             return; // NOAUTH messages need go no further
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER)
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
             UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             //Debug("Got setting response: "+sStr);

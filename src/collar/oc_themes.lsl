@@ -41,7 +41,7 @@ integer CMD_OWNER           =   500;
 //integer CMD_TRUSTED       =   501;
 //integer CMD_GROUP         =   502;
 integer CMD_WEARER          =   503;
-//integer CMD_EVERYONE        =   504;
+integer CMD_EVERYONE        =   504;
 //integer CMD_RLV_RELAY     =   507;
 //integer CMD_SAFEWORD      =   510;
 //integer CMD_RELAY_SAFEWORD=   511;
@@ -519,7 +519,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 }
             }
         } else {  //anyone else gets an error
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%NOACCESS%",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY, "0"+"%NOACCESS% to themes",kID);
             llMessageLinked(LINK_ROOT, iNum, "menu Settings", kID);
         }
     }
@@ -541,7 +541,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sID = llList2String(lParams, 0);

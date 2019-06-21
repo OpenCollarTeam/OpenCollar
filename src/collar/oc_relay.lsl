@@ -18,7 +18,7 @@ integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507; // now will be used from rlvrelay to rlvmain, for ping only
 integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -480,7 +480,7 @@ CleanQueue() {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum<CMD_OWNER || iNum>CMD_WEARER || iNum==CMD_EVERYONE) return;
     if (llToLower(sStr) == "rm relay") {
         if (kID!=g_kWearer && iNum!=CMD_OWNER) RelayNotify(kID,"Access denied!",0);
         else  Dialog(kID,"\nAre you sure you want to delete the relay plugin?\n", ["Yes","No","Cancel"], [], 0, iNum,"rmrelay");
@@ -601,7 +601,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum==CMD_ADDSRC)

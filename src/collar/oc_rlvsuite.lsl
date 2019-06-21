@@ -54,7 +54,7 @@ key     g_kWearer;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER                   = 500;
 integer CMD_TRUSTED = 501;
-//integer CMD_GROUP = 502;
+integer CMD_GROUP = 502;
 integer CMD_WEARER                  = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
@@ -70,7 +70,7 @@ integer LINK_RLV                   = 4;
 integer LINK_SAVE                  = 5;
 integer LINK_UPDATE                = -10;
 integer LM_SETTING_SAVE            = 2000;
-//integer LM_SETTING_REQUEST         = 2001;
+integer LM_SETTING_REQUEST         = 2001;
 integer LM_SETTING_RESPONSE        = 2002;
 integer LM_SETTING_DELETE          = 2003;
 integer LM_SETTING_EMPTY           = 2004;
@@ -188,8 +188,9 @@ DoTerminalCommand(string sMessage, key kID) {
     string sCRLF= llUnescapeURL("%0A");
     list lCommands = llParseString2List(sMessage, [sCRLF], []);
     sMessage = llDumpList2String(lCommands, ",");
-    llMessageLinked(LINK_RLV,RLV_CMD,sMessage,"vdTerminal");
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your command(s) were sent to %WEARERNAME%'s RL-Viewer:\n" + sMessage, kID);
+    
+    llMessageLinked(LINK_RLV,RLV_CMD,sMessage,"Terminal");
+    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your command(s) were sent to %WEARERNAME%'s Viewer:\n" + sMessage, kID);
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about" + " has changed your rlv restrictions.", g_kWearer);
 }
 
@@ -262,39 +263,39 @@ DetachMenu(key kID, integer iAuth)
 }
 
 doRestrictions(){
-    if (g_iSendRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"sendim=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"sendim=y","vdRestrict");
+    if (g_iSendRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"sendim=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"sendim=y","Restrict");
 
-    if (g_iReadRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"recvim=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"recvim=y","vdRestrict");
+    if (g_iReadRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"recvim=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"recvim=y","Restrict");
 
-    if (g_iHearRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"recvchat=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"recvchat=y","vdRestrict");
+    if (g_iHearRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"recvchat=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"recvchat=y","Restrict");
 
-    if (g_iTalkRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"sendchat=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"sendchat=y","vdRestrict");
+    if (g_iTalkRestricted)     llMessageLinked(LINK_RLV,RLV_CMD,"sendchat=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"sendchat=y","Restrict");
 
-    if (g_iTouchRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"touchall=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"touchall=y","vdRestrict");
+    if (g_iTouchRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"touchall=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"touchall=y","Restrict");
 
-    if (g_iStrayRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"tplm=n,tploc=n,tplure=n,sittp=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"tplm=y,tploc=y,tplure=y,sittp=y","vdRestrict");
+    if (g_iStrayRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"tplm=n,tploc=n,tplure=n,sittp=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"tplm=y,tploc=y,tplure=y,sittp=y","Restrict");
 
     if (g_iStandRestricted) {
-        if (llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","vdRestrict");
-    } else llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y","vdRestrict");
+        if (llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","Restrict");
+    } else llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y","Restrict");
 
-    if (g_iRummageRestricted)  llMessageLinked(LINK_RLV,RLV_CMD,"showinv=n,viewscript=n,viewtexture=n,edit=n,rez=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"showinv=y,viewscript=y,viewtexture=y,edit=y,rez=y","vdRestrict");
+    if (g_iRummageRestricted)  llMessageLinked(LINK_RLV,RLV_CMD,"showinv=n,viewscript=n,viewtexture=n,edit=n,rez=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"showinv=y,viewscript=y,viewtexture=y,edit=y,rez=y","Restrict");
 
-    if (g_iDressRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"addattach=n,remattach=n,defaultwear=n,addoutfit=n,remoutfit=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"addattach=y,remattach=y,defaultwear=y,addoutfit=y,remoutfit=y","vdRestrict");
+    if (g_iDressRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"addattach=n,remattach=n,defaultwear=n,addoutfit=n,remoutfit=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"addattach=y,remattach=y,defaultwear=y,addoutfit=y,remoutfit=y","Restrict");
 
-    if (g_iBlurredRestricted)  llMessageLinked(LINK_RLV,RLV_CMD,"setdebug_renderresolutiondivisor:16=force","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"setdebug_renderresolutiondivisor:1=force","vdRestrict");
+    if (g_iBlurredRestricted)  llMessageLinked(LINK_RLV,RLV_CMD,"setdebug_renderresolutiondivisor:16=force","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"setdebug_renderresolutiondivisor:1=force","Restrict");
 
-    if (g_iDazedRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"shownames=n,showhovertextworld=n,showloc=n,showworldmap=n,showminimap=n","vdRestrict");
-    else llMessageLinked(LINK_RLV,RLV_CMD,"shownames=y,showhovertextworld=y,showloc=y,showworldmap=y,showminimap=y","vdRestrict");
+    if (g_iDazedRestricted)    llMessageLinked(LINK_RLV,RLV_CMD,"shownames=n,showhovertextworld=n,showloc=n,showworldmap=n,showminimap=n","Restrict");
+    else llMessageLinked(LINK_RLV,RLV_CMD,"shownames=y,showhovertextworld=y,showloc=y,showworldmap=y,showminimap=y","Restrict");
 }
 
 releaseRestrictions() {
@@ -323,7 +324,11 @@ releaseRestrictions() {
 
     doRestrictions();
 }
-
+string bool2string(integer iTest){
+    if(iTest)return "true";
+    else return "false";
+}
+integer g_iTerminalAccess; // This is the bitset indicating what levels can access, or cannot access, the terminal.
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     string sLowerStr=llToLower(sStr);
     //Debug(sStr);
@@ -360,24 +365,44 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         return;
     }
     //restrictions command handling
+    
+    
+    
     integer iNoAccess=FALSE;
-    if (iNum==CMD_WEARER) {
-        if (sStr == RESTRICTIONS_CHAT_COMMAND || sLowerStr == "sit" || sLowerStr == TERMINAL_CHAT_COMMAND) {
+    if (sStr == TERMINAL_CHAT_COMMAND || sStr == "menu " + TERMINAL_BUTTON) {
+        
+        /// g_iTerminalAccess as of v7.2 will define the access rights for the terminal.
+        // A flag is set if denied.
+        if((g_iTerminalAccess&1) && iNum ==CMD_WEARER) { 
             iNoAccess=TRUE;
-        } else if (sLowerStr == "menu force sit" || sStr == "menu " + RESTRICTION_BUTTON || sStr == "menu " + TERMINAL_BUTTON){
+            return;
+        }else if((g_iTerminalAccess&2) && iNum == CMD_TRUSTED){
             iNoAccess=TRUE;
-            llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
+            return;
+        }else if((g_iTerminalAccess&4)&& iNum == CMD_EVERYONE){
+            iNoAccess=TRUE;
+            return;
+        }else if((g_iTerminalAccess&8)&&iNum == CMD_GROUP){
+            iNoAccess=TRUE;
+            return;
         }
-        return;
-    } else if (sStr == RESTRICTIONS_CHAT_COMMAND || sStr == "menu " + RESTRICTION_BUTTON) {
-        RestrictionsMenu(kID, iNum);
-        return;
-    } else if (sStr == TERMINAL_CHAT_COMMAND || sStr == "menu " + TERMINAL_BUTTON) {
+        
+        // CMD_OWNER is never denied terminal. CMD_OWNER is the access level of the owner level as well as the unowned or selfowned wearer.
+        
         if (sStr == TERMINAL_CHAT_COMMAND) g_iMenuCommand = FALSE;
         else g_iMenuCommand = TRUE;
-        Dialog(kID, g_sTerminalText, [], [], 0, iNum, "terminal");
+        
+        string sAppendSettings = "Wearer blocked: "+bool2string((g_iTerminalAccess&1))+"\nTrusted blocked: "+bool2string((g_iTerminalAccess&2))+"\nPublic blocked: "+bool2string((g_iTerminalAccess&4))+"\nGroup blocked: "+bool2string((g_iTerminalAccess&8))+"\n\nFor help configuring, type 'help' without the quotes!\nTo exit the terminal, simply type 'back'";
+        
+        Dialog(kID, g_sTerminalText+"\n"+sAppendSettings, [], [], 0, iNum, "terminal");
         return;
-    } else if (sLowerStr == "restrictions back") {
+    } else if(sStr == RESTRICTIONS_CHAT_COMMAND || sStr == "menu "+RESTRICTION_BUTTON){
+        RestrictionsMenu(kID, iNum);
+        return;
+    }
+    
+    
+    if (sLowerStr == "restrictions back") {
         llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
         return;
     } else if (sLowerStr == "restrictions reset" || sLowerStr == "allow all"){
@@ -540,7 +565,7 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         } else iNoAccess=TRUE;
     } else if (sLowerStr == "stand" || sLowerStr == "standnow"){
         if (iNum <= g_iStandRestricted || !g_iStandRestricted) {
-            llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
+            llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","Restrict");
             g_iSitting = FALSE;
             //UserCommand(iNum, "allow stand", kID, FALSE);
             //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% is allowed to stand once again.\n",kID);
@@ -549,7 +574,9 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         if (bFromMenu) SitMenu(kID, iNum);
         return;
     } else if (sLowerStr == "menu force sit" || sLowerStr == "sit" || sLowerStr == "sitnow"){
-        SitMenu(kID, iNum);
+        if(iNum!=CMD_WEARER)
+            SitMenu(kID, iNum);
+        else iNoAccess=TRUE;
        /* if (iNum <= g_iStandRestricted || !g_iStandRestricted) SitMenu(kID, iNum);
         else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS%",kID);
@@ -559,10 +586,10 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     } else if (sLowerStr == "sit back") {
         if (iNum <= g_iStandRestricted || !g_iStandRestricted) {
             if (CheckLastSit(g_kLastForcedSeat)==FALSE) return;
-            llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
+            llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","Restrict");
             llSleep(0.5);
-            llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
-            if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","vdRestrict");
+            llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","Restrict");
+            if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","Restrict");
             g_iSitting = TRUE;
             llSleep(0.5);
         } else iNoAccess=TRUE;
@@ -572,12 +599,12 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         if (iNum <= g_iStandRestricted || !g_iStandRestricted) {
             sLowerStr = llDeleteSubString(sStr,0,llStringLength("sit ")-1);
             if ((key)sLowerStr) {
-                llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","vdRestrict");
+                llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force","Restrict");
                 llSleep(0.5);
                 g_kLastForcedSeat=(key)sLowerStr;
                 g_sLastForcedSeat=llKey2Name(g_kLastForcedSeat);
-                llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sLowerStr+"=force","vdRestrict");
-                if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","vdRestrict");
+                llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sLowerStr+"=force","Restrict");
+                if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","Restrict");
                 g_iSitting = TRUE;
                 llSleep(0.5);
             } else {
@@ -605,6 +632,14 @@ default {
     state_entry() {
         g_kWearer = llGetOwner();
         //Debug("Starting");
+        string R="restrictions";
+        list tokens = [R+"send",R+"read", R+"hear", R+"talk",R+"touch",R+"stray", R+"stand",R+"rummage", R+"blurred", R+"dazed", "terminal_accessbitset"];
+        integer i=0;
+        integer end=llGetListLength(tokens);
+        for(i=0;i<end;i++){
+            llMessageLinked(LINK_SAVE, LM_SETTING_REQUEST, llList2String(tokens,i),"");
+        }
+        tokens=[];end=0;i=0;
     }
 
     on_rez(integer iParam) {
@@ -631,7 +666,8 @@ default {
             else if (sStr=="restrictions_rummage") g_iRummageRestricted=FALSE;
             else if (sStr=="restrictions_blurred") g_iBlurredRestricted=FALSE;
             else if (sStr=="restrictions_dazed")   g_iDazedRestricted=FALSE;
-        } else if (iNum == LM_SETTING_RESPONSE) {
+            else if(sStr == "terminal_accessbitset") g_iTerminalAccess=0;
+        } else if (iNum == LM_SETTING_RESPONSE || iNum == LM_SETTING_SAVE) { // we should set these values on save or load.
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
@@ -646,17 +682,19 @@ default {
                 else if (sToken=="restrictions_rummage")  g_iRummageRestricted=(integer)sValue;
                 else if (sToken=="restrictions_blurred")  g_iBlurredRestricted=(integer)sValue;
                 else if (sToken=="restrictions_dazed")    g_iDazedRestricted=(integer)sValue;
+            } else if(~llSubStringIndex(sToken, "terminal_")){
+                if(sToken == "terminal_accessbitset") g_iTerminalAccess=(integer)sValue;
             }
         }
-        else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID,FALSE);
+        else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID,FALSE);
         else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;
             doRestrictions();
             if (g_iSitting && g_iStandRestricted) {
                 if (CheckLastSit(g_kLastForcedSeat)==TRUE) {
-                    llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","vdRestrict");
-                    if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","vdRestrict");
-                } else llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y","vdRestrict");
+                    llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+(string)g_kLastForcedSeat+"=force","Restrict");
+                    if (g_iStandRestricted) llMessageLinked(LINK_RLV,RLV_CMD,"unsit=n","Restrict");
+                } else llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y","Restrict");
             }
         } else if (iNum == RLV_OFF) {
             g_iRLVOn = FALSE;
@@ -689,8 +727,46 @@ default {
                     UserCommand(iAuth, "menu force sit", kAv, TRUE);
                 } else if (sMenu == "find") UserCommand(iAuth, "sit "+sMessage, kAv, FALSE);
                 else if (sMenu == "terminal") {
+                    
+                    if(iAuth == CMD_OWNER ){
+                        list tmp = llParseString2List(llToLower(sMessage), [" "],[]);
+                        integer iTerminate=FALSE;
+                        if(llList2String(tmp,0)=="allow"){
+                            integer iAddAccess;
+                            iTerminate=TRUE;
+                            if(llList2String(tmp,1) == "wearer"  && (g_iTerminalAccess&1))iAddAccess=1;
+                            if(llList2String(tmp,1) == "trusted" && (g_iTerminalAccess&2))iAddAccess=2;
+                            if(llList2String(tmp,1) == "public" && (g_iTerminalAccess&4))iAddAccess=4;
+                            if(llList2String(tmp,1) == "group" && (g_iTerminalAccess&8))iAddAccess=8;
+                            
+                            g_iTerminalAccess=(g_iTerminalAccess-iAddAccess);
+                        } else if(llList2String(tmp,0)=="deny"){
+                            integer iRemAccess;
+                            iTerminate=TRUE;
+                            if(llList2String(tmp,1) == "wearer" && !(g_iTerminalAccess&1))iRemAccess=1;
+                            if(llList2String(tmp,1) == "trusted" && !(g_iTerminalAccess&2))iRemAccess=2;
+                            if(llList2String(tmp,1) == "public" && !(g_iTerminalAccess&4))iRemAccess=4;
+                            if(llList2String(tmp,1) == "group" && !(g_iTerminalAccess&8))iRemAccess=8;
+                            
+                            g_iTerminalAccess=(g_iTerminalAccess+iRemAccess);
+                        }else if(llList2String(tmp,0)=="help"){
+                            iTerminate=TRUE;
+                            llInstantMessage(kAv, "The following config options are available for the terminal. Please note that only CMD_OWNER can execute the configuration commands.\n{allow/deny} {wearer,public,group,trusted}\nAn example command would look like this: deny public\nYou can also type 'back' into the terminal to exit to the RLV menu.");
+                        } else if(llList2String(tmp,0)=="back"){
+                            llMessageLinked(LINK_RLV,iAuth,"menu "+COLLAR_PARENT_MENU,kAv);
+                            return;
+                        }
+                        if(iTerminate){
+                            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "terminal_accessbitset="+(string)g_iTerminalAccess,"");
+                            llMessageLinked(LINK_SET, iAuth, "menu Terminal", kAv); 
+                            return; // this is not a RLV command. We're safe to exit here.
+                        }// if it was NOT a config command, then process as a RLV command.
+                    }
+                    
+                    
+                    
                     if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
-                    if (g_iMenuCommand) llMessageLinked(LINK_RLV, iAuth, "menu " + COLLAR_PARENT_MENU, kAv);
+                    llMessageLinked(LINK_SET, iAuth, "menu Terminal", kAv);
                 } else if (sMenu == "folder" || sMenu == "multimatch") {
                     g_kMenuClicker = kAv;
                     if (sMessage == UPMENU)

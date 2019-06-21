@@ -11,7 +11,7 @@ integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -382,7 +382,7 @@ default {
                     }
                 }
             }
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             if (llToLower(sMessage) == "leash configure") {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
                 else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to configuring the leash particles",kMessageID);
