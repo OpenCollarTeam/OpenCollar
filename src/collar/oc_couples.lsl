@@ -59,7 +59,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
@@ -250,8 +250,8 @@ default {
 
     link_message(integer iSender, integer iNum, string sStr, key kID){
         //if you don't care who gave the command, so long as they're one of the above, you can just do this instead:
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) {
-            //the command was given by either owner, secowner, group member, or wearer
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
+            //the command was given by either owner, secowner, group member, wearer, or public user
             list lParams = llParseString2List(sStr, [" "], []);
             g_kCmdGiver = kID; 
             g_iCmdAuth = iNum;
@@ -270,8 +270,8 @@ default {
                 } else {       //no name given.
                     if (kID == g_kWearer) {                   //if commander is not sub, then treat commander as partner
                         llMessageLinked(LINK_DIALOG, NOTIFY, 
-														"0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand +
-														" Alice Mannonen, for example, you could say:\n\n /%CHANNEL% %PREFIX%" + sCommand + " ali\n", g_kWearer);
+                                                        "0"+"\n\nYou didn't give the name of the person you want to animate. To " + sCommand +
+                                                        " Alice Mannonen, for example, you could say:\n\n /%CHANNEL% %PREFIX%" + sCommand + " ali\n", g_kWearer);
                     } else {               //else set partner to commander
                         g_kPartner = g_kCmdGiver;
                         g_sPartnerName = "secondlife:///app/agent/"+(string)g_kPartner+"/about";
