@@ -47,6 +47,7 @@ integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 //integer CMD_BLOCKED = 520;
+integer CMD_NOACCESS = 599; // This is formerly CMD_EVERYONE. However.. CMD_EVERYONE was meant to be PUBLIC access... 
 
 // EXTERNAL MESSAGE MAP
 integer EXT_CMD_COLLAR = 499; // Added for collar or cuff commands to put ao to pause or standOff
@@ -395,7 +396,7 @@ CreateAnimList() {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-  if (iNum == CMD_EVERYONE) { // No command for people with no privilege in this plugin.
+  if (iNum == CMD_NOACCESS) { // No command for people with no privilege in this plugin.
     return;
   }
 
@@ -431,7 +432,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
   } else if (sCommand == "posture") {
     if (sValue == "on") {
-      if (iNum <= CMD_WEARER) {
+      if (iNum <= CMD_EVERYONE) {
         g_iLastPostureRank=iNum;
         SetPosture(TRUE, kID);
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PostureRank=" + (string)g_iLastPostureRank, "");
@@ -444,7 +445,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       }
     } else if ( sValue=="off") {
       if (iNum <= g_iLastPostureRank) {
-        g_iLastPostureRank = CMD_WEARER;
+        g_iLastPostureRank = CMD_EVERYONE;
         SetPosture(FALSE, kID);
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "PostureRank", "");
         llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "You can move your neck again.", g_kWearer);
