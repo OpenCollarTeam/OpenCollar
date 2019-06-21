@@ -10,8 +10,8 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="";
-string g_sCollarVersion="7.1";
+string g_sDevStage="(Alpha)";
+string g_sCollarVersion="7.2";
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
@@ -27,7 +27,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -152,6 +152,13 @@ integer g_iWaitUpdate;
 integer g_iWaitRebuild;
 
 integer compareVersions(string v1, string v2) { //compares two symantic version strings, true if v1 >= v2
+    // For a collar running a non-release build (one with g_sDevStage set to not null) return TRUE 
+    if(g_sDevStage!= ""){
+        if(v1 == v2) {
+            // likely that the new version has been released. Return true!
+            return TRUE;
+        } else return FALSE;
+    } // all other cases, perform this function as normal!
     integer v1Index=llSubStringIndex(v1,".");
     integer v2Index=llSubStringIndex(v2,".");
     integer v1a=(integer)llGetSubString(v1,0,v1Index);
@@ -276,7 +283,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "lock" || (!g_iLocked && sStr == "togglelock")) { // the remote uses togglelock
         if(g_iCaptureIsActive){
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% while capture is active",kID);
+            llMessageLinked(LINK_DIALOG,NOTIFY,"0%NOACCESS% to toggle lock while capture is active",kID);
             return;
         }
         //Debug("User command:"+sCmd);
@@ -310,8 +317,9 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         if (fromMenu) MainMenu(kID, iNum);
     } else if (sCmd == "fix") {
         if (kID == g_kWearer || iNum == CMD_OWNER){
-            RebuildMenu();
+            RebuildMenu(fromMenu, kID, iNum);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Menus have been fixed!",kID);
+            
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to fixing menus",kID);
     } else if (sCmd == "news"){
         llMessageLinked(LINK_DIALOG,NOTIFY, "0News is deprecated in this version", kID);
@@ -477,7 +485,7 @@ UpdateGlow(integer iLink, integer iAlpha) {
     }
 }
 
-RebuildMenu() {
+RebuildMenu(integer iRemenu, key kLastUser, integer iLastAuth) {
     //Debug("Rebuild Menu");
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
@@ -489,6 +497,9 @@ RebuildMenu() {
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "AddOns", "");
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Settings", "");
     llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE,"LINK_REQUEST","");
+    
+    if(iRemenu)
+        SettingsMenu(kLastUser, iLastAuth); // test fix
 }
 
 init (){
@@ -618,7 +629,7 @@ default {
                     SettingsMenu(kAv,iAuth);
                 }
             }
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE); 
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -740,7 +751,7 @@ default {
         }
         if (g_iWaitRebuild) {
             g_iWaitRebuild = FALSE;
-            RebuildMenu();
+            RebuildMenu(FALSE, "",0);
         }
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
     }
