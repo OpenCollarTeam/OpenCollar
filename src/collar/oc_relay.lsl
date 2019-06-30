@@ -197,10 +197,16 @@ integer Auth(key object, key user) {
     else if (~llListFindList(g_lBlockAv,[(string)kOwner])) return -1;
     else if (~llListFindList(g_lBlock,[(string)kOwner])) return -1;
     else if (g_iBaseMode==3) {}
-    else if (g_iLandMode && llGetOwnerKey(object)==llGetLandOwnerAt(llGetPos())) {}
+    else if (g_iLandMode && llGetOwnerKey(object)==llGetLandOwnerAt(llGetPos())) {
+       if(kOwner==g_kWearer) iAuth=0; 
+       //in case landmode is set and landowner is wearer, revert to ask.
+    }
     else if (~llListFindList(g_lTempTrustObj+g_lTrustObj,[object])) {}
     else if (~llListFindList(g_lTrustAv,[(string)kOwner])) {}
-    else if (~llListFindList(g_lOwner+g_lTrust+g_lTempOwner,[(string)kOwner])) {}
+    else if (~llListFindList(g_lOwner+g_lTrust+g_lTempOwner,[(string)kOwner])) {
+        if(kOwner!=object && (kOwner==g_kWearer  || llGetAgentSize(kOwner)==ZERO_VECTOR)) iAuth=0;
+        //We only rely on owner list permissions if the object owner is not the wearer, and the object owner is present in the sim.
+    }
 //    else if (g_iBaseMode==1) return -1; we should not block playful in trusted mode
     else iAuth=0;
     //user auth
