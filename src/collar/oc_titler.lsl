@@ -393,6 +393,13 @@ default{
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == 1999){ // link_cmd_debug. This script hasn't been modified since 7.1 i don't think - will update this if changelog shows otherwise.
+            if(sStr=="ver"){
+                llInstantMessage(kID, llGetScriptName()+" 7.1");
+            }else{
+                llInstantMessage(kID, llGetScriptName()+" TITLE TEXT: "+g_sText);
+            }
+        }
     }
 
     changed(integer iChange){

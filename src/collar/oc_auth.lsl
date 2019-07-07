@@ -3,7 +3,17 @@
 // Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,    
 // Medea Destiny, littlemousy, Romka Swallowtail, Sumi Perl et al.     
 // Licensed under the GPLv2. See LICENSE for full details. 
-
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 
 string g_sWearerID;
@@ -374,17 +384,17 @@ integer Auth(string sObjID) {
     else if (sID == g_sWearerID)
         iNum = CMD_WEARER;
     else if (g_iOpenAccess)
-        if (in_range((key)sID))
-            iNum = CMD_EVERYONE; // TODO: Change this ! If we REALLY want a different auth level for public & in_range, then we need to create a special level for that, not be assigning it to cmd_group. It caused a issue in the bookmarks script as that disallows group access, however it would also still present the menu. So all actions a user would do would be met with "ACCESS DENIED"
-        else
+        if(in_range((key)sID))
             iNum = CMD_EVERYONE;
+        else
+            iNum = CMD_NOACCESS;
     else if (g_iGroupEnabled && (string)llGetObjectDetails((key)sObjID, [OBJECT_GROUP]) == (string)g_kGroup && (key)sID != g_sWearerID)  //meaning that the command came from an object set to our control group, and is not owned by the wearer
-        iNum = CMD_GROUP;
-    else if (llSameGroup(sID) && g_iGroupEnabled && sID != g_sWearerID) {
-        if (in_range((key)sID))
+        if(in_range((key)sID))
             iNum = CMD_GROUP;
         else
-            iNum = CMD_GROUP;
+            iNum = CMD_NOACCESS;
+    else if (llSameGroup(sID) && g_iGroupEnabled && sID != g_sWearerID) {
+        iNum = CMD_GROUP;
     } else
         iNum = CMD_NOACCESS;
     //Debug("Authed as "+(string)iNum);
@@ -754,6 +764,19 @@ default {
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_AUTH","");
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" CAPTURE ACTIVE:",g_iCaptureIsActive]);
+            DebugOutput(kID, [" LIMIT ACCESS:", g_iLimitRange]);
+            DebugOutput(kID, [" OWN SELF:", g_iOwnSelf]);
+            DebugOutput(kID, [" OPEN ACCESS:",g_iOpenAccess]);
+            DebugOutput(kID, [" FIRST RUN:",g_iFirstRun]);
+            DebugOutput(kID, [" DISABLE RUNAWAY:", g_iRunawayDisable]);
+            DebugOutput(kID, [" GROUP:", g_iGroupEnabled]);
+        }
     }
     
     timer () {

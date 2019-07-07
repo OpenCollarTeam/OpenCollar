@@ -3,7 +3,17 @@
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,  
 // Romka Swallowtail, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
+string g_sScriptVersion="7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 integer g_iPrivateListenChan = 1;
 integer g_iPublicListenChan = TRUE;
@@ -540,6 +550,14 @@ default {
         else if (iNum == MVANIM_SKIP) {
             SafeDelete(sStr);
             AnnounceAnimInventory(iSender);
+        }else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" PRIVATE CHANNEL:", g_iPrivateListenChan]);
+            DebugOutput(kID, [" PUBLIC CHANNEL ON:", g_iPublicListenChan]);
+            DebugOutput(kID, [" HUD LISTEN CHANNEL:", g_iHUDChan]);
         }
     }
 

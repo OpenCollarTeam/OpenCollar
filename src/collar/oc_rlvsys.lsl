@@ -4,7 +4,7 @@
 // Sumi Perl et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-
+string g_sScriptVersion = "7.2rc";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -28,6 +28,7 @@ integer g_iMenuStride = 3;
 integer RELAY_CHANNEL = -1812221819;
 
 //MESSAGE MAP
+integer LINK_CMD_DEBUG=1999;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -556,6 +557,19 @@ default {
                     rebakeSourceRestrictions(kID);
                 }
             }
+        }
+        
+        if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            // The rest of this command can be access by <prefix> debug
+            llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
+            llInstantMessage(kID, llGetScriptName()+" RLV_ON: "+(string)g_iRLVOn);
+            
+            
+            
         }
     }
     

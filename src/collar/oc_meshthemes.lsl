@@ -1,6 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2017 Nirea Resident
 // Licensed under the GPLv2.  See LICENSE for full details. 
+string g_sScriptVersion = "7.2rc";
 
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -11,6 +12,8 @@ integer CMD_WEARER = 503;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
+
+integer LINK_CMD_DEBUG=1999;
 
 integer LINK_DIALOG         = 3;
 integer LINK_UPDATE = -10;
@@ -144,6 +147,13 @@ default
                 ApplyTheme(button, av);
                 ThemeMenu(av, auth);
             }
+        } else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            llInstantMessage(kID, llGetScriptName()+" THEMES: "+llDumpList2String(g_lThemes,", "));
+            llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iCollarHidden);
         }
     }
     

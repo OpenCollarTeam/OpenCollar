@@ -7,11 +7,12 @@
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 
-string g_sAppVersion = "¹⋅¹";
+string g_sAppVersion = "1.1";
+string g_sScriptVersion = "7.2rc";
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Label";
-
+integer LINK_CMD_DEBUG = 1999;
 key g_kWearer;
 
 //MESSAGE MAP
@@ -429,6 +430,14 @@ default
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+         else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            llInstantMessage(kID, llGetScriptName()+" APP VERSION: "+g_sAppVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            llInstantMessage(kID, llGetScriptName()+" LABEL "+g_sLabelText);
+        }
     }
 
     timer() {

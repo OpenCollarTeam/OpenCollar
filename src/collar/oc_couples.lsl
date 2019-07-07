@@ -3,7 +3,17 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,   
 // littlemousy, Romka Swallowtail, Sumi Perl et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
+string g_sScriptVersion="7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 string g_sParentMenu = "Animations";
 string g_sSubMenu = " Couples";
@@ -390,6 +400,13 @@ default {
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" PARTNER:", g_kPartner]);
+        }
     }
     not_at_target() {
         llTargetRemove(g_iTargetID);

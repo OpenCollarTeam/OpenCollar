@@ -4,7 +4,8 @@
 // littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -345,6 +346,16 @@ LMSay() {
     llSetTimerEvent(4.0);
 }
 
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
+
 default {
     on_rez(integer iRez) {
         llResetScript();
@@ -561,6 +572,17 @@ default {
        /* else if (iNum == LM_SETTING_DELETE) {
             if (sMessage == "leash_leashedto") StopParticles(TRUE);
         }*/
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sMessage == "ver")onlyver=1;
+            llInstantMessage(kMessageID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kMessageID, [" SETTINGS:"]+g_lSettings);
+            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo, g_kLeashToPoint]);
+            DebugOutput(kMessageID, [" LEASH ACTIVE:", g_iLeashActive]);
+            DebugOutput(kMessageID, [" STRICT MODE:", g_iStrictMode]);
+            DebugOutput(kMessageID, [" LEASH PRIMS:"]+g_lLeashPrims);
+        }
     }
 
     timer() {
