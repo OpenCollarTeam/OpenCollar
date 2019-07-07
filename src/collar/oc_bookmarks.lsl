@@ -3,7 +3,17 @@
 // Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
 // Romka Swallowtail, Garvin Twine et al.                 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 string g_sAppVersion = "1.3";
 
@@ -511,6 +521,14 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" DESTINATIONS:"]+g_lDestinations);
+            DebugOutput(kID, [" TEMPORARY DESTINATIONS:"]+g_lVolatile_Destinations);
+        }
     }
 
     changed(integer iChange) {

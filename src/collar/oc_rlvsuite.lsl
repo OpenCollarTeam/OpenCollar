@@ -3,7 +3,7 @@
 // Garvin Twine, Romka Swallowtail et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-
+string g_sScriptVersion = "7.2rc";
 //menu setup
 string  RESTRICTION_BUTTON          = "Restrictions"; // Name of the submenu
 string  RESTRICTIONS_CHAT_COMMAND   = "restrictions";
@@ -37,6 +37,8 @@ integer g_iBlurredRestricted;
 integer g_iDazedRestricted;
 
 integer g_iSitting;
+
+integer LINK_CMD_DEBUG = 1999;
 
 //outfit vars
 integer g_iListener;
@@ -328,7 +330,7 @@ string bool2string(integer iTest){
     if(iTest)return "true";
     else return "false";
 }
-integer g_iTerminalAccess; // This is the bitset indicating what levels can access, or cannot access, the terminal.
+integer g_iTerminalAccess=12; // This is the bitset indicating what levels can access, or cannot access, the terminal. Default is only owner, trusted and wearer, see the link message section for a explanation of the bitset.
 UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     string sLowerStr=llToLower(sStr);
     //Debug(sStr);
@@ -815,6 +817,15 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+         else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            // The rest of this command can be access by <prefix> debug
+            llInstantMessage(kID, llGetScriptName()+" RESTRICTIONS: "+llDumpList2String([g_iSendRestricted, g_iReadRestricted, g_iHearRestricted, g_iTalkRestricted, g_iTouchRestricted, g_iStrayRestricted, g_iRummageRestricted, g_iStandRestricted, g_iDressRestricted, g_iBlurredRestricted, g_iDazedRestricted], ", "));
+            llInstantMessage(kID, llGetScriptName()+" TERMINAL ACCESS: "+(string)g_iTerminalAccess);
+        }
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {

@@ -9,7 +9,18 @@
 //show/hide for elements named: Bell
 //2009-01-30 Cleo Collins - 1. draft
 
-string g_sAppVersion = "¹⋅¹";
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
+string g_sAppVersion = "1.1";
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
@@ -361,6 +372,15 @@ default {
             llSleep(4);
             SetBellElementAlpha();
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion+", APPVERSION: "+g_sAppVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" HAS BELL PRIMS:", g_iHasBellPrims]);
+            DebugOutput(kID, [" BELL VISIBLE:", g_iBellShow]);
+            DebugOutput(kID, [" BELL ON:", g_iBellOn]);
+        }
     }
 
     control( key kID, integer nHeld, integer nChange ) {

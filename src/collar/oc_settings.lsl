@@ -7,7 +7,7 @@
 
 
 // Central storage for settings of other plugins in the device.
-
+string g_sScriptVersion= "7.2rc";
 string g_sCard = ".settings";
 string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
@@ -20,6 +20,7 @@ key g_kWearer;
 string g_sURL;
 key g_kConfirmLoadDialogID;
 
+integer LINK_CMD_DEBUG= 1999;
 //string g_sSettingToken = "settings_";
 //string g_sGlobalToken = "global_";
 
@@ -28,7 +29,7 @@ key g_kConfirmLoadDialogID;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
-//integer CMD_WEARER = 503;
+integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
@@ -43,6 +44,8 @@ integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;
+integer LM_SETTING_RELAY_CONTENT = 2100;
+integer LM_SETTING_RELAY_LOAD = 2101; // used on 'Load' and on initial boot to read the .settings from root prim if applicable.
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -288,6 +291,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
                     //g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
                 } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
             } else if (sStrLower == "load card" || sStrLower == "load") {
+                llMessageLinked(LINK_SET, LM_SETTING_RELAY_LOAD, "", "");
                 if (llGetInventoryKey(g_sCard)) {
                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: /%CHANNEL% %PREFIX% load url <url>\n",kID);
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
@@ -313,6 +317,8 @@ UserCommand(integer iAuth, string sStr, key kID) {
     else if (sStrLower == "runaway") llSetTimerEvent(2.0);
 }
 
+
+
 default {
     state_entry() {
         if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
@@ -322,6 +328,7 @@ default {
         g_kWearer = llGetOwner();
         g_iLineNr = 0;
         if (!llGetStartParameter()) {
+            llMessageLinked(LINK_SET, LM_SETTING_RELAY_LOAD, "", "");
             if (llGetInventoryKey(g_sCard)) {
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
              g_kCardID = llGetInventoryKey(g_sCard);
@@ -389,7 +396,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum == CMD_OWNER || kID == g_kWearer) UserCommand(iNum, sStr, kID);
+        if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
             //save the token, value
             list lParams = llParseString2List(sStr, ["="], []);
@@ -413,7 +420,7 @@ default {
         else if (iNum == LM_SETTING_DELETE){
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_DELETE,sStr,"");
             DelSetting(sStr);
-        }
+        } else if(iNum == LM_SETTING_RELAY_CONTENT) LoadSetting(sStr, (integer)((string)kID));
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
             kID = llList2Key(lMenuParams,0);
@@ -434,6 +441,17 @@ default {
         } else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
+        } else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            // The rest of this command can be access by <prefix> debug
+            // This script does not have anything special to send. Only it's settings
+            llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
+            llInstantMessage(kID, llGetScriptName() +" lSettings length: "+(string)llGetListLength(g_lSettings));
+
+            PrintSettings(kID, "");
         }
     }
 

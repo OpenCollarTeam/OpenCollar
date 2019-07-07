@@ -5,6 +5,8 @@
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
 // ---- Immutable ----
@@ -67,7 +69,6 @@ string BUTTON_SUBMENU      = "Leash";
 // ---------------------------------------------
 // ------ VARIABLE DEFINITIONS ------
 // ----- menu -----
-
 list     g_lMenuIDs;
 integer g_iMenuStride = 3;
 integer g_iPreviousAuth;
@@ -581,7 +582,15 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         }
     }
 }
-
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
@@ -753,6 +762,20 @@ default {
             } else if(llList2String(lParams,0) == "AuthReply" && kMessageID=="followPass"){
                 LeashTo(kTarget, g_kPassLeashFrom, iNewAuth, g_lPasslPoints,TRUE, g_iPreviousAuth);
             }
+        }else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sMessage == "ver")onlyver=1;
+            llInstantMessage(kMessageID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo]);
+            DebugOutput(kMessageID, [" LENGTH:", g_iLength]);
+            DebugOutput(kMessageID, [" STAY:", g_iStay]);
+            DebugOutput(kMessageID, [" LEASHER IN RANGE:", g_iLeasherInRange]);
+            DebugOutput(kMessageID, [" STRICT MODE:",g_iStrictModeOn]);
+            DebugOutput(kMessageID, [" FOLLOW MODE:", g_bFollowMode]);
+            DebugOutput(kMessageID, [" COMMAND GIVER:",g_kCmdGiver]);
+            DebugOutput(kMessageID, [" LEASH COMMANDER ID:",g_kLeashCmderID]);
+            DebugOutput(kMessageID, [" LEASHED TO AVI:",g_bLeashedToAvi]);
         }
     }
 

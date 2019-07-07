@@ -3,7 +3,9 @@
 // Sumi Perl, littlemousy, Romka Swallowtail, Garvin Twine et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+string g_sScriptVersion = "7.2rc";
 
+integer LINK_CMD_DEBUG=1999;
 string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
 
@@ -198,13 +200,13 @@ integer Auth(key object, key user) {
     else if (~llListFindList(g_lBlock,[(string)kOwner])) return -1;
     else if (g_iBaseMode==3) {}
     else if (g_iLandMode && llGetOwnerKey(object)==llGetLandOwnerAt(llGetPos())) {
-       if(kOwner==g_kWearer) iAuth=0; 
-       //in case landmode is set and landowner is wearer, revert to ask.
+        if(kOwner==g_kWearer)iAuth=0;
+        // incase landmode is set and landowner is wearer, revert to ask
     }
     else if (~llListFindList(g_lTempTrustObj+g_lTrustObj,[object])) {}
     else if (~llListFindList(g_lTrustAv,[(string)kOwner])) {}
     else if (~llListFindList(g_lOwner+g_lTrust+g_lTempOwner,[(string)kOwner])) {
-        if(kOwner!=object && (kOwner==g_kWearer  || llGetAgentSize(kOwner)==ZERO_VECTOR)) iAuth=0;
+        if(kOwner!=object && (kOwner == g_kWearer || llGetAgentSize(kOwner)==ZERO_VECTOR)) iAuth=0;
         //We only rely on owner list permissions if the object owner is not the wearer, and the object owner is present in the sim.
     }
 //    else if (g_iBaseMode==1) return -1; we should not block playful in trusted mode
@@ -594,6 +596,16 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
+
 default {
     on_rez(integer iNum) {
         if (llGetOwner() != g_kWearer) llResetScript();
@@ -746,6 +758,17 @@ default {
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            
+            DebugOutput(kID, [" SOURCES:"]+g_lSources);
+            DebugOutput(kID, [" AUTH PENDING:", g_iAuthPending]);
+            
+            
+        }
     }
 
     listen(integer iChan, string who, key kID, string sMsg) {

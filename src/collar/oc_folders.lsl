@@ -4,6 +4,17 @@
 // Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 string g_sParentMenu = "RLV";
 
@@ -662,6 +673,9 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             else if (sStr == "LINK_RLV") LINK_RLV = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+        }
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {

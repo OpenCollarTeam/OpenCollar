@@ -3,6 +3,8 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
 // Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
+string g_sScriptVersion="7.2rc";
+integer LINK_CMD_DEBUG=1999;
 
 
 //an adaptation of Schmobag Hogfather's SchmoDialog script
@@ -638,6 +640,12 @@ default {
             else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_DIALOG","");
         } else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+        }
     }
 
     listen(integer iChan, string sName, key kID, string sMessage) {

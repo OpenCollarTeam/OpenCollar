@@ -8,6 +8,10 @@
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
 
+string g_sScriptVersion = "7.2rc";
+
+
+integer LINK_CMD_DEBUG=1999;
 string g_sSubMenu = "Size/Position";
 string g_sParentMenu = "Settings";
 
@@ -386,6 +390,15 @@ default {
             }
         } else if (iNum == LINK_UPDATE && sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+         else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            // The rest of this command can be access by <prefix> debug
+            llInstantMessage(kID, llGetScriptName()+" SIZED BY SCRIPT: "+(string)g_iSizedByScript);
+            llInstantMessage(kID, llGetScriptName()+" SIZE FACTOR: "+(string)g_iScaleFactor);
+        }
     }
 
     timer() {

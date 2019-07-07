@@ -10,13 +10,18 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="(Alpha)";
+string g_sDevStage="(Release Candidate)";
 string g_sCollarVersion="7.2";
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
 
 key g_kWearer;
+// Entries for the .settings relay
+// Relay will read .settings from root prim and send to oc_settings for storage.
+key g_kSettingsReader;
+integer g_iSettingsReader; 
+// End .settings relay
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
 integer g_iMenuStride = 3;
@@ -36,7 +41,7 @@ integer CMD_EVERYONE = 504;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS = 1003;
 //integer SAY = 1004;
-
+integer LINK_CMD_DEBUG = 1999;
 integer REBOOT = -1000;
 integer LINK_AUTH = 2;
 integer LINK_DIALOG = 3;
@@ -48,6 +53,11 @@ integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
+
+// .settings Relay related message IDs!
+integer LM_SETTING_RELAY_CONTENT = 2100;
+integer LM_SETTING_RELAY_LOAD = 2101;
+// .settings Relay message end
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -260,7 +270,8 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         sMessage += "\nUser: "+llGetUsername(g_kWearer);
         sMessage += "\nPrefix: %PREFIX%\nChannel: %CHANNEL%\nSafeword: "+g_sSafeWord;
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
-    } else if (sStr == "license") {
+    }
+     else if (sStr == "license") {
         if(llGetInventoryType(".license")==INVENTORY_NOTECARD) llGiveInventory(kID,".license");
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"The license card has been removed from this %DEVICETYPE%. Please find the recent revision [https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/LICENSE here].",kID);
         if (fromMenu) HelpMenu(kID, iNum);
@@ -525,6 +536,8 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
+        if(sStr == "debug")llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"",kID);
+        if(sStr == "versions")llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"ver",kID);
         if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"
             list lParams = llParseString2List(sStr, ["|"], []);
@@ -661,6 +674,24 @@ default {
             if (g_iLocked) llMessageLinked(LINK_RLV, RLV_CMD, "detach=n", "main");
             else llMessageLinked(LINK_RLV, RLV_CMD, "detach=y", "main");
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LM_SETTING_RELAY_LOAD){
+            g_iSettingsReader=0;
+            if(llGetInventoryType(".settings") == INVENTORY_NOTECARD){
+                g_kSettingsReader = llGetNotecardLine(".settings", 0);
+            }
+        } else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sCollarVersion+" "+g_sDevStage);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            // The rest of this command can be access by <prefix> debug
+            llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
+            llInstantMessage(kID, llGetScriptName()+" LOCKED: "+(string)g_iLocked);
+            llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iHide);
+            llInstantMessage(kID, llGetScriptName()+" DETACHED WHILE LOCKED: "+(string)g_bDetached);
+            
+            
+        }
     }
 
     on_rez(integer iParam) {
@@ -674,6 +705,10 @@ default {
             PermsCheck();
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
+            if(llGetInventoryType(".settings") == INVENTORY_NOTECARD){
+                g_iSettingsReader=0;
+                g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
+            }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
         if (iChange & CHANGED_COLOR) {
@@ -693,6 +728,17 @@ default {
                 Debug("profiling restarted");
             }
         }*/
+    }
+    
+    dataserver(key kID, string sData){
+        if(kID==g_kSettingsReader){
+            if(sData ==EOF)llMessageLinked(LINK_SET,LM_SETTING_REQUEST,"ALL","");
+            else{
+                g_iSettingsReader++;
+                llMessageLinked(LINK_SET, LM_SETTING_RELAY_CONTENT, sData, (string)g_iSettingsReader);
+                g_kSettingsReader=llGetNotecardLine(".settings", g_iSettingsReader);
+            }
+        }
     }
 
     attach(key kID) {

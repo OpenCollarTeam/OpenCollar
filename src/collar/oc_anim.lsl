@@ -3,7 +3,17 @@
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,
 // Sumi Perl, Romka Swallowtail, littlemousy, North Glenwalker et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
-
+string g_sScriptVersion = "7.2rc";
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 
 // Needs to handle anim requests from sister scripts as well
 // This script as essentially two layers
@@ -846,7 +856,15 @@ default {
         // we've already got one.  Skip.
         llMessageLinked(iSender, MVANIM_SKIP, sStr, "");
       }
-    }
+    }else if(iNum == LINK_CMD_DEBUG){
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            DebugOutput(kID, [" ANIM LOCK:", g_bAnimLock]);
+            DebugOutput(kID, [" CURRENT POSE:", g_sCurrentPose]);
+            DebugOutput(kID, [" POSE LIST:"]+g_lPoseList);
+        }
   }
 
   changed(integer iChange) {
