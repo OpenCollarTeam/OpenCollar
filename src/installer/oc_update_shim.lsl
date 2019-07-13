@@ -164,6 +164,7 @@ default {
             llRegionSayTo(kID, iChannel, sResponse);
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
+            llSleep(5); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
             //restore settings
             if (g_iIsUpdate) {
                 llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE, "LINK_REQUEST","");
