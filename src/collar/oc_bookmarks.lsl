@@ -3,7 +3,7 @@
 // Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
 // Romka Swallowtail, Garvin Twine et al.                 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.2";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -118,10 +118,6 @@ PermsCheck() {
 
 UserCommand(integer iNum, string sStr, key kID) {
     // So commands can accept a value
-    if (iNum==CMD_GROUP) {  // Do not permit Group Access (Public Access)
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% for group in bookmarks",kID);
-            return;
-    }
     if (sStr == "reset") {
         // it is a request for a reset
         if(iNum == CMD_WEARER || iNum == CMD_OWNER)
@@ -461,7 +457,7 @@ default {
                     g_lVolatile_Slurls += [sValue];
                 }
             }
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID); // This is intentionally not available to public access.
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER && iNum != CMD_GROUP) UserCommand(iNum, sStr, kID); // This is intentionally not available to public access.
         else if(iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
