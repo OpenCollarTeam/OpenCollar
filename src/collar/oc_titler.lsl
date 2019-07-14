@@ -4,7 +4,7 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-
+string g_sScriptVersion = "7.2";
 string g_sAppVersion = "1.5";
 
 string g_sParentMenu = "Apps";
@@ -23,7 +23,7 @@ integer CMD_EVERYONE         = 504;
 //integer CMD_SAFEWORD       = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
-
+integer LINK_CMD_DEBUG = 1999;
 integer NOTIFY = 1002;
 //integer SAY = 1004;
 integer REBOOT              = -1000;
@@ -206,6 +206,13 @@ UserCommand(integer iAuth, string sStr, key kAv) {
     else if (sStr == "runaway" && (iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
         UserCommand(CMD_OWNER,"title off", g_kWearer);
     } else if (sCommand == "image") {
+        
+        if(g_sParticle == "" && g_iOn==FALSE) g_iLastRank = CMD_EVERYONE; 
+        if(iAuth > g_iLastRank){
+            llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to change titler particles.", kAv);
+            return;
+        }
+        g_iLastRank=iAuth;
       if (sAction == "") ImageMenu(kAv, iAuth);
       else if (sAction == "bigger") {
         float fNew = g_vPartSize.x + 0.1;
@@ -218,6 +225,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         g_vPartSize = < fNew, fNew, 0.0 >;
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
       } else if (sAction == "off") {
+          if(!g_iOn)g_iLastRank=CMD_EVERYONE;
         g_sParticle = "";
         llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
       } else if (sAction == "custom") {
@@ -230,18 +238,23 @@ UserCommand(integer iAuth, string sStr, key kAv) {
     } else if (sCommand == "title") {
         integer iIsCommand;
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
-        if (g_iOn && iAuth > g_iLastRank) //only change text if commander has same or greater auth
+        if(g_sParticle == "" && g_iOn==FALSE) g_iLastRank = CMD_EVERYONE; 
+        if ( iAuth > g_iLastRank){ //only change text if commander has same or greater auth 
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
+            return;
+        }
         else if (sAction == "on") {
             g_iLastRank = iAuth;
             g_iOn = TRUE;
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sAction == "off" && iIsCommand) {
+             
             g_iLastRank = CMD_EVERYONE;
             g_iOn = FALSE;
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on", "");
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
+            
         } else if (sAction == "image") {
           string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");
           g_sParticle = sNewText;
@@ -275,7 +288,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         }
         ShowHideTitle();
     } else if (sStr == "rm titler") {
-            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kAv);
+            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to uninstalling titler",kAv);
             else ConfirmDeleteMenu(kAv, iAuth);
     }
 }
@@ -393,12 +406,18 @@ default{
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if(iNum == 1999){ // link_cmd_debug. This script hasn't been modified since 7.1 i don't think - will update this if changelog shows otherwise.
+        else if(iNum == LINK_CMD_DEBUG){
+            integer iOnlyver=FALSE;
             if(sStr=="ver"){
-                llInstantMessage(kID, llGetScriptName()+" 7.1");
-            }else{
-                llInstantMessage(kID, llGetScriptName()+" TITLE TEXT: "+g_sText);
+                iOnlyver=TRUE;
             }
+            llInstantMessage(kID, llGetScriptName()+" SCRIPT VERSION: "+g_sScriptVersion);
+            if(iOnlyver)return;
+            llInstantMessage(kID, llGetScriptName()+" TITLE TEXT: "+g_sText);
+            llInstantMessage(kID, llGetScriptName()+" ON: "+(string)g_iOn);
+            llInstantMessage(kID, llGetScriptName()+" PARTICLE: "+g_sParticle);
+            llInstantMessage(kID, llGetScriptName()+" LAST AUTH: "+(string)g_iLastRank);
+
         }
     }
 

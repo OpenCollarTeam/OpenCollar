@@ -1,5 +1,5 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008-2016 Ilse Mannonen, Garvin Twine, Wendy Starfall.
+// Copyright (c) 2008-2016 Ilse Mannonen, Garvin Twine, Wendy Starfall, Tashia Redrose
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 integer g_iMychannel = -8888;
@@ -51,7 +51,7 @@ default {
     }
     changed(integer change) {
         if (change & CHANGED_INVENTORY) PermsCheck();
-        if (change & CHANGED_TELEPORT) {
+        if (change & CHANGED_TELEPORT || change & CHANGED_REGION) {
             llSay(g_iMychannel, g_sResponse);
             llSetTimerEvent(2.0);
         }

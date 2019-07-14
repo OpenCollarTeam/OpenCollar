@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="(Release Candidate)";
+string g_sDevStage="";
 string g_sCollarVersion="7.2";
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
@@ -21,6 +21,7 @@ key g_kWearer;
 // Relay will read .settings from root prim and send to oc_settings for storage.
 key g_kSettingsReader;
 integer g_iSettingsReader; 
+key g_kExistingSettings; // To prevent excess linked messages if the settings notecard is not modified, or load is not requested, cache the settings UUID
 // End .settings relay
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
@@ -109,6 +110,7 @@ key g_kCurrentUser;
 
 list g_lAppsButtons;
 list g_lResizeButtons;
+integer MVANIM_ANNOUNCE = 13001;
 
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
@@ -429,6 +431,17 @@ BuildLockElementList() {//EB
             g_lOpenLockElements += [n];
     }
 }
+AnnounceAnimInventory(integer iLink) {
+    // if there's an anim, announce it.
+    if (llGetInventoryNumber(INVENTORY_ANIMATION)) {
+        string sAnim = llGetInventoryName(INVENTORY_ANIMATION, 0);
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
+    }
+    
+    if (llGetInventoryType(".couples") == INVENTORY_NOTECARD) {
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, ".couples", llGetInventoryKey(".couples"));
+    }
+}
 
 PermsCheck() {
     if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
@@ -706,8 +719,14 @@ default {
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             if(llGetInventoryType(".settings") == INVENTORY_NOTECARD){
-                g_iSettingsReader=0;
-                g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
+                if(llGetInventoryKey(".settings") != g_kExistingSettings){
+                    g_iSettingsReader=0;
+                    g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
+                    g_kExistingSettings = llGetInventoryKey(".settings");
+                }
+            }
+            if(llGetInventoryNumber(INVENTORY_ANIMATION)!=0){
+                AnnounceAnimInventory(LINK_ALL_OTHERS);
             }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
