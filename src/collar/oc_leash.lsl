@@ -617,8 +617,7 @@ LHSearch(){
     else{
         for(iBegin=0;iBegin<iEnd;iBegin++){
             string sItem  = llGetInventoryName(INVENTORY_OBJECT,iBegin);
-            sItem = llToLower(sItem);
-            if(llSubStringIndex(sItem,"leashholder")!=-1){
+            if(llSubStringIndex(llToLower(sItem),"leashholder")!=-1){
                 g_sLeashHolder=llGetInventoryName(INVENTORY_OBJECT, iBegin);
                 sItem="";
                 iBegin=0;
