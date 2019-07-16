@@ -5,7 +5,7 @@
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.2";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -617,9 +617,8 @@ LHSearch(){
     else{
         for(iBegin=0;iBegin<iEnd;iBegin++){
             string sItem  = llGetInventoryName(INVENTORY_OBJECT,iBegin);
-            sItem = llToLower(sItem);
-            if(llSubStringIndex(sItem,"leashholder")!=-1){
-                g_sLeashHolder=llGetInventoryName(INVENTORY_OBJECT, iBegin);
+            if(llSubStringIndex(llToLower(sItem),"leashholder")!=-1){
+                g_sLeashHolder=sItem;
                 sItem="";
                 iBegin=0;
                 iEnd=0;
