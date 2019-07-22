@@ -11,7 +11,7 @@
 //on listen, send submenu link message
 
 string g_sDevStage="(Release Candidate)";
-string g_sCollarVersion="7.2";
+string g_sCollarVersion="7.3";
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
@@ -21,6 +21,7 @@ key g_kWearer;
 // Relay will read .settings from root prim and send to oc_settings for storage.
 key g_kSettingsReader;
 integer g_iSettingsReader; 
+key g_kExistingSettings; // To prevent excess linked messages if the settings notecard is not modified, or load is not requested, cache the settings UUID
 // End .settings relay
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
@@ -43,10 +44,10 @@ integer NOTIFY_OWNERS = 1003;
 //integer SAY = 1004;
 integer LINK_CMD_DEBUG = 1999;
 integer REBOOT = -1000;
-integer LINK_AUTH = 2;
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
+integer LINK_AUTH = LINK_SET; // = 2;
+integer LINK_DIALOG = LINK_SET; // = 3;
+integer LINK_RLV = LINK_SET; // = 4;
+integer LINK_SAVE = LINK_SET; // = 5;
 integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
@@ -109,6 +110,7 @@ key g_kCurrentUser;
 
 list g_lAppsButtons;
 list g_lResizeButtons;
+integer MVANIM_ANNOUNCE = 13001;
 
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
@@ -429,6 +431,17 @@ BuildLockElementList() {//EB
             g_lOpenLockElements += [n];
     }
 }
+AnnounceAnimInventory(integer iLink) {
+    // if there's an anim, announce it.
+    if (llGetInventoryNumber(INVENTORY_ANIMATION)) {
+        string sAnim = llGetInventoryName(INVENTORY_ANIMATION, 0);
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, sAnim, llGetInventoryKey(sAnim));
+    }
+    
+    if (llGetInventoryType(".couples") == INVENTORY_NOTECARD) {
+        llMessageLinked(iLink, MVANIM_ANNOUNCE, ".couples", llGetInventoryKey(".couples"));
+    }
+}
 
 PermsCheck() {
     if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
@@ -706,8 +719,14 @@ default {
             llSetTimerEvent(1.0);
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             if(llGetInventoryType(".settings") == INVENTORY_NOTECARD){
-                g_iSettingsReader=0;
-                g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
+                if(llGetInventoryKey(".settings") != g_kExistingSettings){
+                    g_iSettingsReader=0;
+                    g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
+                    g_kExistingSettings = llGetInventoryKey(".settings");
+                }
+            }
+            if(llGetInventoryNumber(INVENTORY_ANIMATION)!=0){
+                AnnounceAnimInventory(LINK_ALL_OTHERS);
             }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
