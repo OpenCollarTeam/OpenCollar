@@ -4,7 +4,7 @@
 // littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -22,9 +22,9 @@ integer CMD_EVERYONE = 504;
 integer NOTIFY              = 1002;
 //integer SAY                 = 1004;
 integer REBOOT              = -1000;
-integer LINK_DIALOG         = 3;
-//integer LINK_RLV            = 4;
-integer LINK_SAVE           = 5;
+integer LINK_DIALOG = LINK_SET; //         = 3;
+//integer LINK_RLV = LINK_SET; //            = 4;
+integer LINK_SAVE = LINK_SET; //           = 5;
 integer LINK_UPDATE = -10;
 // -- SETTINGS
 integer LM_SETTING_SAVE     = 2000;
