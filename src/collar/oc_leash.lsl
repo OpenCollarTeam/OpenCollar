@@ -5,7 +5,7 @@
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -34,9 +34,9 @@ integer AUTH_REPLY = 601;
 integer NOTIFY                = 1002;
 //integer SAY                   = 1004;
 integer REBOOT                = -1000;
-integer LINK_DIALOG           = 3;
-integer LINK_RLV              = 4;
-integer LINK_SAVE             = 5;
+integer LINK_DIALOG = LINK_SET; //           = 3;
+integer LINK_RLV = LINK_SET; //              = 4;
+integer LINK_SAVE = LINK_SET; //             = 5;
 integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE       = 2000;
 integer LM_SETTING_REQUEST    = 2001;
@@ -106,6 +106,9 @@ integer g_iLeasherInRange=FALSE; //
 integer g_iRLVOn=FALSE;     // To store if RLV was enabled in the collar
 integer g_iAwayCounter=0;
 
+
+
+string g_sLeashHolder="na"; // Leash holder item name
 // ---------------------------------------------
 // ------ FUNCTION DEFINITIONS ------
 
@@ -402,6 +405,7 @@ YankTo(key kIn){
 }
 
 UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
+    //llSay(0, sMessage+" ["+(string)kMessageID+"]");
     //Debug("Got user comand:\niAuth: "+(string)iAuth+"\nsMessage: "+sMessage+"\nkMessageID: "+(string)kMessageID+"\nbFromMenu: "+(string)bFromMenu);
     if (iAuth == CMD_NOACCESS) {
         if (kMessageID == g_kLeashedTo) {
@@ -418,6 +422,7 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         sMessage = llToLower(sMessage);  //convert sMessage to lower case for caseless comparisson
         //debug(sMessage);
         if (sMessage=="leashmenu" || sMessage == "menu leash"){
+            if(g_sLeashHolder=="na")LHSearch(); // Try to find the leash holder before showing the menu if leash holder was not found at init.
             list lButtons;
             if (kMessageID != g_kWearer) lButtons += "Grab";// Only if not the wearer.
             else lButtons += ["-"];
@@ -431,6 +436,8 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             lButtons += ["Follow"];
             lButtons += ["Anchor","Pass"];
             lButtons += ["Length"];
+            if(g_sLeashHolder!="na")
+                lButtons += ["Give Holder"];
             lButtons += g_lButtons;
 
             string sPrompt = "\n[Leash]\n";
@@ -580,6 +587,18 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             } else
                 SensorDialog(g_kCmdGiver, "\n\nWhat's going to serve us as a post? If the desired object isn't on the list, please try moving closer.\n", "",iAuth,"PostTarget", PASSIVE|ACTIVE);
         }
+        if(sMessage  == "give holder"){
+            if(iAuth >=CMD_OWNER || iAuth <= CMD_EVERYONE){
+                if(g_sLeashHolder == "na") {
+                    llMessageLinked(LINK_DIALOG,NOTIFY, "0This option is disabled because no leash holder is in the collar", kMessageID);
+                    if(bFromMenu)UserCommand(iAuth, "leashmenu", kMessageID, bFromMenu);
+                }else{
+                    llMessageLinked(LINK_DIALOG,NOTIFY, "0Sending Leash Holder...", kMessageID);
+                    llGiveInventory(kMessageID, g_sLeashHolder);
+                    if(bFromMenu)UserCommand(iAuth, "leashmenu", kMessageID, bFromMenu);
+                }
+            }
+        }
     }
 }
 DebugOutput(key kID, list ITEMS){
@@ -591,6 +610,23 @@ DebugOutput(key kID, list ITEMS){
     }
     llInstantMessage(kID, llGetScriptName() +final);
 }
+LHSearch(){
+    integer iBegin=0;
+    integer iEnd = llGetInventoryNumber(INVENTORY_OBJECT);
+    if(iEnd == 0)g_sLeashHolder="na";
+    else{
+        for(iBegin=0;iBegin<iEnd;iBegin++){
+            string sItem  = llGetInventoryName(INVENTORY_OBJECT,iBegin);
+            if(llSubStringIndex(llToLower(sItem),"leashholder")!=-1){
+                g_sLeashHolder=sItem;
+                sItem="";
+                iBegin=0;
+                iEnd=0;
+                return;
+            }
+        }
+    }
+}
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
@@ -601,6 +637,7 @@ default {
         llMinEventDelay(0.44);
         DoUnleash(FALSE);
         //Debug("Starting");
+        LHSearch();
     }
 
     timer() {
@@ -776,6 +813,7 @@ default {
             DebugOutput(kMessageID, [" COMMAND GIVER:",g_kCmdGiver]);
             DebugOutput(kMessageID, [" LEASH COMMANDER ID:",g_kLeashCmderID]);
             DebugOutput(kMessageID, [" LEASHED TO AVI:",g_bLeashedToAvi]);
+            DebugOutput(kMessageID, [" LEASH HOLDER:",g_sLeashHolder]);
         }
     }
 
