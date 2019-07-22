@@ -7,7 +7,7 @@
 
 
 // Central storage for settings of other plugins in the device.
-string g_sScriptVersion= "7.2rc";
+string g_sScriptVersion= "7.3";
 string g_sCard = ".settings";
 string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
@@ -49,7 +49,7 @@ integer LM_SETTING_RELAY_LOAD = 2101; // used on 'Load' and on initial boot to r
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer LINK_DIALOG = 3;
+integer LINK_DIALOG = LINK_SET; // = 3;
 integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;

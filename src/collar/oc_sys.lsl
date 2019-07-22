@@ -10,8 +10,9 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="";
-string g_sCollarVersion="7.2";
+string g_sDevStage="(Release Candidate 2)";
+string g_sCollarVersion="7.3";
+
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;
@@ -44,10 +45,10 @@ integer NOTIFY_OWNERS = 1003;
 //integer SAY = 1004;
 integer LINK_CMD_DEBUG = 1999;
 integer REBOOT = -1000;
-integer LINK_AUTH = 2;
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
+integer LINK_AUTH = LINK_SET; // = 2;
+integer LINK_DIALOG = LINK_SET; // = 3;
+integer LINK_RLV = LINK_SET; // = 4;
+integer LINK_SAVE = LINK_SET; // = 5;
 integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
@@ -543,6 +544,8 @@ default {
     state_entry() {
         g_kWearer = llGetOwner();
         BuildLockElementList();
+        
+        llSleep(5.0);
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
         //Debug("Starting");

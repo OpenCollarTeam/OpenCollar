@@ -4,7 +4,7 @@
 // Sumi Perl et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -42,8 +42,8 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
-integer LINK_DIALOG = 3;
-integer LINK_SAVE = 5;
+integer LINK_DIALOG = LINK_SET; // = 3;
+integer LINK_SAVE = LINK_SET; // = 5;
 integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
