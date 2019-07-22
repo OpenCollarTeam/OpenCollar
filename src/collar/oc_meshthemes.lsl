@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2017 Nirea Resident
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -15,7 +15,7 @@ integer CMD_WEARER = 503;
 
 integer LINK_CMD_DEBUG=1999;
 
-integer LINK_DIALOG         = 3;
+integer LINK_DIALOG = LINK_SET; //         = 3;
 integer LINK_UPDATE = -10;
 
 integer DIALOG              = -9000;
