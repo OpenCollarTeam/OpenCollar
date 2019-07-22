@@ -3,7 +3,7 @@
 // Garvin Twine, Romka Swallowtail et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 //menu setup
 string  RESTRICTION_BUTTON          = "Restrictions"; // Name of the submenu
 string  RESTRICTIONS_CHAT_COMMAND   = "restrictions";
@@ -67,9 +67,9 @@ integer CMD_RELAY_SAFEWORD          = 511;
 integer NOTIFY                     = 1002;
 //integer SAY                        = 1004;
 integer REBOOT                     = -1000;
-integer LINK_DIALOG                = 3;
-integer LINK_RLV                   = 4;
-integer LINK_SAVE                  = 5;
+integer LINK_DIALOG = LINK_SET; //                = 3;
+integer LINK_RLV = LINK_SET; //                   = 4;
+integer LINK_SAVE = LINK_SET; //                  = 5;
 integer LINK_UPDATE                = -10;
 integer LM_SETTING_SAVE            = 2000;
 integer LM_SETTING_REQUEST         = 2001;
@@ -261,6 +261,7 @@ DetachMenu(key kID, integer iAuth)
     for (n = 0; n < iStop; n+=2) {
         lButtons += [llList2String(g_lAttachments, n)];
     }
+    lButtons = llListSort(lButtons, 1, TRUE);
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "detach");
 }
 
