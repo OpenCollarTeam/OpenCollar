@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="(Release Candidate)";
+string g_sDevStage="(Release Candidate 2)";
 string g_sCollarVersion="7.3";
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
@@ -543,6 +543,8 @@ default {
     state_entry() {
         g_kWearer = llGetOwner();
         BuildLockElementList();
+        
+        llSleep(5.0);
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
         //Debug("Starting");
