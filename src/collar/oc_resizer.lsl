@@ -8,7 +8,7 @@
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 
 
 integer LINK_CMD_DEBUG=1999;
@@ -58,7 +58,7 @@ integer NOTIFY = 1002;
 //integer LM_SETTING_DELETE = 2003;
 //integer LM_SETTING_EMPTY = 2004;
 integer REBOOT              = -1000;
-integer LINK_DIALOG         = 3;
+integer LINK_DIALOG = LINK_SET; //         = 3;
 integer LINK_UPDATE = -10;
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
