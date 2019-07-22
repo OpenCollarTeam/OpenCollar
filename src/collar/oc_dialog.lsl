@@ -3,7 +3,7 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
 // Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="7.2rc";
+string g_sScriptVersion="7.3";
 integer LINK_CMD_DEBUG=1999;
 
 
@@ -24,7 +24,7 @@ integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
-integer LINK_SAVE = 5;
+integer LINK_SAVE = LINK_SET; // = 5;
 integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
