@@ -12,6 +12,7 @@
 
 string g_sDevStage="(Release Candidate 2)";
 string g_sCollarVersion="7.3";
+
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
 float g_fBuildVersion = 200000.0;

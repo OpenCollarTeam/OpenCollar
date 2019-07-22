@@ -3,3 +3,4 @@ kiss|~kiss|~kiss|0.4|_SELF_ kisses _PARTNER_.
 pet|~good|~pet|0.55|_PARTNER_ pets _SELF_'s head.
 cling|~cling|~hips|0.55|_SELF_ clings to _PARTNER_'s hips.
 catch|~leap|~catch|0.6|_SELF_ leaps into _PARTNER_'s arms.
+foot|~footkiss|~foot|1.1|_SELF_ kisses _PARTNER_'s foot

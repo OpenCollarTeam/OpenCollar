@@ -4,7 +4,6 @@
 // Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
-
 string g_sScriptVersion = "7.3";
 integer LINK_CMD_DEBUG=1999;
 

@@ -4,7 +4,7 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-
+string g_sScriptVersion = "7.2";
 string g_sAppVersion = "1.5";
 
 string g_sParentMenu = "Apps";
@@ -23,7 +23,7 @@ integer CMD_EVERYONE         = 504;
 //integer CMD_SAFEWORD       = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
-
+integer LINK_CMD_DEBUG = 1999;
 integer NOTIFY = 1002;
 //integer SAY = 1004;
 integer REBOOT              = -1000;
@@ -406,12 +406,13 @@ default{
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if(iNum == 1999){ // link_cmd_debug. This script hasn't been modified since 7.1 i don't think - will update this if changelog shows otherwise.
+        else if(iNum == LINK_CMD_DEBUG){
             integer iOnlyver=FALSE;
             if(sStr=="ver"){
                 iOnlyver=TRUE;
             }
-            llInstantMessage(kID, llGetScriptName()+" 7.3");
+            llInstantMessage(kID, llGetScriptName()+" SCRIPT VERSION: "+g_sScriptVersion);
+            
             if(iOnlyver)return;
             llInstantMessage(kID, llGetScriptName()+" TITLE TEXT: "+g_sText);
             llInstantMessage(kID, llGetScriptName()+" ON: "+(string)g_iOn);
