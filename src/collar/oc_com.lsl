@@ -3,7 +3,7 @@
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,  
 // Romka Swallowtail, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="7.2rc";
+string g_sScriptVersion="7.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -45,9 +45,9 @@ integer CMD_SAFEWORD = 510;
 integer NOTIFY=1002;
 integer NOTIFY_OWNERS=1003;
 //integer SAY = 1004;
-integer LINK_AUTH = 2;
-integer LINK_DIALOG = 3;
-integer LINK_SAVE = 5;
+integer LINK_AUTH = LINK_SET; // = 2;
+integer LINK_DIALOG = LINK_SET; // = 3;
+integer LINK_SAVE = LINK_SET; // = 5;
 integer LINK_ANIM = 6;
 integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
