@@ -4,7 +4,7 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.2";
+string g_sScriptVersion = "7.3";
 string g_sAppVersion = "1.5";
 
 string g_sParentMenu = "Apps";
