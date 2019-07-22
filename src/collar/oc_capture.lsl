@@ -2,7 +2,7 @@
 // Copyright (c) 2014 - 2016 littlemousy, Sumi Perl, Wendy Starfall,    
 // Garvin Twine 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.2rc";
+string g_sScriptVersion = "7.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -36,10 +36,10 @@ integer CMD_SAFEWORD = 510;
 integer NOTIFY              =  1002;
 integer SAY                 =  1004;
 integer REBOOT              = -1000;
-integer LINK_AUTH           =  2;
-integer LINK_DIALOG         =  3;
-integer LINK_RLV            =  4;
-integer LINK_SAVE           =  5;
+integer LINK_AUTH = LINK_SET; //           =  2;
+integer LINK_DIALOG = LINK_SET; //         =  3;
+integer LINK_RLV = LINK_SET; //            =  4;
+integer LINK_SAVE = LINK_SET; //           =  5;
 integer LINK_UPDATE         = -10;
 integer LM_SETTING_SAVE     =  2000;
 // integer LM_SETTING_REQUEST  =  2001;
@@ -144,17 +144,22 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     string sStrLower=llToLower(sStr);
     if (llSubStringIndex(sStr,"capture TempOwner") == 0){
         string sCaptorID = llGetSubString(sStr,llSubStringIndex(sStr,"~")+1,-1);
+        
+        integer iIsCaptured=FALSE;
+        if(g_sTempOwnerID)iIsCaptured=TRUE;
         if (iNum==CMD_OWNER || iNum==CMD_TRUSTED || iNum==CMD_GROUP) { //do nothing, owners get their own menu but cannot capture
+            
         }
-        else Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", sCaptorID);
+        else if(!iIsCaptured) Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", sCaptorID);
+        else if(iIsCaptured) CaptureMenu(kID, iNum);
     }
     else if (sStrLower == "capture" || sStrLower == "menu capture") {
-        if  (iNum!=CMD_OWNER && iNum != CMD_WEARER) {
+        if  (iNum!=CMD_OWNER && iNum != CMD_WEARER && iNum != CMD_TRUSTED) {
             if (g_iCaptureOn) Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", kID);
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",kID);//Notify(kID,g_sAuthError, FALSE);
         } else CaptureMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
-    else if (iNum!=CMD_OWNER && iNum != CMD_WEARER){
+    else if (iNum!=CMD_OWNER && iNum != CMD_WEARER && iNum != CMD_TRUSTED){
         //silent fail, no need to do anything more in this case
     }
     else if (llSubStringIndex(sStrLower,"capture")==0) {
