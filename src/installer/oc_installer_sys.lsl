@@ -3,6 +3,7 @@
 // Wendy Starfall, littlemousy, Romka Swallowtail, Garvin Twine et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// Medea added fancy new rainbow particles! 
 
 // This is the master updater script.  It complies with the update handshake
 // protocol that OC has been using for quite some time, and should therefore be
@@ -62,7 +63,9 @@ string g_sName;
 string g_sObjectType;
 string g_sObjectName;
 
-
+key g_kParticleTarget;
+integer g_iRainbowCycle;
+list l_ParticleColours=[<1,0,0>,<1.0,0.5,0>,<1,1,0>,<0,1,0>,<0,0.25,1>,<0.25,0,1>,<0.5,0,1>,<1,0,0>];
 // A wrapper around llSetScriptState to avoid the problem where it says it can't
 // find scripts that are already not running.
 DisableScript(string sName) {
@@ -98,24 +101,44 @@ SetFloatText() {
 }
 
 Particles(key kTarget) {
-    llParticleSystem([
-        PSYS_PART_FLAGS,
-            PSYS_PART_INTERP_COLOR_MASK |
-            PSYS_PART_INTERP_SCALE_MASK |
-            PSYS_PART_TARGET_POS_MASK |
-            PSYS_PART_EMISSIVE_MASK,
-        PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_EXPLODE,
-        PSYS_SRC_TEXTURE, "690c110f-95b9-3042-5d93-0c04a062b6db",
-        PSYS_SRC_TARGET_KEY, kTarget,
-        PSYS_PART_START_SCALE, <0.68, 0.64, 0>,
-        PSYS_PART_END_SCALE, <0.04, 0.04, 0>,
-        PSYS_PART_START_ALPHA, 0.1,
-        PSYS_PART_END_ALPHA, 1,
-        PSYS_SRC_BURST_PART_COUNT, 4,
-        PSYS_PART_MAX_AGE, 2,
-        PSYS_SRC_BURST_SPEED_MIN, 0.2,
-        PSYS_SRC_BURST_SPEED_MAX, 1
-    ]);
+    g_kParticleTarget=kTarget;
+    vector a=llList2Vector(l_ParticleColours,g_iRainbowCycle);
+    vector b=llList2Vector(l_ParticleColours,g_iRainbowCycle+1);
+    g_iRainbowCycle++;
+    if(g_iRainbowCycle>6) g_iRainbowCycle=0;
+    llParticleSystem([            
+            PSYS_SRC_PATTERN,PSYS_SRC_PATTERN_EXPLODE,
+            PSYS_SRC_BURST_RADIUS,0,
+            PSYS_SRC_ANGLE_BEGIN,0.1,
+            PSYS_SRC_ANGLE_END,-0.1,
+            PSYS_SRC_TARGET_KEY,g_kParticleTarget,
+            PSYS_PART_START_COLOR,a,
+            PSYS_PART_END_COLOR,b,
+            PSYS_PART_START_ALPHA,1,
+            PSYS_PART_END_ALPHA,1,
+            PSYS_PART_START_GLOW,0,
+            PSYS_PART_END_GLOW,0,
+            PSYS_PART_BLEND_FUNC_SOURCE,PSYS_PART_BF_SOURCE_ALPHA,
+            PSYS_PART_BLEND_FUNC_DEST,PSYS_PART_BF_ONE_MINUS_SOURCE_ALPHA,
+            PSYS_PART_START_SCALE,<0.500000,0.500000,0.000000>,
+            PSYS_PART_END_SCALE,<0.231000,0.231000,0.000000>,
+            PSYS_SRC_TEXTURE,"",
+            PSYS_SRC_MAX_AGE,0,
+            PSYS_PART_MAX_AGE,2.9,
+            PSYS_SRC_BURST_RATE,0.1,
+            PSYS_SRC_BURST_PART_COUNT,5,
+            PSYS_SRC_ACCEL,<0.000000,0.000000,0.000000>,
+            PSYS_SRC_OMEGA,<0.000000,0.000000,0.000000>,
+            PSYS_SRC_BURST_SPEED_MIN,0.1,
+            PSYS_SRC_BURST_SPEED_MAX,0.9,
+            PSYS_PART_FLAGS,
+                0 |
+                PSYS_PART_EMISSIVE_MASK |
+                PSYS_PART_INTERP_COLOR_MASK |
+                PSYS_PART_INTERP_SCALE_MASK |
+                PSYS_PART_TARGET_POS_MASK
+        ]);
+        llSensorRepeat("*&^","6b4092ce-5e5a-ff2e-42e0-3d4c1a069b2f",AGENT,0.1,0.1,0.6);
 }
 
 InitiateInstallation() {
@@ -261,7 +284,9 @@ default {
                 string sMyName = llList2String(llParseString2List(llGetObjectName(), [" - "], []), 1);
                 llRegionSayTo(g_kCollarKey, g_iSecureChannel, "DONE|" + sMyName);
                 llSetText("DONE!\n \n████████100%████████", <0,1,0>, 1.0);
+                llSetTimerEvent(0);
                 llParticleSystem([]);
+                llSensorRemove();
                 g_iDone = TRUE;
                 llMessageLinked(LINK_SET,INSTALLATION_DONE,"","");
                 llSleep(1);
@@ -282,7 +307,10 @@ default {
     on_rez(integer iStartParam) {
         llResetScript();
     }
-
+    no_sensor()
+    {
+        Particles(g_kParticleTarget);
+    }
     changed(integer iChange) {
     // Resetting on inventory change ensures that the bundle list is
     // kept current, and that the .name card is re-read if it changes.
