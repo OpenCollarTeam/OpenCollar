@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="(Release Candidate 2)";
+string g_sDevStage="";
 string g_sCollarVersion="7.3";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
