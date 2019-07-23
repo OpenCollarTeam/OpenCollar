@@ -545,7 +545,7 @@ default {
         g_kWearer = llGetOwner();
         BuildLockElementList();
         
-        llSleep(5.0);
+        llSleep(10.0);
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
         //Debug("Starting");
