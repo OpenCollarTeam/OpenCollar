@@ -34,6 +34,7 @@ integer sync;
 integer hide = FALSE;
 integer wait = FALSE; //maybe not needed now but will leave in for this release
 //MESSAGE MAP
+integer CMD_ZERO = 0;
 integer COMMAND_OWNER = 500;
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
@@ -186,7 +187,7 @@ default
                 string message = llList2String(menuparams, 1);
                 integer page = (integer)llList2String(menuparams, 2);
                 if (message == UPMENU)
-                    llMessageLinked(LINK_SET, 500, "menu "+ parentmenu, AV);//forcing to Auth level 500 to do a BACK
+                    llMessageLinked(LINK_SET, CMD_ZERO, "menu "+ parentmenu, AV);
                 else if (message == "Cuff Menu")//ask for the cuff menu
                     llRegionSayTo(wearer,CUFF_CHANNEL,(string)AV + ":menu|"+(string)AV);
                 else if (message == TURNON)
