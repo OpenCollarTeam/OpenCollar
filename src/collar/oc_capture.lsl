@@ -167,7 +167,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         if (g_sTempOwnerID != "" && kID==g_kWearer) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",g_kWearer);
             return;
-        } else if (sStrLower == "capture on") {
+        } else if (sStrLower == "capture on" && iNum == CMD_OWNER ) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"capture=1","");
             g_iCaptureOn=TRUE;
@@ -175,7 +175,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
                 llSetTimerEvent(900.0);
             }
-        } else if (sStrLower == "capture off") {
+        } else if (sStrLower == "capture off" && iNum == CMD_OWNER) {
             if(g_iCaptureOn) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode deactivated",kID);
             g_sTempOwnerID = "";
             g_iCaptureOn=FALSE;
@@ -191,7 +191,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             saveTempOwners();
             llSetTimerEvent(0.0);
             return;  //no remenuin case of release
-        } else if (sStrLower == "capture risky on") {
+        } else if (sStrLower == "capture risky on" && iNum == CMD_OWNER) {
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"risky=1", "");
             g_iRiskyOn = TRUE;
             //llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You are vulnerable now...",g_kWearer);
@@ -200,12 +200,12 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
                  llSetTimerEvent(900.0);
                  llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
                 }
-        } else if (sStrLower == "capture risky off") {
+        } else if (sStrLower == "capture risky off" && iNum == CMD_OWNER) {
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"risky", "");
             g_iRiskyOn = FALSE;
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capturing will require %WEARERNAME%'s consent first.",kID);
             llSetTimerEvent(0.0);
-        } else if (sStrLower == "capture info on") {
+        } else if (sStrLower == "capture info on" && iNum == CMD_OWNER) {
             g_iCaptureInfo = TRUE;
             llMessageLinked(LINK_DIALOG,NOTIFY, "1"+"\"Capture me\" announcements during risky mode are now enabled.", kID);
             llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sSettingToken+"info","");
@@ -213,7 +213,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
                 llSetTimerEvent(900.0);
                 llMessageLinked(LINK_DIALOG,SAY,"1"+"%WEARERNAME%: You can capture me if you touch my %DEVICETYPE%...","");
             }
-        } else if (sStrLower == "capture info off") {
+        } else if (sStrLower == "capture info off" && iNum == CMD_OWNER) {
             g_iCaptureInfo = FALSE;
             if (g_iRiskyOn && g_iCaptureOn) llSetTimerEvent(0);
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\"Capture me\" announcements during risky mode are now disabled.", kID);
@@ -264,7 +264,7 @@ default{
             else if (sToken == g_sSettingToken+"risky") g_iRiskyOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_sTempOwnerID = sValue; //store tempowner
             else if (sToken == g_sSettingToken+"info") g_iCaptureInfo = (integer)sValue;
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE || iNum == CMD_NOACCESS) UserCommand(iNum, sStr, kID, FALSE);
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE || (iNum == CMD_NOACCESS && g_iCaptureOn)) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
