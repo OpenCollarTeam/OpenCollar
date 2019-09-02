@@ -32,6 +32,7 @@ integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
+integer CMD_NOACCESS = 599;
 
 integer NOTIFY              =  1002;
 integer SAY                 =  1004;
@@ -263,7 +264,7 @@ default{
             else if (sToken == g_sSettingToken+"risky") g_iRiskyOn = (integer)sValue;
             else if (sToken == "auth_tempowner") g_sTempOwnerID = sValue; //store tempowner
             else if (sToken == g_sSettingToken+"info") g_iCaptureInfo = (integer)sValue;
-        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
+        } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE || iNum == CMD_NOACCESS) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
