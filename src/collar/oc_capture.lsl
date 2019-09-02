@@ -156,7 +156,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     }
     else if (sStrLower == "capture" || sStrLower == "menu capture") {
         if  (iNum!=CMD_OWNER && iNum != CMD_WEARER && iNum != CMD_TRUSTED) {
-            if (g_iCaptureOn) Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", kID);
+            if (g_iCaptureOn && g_sTempOwnerID == "") Dialog(kID, "\nYou can try to capture %WEARERNAME%.\n\nReady for that?", ["Yes","No"], [], 0, iNum, "ConfirmCaptureMenu", kID);
             else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",kID);//Notify(kID,g_sAuthError, FALSE);
         } else CaptureMenu(kID, iNum); // an authorized user requested the plugin menu by typing the menus chat command
     }
@@ -167,7 +167,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         if (g_sTempOwnerID != "" && kID==g_kWearer) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to capture",g_kWearer);
             return;
-        } else if (sStrLower == "capture on" && iNum == CMD_OWNER ) {
+        } else if (sStrLower == "capture on" && iNum == CMD_OWNER) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Capture Mode activated",kID);
             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"capture=1","");
             g_iCaptureOn=TRUE;
@@ -182,7 +182,7 @@ UserCommand(integer iNum, string sStr, key kID, integer remenu) {
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"capture", "");
             saveTempOwners();
             llSetTimerEvent(0.0);
-        } else if (sStrLower == "capture release") {
+        } else if (sStrLower == "capture release" && (iNum == CMD_OWNER || g_sTempOwnerID == (string)kID)) {
             llMessageLinked(LINK_SET, CMD_OWNER, "unleash", kID);
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(kID)+" has released you.",g_kWearer);
             llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sSettingToken+"isActive", "");
