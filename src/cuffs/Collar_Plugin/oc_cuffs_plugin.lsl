@@ -10,7 +10,7 @@
 // ©   2013 - 2016  OpenNC                                                        //
 // 2019 - OpenCollar, Tashia Redrose, agesly, et al.                              //
 // ------------------------------------------------------------------------------ //
-// Not now supported by OpenCollar at all                                         //
+// OpenCollar Beta as of September 2019                                           //
 ////////////////////////////////////////////////////////////////////////////////////
 
 integer    g_nCmdHandle    = 0;            // command listen handler
