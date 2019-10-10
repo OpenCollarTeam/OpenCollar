@@ -180,6 +180,8 @@ OwnSelfOff(key kID) {
 
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     list lPeople;
+
+
     if (sToken=="owner") lPeople=g_lOwner;
     else if (sToken=="tempowner") lPeople=g_lTempOwner;
     else if (sToken=="trust") lPeople=g_lTrust;
@@ -210,6 +212,8 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
                 iFound = TRUE;
             }
         } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
+           //llSay(0, "remove_all");
+            
             if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])){
                 string msg;
                 if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
@@ -493,8 +497,8 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         } else if ((key)sTmpID) {
             RemovePerson(sTmpID, sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
-        } else if (llToLower(sTmpID) == "remove all") {
-            RemovePerson(sTmpID, sAction, kID, FALSE);
+        } else if (llToLower(sTmpID)+" "+llToLower(llList2String(lParams,3)) == "remove all") {
+            RemovePerson(sTmpID+" "+llList2String(lParams,3), sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
         } else {
             string sTmpID2 = llList2String(lParams,3);
