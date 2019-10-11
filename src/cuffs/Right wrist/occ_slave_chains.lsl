@@ -30,6 +30,7 @@ integer listener;
 integer g_nCmdChannel;      //our normal coms channel a product of our UUID
 integer g_nCmdHandle    = 0;            // command listen handler
 integer g_nCmdChannelOffset = 0xCC0CC;       // offset to be used to make sure we do not interfere with other items using the same technique for
+integer    LM_CUFF_CMD        = -551001;        // used as channel for linkemessages - sending commands
 
 string  g_szAllowedCommadToken = "rlac"; // only accept commands from this token adress
 list    g_lstModTokens    = []; // valid token for this module
@@ -643,5 +644,15 @@ default
     {
         if (iChange & CHANGED_INVENTORY)
             custom();
+    }
+    
+    link_message(integer sender, integer nNum, string str, key id)
+    {
+        if (nNum == LM_CUFF_CMD)
+        {
+            list lstParsed = llParseString2List( str, [ "=" ], [] );
+            string szCmd = llList2String(lstParsed,0);
+            if (szCmd == "chain") Sanity2(str);
+        }
     }
 }
