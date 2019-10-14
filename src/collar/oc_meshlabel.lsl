@@ -75,6 +75,9 @@ string g_sColorMenu = "Color";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
 integer g_iMenuStride = 3;
 
+integer g_bHasError = FALSE;
+string g_sErrorMsg = "";
+
 string g_sCharmap = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĲĳĴĵĶķĸĹĺĻļĽľĿŀŁłŃńŅņŇňŉŊŋŌōŎŏŐőŒœŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžſƒƠơƯưǰǺǻǼǽǾǿȘșʼˆˇˉ˘˙˚˛˜˝˳̣̀́̃̉̏΄΅Ά·ΈΉΊΌΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϑϒϖЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҃҄҅҆҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡӢӣӤӥӦӧӨөӪӫӬӭӮӯӰӱӲӳӴӵӶӷӸӹӺӻӼӽӾӿԀԁԂԃԄԅԆԇԈԉԊԋԌԍԎԏԐԑԒԓḀḁḾḿẀẁẂẃẄẅẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹὍ–—―‗‘’‚‛“”„†‡•…‰′″‹›‼⁄ⁿ₣₤₧₫€℅ℓ№™Ω℮⅛⅜⅝⅞∂∆∏∑−√∞∫≈≠≤≥◊ﬁﬂﬃﬄ￼ ";
 
 list g_lFonts = [
@@ -159,6 +162,8 @@ SetColor() {
 // find all 'Label' prims, count and store it's link numbers for fast work SetLabel() and timer
 integer LabelsCount() {
     integer ok = TRUE ;
+    integer bMultiLine = FALSE;
+    list lSingleParamLinks = [];
     g_lLabelLinks = [] ;
     g_lLabelBaseElements = [];
     string sLabel;
@@ -171,8 +176,13 @@ integer LabelsCount() {
         sLabel = llList2String(lTmp,0);
         if(sLabel == "MeshLabel") {
             integer iLine = 0;
-            if (llGetListLength(lTmp)>2) iLine = llList2Integer(lTmp,2);
-            else iLine = 0;
+            if (llGetListLength(lTmp)>2) {
+                iLine = llList2Integer(lTmp,2);
+                bMultiLine = TRUE;
+            } else {
+                iLine = 0;
+                lSingleParamLinks += [iLink];
+            }
             if (iLine > llGetListLength(g_lLabelLinks)-1) g_lLabelLinks += [""]; // Add new Line
             list lLineLinks = llParseString2List(llList2String(g_lLabelLinks,iLine),["|"],[]);
             lLineLinks += [0]; // Fill with Zero
@@ -181,40 +191,64 @@ integer LabelsCount() {
             llSetLinkPrimitiveParamsFast(iLink,[PRIM_DESC,"Label~notexture~nocolor~nohide~noshiny"]);
         } else if (sLabel == "LabelBase") g_lLabelBaseElements += iLink;
     }
-    integer i;
-    for (i=0; i<llGetListLength(g_lLabelLinks);++i)
+    
+    if (bMultiLine && llGetListLength(lSingleParamLinks) > 0) // if we have multible lines, check if all prims are correctly named
     {
-        list lLineLinks = llParseString2List(llList2String(g_lLabelLinks,i),["|"],[]);
-        g_lCharLimit = llListReplaceList(g_lCharLimit,[llGetListLength(lLineLinks) * faces],i,i);
+        g_sErrorMsg += "Error! Some of your label prims don't have the line parameter in the name! (Should be: MeshLabel~num~line) \n";
+        integer i;
+        g_sErrorMsg += "Missing parameter in link numbers:";
+        for (i=0; i<llGetListLength(lSingleParamLinks);++i)
+        {
+            g_sErrorMsg += " "+llList2String(lSingleParamLinks,i);
+        }
+        g_sErrorMsg += "\n";
+        ok = FALSE;
     }
-    //find all 'Label' prims and store it's links to list
-    for(iLink=2; iLink <= iLinkCount; iLink++) {
-        lTmp = llParseString2List(llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0), ["~"],[]);
-        sLabel = llList2String(lTmp,0);
-        if (sLabel == "MeshLabel") {
-            integer iLabel = (integer)llList2String(lTmp,1);
-            integer iLine = 0;
-            if (llGetListLength(lTmp) > 2) iLine = llList2Integer(lTmp,2); // keep it compatible with old single-line version
-            integer link = -1;
-            
-            list lLineList = llParseString2List(llList2String(g_lLabelLinks,iLine),["|"],[]);
-            
-            link = llList2Integer(lLineList,iLabel);
-            if (link == 0) 
-            {
-                lLineList = llListReplaceList(lLineList, [iLink], iLabel, iLabel);
-                g_lLabelLinks = llListReplaceList(g_lLabelLinks, [llDumpList2String(lLineList,"|")], iLine, iLine);
-            }
-            else {
-                ok = FALSE;
-                llOwnerSay("Warning! Found duplicated label prims: "+sLabel+" with link numbers: "+(string)link+" and "+(string)iLink);
+    
+    if (ok) {
+        integer i;
+        for (i=0; i<llGetListLength(g_lLabelLinks);++i)
+        {
+            list lLineLinks = llParseString2List(llList2String(g_lLabelLinks,i),["|"],[]);
+            g_lCharLimit = llListReplaceList(g_lCharLimit,[llGetListLength(lLineLinks) * faces],i,i);
+        }
+        //find all 'Label' prims and store it's links to list
+        for(iLink=2; iLink <= iLinkCount; iLink++) {
+            lTmp = llParseString2List(llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0), ["~"],[]);
+            sLabel = llList2String(lTmp,0);
+            if (sLabel == "MeshLabel") {
+                integer iLabel = (integer)llList2String(lTmp,1);
+                integer iLine = 0;
+                if (llGetListLength(lTmp) > 2) iLine = llList2Integer(lTmp,2); // keep it compatible with old single-line version
+                integer link = -1;
+                
+                list lLineList = llParseString2List(llList2String(g_lLabelLinks,iLine),["|"],[]);
+                
+                link = llList2Integer(lLineList,iLabel);
+                if (link == 0) 
+                {
+                    if (iLabel > llGetListLength(lLineList) -1) {
+                        g_sErrorMsg += "Error! First Parameter of the label prim with the link number "+(string)iLink+" exceeds the number of prims in line "+(string)iLine+" (Current="+(string)iLabel+" Max="+(string)(llGetListLength(lLineList) -1)+")\n";
+                        ok = FALSE;
+                    } else {
+                        lLineList = llListReplaceList(lLineList, [iLink], iLabel, iLabel);
+                        g_lLabelLinks = llListReplaceList(g_lLabelLinks, [llDumpList2String(lLineList,"|")], iLine, iLine);
+                    }
+                } else {
+                    ok = FALSE;
+                    g_sErrorMsg += "Error! Found duplicated label prims: "+sLabel+" with link numbers: "+(string)link+" and "+(string)iLink+"\n";
+                }
             }
         }
-    }
+    } 
     if (!ok) {
         if (~llSubStringIndex(llGetObjectName(),"Installer") && ~llSubStringIndex(llGetObjectName(),"Updater"))
             return 1;
-    } else SetLabel();
+        else {
+            llOwnerSay(g_sErrorMsg);
+            g_bHasError = TRUE;
+        }
+    }
     return ok;
 }
 
@@ -273,7 +307,7 @@ SetLabel() {
         }
     } else {
         integer i;
-        for (i=0; i<llGetListLength(g_lLabelText);++i)
+        for (i=0; i<llGetListLength(g_lLabelLinks);++i)
         {
             SetLine(i," ");
         }
@@ -382,7 +416,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
                 g_lLabelText = llListReplaceList(g_lLabelText,[sNewText],iLine, iLine);
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "text"+(string)iLine+"=" + sNewText, "");
                 if (!g_iShow)
-                    llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"The label is actually disabled, it will not show up until you enable it.", kAv);
+                    llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"The label is currently disabled, it will not show up until you enable it.", kAv);
                 
                 if (llStringLength(sNewText) > llList2Integer(g_lCharLimit,iLine)) {
                         string sDisplayText = llGetSubString(sNewText, 0, llList2Integer(g_lCharLimit,iLine)-1);
@@ -404,16 +438,16 @@ UserCommand(integer iAuth, string sStr, key kAv) {
 default
 {
     state_entry() {
+        g_sErrorMsg = "";
        // llSetMemoryLimit(45056);
         g_kWearer = llGetOwner();
         Ureps = (float)1 / x;
         Vreps = (float)1 / y;
+        g_iShow = FALSE;
         if (LabelsCount()==TRUE) SetLabel();
-        if (llGetListLength(g_lLabelLinks) < 1) {
+        if (g_bHasError) {
             llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
-            llRemoveInventory(llGetScriptName());
         }
-        //SetLabel();
     }
 
     on_rez(integer iNum) {
@@ -443,7 +477,8 @@ default
                 SetLabel();
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            if (!g_bHasError) llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            else llOwnerSay(g_sErrorMsg);
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
