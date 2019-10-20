@@ -1,15 +1,14 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,    
-// Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy, 
-// Romka Swallowtail et al.    
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2008 - 2016 Nandana Singh, Lulu Pink, Garvin Twine,
+// Cleo Collins, Master Starship, Joy Stipe, Wendy Starfall, littlemousy,
+// Romka Swallowtail et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 
 // Based on a split of OpenCollar - appearance by Romka Swallowtail
 // Virtual Disgrace - Resizer is derivative of OpenCollar - adjustment
 
-string g_sScriptVersion = "7.3";
-
+string g_sScriptVersion = "7.4";
 
 integer LINK_CMD_DEBUG=1999;
 string g_sSubMenu = "Size/Position";
@@ -34,7 +33,7 @@ float g_fRotNudge;
 
 list SIZEMENU_BUTTONS = [ "-1%", "-2%", "-5%", "-10%", "+1%", "+2%", "+5%", "+10%", "100%" ]; // buttons for menu
 list g_lSizeFactors = [-1, -2, -5, -10, 1, 2, 5, 10, -1000]; // actual size factors
-list g_lPrimStartSizes; // area for initial prim sizes (stored on rez)
+vector g_vStartScale;
 integer g_iScaleFactor = 100; // the size on rez is always regarded as 100% to preven problem when scaling an item +10% and than - 10 %, which would actuall lead to 99% of the original size
 integer g_iSizedByScript = FALSE; // prevent reseting of the script when the item has been chnged by the script
 
@@ -78,7 +77,7 @@ key g_kWearer;
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
+    //if you delete the first /g_sDeviceType/ from the preceeding and following  lines,
     //  profiling is off, debug is off, and the compiler will remind you to
     //  remove the debug calls from the code, we're back to production mode
     if (!g_iProfiled){
@@ -98,99 +97,24 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     else g_lMenuIDs += [kRCPT, kMenuID, sMenuType];
 }
 
-integer MinMaxUnscaled(vector vSize, float fScale) {
-    if (fScale < 1.0) {
-        if (vSize.x <= 0.01) return TRUE;
-        if (vSize.y <= 0.01) return TRUE;
-        if (vSize.z <= 0.01) return TRUE;
-    } else {
-        if (vSize.x >= 10.0) return TRUE;
-        if (vSize.y >= 10.0) return TRUE;
-        if (vSize.z >= 10.0) return TRUE;
-    }
-    return FALSE;
-}
 
-integer MinMaxScaled(vector vSize, float fScale) {
-    if (fScale < 1.0) {
-        if (vSize.x < 0.01) return TRUE;
-        if (vSize.y < 0.01) return TRUE;
-        if (vSize.z < 0.01) return TRUE;
-    } else {
-        if (vSize.x > 10.0) return TRUE;
-        if (vSize.y > 10.0) return TRUE;
-        if (vSize.z > 10.0) return TRUE;
-    }
-    return FALSE;
-}
-
-
-Store_StartScaleLoop() {
-    g_lPrimStartSizes = [];
-    integer iPrimIndex;
-    vector vPrimScale;
-    vector vPrimPosit;
-    list lPrimParams;
-    if (llGetNumberOfPrims()<2) {
-        vPrimScale = llGetScale();
-        g_lPrimStartSizes += vPrimScale.x;
-    } else {
-        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
-            lPrimParams = llGetLinkPrimitiveParams( iPrimIndex, [PRIM_SIZE, PRIM_POSITION]);
-            vPrimScale=llList2Vector(lPrimParams,0);
-            vPrimPosit=(llList2Vector(lPrimParams,1)-llGetRootPosition())/llGetRootRotation();
-            g_lPrimStartSizes += [vPrimScale,vPrimPosit];
-        }
-    }
+Store_StartScale() {
+    g_vStartScale = llGetScale();
     g_iScaleFactor = 100;
 }
 
-ScalePrimLoop(integer iScale, integer iRezSize, key kAV) {
-    integer iPrimIndex;
-    float fScale = iScale / 100.0;
-    list lPrimParams;
-    vector vPrimScale;
-    vector vPrimPos;
-    vector vSize;
-    if (llGetNumberOfPrims()<2) {
-        vSize = llList2Vector(g_lPrimStartSizes,0);
-        if (MinMaxUnscaled(llGetScale(), fScale) || !iRezSize) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
-            return;
-        } else if (MinMaxScaled(fScale * vSize, fScale) || !iRezSize) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
-            return;
-        } else llSetScale(fScale * vSize); // not linked prim
-    } else {
-        if  (!iRezSize) {
-            // first some checking
-            for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
-                lPrimParams = llGetLinkPrimitiveParams( iPrimIndex, [PRIM_SIZE, PRIM_POSITION]);
-                vPrimScale = llList2Vector(g_lPrimStartSizes, (iPrimIndex  - 1)*2);
-
-                if (MinMaxUnscaled(llList2Vector(lPrimParams,0), fScale)) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"The object cannot be scaled as you requested; prims are already at minimum or maximum size.",kAV);
-                    return;
-                } else if (MinMaxScaled(fScale * vPrimScale, fScale)) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
-                    return;
-                }
-            }
-        }
-        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Scaling started, please wait ...",kAV);
-        g_iSizedByScript = TRUE;
-        for (iPrimIndex = 1; iPrimIndex <= llGetNumberOfPrims(); iPrimIndex++ ) {
-            vPrimScale = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2);
-            vPrimPos = fScale * llList2Vector(g_lPrimStartSizes, (iPrimIndex - 1)*2+1);
-            if (iPrimIndex == 1)
-                llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale]);
-            else
-                llSetLinkPrimitiveParamsFast(iPrimIndex, [PRIM_SIZE, vPrimScale, PRIM_POSITION, vPrimPos]);
-        }
+Scale(integer iScale, integer iRezSize, key kAV) {
+    vector vSize = llGetScale();
+    vector vDestSize = g_vStartScale * (iScale*0.01);
+    if (iRezSize) vDestSize = g_vStartScale;
+    float fScale = vDestSize.x / vSize.x ;
+    g_iSizedByScript = TRUE;
+    // use new scale function integer llScaleByFactor( float scaling_factor ); 
+    // http://wiki.secondlife.com/wiki/LlScaleByFactor
+    if (llScaleByFactor(fScale)==TRUE) { 
         g_iScaleFactor = iScale;
-        g_iSizedByScript = TRUE;
         llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Scaling finished, the %DEVICETYPE% is now on "+ (string)g_iScaleFactor +"% of the rez size.",kAV);
-    }
+    } else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+ "The object cannot be scaled as you requested; prims would surpass minimum or maximum size.",kAV);
 }
 
 ForceUpdate() {
@@ -300,7 +224,7 @@ default {
         //llSetMemoryLimit(40960);  //2015-05-16 (5612 bytes free)
         g_kWearer = llGetOwner();
         g_fRotNudge = PI / 32.0;//have to do this here since we can't divide in a global var declaration
-        Store_StartScaleLoop();
+        Store_StartScale();
         //Debug("Starting");
     }
 
@@ -366,9 +290,9 @@ default {
                             if (iSizeFactor == -1000) {
                                 if (g_iScaleFactor == 100)
                                     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Resizing canceled; the %DEVICETYPE% is already at original size.",kID);
-                                else ScalePrimLoop(100, TRUE, kAv);
+                                else Scale(100, TRUE, kAv);
                             }
-                            else ScalePrimLoop(g_iScaleFactor + iSizeFactor, FALSE, kAv);
+                            else Scale(g_iScaleFactor + iSizeFactor, FALSE, kAv);
                         }
                         SizeMenu(kAv, iAuth);
                     }
@@ -410,8 +334,8 @@ default {
     changed(integer iChange) {
         if (iChange & (CHANGED_SCALE)) {
             if (g_iSizedByScript) llSetTimerEvent(0.5);
-            else Store_StartScaleLoop();
+            else Store_StartScale();
         }
-        if (iChange & (CHANGED_SHAPE | CHANGED_LINK)) Store_StartScaleLoop();
+        if (iChange & (CHANGED_SHAPE | CHANGED_LINK)) Store_StartScale();
     }
  }
