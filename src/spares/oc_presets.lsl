@@ -2,6 +2,17 @@
 // Copyright (c) 2019 Romka Swallowtail
 // Licensed under the GPLv2.  See LICENSE for full details.
 
+string g_sScriptVersion = "7.4"; // Used to validate that a script is up to date via versions/debug command.
+integer LINK_CMD_DEBUG=1999;
+DebugOutput(key kID, list ITEMS){
+    integer i=0;
+    integer end=llGetListLength(ITEMS);
+    string final;
+    for(i=0;i<end;i++){
+        final+=llList2String(ITEMS,i)+" ";
+    }
+    llInstantMessage(kID, llGetScriptName() +final);
+}
 string g_sSubMenu = "SizePresets";
 string g_sParentMenu = "Apps";
 
@@ -87,7 +98,10 @@ PresetMenu(key kAv, integer iAuth, string sType) {
 }
 
 Restore(string sName, key kAv) {
-    if (!llGetAttached()) return;
+    if (!llGetAttached()){
+        llMessageLinked(LINK_DIALOG,NOTIFY, "0You must be wearing the %DEVICETYPE% in order to restore a preset", kAv);
+        return;
+    }
     integer i = llListFindList(g_lPresets,[sName]);
     if (~i) {
         list lSettings = llParseString2List(llList2String(g_lPresets, i+1),["/"],[]);
@@ -103,6 +117,10 @@ Restore(string sName, key kAv) {
 }
 
 Save(string sName, key kAv) {
+    if(!llGetAttached()){
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0You cannot create or update a preset while the %DEVICETYPE% is rezzed", kAv);
+        return;
+    }
     string sSettings = (string)llGetScale()+"/"+(string)llGetLocalPos()+"/"+(string)llGetLocalRot();
     integer i = llListFindList(g_lPresets,[sName]);
     if (~i) g_lPresets = llListReplaceList(g_lPresets, [sSettings], i+1, i+1);
@@ -204,5 +222,14 @@ default {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if(iNum == LINK_CMD_DEBUG){
+            
+            integer onlyver=0;
+            if(sStr == "ver")onlyver=1;
+            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
+            if(onlyver)return; // basically this command was: <prefix> versions
+            llInstantMessage(kID, llGetScriptName() + " PRESETS: "+llDumpList2String(llList2ListStrided(g_lPresets, 0, -1, 2), " | "));
+        }
+            
     }
  }
