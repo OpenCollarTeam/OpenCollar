@@ -75,74 +75,32 @@ integer handle;
 integer menuChan;
 float min_original_scale=10.0; // minimum x/y/z component of the scales in the linkset
 float max_original_scale=0.0; // minimum x/y/z component of the scales in the linkset
-list link_scales = [];
-list link_positions = [];
- 
+
+vector start_size;
+
 makeMenu()
 {
     llDialog(llGetOwner(),"Max scale: "+(string)max_scale+"\nMin scale: "+(string)min_scale+"\n \nCurrent scale: "+
         (string)cur_scale,["-0.01","-0.05","MIN  SIZE","+0.01","+0.05","MAX  SIZE","-0.10","-0.25","RESTORE","+0.10","+0.25"],menuChan);
 }
- 
-integer scanLinkset()
+
+saveStartScale()
 {
-    integer link_qty = llGetNumberOfPrims();
-    integer link_idx;
-    vector link_pos;
-    vector link_scale;
-    //script made specifically for linksets, not for single prims
-    if (link_qty > 1)
-    {
-        //link numbering in linksets starts with 1
-        for (link_idx=1; link_idx <= link_qty; link_idx++)
-        {
-            link_pos=llList2Vector(llGetLinkPrimitiveParams(link_idx,[PRIM_POSITION]),0);
-            link_scale=llList2Vector(llGetLinkPrimitiveParams(link_idx,[PRIM_SIZE]),0);
-            // determine the minimum and maximum prim scales in the linkset,
-            // so that rescaling doesn't fail due to prim scale limitations
-            if(link_scale.x<min_original_scale)
-                min_original_scale=link_scale.x;
-            else if(link_scale.x>max_original_scale)
-                max_original_scale=link_scale.x;
-            if(link_scale.y<min_original_scale)
-                min_original_scale=link_scale.y;
-            else if(link_scale.y>max_original_scale)
-                max_original_scale=link_scale.y;
-            if(link_scale.z<min_original_scale)
-                min_original_scale=link_scale.z;
-            else if(link_scale.z>max_original_scale)
-                max_original_scale=link_scale.z;
-            link_scales    += [link_scale];
-            link_positions += [(link_pos-llGetRootPosition())/llGetRootRotation()];
-        }
-    }
-    else
-        return FALSE;
+    start_size = llGetScale();
     max_scale = MAX_DIMENSION/max_original_scale;
     min_scale = MIN_DIMENSION/min_original_scale;
-    return TRUE;
 }
- 
+
 resizeObject(float scale)
 {
-    integer link_qty = llGetNumberOfPrims();
-    integer link_idx;
-    vector new_size;
-    vector new_pos;
-    if (link_qty > 1)
-    {
-        //link numbering in linksets starts with 1
-        for (link_idx=1; link_idx <= link_qty; link_idx++)
-        {
-            new_size   = scale * llList2Vector(link_scales, link_idx-1);
-            new_pos    = scale * llList2Vector(link_positions, link_idx-1);
- 
-            if (link_idx == 1)//because we don't really want to move the root prim as it moves the whole object
-                llSetLinkPrimitiveParamsFast(link_idx, [PRIM_SIZE, new_size]);
-            else
-                llSetLinkPrimitiveParamsFast(link_idx, [PRIM_SIZE, new_size, PRIM_POSITION, new_pos]);
-        }
-    }
+    vector vSize = llGetScale();
+    vector vDestSize = start_size * scale;
+    float scaling_factor = vDestSize.x / vSize.x ;
+    float min_scale_factor = llGetMinScaleFactor();
+    if (scaling_factor < min_scale_factor) scaling_factor = min_scale_factor;
+    // use new scale function integer llScaleByFactor( float scaling_factor );
+    // http://wiki.secondlife.com/wiki/LlScaleByFactor
+    llScaleByFactor(scaling_factor);
 }
 //end of size adjust
 
@@ -337,7 +295,7 @@ UserCommand(string sStr, key kID) {
                     for (iFace = 0; iFace < iSides; iFace++) {
                         list lPrimParams = llGetLinkPrimitiveParams(iLinkCount, [PRIM_TEXTURE, iFace ]);
                         lPrimParams = llDeleteSubList(lPrimParams,0,0); // get texture params **** error on this line called lPrim not lPrimParams
-                        
+
                         llSetLinkPrimitiveParamsFast(iLinkCount, [PRIM_TEXTURE, iFace, sTextureKey]+lPrimParams);
                     }
                 }
@@ -504,11 +462,9 @@ default
     state_entry()
     {
         Init();
-        if (scanLinkset())
-        { // llOwnerSay("resizer script ready");
-        }
+        saveStartScale();
     }
-    
+
     on_rez(integer param)
     {
         if (llGetAttached() == 0) // If not attached then
@@ -516,7 +472,7 @@ default
             llResetScript();
             return;
         }
-        
+
         if (g_keyWearer == llGetOwner())
         {
             Init();// we keep loosing who we are so main cuff won't hear us
@@ -525,7 +481,7 @@ default
         }
         else llResetScript();
     }
-    
+
     touch_start(integer nCnt)
     {
         //resize
@@ -539,7 +495,7 @@ default
             llSetScriptState("occ_update",TRUE);
             return;
         }
-        
+
         if (llDetectedKey(0) == llGetOwner())// if we are wearer then allow to resize
             llDialog(llGetOwner(),"Select if you want to Resize this item or the main Cuff Menu ",["Resizer","Cuff Menu"],menuChan);
         // else just ask for main cuff menu
@@ -590,7 +546,7 @@ default
             }
         }
     }
-    
+
     timer()
     {
         //Clear resize menu listen
