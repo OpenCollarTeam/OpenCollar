@@ -86,7 +86,7 @@ makeMenu()
 
 saveStartScale()
 {
-	start_size = llGetScale();
+    start_size = llGetScale();
     max_scale = MAX_DIMENSION/max_original_scale;
     min_scale = MIN_DIMENSION/min_original_scale;
     return TRUE;
@@ -94,7 +94,7 @@ saveStartScale()
 
 resizeObject(float scale)
 {
-	vector vSize = llGetScale();
+    vector vSize = llGetScale();
     vector vDestSize = start_size * scale;
     float scaling_factor = vDestSize.x / vSize.x ;
     float min_scale_factor = llGetMinScaleFactor();
