@@ -89,7 +89,6 @@ saveStartScale()
     start_size = llGetScale();
     max_scale = MAX_DIMENSION/max_original_scale;
     min_scale = MIN_DIMENSION/min_original_scale;
-    return TRUE;
 }
 
 resizeObject(float scale)
@@ -102,7 +101,6 @@ resizeObject(float scale)
     // use new scale function integer llScaleByFactor( float scaling_factor );
     // http://wiki.secondlife.com/wiki/LlScaleByFactor
     llScaleByFactor(scaling_factor);
-
 }
 //end of size adjust
 
