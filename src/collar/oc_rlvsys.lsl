@@ -1,8 +1,8 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,  
-// Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,      
-// Sumi Perl et al.     
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2008 - 2016 Satomi Ahn, Nandana Singh, Wendy Starfall,
+// Medea Destiny, littlemousy, Romka Swallowtail, Garvin Twine,
+// Sumi Perl et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 string g_sScriptVersion = "7.3";
 integer g_iRLVOn = TRUE;
@@ -478,7 +478,7 @@ default {
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         }
-        else if (iNum == REBOOT && sStr == "reboot") llResetScript(); 
+        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if (iNum == LINK_UPDATE) {
             if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
             else if (sStr == "LINK_SAVE") {
@@ -487,6 +487,7 @@ default {
             } else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
         } else if (g_iRlvActive) {
             llSetLinkPrimitiveParams(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+            llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
                 list lCommands=llParseString2List(llToLower(sStr),[","],[]);
@@ -558,7 +559,7 @@ default {
                 }
             }
         }
-        
+
         if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
             if(sStr == "ver")onlyver=1;
@@ -567,13 +568,14 @@ default {
             // The rest of this command can be access by <prefix> debug
             llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
             llInstantMessage(kID, llGetScriptName()+" RLV_ON: "+(string)g_iRLVOn);
-            
-            
-            
         }
     }
-    
-    
+
+    no_sensor() {
+        llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
+        llSensorRemove();
+    }
+
     timer() {
         if (g_iWaitRelay) {
             if (g_iWaitRelay < 2) {
