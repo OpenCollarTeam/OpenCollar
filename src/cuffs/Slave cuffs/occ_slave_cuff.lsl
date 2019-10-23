@@ -66,38 +66,42 @@ string    g_szSender        = "";
 //end
 
 //size adust
-float MIN_DIMENSION=0.001; // the minimum scale of a prim allowed, in any dimension
-float MAX_DIMENSION=1.0; // the maximum scale of a prim allowed, in any dimension
+float MIN_DIMENSION=0.01; // the minimum scale of a root prim allowed, in any dimension
+float MAX_DIMENSION=0.25; // the maximum scale of a root prim allowed, in any dimension
 float max_scale;
 float min_scale;
 float   cur_scale = 1.0;
 integer handle;
 integer menuChan;
-float min_original_scale=10.0; // minimum x/y/z component of the scales in the linkset
-float max_original_scale=0.0; // minimum x/y/z component of the scales in the linkset
-
-vector start_size;
+float start_size;
 
 makeMenu()
 {
     llDialog(llGetOwner(),"Max scale: "+(string)max_scale+"\nMin scale: "+(string)min_scale+"\n \nCurrent scale: "+
-        (string)cur_scale,["-0.01","-0.05","MIN  SIZE","+0.01","+0.05","MAX  SIZE","-0.10","-0.25","RESTORE","+0.10","+0.25"],menuChan);
+        (string)cur_scale,["-0.01","-0.05","MIN SIZE","+0.01","+0.05","MAX SIZE","-0.10","-0.25","RESTORE","+0.10","+0.25"],menuChan);
 }
 
 saveStartScale()
 {
-    start_size = llGetScale();
-    max_scale = MAX_DIMENSION/max_original_scale;
-    min_scale = MIN_DIMENSION/min_original_scale;
+    vector vSize = llGetScale();
+    start_size = vSize.x;
+    max_scale = MAX_DIMENSION/start_size;
+    min_scale = MIN_DIMENSION/start_size;
 }
 
 resizeObject(float scale)
 {
     vector vSize = llGetScale();
-    vector vDestSize = start_size * scale;
-    float scaling_factor = vDestSize.x / vSize.x ;
+
+    // calculate scaling factor
+    float scaling_factor = start_size * scale / vSize.x ;
+
+    // get a float that is the smallest scaling factor that can be used with llScaleByFactor to resize the object.
     float min_scale_factor = llGetMinScaleFactor();
+
+    // compare scaling factor and smallest scaling factor
     if (scaling_factor < min_scale_factor) scaling_factor = min_scale_factor;
+
     // use new scale function integer llScaleByFactor( float scaling_factor );
     // http://wiki.secondlife.com/wiki/LlScaleByFactor
     llScaleByFactor(scaling_factor);
