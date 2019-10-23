@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,    
-// Garvin Twine, Romka Swallowtail et al.   
-// Licensed under the GPLv2.  See LICENSE for full details. 
+// Copyright (c) 2014 - 2017 Wendy Starfall, littlemousy, Sumi Perl,
+// Garvin Twine, Romka Swallowtail et al.
+// Licensed under the GPLv2.  See LICENSE for full details.
 
 string g_sScriptVersion = "7.3";
 //menu setup
@@ -190,7 +190,7 @@ DoTerminalCommand(string sMessage, key kID) {
     string sCRLF= llUnescapeURL("%0A");
     list lCommands = llParseString2List(sMessage, [sCRLF], []);
     sMessage = llDumpList2String(lCommands, ",");
-    
+
     llMessageLinked(LINK_RLV,RLV_CMD,sMessage,"Terminal");
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your command(s) were sent to %WEARERNAME%'s Viewer:\n" + sMessage, kID);
     llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"secondlife:///app/agent/"+(string)kID+"/about" + " has changed your rlv restrictions.", g_kWearer);
@@ -247,7 +247,7 @@ DetachMenu(key kID, integer iAuth)
     list attachmentKeys = llGetAttachedList(llGetOwner());
     integer n;
     integer iStop = llGetListLength(attachmentKeys);
-    
+
     for (n = 0; n < iStop; n++) {
         key k = llList2Key(attachmentKeys, n);
         if (k != llGetKey()) {
@@ -257,7 +257,7 @@ DetachMenu(key kID, integer iAuth)
 
     list lButtons;
     iStop = llGetListLength(g_lAttachments);
-    
+
     for (n = 0; n < iStop; n+=2) {
         lButtons += [llList2String(g_lAttachments, n)];
     }
@@ -368,15 +368,15 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
         return;
     }
     //restrictions command handling
-    
-    
-    
+
+
+
     integer iNoAccess=FALSE;
     if (sStr == TERMINAL_CHAT_COMMAND || sStr == "menu " + TERMINAL_BUTTON) {
-        
+
         /// g_iTerminalAccess as of v7.2 will define the access rights for the terminal.
         // A flag is set if denied.
-        if((g_iTerminalAccess&1) && iNum ==CMD_WEARER) { 
+        if((g_iTerminalAccess&1) && iNum ==CMD_WEARER) {
             iNoAccess=TRUE;
             return;
         }else if((g_iTerminalAccess&2) && iNum == CMD_TRUSTED){
@@ -389,22 +389,22 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
             iNoAccess=TRUE;
             return;
         }
-        
+
         // CMD_OWNER is never denied terminal. CMD_OWNER is the access level of the owner level as well as the unowned or selfowned wearer.
-        
+
         if (sStr == TERMINAL_CHAT_COMMAND) g_iMenuCommand = FALSE;
         else g_iMenuCommand = TRUE;
-        
+
         string sAppendSettings = "Wearer blocked: "+bool2string((g_iTerminalAccess&1))+"\nTrusted blocked: "+bool2string((g_iTerminalAccess&2))+"\nPublic blocked: "+bool2string((g_iTerminalAccess&4))+"\nGroup blocked: "+bool2string((g_iTerminalAccess&8))+"\n\nFor help configuring, type 'help' without the quotes!\nTo exit the terminal, simply type 'back'";
-        
+
         Dialog(kID, g_sTerminalText+"\n"+sAppendSettings, [], [], 0, iNum, "terminal");
         return;
     } else if(sStr == RESTRICTIONS_CHAT_COMMAND || sStr == "menu "+RESTRICTION_BUTTON){
         RestrictionsMenu(kID, iNum);
         return;
     }
-    
-    
+
+
     if (sLowerStr == "restrictions back") {
         llMessageLinked(LINK_RLV, iNum, "menu " + COLLAR_PARENT_MENU, kID);
         return;
@@ -623,9 +623,9 @@ UserCommand(integer iNum, string sStr, key kID, integer bFromMenu) {
     } else if (!llSubStringIndex(sLowerStr, "hudtpto:") && (iNum == CMD_OWNER || iNum == CMD_TRUSTED)) {
         if (g_iRLVOn) llMessageLinked(LINK_RLV,RLV_CMD,llGetSubString(sLowerStr,3,-1),"");
     } else if (sLowerStr == "menu detach" || sLowerStr == "detach") {
-        DetachMenu(kID, iNum); 
+        DetachMenu(kID, iNum);
     }
-    
+
     if(iNoAccess)llMessageLinked(LINK_DIALOG,NOTIFY, "0%NOACCESS%", kID);
     if (bFromMenu) RestrictionsMenu(kID,iNum);
 }
@@ -635,7 +635,7 @@ default {
     state_entry() {
         g_kWearer = llGetOwner();
         //Debug("Starting");
-        string R="restrictions";
+        string R="restrictions_";
         list tokens = [R+"send",R+"read", R+"hear", R+"talk",R+"touch",R+"stray", R+"stand",R+"rummage", R+"blurred", R+"dazed", "terminal_accessbitset"];
         integer i=0;
         integer end=llGetListLength(tokens);
@@ -730,7 +730,7 @@ default {
                     UserCommand(iAuth, "menu force sit", kAv, TRUE);
                 } else if (sMenu == "find") UserCommand(iAuth, "sit "+sMessage, kAv, FALSE);
                 else if (sMenu == "terminal") {
-                    
+
                     if(iAuth == CMD_OWNER ){
                         list tmp = llParseString2List(llToLower(sMessage), [" "],[]);
                         integer iTerminate=FALSE;
@@ -741,7 +741,7 @@ default {
                             if(llList2String(tmp,1) == "trusted" && (g_iTerminalAccess&2))iAddAccess=2;
                             if(llList2String(tmp,1) == "public" && (g_iTerminalAccess&4))iAddAccess=4;
                             if(llList2String(tmp,1) == "group" && (g_iTerminalAccess&8))iAddAccess=8;
-                            
+
                             g_iTerminalAccess=(g_iTerminalAccess-iAddAccess);
                         } else if(llList2String(tmp,0)=="deny"){
                             integer iRemAccess;
@@ -750,7 +750,7 @@ default {
                             if(llList2String(tmp,1) == "trusted" && !(g_iTerminalAccess&2))iRemAccess=2;
                             if(llList2String(tmp,1) == "public" && !(g_iTerminalAccess&4))iRemAccess=4;
                             if(llList2String(tmp,1) == "group" && !(g_iTerminalAccess&8))iRemAccess=8;
-                            
+
                             g_iTerminalAccess=(g_iTerminalAccess+iRemAccess);
                         }else if(llList2String(tmp,0)=="help"){
                             iTerminate=TRUE;
@@ -761,13 +761,13 @@ default {
                         }
                         if(iTerminate){
                             llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "terminal_accessbitset="+(string)g_iTerminalAccess,"");
-                            llMessageLinked(LINK_SET, iAuth, "menu Terminal", kAv); 
+                            llMessageLinked(LINK_SET, iAuth, "menu Terminal", kAv);
                             return; // this is not a RLV command. We're safe to exit here.
                         }// if it was NOT a config command, then process as a RLV command.
                     }
-                    
-                    
-                    
+
+
+
                     if (llStringLength(sMessage) > 4) DoTerminalCommand(sMessage, kAv);
                     llMessageLinked(LINK_SET, iAuth, "menu Terminal", kAv);
                 } else if (sMenu == "folder" || sMenu == "multimatch") {
@@ -794,7 +794,7 @@ default {
                 } else if (sMenu == "detach") {
                     if (sMessage == UPMENU) {
                         llMessageLinked(LINK_RLV, iAuth, "menu "+COLLAR_PARENT_MENU, kAv);
-                    } else {              
+                    } else {
                         integer idx = llListFindList(g_lAttachments, [sMessage]);
                         if (~idx) {
                             string uuid = llList2String(g_lAttachments, idx + 1);
