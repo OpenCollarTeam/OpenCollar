@@ -724,7 +724,7 @@ default {
                     g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
                     g_kExistingSettings = llGetInventoryKey(".settings");
                 }
-            } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
+            } else llMessageLinked(LINK_SAVE, LM_SETTING_REQUEST,"ALL","");
             if(llGetInventoryNumber(INVENTORY_ANIMATION)!=0){
                 AnnounceAnimInventory(LINK_ALL_OTHERS);
             }

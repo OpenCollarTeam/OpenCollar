@@ -299,8 +299,15 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
         } else if ((lSubArgs!=[])==2) {
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
             list lTemp=llParseString2List(sBehav,[":"],[]);
-            if (g_iSmartStrip && llList2String(lTemp,0) == "remoutfit" && sVal == "force")
-                sBehav = "detachallthis:" + llList2String(lTemp,1);
+            if (g_iSmartStrip && llList2String(lTemp,0) == "remoutfit" && sVal == "force") {
+                if (llList2String(lTemp,1) != "") sBehav = "detachallthis:" + llList2String(lTemp,1);
+                else {  // only if  'remoutfit=force'
+                    list parts=["jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt"]; //"gloves","alpha","tattoo","physics"];
+                    integer n;
+                    for (n=0; n<llGetListLength(parts); ++n)
+                        llMessageLinked(LINK_RLV,RLV_CMD,"detachallthis:"+llList2String(parts,n)+"=force",kID);
+                }
+            }
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
                 llMessageLinked(LINK_RLV,RLV_CMD,sBehav+"="+sVal,kID);
             else sAck="ko";
