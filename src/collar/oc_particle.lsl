@@ -134,7 +134,7 @@ FindLinkedPrims() {
     integer linkcount = llGetNumberOfPrims();
     //root prim is 1, so start at 2
     for (g_iLoop = 2; g_iLoop <= linkcount; g_iLoop++) {
-        string sPrimDesc = (string)llGetObjectDetails(llGetLinkKey(g_iLoop), [OBJECT_DESC]);
+        string sPrimDesc = (string)llGetLinkPrimitiveParams((g_iLoop), [PRIM_DESC]);
         list lTemp = llParseString2List(sPrimDesc, ["~"], []);
         integer iLoop;
         for (iLoop = 0; iLoop < llGetListLength(lTemp); iLoop++) {
