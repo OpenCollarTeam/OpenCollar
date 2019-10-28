@@ -172,7 +172,7 @@ integer LabelsCount() {
     integer iLinkCount = llGetNumberOfPrims();
     //find all 'Label' prims and count it's
     for(iLink=2; iLink <= iLinkCount; iLink++) {
-        lTmp = llParseString2List(llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0), ["~"],[]);
+        lTmp = llParseString2List(llGetLinkName(iLink), ["~"],[]);
         sLabel = llList2String(lTmp,0);
         if(sLabel == "MeshLabel") {
             integer iLine = 0;
@@ -214,7 +214,7 @@ integer LabelsCount() {
         }
         //find all 'Label' prims and store it's links to list
         for(iLink=2; iLink <= iLinkCount; iLink++) {
-            lTmp = llParseString2List(llList2String(llGetLinkPrimitiveParams(iLink,[PRIM_NAME]),0), ["~"],[]);
+            lTmp = llParseString2List(llGetLinkName(iLink), ["~"],[]);
             sLabel = llList2String(lTmp,0);
             if (sLabel == "MeshLabel") {
                 integer iLabel = (integer)llList2String(lTmp,1);

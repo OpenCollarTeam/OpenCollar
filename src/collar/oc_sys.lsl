@@ -422,7 +422,7 @@ BuildLockElementList() {//EB
     integer n=2;
     for (; n <= llGetNumberOfPrims(); n++) {
         // read description
-        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_NAME]), ["~"], []);
+        lParams=llParseString2List(llGetLinkName(n), ["~"], []);
         // check inf name is lock name
         if (llList2String(lParams, 0)==g_sLockPrimName || llList2String(lParams, 0)==g_sClosedLockPrimName)
             // if so store the number of the prim
@@ -705,8 +705,6 @@ default {
             llInstantMessage(kID, llGetScriptName()+" LOCKED: "+(string)g_iLocked);
             llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iHide);
             llInstantMessage(kID, llGetScriptName()+" DETACHED WHILE LOCKED: "+(string)g_bDetached);
-            
-            
         }
     }
 
@@ -720,14 +718,13 @@ default {
             g_iWaitRebuild = TRUE;
             PermsCheck();
             llSetTimerEvent(1.0);
-            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST,"ALL","");
             if(llGetInventoryType(".settings") == INVENTORY_NOTECARD){
                 if(llGetInventoryKey(".settings") != g_kExistingSettings){
                     g_iSettingsReader=0;
                     g_kSettingsReader = llGetNotecardLine(".settings", g_iSettingsReader);
                     g_kExistingSettings = llGetInventoryKey(".settings");
                 }
-            }
+            } else llMessageLinked(LINK_SAVE, LM_SETTING_REQUEST,"ALL","");
             if(llGetInventoryNumber(INVENTORY_ANIMATION)!=0){
                 AnnounceAnimInventory(LINK_ALL_OTHERS);
             }
@@ -754,10 +751,10 @@ default {
     
     dataserver(key kID, string sData){
         if(kID==g_kSettingsReader){
-            if(sData ==EOF)llMessageLinked(LINK_SET,LM_SETTING_REQUEST,"ALL","");
+            if(sData ==EOF)llMessageLinked(LINK_SAVE,LM_SETTING_REQUEST,"ALL","");
             else{
                 g_iSettingsReader++;
-                llMessageLinked(LINK_SET, LM_SETTING_RELAY_CONTENT, sData, (string)g_iSettingsReader);
+                llMessageLinked(LINK_SAVE, LM_SETTING_RELAY_CONTENT, sData, (string)g_iSettingsReader);
                 g_kSettingsReader=llGetNotecardLine(".settings", g_iSettingsReader);
             }
         }

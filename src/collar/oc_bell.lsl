@@ -179,7 +179,7 @@ BuildBellElementList() {
     //root prim is 1, so start at 2
     integer i = 2;
     for (; i <= llGetNumberOfPrims(); i++) {
-        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(i), [OBJECT_DESC]), ["~"], []);
+        lParams=llParseString2List((string)llGetLinkPrimitiveParams(i,[PRIM_DESC]), ["~"], []);
         if (llList2String(lParams, 0)=="Bell") {
             g_lBellElements += [i];
             // Debug("added " + (string)n + " to elements");
