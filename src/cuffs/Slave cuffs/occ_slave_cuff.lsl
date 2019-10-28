@@ -307,7 +307,7 @@ UserCommand(string sStr, key kID) {
         }
     }
 }
-
+/* these functions are not used anywhere
 integer IsAllowed( key keyID )
 {
     integer nAllow = FALSE;
@@ -316,7 +316,7 @@ integer IsAllowed( key keyID )
         nAllow = TRUE;
     return nAllow;
 }
-
+*/
 string CheckCmd( key keyID, string szMsg )
 {
     list lstParsed = llParseString2List( szMsg, [ "|" ], [] );
@@ -428,7 +428,7 @@ LM_CUFF_CMD(string szMsg, key id)
     }
     UserCommand( llList2String(llParseString2List(sID, ["_"], []),0) + " " + llList2String(llParseString2List(sID, ["_"], []),1) +" "+sValue, id);//NG added
 }
-
+/*
 string Float2String(float in)
 {
     string out = (string)in;
@@ -436,10 +436,10 @@ string Float2String(float in)
     while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
         out = llGetSubString(out, 0, -2);
     return out;
-}
+}*/
 string ElementType(integer linkiNumber)
 {
-    string sDesc = (string)llGetObjectDetails(llGetLinkKey(linkiNumber), [OBJECT_DESC]);
+    string sDesc = (string)llGetLinkPrimitiveParams(linkiNumber, [PRIM_DESC]);
     //each prim should have <elementname> in its description, plus "nocolor" or "notexture", if you want the prim to  not appear in the color or texture menus
     list lParams = llParseString2List(sDesc, ["~"], []);
     if ((~(integer)llListFindList(lParams, [g_sIgnore])) || sDesc == "" || sDesc == " " || sDesc == "(No Description)")
@@ -512,7 +512,7 @@ default
         // commands sent on cmd channel
         if ( nChannel == g_nCmdChannel+ 1 )
         {
-            if ( IsAllowed(keyID) )
+            if (llGetOwnerKey(keyID) == g_keyWearer)
             {
                 if (llGetSubString(szMsg,0,8)=="lockguard") // this should not be happening!
                     llMessageLinked(LINK_SET, -9119, szMsg, keyID);
