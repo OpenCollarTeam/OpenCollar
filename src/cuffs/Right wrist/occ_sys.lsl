@@ -417,7 +417,6 @@ string GetTimestamp() { // Return a string of the date and time
     return out;
 }
 
-
 BuildLockElementList() {//EB
     list lParams;
     // clear list just in case
@@ -427,7 +426,7 @@ BuildLockElementList() {//EB
     integer n=2;
     for (; n <= llGetNumberOfPrims(); n++) {
         // read description
-        lParams=llParseString2List((string)llGetObjectDetails(llGetLinkKey(n), [OBJECT_NAME]), ["~"], []);
+        lParams=llParseString2List(llGetLinkName(n), ["~"], []);
         // check inf name is lock name
         if (llList2String(lParams, 0)==g_sLockPrimName || llList2String(lParams, 0)==g_sClosedLockPrimName)
             // if so store the number of the prim

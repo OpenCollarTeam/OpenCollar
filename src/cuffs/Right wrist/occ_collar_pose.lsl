@@ -182,11 +182,6 @@ DoMenu(key id)
     g_keyDialogID=Dialog(id, prompt, mybuttons, [UPMENU], 0);
 }
 
-integer startswith(string haystack, string needle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return llDeleteSubString(haystack, llStringLength(needle), -1) == needle;
-}
-
 default
 {
     state_entry()

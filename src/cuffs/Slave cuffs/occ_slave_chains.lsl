@@ -477,25 +477,6 @@ integer nGetOwnerChannel(integer nOffset)
     return chan;
 }
 
-integer nStartsWith(string szHaystack, string szNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return (llDeleteSubString(szHaystack, llStringLength(szNeedle), -1) == szNeedle);
-}
-
-string szStripSpaces (string szStr)
-{
-    return llDumpList2String(llParseString2List(szStr, [" "], []), "");
-}
-
-integer IsAllowed( key keyID )
-{
-    integer nAllow = FALSE;
-
-    if ( llGetOwnerKey(keyID) == g_keyWearer )
-        nAllow = TRUE;
-    return nAllow;
-}
-
 string CheckCmd( key keyID, string szMsg )
 {
     list lstParsed = llParseString2List( szMsg, [ "|" ], [] );
@@ -543,14 +524,6 @@ ParseSingleCmd( key keyID, string szMsg )
         if (( length == 4 || length == 7 ) && llGetKey() != keyID )//check string length and we didn't originally sent this command
             Sanity2( szMsg );
     }
-}
-
-string Float2String(string out)
-{
-    integer i = llSubStringIndex(out, ".");
-    while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
-        out = llGetSubString(out, 0, -2);
-    return out;
 }
 
 Init()
@@ -614,7 +587,7 @@ default
         // commands sent on cmd channel
         if ( nChannel == g_nInternalLockGuardChannel )
         {
-            if ( IsAllowed(keyID) )
+            if (llGetOwnerKey(keyID) == g_keyWearer)
             {
                 if (llGetSubString(szMsg,0,8)=="lockguard")
                     Sanity1( szMsg );
