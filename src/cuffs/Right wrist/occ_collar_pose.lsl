@@ -181,12 +181,7 @@ DoMenu(key id)
     prompt += "\n\nPick an option.";
     g_keyDialogID=Dialog(id, prompt, mybuttons, [UPMENU], 0);
 }
-/* these functions are not used anywhere
-integer startswith(string haystack, string needle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return llDeleteSubString(haystack, llStringLength(needle), -1) == needle;
-}
-*/
+
 default
 {
     state_entry()

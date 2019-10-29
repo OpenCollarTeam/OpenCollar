@@ -476,26 +476,7 @@ integer nGetOwnerChannel(integer nOffset)
         chan -= 30000;
     return chan;
 }
-/* these functions are not used anywhere
-integer nStartsWith(string szHaystack, string szNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return (llDeleteSubString(szHaystack, llStringLength(szNeedle), -1) == szNeedle);
-}
 
-string szStripSpaces (string szStr)
-{
-    return llDumpList2String(llParseString2List(szStr, [" "], []), "");
-}
-
-integer IsAllowed( key keyID )
-{
-    integer nAllow = FALSE;
-
-    if ( llGetOwnerKey(keyID) == g_keyWearer )
-        nAllow = TRUE;
-    return nAllow;
-}
-*/
 string CheckCmd( key keyID, string szMsg )
 {
     list lstParsed = llParseString2List( szMsg, [ "|" ], [] );
@@ -544,15 +525,7 @@ ParseSingleCmd( key keyID, string szMsg )
             Sanity2( szMsg );
     }
 }
-/* these functions are not used anywhere
-string Float2String(string out)
-{
-    integer i = llSubStringIndex(out, ".");
-    while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
-        out = llGetSubString(out, 0, -2);
-    return out;
-}
-*/
+
 Init()
 {
     g_keyWearer = llGetOwner();

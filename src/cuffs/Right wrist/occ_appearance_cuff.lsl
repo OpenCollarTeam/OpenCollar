@@ -104,20 +104,7 @@ ChainMenu(key id, integer iAuth)
     g_keyChainDialogID = Dialog(id, prompt, mybuttons, [UPMENU], 0, iAuth);
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, chaintoken + "=" + (string)ChainCurrent, "");
 }
-/* these functions are not used anywhere
-string GetScriptID()
-{
-    // strip away "OpenNC - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
-*/
+
 DoMenu(key kAv, integer iAuth)
 {
     list lMyButtons;

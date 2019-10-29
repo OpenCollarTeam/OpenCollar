@@ -82,26 +82,7 @@ integer DIALOG_RESPONSE = -9001;
 integer TIMER_EVENT = -10000; // str = "start" or "end". For start, either "online" or "realtime".
 integer WEARERLOCKOUT=620;
 string UPMENU = "BACK";
-/*  these functions are not used anywhere
-string GetScriptID()
-{
-    // strip away "OpenNC - " leaving the script's individual name
-    list parts = llParseString2List(llGetScriptName(), ["-"], []);
-    return llStringTrim(llList2String(parts, 1), STRING_TRIM) + "_";
-}
 
-string PeelToken(string in, integer slot)
-{
-    integer i = llSubStringIndex(in, "_");
-    if (!slot) return llGetSubString(in, 0, i);
-    return llGetSubString(in, i + 1, -1);
-}
-
-integer StartsWith(string sHaystack, string sNeedle) // http://wiki.secondlife.com/wiki/llSubStringIndex
-{
-    return (llDeleteSubString(sHaystack, llStringLength(sNeedle), -1) == sNeedle);
-}
-*/
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
@@ -201,12 +182,7 @@ DoRealMenu(key keyID, integer iAuth)
         sPrompt += "\n Realtime timer - not running";
     g_kRealMenuID = Dialog(keyID, sPrompt, g_lTimeButtons, [UPMENU], 0, iAuth);
 }
-/*
-string GetDBPrefix()
-{//get db prefix from list in object desc
-    return llList2String(llParseString2List(llGetObjectDesc(), ["~"], []), 2);
-}
-*/
+
 string Int2Time(integer sTime)
 {
     if (sTime<0) sTime=0;

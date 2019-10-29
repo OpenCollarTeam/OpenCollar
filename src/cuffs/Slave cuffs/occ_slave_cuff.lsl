@@ -307,16 +307,7 @@ UserCommand(string sStr, key kID) {
         }
     }
 }
-/* these functions are not used anywhere
-integer IsAllowed( key keyID )
-{
-    integer nAllow = FALSE;
 
-    if ( llGetOwnerKey(keyID) == g_keyWearer )
-        nAllow = TRUE;
-    return nAllow;
-}
-*/
 string CheckCmd( key keyID, string szMsg )
 {
     list lstParsed = llParseString2List( szMsg, [ "|" ], [] );
@@ -428,15 +419,7 @@ LM_CUFF_CMD(string szMsg, key id)
     }
     UserCommand( llList2String(llParseString2List(sID, ["_"], []),0) + " " + llList2String(llParseString2List(sID, ["_"], []),1) +" "+sValue, id);//NG added
 }
-/*
-string Float2String(float in)
-{
-    string out = (string)in;
-    integer i = llSubStringIndex(out, ".");
-    while (~i && llStringLength(llGetSubString(out, i + 2, -1)) && llGetSubString(out, -1, -1) == "0")
-        out = llGetSubString(out, 0, -2);
-    return out;
-}*/
+
 string ElementType(integer linkiNumber)
 {
     string sDesc = (string)llGetLinkPrimitiveParams(linkiNumber, [PRIM_DESC]);
