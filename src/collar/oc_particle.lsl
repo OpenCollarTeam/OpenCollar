@@ -676,6 +676,17 @@ default {
                 if (iIndex > -1 && kLGAv == g_kWearer) {
                     if (sLGCMD == "link") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kLGTarget); // doChain(llList2String(g_lLeashPrims,0) , kLGTarget, TRUE);
                     else if (sLGCMD == "unlink") llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1),[]); //doChain(llList2String(g_lLeashPrims,0) , NULL_KEY, FALSE);
+                    else if (sLGCMD == "gravity") g_vLeashGravity.z = llList2Float(lLGCmd,4);
+                    else if (sLGCMD == "life") g_fParticleAge = llList2Float(lLGCmd,4);
+                    else if (sLGCMD == "color") {
+                        
+                        g_vLeashColor.x = llList2Float(lLGCmd,4);
+                        g_vLeashColor.y = llList2Float(lLGCmd,5);
+                        g_vLeashColor.z = llList2Float(lLGCmd,6);
+                    } else if (sLGCMD == "size") {
+                        g_vLeashSize.x = llList2Float(lLGCmd,4);
+                        g_vLeashSize.y = llList2Float(lLGCmd,5);
+                    } else if (sLGCMD == "texture") g_sParticleTextureID = llList2Key(lLGCmd,4);
                 }
             }
         } else if (iChannel == g_iChan_LOCKMEISTER) {
