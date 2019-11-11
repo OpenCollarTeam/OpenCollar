@@ -1,8 +1,9 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2008 - 2017 Nandana Singh, Garvin Twine, Cleo Collins,  
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,  
-// Romka Swallowtail, Sumi Perl et al.  
+// Romka Swallowtail, lillith xue, Sumi Perl et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
+
 string g_sScriptVersion="7.3";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
@@ -18,8 +19,6 @@ DebugOutput(key kID, list ITEMS){
 integer g_iPrivateListenChan = 1;
 integer g_iPublicListenChan = TRUE;
 string g_sPrefix = ".";
-
-integer g_iLockMeisterChan = -8888;
 
 integer g_iPublicListener;
 integer g_iPrivateListener;
@@ -363,7 +362,6 @@ default {
         if (g_iInterfaceChannel > 0) g_iInterfaceChannel = -g_iInterfaceChannel;
         g_iPublicListener = llListen(0, "", NULL_KEY, "");
         g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-        g_iLockMeisterListener = llListen(g_iLockMeisterChan, "", "", "");
         //garvin attachments listener
         g_iListenHandleAtt = llListen(g_iInterfaceChannel, "", "", "");
         g_iHUDListener = llListen(g_iHUDChan, "", NULL_KEY ,"");
@@ -400,20 +398,6 @@ default {
                 else llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else
                 llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
-            return;
-        }
-        if (iChan == g_iLockMeisterChan) {
-            if(sMsg ==(string)g_kWearer+"collar")
-                llSay(g_iLockMeisterChan,(string)g_kWearer + "collar ok");
-            //new for LMV2
-            if(sMsg == (string)g_kWearer+"|LMV2|RequestPoint|collar") {
-    //this message is for us, it's claiming to be an LMV2 message, it's a "Request" message, and concerns the mooring_point we specified
-     //message structure:   llGetOwner()|LMV2|RequestPoint|anchor_name
-                if(g_iLeashPrim)
-                    llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string)llGetLinkKey(g_iLeashPrim));
-                else
-                    llRegionSayTo(kID, g_iLockMeisterChan, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string) llGetKey());
-            }
             return;
         }
         if(llGetOwnerKey(kID) == g_kWearer) { // also works for attachments

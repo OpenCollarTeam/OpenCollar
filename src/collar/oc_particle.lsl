@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2008 - 2017 Lulu Pink, Nandana Singh, Garvin Twine,    
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Romka Swallowtail, 
-// littlemousy et al.    
+// lillith xue, littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
 string g_sScriptVersion = "7.3";
@@ -41,7 +41,10 @@ integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
 
-integer LOCKMEISTER         = -8888;
+integer g_iChan_LOCKMEISTER = -8888;
+integer g_iChan_LOCKGUARD   = -9119;
+integer g_iChan_ocCmd;                      // OpenCollar Chain CMD Channel (for cuff compatibility)
+integer g_iChan_ocCmd_Offset = 0xCC0CC;     // OpenCollar Chain CMD Channel Offset
 integer g_iLMListener;
 integer g_iLMListernerDetach;
 
@@ -105,6 +108,12 @@ integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
+list g_lCollarPoints = [ // oc chain name, lockmeister name, lockguard name
+    "occ"        , "collar"  , "collarfrontloop" , // Collar Front
+    "loccollar"  , "lcollar" , "collarleftloop"  , // Collar Left
+    "roccollar"  , "rcollar" , "collarrightloop" , // Collar Right
+    "boccollar"  , "bcollar" , "collarbackloop"    // Collar Back
+];
 /*
 integer g_iProfiled=1;
 Debug(string sStr) {
@@ -131,25 +140,20 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 FindLinkedPrims() {
+    g_lLeashPrims = [];
     integer linkcount = llGetNumberOfPrims();
-    //root prim is 1, so start at 2
-    for (g_iLoop = 2; g_iLoop <= linkcount; g_iLoop++) {
-        string sPrimDesc = (string)llGetLinkPrimitiveParams((g_iLoop), [PRIM_DESC]);
-        list lTemp = llParseString2List(sPrimDesc, ["~"], []);
-        integer iLoop;
-        for (iLoop = 0; iLoop < llGetListLength(lTemp); iLoop++) {
-            string sTest = llList2String(lTemp, iLoop);
-            //Debug(sTest);
-            //expected either "leashpoint" or "leashpoint:point"
-            if (llGetSubString(sTest, 0, 9) == "leashpoint") {
-                if (llGetSubString(sTest, 11, -1) == "") g_lLeashPrims += [sTest, (string)g_iLoop, "1"];
-                else g_lLeashPrims += [llGetSubString(sTest, 11, -1), (string)g_iLoop, "1"];
-            }
+    integer i;
+    for (i=2; i<linkcount;++i) {
+        string sPrimName = llToLower(llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),STRING_TRIM));
+        integer iIndex = llListFindList(g_lCollarPoints,[sPrimName]);
+        if (iIndex > -1) {
+            g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex),i];
+            g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex+1),i]; 
+            g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex+2),i];
         }
     }
-    //if we did not find any leashpoint... we unset the root as one
-    if (!llGetListLength(g_lLeashPrims)) g_lLeashPrims = ["collar", LINK_THIS, "1"];
-    else llMessageLinked(LINK_ROOT, LM_SETTING_RESPONSE,"leashpoint="+llList2String(g_lLeashPrims,1) ,"");
+    
+    if (llGetListLength(g_lLeashPrims) < 1) g_lLeashPrims += ["collar",LINK_THIS];
 }
 
 Particles(integer iLink, key kParticleTarget) {
@@ -184,19 +188,20 @@ Particles(integer iLink, key kParticleTarget) {
 StartParticles(key kParticleTarget) {
     //Debug(llList2CSV(g_lLeashPrims));
     StopParticles(FALSE);
-    for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop = g_iLoop + 3) {
-        if ((integer)llList2String(g_lLeashPrims, g_iLoop + 2)) {
-            Particles((integer)llList2String(g_lLeashPrims, g_iLoop + 1), kParticleTarget);
-           //if (g_sParticleMode == "Classic") g_iLoop = g_iLoop + 3;
-        }
+    
+    integer iIndex = llListFindList(g_lLeashPrims,["collar"]);
+    if (iIndex > -1) {
+        Particles(llList2Integer(g_lLeashPrims,iIndex+1),kParticleTarget);
+        g_iLeashActive = TRUE;
     }
-    g_iLeashActive = TRUE;
 }
 
 StopParticles(integer iEnd) {
-    for (g_iLoop = 0; g_iLoop < llGetListLength(g_lLeashPrims); g_iLoop++) {
-        llLinkParticleSystem((integer)llList2String(g_lLeashPrims, g_iLoop + 1), []);
+    integer iIndex = llListFindList(g_lLeashPrims,["collar"]);
+    if (iIndex > -1) {
+        llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1), []);
     }
+
     if (iEnd) {
         g_iLeashActive = FALSE;
         g_kLeashedTo = NULLKEY;
@@ -206,6 +211,66 @@ StopParticles(integer iEnd) {
        // llSensorRemove();
     }
 }
+
+key findPrimKey(string sDesc)
+{
+    integer i;
+    for (i=1;i<llGetNumberOfPrims()+1;++i)
+    {
+        if (llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0) == sDesc) return llGetLinkKey(i);
+    }
+    return NULL_KEY;
+}
+
+doClearChain(string sChainCMD)
+{
+    if (sChainCMD == "all") {
+        integer i;
+        for (i=1;i<llGetNumberOfPrims()+1;++i)
+        {
+            llLinkParticleSystem(i,[]);
+        }
+    } else {
+        list lRemChains = [];
+        list lChains = llParseString2List(sChainCMD,["~"],[]); // Could be a string like "point=target~point=target..." or "point~point..."
+        integer i;
+        for (i=0;i<llGetListLength(lChains);++i) lRemChains += [llList2String(llParseString2List(llList2String(lChains,i),["="],[]),0)]; // Remove the targets out of the string
+        
+        for (i=1;i<llGetNumberOfPrims()+1;++i)
+        {
+            string sDesc = llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0);
+            if (llListFindList(lRemChains,[sDesc]) > -1) llLinkParticleSystem(i,[]);
+        }
+    }
+}
+
+ParseOcChains(string sChainCMD)
+{
+    list lChains = llParseString2List(sChainCMD,["~"],[]);
+    integer i;
+    for (i=0; i<llGetListLength(lChains);++i)
+    {
+        list lChain = llParseString2List(llList2String(lChains,i),["="],[]);
+        string sSource = llList2String(lChain,0);
+        string sTarget = llList2String(lChain,1);
+        
+        if (llListFindList(g_lLeashPrims,[sTarget]) > -1) { // if we are the target, send our key
+            llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhain:"+sSource+"="+(string)findPrimKey(sTarget));
+        }
+        
+    }
+}
+
+doOcChain(string sChainCMD)
+{
+    list lChain = llParseString2List(sChainCMD,["="],[]);
+    string sSource = llList2String(lChain,0);
+    key kTarget = llList2String(lChain,1);
+    
+    integer iIndex = llListFindList(g_lLeashPrims,[sSource]);
+    if (iIndex > -1 && kTarget != NULL_KEY && kTarget != "") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kTarget);
+}
+
 
 string Vec2String(vector vVec) {
     list lParts = [vVec.x, vVec.y, vVec.z];
@@ -341,8 +406,8 @@ ColorMenu(key kIn, integer iAuth) {
 }
 
 LMSay() {
-    llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "collar");
-    llShout(LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "handle");
+    llShout(g_iChan_LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "collar");
+    llShout(g_iChan_LOCKMEISTER, (string)llGetOwnerKey(g_kLeashedTo) + "handle");
     llSetTimerEvent(4.0);
 }
 
@@ -363,6 +428,12 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
+        g_iChan_ocCmd = (integer)("0x"+llGetSubString((string)g_kWearer,3,8)) + g_iChan_ocCmd_Offset;
+        if (g_iChan_ocCmd>0) g_iChan_ocCmd=g_iChan_ocCmd*(-1);
+        if (g_iChan_ocCmd > -10000) g_iChan_ocCmd -= 30000;
+        llListen(g_iChan_ocCmd,"",NULL_KEY,"");         // OpenCollar Chain Listener
+        llListen(g_iChan_LOCKGUARD,"",NULL_KEY,"");     // Lockguard Listener
+        llListen(g_iChan_LOCKMEISTER,"",NULL_KEY,"");   // Lockmeister Listener
         FindLinkedPrims();
         StopParticles(TRUE);
         GetSettings(FALSE);
@@ -374,24 +445,11 @@ default {
             g_kLeashedTo = kMessageID;
             if (sMessage == "unleash") {
                 StopParticles(TRUE);
-                llListenRemove(g_iLMListener);
-                llListenRemove(g_iLMListernerDetach);
-            } else {
-                //Debug("leash active");
-                if (g_sParticleMode != "noParticle") {
-                    integer bLeasherIsAv = (integer)llList2String(llParseString2List(sMessage, ["|"], [""]), 1);
-                    g_kParticleTarget = g_kLeashedTo;
-                    StartParticles(g_kParticleTarget);
-                    if (bLeasherIsAv) {
-                        llListenRemove(g_iLMListener);
-                        llListenRemove(g_iLMListernerDetach);
-                        if (llGetSubString(sMessage, 0, 10)  == "leashhandle") {
-                            g_iLMListener = llListen(LOCKMEISTER, "", "", (string)g_kLeashedTo + "handle ok");
-                            g_iLMListernerDetach = llListen(LOCKMEISTER, "", "", (string)g_kLeashedTo + "handle detached");
-                        } else  g_iLMListener = llListen(LOCKMEISTER, "", "", "");
-                        LMSay();
-                    }
-                }
+            } else if (g_sParticleMode != "noParticle") {
+                integer bLeasherIsAv = (integer)llList2String(llParseString2List(sMessage, ["|"], [""]), 1);
+                g_kParticleTarget = g_kLeashedTo;
+                StartParticles(g_kParticleTarget);
+                if (bLeasherIsAv) LMSay();
             }
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             if (llToLower(sMessage) == "leash configure") {
@@ -588,7 +646,7 @@ default {
     timer() {
         if (llGetOwnerKey(g_kParticleTarget) == g_kParticleTarget) {
             if(g_kLeashedTo) {
-                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
+                llRegionSayTo(g_kLeashedTo,g_iChan_LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
             }
@@ -597,12 +655,71 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
-        if (iChannel == LOCKMEISTER) {
-            //leash holder announced it got detached... send particles to avi
-            if (sMessage == (string)g_kLeashedTo + "handle detached") {
+        if (iChannel == g_iChan_ocCmd){
+            list lOcCMD = llParseString2List(sMessage, [":"],[]);
+            key kOcWearer = llList2Key(lOcCMD,0);
+            string sCMD = llList2String(lOcCMD,1);
+            if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,2));         // Request keys
+            else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));         // Request Chain
+            else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));   // Clear Chain
+            
+        } else if (iChannel == g_iChan_LOCKGUARD){
+            // Implementation of the Lockguard V2 Protocol
+            list lLGCmd = llParseString2List(llToLower(sMessage), [" "],[]);
+            if (llList2String(lLGCmd,0) == "lockguard") {
+                key kLGAv = llList2Key(lLGCmd,1);           // Request Avatar-UUID
+                string sLGPoint = llList2String(lLGCmd,2);  // Request ChainPoint
+                string sLGCMD = llList2String(lLGCmd,3);    // Request Command
+                key kLGTarget = llList2Key(lLGCmd,4);       // Request Target
+                
+                integer iIndex = llListFindList(g_lLeashPrims, [sLGPoint]);
+                if (iIndex > -1 && kLGAv == g_kWearer) {
+                    if (sLGCMD == "link") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kLGTarget); // doChain(llList2String(g_lLeashPrims,0) , kLGTarget, TRUE);
+                    else if (sLGCMD == "unlink") llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1),[]); //doChain(llList2String(g_lLeashPrims,0) , NULL_KEY, FALSE);
+                    else if (sLGCMD == "gravity") g_vLeashGravity.z = llList2Float(lLGCmd,4);
+                    else if (sLGCMD == "life") g_fParticleAge = llList2Float(lLGCmd,4);
+                    else if (sLGCMD == "color") {
+                        
+                        g_vLeashColor.x = llList2Float(lLGCmd,4);
+                        g_vLeashColor.y = llList2Float(lLGCmd,5);
+                        g_vLeashColor.z = llList2Float(lLGCmd,6);
+                    } else if (sLGCMD == "size") {
+                        g_vLeashSize.x = llList2Float(lLGCmd,4);
+                        g_vLeashSize.y = llList2Float(lLGCmd,5);
+                    } else if (sLGCMD == "texture") g_sParticleTextureID = llList2Key(lLGCmd,4);
+                }
+            }
+        } else if (iChannel == g_iChan_LOCKMEISTER) {
+            // Implementation of the LMV2 Protocol
+            key kLMKey = (key)llGetSubString(sMessage,0,35);
+            list lLMCmd = llParseString2List(sMessage,["|"],[]);
+            if (kLMKey == g_kWearer){
+                if (llGetListLength(lLMCmd) > 1) {  // A Lockmeister command
+                    string sLMCMD = llList2String(lLMCmd,2);
+                    string sLMPoint = llList2String(lLMCmd,3);
+                    if (llListFindList(g_lLeashPrims,[sLMPoint]) > -1) {
+                        if (sLMCMD == "RequestPoint") {
+                            key kLink = llGetLinkKey(llList2Integer(g_lLeashPrims, llListFindList(g_lLeashPrims,[sLMPoint])+1));
+                            if (kLink != NULL_KEY) llRegionSayTo(kID, g_iChan_LOCKMEISTER,(string)g_kWearer+"|LMV2|ReplyPoint|"+sLMPoint+"|"+(string)kLink);
+                        }
+                    }
+                } else { // A Lockmeister Ping
+                    string sLMPoint = llGetSubString(sMessage,36,-1);
+                    if (llListFindList(g_lLeashPrims,[sLMPoint]) > -1) {
+                        llRegionSayTo(kID, g_iChan_LOCKMEISTER, (string)g_kWearer+sLMPoint+" ok");
+                    }
+                }
+            }
+        
+            // Implementation of the Leashholder Handling
+            else if(sMessage ==(string)g_kWearer+"collar") llRegionSayTo(kID,g_iChan_LOCKMEISTER,(string)g_kWearer + "collar ok"); // Response to redirect Leash to collar LMV1
+            else if(sMessage == (string)g_kWearer+"|LMV2|RequestPoint|collar") { // Response to redirect Leash to collar LMV2
+                llRegionSayTo(kID, g_iChan_LOCKMEISTER, (string)g_kWearer+"|LMV2|ReplyPoint|collar|"+(string)llGetLinkKey(llList2Integer(g_lLeashPrims,1)));
+            }
+            else if (sMessage == (string)g_kLeashedTo + "handle detached") { // Redirect leash to Collar if the holder got detached
                 g_kParticleTarget = g_kLeashedTo;
                 StartParticles(g_kParticleTarget);
-                llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
+                llRegionSayTo(g_kLeashedTo,g_iChan_LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
             }
             // We heard from a leash holder. re-direct particles
             if (llGetOwnerKey(kID) == g_kLeashedTo) {
@@ -611,7 +728,7 @@ default {
                     if (sMessage == "collar ok") {
                         g_kParticleTarget = kID;
                         StartParticles(g_kParticleTarget);
-                        llRegionSayTo(g_kLeashedTo,LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
+                        llRegionSayTo(g_kLeashedTo,g_iChan_LOCKMEISTER,(string)g_kLeashedTo+"|LMV2|RequestPoint|collar");
                     }
                     if (sMessage == "handle ok") {
                         g_kParticleTarget = kID;
