@@ -237,9 +237,9 @@ LoadSetting(string sData, integer iLine) {
                         list lOut;
                         integer n;
                         do {//sanity check for valid entries
-                            if (llList2Key(lTest,n)) //if this is not a valid key, it's useless
+                            if (llList2Key(lTest,n)) { //if this is not a valid key, it's useless
                                 lOut += llList2String(lTest,n);
-                            integer iTest = llGetListLength(lOut);
+                            }
                         } while (++n < llGetListLength(lTest));
                         sValue = llDumpList2String(lOut,",");
                         lTest = [];
