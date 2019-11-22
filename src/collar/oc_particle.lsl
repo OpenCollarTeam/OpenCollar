@@ -108,11 +108,13 @@ integer g_iParticleCount = 1;
 float g_fBurstRate = 0.0;
 //same g_lSettings but to store locally the default settings recieved from the defaultsettings note card, using direct string here to save some bits
 
+list g_lCurrentChains = [];
+
 list g_lCollarPoints = [ // oc chain name, lockmeister name, lockguard name
-    "occ"        , "collar"  , "collarfrontloop" , // Collar Front
-    "loccollar"  , "lcollar" , "collarleftloop"  , // Collar Left
-    "roccollar"  , "rcollar" , "collarrightloop" , // Collar Right
-    "boccollar"  , "bcollar" , "collarbackloop"    // Collar Back
+    "ooc"       , "collar"  , "collarfrontloop" , // Collar Front
+    "lcollar"   , "lcollar" , "collarleftloop"  , // Collar Left
+    "rcollar"   , "rcollar" , "collarrightloop" , // Collar Right
+    "bcollar"   , "bcollar" , "collarbackloop"    // Collar Back
 ];
 /*
 integer g_iProfiled=1;
@@ -230,6 +232,7 @@ doClearChain(string sChainCMD)
         {
             llLinkParticleSystem(i,[]);
         }
+        g_lCurrentChains = [];
     } else {
         list lRemChains = [];
         list lChains = llParseString2List(sChainCMD,["~"],[]); // Could be a string like "point=target~point=target..." or "point~point..."
@@ -240,6 +243,8 @@ doClearChain(string sChainCMD)
         {
             string sDesc = llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0);
             if (llListFindList(lRemChains,[sDesc]) > -1) llLinkParticleSystem(i,[]);
+            integer iIndex = llListFindList(g_lCurrentChains,[sDesc]);
+            if (iIndex > -1) g_lCurrentChains = llDeleteSubList(g_lCurrentChains,iIndex,iIndex+1);
         }
     }
 }
@@ -269,6 +274,8 @@ doOcChain(string sChainCMD)
     
     integer iIndex = llListFindList(g_lLeashPrims,[sSource]);
     if (iIndex > -1 && kTarget != NULL_KEY && kTarget != "") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kTarget);
+    
+    if (llListFindList(g_lCurrentChains,[sSource]) == -1) g_lCurrentChains += [sSource,kTarget];
 }
 
 
@@ -451,6 +458,13 @@ default {
                 StartParticles(g_kParticleTarget);
                 if (bLeasherIsAv) LMSay();
             }
+        } else if (iNum == g_iChan_ocCmd) {
+            list lOcCMD = llParseString2List(sMessage, [":"],[]);
+            key kOcWearer = llList2Key(lOcCMD,0);
+            string sCMD = llList2String(lOcCMD,1);
+            if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,2));         // Request keys
+            else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));         // Request Chain
+            else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));   // Clear Chain
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             if (llToLower(sMessage) == "leash configure") {
                 if(iNum <= CMD_TRUSTED || iNum==CMD_WEARER) ConfigureMenu(kMessageID, iNum);
@@ -662,7 +676,15 @@ default {
             if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,2));         // Request keys
             else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));         // Request Chain
             else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));   // Clear Chain
-            
+            else if (sCMD == "chaintex" && g_sParticleTextureID != llList2Key(lOcCMD,2)) {
+                g_sParticleTextureID = llList2Key(lOcCMD,2);
+                list lActiveChains = g_lCurrentChains;
+                doClearChain("all"); // Restart all Chains so the change can be seen live!
+                integer i;
+                for (i=0; i<llGetListLength(lActiveChains);i+=2) {
+                    doOcChain(llList2String(lActiveChains,i)+"="+llList2String(lActiveChains,i+1));
+                }
+            }
         } else if (iChannel == g_iChan_LOCKGUARD){
             // Implementation of the Lockguard V2 Protocol
             list lLGCmd = llParseString2List(llToLower(sMessage), [" "],[]);
@@ -674,8 +696,8 @@ default {
                 
                 integer iIndex = llListFindList(g_lLeashPrims, [sLGPoint]);
                 if (iIndex > -1 && kLGAv == g_kWearer) {
-                    if (sLGCMD == "link") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kLGTarget); // doChain(llList2String(g_lLeashPrims,0) , kLGTarget, TRUE);
-                    else if (sLGCMD == "unlink") llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1),[]); //doChain(llList2String(g_lLeashPrims,0) , NULL_KEY, FALSE);
+                    if (sLGCMD == "link") Particles(llList2Integer(g_lLeashPrims,iIndex+1), kLGTarget);
+                    else if (sLGCMD == "unlink") llLinkParticleSystem(llList2Integer(g_lLeashPrims,iIndex+1),[]);
                     else if (sLGCMD == "gravity") g_vLeashGravity.z = llList2Float(lLGCmd,4);
                     else if (sLGCMD == "life") g_fParticleAge = llList2Float(lLGCmd,4);
                     else if (sLGCMD == "color") {
