@@ -1,0 +1,62 @@
+# OpenCollar Pose Config
+#
+Anim:Bend 1
+Chains:illac=irlac~iluac=iruac~bbelt=bcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Anim:Bend 2
+Chains:illac=irlac~llac=rlac~frlac=bcollar~bllac=bbelt
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+
+Anim:Display
+Chains:lulc=iluac~rulc=iruac~fluac=fllac~fruac=frlac~fllac=lcollar~frlac=rcollar~llac=rlac~illlc=irllc
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Display 1
+Chains:lllc=iluac~rllc=iruac~fluac=fllac~fruac=frlac~fllac=lcollar~frlac=rcollar~llac=rlac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Dog
+Chains:ruac=rlac~luac=llac~iruac=irlac~iluac=illac~lulc=lllc~rulc=rllc~ilulc=illlc~irulc=irllc~lllc=lbelt~rllc=rbelt~bbelt=bcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+Anim:Hogtie
+Chains:iluac=iruac~bllac=brlac~fllac=frlac~illac=bbelt~irlac=bbelt~bbelt=bcollar~bluac=bruac~lllc=luac~rllc=ruac~llac=illlc~rlac=irllc
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+Anim:Hogtie-Open
+Chains:iluac=iruac~bllac=brlac~fllac=frlac~illac=bbelt~irlac=bbelt~bbelt=bcollar~bluac=bruac~lllc=luac~rllc=ruac~llac=illlc~rlac=irllc~lulc=fluac~rulc=fruac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Nadu-Cute Back
+Chains:illac=bbelt~bbelt=irlac~irlac=illac~rlac=brllc~llac=blllc~lbelt=blllc~rbelt=brllc
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Open
+Chains:fluac=flulc~fruac=frulc~illac=blulc~irlac=brulc
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+Anim:Rise
+Chains:rlac=brllc~irllc=illlc~blllc=llac~illac=irlac~fllac=bbelt~frlac=bbelt
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Spread
+Chains:iluac=lulc~lulc=illac~llac=lllc~iruac=rulc~rulc=irlac~rlac=rllc
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Spread 1
+Chains:blulc=fllac~brulc=frlac~blllc=llac~brllc=rlac~illac=irlac~bbelt=bcollar~iluac=iruac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
+
+Anim:Submit
+Chains:fllac=frlac~iluac=lcollar~iruac=rcollar~blllc=bbelt~brllc=bbelt~fluac=bcollar~fruac=bcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit,tplm,tplure,tploc,move
+
