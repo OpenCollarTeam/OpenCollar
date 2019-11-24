@@ -1,6 +1,6 @@
 
 // This file is part of OpenCollar.
-// Copyright (c) 2018 - 2019 lillith xue      
+// Copyright (c) 2019 lillith xue      
 // Licensed under the GPLv2.  See LICENSE for full details.
 
 integer g_iChan_ocCmd;                      // OpenCollar CMD Channel
@@ -173,16 +173,16 @@ doChain(string sSource, key kTarget, integer bEnable) {
             if (llListFindList(g_lCurrentChains,[sSource]) == -1) g_lCurrentChains += [sSource,kTarget];
             
             g_bTMPUnhide = TRUE;
-            doHide(FALSE, TRUE);
+            doHide();
             //llOwnerSay("doChain from '"+sSource+"' to '"+(string)kTarget+"'");
         } else {
             llLinkParticleSystem(iSource, [] );
             integer iIndex = llListFindList(g_lCurrentChains,[sSource]);
             if (iIndex > -1) g_lCurrentChains = llDeleteSubList(g_lCurrentChains,iIndex,iIndex+1);
             
-            if (llGetListLength(g_lCurrentChains) < 1) {
+            if (llGetListLength(g_lCurrentChains) < 1 && g_iTargetedBy < 1) {
                 g_bTMPUnhide = FALSE;
-                doHide(g_bHide, TRUE);
+                doHide();
             }
             //llOwnerSay("remove Chain from '"+sSource+"'");
         }
@@ -202,26 +202,25 @@ key findPrimKey(string sDesc)
 doClearChain(string sChainCMD)
 {
     if (sChainCMD == "all") {
-        g_bTMPUnhide = FALSE;
-        doHide(g_bHide,TRUE);
         integer i;
         for (i=1;i<llGetNumberOfPrims()+1;++i)
         {
             doChain(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),NULL_KEY,FALSE);
         }
+        g_iTargetedBy = 0;
     } else {
         list lRemChains = [];
         list lChains = llParseString2List(sChainCMD,["~"],[]);
         integer i;
         for (i=0;i<llGetListLength(lChains);++i) {
-            lRemChains += [llList2String(llParseString2List(llList2String(lChains,i),["="],[]),0)];
-            if (llListFindList(g_lMyPoints,[llList2String(llParseString2List(llList2String(lChains,i),["="],[]),1)]) > -1) g_iTargetedBy = g_iTargetedBy - 1;
-        }
-        
-        if (g_iTargetedBy <= 0){
-            g_iTargetedBy = 0;
-            g_bTMPUnhide = FALSE;
-            doHide(g_bHide,TRUE);
+            list lChain = llParseString2List(llList2String(lChains,i),["="],[]);
+            string sSource = llList2String(lChain,0);
+            string sTarget = llList2String(lChain,1);
+            
+            lRemChains += [sSource];
+            
+            if (llListFindList(g_lMyPoints,[sTarget]) > -1) g_iTargetedBy = g_iTargetedBy - 1;
+            
         }
         
         for (i=1;i<llGetNumberOfPrims()+1;++i)
@@ -233,6 +232,12 @@ doClearChain(string sChainCMD)
     integer i;
     for (i=0; i<llGetListLength(g_lActivePoseIndexes);++i){ // reapply pose chains
         doPose(llList2String(g_lPoses,llList2Integer(g_lActivePoseIndexes,i)));
+    }
+    
+    if (g_iTargetedBy < 1 && llGetListLength(g_lCurrentChains) < 1){
+        g_iTargetedBy = 0;
+        g_bTMPUnhide = FALSE;
+        doHide();
     }
 }
 
@@ -250,7 +255,7 @@ ParseOcChains(string sChainCMD)
             llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhain:"+sSource+"="+(string)findPrimKey(sTarget));
             g_iTargetedBy++;
             g_bTMPUnhide = TRUE;
-            doHide(FALSE, TRUE);
+            doHide();
         }
         
     }
@@ -269,13 +274,16 @@ doPose(string sPoseName){
     llRequestPermissions(g_kWearer,PERMISSION_TRIGGER_ANIMATION|PERMISSION_TAKE_CONTROLS);
     integer iPoseIndex = llListFindList(g_lPoses,[sPoseName]);
     if (iPoseIndex > -1) {
-        if (llListFindList(g_lActivePoseIndexes,[iPoseIndex]) == -1) g_lActivePoseIndexes += [iPoseIndex];
+        if (llListFindList(g_lActivePoseIndexes,[iPoseIndex]) > -1) undoPose(sPoseName);
+        
+        g_lActivePoseIndexes += [iPoseIndex];
         if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) llStartAnimation(llList2String(g_lPoses,iPoseIndex+1));
         else llOwnerSay("ERROR: Lost Animation permission!");
         ParseOcChains(llList2String(g_lPoses,iPoseIndex+2)); // do our own chains
         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to do chains
         list lCatPose = llParseString2List(sPoseName,["|"],[]);
         SendRLV(llList2String(g_lPoses,iPoseIndex+3),llList2String(lCatPose,0),TRUE);
+    
     }
 }
 
@@ -291,7 +299,6 @@ undoPose(string sPoseName){
         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":clearchain:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to clear chains
         list lCatPose = llParseString2List(sPoseName,["|"],[]);
         SendRLV(llList2String(g_lPoses,iPoseIndex+3),llList2String(lCatPose,0),FALSE);
-        
     }
 }
 
@@ -405,10 +412,16 @@ SendRLV(string sRestrictions, string sCategory, integer bEnable)
     }
 }
 
-doHide(integer bHide, integer bTmpHide)
+doHide()
 {
-    if (!bTmpHide) g_bHide = bHide;
-    integer iShow = !bHide;
+    integer iShow = 1;
+    
+    if (llGetListLength(g_lCurrentChains) < 1 && g_iTargetedBy < 1) g_bTMPUnhide = FALSE;
+    
+    if (!g_bHide) iShow = 1;
+    else if (g_bHide && !g_bTMPUnhide) iShow = 0;
+    else if (g_bHide && g_bTMPUnhide) iShow = 1;
+
     integer i;
     for (i=0; i<llGetListLength(g_lHidePrims);++i) {
         llSetLinkAlpha(llList2Integer(g_lHidePrims,i),(float)iShow,ALL_SIDES);
@@ -614,7 +627,8 @@ default
                         }
                     }
                 }else if (sCMD == "hide" && llGetOwnerKey(kID) == g_kWearer) {
-                    doHide(llList2Integer(lOcCMD,2),FALSE);
+                    g_bHide = llList2Integer(lOcCMD,2);
+                    doHide();
                 } else if (sCMD == "chaintex" && g_kTexture != llList2Key(lOcCMD,2)) {
                     g_kTexture = llList2Key(lOcCMD,2);
                     list lActiveChains = g_lCurrentChains;
