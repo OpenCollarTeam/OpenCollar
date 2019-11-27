@@ -114,7 +114,7 @@ float g_fBurstRate = 0.0;
 list g_lCurrentChains = [];
 
 list g_lCollarPoints = [ // oc chain name, lockmeister name, lockguard name
-    "ooc"       , "collar"  , "collarfrontloop" , // Collar Front
+    "fcollar"       , "collar"  , "collarfrontloop" , // Collar Front
     "lcollar"   , "lcollar" , "collarleftloop"  , // Collar Left
     "rcollar"   , "rcollar" , "collarrightloop" , // Collar Right
     "bcollar"   , "bcollar" , "collarbackloop"    // Collar Back
@@ -150,6 +150,11 @@ FindLinkedPrims() {
     integer i;
     for (i=2; i<linkcount;++i) {
         string sPrimName = llToLower(llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),STRING_TRIM));
+        if (llToLower(sPrimName) == "leashpoint" || llToLower(sPrimName) == "ooc") {
+            llSetLinkPrimitiveParams(i,[PRIM_NAME,"fcollar"]);
+            llOwnerSay("Prim '"+sPrimName+"' renamed to 'fcollar'!");
+            sPrimName = "fcollar";
+        }
         integer iIndex = llListFindList(g_lCollarPoints,[sPrimName]);
         if (iIndex > -1) {
             g_lLeashPrims += [llList2String(g_lCollarPoints,iIndex),i];
@@ -158,9 +163,9 @@ FindLinkedPrims() {
         }
     }
     
-    if (llListFindList(g_lLeashPrims,["collar"]) < 0){
-        llOwnerSay("Warning: There is no leash prim! Please create a invisible Prim in front of the collar and name it 'ooc'");
-        g_lLeashPrims += ["collar",LINK_THIS];
+    if (llListFindList(g_lLeashPrims,["fcollar"]) < 0){
+        llOwnerSay("Warning: There is no leash prim! Please create a invisible Prim in front of the collar and name it 'fcollar'");
+        g_lLeashPrims += ["fcollar",LINK_THIS];
     }
 }
 
