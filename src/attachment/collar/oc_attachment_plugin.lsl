@@ -27,6 +27,8 @@ integer LINK_UPDATE = -10;
 integer LINK_AUTH = -15;
 integer REBOOT = -1000;
 
+integer LINK_CMD_RESTRICTIONS = -2576;
+
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
@@ -88,9 +90,12 @@ string g_sCurrentCollarPose = "";
 integer g_bLocked = FALSE;
 integer g_bSyncLock = TRUE;
 integer g_bHidden = FALSE;
+
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
+
+list g_lDeviceMenu = [];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -111,7 +116,27 @@ Menu(key kID, integer iAuth) {
     if (iAuth == CMD_OWNER || iAuth == CMD_WEARER) lButtons += ["Settings"];
     if (iAuth != CMD_WEARER) lButtons += ["Clear All"];
     
+    lButtons += ["Devices"];
+    
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Cuffs");
+}
+
+DeviceMenu(key kID, integer iAuth, string sDevice){
+    string sPrompt = "\n [Devices]";
+    list lButtons = [];
+    if (llGetListLength(g_lDeviceMenu) < 1) sPrompt += "\n \nNo Device worn";
+    else {
+        integer i;
+        for (i=0; i<llGetListLength(g_lDeviceMenu);++i){
+            list lMenu = llParseString2List(llList2String(g_lDeviceMenu,i),["|"],[]);
+            string sDeviceMenu = llList2String(lMenu,0);
+            if (sDevice == "" && llListFindList(lButtons,[sDeviceMenu]) == -1) lButtons += [sDeviceMenu];
+            else if (sDevice == sDeviceMenu) lButtons += [llList2String(lMenu,1)];
+        }
+    }
+    string sMenuName = "Menu~DeviceList";
+    if (sDevice != "") sMenuName = "Menu~"+sDevice; 
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, sMenuName);
 }
 
 PosesMenu(key kID, integer iAuth){
@@ -420,7 +445,10 @@ default
                     else if (sMsg == "Clear All") {
                         doClearAllPoses();
                         Menu(kAv, iAuth);
-                    }
+                    } else if (sMsg == "Devices") DeviceMenu(kAv,iAuth,"");
+                } else if (sMenu == "Menu~DeviceList") {
+                    if (sMsg == UPMENU) Menu(kAv,iAuth);
+                    else DeviceMenu(kAv,iAuth,sMsg);
                 } else if (sMenu == "Menu~CuffPoses") {
                     if (sMsg == UPMENU) Menu(kAv,iAuth);
                     else  AnimMenu(kAv,iAuth,sMsg);
@@ -445,6 +473,7 @@ default
                         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_synclock="+(string)g_bSyncLock, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Sync");
                     } else if (sMsg == "ReSync Now"){
+                        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":collarping");
                         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
                         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
                         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",g_kWearer);
@@ -464,14 +493,21 @@ default
                         SettingsMenu(kAv,iAuth,"Chains");
                     } else if (sMsg == g_sChecked+"Chain" || sMsg == g_sChecked+"Rope") SettingsMenu(kAv,iAuth,"Chains");
                 } else {
-                    if (sMsg == UPMENU) PosesMenu(kAv,iAuth);
-                    else {
-                        sMsg = llGetSubString(sMsg,1,-1);
-                        list lMenuSplit = llParseString2List(sMenu,["~"],[]);
-                        string sCategory = llList2String(lMenuSplit,1);
-                        string sAnimation = sMsg;
-                        doPose(sCategory+"|"+sAnimation,iAuth,kAv);
-                        AnimMenu(kAv,iAuth,sCategory);
+                    string sMenuName = llList2String(llParseString2List(sMenu,["~"],[]),1);
+                    integer iIndex = llListFindList(g_lDeviceMenu,[sMenuName+"|"+sMsg]);
+                    if (iIndex > -1){
+                        llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":devicemenu:"+sMenuName+"|"+sMsg);
+                        DeviceMenu(kAv,iAuth,sMenuName);
+                    } else {
+                        if (sMsg == UPMENU) PosesMenu(kAv,iAuth);
+                        else {
+                            sMsg = llGetSubString(sMsg,1,-1);
+                            list lMenuSplit = llParseString2List(sMenu,["~"],[]);
+                            string sCategory = llList2String(lMenuSplit,1);
+                            string sAnimation = sMsg;
+                            doPose(sCategory+"|"+sAnimation,iAuth,kAv);
+                            AnimMenu(kAv,iAuth,sCategory);
+                        }
                     }
                 }
             }
@@ -494,6 +530,7 @@ default
                 } else if (llList2String(lSettings,1) == "chaintex") {
                     g_kTexture = llList2Key(lSettings,2);
                     llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":chaintex:"+(string)g_kTexture);
+                    llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":chaintex:"+(string)g_kTexture,"");
                 } else if (llList2String(lSettings,1) == "hide") {
                     g_bHidden = llList2Integer(lSettings,2);
                     llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":hide:"+(string)g_bHidden);
@@ -546,6 +583,9 @@ default
         } else if (iNum == RLV_OFF) {
             g_bRLV = FALSE;
              llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:0");
+        } else if (iNum == LINK_CMD_RESTRICTIONS) {
+            list lCMD = llParseString2List(sStr,["="],[]);
+            llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":restriction:"+llList2String(lCMD,0)+"="+llList2String(lCMD,1));
         }
     }
     
@@ -561,18 +601,33 @@ default
                 string sCMD = llList2String(lCMD,1);
                 string sParam = llList2String(lCMD,2);
                 
-                if (sCMD == "addposes") {
-                    list lPoseList = llParseString2List(sParam,[","],[]);
-                    integer i;
-                    for (i=0; i<llGetListLength(lPoseList);++i){
-                        if (llListFindList(g_lPoses,[llList2String(lPoseList,i)]) == -1) g_lPoses += [llList2String(lPoseList,i)];
-                    }
+                if (sCMD == "addpose") {
+                    if (llListFindList(g_lPoses,[sParam]) == -1) g_lPoses += [sParam];
                 } else if (sCMD == "remposes") {
                     list lPoseList = llParseString2List(sParam,[","],[]);
                     integer i;
                     for (i=0; i<llGetListLength(lPoseList);++i){
                         integer iDelIndex = llListFindList(g_lPoses,[llList2String(lPoseList,i)]);
                         if (iDelIndex > -1) g_lPoses = llDeleteSubList(g_lPoses,iDelIndex,iDelIndex);
+                    }
+                } else if (sCMD == "addmenu"){
+                    if (llGetListLength(llParseString2List(sParam,["|"],[])) > 1) {
+                        if (llListFindList(g_lDeviceMenu,[sParam]) == -1) g_lDeviceMenu += [sParam];
+                    }
+                } else if (sCMD == "remmenu"){
+                    list lDeleteNames = [];
+                    integer i;
+                    for (i=0;i<llGetListLength(g_lDeviceMenu);i++){
+                        list lMenu = llParseString2List(llList2String(g_lDeviceMenu,i),["|"],[]);
+                        if (llList2String(lMenu,0) == sParam) {
+                            lDeleteNames += [llList2String(g_lDeviceMenu,i)];
+                        }
+                    }
+                    for (i=0; i<llGetListLength(lDeleteNames);i++){
+                        integer iIndex = llListFindList(g_lDeviceMenu,[llList2String(lDeleteNames,i)]);
+                        if (iIndex > -1) {
+                            g_lDeviceMenu = llDeleteSubList(g_lDeviceMenu,iIndex,iIndex);
+                        }
                     }
                 } else if (sCMD == "rlvcmd") {
                     llMessageLinked(LINK_SET,RLV_CMD,llList2String(lCMD,3),sParam);
@@ -585,6 +640,8 @@ default
                     llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
                     if (g_bRLV) llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:1");
                     else llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:0");
+                } else if (sCMD == "requestpose") {
+                    if (llListFindList(g_lPoses,[sParam]) > -1) doPose(sParam,CMD_OWNER,NULL_KEY);
                 } else if (sCMD == "menu") llMessageLinked(LINK_AUTH,AUTH_REQUEST,"cuffmenu",(key)sParam); // Check auth before opening the Menu
             }
         }

@@ -86,6 +86,56 @@ Caveats:
 
 There can be only one chain starting from an attach point, but there can be several chains end at the same Chain point.
 
+Additional Notecard Settings:
+
+IgnoreHide:<value>
+
+When value=1, ignore hide command from the Collar-plugin. (default is 0)
+
+DefaultHide:<value>
+
+When value=1, automatically hide the item. Only works when IgnoreHide is 1 (see above).
+
+Button:<Button Name>
+
+Add a Button to the Devices menu. A Submenu will be created with the same name than the notecard in the attachment. Inside this Submenu there will be the new Button.
+
+
+-[Link Messages]-
+
+-Send by oc_attachment
+
+The oc_Attachment script will send some Link Messages with an integer of -1000 while working.
+The string will be like that:
+
+hide=<value>
+
+value is 1 when the attachment is hiding, otherwise it is 0
+
+restriction=<name>=<value>
+
+If there is a restriction applied in the oc_rlvsuite (new version only) then this message will be send. Value is eighter 1 (restriction activated) or 0 (restriction deactivated)
+
+menu=<Notecard Name>|<Button Name>
+
+This message is send when a custom button, inside devices menu, was pressed.
+
+-Received by oc_attachment
+
+The script also listens to Link Messages with the integer set to -1000. The following commands are possible:
+
+dohide=<value>
+
+Hides/Shows the attachment. (1=hide 0=show).
+
+dolock=<value>
+
+Locks/Unlocks the attachment (1=lock 0=unlock)
+
+doPose=<Notecard Name>|<Pose Name>
+
+Start a pose specified in the Notecard.
+
 
 -[Collar Poses]-
 

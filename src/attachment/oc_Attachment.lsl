@@ -9,6 +9,8 @@ integer g_iChan_ocCmd_Offset = 0xCC0CC;     // OpenCollar CMD Channel Offset
 integer g_iChan_Lockguard = -9119;          // Lockguard listen Channel 
 integer g_iChan_Lockmeister = -8888;        // LockMeister listen Channel
 
+integer LINK_CHAN_API = -1000;
+
 key g_kWearer = NULL_KEY;
 
 key g_kTexture = "4cde01ac-4279-2742-71e1-47ff81cc3529";
@@ -23,9 +25,9 @@ float g_fGreen = 1;
 float g_fBlue = 1;
 integer g_bRibbon = FALSE;
 
-string g_sCuffPoseNCName = "Poses";
-integer g_iCuffPoseNCLine = 0;
-key g_kCuffPoseNCQuery;
+string g_sNCName = "Poses";
+integer g_iNCLine = 0;
+key g_kNCQuery;
 
 list g_lSelectedPose = [];
 list g_lPoses = [];
@@ -38,12 +40,16 @@ integer g_bLocked = FALSE;
 integer g_bRLV = FALSE;
 integer g_bHide = FALSE;
 integer g_bTMPUnhide = FALSE;
+integer g_bDoHide = TRUE;
 
 integer g_iTargetedBy = 0;
 list g_lCurrentChains = [];
 list g_lHidePrims = [];
 
 list g_lMyPoints = [];
+
+string g_sDeviceID = "";
+string g_sMenu = "";
 
 list g_lPoints = [        // occ, lockmeister, lockguard, alt1, alt2
     "rlac"      , "rcuff"       , "rightwrist"          , "wrists"  , "allfour" ,   // right lower arm cuff
@@ -97,7 +103,7 @@ list g_lPoints = [        // occ, lockmeister, lockguard, alt1, alt2
     "taill"     , "ltail"       , "lefttail"            , "tails"   , ""        ,   // tail left
     "tailr"     , "rtail"       , "righttail"           , "tails"   , ""        ,   // trail right
     
-    "ooc"       , "collar"      , "collarfrontloop"     , ""        , ""        ,   // Collar Front
+    "fcollar"   , "collar"      , "collarfrontloop"     , ""        , ""        ,   // Collar Front
     "lcollar"   , "lcollar"     , "collarleftloop"      , ""        , ""        ,   // Collar Left
     "rcollar"   , "rcollar"     , "collarrightloop"     , ""        , ""        ,   // Collar Right
     "bcollar"   , "bcollar"     , "collarbackloop"      , ""        , ""        ,    // Collar Back
@@ -356,14 +362,16 @@ init() {
         g_lPoses = [];
         g_lSelectedPose = [];
         
+        g_sDeviceID = llList2String(llGetLinkPrimitiveParams(LINK_ROOT,[PRIM_DESC]),0);
+        
         g_lCategory = getCategorys();
         g_iCategoryIndex = 0;
         if (llGetListLength(g_lCategory) > g_iCategoryIndex) {
-            g_sCuffPoseNCName = llList2String(g_lCategory,g_iCategoryIndex);
-            g_iCuffPoseNCLine = 0;
-            llOwnerSay("Loading "+g_sCuffPoseNCName+"...");
-            g_kCuffPoseNCQuery = llGetNotecardLine(g_sCuffPoseNCName,g_iCuffPoseNCLine);
-        } else llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping");
+            g_sNCName = llList2String(g_lCategory,g_iCategoryIndex);
+            g_iNCLine = 0;
+            llOwnerSay("Loading "+g_sNCName+"...");
+            g_kNCQuery = llGetNotecardLine(g_sNCName,g_iNCLine);
+        } else llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
     }
 }
 
@@ -376,21 +384,13 @@ list getCategorys() {
     return result;
 }
 
-updateCollar()
-{
-    if (llGetListLength(g_lPoses) > 0){
-        integer i;
-        list lPoseNames = [];
-        for (i=0;i<llGetListLength(g_lPoses);i+=4) lPoseNames += [llList2String(g_lPoses,i)];
-        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":addposes:"+llDumpList2String(lPoseNames,","));
-    }
-}
-
 refreshLock()
 {
     if (g_bRLV) {
         if (g_bLocked) llOwnerSay("@detach=n");
         else llOwnerSay("@detach=y");
+        
+        llMessageLinked(LINK_SET,LINK_CHAN_API,"lock="+(string)g_bLocked,g_kWearer);
     }
 }
 
@@ -422,6 +422,8 @@ doHide()
     else if (g_bHide && !g_bTMPUnhide) iShow = 0;
     else if (g_bHide && g_bTMPUnhide) iShow = 1;
 
+    llMessageLinked(LINK_SET,LINK_CHAN_API,"hide="+(string)(!iShow),g_kWearer);
+
     integer i;
     for (i=0; i<llGetListLength(g_lHidePrims);++i) {
         llSetLinkAlpha(llList2Integer(g_lHidePrims,i),(float)iShow,ALL_SIDES);
@@ -451,16 +453,13 @@ default
     attach(key kAv){
         if (kAv != NULL_KEY) {
             g_bRLV = FALSE; // We don't know yet if we are running with RLV
-            llRequestPermissions(kAv,PERMISSION_TRIGGER_ANIMATION|PERMISSION_TAKE_CONTROLS);
-            updateCollar();
-            g_lActivePoseIndexes = []; // Restart all poses
+            llResetScript(); // We have a notecard, parse it again!
             llSetTimerEvent(10);
-            if (kAv != g_kWearer) {
-                llResetScript();
-                g_kWearer = kAv;
-                //init();
-            }
         } else {
+            list lConfigs = getCategorys();
+            integer i;
+            for (i=0; i<llGetListLength(lConfigs);++i) llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":remmenu:"+llList2String(lConfigs,i));
+        
             if (llGetListLength(g_lActivePoseIndexes) > 0){
                 integer i;
                 for (i=0;i<llGetListLength(g_lActivePoseIndexes);++i) undoPose(llList2String(g_lActivePoseIndexes,i)); // Stop all poses on detach, to also clear RLV
@@ -477,7 +476,7 @@ default
     
     timer()
     {
-        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping");
+        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
         llSetTimerEvent(0);
     }
     
@@ -498,7 +497,7 @@ default
     
     dataserver(key kQuery, string sData)
     {  
-        if (kQuery == g_kCuffPoseNCQuery)
+        if (kQuery == g_kNCQuery)
         {
             integer iFreeMem = llGetFreeMemory();
             if (sData != EOF && iFreeMem > 3000){
@@ -508,38 +507,55 @@ default
                     string sKey = llList2String(lKV,0);
                     string sValue = llList2String(lKV,1);
                     
-                    if (llToLower(sKey) == "name"){
-                        if (llGetListLength(g_lSelectedPose) == 4) g_lPoses += g_lSelectedPose;
-                        else if (llGetListLength(g_lSelectedPose) > 0) llOwnerSay("Pose '"+llList2String(g_lSelectedPose,0)+"' in notecard '"+g_sCuffPoseNCName+"' is missing some settings! Skipping!");
-                        g_lSelectedPose = [g_sCuffPoseNCName+"|"+sValue];
-                    } else if (llToLower(sKey) == "anim"){
+                    if (llToLower(sKey) == "button"){ // Add a Button to the menu
+                        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":addmenu:"+g_sNCName+"|"+sValue);
+                    } else if (llToLower(sKey) == "ignorehide"){  // Don't hide with the other Attachments
+                        g_bDoHide = !((integer)sValue);
+                    } else if (llToLower(sKey) == "defaulthide"){ // Default hide state
+                        g_bHide = (integer)sValue;
+                        doHide();
+                    } else if (llToLower(sKey) == "defaultlock"){ // Default lock state
+                        g_bLocked = (integer)sValue;
+                        refreshLock();
+                    } else if (llToLower(sKey) == "posename"){
+                        if (llGetListLength(g_lSelectedPose) > 0) llOwnerSay("Pose '"+llList2String(g_lSelectedPose,0)+"' in notecard '"+g_sNCName+"' is missing some settings! Skipping!");
+                        g_lSelectedPose = [g_sNCName+"|"+sValue];
+                    } else if (llToLower(sKey) == "poseanim"){
                         g_lSelectedPose += [sValue];
-                    } else if (llToLower(sKey) == "chains"){
+                    } else if (llToLower(sKey) == "posechains"){
                         g_lSelectedPose += [sValue];
-                    } else if (llToLower(sKey) == "restrictions"){
+                    } else if (llToLower(sKey) == "poserestrictions"){
+                        g_lSelectedPose += [sValue];
+                    } else if (llToLower(sKey) == "poseshow") {
                         g_lSelectedPose += [sValue];
                     } else {
-                        llOwnerSay("Syntax error in Notecard '"+g_sCuffPoseNCName+"' at line "+(string)g_iCuffPoseNCLine);
+                        llOwnerSay("Syntax error in Notecard '"+g_sNCName+"' at line "+(string)g_iNCLine);
                         llOwnerSay("Unknown Key '"+sKey+"'");
                     }
+                    
+                    if (llGetListLength(g_lSelectedPose) == 5) {
+                        g_lPoses += llDeleteSubList(g_lSelectedPose,-1,-1);
+                        if (llList2Integer(g_lSelectedPose,4)) llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":addpose:"+llList2String(g_lSelectedPose,0));
+                        g_lSelectedPose = [];
+                    }
+                    
                 }
                 
-                g_kCuffPoseNCQuery = llGetNotecardLine(g_sCuffPoseNCName,++g_iCuffPoseNCLine);
+                g_kNCQuery = llGetNotecardLine(g_sNCName,++g_iNCLine);
             } else {
                 if (iFreeMem <= 3000) {
-                    llOwnerSay("ERROR: Skipped reading '"+g_sCuffPoseNCName+"' because there is nearly no Script-Memory left.");
+                    llOwnerSay("ERROR: Skipped reading '"+g_sNCName+"' because there is nearly no Script-Memory left.");
                     llOwnerSay("Consider moving some poses into another attachment!");
                 }
-                llOwnerSay("Loading "+g_sCuffPoseNCName+" Finished! "+(string)llGetFreeMemory()+"kb Free");
+                llOwnerSay("Loading "+g_sNCName+" Finished! "+(string)llGetFreeMemory()+"kb Free");
                 g_iCategoryIndex++;
                 if (llGetListLength(g_lCategory) > g_iCategoryIndex) {
-                    g_sCuffPoseNCName = llList2String(g_lCategory,g_iCategoryIndex);
-                    g_iCuffPoseNCLine = 0;
-                    llOwnerSay("Loading "+g_sCuffPoseNCName+"...");
-                    g_kCuffPoseNCQuery = llGetNotecardLine(g_sCuffPoseNCName,g_iCuffPoseNCLine);
+                    g_sNCName = llList2String(g_lCategory,g_iCategoryIndex);
+                    g_iNCLine = 0;
+                    llOwnerSay("Loading "+g_sNCName+"...");
+                    g_kNCQuery = llGetNotecardLine(g_sNCName,g_iNCLine);
                 } else {
-                    llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping");
-                    updateCollar();
+                    llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
                     g_lCategory = [];
                 }
             }
@@ -548,6 +564,22 @@ default
 
     touch_start(integer total_number) {
         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":menu:"+(string)llDetectedKey(0));
+    }
+    
+    link_message(integer iSender, integer iChan, string sMsg, key kID){
+        if (iChan == LINK_CHAN_API){
+            list lCMD = llParseString2List(sMsg,["="],[]);
+            string sKey = llList2String(lCMD,0);
+            if (sKey == "dohide"){
+                g_bHide = llList2Integer(lCMD,1);
+                doHide();
+            } else if (sKey == "dolock") {
+                g_bLocked = llList2Integer(lCMD,1);
+                refreshLock();
+            } else if (sKey == "doPose") {
+                doPose(llList2String(lCMD,1));
+            }
+        }
     }
     
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -608,7 +640,7 @@ default
             else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));
             else if (sCMD == "chainkey") llRegionSayTo(kID,g_iChan_ocCmd,(string)g_kWearer+":"+llList2String(lOcCMD,2)+"="+(string)findPrimKey(llList2String(lOcCMD,2)));
             else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));
-            else if (sCMD == "collarping") updateCollar();
+            else if (sCMD == "collarping") llResetScript();
             if (llGetOwnerKey(kID) == g_kWearer) {  // the following commands can only be send by Attachments!
                 if (sCMD == "lock" && llGetOwnerKey(kID) == g_kWearer) {
                     g_bLocked = TRUE;
@@ -626,7 +658,7 @@ default
                             if (llListFindList(g_lActivePoseIndexes,[iPoseIndex]) == -1) doPose(llList2String(lNewPoses,i)); // Start the pose if not running
                         }
                     }
-                }else if (sCMD == "hide" && llGetOwnerKey(kID) == g_kWearer) {
+                }else if (sCMD == "hide" && g_bDoHide) {
                     g_bHide = llList2Integer(lOcCMD,2);
                     doHide();
                 } else if (sCMD == "chaintex" && g_kTexture != llList2Key(lOcCMD,2)) {
@@ -637,12 +669,13 @@ default
                     for (i=0; i<llGetListLength(lActiveChains);i+=2) {
                         doChain(llList2String(lActiveChains,i),llList2Key(lActiveChains,i+1),TRUE);
                     }
-                }
-                else if (sCMD == "RLV" && llGetOwnerKey(kID) == g_kWearer) {
+                } else if (sCMD == "restriction"){
+                    llMessageLinked(LINK_SET,LINK_CHAN_API,"restriction="+llList2String(lOcCMD,2),g_kWearer);
+                } else if (sCMD == "RLV" && llGetOwnerKey(kID) == g_kWearer) {
                     g_bRLV = llList2Integer(lOcCMD,2);
                     refreshLock();
                     if (!g_bRLV) llOwnerSay("@clear");
-                }
+                } else if (sCMD == "devicemenu") llMessageLinked(LINK_SET,LINK_CHAN_API,"menu="+llList2String(lOcCMD,2),g_kWearer);
             }
         }
     }
