@@ -85,7 +85,6 @@ list OC_SCRIPTS = [
     "oc_auth",
     "oc_bell",
     "oc_bookmarks",
-    "oc_capture",
     "oc_com",
     "oc_couples",
     "oc_dialog",
@@ -132,7 +131,6 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
-integer g_iCaptureMenu=FALSE;
 integer g_iLooks;
 
 integer g_iUpdateChan = -7483213;
@@ -243,8 +241,7 @@ MainMenu(key kID, integer iAuth) {
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+="-";
-    if (g_iCaptureMenu) lStaticButtons+="Capture";
-    else lStaticButtons+="-";
+    lStaticButtons+="-";
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+="-";
@@ -514,7 +511,6 @@ RebuildMenu(integer iRemenu, key kLastUser, integer iLastAuth) {
     //Debug("Rebuild Menu");
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
-    g_iCaptureMenu=FALSE;
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
@@ -567,7 +563,6 @@ default {
                 }
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
-            else if (sStr=="Main|Capture") g_iCaptureMenu=TRUE;
             else if (sStr=="Settings|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
