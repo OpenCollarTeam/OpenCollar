@@ -61,13 +61,14 @@ integer g_iRestrictions2 = 0;
 string g_sChecked = "☑";
 string g_sUnChecked = "☐";
 
-list g_lMacros = [];
-integer g_lMaxMacros = 9;  // Maximum number of Macros allowed
+// Default Macros will look like the old oc_rlvsuite Buttons
+list g_lMacros = ["Hear", 4, 0, "Talk" , 2, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Rummage", 1342179328, 131168, "Dress", 0, 15, "IM", 384, 0, "Daze", 323584, 0, "Dazzle", 0, 16777216];
+integer g_lMaxMacros = 10;  // Maximum number of Macros allowed
 
 string g_sTmpMacroName = "";
 string g_sTmpRestName = "";
 
-list lCategory = ["Chat","Show/Hide","Teleport","Misc","Edit/Mod","Interact","Movement","Camera"];
+list lCategory = ["Chat","Show/Hide","Teleport","Misc","Edit/Mod","Interact","Movement","Camera","Outfit"];
 
 list lUtilityMain = ["[Individual]","[Manage]","BACK"];
 list lUtilityNone = ["BACK"];
@@ -102,36 +103,40 @@ list lRLVList = [   // ButtonText, CategoryIndex, RLVCMD, bitmask1, bitmask2, Au
     "Accept"        , 2 , "tplure"                              , 33554432  , 0         , CMD_EVERYONE ,   // 26
     "Offer"         , 2 , "tprequest"                           , 67108864  , 0         , CMD_EVERYONE ,   // 27
     "Accept Perm"   , 3 , "acceptpermission"                    , 134217728 , 0         , CMD_EVERYONE ,   // 28
-    "Idle"          , 3 , "allowidle"                           , 268435456 , 0         , CMD_EVERYONE ,   // 29
-    "Set Debug"     , 3 , "setdebug"                            , 536870912 , 0         , CMD_OWNER    ,   // 30 // disabled
-    "Environment"   , 3 , "setenv"                              , 1073741824, 0         , CMD_EVERYONE ,   // 31
-    "Edit"          , 4 , "edit"                                , 0         , 1         , CMD_EVERYONE ,   // 32
-    "Edit Object"   , 4 , "editobj"                             , 0         , 2         , CMD_EVERYONE ,   // 33
-    "Rez"           , 4 , "rez"                                 , 0         , 4         , CMD_EVERYONE ,   // 34
-    "Notecard"      , 4 , "viewnote"                            , 0         , 8         , CMD_EVERYONE ,   // 35
-    "Script"        , 4 , "viewscript"                          , 0         , 16        , CMD_EVERYONE ,   // 36
-    "Texture"       , 4 , "viewtexture"                         , 0         , 32        , CMD_EVERYONE ,   // 37
-    "Touch Far"     , 5 , "fartouch"                            , 0         , 64        , CMD_EVERYONE ,   // 38
-    "Interact"      , 5 , "interact"                            , 0         , 128       , CMD_EVERYONE ,   // 39
-    "Attachment"    , 5 , "touchattach"                         , 0         , 256       , CMD_EVERYONE ,   // 40
-    "Own Attach"    , 5 , "touchattachself"                     , 0         , 512       , CMD_EVERYONE ,   // 41
-    "Other Attach"  , 5 , "touchattachother"                    , 0         , 1024      , CMD_EVERYONE ,   // 42
-    "HUD"           , 5 , "touchhud"                            , 0         , 2048      , CMD_EVERYONE ,   // 43
-    "World"         , 5 , "touchworld"                          , 0         , 4096      , CMD_EVERYONE ,   // 44
-    "All"           , 5 , "touchall"                            , 0         , 8192      , CMD_EVERYONE ,   // 45
-    "Fly"           , 6 , "fly"                                 , 0         , 16384     , CMD_EVERYONE ,   // 46
-    "Jump"          , 6 , "jump"                                , 0         , 32768     , CMD_EVERYONE ,   // 47
-    "Stand Up"      , 6 , "unsit"                               , 0         , 65536     , CMD_EVERYONE ,   // 48
-    "Sit Down"      , 6 , "sit"                                 , 0         , 131072    , CMD_EVERYONE ,   // 49
-    "Sit TP"        , 6 , "sittp"                               , 0         , 262144    , CMD_EVERYONE ,   // 50
-    "Stand TP"      , 6 , "standtp"                             , 0         , 524288    , CMD_EVERYONE ,   // 51
-    "Always Run"    , 6 , "alwaysrun"                           , 0         , 1048576   , CMD_EVERYONE ,   // 52
-    "Temp Run"      , 6 , "temprun"                             , 0         , 2097152   , CMD_EVERYONE ,   // 53
-    "Unlock Cam"    , 7 , "camunlock"                           , 0         , 4194304   , CMD_OWNER    ,   // 54
-    "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    , 0         , 8388608   , CMD_EVERYONE ,   // 55
-    "MaxDistance"   , 7 , "setcam_avdistmax"                    , 0         , 16777216  , CMD_EVERYONE ,   // 56
-    "MinDistance"   , 7 , "setcam_avdistmin"                    , 0         , 33554432  , CMD_EVERYONE ,   // 57
-    "Mouselook"     , 7 , "camdistmax:0"                        , 0         , 67108864  , CMD_EVERYONE     // 58
+    "Edit"          , 4 , "edit"                                , 268435456 , 0         , CMD_EVERYONE ,   // 29
+    "Edit Object"   , 4 , "editobj"                             , 536870912 , 0         , CMD_EVERYONE ,   // 30
+    "Rez"           , 4 , "rez"                                 , 1073741824, 0         , CMD_EVERYONE ,   // 31
+    "Add Attach"    , 8 , "addattach"                           , 0         , 1         , CMD_EVERYONE ,   // 32
+    "Rem Attach"    , 8 , "remattach"                           , 0         , 2         , CMD_EVERYONE ,   // 33
+    "Add Cloth"     , 8 , "addoutfit"                           , 0         , 4         , CMD_EVERYONE ,   // 34
+    "Rem Cloth"     , 8 , "remoutfit"                           , 0         , 8         , CMD_EVERYONE ,   // 35
+    "Notecard"      , 4 , "viewnote"                            , 0         , 16        , CMD_EVERYONE ,   // 36
+    "Script"        , 4 , "viewscript"                          , 0         , 32        , CMD_EVERYONE ,   // 37
+    "Texture"       , 4 , "viewtexture"                         , 0         , 64        , CMD_EVERYONE ,   // 38
+    "Touch Far"     , 5 , "fartouch"                            , 0         , 128       , CMD_EVERYONE ,   // 39
+    "Interact"      , 5 , "interact"                            , 0         , 256       , CMD_EVERYONE ,   // 40
+    "Attachment"    , 5 , "touchattach"                         , 0         , 512       , CMD_EVERYONE ,   // 41
+    "Own Attach"    , 5 , "touchattachself"                     , 0         , 1024      , CMD_EVERYONE ,   // 42
+    "Other Attach"  , 5 , "touchattachother"                    , 0         , 2048      , CMD_EVERYONE ,   // 43
+    "HUD"           , 5 , "touchhud"                            , 0         , 4096      , CMD_EVERYONE ,   // 44
+    "World"         , 5 , "touchworld"                          , 0         , 8192      , CMD_EVERYONE ,   // 45
+    "All"           , 5 , "touchall"                            , 0         , 16384     , CMD_EVERYONE ,   // 46
+    "Fly"           , 6 , "fly"                                 , 0         , 32768     , CMD_EVERYONE ,   // 47
+    "Jump"          , 6 , "jump"                                , 0         , 65536     , CMD_EVERYONE ,   // 48
+    "Stand Up"      , 6 , "unsit"                               , 0         , 131072    , CMD_EVERYONE ,   // 49
+    "Sit Down"      , 6 , "sit"                                 , 0         , 262144    , CMD_EVERYONE ,   // 50
+    "Sit TP"        , 6 , "sittp"                               , 0         , 524288    , CMD_EVERYONE ,   // 51
+    "Stand TP"      , 6 , "standtp"                             , 0         , 1048576   , CMD_EVERYONE ,   // 52
+    "Always Run"    , 6 , "alwaysrun"                           , 0         , 2097152   , CMD_EVERYONE ,   // 53
+    "Temp Run"      , 6 , "temprun"                             , 0         , 4194304   , CMD_EVERYONE ,   // 54
+    "Unlock Cam"    , 7 , "camunlock"                           , 0         , 8388608   , CMD_OWNER    ,   // 55
+    "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    , 0         , 16777216  , CMD_EVERYONE ,   // 56
+    "MaxDistance"   , 7 , "setcam_avdistmax"                    , 0         , 33554432  , CMD_EVERYONE ,   // 57
+    "MinDistance"   , 7 , "setcam_avdistmin"                    , 0         , 67108864  , CMD_EVERYONE     // 58
+//  "Idle"          , 3 , "allowidle"                           , 268435456 , 0         , CMD_EVERYONE ,   // 59  // Everything down here was ignored. There seem to be a Limit how
+//  "Set Debug"     , 3 , "setdebug"                            , 536870912 , 0         , CMD_OWNER    ,   // 60  // big a lsl-list can go
+//  "Environment"   , 3 , "setenv"                              , 1073741824, 0         , CMD_EVERYONE ,   // 61
+//  "Mouselook"     , 7 , "camdistmax:0"                        , 0         , 67108864  , CMD_EVERYONE     // 62
 ];
 
 integer g_iBlurAmount = 5;
@@ -158,7 +163,7 @@ Menu(key kID, integer iAuth) {
     integer i;
     for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
     
-    Dialog(kID, "\n[Macros]\n \nClick on a Macro to see more Options.\n\n[Individual] : Select restrictions individually\n[Manage] : Manage the Macros", lButtons, lUtilityMain, 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Macros]\n \nClick on a Macro to see more Options.", lButtons, lUtilityMain, 0, iAuth, "Restrictions~Main");
 }
 
 MenuRestrictions(key kID, integer iAuth, integer iSetAccess){
@@ -243,7 +248,7 @@ integer CheckPermissions(integer iMask1, integer iMask2, key kID, integer iAuth)
     }
     
     if (llGetListLength(lDenied) > 0){
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"You don't have permission to change following restrictions:\n "+llDumpList2String(lDenied,", "),kID);
+        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"NOACCESS% to change restrictions:\n "+llDumpList2String(lDenied,", "),kID);
         return FALSE;
     } else return TRUE;
 }
@@ -360,19 +365,19 @@ UserCommand(integer iNum, string sStr, key kID) {
                     if (sChangekey == "add") {
                         g_iRestrictions1 = g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1);
                         g_iRestrictions2 = g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2);
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Added all restrictions of macro '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Macro Added: '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1,g_iRestrictions2);
-                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been added to your Restrictions!");
+                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been added!");
                     } else if (sChangekey == "replace") {
                         g_iRestrictions1 = llList2Integer(g_lMacros,iIndex+1);
                         g_iRestrictions2 = llList2Integer(g_lMacros,iIndex+2);
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Replaced all restrictions with macro '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Replaced restrictions with Macro '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1,g_iRestrictions2);
-                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' replaced all your Restrictions!");
+                        llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
                     } else if (sChangekey == "clear") {
                         g_iRestrictions1 = g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1));
                         g_iRestrictions2 = g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2));
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Cleared all restrictions of macro '"+sChangevalue+"'", kID);
+                        llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Macro cleared '"+sChangevalue+"'", kID);
                         ApplyAll(g_iRestrictions1,g_iRestrictions2);
                         llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
                     }
@@ -410,9 +415,8 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
-                //llOwnerSay(sMenu+" - "+sMsg);
-                llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
-                llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
+                //llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
+                //llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
                 
                 if(sMenu == "Restrictions~Main"){
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
@@ -423,7 +427,7 @@ default
                         integer iIndex = llListFindList(g_lMacros,[sMsg]);
                         if (iIndex > -1) {
                             g_sTmpMacroName = sMsg;
-                            Dialog(kAv, "What do you want to do with that macro?\n\nAdd = Add restrictions to current restrictions\nReplace = Replace current restrictions\nClear = Clear macro-options", ["Add","Replace","Clear"], lUtilityNone, 0, iAuth, "Restrictions~Options");
+                            Dialog(kAv, "What do you want to do with that macro?", ["Add","Replace","Clear"], lUtilityNone, 0, iAuth, "Restrictions~Options");
                         }
                     }
                 } else if (sMenu == "Restrictions~Manage"){
@@ -499,7 +503,7 @@ default
                 
                     if (llListFindList(g_lMacros,[sMsg]) > -1) {
                         g_sTmpMacroName = sMsg;
-                        Dialog(kAv, "A Macro with this name does already exist!\n \nDo you want to override it?", ["YES","NO"], lUtilityNone, 0, iAuth, "Restrictions~Override");
+                        Dialog(kAv, "A Macro named '"+sMsg+"' does already exist!\n \nDo you want to override it?", ["YES","NO"], lUtilityNone, 0, iAuth, "Restrictions~Override");
                     } else {
                         if (llGetListLength(g_lMacros)/3 >= g_lMaxMacros) Dialog(kAv, "You have already created the maximum amount of macros!", ["OK"], lUtilityNone, 0, iAuth, "Restrictions~MaxMacro");
                         else {
@@ -556,7 +560,6 @@ default
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             ApplyAll(g_iRestrictions1,g_iRestrictions2);
         } else if (iNum == REBOOT && sStr == "reboot") {
-            llOwnerSay("Rebooting RLV Suite");
             llResetScript();
         } else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
