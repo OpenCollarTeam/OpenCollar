@@ -2,6 +2,8 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
+// Licensed under the GPLv2. See LICENSE for full details.
+
 string g_sScriptVersion = "7.3";
 
 string g_sParentMenu = "RLV";
@@ -196,6 +198,7 @@ MenuSetValue(key kID, integer iAuth, string sValueName) {
 }
 
 ApplyAllExceptions(){
+    llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
     list lCmd = [];
     integer iExIndex;
     for (iExIndex=1; iExIndex<llGetListLength(lRLVEx);iExIndex=iExIndex + 3){
@@ -203,18 +206,21 @@ ApplyAllExceptions(){
         integer i;
         for (i=0; i<llGetListLength(lTargetList);++i) {
             if (llList2String(lTargetList,i) != llGetOwner()){
-                if (llList2Integer(lRLVEx,iExIndex+1) & g_iOwnerEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=n"];
-                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=y"];
+                if (llList2Integer(lRLVEx,iExIndex+1) & g_iOwnerEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add"];
+                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem"];
             }
         }
         lTargetList = g_lSecOwners;
         for (i=0; i<llGetListLength(lTargetList);++i){
             if (llList2String(lTargetList,i) != llGetOwner()){
-                if (llList2Integer(lRLVEx,iExIndex+1) & g_iTrustedEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=n"];
-                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=y"];
+                if (llList2Integer(lRLVEx,iExIndex+1) & g_iTrustedEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add"];
+                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem"];
             }
         }
     }
+    
+    //llOwnerSay("DEBUG: Apply Exceptions: "+llDumpList2String(lCmd,","));
+    
     llMessageLinked(LINK_RLV,RLV_CMD,llDumpList2String(lCmd,","),"Exceptions");
     Save();
 }
@@ -271,14 +277,14 @@ default
 {
     state_entry()
     {
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MinCamDist", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MaxCamDist", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_BlurAmount", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Muffle", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Owner", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Trusted", "");
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "auth_owner","");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MinCamDist", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MaxCamDist", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_BlurAmount", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Muffle", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Owner", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Trusted", llGetOwner());
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "auth_owner",llGetOwner());
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
@@ -433,7 +439,7 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
-        }else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
+        }else if (iNum == RLV_OFF){
             llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             ApplyAllExceptions();
