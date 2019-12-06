@@ -2,8 +2,6 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-// Licensed under the GPLv2. See LICENSE for full details.
-
 string g_sScriptVersion = "7.3";
 
 string g_sParentMenu = "RLV";
