@@ -538,6 +538,8 @@ StartUpdate(){
 
 default {
     state_entry() {
+        if(llGetStartParameter()!=0)state inUpdate;
+        
         g_kWearer = llGetOwner();
         BuildLockElementList();
         
@@ -814,5 +816,10 @@ default {
             RebuildMenu(FALSE, "",0);
         }
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
+    }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
