@@ -438,6 +438,8 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }else if (iNum == RLV_OFF){
             llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
