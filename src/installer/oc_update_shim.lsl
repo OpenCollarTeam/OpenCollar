@@ -34,7 +34,7 @@ integer CMD_OWNER = 500;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to settings store
 //str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from store
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
@@ -79,7 +79,6 @@ default {
         PermsCheck();
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ){
-            llMessageLinked(LINK_SET, -99999, "update_active", "");
             g_iIsUpdate = TRUE;
         }
         // build script list
@@ -95,7 +94,8 @@ default {
         // listen on the start param channel
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
-        llWhisper(g_iStartParam, "reallyready");
+        //llWhisper(g_iStartParam, "reallyready");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
     }
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
@@ -223,6 +223,9 @@ default {
                 if (llListFindList(g_lSettings, [sStr]) == -1) {
                     g_lSettings += [sStr];
                 }
+            }else{
+                llWhisper(g_iStartParam, "reallyready");
+                llMessageLinked(LINK_SET, -99999, "update_active", "");
             }
         }
         if (iNum == LOADPIN) {
