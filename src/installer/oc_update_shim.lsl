@@ -14,6 +14,7 @@ integer g_iStartParam;
 integer LOADPIN = -1904;
 integer LINK_UPDATE = -10;
 
+integer REBOOT = -1000;
 // a strided list of all scripts in inventory, with their names,versions,uuids
 // built on startup
 list g_lScripts;
@@ -77,7 +78,10 @@ default {
     state_entry() {
         PermsCheck();
         g_iStartParam = llGetStartParameter();
-        if (g_iStartParam < 0 ) g_iIsUpdate = TRUE;
+        if (g_iStartParam < 0 ){
+            llMessageLinked(LINK_SET, -99999, "update_active", "");
+            g_iIsUpdate = TRUE;
+        }
         // build script list
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
         string sName;
@@ -96,6 +100,7 @@ default {
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
         if (llGetOwnerKey(kID) != llGetOwner()) return;
+        
         list lParts = llParseString2List(sMsg, ["|"], []);
         if (llGetListLength(lParts) == 4) {
             string sType = llList2String(lParts, 0);
@@ -203,6 +208,7 @@ default {
                 //reboot scripts
                 llSleep(0.5);
                 llMessageLinked(LINK_ALL_OTHERS,CMD_OWNER,"reboot --f",llGetOwner());
+                llMessageLinked(LINK_SET, REBOOT, "", "");
             }
             // delete shim script
             llRemoveInventory(llGetScriptName());
