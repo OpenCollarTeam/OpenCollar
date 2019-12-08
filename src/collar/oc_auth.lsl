@@ -681,6 +681,8 @@ default {
                     g_lTempOwner=[];
                 }
             }
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
