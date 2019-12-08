@@ -166,10 +166,10 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
-
+string g_sOwnSelfList;
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     list lPeople;
-
+    
 
     if (sToken=="owner") lPeople=g_lOwner;
     else if (sToken=="tempowner") lPeople=g_lTempOwner;
@@ -192,13 +192,16 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
                 if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
                 else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
+                g_sOwnSelfList = sToken;
+                g_iGrantRemoval=FALSE;
                 llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
-                
+                iFound=TRUE;
             } else {
                 //OwnSelfOff(kCmdr);
                 lPeople = llDeleteSubList(lPeople,index,index);
                 if (!iPromoted) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" removed from " + sToken + " list.",kCmdr);
                 iFound = TRUE;
+                g_iGrantRemoval=FALSE;
             }
         } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
            //llSay(0, "remove_all");
@@ -208,11 +211,17 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
                 if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
                 else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
                 g_kConfirmOwnSelfOffDialogID = llGenerateKey();
+                g_iGrantRemoval=FALSE;
+                g_sOwnSelfList = sToken;
                 llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|"+msg+"|0|Yes`No|Cancel|",g_kConfirmOwnSelfOffDialogID);
+                iFound=TRUE;
+                lPeople=[g_sWearerID];
             } else {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sToken+" list cleared.",kCmdr);
                 lPeople = [];
                 iFound = TRUE;
+                
+                
             }
         }
     }
@@ -490,15 +499,18 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
+        //llSay(0, "lParams 2: "+llList2String(lParams,2)+"; lParams 3: "+llList2String(lParams,3));
         if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to removing user from list",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID) {
+            if(sTmpID == g_sWearerID)iRemenu=FALSE;
             RemovePerson(sTmpID, sAction, kID, FALSE);
             if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
         } else if (llToLower(sTmpID)+" "+llToLower(llList2String(lParams,3)) == "remove all") {
             RemovePerson(sTmpID+" "+llList2String(lParams,3), sAction, kID, FALSE);
-            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
+            // Remenu in the RemovePerson function 
+//            if (iRemenu) RemPersonMenu(kID, sAction, Auth(kID));
         } else {
             string sTmpID2 = llList2String(lParams,3);
             if(sTmpID2 != ""){
@@ -726,7 +738,10 @@ default {
                     string sCmd = "rm "+llGetSubString(sMenu,6,-1)+" ";
                     if (sMessage == UPMENU)
                         AuthMenu(kAv, iAuth);
-                    else UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
+                    else{
+                        //llSay(0, "Remove User: "+(string)iAuth+"; "+sCmd+"; "+sMessage+"; "+(string)kAv);
+                        UserCommand(iAuth, sCmd +sMessage, kAv, TRUE);
+                    }
                 } else if (sMenu == "runawayMenu" ) {   //no chat commands for this menu, by design, so handle it all here
                     if (sMessage == "Yes") RunAway();
                     else if (sMessage == UPMENU) AuthMenu(kAv, iAuth);
@@ -748,7 +763,7 @@ default {
                 if(llList2String(MenuParams,1)=="Yes"){
                     // truly disable ownself now
                     g_iGrantRemoval=TRUE;
-                    RemovePerson(g_sWearerID, "owner", llGetKey(), TRUE);
+                    RemovePerson(g_sWearerID, g_sOwnSelfList, llGetKey(), TRUE);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
