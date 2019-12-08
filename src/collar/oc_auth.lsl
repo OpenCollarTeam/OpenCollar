@@ -3,7 +3,7 @@
 // Satomi Ahn, Master Starship, Sei Lisa, Joy Stipe, Wendy Starfall,    
 // Medea Destiny, littlemousy, Romka Swallowtail, Sumi Perl et al.     
 // Licensed under the GPLv2. See LICENSE for full details. 
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -84,8 +84,6 @@ string UPMENU = "BACK";
 integer g_iCaptureIsActive=FALSE; // If this flag is set, then auth will deny access to it's menus
 integer g_iOpenAccess; // 0: disabled, 1: openaccess
 integer g_iLimitRange=1; // 0: disabled, 1: limited
-integer g_iOwnSelf; // self-owned wearers
-string g_sFlavor = "OwnSelf";
 
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
@@ -140,8 +138,6 @@ AuthMenu(key kAv, integer iAuth) {
     else lButtons += ["Group ☑"];    //unset group
     if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
     else lButtons += ["Public ☐"];    //unset open access
-    if (g_iOwnSelf) lButtons += g_sFlavor+" ☑";    //add wearer as owner
-    else lButtons += g_sFlavor+" ☐";    //remove wearer as owner
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
@@ -170,13 +166,6 @@ RemPersonMenu(key kID, string sToken, integer iAuth) {
     }
 }
 
-OwnSelfOff(key kID) {
-    g_iOwnSelf = FALSE;
-    if (kID == g_sWearerID)
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYou no longer own yourself.\n",kID);
-    else
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% does no longer own themselves.\n",kID);
-}
 
 RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     list lPeople;
@@ -197,7 +186,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
     } else {
         integer index = llListFindList(lPeople,[sPersonID]);
         if (~index) {
-            if (sToken == "owner" && sPersonID == g_sWearerID && g_iGrantRemoval==FALSE){
+            if ((sToken == "owner" || sToken == "trust")&& sPersonID == g_sWearerID && g_iGrantRemoval==FALSE){
                 
                 string msg;
                 if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
@@ -214,7 +203,7 @@ RemovePerson(string sPersonID, string sToken, key kCmdr, integer iPromoted) {
         } else if (llToLower(sPersonID) == "remove all" && g_iGrantRemoval==FALSE) {
            //llSay(0, "remove_all");
             
-            if (sToken == "owner" && ~llListFindList(lPeople,[g_sWearerID])){
+            if ((sToken == "owner" || sToken == "trust") && ~llListFindList(lPeople,[g_sWearerID])){
                 string msg;
                 if((key)g_sWearerID==kCmdr)msg="Are you sure you no longer wish to own yourself?";
                 else msg = llGetDisplayName(kCmdr)+" wants to remove you as owner do you agree?";
@@ -273,13 +262,17 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
             if (~llListFindList(g_lOwner,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" is already Owner! You should really trust them.\n",kID);
                 return;
-            } else if (sPersonID==g_sWearerID) {
+            }/* else if (sPersonID==g_sWearerID) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\n"+NameURI(sPersonID)+" doesn't belong on this list as the wearer of the %DEVICETYPE%. Instead try: /%CHANNEL% %PREFIX% ownself on\n",kID);
                 return;
-            }
+            }*/
         } else if (sToken=="tempowner") {
             lPeople=g_lTempOwner;
         } else if (sToken=="block") {
+            if(sPersonID == g_sWearerID){
+                llMessageLinked(LINK_DIALOG,NOTIFY, "0\n\n%WEARERNAME% cannot be blocked.",kID);
+                return;
+            }
             lPeople=g_lBlock;
             if (~llListFindList(g_lTrust,[sPersonID])) {
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nOops!\n\nYou trust "+NameURI(sPersonID)+". If you really want to block "+NameURI(sPersonID)+" then you should remove them as trusted first.\n",kID);
@@ -291,7 +284,6 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
         } else return;
         if (! ~llListFindList(lPeople, [sPersonID])) { //owner is not already in list.  add him/her
             lPeople += sPersonID;
-            if (sPersonID == g_sWearerID && sToken == "owner") g_iOwnSelf = TRUE;
         } else {
             llMessageLinked(LINK_DIALOG,NOTIFY,"0"+NameURI(sPersonID)+" is already registered as "+sToken+".",kID);
             return;
@@ -315,8 +307,15 @@ AddUniquePerson(string sPersonID, string sToken, key kID) {
             } else
                 llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% belongs to you now.\n\nSee [https://github.com/OpenCollarTeam/OpenCollar/wiki/Access here] what that means!\n",sPersonID);
         }
-        if (sToken == "trust")
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [https://github.com/OpenCollarTeam/OpenCollar/wiki/Access here] what that means!\n",sPersonID);
+        if (sToken == "trust"){
+            if(sPersonID == g_sWearerID){
+                if(kID == g_sWearerID)
+                    llMessageLinked(LINK_DIALOG,NOTIFY, "0\n\nYou are now added as a trusted user to your own collar", g_sWearerID);
+                else
+                    llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n%WEARERNAME% is now trusted",g_sWearerID);
+            }else
+                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME% seems to trust you.\n\nSee [https://github.com/OpenCollarTeam/OpenCollar/wiki/Access here] what that means!\n",sPersonID);
+        }
         llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, g_sSettingToken + sToken + "=" + llDumpList2String(lPeople, ","), "");
         if (sToken=="owner") {
@@ -451,7 +450,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         }
         else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to listing access",kID);
         if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
+    } /*else if (sCommand == "ownself" || sCommand == llToLower(g_sFlavor)) {
         if (iNum == CMD_OWNER && !~llListFindList(g_lTempOwner,[(string)kID])) {
             if (sAction == "on") {
                 //g_iOwnSelf = TRUE;
@@ -468,7 +467,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to ownself", kID);
          if (iRemenu) AuthMenu(kID, iNum);
-    } else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
+    }*/ else if (sMessage == "owners" || sMessage == "access") {   //give owner menu
         AuthMenu(kID, iNum);
     } else if (sCommand == "owner" && iRemenu==FALSE) { //request for access menu from chat
         AuthMenu(kID, iNum);
@@ -486,7 +485,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             if(sTmpID2 != ""){
                 g_lRequests = [llHTTPRequest("http://w-hat.com/name2key/"+sTmpID+"."+sTmpID2,[],""), sCommand, sAction, kID];
             } else
-                Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
+                Dialog(kID, "\nChoose who to add to the "+sAction+" list:\n",[sTmpID],[">Wearer<",UPMENU],0,iNum,"AddAvi"+sAction, TRUE);
         }
     } else if (sCommand == "remove" || sCommand == "rm") { //remove person from a list
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
@@ -570,15 +569,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
             }
         } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"This feature is only for the wearer of the %DEVICETYPE%.",kID);
         if (iRemenu) AuthMenu(kID, Auth(kID));
-    } else if (sCommand == "flavor") {
-        if (kID != g_sWearerID) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to change flavor",kID);
-        else if (sAction) {
-            g_sFlavor = llGetSubString(sStr,7,15);
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour new flavor is \""+g_sFlavor+"\".\n",kID);
-            llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken+"flavor="+g_sFlavor,"");
-        } else 
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nYour current flavor is \""+g_sFlavor+"\".\n\nTo set a new flavor type \"/%CHANNEL% %PREFIX% flavor MyFlavor\". Flavors must be single names and can only be a maximum of 9 characters.\n",kID);
-    }
+    } 
 }
 DeleteAndResend(string sToken){
     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sSettingToken+sToken+"=",""); //// LEGACY OPTION. New scripts will hear LM_SETTING_DELETE
@@ -608,8 +599,13 @@ default {
     }
 
     state_entry() {
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
-        else g_iFirstRun = TRUE;
+        if (llGetStartParameter()==825){
+            state inUpdate;
+        }else {
+            g_iFirstRun=TRUE;
+            
+            llSetRemoteScriptAccessPin(0);
+        }
       /*  if (g_iProfiled){
             llScriptProfiler(1);
            // Debug("profiling restarted");
@@ -647,8 +643,6 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == "owner") {
                     g_lOwner = llParseString2List(sValue, [","], []);
-                    if (~llSubStringIndex(sValue,g_sWearerID)) g_iOwnSelf = TRUE;
-                    else g_iOwnSelf = FALSE;
                 } else if (sToken == "tempowner")
                     g_lTempOwner = llParseString2List(sValue, [","], []);
                     //Debug("Tempowners: "+llDumpList2String(g_lTempOwner,","));
@@ -665,7 +659,6 @@ default {
                 else if (sToken == "norun") g_iRunawayDisable = (integer)sValue;
                 else if (sToken == "trust") g_lTrust = llParseString2List(sValue, [","], [""]);
                 else if (sToken == "block") g_lBlock = llParseString2List(sValue, [","], [""]);
-                else if (sToken == "flavor") g_sFlavor = sValue;
             } else if (llToLower(sStr) == "settings=sent") {
                 if (llGetListLength(g_lOwner) && g_iFirstRun) {
                     SayOwners();
@@ -720,8 +713,6 @@ default {
                             "Group ☑","group off",
                             "Public ☐","public on",
                             "Public ☑","public off",
-                            g_sFlavor+" ☐","ownself on",
-                            g_sFlavor+" ☑","ownself off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
@@ -745,6 +736,8 @@ default {
                         AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
                     else if (sMessage == "BACK")
                         AuthMenu(kAv,iAuth);
+                    else if(sMessage == ">Wearer<")
+                        AddUniquePerson(sMessage, llGetOwner(), kAv);
                 }
             }
             
@@ -752,7 +745,6 @@ default {
                 list  MenuParams = llParseString2List(sStr,["|"],[]);
                 if(llList2String(MenuParams,1)=="Yes"){
                     // truly disable ownself now
-                    g_iOwnSelf=FALSE;
                     g_iGrantRemoval=TRUE;
                     RemovePerson(g_sWearerID, "owner", llGetKey(), TRUE);
                 }
@@ -778,7 +770,6 @@ default {
             if(onlyver)return; // basically this command was: <prefix> versions
             DebugOutput(kID, [" CAPTURE ACTIVE:",g_iCaptureIsActive]);
             DebugOutput(kID, [" LIMIT ACCESS:", g_iLimitRange]);
-            DebugOutput(kID, [" OWN SELF:", g_iOwnSelf]);
             DebugOutput(kID, [" OPEN ACCESS:",g_iOpenAccess]);
             DebugOutput(kID, [" FIRST RUN:",g_iFirstRun]);
             DebugOutput(kID, [" DISABLE RUNAWAY:", g_iRunawayDisable]);
@@ -812,5 +803,11 @@ default {
             
             g_lRequests=llDeleteSubList(g_lRequests, iPos,iPos+3);
         }
+    }
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
