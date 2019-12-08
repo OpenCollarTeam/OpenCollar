@@ -573,9 +573,6 @@ default {
             llInstantMessage(kID, llGetScriptName()+" RLV_ON: "+(string)g_iRLVOn);
         }
         
-        if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
-        }
     }
 
     no_sensor() {
