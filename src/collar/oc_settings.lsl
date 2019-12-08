@@ -7,7 +7,7 @@
 
 
 // Central storage for settings of other plugins in the device.
-string g_sScriptVersion= "7.3";
+string g_sScriptVersion= "7.4";
 string g_sCard = ".settings";
 string g_sSplitLine; // to parse lines that were split due to lsl constraints
 integer g_iLineNr = 0;
@@ -321,7 +321,11 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 default {
     state_entry() {
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
+        if (llGetStartParameter()!=0){
+            state inUpdate;
+        }else
+            llSetRemoteScriptAccessPin(0);
+        
         if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
@@ -476,5 +480,10 @@ default {
                 SendValues();
             }
         }
+    }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
