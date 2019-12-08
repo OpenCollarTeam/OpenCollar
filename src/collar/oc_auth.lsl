@@ -681,8 +681,6 @@ default {
                     g_lTempOwner=[];
                 }
             }
-        } else if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
             llSetTimerEvent(0.22);
@@ -734,12 +732,14 @@ default {
                     else if (sMessage == UPMENU) AuthMenu(kAv, iAuth);
                     else if (sMessage == "No") llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Runaway aborted.",kAv);
                 } if (llSubStringIndex(sMenu,"AddAvi") == 0) {
-                    if ((key)sMessage)
-                        AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
+                    if(sMessage == ">Wearer<")
+                        AddUniquePerson( llGetOwner(), llGetSubString(sMenu,6,-1),kAv); // add the wearer
                     else if (sMessage == "BACK")
                         AuthMenu(kAv,iAuth);
-                    else if(sMessage == ">Wearer<")
-                        AddUniquePerson(sMessage, llGetOwner(), kAv);
+                    else if ((key)sMessage)
+                        AddUniquePerson(sMessage, llGetSubString(sMenu,6,-1), kAv); //should be safe to uase key2name here, as we added from sensor dialog
+                    
+                    
                 }
             }
             
