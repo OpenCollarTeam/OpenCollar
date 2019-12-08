@@ -237,6 +237,7 @@ default
     }
     state_entry()
     {
+        if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
     }
@@ -245,6 +246,7 @@ default
         if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
+        else if(iNum == -99999) if(sStr == "update_active")state inUpdate;
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -363,4 +365,10 @@ default
         }
     }
             
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
 }
