@@ -541,6 +541,8 @@ default
                     Menu(kAv,iAuth);
                 }
             }
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
