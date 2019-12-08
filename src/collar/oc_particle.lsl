@@ -43,8 +43,7 @@ integer DIALOG_TIMEOUT      = -9002;
 
 integer g_iChan_LOCKMEISTER = -8888;
 integer g_iChan_LOCKGUARD   = -9119;
-integer g_iChan_ocCmd;                      // OpenCollar Chain CMD Channel (for cuff compatibility)
-integer g_iChan_ocCmd_Offset = 0xCC0CC;     // OpenCollar Chain CMD Channel Offset
+integer g_iChan_OCChain = -9889;                   // OpenCollar Chain CMD Channel (for cuff compatibility)
 integer g_iLMListener;
 integer g_iLMListernerDetach;
 
@@ -269,12 +268,26 @@ ParseOcChains(string sChainCMD)
     integer i;
     for (i=0; i<llGetListLength(lChains);++i)
     {
+        key kSource = g_kWearer;
+        key kTarget = g_kWearer;
+    
         list lChain = llParseString2List(llList2String(lChains,i),["="],[]);
         string sSource = llList2String(lChain,0);
+        list lSource = llParseString2List(sSource,["/"],[]);
+        if (llGetListLength(lSource) > 1){ 
+            kSource = llList2Key(lSource,0);
+            sSource = llList2String(lSource,1);
+        }
+        
         string sTarget = llList2String(lChain,1);
+        list lTarget = llParseString2List(sTarget,["/"],[]);
+        if (llGetListLength(lTarget) > 1) {
+            kTarget = llList2Key(lTarget,0);
+            sTarget = llList2String(lTarget,1);
+        }
         
         if (llListFindList(g_lLeashPrims,[sTarget]) > -1) { // if we are the target, send our key
-            llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhain:"+sSource+"="+(string)findPrimKey(sTarget));
+            llRegionSayTo(kSource,g_iChan_OCChain,"occhain:"+sSource+"="+(string)findPrimKey(sTarget));
         }
         
     }
@@ -450,13 +463,12 @@ DebugOutput(key kID, list ITEMS){
 
 HandleOccCMD(string sCMD){
     list lOcCMD = llParseString2List(sCMD, [":"],[]);
-    key kOcWearer = llList2Key(lOcCMD,0);
-    string sCMD = llList2String(lOcCMD,1);
-    if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,2));         // Request keys
-    else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));         // Request Chain
-    else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));   // Clear Chain
-    else if (sCMD == "chaintex" && g_sOccParticleTexture != llList2Key(lOcCMD,2)) {
-        g_sOccParticleTexture = llList2Key(lOcCMD,2);
+    string sCMD = llList2String(lOcCMD,0);
+    if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,1));         // Request keys
+    else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,1));         // Request Chain
+    else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,1));   // Clear Chain
+    else if (sCMD == "chaintex" && g_sOccParticleTexture != llList2Key(lOcCMD,1)) {
+        g_sOccParticleTexture = llList2Key(lOcCMD,1);
         list lActiveChains = g_lCurrentChains;
         doClearChain("all"); // Restart all Chains so the change can be seen live!
         integer i;
@@ -475,10 +487,7 @@ default {
 
     state_entry() {
         g_kWearer = llGetOwner();
-        g_iChan_ocCmd = (integer)("0x"+llGetSubString((string)g_kWearer,3,8)) + g_iChan_ocCmd_Offset;
-        if (g_iChan_ocCmd>0) g_iChan_ocCmd=g_iChan_ocCmd*(-1);
-        if (g_iChan_ocCmd > -10000) g_iChan_ocCmd -= 30000;
-        llListen(g_iChan_ocCmd,"",NULL_KEY,"");         // OpenCollar Chain Listener
+        llListen(g_iChan_OCChain,"",NULL_KEY,"");         // OpenCollar Chain Listener
         llListen(g_iChan_LOCKGUARD,"",NULL_KEY,"");     // Lockguard Listener
         llListen(g_iChan_LOCKMEISTER,"",NULL_KEY,"");   // Lockmeister Listener
         FindLinkedPrims();
@@ -498,7 +507,7 @@ default {
                 StartParticles(g_kParticleTarget);
                 if (bLeasherIsAv) LMSay();
             }
-        } else if (iNum == g_iChan_ocCmd) {
+        } else if (iNum == g_iChan_OCChain) {
             HandleOccCMD(sMessage);
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) {
             if (llToLower(sMessage) == "leash configure") {
@@ -704,7 +713,7 @@ default {
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
-        if (iChannel == g_iChan_ocCmd){
+        if (iChannel == g_iChan_OCChain){
             HandleOccCMD(sMessage);
         } else if (iChannel == g_iChan_LOCKGUARD){
             // Implementation of the Lockguard V2 Protocol

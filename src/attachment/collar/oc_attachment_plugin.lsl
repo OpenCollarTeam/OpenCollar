@@ -80,6 +80,7 @@ integer g_bRibbon = TRUE;
 integer g_bMoveLock = FALSE;
 
 integer g_iChan_ocCmd = -1;
+integer g_iChan_OCChain = -9889;
 list g_lCollarPoses = [];
 list g_lPoses = [];
 list g_lActivePoses = [];
@@ -335,10 +336,10 @@ doPose(string sPose, integer iAuth, key kID){
                 g_lActivePoses += [sPose];
                 llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
             }
-            if (g_sCurrentCollarPose != "") { // Reapply curren Collar pose Chains
+            if (g_sCurrentCollarPose != "") { // Reapply current Collar pose Chains
                 integer iIndex = llListFindList(g_lCollarPoses,[g_sCurrentCollarPose]);
-                llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lCollarPoses,iIndex+1));
-                llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lCollarPoses,iIndex+1),"");
+                llRegionSayTo(g_kWearer,g_iChan_OCChain,"occhains:"+llList2String(g_lCollarPoses,iIndex+1));
+                llMessageLinked(LINK_THIS,g_iChan_OCChain,"occhains:"+llList2String(g_lCollarPoses,iIndex+1),"");
             }
         }
 }
@@ -363,6 +364,7 @@ default
         if (g_iChan_ocCmd>0) g_iChan_ocCmd=g_iChan_ocCmd*(-1);
         if (g_iChan_ocCmd > -10000) g_iChan_ocCmd -= 30000;
         llListen(g_iChan_ocCmd,"",NULL_KEY,"");
+        llListen(g_iChan_OCChain,"",NULL_KEY,"");
         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":collarping");
         g_lCollarPoses = [];
         
@@ -529,7 +531,7 @@ default
                     g_lActivePoses = llParseString2List(llList2String(lSettings,2),[","],[]);
                 } else if (llList2String(lSettings,1) == "chaintex") {
                     g_kTexture = llList2Key(lSettings,2);
-                    llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":chaintex:"+(string)g_kTexture);
+                    llRegionSayTo(g_kWearer, g_iChan_OCChain, (string)g_kWearer+":chaintex:"+(string)g_kTexture);
                     llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":chaintex:"+(string)g_kTexture,"");
                 } else if (llList2String(lSettings,1) == "hide") {
                     g_bHidden = llList2Integer(lSettings,2);
@@ -543,14 +545,14 @@ default
                     string sAnimName = llList2String(llParseString2List(llList2String(lParam, 1),[","],[]),0);
                     integer iIndex = llListFindList(g_lCollarPoses,[sAnimName]);
                     if (iIndex > -1) {
-                        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":clearchain:all");
-                        llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":clearchain:all","");
-                        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lCollarPoses,iIndex+1));
-                        llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lCollarPoses,iIndex+1),"");
+                        llRegionSayTo(g_kWearer,g_iChan_OCChain,"clearchain:all");
+                        llMessageLinked(LINK_THIS,g_iChan_OCChain,"clearchain:all","");
+                        llRegionSayTo(g_kWearer,g_iChan_OCChain,"occhains:"+llList2String(g_lCollarPoses,iIndex+1));
+                        llMessageLinked(LINK_THIS,g_iChan_OCChain,"occhains:"+llList2String(g_lCollarPoses,iIndex+1),"");
                         applyRLV(sAnimName);
                         g_sCurrentCollarPose = sAnimName;
                     } else {
-                        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":clearchain:all");
+                        llRegionSayTo(g_kWearer,g_iChan_OCChain,"clearchain:all");
                         applyRLV("");
                         g_sCurrentCollarPose = "";
                     }
@@ -563,8 +565,8 @@ default
                 if(llList2String(lSettings,1) == "locked") if (g_bSyncLock) lock(FALSE,TRUE);
             } else if (llList2String(lSettings,0)=="anim") {
                 if (llList2String(lSettings,1) == "currentpose") {
-                    llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":clearchain:all");
-                    llMessageLinked(LINK_THIS,g_iChan_ocCmd,(string)g_kWearer+":clearchain:all","");
+                    llRegionSayTo(g_kWearer,g_iChan_OCChain,"clearchain:all");
+                    llMessageLinked(LINK_THIS,g_iChan_OCChain,"clearchain:all","");
                     applyRLV("");
                     g_sCurrentCollarPose = "";
                 }
