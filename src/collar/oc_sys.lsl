@@ -10,12 +10,12 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="";
-string g_sCollarVersion="7.3";
+string g_sDevStage="Beta 1";
+string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 200000.0;
+float g_fBuildVersion = 1.0;
 
 key g_kWearer;
 // Entries for the .settings relay
@@ -85,7 +85,6 @@ list OC_SCRIPTS = [
     "oc_auth",
     "oc_bell",
     "oc_bookmarks",
-    "oc_capture",
     "oc_com",
     "oc_couples",
     "oc_dialog",
@@ -132,7 +131,6 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
-integer g_iCaptureMenu=FALSE;
 integer g_iLooks;
 
 integer g_iUpdateChan = -7483213;
@@ -243,8 +241,7 @@ MainMenu(key kID, integer iAuth) {
     list lStaticButtons=["Apps"];
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+="-";
-    if (g_iCaptureMenu) lStaticButtons+="Capture";
-    else lStaticButtons+="-";
+    lStaticButtons+="-";
     lStaticButtons+=["Leash"];
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+="-";
@@ -365,7 +362,7 @@ UserCommand(integer iNum, string sStr, key kID, integer fromMenu) {
         }
     } else if (sCmd == "version") {
         string sVersion = "\n\nOpenCollar Version: "+g_sCollarVersion+g_sDevStage+" ("+(string)g_fBuildVersion+")";
-        if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new patch has been released.\nPlease install at your earliest convenience. Thanks!\n";
+        if(!g_iLatestVersion) sVersion+="\nUPDATE AVAILABLE: A new version is available! You can find it in the OpenCollar group notices, or at any partner location. See the [https://opencollar.cc OpenCollar] Website for more information!\n";
         llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sVersion,kID);
     }/* else if (sCmd == "objectversion") {
         // ping from an object, we answer to it on the object channel
@@ -514,7 +511,6 @@ RebuildMenu(integer iRemenu, key kLastUser, integer iLastAuth) {
     //Debug("Rebuild Menu");
     g_iAnimsMenu=FALSE;
     g_iRlvMenu=FALSE;
-    g_iCaptureMenu=FALSE;
     g_lResizeButtons = [];
     g_lAppsButtons = [] ;
     llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Main", "");
@@ -567,7 +563,6 @@ default {
                 }
             } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
-            else if (sStr=="Main|Capture") g_iCaptureMenu=TRUE;
             else if (sStr=="Settings|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
             //sStr should be in form of parentmenu|childmenu
