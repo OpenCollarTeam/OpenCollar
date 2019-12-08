@@ -349,6 +349,7 @@ default {
     }
 
     state_entry() {
+        if(llGetStartParameter()!=0)state inUpdate;
        // llSetMemoryLimit(49152);  //2015-05-06 (6180 bytes free)
         g_kWearer = llGetOwner();
         g_sWearerName = NameURI(g_kWearer);
@@ -605,5 +606,11 @@ default {
 
     changed(integer iChange) {
         if (iChange & CHANGED_OWNER) llResetScript();
+    }
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
