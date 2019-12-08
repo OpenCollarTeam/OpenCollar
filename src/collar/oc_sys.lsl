@@ -702,6 +702,8 @@ default {
             llInstantMessage(kID, llGetScriptName()+" LOCKED: "+(string)g_iLocked);
             llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iHide);
             llInstantMessage(kID, llGetScriptName()+" DETACHED WHILE LOCKED: "+(string)g_bDetached);
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }
     }
 
