@@ -395,11 +395,12 @@ default
 {
     state_entry()
     {
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_mask1","");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_mask2","");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_macros","");
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_auths","");
+        if(llGetStartParameter()!=0)state inUpdate;
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_mask1","");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_mask2","");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_macros","");
+        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "rlvsuite_auths","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
@@ -593,4 +594,9 @@ default
         }
     }
     
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
 }
