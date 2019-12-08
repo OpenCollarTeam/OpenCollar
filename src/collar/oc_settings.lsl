@@ -413,8 +413,6 @@ default {
             }
             llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr, "");
         
-        } else if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
