@@ -1,0 +1,272 @@
+HIERARCHY
+ROOT hip
+{
+	OFFSET 0.000000 0.000000 0.000000
+	CHANNELS 6 Xposition Yposition Zposition Xrotation Yrotation Zrotation
+	JOINT mSpine1
+	{
+		OFFSET 0.0000 3.3100 -0.0000
+		CHANNELS 3 Xrotation Yrotation Zrotation
+		JOINT mSpine2
+		{
+			OFFSET 0.0000 -3.3100 0.0000
+			CHANNELS 3 Xrotation Yrotation Zrotation
+			JOINT abdomen
+			{
+				OFFSET 0.0000 3.3100 -0.0000
+				CHANNELS 3 Xrotation Yrotation Zrotation
+				JOINT mSpine3
+				{
+					OFFSET 0.0000 8.0660 -0.6050
+					CHANNELS 3 Xrotation Yrotation Zrotation
+					JOINT mSpine4
+					{
+						OFFSET 0.0000 -8.0660 0.6050
+						CHANNELS 3 Xrotation Yrotation Zrotation
+						JOINT chest
+						{
+							OFFSET 0.0000 8.0660 -0.6050
+							CHANNELS 3 Xrotation Yrotation Zrotation
+							JOINT lCollar
+							{
+								OFFSET 2.8220 6.5116 -0.8157
+								CHANNELS 3 Xrotation Yrotation Zrotation
+								JOINT lShldr
+								{
+									OFFSET 3.1102 0.0000 0.0000
+									CHANNELS 3 Xrotation Yrotation Zrotation
+									JOINT lForeArm
+									{
+										OFFSET 10.9354 0.0000 0.0000
+										CHANNELS 3 Xrotation Yrotation Zrotation
+										JOINT lHand
+										{
+											OFFSET 9.5165 0.0000 0.0000
+											CHANNELS 3 Xrotation Yrotation Zrotation
+											JOINT mHandMiddle1Left
+											{
+												OFFSET 3.9764 0.5905 0.5118
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandMiddle2Left
+												{
+													OFFSET 1.5748 -0.2362 -0.0394
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandMiddle3Left
+													{
+														OFFSET 1.9291 -0.3150 -0.0394
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET 1.2992 -0.2362 -0.0787
+														}
+													}
+												}
+											}
+											JOINT mHandIndex1Left
+											{
+												OFFSET 3.8189 0.5905 1.4961
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandIndex2Left
+												{
+													OFFSET 1.4173 -0.2362 0.6693
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandIndex3Left
+													{
+														OFFSET 1.2598 -0.2362 0.5512
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET 0.9843 -0.1575 0.4331
+														}
+													}
+												}
+											}
+											JOINT mHandRing1Left
+											{
+												OFFSET 3.8976 0.3543 -0.3937
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandRing2Left
+												{
+													OFFSET 1.4961 -0.3150 -0.5118
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandRing3Left
+													{
+														OFFSET 1.5748 -0.3543 -0.5118
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET 1.1024 -0.2362 -0.3937
+														}
+													}
+												}
+											}
+											JOINT mHandPinky1Left
+											{
+												OFFSET 3.7402 0.1181 -1.2205
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandPinky2Left
+												{
+													OFFSET 0.9842 -0.2362 -0.9449
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandPinky3Left
+													{
+														OFFSET 0.7087 -0.1575 -0.5906
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET 0.6299 -0.1575 -0.5118
+														}
+													}
+												}
+											}
+											JOINT mHandThumb1Left
+											{
+												OFFSET 1.0236 0.1575 1.2205
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandThumb2Left
+												{
+													OFFSET 1.2598 -0.0394 1.1024
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandThumb3Left
+													{
+														OFFSET 1.2205 -0.0394 0.9055
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET 0.9843 0.0000 0.5906
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							JOINT rCollar
+							{
+								OFFSET -2.8346 6.5116 -0.8157
+								CHANNELS 3 Xrotation Yrotation Zrotation
+								JOINT rShldr
+								{
+									OFFSET -3.1267 0.0000 0.0000
+									CHANNELS 3 Xrotation Yrotation Zrotation
+									JOINT rForeArm
+									{
+										OFFSET -10.9354 0.0000 0.0000
+										CHANNELS 3 Xrotation Yrotation Zrotation
+										JOINT rHand
+										{
+											OFFSET -9.5236 0.0000 0.0000
+											CHANNELS 3 Xrotation Yrotation Zrotation
+											JOINT mHandMiddle1Right
+											{
+												OFFSET -3.9764 0.5905 0.5118
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandMiddle2Right
+												{
+													OFFSET -1.5748 -0.2362 -0.0394
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandMiddle3Right
+													{
+														OFFSET -1.9291 -0.3150 -0.0394
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET -1.2992 -0.2362 -0.0787
+														}
+													}
+												}
+											}
+											JOINT mHandIndex1Right
+											{
+												OFFSET -3.8189 0.5905 1.4961
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandIndex2Right
+												{
+													OFFSET -1.4173 -0.2362 0.6693
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandIndex3Right
+													{
+														OFFSET -1.2598 -0.2362 0.5512
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET -0.9843 -0.1575 0.4331
+														}
+													}
+												}
+											}
+											JOINT mHandRing1Right
+											{
+												OFFSET -3.8976 0.3543 -0.3937
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandRing2Right
+												{
+													OFFSET -1.4961 -0.3150 -0.5118
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandRing3Right
+													{
+														OFFSET -1.5748 -0.3543 -0.5118
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET -1.1024 -0.2362 -0.3937
+														}
+													}
+												}
+											}
+											JOINT mHandPinky1Right
+											{
+												OFFSET -3.7401 0.1181 -1.2205
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandPinky2Right
+												{
+													OFFSET -0.9842 -0.2362 -0.9449
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandPinky3Right
+													{
+														OFFSET -0.7087 -0.1575 -0.5906
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET -0.6299 -0.1575 -0.5118
+														}
+													}
+												}
+											}
+											JOINT mHandThumb1Right
+											{
+												OFFSET -1.0236 0.1575 1.2205
+												CHANNELS 3 Xrotation Yrotation Zrotation
+												JOINT mHandThumb2Right
+												{
+													OFFSET -1.2598 -0.0394 1.1024
+													CHANNELS 3 Xrotation Yrotation Zrotation
+													JOINT mHandThumb3Right
+													{
+														OFFSET -1.2205 -0.0394 0.9055
+														CHANNELS 3 Xrotation Yrotation Zrotation
+														End Site
+														{
+															OFFSET -0.9843 0.0000 0.5906
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+MOTION
+Frames: 3
+Frame Time: 0.041667
+0.0000 42.0084 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 
+0.0000 42.0084 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 -20.7006 0.0000 44.2660 -13.8010 0.0000 0.0000 -10.6276 -160.3165 32.6152 45.0000 0.0000 0.0000 -1.2201 -2.6772 -16.2862 -1.1066 -2.4321 -16.3202 -1.8457 -2.4884 -16.2618 11.2164 14.1658 -15.4713 3.9228 -3.4661 -10.8998 4.1545 -3.0676 -10.9403 -9.3147 -12.2207 -15.1260 -6.1314 -1.7414 -16.2864 -6.4994 -1.4838 -16.1597 -21.6538 -31.6245 -15.4855 -12.6495 0.1125 -14.7557 -12.5441 -0.1142 -14.8702 4.2497 5.2241 -4.6169 3.9037 5.2301 -4.9021 3.1786 5.5593 -5.0419 -20.7006 0.0000 -44.5845 -13.8010 0.0000 0.0000 -10.6276 160.3165 -41.3836 45.8586 9.8210 -18.6170 -1.6244 3.2239 20.4417 -1.4942 2.9912 20.4728 -2.4208 3.0285 20.4044 12.8029 -13.0093 18.6311 4.8772 4.5379 13.8455 5.1843 4.0392 13.8978 -10.1771 12.3066 16.9024 -6.7861 1.8200 17.9740 -7.1873 1.5311 17.8328 -23.8792 31.3482 17.7005 -14.0019 -0.3188 16.3369 -13.8885 -0.0679 16.4668 3.2133 -4.0302 3.4971 2.9462 -4.0340 3.7181 2.3875 -4.2811 3.8290 
+0.0000 42.0084 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 -20.7006 0.0000 44.2660 -13.8010 0.0000 0.0000 -10.6276 -160.3165 32.6152 45.0000 0.0000 0.0000 -1.2201 -2.6772 -16.2862 -1.1066 -2.4321 -16.3202 -1.8457 -2.4884 -16.2618 11.2164 14.1658 -15.4713 3.9228 -3.4661 -10.8998 4.1545 -3.0676 -10.9403 -9.3147 -12.2207 -15.1260 -6.1314 -1.7414 -16.2864 -6.4994 -1.4838 -16.1597 -21.6538 -31.6245 -15.4855 -12.6495 0.1125 -14.7557 -12.5441 -0.1142 -14.8702 4.2497 5.2241 -4.6169 3.9037 5.2301 -4.9021 3.1786 5.5593 -5.0419 -20.7006 0.0000 -44.5845 -13.8010 0.0000 0.0000 -10.6276 160.3165 -41.3836 45.8586 9.8210 -18.6170 -1.6244 3.2239 20.4417 -1.4942 2.9912 20.4728 -2.4208 3.0285 20.4044 12.8029 -13.0093 18.6311 4.8772 4.5379 13.8455 5.1843 4.0392 13.8978 -10.1771 12.3066 16.9024 -6.7861 1.8200 17.9740 -7.1873 1.5311 17.8328 -23.8792 31.3482 17.7005 -14.0019 -0.3188 16.3369 -13.8885 -0.0679 16.4668 3.2133 -4.0302 3.4971 2.9462 -4.0340 3.7181 2.3875 -4.2811 3.8290 

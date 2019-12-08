@@ -672,18 +672,21 @@ default {
                     g_iFirstRun = FALSE;
                 }
             } else if(llGetSubString(sToken,0,i)=="capture_"){
-                if(llGetSubString(sToken,i+1,-1)=="isActive"){
-                    g_iCaptureIsActive=TRUE;
+                if(llGetSubString(sToken,i+1,-1)=="status"){
+                    integer Flag = (integer)sValue;
+                    if(Flag&4)
+                        g_iCaptureIsActive=TRUE;
                 }
             }
         } else if( iNum == LM_SETTING_DELETE){
             list lParams = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lParams,0);
             string sVariable = llList2String(lParams,1);
-            if(sToken=="capture"){
-                if(sVariable=="isActive")g_iCaptureIsActive=FALSE;
-            } else if(sToken == "auth"){
-                if(sVariable=="tempowner")g_lTempOwner=[];
+            if(sToken == "auth"){
+                if(sVariable=="tempowner"){
+                    g_iCaptureIsActive=FALSE; // Capture will have also been stopped
+                    g_lTempOwner=[];
+                }
             }
         } else if (iNum == AUTH_REQUEST) {//The reply is: "AuthReply|UUID|iAuth" we rerute this to com to have the same prim ID 
             llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);

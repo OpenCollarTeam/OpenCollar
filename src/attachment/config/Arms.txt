@@ -1,0 +1,83 @@
+#
+# Config for Arm-Cuffs
+#
+
+Name:Belt Collar
+Anim:Belt_Collar
+Chains:bluac=bbelt~bruac=bbelt~illac=lbelt~irlac=rbelt~bbelt=bcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Belt
+Anim:cuff-belt2
+Chains:illac=lbelt~irlac=rbelt~iluac=bbelt~iruac=bbelt~bluac=bruac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Pinion
+Anim:cuff-pinion
+Chains:bluac=bruac~bruac=bbelt~bbelt=bluac~fluac=fllac~fruac=frlac~bllac=lbelt~brlac=rbelt
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Front 1
+Anim:LockArmsFront
+Chains:frlac=fllac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Front 2
+Anim:cuff-front
+Chains:frlac=fllac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Front 3
+Anim:Front-Close
+Chains:bllac=brlac~illac=occ~irlac=occ~luac=llac~ruac=rlac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Back 1
+Anim:LockArmsBehind
+Chains:illac=irlac~iruac=iluac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Back 2
+Anim:cuff-back
+Chains:fllac=frlac~fruac=fluac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Back 3
+Anim:cuff-back2
+Chains:bllac=brlac~fllac=frlac~bluac=bruac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Crossed Back 1
+Anim:LockArmsBackCrossed
+Chains:iluac=frlac~iruac=fllac~bllac=blrac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Crossed Back 2
+Anim:winter seale - u-shape2
+Chains:iluac=illac~iruac=irlac~bllac=bbelt~brlac=bbelt
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Head 1
+Anim:LockArmsBehindHead
+Chains:irlac=rcollar~illac=lcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Head 2
+Anim:LockArmsBehindHead2
+Chains:irlac=bcollar~illac=bcollar~luac=illac~ruac=irlac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Head 3
+Anim:cuff-head
+Chains:fllac=lcollar~frlac=rcollar
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Head 4
+Anim:cuff-armsup
+Chains:fluac=lcollar~fruac=rcollar~bllac=brlac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit
+
+Name:Pony
+Anim:Cuff-PonyFront*
+Chains:llac=luac~rlac=ruac
+Restrictions:touchall,showinv,viewnote,viewscript,viewtexture,edit

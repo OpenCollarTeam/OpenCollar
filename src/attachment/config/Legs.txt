@@ -1,0 +1,28 @@
+#
+# Config for Leg-Cuffs
+#
+
+Name:Legs High
+Anim:LockLegsHigh
+Chains:lulc=lllc~rulc=rllc~ilulc=illlc~irulc=irllc
+Restrictions:move,tplm,tplure,tploc
+
+Name:Legs Low
+Anim:LockLegsLow
+Chains:lulc=lllc~rulc=rllc
+Restrictions:move,tplm,tplure,tploc
+
+Name:Shrink
+Anim:Shrink
+Chains:illlc=bbelt~irllc=lbelt~lllc=lulc~rllc=rulc
+Restrictions:tplm,tplure,tploc
+
+Name:Chainonly
+Anim:chainonly
+Chains:irllc=illlc
+Restrictions:move,tplm,tplure,tploc
+
+Name:Sit
+Anim:cuff-sit
+Chains:ilulc=irulc~illlc=irllc
+Restrictions:move,tplm,tplure,tploc
