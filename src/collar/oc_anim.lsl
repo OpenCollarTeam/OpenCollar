@@ -640,6 +640,8 @@ default {
       UserCommand(iNum, sStr, kID);
     } else if (iNum == ANIM_START) {
       StartAnim(sStr);
+    } else if(iNum == -99999){
+        if(sStr == "update_active")state inUpdate;
     } else if (iNum == ANIM_STOP) {
       StopAnim(sStr);
     } else if (iNum == MENUNAME_REQUEST && sStr == "Main") {
