@@ -6,6 +6,7 @@
 integer g_iChan_ocCmd;                      // OpenCollar CMD Channel
 integer g_iChan_ocCmd_Offset = 0xCC0CC;     // OpenCollar CMD Channel Offset
 
+integer g_iChan_OCChain = -9889;
 integer g_iChan_Lockguard = -9119;          // Lockguard listen Channel 
 integer g_iChan_Lockmeister = -8888;        // LockMeister listen Channel
 
@@ -48,8 +49,6 @@ list g_lHidePrims = [];
 
 list g_lMyPoints = [];
 
-string g_sDeviceID = "";
-string g_sMenu = "";
 
 list g_lPoints = [        // occ, lockmeister, lockguard, alt1, alt2
     "rlac"      , "rcuff"       , "rightwrist"          , "wrists"  , "allfour" ,   // right lower arm cuff
@@ -253,12 +252,26 @@ ParseOcChains(string sChainCMD)
     integer i;
     for (i=0; i<llGetListLength(lChains);++i)
     {
+        key kSource = g_kWearer;
+        key kTarget = g_kWearer;
+    
         list lChain = llParseString2List(llList2String(lChains,i),["="],[]);
         string sSource = llList2String(lChain,0);
-        string sTarget = llList2String(lChain,1);
+        list lSource = llParseString2List(sSource,["/"],[]);
+        if (llGetListLength(lSource) > 1){ 
+            kSource = llList2Key(lSource,0);
+            sSource = llList2String(lSource,1);
+        }
         
-        if (llListFindList(g_lMyPoints,[sTarget]) > -1) { // if we are the target, send our key
-            llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhain:"+sSource+"="+(string)findPrimKey(sTarget));
+        string sTarget = llList2String(lChain,1);
+        list lTarget = llParseString2List(sTarget,["/"],[]);
+        if (llGetListLength(lTarget) > 1) {
+            kTarget = llList2Key(lTarget,0);
+            sTarget = llList2String(lTarget,1);
+        }
+        
+        if (llListFindList(g_lMyPoints,[sTarget]) > -1 && kTarget == g_kWearer) { // if we are the target, send our key
+            llRegionSayTo(kSource,g_iChan_OCChain,"occhain:"+sSource+"="+(string)findPrimKey(sTarget));
             g_iTargetedBy++;
             g_bTMPUnhide = TRUE;
             doHide();
@@ -280,13 +293,13 @@ doPose(string sPoseName){
     llRequestPermissions(g_kWearer,PERMISSION_TRIGGER_ANIMATION|PERMISSION_TAKE_CONTROLS);
     integer iPoseIndex = llListFindList(g_lPoses,[sPoseName]);
     if (iPoseIndex > -1) {
-        if (llListFindList(g_lActivePoseIndexes,[iPoseIndex]) > -1) undoPose(sPoseName);
+        if (llListFindList(g_lActivePoseIndexes,[iPoseIndex]) > -1) return; //undoPose(sPoseName);
         
         g_lActivePoseIndexes += [iPoseIndex];
         if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) llStartAnimation(llList2String(g_lPoses,iPoseIndex+1));
         else llOwnerSay("ERROR: Lost Animation permission!");
         ParseOcChains(llList2String(g_lPoses,iPoseIndex+2)); // do our own chains
-        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":occhains:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to do chains
+        llRegionSayTo(g_kWearer,g_iChan_OCChain,"occhains:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to do chains
         list lCatPose = llParseString2List(sPoseName,["|"],[]);
         SendRLV(llList2String(g_lPoses,iPoseIndex+3),llList2String(lCatPose,0),TRUE);
     
@@ -302,7 +315,7 @@ undoPose(string sPoseName){
         
         if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) llStopAnimation(llList2String(g_lPoses,iPoseIndex+1));
         doClearChain(llList2String(g_lPoses,iPoseIndex+2)); // do Clear our own Chains
-        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":clearchain:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to clear chains
+        llRegionSayTo(g_kWearer,g_iChan_OCChain,"clearchain:"+llList2String(g_lPoses,iPoseIndex+2)); // Tell the others to clear chains
         list lCatPose = llParseString2List(sPoseName,["|"],[]);
         SendRLV(llList2String(g_lPoses,iPoseIndex+3),llList2String(lCatPose,0),FALSE);
     }
@@ -354,6 +367,7 @@ init() {
         //llOwnerSay("MyCHannel: "+(string)g_iChan_ocCmd);
         
         llListen(g_iChan_ocCmd, "", NULL_KEY, "");      // Listen to Collar Commands
+        llListen(g_iChan_OCChain, "", NULL_KEY, "");    // Listen to OCChain Channel
         llListen(g_iChan_Lockguard, "", NULL_KEY, "");  // Listen to Lockguard Channel
         llListen(g_iChan_Lockmeister, "", NULL_KEY, "");// Listen to Lockmeister Channel
         
@@ -362,8 +376,6 @@ init() {
         g_lPoses = [];
         g_lSelectedPose = [];
         
-        g_sDeviceID = llList2String(llGetLinkPrimitiveParams(LINK_ROOT,[PRIM_DESC]),0);
-        
         g_lCategory = getCategorys();
         g_iCategoryIndex = 0;
         if (llGetListLength(g_lCategory) > g_iCategoryIndex) {
@@ -371,7 +383,7 @@ init() {
             g_iNCLine = 0;
             llOwnerSay("Loading "+g_sNCName+"...");
             g_kNCQuery = llGetNotecardLine(g_sNCName,g_iNCLine);
-        } else llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
+        } else llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping");
     }
 }
 
@@ -454,7 +466,6 @@ default
         if (kAv != NULL_KEY) {
             g_bRLV = FALSE; // We don't know yet if we are running with RLV
             llResetScript(); // We have a notecard, parse it again!
-            llSetTimerEvent(10);
         } else {
             list lConfigs = getCategorys();
             integer i;
@@ -474,25 +485,12 @@ default
         }
     }
     
-    timer()
-    {
-        llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
-        llSetTimerEvent(0);
-    }
-    
     changed(integer iChange){
-        if (iChange & CHANGED_LINK || iChange & CHANGED_INVENTORY) llResetScript();
-        if (iChange & CHANGED_OWNER) {
-            llOwnerSay("New Owner Detected, Resetting...");
-            llResetScript();
-        }
+        if (iChange & CHANGED_OWNER || iChange & CHANGED_LINK || iChange & CHANGED_INVENTORY) llResetScript();
     }
     
     run_time_permissions(integer iPerm)
     {
-        if (iPerm & PERMISSION_TRIGGER_ANIMATION) {
-
-        }
     }
     
     dataserver(key kQuery, string sData)
@@ -555,8 +553,9 @@ default
                     llOwnerSay("Loading "+g_sNCName+"...");
                     g_kNCQuery = llGetNotecardLine(g_sNCName,g_iNCLine);
                 } else {
-                    llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping:"+g_sDeviceID);
+                    llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer + ":ping");
                     g_lCategory = [];
+                    g_lSelectedPose = [];
                 }
             }
         }
@@ -631,16 +630,19 @@ default
                     }
                 }
             }
-        } else if (iChan == g_iChan_ocCmd) {
+        } else if (iChan == g_iChan_OCChain) {
             //llOwnerSay("Got OC Command:"+sMsg);
             list lOcCMD = llParseString2List(sMsg, [":"],[]);
+            string sCMD = llList2String(lOcCMD,0);
+            if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,1));
+            else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,1));
+            else if (sCMD == "chainkey") llRegionSayTo(kID,g_iChan_OCChain,llList2String(lOcCMD,1)+"="+(string)findPrimKey(llList2String(lOcCMD,1)));
+            else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,1));
+        } else if (iChan == g_iChan_ocCmd) {
+            list lOcCMD = llParseString2List(sMsg, [":"],[]);
             key kOcWearer = llList2Key(lOcCMD,0);
-            string sCMD = llList2String(lOcCMD,1);
-            if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,2));
-            else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,2));
-            else if (sCMD == "chainkey") llRegionSayTo(kID,g_iChan_ocCmd,(string)g_kWearer+":"+llList2String(lOcCMD,2)+"="+(string)findPrimKey(llList2String(lOcCMD,2)));
-            else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,2));
-            else if (sCMD == "collarping") llResetScript();
+            string sCMD = llList2String(lOcCMD,1);  
+            if (sCMD == "collarping") llResetScript();
             if (llGetOwnerKey(kID) == g_kWearer) {  // the following commands can only be send by Attachments!
                 if (sCMD == "lock" && llGetOwnerKey(kID) == g_kWearer) {
                     g_bLocked = TRUE;
