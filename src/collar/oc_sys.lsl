@@ -538,6 +538,8 @@ StartUpdate(){
 
 default {
     state_entry() {
+        if(llGetStartParameter()!=0)state inUpdate;
+        
         g_kWearer = llGetOwner();
         BuildLockElementList();
         
@@ -700,6 +702,8 @@ default {
             llInstantMessage(kID, llGetScriptName()+" LOCKED: "+(string)g_iLocked);
             llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iHide);
             llInstantMessage(kID, llGetScriptName()+" DETACHED WHILE LOCKED: "+(string)g_bDetached);
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }
     }
 
@@ -814,5 +818,10 @@ default {
             RebuildMenu(FALSE, "",0);
         }
         if (!g_iWaitUpdate && !g_iWaitRebuild) llSetTimerEvent(0.0);
+    }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }

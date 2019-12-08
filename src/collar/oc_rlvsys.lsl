@@ -4,7 +4,7 @@
 // Sumi Perl et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
 
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 integer g_iRLVOn = TRUE;
 integer g_iRLVOff = FALSE;
 integer g_iViewerCheck = FALSE;
@@ -347,7 +347,10 @@ default {
     }
 
     state_entry() {
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
+        if (llGetStartParameter()!=0) {
+            state inUpdate;
+        }else
+            llSetRemoteScriptAccessPin(0);
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
         //llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
@@ -569,6 +572,10 @@ default {
             llInstantMessage(kID, llGetScriptName() +" FREE MEMORY: "+(string)llGetFreeMemory()+" bytes");
             llInstantMessage(kID, llGetScriptName()+" RLV_ON: "+(string)g_iRLVOn);
         }
+        
+        if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
+        }
     }
 
     no_sensor() {
@@ -627,5 +634,11 @@ default {
             }
 
         }
+    }
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }

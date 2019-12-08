@@ -275,6 +275,7 @@ default
 {
     state_entry()
     {
+        if(llGetStartParameter()!= 0) state inUpdate;
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",llGetOwner());
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MinCamDist", llGetOwner());
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MaxCamDist", llGetOwner());
@@ -437,6 +438,8 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }else if (iNum == RLV_OFF){
             llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
@@ -475,5 +478,10 @@ default
             llSay(0,MuffleText(sMsg));
             llSetObjectName(sObjectName);
         }
+    }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
