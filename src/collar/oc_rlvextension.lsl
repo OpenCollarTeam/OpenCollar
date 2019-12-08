@@ -275,6 +275,7 @@ default
 {
     state_entry()
     {
+        if(llGetStartParameter()!= 0) state inUpdate;
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",llGetOwner());
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MinCamDist", llGetOwner());
         llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MaxCamDist", llGetOwner());
@@ -475,5 +476,10 @@ default
             llSay(0,MuffleText(sMsg));
             llSetObjectName(sObjectName);
         }
+    }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
