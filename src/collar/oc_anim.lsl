@@ -3,7 +3,7 @@
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,
 // Sumi Perl, Romka Swallowtail, littlemousy, North Glenwalker et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -584,7 +584,9 @@ UserCommand(integer iNum, string sStr, key kID) {
 default {
   on_rez(integer iNum) {
     if (iNum == 825) {
-      llSetRemoteScriptAccessPin(0);
+        state inUpdate;
+    } else {
+        llSetRemoteScriptAccessPin(0);
     }
 
     if (llGetOwner() != g_kWearer) {
@@ -886,4 +888,9 @@ default {
     }
     */
   }
+}
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
 }
