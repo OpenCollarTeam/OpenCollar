@@ -269,7 +269,7 @@ string FormatCommand(string sCommand,integer bEnable)
         else g_bForceMouselook = FALSE;
     }
        
-    llOwnerSay("Restriction '"+sCommand+"' has changed, sending message");
+    //llOwnerSay("Restriction '"+sCommand+"' has changed, sending message");
     llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,sCommand+"="+(string)bEnable+"=-1","");
     
     return sCommand+sMod;
@@ -281,7 +281,7 @@ integer Bool(integer iTest){
 
 ApplyAll(integer iMask1, integer iMask2, integer iBoot)
 {
-    llOwnerSay("Apply All");
+   // llOwnerSay("Apply All");
     list lResult = [];
     integer iMax1 = 1073741824;
     integer iMax2 = 1073741824;
@@ -319,7 +319,7 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
 
 ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 {
-    llOwnerSay("Apply CMD");
+   // llOwnerSay("Apply CMD");
     integer iMenuIndex = llListFindList(lRLVList,[sCommand]);
     if (iMenuIndex > -1) {
         if (llList2Integer(lRLVList,iMenuIndex+5) >= iAuth){
@@ -406,11 +406,11 @@ default
 {
     state_entry()
     {
-        llScriptProfiler(TRUE);
+    //    llScriptProfiler(TRUE);
         if(llGetStartParameter()!=0)state inUpdate;
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
+       // llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
@@ -424,8 +424,8 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
-                llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
-                llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
+               // llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
+            //    llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
                 
                 
                 if(sMenu == "Restrictions~Main"){
