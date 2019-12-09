@@ -66,10 +66,6 @@ integer ATTACHMENT_RESPONSE = 601;
 integer NOTIFY = 1002;
 integer LOADPIN = -1904;
 integer REBOOT = -1000;
-integer LINK_DIALOG = LINK_SET; // = 3;
-integer LINK_RLV = LINK_SET; // = 4;
-integer LINK_SAVE = LINK_SET; // = 5;
-integer LINK_UPDATE = -10;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
@@ -119,7 +115,7 @@ Debug(string sStr) {
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
   key kMenuID = llGenerateKey();
-  llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+  llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
   integer iIndex = llListFindList(g_lMenuIDs, [kID]);
   if (~iIndex) {
@@ -254,7 +250,7 @@ PoseMoveMenu(key kID, integer iAuth) {
 
 AOMenu(key kID, integer iAuth) { // Wrapper to send menu back to the AO's menu
   // com script needs to send this from root
-  llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)iAuth + "|ZHAO_MENU|" + (string)kID, g_kWearer);
+  llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)iAuth + "|ZHAO_MENU|" + (string)kID, g_kWearer);
   llRegionSayTo(g_kWearer, g_iAOChannel, "ZHAO_MENU|" + (string)kID);
 }
 
@@ -267,23 +263,23 @@ integer SetPosture(integer bOn, key kCommander) {
     if (bOn && !g_bPosture) {
       llStartAnimation("~stiff");
       if (kCommander) {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "Posture override active.", kCommander);
+        llMessageLinked(LINK_SET, NOTIFY, "1" + "Posture override active.", kCommander);
       }
-      llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "posture=1","");
+      llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "posture=1","");
     } else if (!bOn) {
       llStopAnimation("~stiff");
-      llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "posture", "");
+      llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "posture", "");
     }
     g_bPosture = bOn;
     return TRUE;
   } else {
-    llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
+    llMessageLinked(LINK_SET, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
     return FALSE;
   }
 }
 
 MessageAOs(string sONOFF, string sWhat) { // send string as "ON" / "OFF" saves 2 llToUpper
-  llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_" + sWhat + sONOFF, g_kWearer);
+  llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_" + sWhat + sONOFF, g_kWearer);
   llRegionSayTo(g_kWearer, g_iAOChannel, "ZHAO_" + sWhat + sONOFF);
   llRegionSayTo(g_kWearer, -8888, (string)g_kWearer + "boot" + llToLower(sONOFF)); // for Firestorm AO
 }
@@ -303,7 +299,7 @@ RefreshAnim() { // g_lAnims can get lost on TP, so re-play g_lAnims[0] here, and
       // string sAnim = llList2String(g_lAnims, 0);
       // if (llGetInventoryType(sAnim) == INVENTORY_ANIMATION) StartAnim(sAnim);  //get and stop currently playing anim
     } else {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Error: Permission to animate lost. Try taking me off and re-attaching me.", g_kWearer);
+      llMessageLinked(LINK_SET, NOTIFY, "0" + "Error: Permission to animate lost. Try taking me off and re-attaching me.", g_kWearer);
     }
   }
 }
@@ -320,7 +316,7 @@ StartAnim(string sAnim) { // Adds anim to queue, calls PlayAnim to play it, and 
       MessageAOs("OFF", "STAND");
     }
   } else {
-    llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
+    llMessageLinked(LINK_SET, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
   }
 }
 
@@ -342,9 +338,9 @@ PlayAnim(string sAnim) { // Plays anim and heightfix, depending on methods confi
   if (g_bRLVaOn && g_bHoverOn) {
     integer iIndex = llListFindList(g_lHeightAdjustments, [sAnim]);
     if (~iIndex) {
-      llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + llList2String(g_lHeightAdjustments, iIndex + 1) + "=force", g_kWearer);
+      llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;" + llList2String(g_lHeightAdjustments, iIndex + 1) + "=force", g_kWearer);
     } else if (g_fStandHover) {
-      llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + (string)g_fStandHover + "=force", g_kWearer);
+      llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;" + (string)g_fStandHover + "=force", g_kWearer);
     }
   }
 
@@ -367,7 +363,7 @@ StopAnim(string sAnim) { // Deals with removing anim from queue, calls UnPlayAni
       }
     }
   } else {
-    llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
+    llMessageLinked(LINK_SET, NOTIFY, "0" + "Error: Somehow I lost permission to animate you. Try taking me off and re-attaching me.", g_kWearer);
   }
 }
 
@@ -377,7 +373,7 @@ UnPlayAnim(string sAnim) { // Stops anim and heightfix, depending on methods con
   }
 
   if (g_bRLVaOn && g_bHoverOn) {
-    llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + (string)g_fStandHover + "=force", g_kWearer);
+    llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;" + (string)g_fStandHover + "=force", g_kWearer);
   }
 
   llStopAnimation(sAnim);
@@ -429,7 +425,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       g_iLastRank = 0;
       StopAnim(g_sCurrentPose);
       g_sCurrentPose = "";
-      llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
+      llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
     }
   } else if (sStr == "animations") {
     AnimMenu(kID, iNum);
@@ -439,36 +435,36 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (g_sCurrentPose != "") {
       StopAnim(g_sCurrentPose);
     }
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
   } else if (sCommand == "posture") {
     if (sValue == "on") {
       if (iNum <= CMD_EVERYONE) {
         g_iLastPostureRank=iNum;
         SetPosture(TRUE, kID);
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PostureRank=" + (string)g_iLastPostureRank, "");
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Your neck is locked in place.", g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "PostureRank=" + (string)g_iLastPostureRank, "");
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "Your neck is locked in place.", g_kWearer);
         if (kID != g_kWearer) {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME%'s neck is locked in place.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "0" + "%WEARERNAME%'s neck is locked in place.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
       }
     } else if ( sValue=="off") {
       if (iNum <= g_iLastPostureRank) {
         g_iLastPostureRank = CMD_EVERYONE;
         SetPosture(FALSE, kID);
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "PostureRank", "");
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "You can move your neck again.", g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "PostureRank", "");
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "You can move your neck again.", g_kWearer);
         if (kID != g_kWearer) {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% is free to move their neck.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "0" + "%WEARERNAME% is free to move their neck.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change posture", kID);
       }
     }
   } else if (sCommand == "rm" && sValue == "pose") {
     if (kID != g_kWearer || g_bAnimLock) {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to delete pose", kID);
+      llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to delete pose", kID);
       return;
     }
 
@@ -486,27 +482,27 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sValue == "on") {
       if (iNum <= CMD_WEARER) {
         g_iLastPoselockRank = iNum;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PoselockRank=" + (string)g_iLastPoselockRank, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "PoselockRank=" + (string)g_iLastPoselockRank, "");
         g_bAnimLock = TRUE;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "animlock=1", "");
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Only owners can change or stop your poses now.", g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "animlock=1", "");
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "Only owners can change or stop your poses now.", g_kWearer);
         if (kID != g_kWearer) {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "0" + "%WEARERNAME% can have their poses changed or stopped only by owners.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
       }
     } else if (sValue == "off") {
       if (iNum <= g_iLastPoselockRank) {
         g_bAnimLock = FALSE;
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "PoselockRank", "");
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "You are now free to change or stop poses on your own.", g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "PoselockRank", "");
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "You are now free to change or stop poses on your own.", g_kWearer);
         if (kID != g_kWearer) {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%WEARERNAME% is free to change or stop poses on their own.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "0" + "%WEARERNAME% is free to change or stop poses on their own.", kID);
         }
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change animlock", kID);
       }
     }
   } else if (sCommand == "ao") {
@@ -515,7 +511,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sValue == "off" || sValue == "on") {
       MessageAOs(llToUpper(sValue), "AO");
     } else {
-      llMessageLinked(LINK_ROOT, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_" + sStr + "|" + (string)kID, kID);
+      llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_" + sStr + "|" + (string)kID, kID);
     }
   } else if (sCommand == "antislide") {
     if (iNum == CMD_OWNER || kID == g_kWearer) {
@@ -523,39 +519,39 @@ UserCommand(integer iNum, string sStr, key kID) {
       if (sValue == "on") {
         if (llGetAnimationOverride("Standing") != "") {
           g_bTweakPoseAO = TRUE;
-          llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "TweakPoseAO=1" , "");
+          llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "TweakPoseAO=1" , "");
           RefreshAnim();
-          llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "AntiSlide is now enabled.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "1" + "AntiSlide is now enabled.", kID);
         } else {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required.\n", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "1" + "\n\nAntiSlide can't be used when a server-side AO is already running. If you are wearing the OpenCollar AO, it will take care of this functionality on its own and AntiSlide is not required.\n", kID);
         }
       } else if (sValue == "off") {
         g_bTweakPoseAO = FALSE;
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "TweakPoseAO", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "TweakPoseAO", "");
         RefreshAnim();
         if (llList2String(lParams,2) == "") {
-          llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "AntiSlide is now disabled.", kID);
+          llMessageLinked(LINK_SET, NOTIFY, "1" + "AntiSlide is now disabled.", kID);
         }
       } else if (sValue == "none") {
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "PoseMoveWalk", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "PoseMoveWalk", "");
         g_sPoseMoveWalk = "";
         g_sPoseMoveRun = "";
         RefreshAnim();
-        llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "AntiSlide animation is \"none\".", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "1" + "AntiSlide animation is \"none\".", kID);
       } else if (llGetInventoryType(llList2String(g_lPoseMoveAnimationPrefix, 0) + sValueNotLower) == INVENTORY_ANIMATION) {
         g_sPoseMoveWalk = llList2String(g_lPoseMoveAnimationPrefix, 0) + sValueNotLower;
         g_sPoseMoveRun = llList2String(g_lPoseMoveAnimationPrefix, 1) + sValueNotLower;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PoseMoveWalk=" + g_sPoseMoveWalk, "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "PoseMoveRun=" + g_sPoseMoveRun, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "PoseMoveWalk=" + g_sPoseMoveWalk, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "PoseMoveRun=" + g_sPoseMoveRun, "");
         RefreshAnim();
-        llMessageLinked(LINK_DIALOG, NOTIFY, "1" + "AntiSlide animation is \"" + sValueNotLower + "\".", kID);
+        llMessageLinked(LINK_SET, NOTIFY, "1" + "AntiSlide animation is \"" + sValueNotLower + "\".", kID);
       } else if (sValue == "") {
         PoseMoveMenu(kID,iNum);
       } else {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Can't find animation " + llList2String(g_lPoseMoveAnimationPrefix, 0) + sValueNotLower, kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0" + "Can't find animation " + llList2String(g_lPoseMoveAnimationPrefix, 0) + sValueNotLower, kID);
       }
     } else {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "Only owners or the wearer can change antislide settings.", g_kWearer);
+      llMessageLinked(LINK_SET, NOTIFY, "0" + "Only owners or the wearer can change antislide settings.", g_kWearer);
     }
   } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
     if (iNum <= g_iLastRank || !g_bAnimLock || g_sCurrentPose == "") {
@@ -563,31 +559,15 @@ UserCommand(integer iNum, string sStr, key kID) {
       g_sCurrentPose = sStr;
       g_iLastRank = iNum;
       StartAnim(g_sCurrentPose);
-      llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
+      llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
     } else {
-      llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "%NOACCESS% to change pose", kID);
+      llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change pose", kID);
     }
-  } else if ((sStr == "show animator") && (iNum == CMD_OWNER || kID == g_kWearer)) {
-    llSetPrimitiveParams([
-      PRIM_TEXTURE, ALL_SIDES, TEXTURE_BLANK, <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0,
-      PRIM_FULLBRIGHT, ALL_SIDES, TRUE
-    ]);
-    llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "\n\nTo hide the animator prim again type:\n\n/%CHANNEL% %PREFIX% hide animator\n", kID);
-  } else if ((sStr == "hide animator") && (iNum == CMD_OWNER || kID == g_kWearer)) {
-    llSetPrimitiveParams([
-      PRIM_TEXTURE, ALL_SIDES, TEXTURE_TRANSPARENT, <1.0, 1.0, 0.0>, ZERO_VECTOR, 0.0,
-      PRIM_FULLBRIGHT, ALL_SIDES, FALSE
-    ]);
-  }
+  } 
 }
 
 default {
   on_rez(integer iNum) {
-    if (iNum == 825) {
-        state inUpdate;
-    } else {
-        llSetRemoteScriptAccessPin(0);
-    }
 
     if (llGetOwner() != g_kWearer) {
       llResetScript();
@@ -603,8 +583,8 @@ default {
   }
 
   state_entry() {
-    if (llGetStartParameter() == 825) {
-      llSetRemoteScriptAccessPin(0);
+    if (llGetStartParameter() != 0) {
+        state inUpdate;
     }
     // llSetMemoryLimit(49152);  // 2015-05-06 (5490 bytes free)
     g_kWearer = llGetOwner();
@@ -613,9 +593,6 @@ default {
     }
     CreateAnimList();
     //Debug("Starting");
-    if (llGetLinkNumber() > LINK_ROOT) {
-      llMessageLinked(LINK_ALL_OTHERS, MVANIM_INIT, "", "");
-    }
   }
 
   run_time_permissions(integer iPerm) {
@@ -657,8 +634,8 @@ default {
         g_iLastRank = 0;
         StopAnim(g_sCurrentPose);
         g_bAnimLock = FALSE;
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "currentpose", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + "animlock", "");
         g_sCurrentPose = "";
       }
     } else if (iNum == ANIM_LIST_REQUEST) {
@@ -716,7 +693,7 @@ default {
         if (sMenuType == "Anim") {
           //Debug("Got message " + sMessage);
           if (sMessage == "BACK") {
-            llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu Main", kAv);
+            llMessageLinked(LINK_SET, iAuth, "menu Main", kAv);
           } else if (sMessage == "Pose") {
             PoseMenu(kAv, 0, iAuth);
           } else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") {
@@ -724,7 +701,7 @@ default {
           } else if (~llListFindList(g_lAnimButtons, [sMessage])) {
             llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
           } else if (sMessage == "AO Menu") {
-            llMessageLinked(LINK_DIALOG, NOTIFY, "0" + "\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n", kAv);
+            llMessageLinked(LINK_SET, NOTIFY, "0" + "\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n", kAv);
             AOMenu(kAv, iAuth);
           } else {
             if (sMessage == "☐ AnimLock") UserCommand(iAuth, "animlock on", kAv);
@@ -749,9 +726,9 @@ default {
               g_fStandHover += fNewHover;
               fNewHover = g_fStandHover;
               if (g_fStandHover) {
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "offset_standhover=" + (string)g_fStandHover, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover=" + (string)g_fStandHover, "");
               } else {
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "offset_standhover", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "offset_standhover", "");
               }
             } else {
               integer iIndex = llListFindList(g_lHeightAdjustments, [g_sCurrentPose]);
@@ -768,8 +745,8 @@ default {
               }
             }
 
-            llMessageLinked(LINK_RLV, RLV_CMD, "adjustheight:1;0;" + (string)fNewHover + "=force", g_kWearer);
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "offset_hovers=" + llDumpList2String(g_lHeightAdjustments, ","), "");
+            llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;" + (string)fNewHover + "=force", g_kWearer);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_hovers=" + llDumpList2String(g_lHeightAdjustments, ","), "");
 
             PoseMenu(kAv, iPage, iAuth);
           } else {
@@ -806,9 +783,9 @@ default {
             if (llGetInventoryType(g_sPose2Remove) == INVENTORY_ANIMATION) {
               if (llGetInventoryPermMask(g_sPose2Remove, MASK_OWNER) & PERM_COPY) {
                 llRemoveInventory(g_sPose2Remove);
-                llMessageLinked(LINK_DIALOG,NOTIFY, "0" + "\n\nThe \"" + g_sPose2Remove + "\" pose has been removed from your %DEVICETYPE%.\n", g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY, "0" + "\n\nThe \"" + g_sPose2Remove + "\" pose has been removed from your %DEVICETYPE%.\n", g_kWearer);
               } else {
-                llMessageLinked(LINK_DIALOG,NOTIFY, "0" + "\n\nThe \"" + g_sPose2Remove + "\" pose has been removed from your %DEVICETYPE% and is now being delivered to you from an object called \"" + llGetObjectName() + "\". This particular pose is not copyable. If you want to keep it, please make sure to accept the inventory.\n", g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY, "0" + "\n\nThe \"" + g_sPose2Remove + "\" pose has been removed from your %DEVICETYPE% and is now being delivered to you from an object called \"" + llGetObjectName() + "\". This particular pose is not copyable. If you want to keep it, please make sure to accept the inventory.\n", g_kWearer);
                 llGiveInventory(g_kWearer, g_sPose2Remove);
               }
             }
@@ -824,11 +801,6 @@ default {
       integer iPin = (integer)llFrand(99999.0) + 1;
       llSetRemoteScriptAccessPin(iPin);
       llMessageLinked(iSender, LOADPIN, (string)iPin + "@" + llGetScriptName(), llGetKey());
-    } else if (iNum == LINK_UPDATE) {
-      if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-      else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-      else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-      else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE, "LINK_ANIM", "");
     } else if (iNum == REBOOT && sStr == "reboot") {
       llResetScript();
     } else if (iNum == RLVA_VERSION) {
@@ -892,5 +864,28 @@ default {
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
         if(iNum == REBOOT)llResetScript();
+        else if(iNum == 0){
+            if(sMsg == "do_move"){
+                
+                if(llGetLinkNumber()==LINK_SET)return;
+                
+                llOwnerSay("Moving oc_anim!");
+                integer i=0;
+                integer end=llGetInventoryNumber(INVENTORY_ALL);
+                for(i=0;i<end;i++){
+                    string item = llGetInventoryName(INVENTORY_ALL,i);
+                    if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
+                        llRemoveInventory(item);
+                    }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
+                        llGiveInventory(kID, item);
+                        llRemoveInventory(item);
+                        i=-1;
+                        end=llGetInventoryNumber(INVENTORY_ALL);
+                    }
+                }
+                
+                llRemoveInventory(llGetScriptName());
+            }
+        }
     }
 }
