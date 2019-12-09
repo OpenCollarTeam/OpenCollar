@@ -39,6 +39,38 @@ integer LM_SETTING_RESPONSE = 2002;//the settings script will send responses on 
 integer LM_SETTING_DELETE = 2003;//delete token from store
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value in the settings store
 
+string gp(integer perm)
+{
+    integer fullPerms = PERM_COPY | PERM_MODIFY | PERM_TRANSFER;
+    integer copyModPerms = PERM_COPY | PERM_MODIFY;
+    integer copyTransPerms = PERM_COPY | PERM_TRANSFER;
+    integer modTransPerms = PERM_MODIFY | PERM_TRANSFER;
+ 
+    string output = "";
+ 
+    if ((perm & fullPerms) == fullPerms)
+        output += "full";
+    else if ((perm & copyModPerms) == copyModPerms)
+        output += "copy & modify";
+    else if ((perm & copyTransPerms) == copyTransPerms)
+        output += "copy & transfer";
+    else if ((perm & modTransPerms) == modTransPerms)
+        output += "modify & transfer";
+    else if ((perm & PERM_COPY) == PERM_COPY)
+        output += "copy";
+    else if ((perm & PERM_TRANSFER) == PERM_TRANSFER)
+        output += "transfer";
+    else
+        output += "none";
+ 
+ 
+    return  output;
+}
+string getperm(string inv)
+{
+    integer perm = llGetInventoryPermMask(inv, MASK_OWNER);
+    return gp(perm);
+}
 Check4Core5Script() {
     integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
     string sScriptName;
@@ -46,7 +78,7 @@ Check4Core5Script() {
         sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
         integer index = llListFindList(g_lCore5Scripts,[sScriptName]);
         if (~index) {
-            llMessageLinked(LINK_ALL_OTHERS,LOADPIN,sScriptName,"");
+            llMessageLinked(LINK_SET,LOADPIN,sScriptName,"");
             g_lCore5Scripts = llDeleteSubList(g_lCore5Scripts,index,index);
             return;
         }
@@ -95,7 +127,9 @@ default {
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
         //llWhisper(g_iStartParam, "reallyready");
+        llSleep(2); // settle for a moment!
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+        llSetTimerEvent(30); // Timeout the settings request in 30 seconds
     }
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
@@ -134,7 +168,7 @@ default {
                             llRemoveInventory(sName);
                             sCmd = "GIVE";
                         } else {
-                            // match.  Skip
+                            // matches. skip
                             sCmd = "SKIP";
                         }
                     } else {
@@ -170,9 +204,11 @@ default {
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
             llSleep(5); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
+            llMessageLinked(LINK_SET, REBOOT, "reboot", "");
+            llSleep(15);
             //restore settings
             if (g_iIsUpdate) {
-                llMessageLinked(LINK_ALL_OTHERS, LINK_UPDATE, "LINK_REQUEST","");
+                llMessageLinked(LINK_SET, LINK_UPDATE, "LINK_REQUEST","");
                 integer n;
                 integer iStop = llGetListLength(g_lSettings);
                 for (n = 0; n < iStop; n++) {
@@ -203,12 +239,26 @@ default {
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
             // celebrate
-            //llOwnerSay("Installation complete!");
+            llOwnerSay("Installation complete!");
+            llSleep(5);
+            integer iDuplicateRemove=0;
+            integer iInvEnd = llGetInventoryNumber(INVENTORY_ANIMATION);
+            for(iDuplicateRemove=0;iDuplicateRemove<iInvEnd;iDuplicateRemove++){
+                string name = llGetInventoryName(INVENTORY_ANIMATION,iDuplicateRemove);
+                if(llGetSubString(name, -2,-1)==" 1"){
+                    string permMask = getperm(name);
+                    if(permMask == "modify & transfer" || permMask == "transfer" || permMask == "none"){}else{
+                        
+                        llRemoveInventory(name);
+                        iDuplicateRemove=-1;
+                        iInvEnd=llGetInventoryNumber(INVENTORY_ANIMATION);
+                    }
+                }
+            }
             if (g_iIsUpdate) {
                 //reboot scripts
                 llSleep(0.5);
-                llMessageLinked(LINK_ALL_OTHERS,CMD_OWNER,"reboot --f",llGetOwner());
-                llMessageLinked(LINK_SET, REBOOT, "", "");
+                llMessageLinked(LINK_SET,CMD_OWNER,"reboot --f",llGetOwner());
             }
             // delete shim script
             llRemoveInventory(llGetScriptName());
@@ -233,9 +283,19 @@ default {
             string sScriptName = llGetSubString(sStr,llSubStringIndex(sStr,"@")+1,-1);
             if (llGetInventoryType(sScriptName) == INVENTORY_SCRIPT) {
                 llRemoteLoadScriptPin(kID, sScriptName, iPin, TRUE, 825);
-                llRemoveInventory(sScriptName);
+                //llRemoveInventory(sScriptName);
+                //llWhisper(0, "Moving script: "+sScriptName+" back to main prim");
+                
             }
+            
+            llSleep(5);
+            llMessageLinked(LINK_ALL_OTHERS, 0, "do_move", llGetLinkKey(llGetLinkNumber()));
         }
+    }
+
+    timer(){
+        llSetTimerEvent(0);
+        llWhisper(g_iStartParam,"reallyready");
     }
 
     changed(integer iChange){
