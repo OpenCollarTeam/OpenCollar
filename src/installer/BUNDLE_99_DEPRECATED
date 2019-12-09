@@ -2,3 +2,5 @@ SCRIPT|oc_root
 SCRIPT|oc_update
 SCRIPT|oc_lock
 SCRIPT|oc_stealth
+SCRIPT|oc_exceptions
+ITEM|S&P_leashholder
