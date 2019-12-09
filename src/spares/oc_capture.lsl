@@ -44,11 +44,6 @@ integer g_iEnabled=FALSE ; // DEFAULT
 integer g_iRisky=FALSE;
 
 integer NOTIFY = 1002;
-
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
 integer LINK_CMD_DEBUG=1999;
 integer REBOOT = -1000;
 
@@ -77,7 +72,7 @@ string ALL = "ALL";
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -115,7 +110,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) {
         if(iNum == CMD_OWNER)
             Menu(kID, iNum);
-        else llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to capture settings", kID);
+        else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture settings", kID);
     }
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
@@ -149,12 +144,12 @@ UserCommand(integer iNum, string sStr, key kID) {
                         g_iExpire = llGetUnixTime()+30;
                         llSetTimerEvent(1);
                     }else{
-                        llMessageLinked(LINK_DIALOG,NOTIFY, "0%NOACCESS% while already captured", kID);
+                        llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% while already captured", kID);
                         return;
                     }
                 }else {
                     if(kID == g_kWearer){
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to capture yourself", g_kWearer);
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture yourself", g_kWearer);
                         return;
                     }
                     integer RetryCount=0;
@@ -164,9 +159,9 @@ UserCommand(integer iNum, string sStr, key kID) {
                         if(g_iRisky){
                             // Instant capture
                             g_kCaptor=kID;
-                            llMessageLinked(LINK_DIALOG, NOTIFY, "0Success", g_kCaptor);
+                            llMessageLinked(LINK_SET, NOTIFY, "0Success", g_kCaptor);
                             g_iCaptured=TRUE;
-                            llMessageLinked(LINK_DIALOG, NOTIFY, "0You have been captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about ! If you need to free yourself, you can always use your safeword '"+g_sSafeword+"'. Also by saying your prefix capture", g_kWearer);
+                            llMessageLinked(LINK_SET, NOTIFY, "0You have been captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about ! If you need to free yourself, you can always use your safeword '"+g_sSafeword+"'. Also by saying your prefix capture", g_kWearer);
                             Commit();
                         }
                         else {
@@ -180,13 +175,13 @@ UserCommand(integer iNum, string sStr, key kID) {
 //                            llSay(0, "=> Ask for consent from wearer <=\n* Not yet implemented");
                         }
                     } else {
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0 Error in capture settings: g_kCaptor; Line 123\n* Attempting repairs", g_kWearer);
+                        llMessageLinked(LINK_SET, NOTIFY, "0 Error in capture settings: g_kCaptor; Line 123\n* Attempting repairs", g_kWearer);
                         g_kCaptor=NULL_KEY;
                         g_iCaptured=FALSE;
                         Commit();
                         RetryCount++;
                         if(RetryCount > 3){
-                            llMessageLinked(LINK_DIALOG,NOTIFY, "0Exceeded maximum retries. Please report this error to OpenCollar!\n"+(string)g_iFlagAtLoad+";"+(string)g_kCaptor,g_kWearer);
+                            llMessageLinked(LINK_SET,NOTIFY, "0Exceeded maximum retries. Please report this error to OpenCollar!\n"+(string)g_iFlagAtLoad+";"+(string)g_kCaptor,g_kWearer);
                             return;
                         }
                         jump Retry;
@@ -219,13 +214,13 @@ Commit(){
     if(g_iCaptured)StatusFlags+=4; // Used in oc_auth mainly to set the captureIsActive flag
     g_iFlagAtLoad=StatusFlags;
     
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "capture_status="+(string)StatusFlags,"");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_status="+(string)StatusFlags,"");
     if(g_iCaptured){
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"");
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "capture_isActive=1", ""); // <--- REMOVE AFTER NEXT RELEASE. This is here only for 7.3 compatibility
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_isActive=1", ""); // <--- REMOVE AFTER NEXT RELEASE. This is here only for 7.3 compatibility
     }else{
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "auth_tempowner", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "capture_isActive", ""); // <------ REMOVE AFTER NEXT RELEASE
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_tempowner", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "capture_isActive", ""); // <------ REMOVE AFTER NEXT RELEASE
     }
 }
 
@@ -239,14 +234,15 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
     }
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
-        else if(iNum == -99999) if(sStr == "update_active")state inUpdate;
+        else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
+        }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -276,12 +272,12 @@ default
                     if(iRespring) Menu(kAv, iAuth);
                 } else if(sMenu == "ConsentPrompt"){
                     if(sMsg == "NO"){
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% by wearer", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% by wearer", g_kCaptor);
                         g_kCaptor=NULL_KEY;
                         Commit();
                     } else if(sMsg == "YES"){
                         g_iCaptured=TRUE;
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0Success", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY, "0Success", g_kCaptor);
                         Commit();
                     }
                     g_iExpire=0;
@@ -290,9 +286,9 @@ default
                     g_iExpireMode=0;
                 } else if(sMenu == "EndPrompt"){
                     if(sMsg == "NO"){
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "0Confirmed. Not Ending Capture", g_kExpireFor);
+                        llMessageLinked(LINK_SET, NOTIFY, "0Confirmed. Not Ending Capture", g_kExpireFor);
                     }else if(sMsg == "YES"){
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1Capture has ended", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY, "1Capture has ended", g_kCaptor);
                         g_iCaptured=FALSE;
                         g_kCaptor=NULL_KEY;
                         Commit();
@@ -304,10 +300,6 @@ default
                     g_iExpireMode=0;
                 }
             }
-        } else if(iNum == LINK_UPDATE){
-            if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
-            if(sStr == "LINK_RLV") LINK_RLV=iSender;
-            if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -336,7 +328,7 @@ default
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         } else if(iNum == CMD_SAFEWORD){
-            if(g_iCaptured)llMessageLinked(LINK_DIALOG,NOTIFY, "0Safeword used, capture has been stopped", g_kCaptor);
+            if(g_iCaptured)llMessageLinked(LINK_SET,NOTIFY, "0Safeword used, capture has been stopped", g_kCaptor);
             g_iCaptured=FALSE;
             g_kCaptor=NULL_KEY;
             Commit();
@@ -355,7 +347,7 @@ default
     timer(){
         if(g_iExpire <=llGetUnixTime()){
             llSetTimerEvent(0);
-            llMessageLinked(LINK_DIALOG,NOTIFY, "0Timed Out.",g_kExpireFor);
+            llMessageLinked(LINK_SET,NOTIFY, "0Timed Out.",g_kExpireFor);
             g_iExpire=0;
             g_kExpireFor="";
             if(g_iExpireMode==1){
