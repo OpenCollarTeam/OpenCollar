@@ -34,10 +34,6 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 string g_sLastOutfit;
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
@@ -71,7 +67,7 @@ integer g_iLockCore = FALSE;
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -184,13 +180,13 @@ integer g_iAccessBitSet=25; // Default modes for outfits
 integer g_iJail;
 Commit(){
     if(g_iLockCore)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
     else
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "outfits_lockcore","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_lockcore","");
 
     if(g_iAccessBitSet>0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "outfits_accessflags", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_accessflags", "");
     
     
     Process();
@@ -222,13 +218,15 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
-        else if(iNum == -99999) if(sStr=="update_active")state inUpdate;
+        else if(iNum == -99999){
+            if(sStr=="update_active")state inUpdate;
+        }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -240,6 +238,8 @@ default
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
                 integer iRespring=TRUE;
+                
+                //llSay(0, sMenu);
                 if(sMenu == "Menu~Main"){
                     if(sMsg == UPMENU) {
                         iRespring=FALSE;
@@ -255,14 +255,14 @@ default
                             iRespring=FALSE;
                             ConfigMenu(kAv, iAuth);
                         }else{
-                            llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to configuration settings", kAv);
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to configuration settings", kAv);
                         }
                         
                     } else if(sMsg == "Browse"){
                         FolderBrowser(kAv,iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Help"){
-                        llMessageLinked(LINK_DIALOG,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
+                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Configure"){
@@ -339,10 +339,6 @@ default
                     if(iRespring)llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                 }
             }
-        } else if(iNum == LINK_UPDATE){
-            if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
-            if(sStr == "LINK_RLV") LINK_RLV=iSender;
-            if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -365,14 +361,13 @@ default
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         }
-        //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     
     timer(){
         if(TimedOut() && g_iListenTimeout!=-1){
             llSetTimerEvent(0);
             if(g_iListenTimeout!=0)
-                llMessageLinked(LINK_DIALOG,NOTIFY, "0Timed out.", g_kListenTo);
+                llMessageLinked(LINK_SET,NOTIFY, "0Timed out.", g_kListenTo);
             g_kListenTo="";
             llListenRemove(g_iListenHandle);
             llListenRemove(g_iSelectionHandler);
