@@ -3,7 +3,7 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
 // Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="7.3";
+string g_sScriptVersion="7.4";
 integer LINK_CMD_DEBUG=1999;
 
 
@@ -24,8 +24,6 @@ integer CMD_WEARER = 503;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
-integer LINK_SAVE = LINK_SET; // = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
@@ -307,7 +305,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
     //LED ON
-    llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
     //send dialog to viewer
     if (llGetListLength(lMenuItems+lUtilityButtons)){
         list lNavButtons;
@@ -316,7 +313,6 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
     //LED OFF
-    llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
     //set dialog timeout
     llSetTimerEvent(g_iReapeat);
     integer ts = llGetUnixTime() + g_iTimeOut;
@@ -397,7 +393,7 @@ CleanList() {
         if (iNow > iDieTime) {
             //Debug("menu timeout");
             key kID = llList2Key(g_lMenus, n + 1);
-            llMessageLinked(LINK_ALL_OTHERS, DIALOG_TIMEOUT, "", kID);
+            llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", kID);
             RemoveMenuStride(n);
         }
     }
@@ -434,8 +430,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             MRSBUN = llDeleteSubList(MRSBUN, i, i);
             Notify(kID,"Verbose Feature de-activated for you.",FALSE);
         } else return; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
-        else llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
+        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
+        else llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
     }
 }
 
@@ -466,14 +462,15 @@ default {
     }
 
     state_entry() {
-        if (llGetStartParameter()==825) llSetRemoteScriptAccessPin(0);
+        if (llGetStartParameter()!=0){
+            state inUpdate;
+        }
         g_kWearer=llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
         if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") 
             g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-        llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_NAME,g_sDeviceName]);
         //Debug("Starting");
     }
 
@@ -501,7 +498,7 @@ default {
                         lButtons = [llDetectedKey(i)];
                         jump next;
                     }
-                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
+                    llMessageLinked(LINK_SET, DIALOG_RESPONSE, llList2String(lParams,0) + "|" + (string)llDetectedKey(i)+ "|0|" + llList2String(lParams,5), (key)llList2String(lSensorInfo,3));
                     //if we have more sensors to run, run another one now, else unlock subsys and quite
                     if (llGetListLength(g_lSensorDetails) > 0)
                         dequeueSensor();
@@ -517,7 +514,7 @@ default {
         string sButtons=llDumpList2String(lButtons,"`");
         lParams=llListReplaceList(lParams,[sButtons],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
+        llMessageLinked(LINK_SET,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
         //if we have more sensors to run, run another one now, else unlock subsys and quite
         if (llGetListLength(g_lSensorDetails) > 0)
             dequeueSensor();
@@ -531,7 +528,7 @@ default {
         list lParams=llParseStringKeepNulls(llList2String(lSensorInfo,2), ["|"], []);
         lParams=llListReplaceList(lParams,[""],3,3);
         //fake fresh dialog call with our new buttons in place, using the rest of the information we were sent
-        llMessageLinked(LINK_THIS,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
+        llMessageLinked(LINK_SET,DIALOG,llDumpList2String(lParams,"|"),(key)llList2String(lSensorInfo,3));
         //if we have more sensors to run, run another one now, else unlock subsys and quit
         if (llGetListLength(g_lSensorDetails) > 0)
             dequeueSensor();
@@ -596,7 +593,7 @@ default {
                         g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [kID, llGetSubString(sCmd, 4, -1)], iIndex, iIndex+1);
                     else
                         g_lRemoteMenus += [kID, llGetSubString(sCmd, 4, -1)];
-                    llMessageLinked(LINK_ALL_OTHERS, iNum, "menu", kID);
+                    llMessageLinked(LINK_SET, iNum, "menu", kID);
                 } else if (llGetSubString(sCmd, 0, 2) == "off") {
                     integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
                     if (~iIndex)
@@ -605,9 +602,9 @@ default {
                 else if (llGetSubString(sCmd, 0, 8) == "response:") {
                     list lParams = llParseString2List(llGetSubString(sCmd, 9, -1), ["|"], []);
                     //llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
-                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, llList2String(lParams, 0) + "|" + llList2String(lParams, 1) + "|" + llList2String(lParams, 2), llList2String(lParams, 3));
+                    llMessageLinked(LINK_SET, DIALOG_RESPONSE, llList2String(lParams, 0) + "|" + llList2String(lParams, 1) + "|" + llList2String(lParams, 2), llList2String(lParams, 3));
                 } else if (llGetSubString(sCmd, 0, 7) == "timeout:")
-                    llMessageLinked(LINK_ALL_OTHERS, DIALOG_TIMEOUT, "", llGetSubString(sCmd, 8, -1));
+                    llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", llGetSubString(sCmd, 8, -1));
             }
         }
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
@@ -635,10 +632,7 @@ default {
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         } else if (iNum == NOTIFY)    Notify(kID,llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
-        else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-            else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_DIALOG","");
-        } else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
+        else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
@@ -681,7 +675,7 @@ default {
                     g_iColorMenu = FALSE;
                 } else sAnswer = sMessage;
                 if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
-                llMessageLinked(LINK_ALL_OTHERS, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
+                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }
         }
     }
@@ -706,5 +700,34 @@ default {
             }
         }
 */
+    }
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
+        else if(iNum == 0){
+            if(sMsg == "do_move"){
+                
+                if(llGetLinkNumber()==LINK_SET)return;
+                
+                llOwnerSay("Moving "+llGetScriptName()+"!");
+                integer i=0;
+                integer end=llGetInventoryNumber(INVENTORY_ALL);
+                for(i=0;i<end;i++){
+                    string item = llGetInventoryName(INVENTORY_ALL,i);
+                    if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
+                        llRemoveInventory(item);
+                    }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
+                        llGiveInventory(kID, item);
+                        llRemoveInventory(item);
+                        i=-1;
+                        end=llGetInventoryNumber(INVENTORY_ALL);
+                    }
+                }
+                
+                llRemoveInventory(llGetScriptName());
+            }
+        }
     }
 }
