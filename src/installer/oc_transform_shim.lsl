@@ -140,9 +140,11 @@ default
     state_entry()
     {
         if (llGetAttached()) {
-            llOwnerSay("I can't do this update while attached.  Please rez me on the ground!");
-            llRemoveInventory(llGetScriptName());
-        }
+            string additional = "You currently have: "+(string)llGetNumberOfPrims()+"\n";
+            if(llGetNumberOfPrims()==1)additional += "* The leash will not appear to be coming directly from a ring, and may appear from the center of the collar object. If you wish to resolve this, please create a small invisible linked prim at the desired location of the chain and name it 'leashpoint' without the quotes.\n \nAlternatively you can just re-run collarizer while the collar is rezzed to add the default leashpoint linkset to your collar. This will still require adjustment of the prim position.";
+            llDialog(llGetOwner(), "OpenCollar\n \n[WARNING]\nStarting update! \n"+additional, ["DISMISS"], -99);
+            state update;
+        }// Else perform linking steps, using the old leashpoint linkset will be fine for this as the automated upgrade will move the scripts to root.
 
         if (llGetStartParameter()) {
             llOwnerSay("I need permission to link a few new child prims to your collar.");
