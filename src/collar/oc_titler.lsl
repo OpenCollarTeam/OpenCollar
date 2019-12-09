@@ -4,7 +4,7 @@
 // Romka Swallowtail, Mano Nevadan, and other contributors.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 string g_sAppVersion = "1.5";
 
 string g_sParentMenu = "Apps";
@@ -27,10 +27,7 @@ integer LINK_CMD_DEBUG = 1999;
 integer NOTIFY = 1002;
 //integer SAY = 1004;
 integer REBOOT              = -1000;
-integer LINK_DIALOG = LINK_SET; //         = 3;
-//integer LINK_RLV = LINK_SET; //            = 4;
-integer LINK_SAVE = LINK_SET; //           = 5;
-integer LINK_UPDATE = -10;
+
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
@@ -79,7 +76,7 @@ list ATTACH_POINT_ROTATIONS = [
 
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string iMenuType) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kRCPT]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kRCPT, kMenuID, iMenuType], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
@@ -198,7 +195,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         string sColor= llDumpList2String(llDeleteSubList(lParams,0,1)," ");
         if (sColor != ""){
             g_vColor=(vector)sColor;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"color="+(string)g_vColor, "");
         }
         ShowHideTitle();
     } else if (sCommand=="titler" && sAction == "box")
@@ -209,7 +206,7 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         
         if(g_sParticle == "" && g_iOn==FALSE) g_iLastRank = CMD_EVERYONE; 
         if(iAuth > g_iLastRank){
-            llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to change titler particles.", kAv);
+            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to change titler particles.", kAv);
             return;
         }
         g_iLastRank=iAuth;
@@ -218,21 +215,21 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         float fNew = g_vPartSize.x + 0.1;
         if (fNew > 2.0) fNew = 2.0;
         g_vPartSize = < fNew, fNew, 0.0 >;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
       } else if (sAction == "smaller") {
         float fNew = g_vPartSize.x - 0.1;
         if (fNew < 0.1) fNew = 0.1;
         g_vPartSize = < fNew, fNew, 0.0 >;
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"particlesize="+(string)g_vPartSize, "");
       } else if (sAction == "off") {
           if(!g_iOn)g_iLastRank=CMD_EVERYONE;
         g_sParticle = "";
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
       } else if (sAction == "custom") {
         Dialog(kAv, "\n- Enter a texture uuid to use as the image", [], [], 0, iAuth, "image");
       } else {
         g_sParticle = FindImage(llGetSubString(sStr, llStringLength("image "), -1));
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
       }
       ShowHideTitle();
     } else if (sCommand == "title") {
@@ -240,55 +237,55 @@ UserCommand(integer iAuth, string sStr, key kAv) {
         if (llGetListLength(lParams) <= 2) iIsCommand = TRUE;
         if(g_sParticle == "" && g_iOn==FALSE) g_iLastRank = CMD_EVERYONE; 
         if ( iAuth > g_iLastRank){ //only change text if commander has same or greater auth 
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"You currently have not the right to change the Titler settings, someone with a higher rank set it!",kAv);
             return;
         }
         else if (sAction == "on") {
             g_iLastRank = iAuth;
             g_iOn = TRUE;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, "");  // save lastrank to DB
         } else if (sAction == "off" && iIsCommand) {
              
             g_iLastRank = CMD_EVERYONE;
             g_iOn = FALSE;
-            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"on", "");
-            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"on", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"auth", ""); // del lastrank from DB
             
         } else if (sAction == "image") {
           string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");
           g_sParticle = sNewText;
           if (sNewText == "") {
-            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"particle", "");
           } else {
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"particle="+g_sParticle, "");
           }
         } else if (sAction == "up" && iIsCommand) {
             g_vPrimScale.z += 0.05 ;
             if(g_vPrimScale.z > max_z) g_vPrimScale.z = max_z ;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
         } else if (sAction ==  "down" && iIsCommand) {
             g_vPrimScale.z -= 0.05 ;
             if(g_vPrimScale.z < min_z) g_vPrimScale.z = min_z ;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"height="+(string)g_vPrimScale.z, "");
         } else {//if (sAction == "text") {
             //string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 1), " ");//pop off the "text" command
             string sNewText= llDumpList2String(llDeleteSubList(lParams, 0, 0), " ");
             g_sText = llDumpList2String(llParseStringKeepNulls(sNewText, ["\\n"], []), "\n");// make it possible to insert line breaks in hover text
             if (sNewText == "") {
                 g_iOn = FALSE;
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingToken+"title", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken+"title", "");
             } else {
                 g_iOn = TRUE;
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"title="+g_sText, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"title="+g_sText, "");
             }
             g_iLastRank=iAuth;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"on="+(string)g_iOn, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"auth="+(string)g_iLastRank, ""); // save lastrank to DB
         }
         ShowHideTitle();
     } else if (sStr == "rm titler") {
-            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to uninstalling titler",kAv);
+            if (kAv!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to uninstalling titler",kAv);
             else ConfirmDeleteMenu(kAv, iAuth);
     }
 }
@@ -320,7 +317,7 @@ default{
         AssembleTextures();
 
         if (g_iTextPrim < 0 && llSubStringIndex(llGetObjectName(), "Updater") == -1) {
-            llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
             llRemoveInventory(llGetScriptName());
         }
         ShowHideTitle();
@@ -356,7 +353,7 @@ default{
                 if (sMenuType == "main") {
                     if (sMessage == SET) UserCommand(iAuth, "titler box", kAv);
                     else if (sMessage == "Color") UserCommand(iAuth, "menu titler color", kAv);
-                    else if (sMessage == UPMENU) llMessageLinked(LINK_ROOT, iAuth, "menu " + g_sParentMenu, kAv);
+                    else if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == "Uninstall") ConfirmDeleteMenu(kAv,iAuth);
                     else if (sMessage == "Image") ImageMenu(kAv,iAuth);
                     else {
@@ -393,18 +390,15 @@ default{
                     UserCommand(iAuth, "menu " + g_sSubMenu, kAv);
                 } else if (sMenuType == "rmtitler") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
             integer iOnlyver=FALSE;
