@@ -14,7 +14,7 @@ DebugOutput(key kID, list ITEMS){
     }
     llInstantMessage(kID, llGetScriptName() +final);
 }
-
+integer g_iIsMoving=FALSE;
 // Needs to handle anim requests from sister scripts as well
 // This script as essentially two layers
 // Lower layer: coordinate animation requests that come in on link messages.  keep a list of playing anims disable AO when needed
@@ -865,10 +865,10 @@ state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
         if(iNum == REBOOT)llResetScript();
         else if(iNum == 0){
-            if(sMsg == "do_move"){
+            if(sMsg == "do_move" && !g_iIsMoving){
                 
                 if(llGetLinkNumber()==LINK_SET)return;
-                
+                g_iIsMoving=TRUE;
                 llOwnerSay("Moving oc_anim!");
                 integer i=0;
                 integer end=llGetInventoryNumber(INVENTORY_ALL);
@@ -877,10 +877,14 @@ state inUpdate{
                     if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
                         llRemoveInventory(item);
                     }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
-                        llGiveInventory(kID, item);
-                        llRemoveInventory(item);
-                        i=-1;
-                        end=llGetInventoryNumber(INVENTORY_ALL);
+                        if (llGetInventoryPermMask( item, MASK_OWNER ) & PERM_COPY){
+                            llGiveInventory(kID, item);
+                            llRemoveInventory(item);
+                            i=-1;
+                            end=llGetInventoryNumber(INVENTORY_ALL);
+                        } else {
+                            llOwnerSay("Item '"+item+"' is no-copy and can not be moved! Please move it manually!");
+                        }
                     }
                 }
                 
