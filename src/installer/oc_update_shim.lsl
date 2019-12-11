@@ -205,7 +205,8 @@ default {
             llRegionSayTo(kID, iChannel, sResponse);
         } else if (sMsg == "Core5Done") Check4Core5Script();
         else if (!llSubStringIndex(sMsg, "DONE")){
-            llSleep(5); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
+            llOwnerSay("Restoring settings");
+            llSleep(15); // WAIT A FEW SECONDS TO ALLOW EVERYTHING TO SETTLE DOWN
             llMessageLinked(LINK_SET, REBOOT, "reboot", "");
             llSleep(15);
             //restore settings
@@ -263,7 +264,7 @@ default {
                 llMessageLinked(LINK_SET,CMD_OWNER,"reboot --f",llGetOwner());
             }
             
-            llSleep(10);
+            llSleep(15); // oc_sys sleeps for 10 seconds
             llOwnerSay("Fixing menus ...");
             llMessageLinked(LINK_SET, CMD_OWNER, "fix", llGetOwner());
             llSleep(5);
