@@ -20,11 +20,6 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
-integer LINK_AUTH = -15;
 integer REBOOT = -1000;
 
 integer LINK_CMD_RESTRICTIONS = -2576;
@@ -100,7 +95,7 @@ list g_lDeviceMenu = [];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -212,25 +207,25 @@ UserCommand(integer iNum, string sStr, key kID) {
                     } else if (llToLower(llList2String(lPose,1)) == llToLower(sParam)) sRealPoseName = llList2String(g_lPoses,i);
                 }
                 if (sRealPoseName) doPose(sRealPoseName,iNum,kID);
-                else llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Pose '"+sParam+"' is not registered!", kID);
+                else llMessageLinked(LINK_SET, NOTIFY, "0"+"Pose '"+sParam+"' is not registered!", kID);
             }
         } else if (sCmd == "clear") doClearAllPoses();
         else if (sCmd == "hide"){
             g_bHidden = TRUE;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
         } else if (sCmd == "show"){
             g_bHidden = FALSE;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
         } else if (sCmd == "lock"){
                 lock(TRUE, TRUE);
-                llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Attachments are now Locked", kID);
-                if (kID != g_kWearer) llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Your Attachments are now Locked", g_kWearer);
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Attachments are now Locked", kID);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"Your Attachments are now Locked", g_kWearer);
         } else if (sCmd == "unlock"){
             if (iNum != CMD_WEARER) {
                 lock(FALSE, TRUE);
-                llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Attachments are now Unlocked", kID);
-                if (kID != g_kWearer) llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Your Attachments are now Unlocked", g_kWearer);
-            } else llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"%NOACCESS%", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"Attachments are now Unlocked", kID);
+                if (kID != g_kWearer) llMessageLinked(LINK_SET, NOTIFY, "0"+"Your Attachments are now Unlocked", g_kWearer);
+            } else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         } else if (sCmd != "") {
             string sRealPoseName = "";
             integer i;
@@ -241,7 +236,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 } else if (llToLower(llList2String(lPose,1)) == llToLower(sCmd)) sRealPoseName = llList2String(g_lPoses,i);
             }
             if (sRealPoseName) doPose(sRealPoseName,iNum,kID);
-            else llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Pose '"+sCmd+"' is not registered!", kID);
+            else llMessageLinked(LINK_SET, NOTIFY, "0"+"Pose '"+sCmd+"' is not registered!", kID);
         } else Menu(kID,iNum);
     }
 }
@@ -257,7 +252,7 @@ lock(integer bEnable, integer bSave)
     }
     g_bLocked = bEnable;
     
-    if (bSave) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_lock="+(string)bEnable, NULL_KEY);
+    if (bSave) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_lock="+(string)bEnable, NULL_KEY);
 }
 
 string getCategoryPose(string sCategory)
@@ -279,7 +274,7 @@ doClearAllPoses() {
         llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":clearpose:"+llList2String(lAPoses,i));
     }
     g_lActivePoses = [];
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
 }
 
 
@@ -320,13 +315,13 @@ applyRLV(string sNewPose){
 doPose(string sPose, integer iAuth, key kID){
     string sCategory = llList2String(llParseString2List(sPose,["|"],[]),0);
     string sStopPose = getCategoryPose(sCategory);
-    if (llGetListLength(g_lActivePoses) > 0 && iAuth == CMD_WEARER && sStopPose != "") llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"%NOACCESS%", kID);
+    if (llGetListLength(g_lActivePoses) > 0 && iAuth == CMD_WEARER && sStopPose != "") llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
         else {
             integer iActiveIndex = llListFindList(g_lActivePoses,[sPose]);
             if (iActiveIndex > -1) {
                 llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":clearpose:"+sPose);
                 g_lActivePoses = llDeleteSubList(g_lActivePoses,iActiveIndex,iActiveIndex);
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
             } else {
                 if (sStopPose != "") {
                     llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":clearpose:"+sStopPose);
@@ -334,7 +329,7 @@ doPose(string sPose, integer iAuth, key kID){
                     if (iStopPoseIndex > -1) g_lActivePoses = llDeleteSubList(g_lActivePoses,iStopPoseIndex,iStopPoseIndex);
                 }
                 g_lActivePoses += [sPose];
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
+                llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_Poses="+llDumpList2String(g_lActivePoses,","), NULL_KEY);
             }
             if (g_sCurrentCollarPose != "") { // Reapply current Collar pose Chains
                 integer iIndex = llListFindList(g_lCollarPoses,[g_sCurrentCollarPose]);
@@ -352,6 +347,7 @@ default
     }
     state_entry()
     {
+        if(llGetStartParameter()!=0)state inUpdate;
         integer iPrimNum = llGetNumberOfPrims();
         integer i;
         for (i=1; i<iPrimNum;++i)
@@ -368,12 +364,12 @@ default
         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":collarping");
         g_lCollarPoses = [];
         
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",g_kWearer);
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
         
         if (llGetInventoryType(g_sNCName) == INVENTORY_NOTECARD)
         {
@@ -434,14 +430,14 @@ default
                     else if (sMsg == g_sChecked+"Locked") { 
                         if (iAuth != CMD_WEARER) {
                             lock(FALSE, TRUE);
-                            llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Attachments are now Unlocked", kAv);
-                            llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Your Attachments are now Unlocked", g_kWearer);
-                        } else llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"%NOACCESS%", kAv);
+                            llMessageLinked(LINK_SET, NOTIFY, "0"+"Attachments are now Unlocked", kAv);
+                            llMessageLinked(LINK_SET, NOTIFY, "0"+"Your Attachments are now Unlocked", g_kWearer);
+                        } else llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
                         Menu(kAv, iAuth);
                     } else if (sMsg == g_sUnChecked+"Locked") {
                         lock(TRUE, TRUE);
-                        llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Attachments are now Locked", kAv);
-                        llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"Your Attachments are now Locked", g_kWearer);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Attachments are now Locked", kAv);
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+"Your Attachments are now Locked", g_kWearer);
                         Menu(kAv, iAuth);
                     } else if (sMsg == "Poses") PosesMenu(kAv,iAuth);
                     else if (sMsg == "Clear All") {
@@ -458,40 +454,40 @@ default
                     if (sMsg == UPMENU) Menu(kAv,iAuth);
                     else if (sMsg == g_sChecked+"Hide") {
                         g_bHidden = FALSE;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Settings");
                     } else if (sMsg == g_sUnChecked+"Hide") {
                         g_bHidden = TRUE;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_hide="+(string)g_bHidden, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Settings");
                     } else if (sMsg == "Chains") SettingsMenu(kAv,iAuth,sMsg);
                     else if (sMsg == "Sync") SettingsMenu(kAv,iAuth,sMsg);
                     else if (sMsg == g_sChecked+"Sync Lock") {
                         g_bSyncLock = FALSE;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_synclock="+(string)g_bSyncLock, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_synclock="+(string)g_bSyncLock, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Sync");
                     } else if (sMsg == g_sUnChecked+"Sync Lock") {
                         g_bSyncLock = TRUE;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_synclock="+(string)g_bSyncLock, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_synclock="+(string)g_bSyncLock, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Sync");
                     } else if (sMsg == "ReSync Now"){
                         llRegionSayTo(g_kWearer,g_iChan_ocCmd,(string)g_kWearer+":collarping");
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",g_kWearer);
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
-                        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
+                        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
                         if (g_bRLV) llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:1");
                         else llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:0");
                          SettingsMenu(kAv,iAuth,"Sync");
                     } else if (sMsg == g_sUnChecked+"Chain") {
                         g_kTexture = g_kChainTexture;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_chaintex="+(string)g_kTexture, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_chaintex="+(string)g_kTexture, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Chains");
                     } else if (sMsg == g_sUnChecked+"Rope") {
                         g_kTexture = g_kRopeTexture;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "Cuffs_chaintex="+(string)g_kTexture, NULL_KEY);
+                        llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "Cuffs_chaintex="+(string)g_kTexture, NULL_KEY);
                         SettingsMenu(kAv,iAuth,"Chains");
                     } else if (sMsg == g_sChecked+"Chain" || sMsg == g_sChecked+"Rope") SettingsMenu(kAv,iAuth,"Chains");
                 } else {
@@ -513,11 +509,8 @@ default
                     }
                 }
             }
-        } else if(iNum == LINK_UPDATE){
-            if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
-            if(sStr == "LINK_RLV") LINK_RLV=iSender;
-            if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
-            if(sStr == "LINK_AUTH") LINK_AUTH = iSender;
+        } else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -575,7 +568,7 @@ default
             list lResponse = llParseString2List(sStr,["|"], []);
             if (llList2String(lResponse,0) == "AuthReply"){
                 if ((string)kID =="cuffmenu" && llList2Integer(lResponse,2) <= CMD_EVERYONE) Menu(llList2Key(lResponse,1),llList2Integer(lResponse,2));
-                else if (llList2Integer(lResponse,2) > CMD_EVERYONE) llMessageLinked(LINK_ALL_OTHERS, NOTIFY, "0"+"%NOACCESS%", llList2Key(lResponse,1));
+                else if (llList2Integer(lResponse,2) > CMD_EVERYONE) llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", llList2Key(lResponse,1));
             }
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR) {
             doClearAllPoses();
@@ -592,7 +585,7 @@ default
     }
     
     changed (integer iChange){
-        if (iChange & CHANGED_INVENTORY) llResetScript();
+        if (iChange & CHANGED_INVENTORY) llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "anim_currentpose",g_kWearer); //llResetScript();
     }
     
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -634,18 +627,24 @@ default
                 } else if (sCMD == "rlvcmd") {
                     llMessageLinked(LINK_SET,RLV_CMD,llList2String(lCMD,3),sParam);
                 } else if (sCMD == "ping") {
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",g_kWearer);
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
-                    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_synclock",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_chaintex",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_Poses",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_lock",g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "Cuffs_hide",g_kWearer);
                     if (g_bRLV) llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:1");
                     else llRegionSayTo(g_kWearer, g_iChan_ocCmd, (string)g_kWearer+":RLV:0");
                 } else if (sCMD == "requestpose") {
                     if (llListFindList(g_lPoses,[sParam]) > -1) doPose(sParam,CMD_OWNER,NULL_KEY);
-                } else if (sCMD == "menu") llMessageLinked(LINK_AUTH,AUTH_REQUEST,"cuffmenu",(key)sParam); // Check auth before opening the Menu
+                } else if (sCMD == "menu") llMessageLinked(LINK_THIS,AUTH_REQUEST,"cuffmenu",(key)sParam); // Check auth before opening the Menu
             }
         }
+    }
+}
+
+state inUpdate{
+    link_message(integer iSender, integer iNum, string sMsg, key kID){
+        if(iNum == REBOOT)llResetScript();
     }
 }
