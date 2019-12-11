@@ -7,7 +7,7 @@ Copyright ©2019
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
 Lillith (Lillith Xue)
-    * Dec 2019      - Helped with the bug in Beta 2 where a menu user who was not wearer could not browse.
+    * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
 et al.
 
@@ -406,7 +406,7 @@ default
             // Viewer reply!
             // Delimiters : ,
             list Options = llParseString2List(sMsg,[","],[]);
-            DoBrowserPath(Options, g_kListenTo, g_iListenToAuth);
+            DoBrowserPath(llListSort(Options,0,TRUE), g_kListenTo, g_iListenToAuth);
             
         }
             
