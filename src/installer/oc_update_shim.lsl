@@ -127,9 +127,11 @@ default {
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
         //llWhisper(g_iStartParam, "reallyready");
-        llSleep(2); // settle for a moment!
+        llSleep(5); // settle for a moment: oc_settings will not be ready right away to handle our request
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
-        llSetTimerEvent(30); // Timeout the settings request in 30 seconds
+        llResetTime();
+        llSetTimerEvent(1); // Timeout the settings request in 30 seconds
+        
     }
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
@@ -239,7 +241,7 @@ default {
             // remove the script pin
             llSetRemoteScriptAccessPin(0);
             // celebrate
-            llOwnerSay("Installation complete!");
+            llOwnerSay("Installation is finishing!");
             llSleep(5);
             integer iDuplicateRemove=0;
             integer iInvEnd = llGetInventoryNumber(INVENTORY_ANIMATION);
@@ -260,6 +262,12 @@ default {
                 llSleep(0.5);
                 llMessageLinked(LINK_SET,CMD_OWNER,"reboot --f",llGetOwner());
             }
+            
+            llSleep(10);
+            llOwnerSay("Fixing menus ...");
+            llMessageLinked(LINK_SET, CMD_OWNER, "fix", llGetOwner());
+            llSleep(5);
+            llOwnerSay("Installation Completed!");
             // delete shim script
             llRemoveInventory(llGetScriptName());
         }
@@ -274,6 +282,8 @@ default {
                     g_lSettings += [sStr];
                 }
             }else{
+                llOwnerSay("Got Settings! Starting Update");
+                llSetTimerEvent(0);
                 llWhisper(g_iStartParam, "reallyready");
                 llMessageLinked(LINK_SET, -99999, "update_active", "");
             }
@@ -294,8 +304,20 @@ default {
     }
 
     timer(){
-        llSetTimerEvent(0);
-        llWhisper(g_iStartParam,"reallyready");
+        if(llGetTime()>30){
+            llSetTimerEvent(0);
+            llOwnerSay("Starting Update");
+            llWhisper(g_iStartParam,"reallyready");
+        } else if(llGetTime()>5 && llGetTime()<6.9){
+            llOwnerSay("* oc_settings has not yet sent us settings! Retry (Count:1)");
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+        } else if(llGetTime()>15 && llGetTime()<16.9){
+            llOwnerSay("* oc_settings has not yet sent us settings! Retry (Count:2)");
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+        } else if(llGetTime()>25 && llGetTime()<26.9){
+            llOwnerSay("* last try to get oc_settings memory!");
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+        }
     }
 
     changed(integer iChange){
