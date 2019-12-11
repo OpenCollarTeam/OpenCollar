@@ -812,7 +812,7 @@ state inUpdate{
                 
                 if(llGetLinkNumber()==LINK_SET)return;
                 
-                llOwnerSay("Moving oc_anim!");
+                llOwnerSay("Moving oc_auth!");
                 integer i=0;
                 integer end=llGetInventoryNumber(INVENTORY_ALL);
                 for(i=0;i<end;i++){
