@@ -158,13 +158,6 @@
       "ScriptPath": null,
       "FileExt": ".lsl"
     },
-    ".": {
-      "ScriptName": ".",
-      "Type": "notecard",
-      "Container": "installer",
-      "ScriptPath": null,
-      "FileExt": "info"
-    },
     "oc_installer_bundles": {
       "ScriptName": "oc_installer_bundles",
       "Type": "script",
