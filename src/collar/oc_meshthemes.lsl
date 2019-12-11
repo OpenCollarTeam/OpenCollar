@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2017 Nirea Resident
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -15,8 +15,6 @@ integer CMD_WEARER = 503;
 
 integer LINK_CMD_DEBUG=1999;
 
-integer LINK_DIALOG = LINK_SET; //         = 3;
-integer LINK_UPDATE = -10;
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
@@ -48,7 +46,7 @@ ApplyFace(string sRule) {
     integer bump = llList2Integer(lParts, 5);
     float glow = llList2Float(lParts, 6);
     llSetLinkPrimitiveParamsFast(
-        LINK_ROOT,
+        LINK_SET,
         [
             PRIM_TEXTURE, face, tex, <1,1,0>, <0,0,0>, 0,
             PRIM_COLOR, face, color, alpha,
@@ -61,7 +59,7 @@ ApplyFace(string sRule) {
 ApplyTheme(string sTheme, key kID) {
     integer idx = llListFindList(g_lThemes, [sTheme]);
     if (~idx) {
-        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Applying the "+sTheme+" theme...",kID);
+        llMessageLinked(LINK_SET,NOTIFY,"1"+"Applying the "+sTheme+" theme...",kID);
         
         list lLines = llParseStringKeepNulls(llList2String(g_lThemes, idx + 1), ["\n"], []);
         integer stop = llGetListLength(lLines);
@@ -70,13 +68,13 @@ ApplyTheme(string sTheme, key kID) {
             ApplyFace(llList2String(lLines, n));
         }
     } else {
-        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"There is no theme named " + sTheme,kID);
+        llMessageLinked(LINK_SET,NOTIFY,"1"+"There is no theme named " + sTheme,kID);
     }
 }
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth) {
     g_kDialog = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, g_kDialog);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, g_kDialog);
 }
 
 ThemeMenu(key kID, integer iAuth) {
@@ -134,15 +132,13 @@ default
             } else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
                 HideShow(sCommand);
             }
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
         } else if (iNum == DIALOG_RESPONSE && kID == g_kDialog) {
             list lParts = llParseString2List(sStr, ["|"], []);
             key av = llList2Key(lParts, 0);
             string button = llList2String(lParts, 1);
             integer auth = llList2Integer(lParts, 3);
             if (button == "BACK") {
-                llMessageLinked(LINK_THIS, auth, "menu Settings", av);
+                llMessageLinked(LINK_SET, auth, "menu Settings", av);
             } else {
                 ApplyTheme(button, av);
                 ThemeMenu(av, auth);

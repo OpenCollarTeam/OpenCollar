@@ -22,10 +22,6 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LINK_CMD_DEBUG=1999;
 integer LINK_CMD_RESTRICTIONS = -2576;
@@ -133,8 +129,8 @@ SetMuffle(integer bEnable)
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     if (sName == "Restrictions~sensor" || sName == "find")
-    llMessageLinked(LINK_DIALOG, DIALOG_SENSOR, (string)kID +"|"+sPrompt+"|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI+"`"+llDumpList2String(lUtilityButtons,"`")+"|"+llDumpList2String(lChoices,"`")+"|" + (string)iAuth, kMenuID);
-    else llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG_SENSOR, (string)kID +"|"+sPrompt+"|0|``"+(string)(SCRIPTED|PASSIVE)+"`20`"+(string)PI+"`"+llDumpList2String(lUtilityButtons,"`")+"|"+llDumpList2String(lChoices,"`")+"|" + (string)iAuth, kMenuID);
+    else llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -196,7 +192,7 @@ MenuSetValue(key kID, integer iAuth, string sValueName) {
 }
 
 ApplyAllExceptions(){
-    llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
+    llMessageLinked(LINK_SET,RLV_CMD,"clear","Exceptions");
     list lCmd = [];
     integer iExIndex;
     for (iExIndex=1; iExIndex<llGetListLength(lRLVEx);iExIndex=iExIndex + 3){
@@ -219,17 +215,17 @@ ApplyAllExceptions(){
     
     //llOwnerSay("DEBUG: Apply Exceptions: "+llDumpList2String(lCmd,","));
     
-    llMessageLinked(LINK_RLV,RLV_CMD,llDumpList2String(lCmd,","),"Exceptions");
+    llMessageLinked(LINK_SET,RLV_CMD,llDumpList2String(lCmd,","),"Exceptions");
     Save();
 }
 
 Save(){
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_MinCamDist="+(string)g_fMinCamDist, "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_MaxCamDist="+(string)g_fMaxCamDist, "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_BlurAmount="+(string)g_iBlurAmount, "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_Muffle="+(string)g_bMuffle, "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_Owner="+(string)g_iOwnerEx, "");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "RLVExt_Trusted="+(string)g_iTrustedEx, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_MinCamDist="+(string)g_fMinCamDist, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_MaxCamDist="+(string)g_fMaxCamDist, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_BlurAmount="+(string)g_iBlurAmount, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Muffle="+(string)g_bMuffle, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Owner="+(string)g_iOwnerEx, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Trusted="+(string)g_iTrustedEx, "");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -239,7 +235,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     else if (sStr=="rlvsettings" || sStr == "menu "+g_sSubMenu3) {
         if (iNum < CMD_EVERYONE) MenuSettings(kID,iNum);
         else {
-            llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"%NOACCESS%", kID);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kID);
             llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
         }
     } else { 
@@ -248,12 +244,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
             if (sChangekey == g_sChecked+"Strict" && iNum != CMD_WEARER) {
-                llMessageLinked(LINK_THIS, LINK_CMD_RESTRICTIONS,"Stand Up=0="+(string)iNum,kID);
+                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=0="+(string)iNum,kID);
                 g_bCanStand = !g_bCanStand;
                 //ApplyCommand("Stand Up",FALSE,kID, iNum);
                 MenuForceSit(kID, iNum);
             } else if (sChangekey == g_sUnChecked+"Strict") {
-                llMessageLinked(LINK_THIS, LINK_CMD_RESTRICTIONS,"Stand Up=1="+(string)iNum,kID);
+                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=1="+(string)iNum,kID);
                 g_bCanStand = !g_bCanStand;
                 //ApplyCommand("Stand Up",TRUE,kID, iNum);
                 MenuForceSit(kID, iNum);
@@ -261,10 +257,10 @@ UserCommand(integer iNum, string sStr, key kID) {
                 string sTmp = "y";
                 if (g_bCanStand) sTmp = "n";
                 else sTmp = "y";
-                llMessageLinked(LINK_RLV,RLV_CMD,"unsit=y,unsit=force,unsit="+sTmp,"Macros");
+                llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force,unsit="+sTmp,"Macros");
                 MenuForceSit(kID, iNum);
             } else {
-                llMessageLinked(LINK_RLV,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
+                llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
                 MenuForceSit(kID, iNum);
             }
         }
@@ -276,14 +272,6 @@ default
     state_entry()
     {
         if(llGetStartParameter()!= 0) state inUpdate;
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked",llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MinCamDist", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_MaxCamDist", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_BlurAmount", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Muffle", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Owner", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "RLVExt_Trusted", llGetOwner());
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "auth_owner",llGetOwner());
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
@@ -325,7 +313,7 @@ default
                 if (iAuth == CMD_OWNER) {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else MenuSetExceptions(kAv, iAuth, sMsg);
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Acces Denied!", kAv);
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Acces Denied!", kAv);
                 } else if (sMenu == "Force Sit") MenuForceSit(kAv,iAuth);
                 else if (sMenu == "Restrictions~sensor") {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
@@ -334,7 +322,7 @@ default
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "Exceptions"){
                         if (iAuth <= CMD_OWNER) MenuExceptions(kAv, iAuth);
-                        else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Acces Denied!", kAv);
+                        else llMessageLinked(LINK_SET, NOTIFY, "0"+"Acces Denied!", kAv);
                     } else if (sMsg == "Camera") MenuCamera(kAv, iAuth);
                     else if (sMsg == "Chat") MenuChat(kAv, iAuth);
                 } else if (sMenu == "Settings~Camera") {
@@ -367,7 +355,7 @@ default
                                 else if (sMsg == "-0.1") g_fMinCamDist -= 0.1;
                                 if (g_fMinCamDist < 0.5) g_fMinCamDist = 0.5;
                                 else if (g_fMinCamDist > g_fMaxCamDist) g_fMinCamDist = g_fMaxCamDist;
-                                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMinCamDist,kAv);
+                                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMinCamDist,kAv);
                             } else if (llList2String(lMenu,1) == "MaxCamDist") {
                                 if (sMsg == "+1.0") g_fMaxCamDist += 1.0;
                                 else if (sMsg == "+0.5") g_fMaxCamDist += 0.5;
@@ -377,7 +365,7 @@ default
                                 else if (sMsg == "-0.1") g_fMaxCamDist -= 0.1;
                                 if (g_fMaxCamDist < g_fMinCamDist) g_fMaxCamDist = g_fMinCamDist;
                                 else if (g_fMaxCamDist > 20.0) g_fMaxCamDist = 20.0;
-                                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMaxCamDist,kAv);
+                                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMaxCamDist,kAv);
                             } else if (llList2String(lMenu,1) == "BlurAmount") {
                                 if (sMsg == "+1.0") g_iBlurAmount += 1;
                                 else if (sMsg == "+0.5") g_iBlurAmount += 1;
@@ -387,7 +375,7 @@ default
                                 else if (sMsg == "-0.1") g_iBlurAmount -= 1;
                                 if (g_iBlurAmount < 2) g_iBlurAmount = 2;
                                 else if (g_iBlurAmount > 30) g_iBlurAmount = 30;
-                                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_iBlurAmount,kAv);
+                                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_iBlurAmount,kAv);
                             }
                             Save();
                             MenuSetValue(kAv,iAuth,llList2String(lMenu,1));
@@ -395,10 +383,6 @@ default
                     }
                 }
             }
-        } else if(iNum == LINK_UPDATE){
-            if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
-            if(sStr == "LINK_RLV") LINK_RLV=iSender;
-            if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if(iNum == LM_SETTING_RESPONSE){
         // Detect here the Settings
             list lParams = llParseString2List(sStr, ["="], []);
@@ -407,13 +391,13 @@ default
              integer i = llSubStringIndex(sToken, "_");
             if (sToken == "RLVExt_MinCamDist") {
                 g_fMinCamDist = (float)sValue;
-                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
+                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
             } else if (sToken == "RLVExt_MaxCamDist") {
                 g_fMaxCamDist = (float)sValue;
-                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
+                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
             } else if (sToken == "RLVExt_BlurAmount") {
                 g_iBlurAmount = (integer)sValue;
-                llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
+                llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
             } else if (sToken == "RLVExt_Muffle") { 
                 g_bMuffle = (integer)sValue;
                 SetMuffle(g_bMuffle);
@@ -441,14 +425,14 @@ default
         } else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         }else if (iNum == RLV_OFF){
-            llMessageLinked(LINK_RLV,RLV_CMD,"clear","Exceptions");
+            llMessageLinked(LINK_SET,RLV_CMD,"clear","Exceptions");
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
             ApplyAllExceptions();
             SetMuffle(g_bMuffle);
             llSleep(1);
-            llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
-            llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
-            llMessageLinked(LINK_THIS,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
+            llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
+            llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
+            llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
         } else if (iNum == REBOOT && sStr == "reboot") {
             llOwnerSay("Rebooting RLV Extension");
             llResetScript();

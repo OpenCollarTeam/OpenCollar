@@ -3,7 +3,7 @@
 // Sumi Perl, littlemousy, Romka Swallowtail, Garvin Twine et al.     
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.3";
+string g_sScriptVersion = "7.4";
 
 integer LINK_CMD_DEBUG=1999;
 string g_sParentMenu = "RLV";
@@ -26,11 +26,6 @@ integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
-
-integer LINK_DIALOG = LINK_SET; // = 3;
-integer LINK_RLV = LINK_SET; // = 4;
-integer LINK_SAVE = LINK_SET; // = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
@@ -121,7 +116,7 @@ Debug(string sStr) {
 */
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -148,27 +143,27 @@ RelayNotify(key kID, string sMessage, integer iNofityWearer) {
 SaveTrustObj()
 {
     if (llGetListLength(g_lTrustObj) > 0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"trustobj=" + llDumpList2String(g_lTrustObj,","), "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"trustobj", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingsToken+"trustobj=" + llDumpList2String(g_lTrustObj,","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingsToken+"trustobj", "");
 }
 
 SaveBlockObj()
 {
     if (llGetListLength(g_lBlockObj) > 0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"blockobj=" + llDumpList2String(g_lBlockObj,","), "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"blockobj", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingsToken+"blockobj=" + llDumpList2String(g_lBlockObj,","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingsToken+"blockobj", "");
 }
 */
 SaveTrustAv() {
     if (llGetListLength(g_lTrustAv) > 0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"trustav=" + llDumpList2String(g_lTrustAv,","), "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"trustav", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingsToken+"trustav=" + llDumpList2String(g_lTrustAv,","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingsToken+"trustav", "");
 }
 
 SaveBlockAv() {
     if (llGetListLength(g_lBlockAv) > 0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"blockav="+llDumpList2String(g_lBlockAv,",") , "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sSettingsToken+"blockav", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingsToken+"blockav="+llDumpList2String(g_lBlockAv,",") , "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingsToken+"blockav", "");
 }
 
 UpdateMode(integer iMode) {
@@ -186,7 +181,7 @@ UpdateMode(integer iMode) {
 SaveMode() {
     string sMode = (string)(1024 * g_iSmartStrip + 512 * g_iMinLiteMode + 256 * g_iMinLandMode + 128 * g_iMinHelplessMode + 32 * g_iMinBaseMode
         + 16 * g_iLiteMode + 8 * g_iLandMode + 4 * g_iHelpless + g_iBaseMode);
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingsToken+"mode=" + sMode, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingsToken+"mode=" + sMode, "");
 }
 
 integer Auth(key object, key user) {
@@ -275,7 +270,7 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
         list lSubArgs = llParseString2List(sCom,["="],[]);
         string sVal = llList2String(lSubArgs,1);
         string sAck = "ok";
-        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_RLV,RLV_CMD,"clear",kID);
+        if (sCom == "!release" || sCom == "@clear") llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
         else if (sCom == "!version") sAck = "1100";
         else if (sCom == "!implversion") sAck = "OpenCollar Relay 6.2.0";
         else if (sCom == "!x-orgversions") sAck = "ORG=0003/who=001";
@@ -289,10 +284,10 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
             sAck=""; //not ko'ing as some old bug in chorazin cages would make them go wrong. Otherwise "ko" looks closer in spirit to the relay spec. (issue 514)
         }//probably an ill-formed command, not answering
         else if ((!llSubStringIndex(sCom,"@version"))||(!llSubStringIndex(sCom,"@get"))||(!llSubStringIndex(sCom,"@findfolder"))) {//(IsChannelCmd(sCom))
-            if ((integer)sVal) llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
+            if ((integer)sVal) llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID); //now with RLV 1.23, negative channels can also be used
             else sAck="ko";
         } else if (g_iLiteMode&&llGetSubString(sCom,0,0)=="@"&&sVal!="n"&&sVal!="add")
-            llMessageLinked(LINK_RLV,RLV_CMD, llGetSubString(sCom,1,-1), kID);
+            llMessageLinked(LINK_SET,RLV_CMD, llGetSubString(sCom,1,-1), kID);
         else if (!iAuthed) {
             if (iGotWho) return "!x-who/"+(string)kWho+"|"+llDumpList2String(llList2List(lCommands,i,-1),"|");
             else return llDumpList2String(llList2List(lCommands,i,-1),"|");
@@ -300,16 +295,16 @@ string HandleCommand(string sIdent, key kID, string sCom, integer iAuthed) {
             string sBehav=llGetSubString(llList2String(lSubArgs,0),1,-1);
             list lTemp=llParseString2List(sBehav,[":"],[]);
             if (g_iSmartStrip && llList2String(lTemp,0) == "remoutfit" && sVal == "force") {
-                if (llList2String(lTemp,1) != "") llMessageLinked(LINK_RLV,RLV_CMD,"detachallthis:"+llList2String(lTemp,1)+"="+sVal,kID);
+                if (llList2String(lTemp,1) != "") llMessageLinked(LINK_SET,RLV_CMD,"detachallthis:"+llList2String(lTemp,1)+"="+sVal,kID);
                 else {  // only if  'remoutfit=force'
                     list parts=["jacket","pants","shirt","shoes","skirt","socks","underpants","undershirt"]; //"gloves","alpha","tattoo","physics"];
                     integer n;
                     for (n=0; n<llGetListLength(parts); ++n)
-                        llMessageLinked(LINK_RLV,RLV_CMD,"detachallthis:"+llList2String(parts,n)+"="+sVal,kID);
+                        llMessageLinked(LINK_SET,RLV_CMD,"detachallthis:"+llList2String(parts,n)+"="+sVal,kID);
                 }
             }
             if (sVal=="force"||sVal=="n"||sVal=="add"||sVal=="y"||sVal=="rem"||sBehav=="clear")
-                llMessageLinked(LINK_RLV,RLV_CMD,sBehav+"="+sVal,kID);
+                llMessageLinked(LINK_SET,RLV_CMD,sBehav+"="+sVal,kID);
             else sAck="ko";
         } else {
              RelayNotify(g_kWearer,"\n\nBad command from "+llKey2Name(kID)+".\n\nCommand: "+sIdent+","+(string)g_kWearer+"\n\nFaulty subcommand: "+sCom+"\n\nPlease report to the maker of this device.\n",0);
@@ -333,7 +328,7 @@ SafeWord() {
     if (!g_iHelpless) {
         // Fix for issue #146, add 30 (revised it to be 20) seconds to the current unix time, and make the relay wait to act upon any new restrictions until time is greater than expected unix target.
         g_iWaitTarget=(llGetUnixTime()+20);
-        llMessageLinked(LINK_RLV, CMD_RELAY_SAFEWORD, "", "");
+        llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "", "");
         RelayNotify(g_kWearer,"Restrictions lifted. Relay is now paused for 30 seconds",0);
         g_lTempBlockObj=[];
         g_lTempTrustObj=[];
@@ -507,8 +502,8 @@ UserCommand(integer iNum, string sStr, key kID) {
         return;
     }
     if (!g_iRLV) {
-        llMessageLinked(LINK_RLV, iNum, "menu RLV", kID);
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
+        llMessageLinked(LINK_SET, iNum, "menu RLV", kID);
+        llMessageLinked(LINK_SET,NOTIFY,"0\n\n\The relay requires RLV to be running in the %DEVICETYPE% but it currently is not. To make things work, click \"ON\" in the RLV menu that just popped up!\n",kID);
     } else if (sStr=="relay" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else if ((sStr=llGetSubString(sStr,6,-1))=="safeword") SafeWord(); // cut "relay " off sStr
@@ -674,7 +669,7 @@ default {
                     else if (sMsg=="Access Lists") UserCommand(iAuth, "relay access", kAv);
                     else if (sMsg=="SAFEWORD") UserCommand(iAuth, "relay safeword", kAv);
                     else if (sMsg=="Sources") {
-                        llMessageLinked(LINK_RLV, iAuth,"show restrictions", kAv);
+                        llMessageLinked(LINK_SET, iAuth,"show restrictions", kAv);
                         Menu(kAv, iAuth);
                     } else {
                         sMsg = llToLower(sMsg);
@@ -745,7 +740,7 @@ default {
                         for (i=0;i<(g_lSources!=[]);++i)
                             sendrlvr("release", llList2Key(g_lSources, i), "!release", "ok");
                         UserCommand(500, "relay off", kAv);
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
                         RelayNotify(kAv,"/me has been removed.",1);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
                     } else RelayNotify(kAv,"/me remains installed.",0);
@@ -760,10 +755,6 @@ default {
                 }
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
             }
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
@@ -780,7 +771,7 @@ default {
 
     listen(integer iChan, string who, key kID, string sMsg) {
         if (iChan == SAFETY_CHANNEL) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0\n\n⚠ "+who+" detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use "+who+" anyway, type \"/%CHANNEL% %PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL% %PREFIX% rm relay\" to permanently uninstall the relay plugin.\n",g_kWearer);
+            llMessageLinked(LINK_SET,NOTIFY,"0\n\n⚠ "+who+" detected ⚠\n\nTo prevent conflicts this relay is being detached now! If you wish to use "+who+" anyway, type \"/%CHANNEL% %PREFIX% relay off\" to temporarily disable or type \"/%CHANNEL% %PREFIX% rm relay\" to permanently uninstall the relay plugin.\n",g_kWearer);
             llRegionSayTo(g_kWearer,SAFETY_CHANNEL,"SafetyDenied!");
         }
 /*
@@ -867,7 +858,7 @@ default {
             key kID = llList2Key(g_lSources,i);
             vector vObjPos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
             if (vObjPos == <0, 0, 0> || llVecDist(vObjPos, vMyPos) > 100) // 100: max shout distance
-                llMessageLinked(LINK_RLV,RLV_CMD,"clear",kID);
+                llMessageLinked(LINK_SET,RLV_CMD,"clear",kID);
         }
         llSetTimerEvent(g_iGarbageRate);
         //g_iAuthPending = FALSE;

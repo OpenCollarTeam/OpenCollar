@@ -6,6 +6,8 @@ Copyright ©2019
 
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
+Lillith (Lillith Xue)
+    * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
 et al.
 
@@ -17,7 +19,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.0";
+string g_sAppVersion = "1.1";
 string g_sScriptVersion = "7.4";
 
 
@@ -34,10 +36,6 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 string g_sLastOutfit;
-integer LINK_DIALOG = 3;
-integer LINK_RLV = 4;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
@@ -71,7 +69,7 @@ integer g_iLockCore = FALSE;
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -95,19 +93,17 @@ integer Bool(integer iNumber){ // for one liners that need the integer to be a b
 string g_sPath;
 integer g_iListenHandle; // Will be unset if no actions for 30 seconds
 integer g_iListenChannel; // Will also be unset if no actions for 30 seconds
-integer g_iSelectionChannel;
-integer g_iSelectionHandler;
 integer g_iListenTimeout;
 key g_kListenTo;
 integer g_iListenToAuth;
 
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: The _ALL functions include adding/removing any subfolders that exist at this path. Additionally: ADD_ALL will remove any other worn outfit except this one.", Options, ["ADD", "ADD_ALL", "REMOVE", UPMENU, "^", "REMOVE_ALL"], 0, iAuth, "Browser");
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
 }
 
 
 TickBrowser(){
-    g_iListenTimeout = llGetUnixTime()+30;
+    g_iListenTimeout = llGetUnixTime()+90;
 }
 integer TimedOut(){
     if(llGetUnixTime()>g_iListenTimeout)return TRUE;
@@ -120,11 +116,8 @@ FolderBrowser (key kID, integer iAuth){
     g_iListenToAuth=iAuth;
     g_iListenChannel = llRound(llFrand(99999999));
     if(g_iListenHandle>0)llListenRemove(g_iListenHandle);
-    g_iListenHandle = llListen(g_iListenChannel, "", kID, "");
-    
-    g_iSelectionChannel = llRound(llFrand(99999999));
-    if(g_iSelectionHandler>0)llListenRemove(g_iSelectionHandler);
-    g_iSelectionHandler = llListen(g_iSelectionChannel, "", kID, "");
+    g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
+    TickBrowser();
     
     
     llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
@@ -138,14 +131,16 @@ ConfigMenu(key kID, integer iAuth){
     integer iGroup = Bool((g_iAccessBitSet&4));
     integer iWearer = Bool((g_iAccessBitSet&8));
     integer iJail = Bool((g_iAccessBitSet&16));
+    integer iStripAll = Bool((g_iAccessBitSet&32));
     string sTrusted = TrueOrFalse(iTrusted);
     string sPublic = TrueOrFalse(iPublic);
     string sGroup = TrueOrFalse(iGroup);
     string sWearer = TrueOrFalse(iWearer);
     string sJail = TrueOrFalse(iJail);
+    string sStripAll = TrueOrFalse(iStripAll);
     
 
-    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail")], [UPMENU], 0, iAuth, "Menu~Configure");
+    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -184,13 +179,13 @@ integer g_iAccessBitSet=25; // Default modes for outfits
 integer g_iJail;
 Commit(){
     if(g_iLockCore)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_lockcore="+(string)g_iLockCore, "");
     else
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "outfits_lockcore","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_lockcore","");
 
     if(g_iAccessBitSet>0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "outfits_accessflags", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "outfits_accessflags="+(string)g_iAccessBitSet,"");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "outfits_accessflags", "");
     
     
     Process();
@@ -222,13 +217,15 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_REQUEST, "global_locked","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
-        else if(iNum == -99999) if(sStr=="update_active")state inUpdate;
+        else if(iNum == -99999){
+            if(sStr=="update_active")state inUpdate;
+        }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -240,6 +237,8 @@ default
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
                 integer iRespring=TRUE;
+                
+                //llSay(0, sMenu);
                 if(sMenu == "Menu~Main"){
                     if(sMsg == UPMENU) {
                         iRespring=FALSE;
@@ -255,14 +254,14 @@ default
                             iRespring=FALSE;
                             ConfigMenu(kAv, iAuth);
                         }else{
-                            llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS% to configuration settings", kAv);
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to configuration settings", kAv);
                         }
                         
                     } else if(sMsg == "Browse"){
                         FolderBrowser(kAv,iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Help"){
-                        llMessageLinked(LINK_DIALOG,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
+                        llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu == "Menu~Configure"){
@@ -282,12 +281,14 @@ default
                             else if(ButtonLabel == "Group")g_iAccessBitSet-=4;
                             else if(ButtonLabel == "Wearer")g_iAccessBitSet-=8;
                             else if(ButtonLabel == "Jail")g_iAccessBitSet-=16;
+                            else if(ButtonLabel == "Strip All")g_iAccessBitSet -= 32;
                         }else{
                             if(ButtonLabel == "Trusted")g_iAccessBitSet+=1;
                             else if(ButtonLabel == "Public")g_iAccessBitSet+=2;
                             else if(ButtonLabel == "Group")g_iAccessBitSet+=4;
                             else if(ButtonLabel == "Wearer") g_iAccessBitSet+=8;
                             else if(ButtonLabel == "Jail")g_iAccessBitSet+=16;
+                            else if(ButtonLabel == "Strip All")g_iAccessBitSet+=32;
                         }
                         
                         
@@ -299,27 +300,35 @@ default
                     
                     ForceLockCore(); // unlocks/relocks - compatible with the Lock Core option. 
                     // The above is a workaround for a viewer bug where any newly added items to .core will not be protected.
+                    if(!g_iLocked){
+                        llOwnerSay("@detach=n");
+                    }
                     
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv, iAuth);
                         g_iListenTimeout=0;
                         return;
-                    } else if(sMsg == "ADD"){
-                        // execute add command
-                        llOwnerSay("@attachover:"+g_sPath+"=force");
-                        
-                    } else if(sMsg == "ADD_ALL"){
+                    } else if(sMsg == ">Wear<"){
                         // add recursive. Adds subfolder contents too
-                        llOwnerSay("@detachall:.outfits=force");
+                        if(!Bool((g_iAccessBitSet&32)))
+                            llOwnerSay("@detachall:.outfits=force");
+                        else{
+                            llOwnerSay("@detach=force");
+                            llOwnerSay("@remoutfit=force");
+                        }
                         llSleep(2); // incase of lag
+                        g_sLastOutfit=g_sPath;
                         llOwnerSay("@attachallover:"+g_sPath+"=force");
                         
-                    } else if(sMsg == "REMOVE"){
-                        // unwear
-                        llOwnerSay("@detach:"+g_sPath+"=force");
-                    } else if(sMsg == "REMOVE_ALL"){
-                        llOwnerSay("@detachall:"+g_sPath+"=force");
+                    } else if(sMsg == ">RemoveAll<"){
+                        g_sLastOutfit="NONE";
+                        if(!Bool((g_iAccessBitSet&32)))
+                            llOwnerSay("@detachall:"+g_sPath+"=force");
+                        else{
+                            llOwnerSay("@detach=force");
+                            llOwnerSay("@remoutfit=force");
+                        }
                     } else if(sMsg == "^"){
                         // go up a path
                         list edit = llParseString2List(g_sPath,["/"],[]);
@@ -339,10 +348,6 @@ default
                     if(iRespring)llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                 }
             }
-        } else if(iNum == LINK_UPDATE){
-            if(sStr == "LINK_DIALOG") LINK_DIALOG=iSender;
-            if(sStr == "LINK_RLV") LINK_RLV=iSender;
-            if(sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
@@ -365,19 +370,16 @@ default
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         }
-        //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     
     timer(){
         if(TimedOut() && g_iListenTimeout!=-1){
             llSetTimerEvent(0);
             if(g_iListenTimeout!=0)
-                llMessageLinked(LINK_DIALOG,NOTIFY, "0Timed out.", g_kListenTo);
+                llMessageLinked(LINK_SET,NOTIFY, "0Timed out.", g_kListenTo);
             g_kListenTo="";
             llListenRemove(g_iListenHandle);
-            llListenRemove(g_iSelectionHandler);
-            g_iSelectionHandler=0;
-            g_iSelectionChannel=0;
+            if(!g_iLocked)llOwnerSay("@detach=y");
             g_iListenHandle=0;
             g_iListenChannel=0;
             g_iListenTimeout=-1;
@@ -404,7 +406,7 @@ default
             // Viewer reply!
             // Delimiters : ,
             list Options = llParseString2List(sMsg,[","],[]);
-            DoBrowserPath(Options, g_kListenTo, g_iListenToAuth);
+            DoBrowserPath(llListSort(Options,0,TRUE), g_kListenTo, g_iListenToAuth);
             
         }
             

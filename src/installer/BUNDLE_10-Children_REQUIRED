@@ -1,5 +1,5 @@
-STOPPEDSCRIPT|oc_auth
-STOPPEDSCRIPT|oc_couples
-STOPPEDSCRIPT|oc_dialog
-STOPPEDSCRIPT|oc_rlvsys
-STOPPEDSCRIPT|oc_settings
+SCRIPT|oc_auth
+SCRIPT|oc_couples
+SCRIPT|oc_dialog
+SCRIPT|oc_rlvsys
+SCRIPT|oc_settings

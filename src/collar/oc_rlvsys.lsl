@@ -42,9 +42,6 @@ integer CMD_RELAY_SAFEWORD = 511;
 
 //integer POPUP_HELP = 1001;
 integer NOTIFY = 1002;
-integer LINK_DIALOG = LINK_SET; // = 3;
-integer LINK_SAVE = LINK_SET; // = 5;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
@@ -126,7 +123,7 @@ DoMenu(key kID, integer iAuth){
         lButtons = [TURNOFF, CLEAR] + lButtons;
     } else if (g_iRLVOff) lButtons = [TURNON];
     else lButtons = [TURNON, TURNOFF];
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|0|" + llDumpList2String(lButtons, "`") + "|" + UPMENU + "|" + (string)iAuth, kMenuID);
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, g_sSubMenu], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, g_sSubMenu];
@@ -164,9 +161,9 @@ setRlvState(){
             g_iRlvActive=TRUE;
            // llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
             g_lMenu = [] ; // flush submenu buttons
-            llMessageLinked(LINK_ALL_OTHERS, MENUNAME_REQUEST, g_sSubMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
             //tell rlv plugins to reinstate restrictions  (and wake up the relay listener... so that it can at least hear !pong's!
-            llMessageLinked(LINK_ALL_OTHERS, RLV_REFRESH, "", NULL_KEY);
+            llMessageLinked(LINK_SET, RLV_REFRESH, "", NULL_KEY);
             g_iWaitRelay = 1;
             llSetTimerEvent(1.5);
         }
@@ -177,7 +174,7 @@ setRlvState(){
             llOwnerSay("@"+llList2String(g_lBaked,-1)+"=y"); //remove restriction
             g_lBaked=llDeleteSubList(g_lBaked,-1,-1);
         }
-        llMessageLinked(LINK_ALL_OTHERS, RLV_OFF, "", NULL_KEY);
+        llMessageLinked(LINK_SET, RLV_OFF, "", NULL_KEY);
     } else if (g_iRLVOn){  //g_iViewerCheck must be FALSE (see above 2 cases), so g_iRLVOn must have just been set to TRUE, so do viewer check
         if (g_iListener) llListenRemove(g_iListener);
         g_iListener = llListen(293847, "", g_kWearer, "");
@@ -194,7 +191,7 @@ AddRestriction(key kID, string sBehav) {
     if (! ~iSource ) {  //if this is a restriction from a new source
         g_lRestrictions += [kID,""];
         iSource=-2;
-        if ((key)kID) llMessageLinked(LINK_ALL_OTHERS, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
+        if ((key)kID) llMessageLinked(LINK_SET, CMD_ADDSRC,"",kID);  //tell relay script we have a new restriction source
     }
     string sSrcRestr = llList2String(g_lRestrictions,iSource+1);
     //Debug("AddRestriction 2.1");
@@ -234,7 +231,7 @@ RemRestriction(key kID, string sBehav) {
         if (~iRestr || sBehav=="ALL") {   //if the restriction is in the list
             if (llGetListLength(lSrcRestr)==1) {  //if it is the only restriction in the list
                 g_lRestrictions=llDeleteSubList(g_lRestrictions,iSource, iSource+1);  //remove the restrictions list
-                if ((key)kID) llMessageLinked(LINK_ALL_OTHERS, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
+                if ((key)kID) llMessageLinked(LINK_SET, CMD_REMSRC,"",kID);    //tell the relay the source has no restrictions
             } else {                              //else, the source has other restrictions
                 lSrcRestr=llDeleteSubList(lSrcRestr,iRestr,iRestr);                 //delete the restriction from the list
                 g_lRestrictions=llListReplaceList(g_lRestrictions,[llDumpList2String(lSrcRestr,"§")] ,iSource+1,iSource+1);//store the list in the sources restrictions list
@@ -271,12 +268,12 @@ SafeWord(key kID) {
         numRestrictions -= 2;
         string kSource=llList2String(g_lRestrictions,numRestrictions);
         if (kSource != "main" && kSource != "rlvex" && llSubStringIndex(kSource,"utility_") != 0)
-            llMessageLinked(LINK_THIS,RLV_CMD,"clear",kSource);
+            llMessageLinked(LINK_SET,RLV_CMD,"clear",kSource);
     }
-    //llMessageLinked(LINK_THIS,RLV_CMD,"unsit=force",""); Removed to fix issue #146, adding a delay to relay accepting new commands
-    llMessageLinked(LINK_DIALOG, NOTIFY, "0RLV was cleared and you may now stand up", g_kWearer);
-    llMessageLinked(LINK_ALL_OTHERS,RLV_CLEAR,"","");
-    if (kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"RLV restrictions cleared.",kID);
+    //llMessageLinked(LINK_SET,RLV_CMD,"unsit=force",""); Removed to fix issue #146, adding a delay to relay accepting new commands
+    llMessageLinked(LINK_SET, NOTIFY, "0RLV was cleared and you may now stand up", g_kWearer);
+    llMessageLinked(LINK_SET,RLV_CLEAR,"","");
+    if (kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"RLV restrictions cleared.",kID);
 }
 // End of book keeping functions
 
@@ -284,36 +281,36 @@ UserCommand(integer iNum, string sStr, key kID) {
     sStr = llToLower(sStr);
     if (sStr=="runaway" && kID==g_kWearer) { // some scripts reset on runaway, we want to resend RLV state.
         llSleep(2); //give some time for scripts to get ready.
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
     } else if (sStr == "rlv" || sStr == "menu rlv" ){
         //someone clicked "RLV" on the main menu.  Give them our menu now
         DoMenu(kID, iNum);
     } else if (sStr == "rlv on") {
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Starting RLV...",g_kWearer);
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
+        llMessageLinked(LINK_SET,NOTIFY,"0"+"Starting RLV...",g_kWearer);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=1", "");
         g_iRLVOn = TRUE;
         g_iRLVOff = FALSE;
         setRlvState();
     } else if (sStr == "rlv off") {
         if (iNum == CMD_OWNER) {
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on=0", "");
             llSetTimerEvent(0.0); //in case handshakes still going on stop the timer
             g_iRLVOn = FALSE;
             g_iRLVOff = TRUE;
             setRlvState();
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV disabled.",g_kWearer);
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing rlv",kID);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV disabled.",g_kWearer);
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to changing rlv",kID);
     } else if (sStr == "clear") {
         if (iNum == CMD_OWNER) SafeWord(kID);
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"%NOACCESS% to clearing RLV",kID);
+        else llMessageLinked(LINK_SET,NOTIFY,"1"+"%NOACCESS% to clearing RLV",kID);
     } else if (llGetSubString(sStr,0,13) == "rlv handshakes") {
-        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing handshake count",kID);
+        if (iNum != CMD_WEARER && iNum != CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to changing handshake count",kID);
         else {
             if ((integer)llGetSubString(sStr,-2,-1)) {
                 g_iMaxViewerChecks = (integer)llGetSubString(sStr,-2,-1);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Next time RLV is turned on or the %DEVICETYPE% attached with RLV turned on, there will be "+(string)g_iMaxViewerChecks+" extra handshake attempts before disabling RLV.", kID);
-                llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sSettingToken + "handshakes="+(string)g_iMaxViewerChecks, "");
-            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"Next time RLV is turned on or the %DEVICETYPE% attached with RLV turned on, there will be "+(string)g_iMaxViewerChecks+" extra handshake attempts before disabling RLV.", kID);
+                llMessageLinked(LINK_SET,LM_SETTING_SAVE,g_sSettingToken + "handshakes="+(string)g_iMaxViewerChecks, "");
+            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nRLV handshakes means the set number of attempts to check for active RLV support in the viewer. Being on slow connections and/or having an unusually large inventory might mean having to check more often than the default of 3 times.\n\nCommand syntax: %PREFIX% rlv handshakes [number]\n", kID);
         }
     }  else if (sStr=="show restrictions") {
         string sOut="\n\n%WEARERNAME% is restricted by the following sources:\n";
@@ -327,7 +324,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 sOut+="\nThis %DEVICETYPE% ("+(string)kSource+"): "+llList2String(g_lRestrictions,numRestrictions-1)+"\n";
             numRestrictions -= 2;
         }
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sOut,kID);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+sOut,kID);
     }
 }
 
@@ -343,18 +340,16 @@ default {
         g_iViewerCheck=FALSE;
         g_iRLVOn=FALSE;
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
-        llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
     }
 
     state_entry() {
         if (llGetStartParameter()!=0) {
             state inUpdate;
-        }else
-            llSetRemoteScriptAccessPin(0);
+        }
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
-        //llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
-        //llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
+        //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
         g_kWearer = llGetOwner();
         //Debug("Starting");
@@ -396,14 +391,13 @@ default {
         if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lMenu = [] ; // flush submenu buttons
-            llMessageLinked(LINK_ALL_OTHERS, MENUNAME_REQUEST, g_sSubMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
         }
         else if (iNum <= CMD_EVERYONE && iNum >= CMD_OWNER) UserCommand(iNum, sStr, kID);
         else if (iNum == DIALOG_RESPONSE) {
             //Debug(sStr);
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
-                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
                 llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
@@ -423,9 +417,9 @@ default {
                         UserCommand(iAuth, "clear", kAv);
                         DoMenu(kAv, iAuth);
                     } else if (sMsg == UPMENU) {
-                        llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu "+g_sParentMenu, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     } else if (~llListFindList(g_lMenu, [sMsg])) {  //if this is a valid request for a foreign menu
-                        llMessageLinked(LINK_ALL_OTHERS, iAuth, "menu " + sMsg, kAv);
+                        llMessageLinked(LINK_SET, iAuth, "menu " + sMsg, kAv);
                     }
                 }
             }
@@ -435,8 +429,8 @@ default {
         } else if (iNum == LM_SETTING_REQUEST && sStr == "ALL") { //inventory changed in root
             if (g_iRlvActive == TRUE) {
                 llSleep(2);
-                llMessageLinked(LINK_ALL_OTHERS, RLV_ON, "", NULL_KEY);
-                if (g_iRlvaVersion) llMessageLinked(LINK_ALL_OTHERS, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
@@ -453,8 +447,8 @@ default {
             }
         } else if (iNum == CMD_SAFEWORD || iNum == CMD_RELAY_SAFEWORD) SafeWord("");
         else if (iNum==RLV_QUERY) {
-            if (g_iRlvActive) llMessageLinked(LINK_ALL_OTHERS, RLV_RESPONSE, "ON", "");
-            else llMessageLinked(LINK_ALL_OTHERS, RLV_RESPONSE, "OFF", "");
+            if (g_iRlvActive) llMessageLinked(LINK_SET, RLV_RESPONSE, "ON", "");
+            else llMessageLinked(LINK_SET, RLV_RESPONSE, "OFF", "");
         } else if (iNum == MENUNAME_RESPONSE) {
             list lParams = llParseString2List(sStr, ["|"], []);
             string sThisParent = llList2String(lParams, 0);
@@ -482,14 +476,7 @@ default {
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
         }
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_SAVE") {
-                LINK_SAVE = iSender;
-                if (g_iRLVOn) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
-            } else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_RLV","");
-        } else if (g_iRlvActive) {
-            llSetLinkPrimitiveParams(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+        else if (g_iRlvActive) {
             llSensorRepeat("N0thin9","abc",ACTIVE,0.1,0.1,0.22);
             if (iNum == RLV_CMD) {
                 //Debug("Received RLV_CMD: "+sStr+" from "+(string)kID);
@@ -533,12 +520,12 @@ default {
                         //Debug("Got other command:\nkey: "+(string)kID+"\ncommand: "+sCommand);
                         if (llSubStringIndex(sCom,"tpto")==0) {
                             if ( ~llListFindList(g_lBaked,["tploc"])  || ~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't teleport due to RLV restrictions",kID);
                                 return;
                             }
                         } else if (sStr=="unsit=force") {
                             if (~llListFindList(g_lBaked,["unsit"]) ) {
-                                if ((key)kID) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
+                                if ((key)kID) llMessageLinked(LINK_SET,NOTIFY,"1"+"Can't force stand due to RLV restrictions",kID);
                                 return;
                             }
                         }
@@ -576,7 +563,6 @@ default {
     }
 
     no_sensor() {
-        llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
         llSensorRemove();
     }
 
@@ -584,10 +570,10 @@ default {
         if (g_iWaitRelay) {
             if (g_iWaitRelay < 2) {
                 g_iWaitRelay = 2;
-                llMessageLinked(LINK_ALL_OTHERS, RLV_ON, "", NULL_KEY);
-                llMessageLinked(LINK_ALL_OTHERS, RLV_VERSION, (string)g_iRlvVersion, "");
+                llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
+                llMessageLinked(LINK_SET, RLV_VERSION, (string)g_iRlvVersion, "");
                 if (g_iRlvaVersion)  //Respond on RLVa as well
-                    llMessageLinked(LINK_ALL_OTHERS, RLVA_VERSION, (string)g_iRlvaVersion, "");
+                    llMessageLinked(LINK_SET, RLVA_VERSION, (string)g_iRlvaVersion, "");
                 DoLock();
                 llSetTimerEvent(3.0);
             } else {
@@ -599,14 +585,14 @@ default {
                     if ((key)kSource) llShout(RELAY_CHANNEL,"ping,"+(string)kSource+",ping,ping");
                     else rebakeSourceRestrictions(kSource);  //reapply collar's restrictions here
                 }
-                if (!llGetStartParameter()) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"RLV ready!",g_kWearer);
+                if (!llGetStartParameter()) llMessageLinked(LINK_SET,NOTIFY,"0"+"RLV ready!",g_kWearer);
             }
         } else {
             if (g_iCheckCount++ < g_iMaxViewerChecks) {
                 llOwnerSay("@versionnew=293847");
                // if (g_iCheckCount==2) llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nIf your viewer doesn't support RLV, you can stop the \"@versionnew\" message by switching RLV off in your %DEVICETYPE%'s RLV menu or by typing: %PREFIX% rlv off\n", g_kWearer);
             } else {    //we've waited long enough, and are out of retries
-                llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"\n\nRLV appears to be not currently activated in your viewer. There will be no further attempted handshakes \"@versionnew=293847\" until the next time you log in. To permanently turn RLV off, type \"/%CHANNEL% %PREFIX% rlv off\" but keep in mind that you will have to manually enable it if you wish to use it in the future.\n", g_kWearer);
+                llMessageLinked(LINK_SET, NOTIFY, "0"+"\n\nRLV appears to be not currently activated in your viewer. There will be no further attempted handshakes \"@versionnew=293847\" until the next time you log in. To permanently turn RLV off, type \"/%CHANNEL% %PREFIX% rlv off\" but keep in mind that you will have to manually enable it if you wish to use it in the future.\n", g_kWearer);
                 llSetTimerEvent(0.0);
                 llListenRemove(g_iListener);
                 g_iCheckCount=0;
@@ -637,5 +623,28 @@ default {
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
         if(iNum == REBOOT)llResetScript();
+        else if(iNum == 0){
+            if(sMsg == "do_move"){
+                
+                if(llGetLinkNumber()==LINK_SET)return;
+                
+                llOwnerSay("Moving "+llGetScriptName()+"!");
+                integer i=0;
+                integer end=llGetInventoryNumber(INVENTORY_ALL);
+                for(i=0;i<end;i++){
+                    string item = llGetInventoryName(INVENTORY_ALL,i);
+                    if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
+                        llRemoveInventory(item);
+                    }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
+                        llGiveInventory(kID, item);
+                        llRemoveInventory(item);
+                        i=-1;
+                        end=llGetInventoryNumber(INVENTORY_ALL);
+                    }
+                }
+                
+                llRemoveInventory(llGetScriptName());
+            }
+        }
     }
 }

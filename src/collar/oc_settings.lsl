@@ -49,8 +49,6 @@ integer LM_SETTING_RELAY_LOAD = 2101; // used on 'Load' and on initial boot to r
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer LINK_DIALOG = LINK_SET; // = 3;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
@@ -191,7 +189,7 @@ PrintSettings(key kID, string sDebug) {
     }
     lOut += [sOld];
     while (llGetListLength(lOut)) {
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+llList2String(lOut, 0), kID);
+        llMessageLinked(LINK_SET,NOTIFY,"0"+llList2String(lOut, 0), kID);
         //Notify(kID, llList2String(lOut, 0), TRUE);
         lOut = llDeleteSubList(lOut, 0, 0);
     }
@@ -269,9 +267,9 @@ SendValues() {
     }
     n = 0;
     for (; n < llGetListLength(lOut); n++)
-        llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, llList2String(lOut, n), "");
+        llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llList2String(lOut, n), "");
 
-    llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
+    llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, "settings=sent", "");//tells scripts everything has be sentout
 }
 
 
@@ -283,37 +281,33 @@ UserCommand(integer iAuth, string sStr, key kID) {
             if (llSubStringIndex(sStrLower,"load url") == 0 && iAuth == CMD_OWNER) {
                 string sURL = llList2String(llParseString2List(sStr,[" "],[]),2);
                 if (!llSubStringIndex(sURL,"http")) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Fetching settings from "+sURL,kID);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+"Fetching settings from "+sURL,kID);
                     g_kURLLoadRequest = kID;
                     g_kConfirmLoadDialogID = llGenerateKey();
                     g_sURL = sURL;
-                    llMessageLinked(LINK_DIALOG, DIALOG, (string)llGetOwner()+"|Settings are about to be loaded from a URL and may revoke your access to the collar. Only allow this action if you trust the person. Read the settings first: "+sURL+"|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmLoadDialogID);
+                    llMessageLinked(LINK_SET, DIALOG, (string)llGetOwner()+"|Settings are about to be loaded from a URL and may revoke your access to the collar. Only allow this action if you trust the person. Read the settings first: "+sURL+"|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmLoadDialogID);
                     //g_kLoadFromWeb = llHTTPRequest(sURL,[HTTP_METHOD, "GET"],"");
-                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
+                } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Please enter a valid URL like: "+g_sSampleURL,kID);
             } else if (sStrLower == "load card" || sStrLower == "load") {
                 llMessageLinked(LINK_SET, LM_SETTING_RELAY_LOAD, "", "");
                 if (llGetInventoryKey(g_sCard)) {
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: /%CHANNEL% %PREFIX% load url <url>\n",kID);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+ "\n\nLoading backup from "+g_sCard+" card. If you want to load settings from the web, please type: /%CHANNEL% %PREFIX% load url <url>\n",kID);
                     g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
-                } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
+                } else llMessageLinked(LINK_SET,NOTIFY,"0"+"No "+g_sCard+" to load found.",kID);
             }
-        } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to load",kID);
+        } else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to load",kID);
     } else if (sStrLower == "reboot" || sStrLower == "reboot --f") {
         if (g_iRebootConfirmed || sStrLower == "reboot --f") {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"Rebooting your %DEVICETYPE% ....",kID);
             g_iRebootConfirmed = FALSE;
-            llMessageLinked(LINK_ALL_OTHERS, REBOOT,"reboot","");
+            llMessageLinked(LINK_SET, REBOOT,"reboot","");
             g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
         } else {
             g_kConfirmDialogID = llGenerateKey();
-            llMessageLinked(LINK_DIALOG,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
+            llMessageLinked(LINK_SET,DIALOG,(string)kID+"|\nAre you sure you want to reboot the %DEVICETYPE%?|0|Yes`No|Cancel|"+(string)iAuth,g_kConfirmDialogID);
         }
-    } else if (sStrLower == "show storage") {
-        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_BLANK,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,TRUE]);
-        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nTo hide the storage prim again type:\n\n/%CHANNEL% %PREFIX% hide storage\n",kID);
-    } else if (sStrLower == "hide storage")
-        llSetPrimitiveParams([PRIM_TEXTURE,ALL_SIDES,TEXTURE_TRANSPARENT,<1,1,0>,ZERO_VECTOR,0.0,PRIM_FULLBRIGHT,ALL_SIDES,FALSE]);
+    }
     else if (sStrLower == "runaway") llSetTimerEvent(2.0);
 }
 
@@ -323,10 +317,9 @@ default {
     state_entry() {
         if (llGetStartParameter()!=0){
             state inUpdate;
-        }else
-            llSetRemoteScriptAccessPin(0);
+        }
         
-        if (llGetNumberOfPrims()>5) g_lSettings = ["intern_dist",(string)llGetObjectDetails(llGetLinkKey(1),[27])];
+        // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
         g_kWearer = llGetOwner();
@@ -336,7 +329,7 @@ default {
             if (llGetInventoryKey(g_sCard)) {
                 g_kLineID = llGetNotecardLine(g_sCard, g_iLineNr);
              g_kCardID = llGetInventoryKey(g_sCard);
-            } else if (g_lSettings) llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, llDumpList2String(g_lSettings, "="), "");
+            } else if (g_lSettings) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llDumpList2String(g_lSettings, "="), "");
         }
     }
 
@@ -345,7 +338,7 @@ default {
             g_iCheckNews = TRUE;
             llSetTimerEvent(2.0);
             //llSleep(0.5); // brief wait for others to reset
-            //llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
+            //llMessageLinked(LINK_SET,LINK_UPDATE,"LINK_SET","");
             //SendValues();
         } else llResetScript();
     }
@@ -368,11 +361,11 @@ default {
         if (kID ==  g_kLoadFromWeb) {
             if (iStatus == 200) {
                 if (lMeta)
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid URL. You need to provide a raw text file like this: "+g_sSampleURL,g_kURLLoadRequest);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Invalid URL. You need to provide a raw text file like this: "+g_sSampleURL,g_kURLLoadRequest);
                 else {
                     list lLoadSettings = llParseString2List(sBody,["\n"],[]);
                     if (lLoadSettings) {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Settings fetched.",g_kURLLoadRequest);
+                        llMessageLinked(LINK_SET,NOTIFY,"1"+"Settings fetched.",g_kURLLoadRequest);
                         integer i;
                         string sSetting;
                         do {
@@ -382,9 +375,9 @@ default {
                             LoadSetting(sSetting,i);
                         } while (i);
                         SendValues();
-                    } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
+                    } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Empty site provided to load settings.",g_kURLLoadRequest);
                 }
-            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
+            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Invalid url provided to load settings.",g_kURLLoadRequest);
             g_kURLLoadRequest = "";
         } else if (iStatus == 200 && kID == g_kURLRequestID) {
             g_iCheckNews = FALSE;
@@ -392,7 +385,7 @@ default {
             float fNewsStamp = (float)llGetSubString(sBody,0,index-1);
             if (fNewsStamp > g_fLastNewsStamp) {
                 sBody = llGetSubString(sBody,index,-1); //schneidet die erste zeile ab
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sBody,g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+sBody,g_kWearer);
                 g_fLastNewsStamp = fNewsStamp;
                 g_lSettings = SetSetting(g_lSettings,"intern_news",(string)fNewsStamp);
             }
@@ -411,19 +404,19 @@ default {
                 g_fLastNewsStamp = (float)sValue;
                 g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
             }
-            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr, "");
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
         
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
-            if (SettingExists(sStr)) llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
+            if (SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
             else if (sStr == "ALL") {
                 g_iCheckNews = FALSE;
                 llSetTimerEvent(2.0);
-            } else llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_EMPTY, sStr, "");
+            } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
         }
         else if (iNum == LM_SETTING_DELETE){
-            llMessageLinked(LINK_ALL_OTHERS, LM_SETTING_DELETE,sStr,"");
+            //llMessageLinked(LINK_SET, LM_SETTING_DELETE,sStr,"");
             DelSetting(sStr);
         } else if(iNum == LM_SETTING_RELAY_CONTENT) LoadSetting(sStr, (integer)((string)kID));
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
@@ -432,20 +425,17 @@ default {
             if (llList2String(lMenuParams,1) == "Yes") {
                 g_iRebootConfirmed = TRUE;
                 UserCommand(llList2Integer(lMenuParams,3),"reboot",kID);
-            } else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Reboot aborted.",kID);
+            } else llMessageLinked(LINK_SET,NOTIFY,"0"+"Reboot aborted.",kID);
         } else if(iNum == DIALOG_RESPONSE && kID == g_kConfirmLoadDialogID){
             list MenuParams = llParseString2List(sStr, ["|"],[]);
             if(llList2String(MenuParams,1) == "Yes"){
                 g_kLoadFromWeb = llHTTPRequest(g_sURL,[HTTP_METHOD, "GET"],"");
-            } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Load aborted", kID);
+            } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Load aborted", kID);
             g_sURL="";
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
             llMessageLinked(iSender, LOADPIN, (string)iPin+"@"+llGetScriptName(),llGetKey());
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_REQUEST") llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_SAVE","");
         } else if(iNum == LINK_CMD_DEBUG){
             integer onlyver=0;
             if(sStr == "ver")onlyver=1;
@@ -483,8 +473,32 @@ default {
         }
     }
 }
+
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
         if(iNum == REBOOT)llResetScript();
+        else if(iNum == 0){
+            if(sMsg == "do_move"){
+                
+                if(llGetLinkNumber()==LINK_SET)return;
+                
+                llOwnerSay("Moving "+llGetScriptName()+"!");
+                integer i=0;
+                integer end=llGetInventoryNumber(INVENTORY_ALL);
+                for(i=0;i<end;i++){
+                    string item = llGetInventoryName(INVENTORY_ALL,i);
+                    if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
+                        llRemoveInventory(item);
+                    }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
+                        llGiveInventory(kID, item);
+                        llRemoveInventory(item);
+                        i=-1;
+                        end=llGetInventoryNumber(INVENTORY_ALL);
+                    }
+                }
+                
+                llRemoveInventory(llGetScriptName());
+            }
+        }
     }
 }

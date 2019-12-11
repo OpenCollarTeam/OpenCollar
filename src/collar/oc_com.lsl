@@ -44,11 +44,6 @@ integer CMD_SAFEWORD = 510;
 integer NOTIFY=1002;
 integer NOTIFY_OWNERS=1003;
 //integer SAY = 1004;
-integer LINK_AUTH = LINK_SET; // = 2;
-integer LINK_DIALOG = LINK_SET; // = 3;
-integer LINK_SAVE = LINK_SET; // = 5;
-integer LINK_ANIM = 6;
-integer LINK_UPDATE = -10;
 integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
@@ -96,9 +91,6 @@ string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 integer g_iHighlander = TRUE;
-list g_lCore5Scripts = ["LINK_AUTH","oc_auth","LINK_DIALOG","oc_dialog","LINK_RLV","oc_rlvsys","LINK_SAVE","oc_settings","LINK_ANIM","oc_anim","LINK_ANIM","oc_couples"];
-list g_lFoundCore5Scripts;
-list g_lWrongRootScripts;
 integer g_iVerify;
 /*integer g_iProfiled;
 Debug(string sStr) {
@@ -124,14 +116,14 @@ ClearUser(key kRCPT, integer iNotify) {
         if (iNotify) {
             key kID = llList2Key(g_lTouchRequests, iIndex -1);
             integer iAuth = llList2Integer(g_lTouchRequests, iIndex + 2);
-            llMessageLinked(LINK_THIS, TOUCH_EXPIRE, (string) kRCPT + "|" + (string) iAuth,kID);
+            llMessageLinked(LINK_SET, TOUCH_EXPIRE, (string) kRCPT + "|" + (string) iAuth,kID);
         }
         g_lTouchRequests = llDeleteSubList(g_lTouchRequests, iIndex - 1, iIndex - 2 + g_iStrideLength);
         iIndex = llListFindList(g_lTouchRequests, [kRCPT]);
     }
     if (g_iNeedsPose && [] == g_lTouchRequests) llStopAnimation(g_sPOSE_ANIM);
 }
-
+/*
 sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
     // check for temporary touch requests
     integer iTrig;
@@ -143,14 +135,14 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
                 ||((iTrigFlags & FLAG_TOUCHEND)&& sType == "touchend")) {
                 integer iAuth = llList2Integer(g_lTouchRequests, iTrig + 3);
                 string sReply = (string) kToucher + "|" + (string) iAuth + "|" + sType +"|"+ (string) iLinkNumber;
-                llMessageLinked(LINK_THIS, TOUCH_RESPONSE, sReply, llList2Key(g_lTouchRequests, iTrig));
+                llMessageLinked(LINK_SET, TOUCH_RESPONSE, sReply, llList2Key(g_lTouchRequests, iTrig));
             }
             if (sType =="touchend") ClearUser(kToucher, FALSE);
             return;
         }
     }
 
-    string sDesc = llDumpList2String(llGetLinkPrimitiveParams(iLinkNumber,[PRIM_DESC])+llGetLinkPrimitiveParams(LINK_ROOT,[PRIM_DESC]),"~");
+    string sDesc = llDumpList2String(llGetLinkPrimitiveParams(iLinkNumber,[PRIM_DESC])+llGetLinkPrimitiveParams(LINK_SET,[PRIM_DESC]),"~");
 
     list lDescTokens = llParseStringKeepNulls(sDesc, ["~"], []);
     integer iNDescTokens = llGetListLength(lDescTokens);
@@ -160,17 +152,17 @@ sendCommandFromLink(integer iLinkNumber, string sType, key kToucher) {
         if (sDescToken == sType || sDescToken == sType+":" || sDescToken == sType+":none") return;
         else if (!llSubStringIndex(sDescToken, sType+":")) {
             string sCommand = llGetSubString(sDescToken, llStringLength(sType)+1, -1);
-            if (sCommand != "") llMessageLinked(LINK_AUTH, CMD_ZERO, sCommand, kToucher);
+            if (sCommand != "") llMessageLinked(LINK_SET, CMD_ZERO, sCommand, kToucher);
             return;
         }
     }
     if (sType == "touchstart") {
-        llMessageLinked(LINK_AUTH, CMD_ZERO, "menu", kToucher);
+        llMessageLinked(LINK_SET, CMD_ZERO, "menu", kToucher);
         if (g_iTouchNotify && kToucher!=g_kWearer)
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your %DEVICETYPE%.\n",g_kWearer);
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)kToucher+"/about touched your %DEVICETYPE%.\n",g_kWearer);
     }
 }
-
+*/
 
 UserCommand(key kID, integer iAuth, string sStr) {
     if (sStr == "ping") { // ping from an object, we answer to it on the object channel
@@ -183,17 +175,17 @@ UserCommand(key kID, integer iAuth, string sStr) {
     if (iAuth == CMD_OWNER || kID == g_kWearer) {  //handle changing prefix and channel from owner
         if (sCommand == "prefix") {
             if (sValue == "") {
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n",kID);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n",kID);
                 return;
             } else if (sValue == "reset") {
                 g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"prefix", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"prefix", "");
             } else {
                 g_sPrefix = sValue;
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
             }
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"prefix=" + g_sPrefix, "");
-            llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu or say '\"%PREFIX% help\" for a list of chat commands.\n",kID);
+            llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\n%WEARERNAME%'s prefix is: %PREFIX%\n\nTouch the %DEVICETYPE% or say \"%PREFIX% menu\" for the main menu or say '\"%PREFIX% help\" for a list of chat commands.\n",kID);
         }
         else if (sCommand == "device" && sValue == "name") {
             string sMessage;
@@ -201,42 +193,42 @@ UserCommand(key kID, integer iAuth, string sStr) {
             string sCmdOptions = llDumpList2String(llDeleteSubList(lParams,0,1), " ");
             if (sValue == "") {
                 sMessage = "\n"+sObjectName+"'s current device name is \"" + g_sDeviceName + "\".\nDevice Name command help:\n%PREFIX% device name [newname|reset]\n";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kID);
             } else if (sCmdOptions == "reset") {
                 g_sDeviceName = llGetObjectDesc();
                 if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") g_sDeviceName = llGetObjectName();
                 sMessage = "The device name is reset to \""+g_sDeviceName+"\".";
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"DeviceName", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
             } else {
                 g_sDeviceName = sCmdOptions;
                 sMessage = sObjectName+"'s new device name is \""+ g_sDeviceName+"\".";
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"DeviceName="+g_sDeviceName, "");
             }
-            if (sValue) llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
+            if (sValue) llMessageLinked(LINK_SET,NOTIFY,"1"+sMessage,kID);
         } else if (sCommand == "name") {
-            if (iAuth != CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS% to changing the name",kID);
+            if (iAuth != CMD_OWNER) llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to changing the name",kID);
             else {
                 string sMessage;
                 if (sValue=="") {  //Just let them know their current name
                     sMessage= "\n\nsecondlife:///app/agent/"+(string)g_kWearer+"/about's current name is " + g_sWearerName;
                     sMessage += "\nName command help: <prefix>name [newname|reset]\n";
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kID);
                 } else if(sValue=="reset") { //unset Global_WearerName
                     sMessage=g_sWearerName+"'s name is reset to ";
                     g_sWearerName = NameURI(g_kWearer);
-                    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sGlobalToken+"WearerName", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+g_sWearerName, "");
                     sMessage += g_sWearerName;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+sMessage,kID);
                 } else {
                     string sNewName = llDumpList2String(llList2List(lParams, 1,-1)," ") ;
                     sMessage=g_sWearerName+"'s new name is ";
                     g_sWearerName = "["+NameURI(g_kWearer)+" "+sNewName+"]";
                     sMessage += g_sWearerName;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"1"+sMessage,kID);
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store
+                    llMessageLinked(LINK_SET,NOTIFY,"1"+sMessage,kID);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken+"WearerName=" + sNewName, ""); //store
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken+"WearerName="+sNewName, "");
                 }
             }
@@ -246,61 +238,61 @@ UserCommand(key kID, integer iAuth, string sStr) {
                 string sMessage= "The %DEVICETYPE% is listening on channel";
                 if (g_iPublicListenChan) sMessage += "s 0 and";
                 sMessage += " "+(string)g_iPrivateListenChan+".";
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+sMessage,kID);
+                llMessageLinked(LINK_SET,NOTIFY,"0"+sMessage,kID);
             } else if (iNewChan > 0) { //set new channel for private listener
                 g_iPrivateListenChan =  iNewChan;
                 llListenRemove(g_iPrivateListener);
                 g_iPrivateListener = llListen(g_iPrivateListenChan, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"Now listening on channel " + (string)g_iPrivateListenChan,kID);
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"Now listening on channel " + (string)g_iPrivateListenChan,kID);
                 if (g_iPublicListenChan) { //save setting along with the state of thepublic listener (messy!)
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                 } else {
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
                 }
             } else if (iNewChan == 0) { //enable public listener
                 g_iPublicListenChan = TRUE;
                 llListenRemove(g_iPublicListener);
                 g_iPublicListener = llListen(0, "", NULL_KEY, "");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL% %PREFIX% channel -1\n",kID);
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nPublic channel listener enabled.\nTo disable it type: /%CHANNEL% %PREFIX% channel -1\n",kID);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",TRUE", "");
             } else if (iNewChan == -1) {  //disable public listener
                 g_iPublicListenChan = FALSE;
                 llListenRemove(g_iPublicListener);
-                llMessageLinked(LINK_DIALOG,NOTIFY,"1"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL% %PREFIX% channel 0\n",kID);
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
+                llMessageLinked(LINK_SET,NOTIFY,"1"+"\n\nPublic channel listener disabled.\nTo enable it type: /%CHANNEL% %PREFIX% channel 0\n",kID);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
                 llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "channel=" + (string)g_iPrivateListenChan + ",FALSE", "");
             }
         } else if (kID == g_kWearer) {
             if (sCommand == "safeword") {
                 if(llStringTrim(sValue, STRING_TRIM) != "") {
                     g_sSafeWord = sValue; // llList2String(lParams, 1);
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You set a new safeword: " + g_sSafeWord,g_kWearer);
-                    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"You set a new safeword: " + g_sSafeWord,g_kWearer);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                     llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, g_sGlobalToken + "safeword=" + g_sSafeWord, "");
                 } else
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Your safeword is: " + g_sSafeWord,g_kWearer);
             } else if (sStr == "mv anims") {
-                AnnounceAnimInventory(LINK_ALL_OTHERS);
+                AnnounceAnimInventory(LINK_SET);
             } else if (sCommand == "busted") {
                 if (sValue == "on") {
-                    llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
+                    llMessageLinked(LINK_SET,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
                     g_iTouchNotify=TRUE;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Touch notification is now enabled.",g_kWearer);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Touch notification is now enabled.",g_kWearer);
                 } else if (sValue == "off") {
-                    llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
+                    llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
                     g_iTouchNotify=FALSE;
-                    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Touch notification is now disabled.",g_kWearer);
+                    llMessageLinked(LINK_SET,NOTIFY,"0"+"Touch notification is now disabled.",g_kWearer);
                 } else if (sValue == "") {
                     if (g_iTouchNotify) {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Touch notification is now disabled.",g_kWearer);
-                        llMessageLinked(LINK_SAVE,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Touch notification is now disabled.",g_kWearer);
+                        llMessageLinked(LINK_SET,LM_SETTING_DELETE,g_sGlobalToken+"touchNotify","");
                         g_iTouchNotify = FALSE;
                     } else {
-                        llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Touch notification is now enabled.",g_kWearer);
-                        llMessageLinked(LINK_SAVE,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
+                        llMessageLinked(LINK_SET,NOTIFY,"0"+"Touch notification is now enabled.",g_kWearer);
+                        llMessageLinked(LINK_SET,LM_SETTING_SAVE,g_sGlobalToken+"touchNotify=1","");
                         g_iTouchNotify = TRUE;
                     }
                 }
@@ -383,11 +375,11 @@ default {
         if (iChan == g_iHUDChan) {
             //check for a ping, if we find one we request auth and answer in LMs with a pong
             if (sMsg==(string)g_kWearer + ":ping")
-                llMessageLinked(LINK_AUTH, CMD_ZERO, "ping", kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, "ping", kID);
             // it it is not a ping, it should be a command for use, to make sure it has to have the key in front of it
             else if (!llSubStringIndex(sMsg,(string)g_kWearer + ":")){
                 sMsg = llGetSubString(sMsg, 37, -1);
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else if (iChan == g_iInterfaceChannel && llGetOwnerKey(kID) == g_kWearer) { //for the rare but possible case g_iHUDChan == g_iInterfaceChannel
                 if (sMsg == "OpenCollar?") llRegionSayTo(g_kWearer, g_iInterfaceChannel, "OpenCollar=Yes");
                 else if (sMsg == "OpenCollar=Yes" && g_iHighlander) llRegionSayTo(kID,g_iInterfaceChannel,"There can be only one!");
@@ -395,10 +387,10 @@ default {
                     llOwnerSay("/me has been detached.");
                     llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
                 } else if (llSubStringIndex(sMsg, "AuthRequest")==0)
-                    llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
-                else llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+                    llMessageLinked(LINK_SET,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
+                else llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             } else
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, llGetOwnerKey(kID));
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, llGetOwnerKey(kID));
             return;
         }
         if(llGetOwnerKey(kID) == g_kWearer) { // also works for attachments
@@ -412,8 +404,8 @@ default {
             if (sw == g_sSafeWord) {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44");
-                llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You used the safeword, your owners have been notified.",g_kWearer);
-                llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"\n\n%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%'s well-being in case further care is required.\n","");
+                llMessageLinked(LINK_SET,NOTIFY,"0"+"You used the safeword, your owners have been notified.",g_kWearer);
+                llMessageLinked(LINK_SET,NOTIFY_OWNERS,"\n\n%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%'s well-being in case further care is required.\n","");
                 return;
             }
         }
@@ -432,7 +424,7 @@ default {
                 llRequestPermissions(g_kWearer,PERMISSION_ATTACH);
             } else { // attachments can send auth request: llRegionSayTo(g_kWearer,g_InteraceChannel,"AuthRequest|UUID");
                 if (llSubStringIndex(sMsg, "AuthRequest")==0) {
-                    llMessageLinked(LINK_AUTH,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
+                    llMessageLinked(LINK_SET,AUTH_REQUEST,(string)kID+(string)g_iInterfaceChannel,llGetSubString(sMsg,12,-1));
                 }
             }
         } else { //check for our prefix, or *
@@ -443,24 +435,8 @@ default {
             else return;
             sMsg = llStringTrim(sMsg,STRING_TRIM_HEAD);
             if (sMsg) {
-                if (kID == g_kWearer && llToLower(sMsg) == "verify") {
-                    llOwnerSay("Verifying core...");
-                    llMessageLinked(LINK_ALL_OTHERS,LINK_UPDATE,"LINK_REQUEST","");
-                    llSetTimerEvent(2);
-                    g_iVerify = TRUE;
-                    g_lWrongRootScripts = [];
-                    string sName;
-                    integer i = llGetListLength(g_lCore5Scripts) -1;
-                    do {
-                        sName = llList2String(g_lCore5Scripts,i);
-                        if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
-                            g_lWrongRootScripts += sName;
-                        i = i - 2;
-                    } while (i>0);
-                    return;
-                }
                 //Debug("Got comand "+sMsg);
-                llMessageLinked(LINK_AUTH, CMD_ZERO, sMsg, kID);
+                llMessageLinked(LINK_SET, CMD_ZERO, sMsg, kID);
             }
         }
     }
@@ -500,16 +476,6 @@ default {
             ClearUser(kRCPT, TRUE);
             g_lTouchRequests += [kID, kRCPT, iFlags, iAuth];
             if (g_iNeedsPose) llStartAnimation(g_sPOSE_ANIM);
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
-            else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-            else if (sStr == "LINK_ANIM") LINK_ANIM = iSender;
-            if (sStr != "LINK_REQUEST") {
-                if (!~llListFindList(g_lFoundCore5Scripts,[sStr,iSender]))
-                    g_lFoundCore5Scripts += [sStr,iSender];
-                if (llGetListLength(g_lFoundCore5Scripts) >= 10) llSetTimerEvent(0.1);
-            }
         } else if (iNum == TOUCH_CANCEL) {
             integer iIndex = llListFindList(g_lTouchRequests, [kID]);
             if (~iIndex) {
@@ -550,11 +516,10 @@ default {
 
     touch_start(integer iNum) {
         //Debug("touched");
-        sendCommandFromLink(llDetectedLinkNumber(0), "touchstart", llDetectedKey(0));
-    }
-
-    touch_end(integer iNum) {
-        sendCommandFromLink(llDetectedLinkNumber(0), "touchend", llDetectedKey(0));
+        if (g_iTouchNotify && llDetectedKey(0)!=g_kWearer)
+            llMessageLinked(LINK_SET,NOTIFY,"0"+"\n\nsecondlife:///app/agent/"+(string)llDetectedKey(0)+"/about touched your %DEVICETYPE%.\n",g_kWearer);
+        llMessageLinked(LINK_SET, 0, "menu", llDetectedKey(0));
+        //sendCommandFromLink(llDetectedLinkNumber(0), "touchstart", llDetectedKey(0));
     }
 
     run_time_permissions(integer iPerm) {
@@ -562,47 +527,6 @@ default {
         if (iPerm & PERMISSION_ATTACH) {
             llOwnerSay("@detach=yes");
             llDetachFromAvatar();
-        }
-    }
-
-    timer() {
-        llSetTimerEvent(0);
-        string sMessage;
-        if (g_lWrongRootScripts) {
-            sMessage = "\nFalse root prim placement:\n";
-            do {
-                sMessage += llList2String(g_lWrongRootScripts,0);
-                g_lWrongRootScripts =  llDeleteSubList(g_lWrongRootScripts,0,0);
-            } while (g_lWrongRootScripts);
-        }
-        if(sMessage) sMessage += "\n";
-        integer i;
-        integer index;
-        list lTemp = ["Missing Scripts:"];
-        do {
-            index = llListFindList(g_lFoundCore5Scripts,llList2List(g_lCore5Scripts,i,i));
-            if (index == -1) {
-                if (llSubStringIndex(sMessage,llList2String(g_lCore5Scripts,i+1)) == -1)
-                    lTemp += [llList2String(g_lCore5Scripts,i+1)];
-            } else
-                sMessage += "\n"+llList2String(g_lCore5Scripts,i+1) + "\t(Link# "+llList2String(g_lFoundCore5Scripts,index+1)+")";
-            i = i + 2;
-        } while (i<10);
-        i = llGetLinkNumber();
-        if (i != 1) sMessage += "\noc_com\t(not in root prim!)";
-        if (llSubStringIndex(sMessage,"False") == -1 && llGetListLength(lTemp) == 1) {
-            g_lFoundCore5Scripts = llListSort(g_lFoundCore5Scripts,2, TRUE);
-            lTemp = [];
-            g_lFoundCore5Scripts = [];
-        } else {
-            if (llGetListLength(lTemp) ==1) lTemp = [];
-            sMessage = "\n\nCore corruption detected:\n"+ llDumpList2String(lTemp,"\n")+sMessage;
-            if (i == 1) sMessage += "\noc_com\t(root)";
-        }
-        g_lFoundCore5Scripts = [];
-        if (g_iVerify) {
-            g_iVerify = FALSE;
-            llOwnerSay(sMessage);
         }
     }
 
