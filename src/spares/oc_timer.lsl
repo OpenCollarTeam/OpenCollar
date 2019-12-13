@@ -15,7 +15,7 @@ integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
@@ -29,11 +29,6 @@ integer ATTACHMENT_FORWARD = 610;
 integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 integer REBOOT  = -1000;
-integer LINK_AUTH = 2;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 // integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_RESPONSE = 2002;
@@ -117,7 +112,7 @@ Debug(string sStr) {
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtility, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtility, "`") + "|" + (string)iAuth, kMenuID);
 
     integer i = llListFindList(g_lMenuIDs, [kID]);
     if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
@@ -206,8 +201,8 @@ TimerFinish() {
     g_iOnRunning=g_iRealRunning=0;
     g_iOnTimeUpAt=g_iRealTimeUpAt=0;
     g_iWhoCanChangeTime=504;
-    llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout false","");
-    llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"Yay! Timer expired!",g_kWearer);
+    llMessageLinked(LINK_THIS,CMD_OWNER,"lockout false","");
+    llMessageLinked(LINK_THIS,NOTIFY,"0"+"Yay! Timer expired!",g_kWearer);
     llMessageLinked(LINK_SET, TIMER_EVENT, "end", "");
 }
 
@@ -217,7 +212,7 @@ TimerStart(integer perm) {
     if (g_iRealSetTime) {
         g_iRealTimeUpAt=g_iCurrentTime+g_iRealSetTime;
 //        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
-        llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout true","");
+        llMessageLinked(LINK_THIS,CMD_OWNER,"lockout true","");
         llMessageLinked(LINK_SET, TIMER_EVENT, "START", "RL");
         g_iRealRunning=1;
     } else g_iRealRunning=3;
@@ -225,7 +220,7 @@ TimerStart(integer perm) {
     if (g_iOnSetTime) {
         g_iOnTimeUpAt=g_iOnTime+g_iOnSetTime;
 //        llMessageLinked(LINK_SET, WEARERLOCKOUT, "on", "");
-        llMessageLinked(LINK_AUTH,CMD_OWNER,"lockout true","");
+        llMessageLinked(LINK_THIS,CMD_OWNER,"lockout true","");
         llMessageLinked(LINK_SET, TIMER_EVENT, "START", "Online Timer");
         g_iOnRunning=1;
     } else g_iOnRunning=3;
@@ -255,7 +250,7 @@ PermsCheck() {
 UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
     if ((g_iOnRunning || g_iRealRunning) && kID == g_kWearer) {
         if (!llSubStringIndex(llToLower(sStr),"timer")) {
-            llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"You can't access here until the timer went off.",kID);
+            llMessageLinked(LINK_THIS,NOTIFY,"0"+"You can't access here until the timer went off.",kID);
             return;
         }
     }
@@ -282,22 +277,22 @@ UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
         else if (sMsg == "☐ combined") g_iBoth = TRUE;
         else if (sMsg == "☑ unlock") {
             if (iAuth == CMD_OWNER) g_iUnlockCollar = 0;
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sMsg == "☐ unlock") {
             if (iAuth == CMD_OWNER) g_iUnlockCollar = 1;
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sMsg == "☑ clear RLV") {
-            if (iAuth == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            if (iAuth == CMD_WEARER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
             else g_iClearRLVRestions = 0;
         } else if (sMsg == "☐ clear RLV") {
-            if (iAuth == CMD_WEARER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            if (iAuth == CMD_WEARER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
             else g_iClearRLVRestions = 1;
         } else if (sMsg == "☑ unleash") {
             if (iAuth <= g_iWhoCanChangeLeash) g_iUnleash = 0;
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (sMsg == "☐ unleash") {
             if (iAuth <= g_iWhoCanChangeLeash) g_iUnleash = 1;
-            else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+            else llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         } else if (llGetSubString(sMsg, 0, 11) == "Online Timer") {
             sMsg = "online" + llStringTrim(llGetSubString(sMsg, 12, -1), STRING_TRIM_HEAD);
         } else if (llGetSubString(sMsg, 0, 9) == "Real Timer") {
@@ -417,7 +412,7 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID, FALSE);
+        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID, FALSE);
         else if (iNum==ATTACHMENT_FORWARD) {
             list info = llParseString2List (sStr, ["|"], []);
             if (llList2String(info, 0)!="timer") return;
@@ -508,18 +503,13 @@ default {
             } else if (sMenu == "rmtimer") {
                 if (sMsg == "Yes") {
                     llMessageLinked(LINK_ROOT, MENUNAME_REMOVE, g_sParentMenu+"|"+g_sSubMenu, "");
-                    llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                    llMessageLinked(LINK_THIS, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                } else llMessageLinked(LINK_THIS, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
             }
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

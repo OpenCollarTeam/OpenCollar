@@ -17,10 +17,6 @@ integer CMD_SAFEWORD = 510;
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer REBOOT = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 // messages for storing and retrieving values in the settings script
 integer LM_SETTING_SAVE = 2000;
@@ -71,7 +67,7 @@ Debug(string sStr) {
 */
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_THIS,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 string Name(key id) {
@@ -101,7 +97,7 @@ bind() {
     llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu+"|"+GARBLE, "");
 
     g_iGarbleListen = llListen(g_iGarbleChan, "", g_kWearer, "");
-    llMessageLinked(LINK_RLV, RLV_CMD, "redirchat:"+(string)g_iGarbleChan+"=add,chatshout=n,sendim=n", NULL_KEY);
+    llMessageLinked(LINK_THIS, RLV_CMD, "redirchat:"+(string)g_iGarbleChan+"=add,chatshout=n,sendim=n", NULL_KEY);
 }
 
 release() {
@@ -109,10 +105,10 @@ release() {
     bOn = FALSE;
     g_iBinder = CMD_EVERYONE;
     g_kBinder = NULL_KEY;
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "garble_Binder", "");
+    llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "garble_Binder", "");
     llMessageLinked(LINK_THIS, MENUNAME_RESPONSE, g_sParentMenu + "|" + GARBLE, "");
     llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|" + UNGARBLE, "");
-    llMessageLinked(LINK_RLV, RLV_CMD, "chatshout=y,sendim=y,redirchat:"+(string)g_iGarbleChan+"=rem", NULL_KEY);
+    llMessageLinked(LINK_THIS, RLV_CMD, "chatshout=y,sendim=y,redirchat:"+(string)g_iGarbleChan+"=rem", NULL_KEY);
     llListenRemove(g_iGarbleListen);
 }
 
@@ -126,7 +122,7 @@ UserCommand(integer iAuth, string sStr, key kID, integer iMenu) {
         else {
             g_iBinder = iAuth;
             g_kBinder = kID;
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "garble_Binder="+(string)kID+","+(string)iAuth, "");
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "garble_Binder="+(string)kID+","+(string)iAuth, "");
             bind();
             if (kID != g_kWearer) llOwnerSay(Name(kID)+" ordered you to be quiet");
             Notify(kID, "%WEARERNAME%'s speech is now garbled", FALSE);
@@ -151,8 +147,8 @@ default {
         g_sPrefix = llGetSubString(llKey2Name(g_kWearer),0,1);
         release();
         g_iGarbleChan = llRound(llFrand(499) + 100);
-        //llMessageLinked(LINK_SAVE, LM_SETTING_REQUEST, "listener_safeword", "");
-        //llMessageLinked(LINK_SAVE, LM_SETTING_REQUEST, "garble_Binder", "");
+        //llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "listener_safeword", "");
+        //llMessageLinked(LINK_THIS, LM_SETTING_REQUEST, "garble_Binder", "");
         //Debug("Starting");
     }
 
@@ -180,11 +176,7 @@ default {
 
         }
         else if (iNum == LM_SETTING_EMPTY && sMsg == "garble_Binder") release();
-        else if (iNum == LINK_UPDATE) {
-            if (sMsg == "LINK_DIALOG") LINK_DIALOG = iLink;
-            else if (sMsg == "LINK_RLV") LINK_RLV = iLink;
-            else if (sMsg == "LINK_SAVE") LINK_SAVE = iLink;
-        } else if (iNum == REBOOT && sMsg == "reboot") llResetScript();
+        else if (iNum == REBOOT && sMsg == "reboot") llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMsg) {
@@ -197,7 +189,7 @@ default {
             {
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "", "");
                 llOwnerSay("You used your safeword, your owner will be notified you did.");
-                llMessageLinked(LINK_DIALOG,NOTIFY_OWNERS,"Your sub %WEARERNAME% has used the safeword. Please check on their well-being in case further care is required.","");
+                llMessageLinked(LINK_THIS,NOTIFY_OWNERS,"Your sub %WEARERNAME% has used the safeword. Please check on their well-being in case further care is required.","");
             }
             else
             {

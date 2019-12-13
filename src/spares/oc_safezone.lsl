@@ -33,13 +33,6 @@ integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLACKLIST = 520;
 
-
-integer LINK_AUTH = 2;
-integer LINK_DIALOG = 3;
-integer LINK_SAVE = 5;
-integer LINK_ANIM = 6;
-integer LINK_UPDATE = -10;
-
 // messages for storing and retrieving values from settings store
 integer LM_SETTING_SAVE = 2000;     // scripts send messages on this channel to have settings saved to settings store
 //integer LM_SETTING_REQUEST = 2001;
@@ -76,7 +69,7 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer){
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    llMessageLinked(LINK_THIS, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
@@ -87,21 +80,21 @@ CheckRegion() {
         integer iIndex = llListFindList(g_lRegions,[sRegion]);
         if (g_iAllowList) { //we allow public modes here //g_iStealth
             if (iIndex < 0) {
-                llMessageLinked(LINK_AUTH, CMD_OWNER, "public off", g_kWearer);
+                llMessageLinked(LINK_THIS, CMD_OWNER, "public off", g_kWearer);
                 if (g_iStealth) llMessageLinked(LINK_THIS, CMD_OWNER, "hide", g_kWearer);
             }
             else {
-                llMessageLinked(LINK_AUTH, CMD_OWNER, "public on", g_kWearer);
+                llMessageLinked(LINK_THIS, CMD_OWNER, "public on", g_kWearer);
                 if (g_iStealth) llMessageLinked(LINK_THIS, CMD_OWNER, "show", g_kWearer);
             }
         }
         else if (g_iDenyList) { //we deny public modes here
             if (iIndex < 0) {
-                llMessageLinked(LINK_AUTH, CMD_OWNER, "public on", g_kWearer);
+                llMessageLinked(LINK_THIS, CMD_OWNER, "public on", g_kWearer);
                 if (g_iStealth) llMessageLinked(LINK_THIS, CMD_OWNER, "show", g_kWearer);
             }
             else {
-                llMessageLinked(LINK_AUTH, CMD_OWNER, "public off", g_kWearer); 
+                llMessageLinked(LINK_THIS, CMD_OWNER, "public off", g_kWearer); 
                 if (g_iStealth) llMessageLinked(LINK_THIS, CMD_OWNER, "hide", g_kWearer);
             }
         }
@@ -160,38 +153,38 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
     } else if (sStr == g_sAppName+" off")  {
         Notify(kID,SUBMENU_BUTTON+" plugin OFF!",TRUE);
         g_iSafeZoneOn=FALSE;
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sScript+ g_sAppName, "");
-        llMessageLinked(LINK_AUTH, CMD_OWNER, "public off", g_kWearer);
+        llMessageLinked(LINK_THIS, LM_SETTING_DELETE,g_sScript+ g_sAppName, "");
+        llMessageLinked(LINK_THIS, CMD_OWNER, "public off", g_kWearer);
     } else if (sStr == g_sAppName+" on")  {
         Notify(kID,SUBMENU_BUTTON+" plugin ON!",TRUE);
         g_iSafeZoneOn=TRUE;
         CheckRegion();
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sScript+ g_sAppName+"=1", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE,g_sScript+ g_sAppName+"=1", "");
     } else if (sStr == g_sAppName+" stealth on")  {
         Notify(kID,SUBMENU_BUTTON+" Stealth mode active!",TRUE);
         g_iStealth=TRUE;
         CheckRegion();
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sScript+ "stealth=1", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE,g_sScript+ "stealth=1", "");
     } else if (sStr == g_sAppName+" stealth off")  {
         Notify(kID,SUBMENU_BUTTON+" Stealth mode deactivated!",TRUE);
         llMessageLinked(LINK_THIS, CMD_OWNER, "show", g_kWearer);
         g_iStealth=FALSE;
         CheckRegion();
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sScript+ "stealth", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_DELETE,g_sScript+ "stealth", "");
     } else if (sStr == g_sAppName+" allow")  {
         Notify(kID,SUBMENU_BUTTON+" is set to allow public modes in it's list of regions!",TRUE);
         g_iAllowList=TRUE;
         g_iDenyList=FALSE;
         CheckRegion();
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sScript+ "allow=1", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sScript+ "deny", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE,g_sScript+ "allow=1", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_DELETE,g_sScript+ "deny", "");
     } else if (sStr == g_sAppName+" deny")  {
         Notify(kID,SUBMENU_BUTTON+" is set to deny public modes in it's list of regions!",TRUE);
         g_iAllowList=FALSE;
         g_iDenyList=TRUE;
         CheckRegion();
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sScript+ "deny=1", "");
-        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sScript+ "allow", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_SAVE,g_sScript+ "deny=1", "");
+        llMessageLinked(LINK_THIS, LM_SETTING_DELETE,g_sScript+ "allow", "");
     } else if ((sParam0 == g_sAppName) && (sParam1 == "add")) {
         string sRegion;
         if ( sParam2 == "") {
@@ -203,7 +196,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         if (iIndex < 0) { //we don't track this region.  Let's add it
             g_lRegions += [sRegion];
             Notify(kID,SUBMENU_BUTTON+" added "+sRegion+" to the list of regions",TRUE);
-            llMessageLinked(LINK_SAVE, LM_SETTING_SAVE,g_sScript + sRegion+"=1", "");
+            llMessageLinked(LINK_THIS, LM_SETTING_SAVE,g_sScript + sRegion+"=1", "");
             CheckRegion();
         }
         else Notify(kID,SUBMENU_BUTTON+" we already have "+sParam2+" in the current list of regions.",FALSE);
@@ -218,7 +211,7 @@ integer UserCommand(integer iNum, string sStr, key kID, integer remenu) {
         if (iIndex >= 0) { //we already have this region, so we can delete it
             g_lRegions = llDeleteSubList(g_lRegions,iIndex,iIndex);
             Notify(kID,SUBMENU_BUTTON+" removed "+sRegion+" to the list of regions",TRUE);
-            llMessageLinked(LINK_SAVE, LM_SETTING_DELETE,g_sScript + sRegion, "");
+            llMessageLinked(LINK_THIS, LM_SETTING_DELETE,g_sScript + sRegion, "");
             CheckRegion();
         }
         else Notify(kID,SUBMENU_BUTTON+" can't find "+sParam2+" in the current list of regions.",FALSE);
@@ -295,11 +288,6 @@ default {
                 }
             }
         }
-        else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_AUTH") LINK_AUTH = iSender;
-            else if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        }        
         else if (iNum == CMD_SAFEWORD) { 
             // Safeword has been received, release any restricitions that should be released
             // We're not really doing something that would warrant steps here

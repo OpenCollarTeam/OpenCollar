@@ -8,14 +8,10 @@
 
 /*
  -Purpose-
-
  The purpose of the plugin is to give the dom all the benefits of keeping a sub in
  a cage for long terms without causing the sub extreme boredom and frustration, as
  often occurs if the dom is away from SL for a couple of days.
-
-
  -Description-
-
  When the owner of the sub logs on, or the sub logs on and the owner is already on,
  the sub is teleported to an owner set location called the Cage Home, and kept there
  until:
@@ -23,84 +19,59 @@
    - The owner TPs the sub
    - A timer expires
    - Any primary owner manually releases the sub
-
-
  -Quick Installation-
-
    1. Put the script in the unlocked OC collar.
    2. Re-attach collar or relog
    3. The sub must stand where the "Cage Home" should be
    4. The owner selects "Cage Here" from the menu or chat command
    5. The owner now arms the plugin. This owner becomes cage owner.
-
-
  -Settings-
-
  Below is a complete list of available commands, of which you should prefix with the
  sub's initials, of course. Chat commands are only available to primary owners.
-
  ch here
    Makes sub's current position the Cage Home Location.
    Valid when not caged.
-
  ch arm
    Arms the Cage Home plugin. The primary that issues this command will become
    Cage Owner, to distinguish them from other primary owners. The on/offline state
    of the Cage Owner will be monitored.
    Valid when a Home Location has been set and not already armed.
-
  ch disarm
    Disarms the Cage Home plugin. Any primary owner may disarm.
    Valid when armed, but not caged.
-
  ch release
    Release the sub from the Cage Home. Any primary owner may release. If the
    primary owner that releases the sub is not the Cage Owner, the Cage Owner will
    also be notified about this release.
-
  ch settings
    Shows current settings. There is also a menu button for this action.
-
  ch commands
    Shows available chat commands. This list is unprefixed. There is also a menu
    button for this action.
-
  ch warntime <seconds>
    Specifies the duration, in seconds, between a warning is issued and the actual
    capturing (teleport). If this value is 0 or lower, no warning will be issued.
-
  ch radius <meters>
    Specifies the radius of the Cage Home, in meters.
-
  ch cagetime <minutes>
    Specifies the duration of the timer, after which the sub will be auto released,
    if not released manually earlier. If this value is 0 or less, no timer will be
    activated (use with care!).
-
  ch notifychannel <channel number>
    Specifies the channel number on which capturing (arrival) and releasing must
    be announced. If this value is 0 (public chat), no announcements will be made.
-
  ch notifyarrive <arrive string>
    Specifies the word or phrase that will be said upon capture (teleport
    arrival) of the sub.
-
  ch notifyrelease <release string>
    Specifies the word or phrase that will be said upon release of the sub.
-
  ch warnmessage <warning message>
    Specifies the word or phrase that will be said in public chat, that will
    announce the sub being summoned. The following tokens may be used:
    @  will be replaced with the sub's username
    #  will be replaced with the number of seconds
-
-
-
-
  script state-flow, with corresponding state names:
  --------------------------------------------------
-
-
                          script install                                             default
                            or reset
                               |
@@ -136,10 +107,8 @@
 |                    ----> released                                                 armed_released
 |                             |
  -----------------------------
-
 Notes:
   - Can only set location while not armed
-
 */
 
 
@@ -160,10 +129,6 @@ integer CMD_SAFEWORD = 510;
 
 integer NOTIFY      = 1002;
 integer REBOOT      = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
@@ -289,12 +254,12 @@ list lSTATES = ["UNSET","DISARMED","ARMED","WARNING","TELEPORT","CAGED","RELEASE
 
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_THIS,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtility, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" +
+    llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" +
     llDumpList2String(lChoices,"`") + "|" + llDumpList2String(lUtility,"`")+"|"+(string)iAuth,kMenuID);
     integer i = llListFindList(g_lMenuIDs, [kID]);
     if (~i) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], i, i + g_iMenuStride - 1);
@@ -419,17 +384,17 @@ Set(key kID, integer iAuth, string sMenuButton, string sButton) {
 // Stores all settings (using the settings or database script, or whatever)
 SaveSettings() {
     string sSaveString = llDumpList2String([g_iCageTime, g_iCageRadius, g_iWarningTime, g_iNotifyChannel, g_sNotifyArrive, g_sNotifyRelease, g_sWarningMessage], "|");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_settings="+sSaveString, "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "cagehome_settings="+sSaveString, "");
 }
 
 SaveRegion() {
     string sSaveString = llDumpList2String([g_sCageRegion, g_vCagePos, g_vRegionPos], "|");
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_region="+sSaveString, "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "cagehome_region="+sSaveString, "");
 }
 
 SaveState() {
     string sSaveString = (string)g_iState+"|"+(string)g_iCageAuth+"|"+(string)g_kCageOwnerKey;
-    llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "cagehome_state="+sSaveString, "");
+    llMessageLinked(LINK_THIS, LM_SETTING_SAVE, "cagehome_state="+sSaveString, "");
 }
 
 // Parses sValue, that we received from the settings or database script earlier,
@@ -508,7 +473,7 @@ ClearRlvRestrictions() {
 SendRlvCommands(list lRlvCommands) {
     integer i;
     for (i = 0; i < llGetListLength(lRlvCommands); i++) {
-        llMessageLinked(LINK_RLV, RLV_CMD, llList2String(lRlvCommands, i), "cagehome");
+        llMessageLinked(LINK_THIS, RLV_CMD, llList2String(lRlvCommands, i), "cagehome");
     }
 }
 
@@ -663,7 +628,7 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
     if (sStr=="menu "+g_sSubMenu || sStr==g_sSubMenu || sStr==g_sChatCmd) MenuMain(kID,iAuth);
     else if (llToLower(sStr) == "rm cagehome") {
-        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rmcagehome");        
     } else if (sStr == "settings") { // collar's command to request settings of all modules
         string sMsg = g_sPluginTitle+": "+llList2String(lSTATES, g_iState);
@@ -836,8 +801,8 @@ default {
                         g_sCageRegion = "";
                         g_vCagePos = ZERO_VECTOR;
                         g_vRegionPos = ZERO_VECTOR;
-                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "cagehome_state", "");
-                        llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "cagehome_region", "");
+                        llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "cagehome_state", "");
+                        llMessageLinked(LINK_THIS, LM_SETTING_DELETE, "cagehome_region", "");
                     }
                     MenuMain(kAv, iAuth);
                 }
@@ -855,17 +820,13 @@ default {
             } else if (sMenu == "rmcagehome") {
                 if (sMsg == "Yes") {
                     llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                    llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                    llMessageLinked(LINK_THIS, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                 if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                } else llMessageLinked(LINK_THIS, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
             }         
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 

@@ -319,21 +319,17 @@ string  UPMENU = "BACK"; // when your menu hears this, give the parent menu
 
 integer NOTIFY      = 1002;
 integer REBOOT      = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 //Debug(string sMsg) { llOwnerSay(llGetScriptName() + " [DEBUG]: " + sMsg);}
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_THIS,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 key Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth)
 {
     key kID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    llMessageLinked(LINK_THIS, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kID);
     return kID;
 }
@@ -477,7 +473,7 @@ RlvCmd(string sStr)
 
 OutCommand (string sCommand) {
     sCommand = llGetSubString(sCommand,1,-1); //strip off @
-    llMessageLinked(LINK_RLV, RLV_CMD, sCommand, g_kClicker);
+    llMessageLinked(LINK_THIS, RLV_CMD, sCommand, g_kClicker);
 }
 
 UserCommand(integer iAuth, string sStr, key kID, integer remenu)
@@ -685,10 +681,6 @@ default {
                     ProcessCommand(kAv, sMessage, FindCommandType(sMessage), "", "");
                 }
             }
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 }
