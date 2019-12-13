@@ -242,12 +242,10 @@ Dequeue() {
     }
     g_lQueue=[sCurIdent,kCurID,sCommand]+g_lQueue;
     list lButtons=["Yes","Trust Owner","Trust Object","No","Block Owner","Block Object"];
-    string sOwner=NameURI(llGetOwnerKey(kCurID)) ;
-    string sPrompt="\n"+llKey2Name(kCurID)+", owned by "+sOwner+" wants to control your viewer.";
+    string sOwner=NameURI(llList2Key(llGetObjectDetails(kCurID, [OBJECT_OWNER]),0)) ;
+    string sPrompt="\n"+llList2String(llGetObjectDetails(kCurID, [OBJECT_NAME]),0)+", owned by "+sOwner+" wants to control your viewer.";
     if (llGetSubString(sCommand,0,6)=="!x-who/") {
-        key kUser = SanitizeKey(llGetSubString(sCommand,7,42));
         lButtons+=["Trust User","Block User"];
-        sPrompt+="\n" + NameURI(kUser) + " is currently using this device.";
     }
     sPrompt+="\n\nDo you want to allow this?";
     g_iAuthPending = TRUE;
@@ -610,7 +608,27 @@ DebugOutput(key kID, list ITEMS){
 
 default {
     on_rez(integer iNum) {
-        if (llGetOwner() != g_kWearer) llResetScript();
+        
+        g_iRLV=FALSE; // turn off RLV until we get a signal from oc_rlvsys
+        g_lSources=[];
+
+        g_lTempTrustObj=[];
+        g_lTempBlockObj=[];
+        g_lTempTrustUser=[];
+        g_lTempBlockUser;
+        g_lTrustObj; // 2-strided list uuid,name
+        g_lBlockObj; // 2-strided list uuid,name
+        g_lTrustAv; // keys stored as string since strings is what you get when restoring settings
+        g_lBlockAv; // same here (this fixes issue 1253)
+
+        g_lQueue=[];
+        QSTRIDES=3;
+    }
+    
+    changed(integer iChange){
+        if(iChange&CHANGED_OWNER){
+            llResetScript();
+        }
     }
 
     state_entry() {
@@ -733,7 +751,9 @@ default {
                             SaveBlockAv();
                         }
                     }
+                    g_iAuthPending=FALSE;
                     CleanQueue();
+                    Dequeue();
                 } else if (sMenu == "rmrelay") {
                     if (sMsg == "Yes") {
                         integer i;
