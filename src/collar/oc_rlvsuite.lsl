@@ -207,7 +207,7 @@ MenuSetAccess(key kID, integer iAuth, string sCommand)
         else if (iCurrentAuth < CMD_WEARER) lButtons = [g_sChecked+"Owner",g_sChecked+"Trusted",g_sChecked+"Group",g_sUnChecked+"Everyone"];
         else if (iCurrentAuth <= CMD_EVERYONE) lButtons = [g_sChecked+"Owner",g_sChecked+"Trusted",g_sChecked+"Group",g_sChecked+"Everyone"];
     }
-    Dialog(kID, "Set who will access to '"+sCommand+"'", lButtons, lUtilityNone, 0, iAuth, "Restrictions~SetPerm");
+    Dialog(kID, "Set who will have access to '"+sCommand+"'", lButtons, lUtilityNone, 0, iAuth, "Restrictions~SetPerm");
 }
 
 MenuDelete(key kID, integer iAuth)
@@ -244,7 +244,7 @@ integer CheckPermissions(integer iMask1, integer iMask2, key kID, integer iAuth)
     }
     
     if (llGetListLength(lDenied) > 0){
-        llMessageLinked(LINK_SET, NOTIFY, "0"+"NOACCESS% to change restrictions:\n "+llDumpList2String(lDenied,", "),kID);
+        llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to change restrictions:\n "+llDumpList2String(lDenied,", "),kID);
         return FALSE;
     } else return TRUE;
 }
@@ -340,24 +340,24 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
     }
 }
 
-AuthSetting(list lAuthStrided, integer iRestore){
+
+AuthSetting(string sAuthSetting){
     
-    list authVals = [];
-    integer realPos=0;
-    integer i=0;
-    integer end = llGetListLength(lRLVList);
-    for(i=5;i<end;i+=6){
-        if(!iRestore)
-            authVals+=llList2Integer(lRLVList, i);
-        else
-            lRLVList = llListReplaceList(lRLVList, [llList2Integer(lAuthStrided, realPos)], i,i);
-        
-        
-        realPos++;
+    if (sAuthSetting == ""){ // Save last numbers of restriction auth
+        integer i;
+        for (i=5; i<llGetListLength(lRLVList);i+=6){
+            sAuthSetting += (string)(llList2Integer(lRLVList,i) - 500);
+        }
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_auths="+sAuthSetting, "");
+    } else { // restore restriction auths from string
+        integer i;
+        integer num = 0;
+        for (i=5; i<llGetListLength(lRLVList);i+=6){
+            integer iNewAuth = ((integer)llGetSubString(sAuthSetting,num,num))+500;
+            lRLVList = llListReplaceList(lRLVList, [iNewAuth], i,i);
+            ++num;
+        }
     }
-    
-    if(!iRestore)
-        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvsuite_auths="+llDumpList2String(authVals, "^"), "");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -374,27 +374,21 @@ UserCommand(integer iNum, string sStr, key kID) {
             if (iIndex > -1) {
                 if (CheckPermissions(llList2Integer(g_lMacros,iIndex+1),llList2Integer(g_lMacros,iIndex+2),kID,iNum)){
                     if (sChangekey == "add") {
-                        integer iNewMask1 = g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1);
-                        integer iNewMask2 = g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2);
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro Added: '"+sChangevalue+"'", kID);
-                        ApplyAll(iNewMask1,iNewMask2,FALSE);
+                        ApplyAll(g_iRestrictions1 | llList2Integer(g_lMacros,iIndex+1),g_iRestrictions2 | llList2Integer(g_lMacros,iIndex+2),FALSE);
                         llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been added!");
                     } else if (sChangekey == "replace") {
-                        integer iNewMask1 = llList2Integer(g_lMacros,iIndex+1);
-                        integer iNewMask2 = llList2Integer(g_lMacros,iIndex+2);
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Replaced restrictions with Macro '"+sChangevalue+"'", kID);
-                        ApplyAll(iNewMask1,iNewMask2,FALSE);
+                        ApplyAll(llList2Integer(g_lMacros,iIndex+1),llList2Integer(g_lMacros,iIndex+2),FALSE);
                         llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' replaced your Restrictions!");
                     } else if (sChangekey == "clear") {
-                        integer iNewMask1 = g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1));
-                        integer iNewMask2 = g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2));
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro cleared '"+sChangevalue+"'", kID);
-                        ApplyAll(iNewMask1,iNewMask2,FALSE);
+                        ApplyAll(g_iRestrictions1 ^ (g_iRestrictions1 & llList2Integer(g_lMacros,iIndex+1)),g_iRestrictions2 ^ (g_iRestrictions2 & llList2Integer(g_lMacros,iIndex+2)),FALSE);
                         llOwnerSay("Macro '"+llList2String(g_lMacros,iIndex)+"' has been cleared!");
                     }
                 } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Macro not applied!", kID);
             } else llInstantMessage(kID,"Macro '"+sChangevalue+"' does not exist!");
-        } else if (sChangetype == "restriction") {
+        } else if (sChangetype == "restriction" || sChangetype == "rlv") {
             if (sChangekey == "add") ApplyCommand(sChangevalue,TRUE, kID, iNum);
             else if (sChangekey == "rem" && iNum != CMD_WEARER) ApplyCommand(sChangevalue,FALSE, kID, iNum);
         } else if (sChangetype == "restrictions") Menu(kID,iNum);
@@ -424,11 +418,11 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 
-               // llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
-            //    llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
+                //llOwnerSay("Memory Free: "+(string)llGetFreeMemory());
+                //llOwnerSay("Memory Used: "+(string)llGetUsedMemory());
                 
                 
-                if(sMenu == "Restrictions~Main"){
+                if(sMenu == "Restrictions~Main"){ 
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "[Manage]") Dialog(kAv, "Select an Option:\n \nSave As: Save current restrictions into a Macro\nDelete: Delete a Macro", ["Save As","Delete"], lUtilityNone, 0, iAuth, "Restrictions~Manage");
                     else if(sMsg == "[Individual]") {
@@ -503,7 +497,7 @@ default
                             else if (sMsg == "Group") lRLVList = llListReplaceList(lRLVList,[CMD_GROUP],iIndex+5,iIndex+5);
                             else if (sMsg == "Everyone") lRLVList = llListReplaceList(lRLVList,[CMD_EVERYONE],iIndex+5,iIndex+5);
                             llOwnerSay(g_sTmpRestName+"'s Access set to "+sMsg);
-                            AuthSetting([],FALSE);
+                            AuthSetting("");
                         }
                         MenuSetAccess(kAv, iAuth, g_sTmpRestName);
                     }
@@ -552,13 +546,10 @@ default
             if(sStr == "update_active")state inUpdate;
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
-            string sToken = llList2String(lParams, 0);
-            string sValue = llList2String(lParams, 1);
-            integer i = llSubStringIndex(sToken, "_");
-            if (sToken == "rlvsuite_mask1") g_iRestrictions1 = (integer)sValue;
-            else if (sToken == "rlvsuite_mask2") g_iRestrictions2 = (integer) sValue;
-            else if (sToken == "rlvsuite_macros") g_lMacros = llParseStringKeepNulls(sValue, ["^"],[]);
-            else if (sToken == "rlvsuite_auths") AuthSetting(llParseString2List(sValue, ["^"], []), TRUE);
+            if (llList2String(lParams, 0) == "rlvsuite_mask1") g_iRestrictions1 = llList2Integer(lParams, 1);
+            else if (llList2String(lParams, 0) == "rlvsuite_mask2") g_iRestrictions2 = llList2Integer(lParams, 1);
+            else if (llList2String(lParams, 0) == "rlvsuite_macros") g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
+            else if (llList2String(lParams, 0) == "rlvsuite_auths") AuthSetting(llList2String(lParams, 1));
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
             ApplyAll(0,0,FALSE);
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
