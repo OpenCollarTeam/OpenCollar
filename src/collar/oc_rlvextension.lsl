@@ -220,12 +220,12 @@ ApplyAllExceptions(){
 }
 
 Save(){
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_MinCamDist="+(string)g_fMinCamDist, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_MaxCamDist="+(string)g_fMaxCamDist, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_BlurAmount="+(string)g_iBlurAmount, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Muffle="+(string)g_bMuffle, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Owner="+(string)g_iOwnerEx, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "RLVExt_Trusted="+(string)g_iTrustedEx, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MinCamDist="+(string)g_fMinCamDist, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MaxCamDist="+(string)g_fMaxCamDist, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_BlurAmount="+(string)g_iBlurAmount, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Muffle="+(string)g_bMuffle, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Owner="+(string)g_iOwnerEx, "");
+    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Trusted="+(string)g_iTrustedEx, "");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -389,21 +389,21 @@ default
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
              integer i = llSubStringIndex(sToken, "_");
-            if (sToken == "RLVExt_MinCamDist") {
+            if (sToken == "rlvext_MinCamDist") {
                 g_fMinCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
-            } else if (sToken == "RLVExt_MaxCamDist") {
+            } else if (sToken == "rlvext_MaxCamDist") {
                 g_fMaxCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
-            } else if (sToken == "RLVExt_BlurAmount") {
+            } else if (sToken == "rlvext_BlurAmount") {
                 g_iBlurAmount = (integer)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
-            } else if (sToken == "RLVExt_Muffle") { 
+            } else if (sToken == "rlvext_Muffle") { 
                 g_bMuffle = (integer)sValue;
                 SetMuffle(g_bMuffle);
-            } else if (sToken == "RLVExt_Owner") {
+            } else if (sToken == "rlvext_Owner") {
                 g_iOwnerEx = (integer) sValue;
-            } else if (sToken == "RLVExt_Trusted") {
+            } else if (sToken == "rlvext_Trusted") {
                 g_iTrustedEx = (integer) sValue;
             }else if (llGetSubString(sToken, 0, i) == "auth_") {
                 if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
