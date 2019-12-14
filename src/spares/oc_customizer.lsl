@@ -14,9 +14,6 @@ integer CMD_OWNER = 500;
 integer CMD_WEARER = 503;
 
 integer NOTIFY = 1002;
-integer LINK_DIALOG = 3;
-integer LINK_SAVE = 5;
-integer LINK_UPDATE = -10;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -66,7 +63,7 @@ Debug(string sStr) {
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType)
 {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
+    llMessageLinked(LINK_THIS, DIALOG, (string)kRCPT + "|" + sPrompt + "|" + (string)iPage + "|"
     + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iMenuIndex = llListFindList(g_lMenuIDs, [kRCPT]);
@@ -188,12 +185,12 @@ UserCommand(integer iAuth, string sStr, key kID )
         //give this plugin's menu to id
         if (kID!=g_kWearer && iAuth!=CMD_OWNER)
         {
-        llMessageLinked(LINK_DIALOG, NOTIFY, "0%NOACCESS%.", kID);
+        llMessageLinked(LINK_THIS, NOTIFY, "0%NOACCESS%.", kID);
             llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kID);
         }
         else ElementMenu(kID, 0, iAuth);
     } else if (llToLower(sStr) == "rm customizer") {
-        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iAuth!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         else Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iAuth,"rm"+g_sSubMenu);
     }
 }
@@ -243,14 +240,14 @@ default
                     else if (sMessage == RESET)
                     {
                         ResetScripts();
-                        llMessageLinked(LINK_SAVE, iAuth, "load", kAv);
+                        llMessageLinked(LINK_THIS, iAuth, "load", kAv);
                         g_sCurrentElement = "";
                         ElementMenu(kAv, iPage, iAuth);
                     }
                     else if (sMessage == REMOVE)
                     {
                         ResetScripts();
-                        llMessageLinked(LINK_SAVE, iAuth, "load", kAv);
+                        llMessageLinked(LINK_THIS, iAuth, "load", kAv);
                         llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|" + g_sSubMenu, "");
                         llMessageLinked(LINK_THIS, iAuth, "menu " + g_sParentMenu, kAv);
                         llRemoveInventory(llGetScriptName());
@@ -296,9 +293,9 @@ default
                 } else if (sMenuType == "rm"+g_sSubMenu) {
                     if (sMessage == "Yes") {
                         llMessageLinked(LINK_ROOT, MENUNAME_REMOVE , g_sParentMenu + "|" + g_sSubMenu, "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        llMessageLinked(LINK_THIS, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                     if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                    } else llMessageLinked(LINK_THIS, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
         }
@@ -306,11 +303,6 @@ default
         {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
-        }
-        else if (iNum == LINK_UPDATE)
-        {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         }
     }
 

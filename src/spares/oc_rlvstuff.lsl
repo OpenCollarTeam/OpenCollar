@@ -72,10 +72,6 @@ integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 //integer LOADPIN = -1904;
 integer REBOOT  = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
@@ -124,7 +120,7 @@ Debug(string sStr) {
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_THIS, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -132,7 +128,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_THIS,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 StuffMenu(key kID, integer iAuth) {
@@ -213,7 +209,7 @@ UpdateSettings() {    //build one big string from the settings list, and send to
             if (sTempRLVValue!="y")lTempSettings+=[sTempRLVSetting,sTempRLVValue];
         }
         //output that string to viewer
-        llMessageLinked(LINK_RLV, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
+        llMessageLinked(LINK_THIS, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
     }
 }
 
@@ -229,8 +225,8 @@ SaveSettings() {
                 lCategorySettings+=[llList2String(g_lSettings,numSettings+1),llList2String(g_lSettings,numSettings+2)];
             }
         }
-        if (llGetListLength(lCategorySettings)>0) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, llList2String(g_lChangedCategories,-1) + "List=" + llDumpList2String(lCategorySettings, ","), "");
-        else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, llList2String(g_lChangedCategories,-1) + "List", "");
+        if (llGetListLength(lCategorySettings)>0) llMessageLinked(LINK_THIS, LM_SETTING_SAVE, llList2String(g_lChangedCategories,-1) + "List=" + llDumpList2String(lCategorySettings, ","), "");
+        else llMessageLinked(LINK_THIS, LM_SETTING_DELETE, llList2String(g_lChangedCategories,-1) + "List", "");
 
         g_lChangedCategories=llDeleteSubList(g_lChangedCategories,-1,-1);
     }
@@ -276,7 +272,7 @@ UserCommand(integer iNum, string sStr, key kID, string fromMenu) {
     sStr=llStringTrim(sStr,STRING_TRIM);
     string sStrLower=llToLower(sStr);
     if (sStrLower == "rm rlvstuff") {
-        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        if (kID!=g_kWearer && iNum!=CMD_OWNER) llMessageLinked(LINK_THIS,NOTIFY,"0"+"%NOACCESS%",kID);
         else Dialog(kID, "\nDo you really want to uninstall Legacy RLV Stuff?", ["Yes","No","Cancel"], [], 0, iNum,"rmrlvstuff");
     } else if (sStrLower == "rlvtp" || sStrLower == "menu travel") Menu(kID, iNum, "rlvtp_");
     else if (sStrLower == "rlvtalk" || sStrLower == "menu talk") Menu(kID, iNum, "rlvtalk_");
@@ -384,13 +380,13 @@ default {
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
                 if (sMenu == "rmrlvstuff") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE, g_sParentMenu + "|Stuff", "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+"Legacy RLV Stuff has been removed.", kAv);
+                        llMessageLinked(LINK_THIS, MENUNAME_REMOVE, g_sParentMenu + "|Stuff", "");
+                        llMessageLinked(LINK_THIS, NOTIFY, "1"+"Legacy RLV Stuff has been removed.", kAv);
                         ClearSettings("");
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+"Legacy RLV Stuff remains installed.", kAv);
+                    } else llMessageLinked(LINK_THIS, NOTIFY, "0"+"Legacy RLV Stuff remains installed.", kAv);
                 } else if (sMenu == "rlvstuff") {
-                    if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu "+g_sParentMenu, kAv);
+                    if (sMessage == UPMENU) llMessageLinked(LINK_THIS, iAuth, "menu "+g_sParentMenu, kAv);
                     else UserCommand(iAuth, "menu "+sMessage, kAv, "");
                 }
                 else if (sMessage == UPMENU) StuffMenu(kAv,iAuth);
@@ -433,10 +429,6 @@ default {
             //remove stride from g_lMenuIDs
             //we have to subtract from the index because the dialog id comes in the middle of the stride
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
-        } else if (iNum == LINK_UPDATE) {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
