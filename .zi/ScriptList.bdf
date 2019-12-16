@@ -203,7 +203,7 @@
     "oc_outfits": {
       "ScriptName": "oc_outfits",
       "Type": "script",
-      "Container": "spares",
+      "Container": "spares/Apps",
       "ScriptPath": null,
       "FileExt": ".lsl"
     },
