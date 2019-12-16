@@ -676,8 +676,8 @@ default {
         }
     }
     link_message(integer iSender, integer iNum, string sMessage, key kMessageID){
-        if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sMessage, kMessageID, FALSE);
-        else if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
+        if (iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sMessage, kMessageID, FALSE);
+        if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
             g_lButtons = [] ; // flush submenu buttons
             llMessageLinked(iSender, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
         } else if (iNum == MENUNAME_RESPONSE) {
