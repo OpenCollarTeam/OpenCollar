@@ -189,7 +189,7 @@
     "oc_capture": {
       "ScriptName": "oc_capture",
       "Type": "script",
-      "Container": "spares",
+      "Container": "spares/Apps",
       "ScriptPath": null,
       "FileExt": ".lsl"
     },
