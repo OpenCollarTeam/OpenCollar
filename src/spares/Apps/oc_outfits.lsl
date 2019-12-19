@@ -146,12 +146,12 @@ ConfigMenu(key kID, integer iAuth){
 UserCommand(integer iNum, string sStr, key kID) {
     if(iNum == 599)return;//No Access
     // Verify access rights now
-    if(iNum > CMD_WEARER)return;
+    if(iNum > CMD_EVERYONE)return;
     if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return; 
     if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return; 
     if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return; 
     if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
@@ -220,7 +220,7 @@ default
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
