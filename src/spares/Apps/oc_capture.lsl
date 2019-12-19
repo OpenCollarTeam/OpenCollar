@@ -94,6 +94,11 @@ WearerConsent(string SLURL){
     Dialog(g_kWearer, sPrompt, ["YES", "NO"], [], 0, CMD_WEARER, "ConsentPrompt");
 }
 
+StartCapture(key kID, integer iAuth)
+{
+    Dialog(kID,  "\n[Capture]\n \nDo you want to capture secondlife:///app/agent/"+(string)g_kWearer+"/about?", ["YES", "NO"], [], 0, iAuth, "StartPrompt");
+}
+
 StopCapture(key kID, integer iAuth){
     Dialog(kID,  "\n[Capture]\n \nAre you sure you want to end capture?", ["YES", "NO"], [], 0, iAuth, "EndPrompt");
 }
@@ -110,6 +115,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) {
         if(iNum == CMD_OWNER)
             Menu(kID, iNum);
+        else if (kID == g_kCaptor) StopCapture(kID, iNum); // if we are the Captor ask if we want to stop capture instead.
         else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture settings", kID);
     }
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
@@ -133,10 +139,11 @@ UserCommand(integer iNum, string sStr, key kID) {
                     // Check if ID is captor, as they may be trying to release
                     if(kID == g_kCaptor){
                         // Initiate release now
-                        StopCapture(kID, iNum);
-                        g_iExpire = llGetUnixTime()+30;
-                        g_kExpireFor = kID;
-                        llSetTimerEvent(1);
+                        llMessageLinked(LINK_SET, NOTIFY, "0Capture has ended", g_kCaptor);
+                        llMessageLinked(LINK_SET, NOTIFY, "0You are no longer captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about !", g_kWearer);
+                        g_iCaptured=FALSE;
+                        g_kCaptor=NULL_KEY;
+                        Commit();
                     }else if(kID == g_kWearer){
                         // Prompt wearer, ask if they want to end capture
                         StopCapture(kID, iNum);
@@ -159,7 +166,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         if(g_iRisky){
                             // Instant capture
                             g_kCaptor=kID;
-                            llMessageLinked(LINK_SET, NOTIFY, "0Success", g_kCaptor);
+                            llMessageLinked(LINK_SET, NOTIFY, "0Successfuly captured secondlife:///app/agent/"+(string)g_kWearer+"/about", g_kCaptor);
                             g_iCaptured=TRUE;
                             llMessageLinked(LINK_SET, NOTIFY, "0You have been captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about ! If you need to free yourself, you can always use your safeword '"+g_sSafeword+"'. Also by saying your prefix capture", g_kWearer);
                             Commit();
@@ -238,6 +245,7 @@ default
     }
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
+        if(iNum == CMD_NOACCESS && sStr == "menu" && g_iEnabled && !g_iCaptured) StartCapture(kID, iNum); // When the collar is touched by someone without permission and capture is enabled show the Capture dialog.
         if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
@@ -285,6 +293,8 @@ default
                     g_kExpireFor=NULL_KEY;
                     llSetTimerEvent(0);
                     g_iExpireMode=0;
+                } else if(sMenu == "StartPrompt"){
+                    if (sMsg == "YES") UserCommand(iAuth,"capture",kAv);
                 } else if(sMenu == "EndPrompt"){
                     if(sMsg == "NO"){
                         llMessageLinked(LINK_SET, NOTIFY, "0Confirmed. Not Ending Capture", g_kExpireFor);
