@@ -70,6 +70,8 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
+integer g_iReleaseTicks = 600; // 600seconds = 10 minutes
+
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -149,7 +151,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         StopCapture(kID, iNum);
                         g_kExpireFor=kID;
                         g_iExpire = llGetUnixTime()+30;
-                        llSetTimerEvent(1);
+                        if (!g_iCaptured) llSetTimerEvent(1);
                     }else{
                         llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% while already captured", kID);
                         return;
@@ -174,7 +176,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         else {
                             // Ask the wearer for consent to allow capture
                             g_kCaptor=kID;
-                            llSetTimerEvent(1);
+                            if (!g_iCaptured) llSetTimerEvent(1);
                             g_kExpireFor=g_kWearer;
                             g_iExpireMode=1;
                             g_iExpire=llGetUnixTime()+30;
@@ -225,7 +227,10 @@ Commit(){
     if(g_iCaptured){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_isActive=1", ""); // <--- REMOVE AFTER NEXT RELEASE. This is here only for 7.3 compatibility
+        g_iReleaseTicks = 600;
+        llSetTimerEvent(1);
     }else{
+        if (g_kExpireFor == NULL_KEY) llSetTimerEvent(0);
         llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kCaptor);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_tempowner", "");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "capture_isActive", ""); // <------ REMOVE AFTER NEXT RELEASE
@@ -291,7 +296,7 @@ default
                     }
                     g_iExpire=0;
                     g_kExpireFor=NULL_KEY;
-                    llSetTimerEvent(0);
+                    if (!g_iCaptured) llSetTimerEvent(0);
                     g_iExpireMode=0;
                 } else if(sMenu == "StartPrompt"){
                     if (sMsg == "YES") UserCommand(iAuth,"capture",kAv);
@@ -307,7 +312,7 @@ default
                     
                     g_iExpire=0;
                     g_kExpireFor=NULL_KEY;
-                    llSetTimerEvent(0);
+                    if (!g_iCaptured) llSetTimerEvent(0);
                     g_iExpireMode=0;
                 }
             }
@@ -356,8 +361,8 @@ default
        // llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     timer(){
-        if(g_iExpire <=llGetUnixTime()){
-            llSetTimerEvent(0);
+        if(g_iExpire <=llGetUnixTime() && g_kExpireFor != NULL_KEY){
+            if (!g_iCaptured) llSetTimerEvent(0);
             llMessageLinked(LINK_SET,NOTIFY, "0Timed Out.",g_kExpireFor);
             g_iExpire=0;
             g_kExpireFor="";
@@ -366,7 +371,17 @@ default
                 g_iExpireMode=0;
             }
         }
+        
+        if (g_iCaptured && llGetAgentSize(g_kCaptor) == ZERO_VECTOR){
+            g_iReleaseTicks--;
+            if (g_iReleaseTicks == 599) llMessageLinked(LINK_SET,NOTIFY, "0You are out of range! Capture of secondlife:///app/agent/"+(string)g_kWearer+"/about will end in 10 minutes unless you come back!", g_kCaptor);
+            if (g_iReleaseTicks <= 0) UserCommand(CMD_OWNER,"capture",g_kCaptor);
+        } else if (g_iCaptured) {
+            if (g_iReleaseTicks < 600) llMessageLinked(LINK_SET,NOTIFY, "0Timer reset. Welcome Back!", g_kCaptor);
+            g_iReleaseTicks = 600;
+        }
     }
+    
             
 }
 
