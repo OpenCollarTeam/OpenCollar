@@ -687,6 +687,7 @@ default {
 
     on_rez(integer iParam) {
         g_iHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
+        llSleep(10.0);
         init();
     }
 

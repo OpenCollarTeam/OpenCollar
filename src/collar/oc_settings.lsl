@@ -336,7 +336,7 @@ default {
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
             g_iCheckNews = TRUE;
-            llSetTimerEvent(2.0);
+            llSetTimerEvent(7.0);
             //llSleep(0.5); // brief wait for others to reset
             //llMessageLinked(LINK_SET,LINK_UPDATE,"LINK_SET","");
             //SendValues();
