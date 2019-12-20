@@ -356,8 +356,6 @@ default
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
         } else if(iNum == LM_SETTING_EMPTY){
             if(sStr == "capture_status"){
-                llSay(0,"(debug) no capture status flag [set:8]");
-                g_iFlagAtLoad=8;
                 g_iAutoRelease=TRUE;
                 Commit();
             }
