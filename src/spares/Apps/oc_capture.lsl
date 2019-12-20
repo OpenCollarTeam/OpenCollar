@@ -42,7 +42,7 @@ integer CMD_NOACCESS = 599; // Required for when public is disabled
 
 integer g_iEnabled=FALSE ; // DEFAULT
 integer g_iRisky=FALSE;
-integer g_iAutoRelease=TRUE;
+integer g_iAutoRelease=FALSE;
 
 integer NOTIFY = 1002;
 integer LINK_CMD_DEBUG=1999;
@@ -129,10 +129,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sText;
         //llSay(0, sChangetype+": [changetype]");
         //llSay(0, sChangevalue+": [changevalue]");
+        //llSay(0, (string)iNum+": [iAuth]");
+        
         
         if(sChangetype == "capture"){
             if(sChangevalue == "dump"){
-                if(iNum != CMD_OWNER || iNum != CMD_WEARER)return;
+                if(iNum != CMD_OWNER && iNum != CMD_WEARER)return;
                 llSay(0,(string)g_iFlagAtLoad+" [InitialBootFlags]");
                 llSay(0, (string)g_kCaptor+" [TempOwner]");
                 llSay(0, (string)iNum+" [AuthLevel]");
@@ -210,7 +212,7 @@ integer g_iLocked=FALSE;
 
 key g_kCaptor;
 integer g_iCaptured;
-integer g_iFlagAtLoad = 0;
+integer g_iFlagAtLoad = 8;
 string g_sSafeword="RED";
 
 Commit(){
@@ -247,6 +249,8 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
+        llSleep(2);
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "capture_status", ""); // Needed to get the EMPTY reply
     }
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
@@ -336,7 +340,8 @@ default
                     if(Flag&2)g_iRisky=TRUE;
                     if(Flag&4)g_iCaptured=TRUE;
                     if(Flag&8)g_iAutoRelease=TRUE;
-                    else g_iAutoRelease = FALSE;
+                    
+                    
                     g_iFlagAtLoad=Flag;
                 }
             } else if(llList2String(lSettings,0) == "auth"){
@@ -349,6 +354,13 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+        } else if(iNum == LM_SETTING_EMPTY){
+            if(sStr == "capture_status"){
+                llSay(0,"(debug) no capture status flag [set:8]");
+                g_iFlagAtLoad=8;
+                g_iAutoRelease=TRUE;
+                Commit();
+            }
         } else if(iNum == CMD_SAFEWORD){
             if(g_iCaptured)llMessageLinked(LINK_SET,NOTIFY, "0Safeword used, capture has been stopped", g_kCaptor);
             g_iCaptured=FALSE;
