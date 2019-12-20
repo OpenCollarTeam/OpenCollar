@@ -60,8 +60,8 @@ integer LM_SETTING_DELETE = 2003;
 //integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 
 //integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
 //integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
@@ -675,6 +675,8 @@ default {
                         g_iCaptureIsActive=TRUE;
                 }
             }
+        } else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR){
+            if (g_iGroupEnabled) llMessageLinked(LINK_SET, RLV_CMD, "setgroup=n", "auth"); // This restriction should be active as long as group access is active!
         } else if( iNum == LM_SETTING_DELETE){
             list lParams = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lParams,0);
