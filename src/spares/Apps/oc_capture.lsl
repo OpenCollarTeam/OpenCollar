@@ -42,6 +42,7 @@ integer CMD_NOACCESS = 599; // Required for when public is disabled
 
 integer g_iEnabled=FALSE ; // DEFAULT
 integer g_iRisky=FALSE;
+integer g_iAutoRelease=TRUE;
 
 integer NOTIFY = 1002;
 integer LINK_CMD_DEBUG=1999;
@@ -70,6 +71,8 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
+integer g_iReleaseTime = 0;
+
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -85,7 +88,7 @@ string TickBox(integer iTick, string sLabel){
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Capture]";
-    list lButtons = [TickBox(g_iEnabled,"Enabled"), TickBox(g_iRisky, "Risky")];
+    list lButtons = [TickBox(g_iEnabled,"Enabled"), TickBox(g_iRisky, "Risky"), TickBox(g_iAutoRelease, "AutoRelease")];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
@@ -145,11 +148,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         g_kCaptor=NULL_KEY;
                         Commit();
                     }else if(kID == g_kWearer){
-                        // Prompt wearer, ask if they want to end capture
-                        StopCapture(kID, iNum);
-                        g_kExpireFor=kID;
-                        g_iExpire = llGetUnixTime()+30;
-                        llSetTimerEvent(1);
+                        llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% you can not free yourself!", kID);
                     }else{
                         llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% while already captured", kID);
                         return;
@@ -174,7 +173,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         else {
                             // Ask the wearer for consent to allow capture
                             g_kCaptor=kID;
-                            llSetTimerEvent(1);
+                            if (!g_iCaptured) llSetTimerEvent(1);
                             g_kExpireFor=g_kWearer;
                             g_iExpireMode=1;
                             g_iExpire=llGetUnixTime()+30;
@@ -219,13 +218,19 @@ Commit(){
     if(g_iEnabled)StatusFlags+=1;
     if(g_iRisky)StatusFlags+=2;
     if(g_iCaptured)StatusFlags+=4; // Used in oc_auth mainly to set the captureIsActive flag
+    if(g_iAutoRelease)StatusFlags+=8;
     g_iFlagAtLoad=StatusFlags;
     
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_status="+(string)StatusFlags,"");
     if(g_iCaptured){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_tempowner="+(string)g_kCaptor,"");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "capture_isActive=1", ""); // <--- REMOVE AFTER NEXT RELEASE. This is here only for 7.3 compatibility
+        if (g_iAutoRelease) {
+            g_iReleaseTime = 0;
+            llSetTimerEvent(1);
+        }
     }else{
+        if (g_kExpireFor == NULL_KEY) llSetTimerEvent(0);
         llMessageLinked(LINK_SET, CMD_OWNER, "unleash", g_kCaptor);
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_tempowner", "");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "capture_isActive", ""); // <------ REMOVE AFTER NEXT RELEASE
@@ -276,6 +281,10 @@ default
                         g_iRisky=1-g_iRisky;
                     }
                     
+                    if (sMsg == TickBox(g_iAutoRelease,"AutoRelease")){
+                        g_iAutoRelease=1-g_iAutoRelease;
+                    }
+                    
                     Commit();
                     
                     if(iRespring) Menu(kAv, iAuth);
@@ -291,7 +300,7 @@ default
                     }
                     g_iExpire=0;
                     g_kExpireFor=NULL_KEY;
-                    llSetTimerEvent(0);
+                    if (!g_iCaptured) llSetTimerEvent(0);
                     g_iExpireMode=0;
                 } else if(sMenu == "StartPrompt"){
                     if (sMsg == "YES") UserCommand(iAuth,"capture",kAv);
@@ -307,7 +316,7 @@ default
                     
                     g_iExpire=0;
                     g_kExpireFor=NULL_KEY;
-                    llSetTimerEvent(0);
+                    if (!g_iCaptured) llSetTimerEvent(0);
                     g_iExpireMode=0;
                 }
             }
@@ -326,6 +335,8 @@ default
                     if(Flag&1)g_iEnabled=TRUE;
                     if(Flag&2)g_iRisky=TRUE;
                     if(Flag&4)g_iCaptured=TRUE;
+                    if(Flag&8)g_iAutoRelease=TRUE;
+                    else g_iAutoRelease = FALSE;
                     g_iFlagAtLoad=Flag;
                 }
             } else if(llList2String(lSettings,0) == "auth"){
@@ -356,8 +367,8 @@ default
        // llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     timer(){
-        if(g_iExpire <=llGetUnixTime()){
-            llSetTimerEvent(0);
+        if(g_iExpire <=llGetUnixTime() && g_kExpireFor != NULL_KEY){
+            if (!g_iCaptured) llSetTimerEvent(0);
             llMessageLinked(LINK_SET,NOTIFY, "0Timed Out.",g_kExpireFor);
             g_iExpire=0;
             g_kExpireFor="";
@@ -366,7 +377,26 @@ default
                 g_iExpireMode=0;
             }
         }
+        
+        if (g_iCaptured && g_iAutoRelease && llGetAgentSize(g_kCaptor) == ZERO_VECTOR){
+            if (g_iReleaseTime == 0) {
+                g_iReleaseTime = llGetUnixTime() + 600;
+                llSleep(1); // Otherwise the Message will happen at the same time as the Teleport, and the Message will not show to the captor!
+                llMessageLinked(LINK_SET,NOTIFY, "0You are out of range! Capture of secondlife:///app/agent/"+(string)g_kWearer+"/about will end in 10 minutes unless you come back!", g_kCaptor);
+                llMessageLinked(LINK_SET,NOTIFY, "0Seems your captor has left you alone. You will be released in 10 minutes.", g_kWearer);
+            } else if (g_iReleaseTime <= llGetUnixTime()) {
+                g_iReleaseTime = 0;
+                UserCommand(CMD_OWNER,"capture",g_kCaptor);
+            }
+        } else if (g_iCaptured && g_iAutoRelease) {
+            if (g_iReleaseTime != 0){
+                llMessageLinked(LINK_SET,NOTIFY, "0Timer reset. Welcome Back!", g_kCaptor);
+                llMessageLinked(LINK_SET,NOTIFY, "0Your captor is back! Reseted and Stopped the timer.", g_kWearer);
+            }
+            g_iReleaseTime = 0;
+        }
     }
+    
             
 }
 
