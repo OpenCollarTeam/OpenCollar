@@ -664,6 +664,7 @@ default {
             else if (sToken == "auth_tempowner") g_lTempOwner = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_trust") g_lTrust = llParseString2List(sValue, [","], []);
             else if (sToken == "auth_block") g_lBlock = llParseString2List(sValue, [","], []);
+            else if(sToken == "global_checkboxes") g_lCheckboxes = llCSV2List(sValue);
         } else if (iNum == RLV_OFF) {
             g_iRLV=FALSE;
             refreshRlvListener();
