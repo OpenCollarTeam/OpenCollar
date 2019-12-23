@@ -318,6 +318,15 @@ Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer i
     else g_lMenuIDs += [kRCPT, kMenuID, iMenuType];
 }
 
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 MainMenu(key kID, integer iAuth) {
     list lButtons=[];
     integer i;
@@ -326,14 +335,11 @@ MainMenu(key kID, integer iAuth) {
         lButtons += [g_sTextMenu+(string)(i+1)];
     }
     
-    lButtons += [g_sColorMenu, g_sFontMenu];
-    if (g_iShow) lButtons += ["☑ Show"];
-    else lButtons += ["☐ Show"];
-
+    lButtons += [g_sColorMenu, g_sFontMenu, Checkbox(g_iShow, "Show")];
+    
     if (llGetListLength(g_lLabelLinks) < 3)  // Too much work to scroll more than 2 lines.
     {
-        if (g_iScroll) lButtons += ["☑ Scroll"];
-        else lButtons += ["☐ Scroll"];
+        lButtons+=Checkbox(g_iScroll, "Scroll");
     }
 
     string sPrompt = "\n[Label]\t"+g_sAppVersion+"\n\nCustomize the %DEVICETYPE%'s label!";
@@ -471,6 +477,11 @@ default
             } else if (sToken == "settings" && sValue == "sent") {
                 SetColor();
                 SetLabel();
+            }else if(llGetSubString(sToken, 0, i) == "global_"){
+                sToken = llGetSubString(sToken, i+1, -1);
+                if(sToken == "checkboxes"){
+                    g_lCheckboxes = llCSV2List(sValue);
+                }
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             if (!g_bHasError) llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
@@ -491,18 +502,19 @@ default
                     else if (llGetSubString(sMessage,0,-2) == g_sTextMenu) TextMenu(kAv, iAuth, ((integer)llGetSubString(sMessage,-1,-1))-1);
                     else if (sMessage == g_sColorMenu) ColorMenu(kAv, iAuth);
                     else if (sMessage == g_sFontMenu) FontMenu(kAv, iAuth);
-                    else if (sMessage == "☐ Show") {
-                        UserCommand(iAuth, "label on", kAv);
-                        MainMenu(kAv, iAuth);
-                    } else if (sMessage == "☑ Show") {
-                        UserCommand(iAuth, "label off", kAv);
-                        MainMenu(kAv, iAuth);
-                    } else if (sMessage == "☐ Scroll") {
-                        UserCommand(iAuth, "label scroll on", kAv);
-                        MainMenu(kAv, iAuth);
-                    } else if (sMessage == "☑ Scroll") {
-                        UserCommand(iAuth, "label scroll off", kAv);
-                        MainMenu(kAv, iAuth);
+                    else if(sMessage == Checkbox(g_iShow, "Show")){
+                        g_iShow=1-g_iShow;
+                        string onoff="off";
+                        if(g_iShow)onoff = "on";
+                        UserCommand(iAuth, "label "+onoff, kAv);
+                        MainMenu(kAv,iAuth);
+                    } else if(sMessage == Checkbox(g_iScroll, "Scroll")){
+                        g_iScroll=1-g_iScroll;
+                        string onoff="off";
+                        if(g_iScroll)onoff = "on";
+                        UserCommand(iAuth, "label "+onoff, kAv);
+                        UserCommand(iAuth, "label scroll "+onoff, kAv);
+                        MainMenu(kAv,iAuth);
                     }
                 } else if (sMenuType == "color") {
                     if (sMessage == UPMENU) MainMenu(kAv, iAuth);
