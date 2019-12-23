@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="Beta 2";
+string g_sDevStage="Beta 3";
 string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
@@ -145,10 +145,18 @@ integer g_iWillingUpdaters = 0;
 
 string g_sSafeWord="RED";
 
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 //Option Menu variables
 string DUMPSETTINGS = "Print";
-string STEALTH_OFF = "☐ Stealth"; // show the whole device
-string STEALTH_ON = "☑ Stealth"; // hide the whole device
+string STEALTH = "Stealth";
 string LOADCARD = "Load";
 string REFRESH_MENU = "Fix";
 
@@ -197,9 +205,9 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 SettingsMenu(key kID, integer iAuth) {
     string sPrompt = "\n[Settings]";
     list lButtons = [DUMPSETTINGS,LOADCARD,REFRESH_MENU];
-    lButtons += g_lResizeButtons;
-    if (g_iHide) lButtons += [STEALTH_ON];
-    else lButtons += [STEALTH_OFF];
+    lButtons += g_lResizeButtons+[Checkbox(g_iHide,STEALTH)];
+    
+    
     if (g_iLooks) lButtons += "Looks";
     else lButtons += "Themes";
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Settings");
@@ -222,9 +230,7 @@ HelpMenu(key kID, integer iAuth) {
     if(!g_iLatestVersion) sPrompt+="\n\n[Update available!]";
     //Debug("max memory used: "+(string)llGetSPMaxMemory());
     list lUtility = [UPMENU];
-    string sNewsButton="☐ News";
-    if (g_iNews) sNewsButton="☑ News";
-    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,sNewsButton,"Update"];
+    list lStaticButtons=[GIVECARD,CONTACT,LICENSE,"Update"];
     Dialog(kID, sPrompt, lStaticButtons, lUtility, 0, iAuth, "Help/About");
 }
 
@@ -596,8 +602,6 @@ default {
                     else if (sMessage == GIVECARD) UserCommand(iAuth,"help",kAv, TRUE);
                     else if (sMessage == LICENSE) UserCommand(iAuth,"license",kAv, TRUE);
                     else if (sMessage == CONTACT) UserCommand(iAuth,"contact",kAv, TRUE);
-                    else if (sMessage=="☐ News") UserCommand(iAuth, "news on", kAv, TRUE);
-                    else if (sMessage=="☑ News")   UserCommand(iAuth, "news off", kAv, TRUE);
                     else if (sMessage == "Update") UserCommand(iAuth,"update",kAv,TRUE);
                 } else if (sMenu == "UpdateConfirmMenu"){
                     if (sMessage=="Yes") StartUpdate();
@@ -611,12 +615,10 @@ default {
                      else if (sMessage == REFRESH_MENU) {
                          UserCommand(iAuth, sMessage, kAv, TRUE);
                          return;
-                    } else if (sMessage == STEALTH_OFF) {
-                         llMessageLinked(LINK_SET, iAuth,"hide",kAv);
-                         g_iHide = TRUE;
-                    } else if (sMessage == STEALTH_ON) {
-                        llMessageLinked(LINK_SET, iAuth,"show",kAv);
-                        g_iHide = FALSE;
+                    } else if(sMessage == Checkbox(g_iHide, STEALTH)){
+                        g_iHide=1-g_iHide;
+                        if(g_iHide)llMessageLinked(LINK_SET,iAuth,"hide",kAv);
+                        else llMessageLinked(LINK_SET, iAuth, "show", kAv);
                     } else if (sMessage == "Themes") {
                         llMessageLinked(LINK_SET, iAuth, "menu Themes", kAv);
                         return;
@@ -642,6 +644,8 @@ default {
                 g_iLocked = (integer)sValue;
                 if (g_iLocked) llOwnerSay("@detach=n");
                 SetLockElementAlpha();
+            } else if(sToken == g_sGlobalToken + "checkboxes"){
+                g_lCheckboxes = llCSV2List(sValue);
             } else if (sToken == "intern_looks") g_iLooks = (integer)sValue;
             else if (sToken == "intern_news") g_iNews = (integer)sValue;
             else if(sToken =="lock_locksound") {
