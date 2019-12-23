@@ -343,32 +343,36 @@ SafeWord() {
 
 }
 
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
+
 //----Menu functions section---//
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Relay]";
     list lButtons = ["☐ Trusted","☐ Ask","☐ Auto"];
     if (g_iBaseMode == 1){
-        lButtons = ["☒ Trusted","☐ Ask","☐ Auto"];
+        lButtons = llListReplaceList(lButtons, [Checkbox(TRUE, "Trusted")],0,0);
         sPrompt += " is set to trusted mode.";
     }
     else if (g_iBaseMode == 2){
-        lButtons = ["☐ Trusted","☒ Ask","☐ Auto"];
+        lButtons = llListReplaceList(lButtons, [Checkbox(TRUE, "Ask")],1,1);
         sPrompt += " is set to ask mode.";
     }
     else if (g_iBaseMode == 3){
-        lButtons = ["☐ Trusted","☐ Ask","☒ Auto"];
+        lButtons = llListReplaceList(lButtons, [Checkbox(TRUE, "Auto")],2,2);
         sPrompt += " is set to auto mode.";
     }
     else sPrompt += " is offline.";
-    if (g_iLiteMode) lButtons+=["☑ Lite"];
-    else lButtons+=["☐ Lite"];
-    if (g_iSmartStrip) lButtons+=["☑ Smart"];
-    else lButtons+=["☐ Smart"];
-    if (g_iLandMode) lButtons+=["☑ Land"];
-    else lButtons+=["☐ Land"];
-    lButtons+=["Pending","Sources","Access Lists"];
-    if (g_iHelpless) lButtons+=["☑ Helpless"];
-    else lButtons+=["☐ Helpless"];
+    
+    lButtons += [Checkbox(g_iLiteMode, "Lite"), Checkbox(g_iSmartStrip, "Smart"), Checkbox(g_iLandMode, "Land"), Checkbox(g_iHelpless, "Helpless")];
+    
     if (!g_iHelpless) lButtons+=["SAFEWORD"];
     if (g_lSources!=[]) {
         sPrompt+="\n\nCurrently grabbed by "+(string)(g_lSources!=[])+" source";
@@ -691,9 +695,9 @@ default {
                         Menu(kAv, iAuth);
                     } else {
                         sMsg = llToLower(sMsg);
-                        if (llSubStringIndex(sMsg,"☐ ")==0)
+                        if (llSubStringIndex(sMsg,llList2String(g_lCheckboxes,FALSE))==0)
                             sMsg = llDeleteSubString(sMsg,0,1)+" on";
-                        else if (llSubStringIndex(sMsg,"☒ ")==0||llSubStringIndex(sMsg,"☑ ")==0)
+                        else if (llSubStringIndex(sMsg,llList2String(g_lCheckboxes,TRUE))==0)
                             sMsg = llDeleteSubString(sMsg,0,1)+" off";
                         sMsg ="relay "+sMsg;
                         UserCommand(iAuth, sMsg, kAv);
