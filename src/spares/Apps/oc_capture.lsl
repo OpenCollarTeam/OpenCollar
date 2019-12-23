@@ -18,7 +18,15 @@ https://github.com/OpenCollarTeam/OpenCollar
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Capture";
 
-string CHECKBOX = "☐☑";
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 
 string g_sScriptVersion = "7.4";
 string g_sAppVersion = "1.0";
@@ -82,13 +90,9 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-string TickBox(integer iTick, string sLabel){
-    return llGetSubString(CHECKBOX, iTick, iTick)+" "+sLabel;
-}
-
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Capture]";
-    list lButtons = [TickBox(g_iEnabled,"Enabled"), TickBox(g_iRisky, "Risky"), TickBox(g_iAutoRelease, "AutoRelease")];
+    list lButtons = [Checkbox(g_iEnabled,"Enabled"), Checkbox(g_iRisky, "Risky"), Checkbox(g_iAutoRelease, "AutoRelease")];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
@@ -277,15 +281,15 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
                     
-                    if(sMsg == TickBox(g_iEnabled, "Enabled")){
+                    if(sMsg == Checkbox(g_iEnabled, "Enabled")){
                         g_iEnabled=1-g_iEnabled;
                     }
                     
-                    if(sMsg == TickBox(g_iRisky, "Risky")){
+                    if(sMsg == Checkbox(g_iRisky, "Risky")){
                         g_iRisky=1-g_iRisky;
                     }
                     
-                    if (sMsg == TickBox(g_iAutoRelease,"AutoRelease")){
+                    if (sMsg == Checkbox(g_iAutoRelease,"AutoRelease")){
                         g_iAutoRelease=1-g_iAutoRelease;
                     }
                     
@@ -332,6 +336,8 @@ default
                     g_iLocked=llList2Integer(lSettings,2);
                 } else if(llList2String(lSettings,1) == "safeword"){
                     g_sSafeword = llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) == "checkboxes"){
+                    g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
                 }
             } else if(llList2String(lSettings,0) == "capture"){
                 if(llList2String(lSettings,1) == "status"){
