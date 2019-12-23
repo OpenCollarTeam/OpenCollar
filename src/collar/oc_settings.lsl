@@ -480,7 +480,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_SET)return;
+                if(llGetLinkNumber()==LINK_ROOT)return;
                 
                 llOwnerSay("Moving "+llGetScriptName()+"!");
                 integer i=0;
