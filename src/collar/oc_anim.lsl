@@ -680,6 +680,11 @@ default {
                 } else if (sToken == "standhover") {
                     g_fStandHover = (float)sValue;
                 }
+            } else if(llToLower(llGetSubString(sToken,0,i)) == "global_"){
+                sToken = llGetSubString(sToken, i+1,-1);
+                if(sToken == "checkboxes"){
+                    g_lCheckboxes = llCSV2List(sValue);
+                }
             }
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
