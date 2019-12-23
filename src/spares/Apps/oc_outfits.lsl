@@ -60,9 +60,14 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
-string CHECKBOX = "☐☑⊡";
-string TickBox(integer iTick, string sLabel){
-    return llGetSubString(CHECKBOX, iTick, iTick)+" "+sLabel;
+
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string TickBox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 
 integer g_iLockCore = FALSE;
@@ -272,7 +277,7 @@ default
                         // Check mode first
                         list ButtonFlags = llParseString2List(sMsg,[" "],[]);
                         string ButtonLabel = llDumpList2String(llList2List(ButtonFlags,1,-1), " ");
-                        integer Enabled = llSubStringIndex(CHECKBOX, llList2String(ButtonFlags,0));
+                        integer Enabled = llListFindList(g_lCheckboxes, [llList2String(ButtonFlags,0)]);
                         
                         if(Enabled){
                             // Disable flag
@@ -354,6 +359,8 @@ default
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
+                } else if(llList2String(lSettings,1) == "checkboxes"){
+                    g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
                 }
             } else if(llList2String(lSettings,0) == "outfits"){
                 if(llList2String(lSettings,1) == "lockcore"){
@@ -362,8 +369,8 @@ default
                     //llSay(0, "ACCESS FLAGS: "+llList2String(lSettings,2));
                     g_iAccessBitSet=llList2Integer(lSettings,2);
                 }
+                Process();
             }
-            Process();
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
