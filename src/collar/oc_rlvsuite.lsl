@@ -57,8 +57,15 @@ integer DIALOG_RESPONSE = -9001;
 integer g_iRestrictions1 = 0;
 integer g_iRestrictions2 = 0;
 
-string g_sChecked = "☑";
-string g_sUnChecked = "☐";
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 
 // Default Macros will look like the old oc_rlvsuite Buttons
 list g_lMacros = ["Hear", 4, 0, "Talk" , 2, 0, "Touch", 0, 16384, "Stray", 29360128, 524288, "Rummage", 1342179328, 131168, "Dress", 0, 15, "IM", 384, 0, "Daze", 323584, 0, "Dazzle", 0, 16777216];
@@ -190,17 +197,13 @@ MenuCategory(key kID, integer iAuth, string sCategory, integer iSetAccess)
         if (llList2Integer(g_lRLVList,i) == iCatIndex) {
             if (iSetAccess) lMenu += [llList2String(g_lRLVList,i-1)];
             else if (llList2Integer(g_lRLVList,i+4) >= iAuth){
-                if ((g_iRestrictions1 & llList2Integer(g_lRLVList,i+2)) || (g_iRestrictions2 & llList2Integer(g_lRLVList,i+3))) lMenu += [g_sChecked+llList2String(g_lRLVList,i-1)];
-                else lMenu += [g_sUnChecked+llList2String(g_lRLVList,i-1)];
+                if ((g_iRestrictions1 & llList2Integer(g_lRLVList,i+2)) || (g_iRestrictions2 & llList2Integer(g_lRLVList,i+3))) lMenu += [Checkbox(TRUE,llList2String(g_lRLVList,i-1))];
+                else lMenu += [Checkbox(FALSE,llList2String(g_lRLVList,i-1))];
             }
         }
     }
     if (iSetAccess) Dialog(kID, sPrompt, lMenu, g_lUtilityNone, 0, iAuth, "Restrictions~Access");
     else Dialog(kID, sPrompt, lMenu, g_lUtilityNone, 0, iAuth, "Restrictions~Category");
-}
-string TickBox(integer iCheck, string sLabel){
-    if(iCheck) return g_sChecked+sLabel;
-    else return g_sUnChecked+sLabel;
 }
 
 MenuSetAccess(key kID, integer iAuth, string sCommand)
@@ -211,7 +214,7 @@ MenuSetAccess(key kID, integer iAuth, string sCommand)
         g_sTmpRestName = sCommand;
         integer iCurrentAuth = llList2Integer(g_lRLVList,iIndex+5);
         
-        lButtons = [TickBox(Bool((iCurrentAuth&1)), "Owner"), TickBox(Bool((iCurrentAuth&2)), "Trusted"), TickBox(Bool((iCurrentAuth&4)), "Group"), TickBox(Bool((iCurrentAuth&8)), "Everyone")];
+        lButtons = [Checkbox(bool((iCurrentAuth&1)), "Owner"), Checkbox(bool((iCurrentAuth&2)), "Trusted"), Checkbox(bool((iCurrentAuth&4)), "Group"), Checkbox(bool((iCurrentAuth&8)), "Everyone")];
     }
     Dialog(kID, "Set who will have access to '"+sCommand+"'", lButtons, g_lUtilityNone, 0, iAuth, "Restrictions~SetPerm");
 }
@@ -332,10 +335,6 @@ string FormatCommand(string sCommand,integer bEnable)
     
     return sCommand+sMod;
 }
-integer Bool(integer iTest){
-    if(iTest)return TRUE;
-    else return FALSE;
-}
 
 ApplyAll(integer iMask1, integer iMask2, integer iBoot)
 {
@@ -345,8 +344,8 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
     while (iMax1 > 0) {
         list pos = bitpos(iMax1, 0);
         integer iIndex = (llList2Integer(pos,0)*4)+2;
-        if (iIndex > -1 && Bool(iMax1 & iMask1) != Bool(iMax1 & g_iRestrictions1)) {
-                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex), Bool(iMax1 & iMask1))];
+        if (iIndex > -1 && bool(iMax1 & iMask1) != bool(iMax1 & g_iRestrictions1)) {
+                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex), bool(iMax1 & iMask1))];
         }
         iMax1 = iMax1 >> 1;
     }
@@ -354,8 +353,8 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
     while (iMax2 > 0) {
         list pos = bitpos(0,iMax2);
         integer iIndex = (llList2Integer(pos,1)*4)+30+2;
-        if (iIndex > -1 && Bool(iMax2 & iMask2) != Bool(iMax2 & g_iRestrictions2)) {
-                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex),Bool(iMax2 & iMask2))];
+        if (iIndex > -1 && bool(iMax2 & iMask2) != bool(iMax2 & g_iRestrictions2)) {
+                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex),bool(iMax2 & iMask2))];
         }
         iMax2 = iMax2 >> 1;
     }
@@ -571,7 +570,7 @@ default
                             integer mask = llList2Integer(g_lRLVList, iIndex+5);
                             
                             
-                            if(llGetSubString(sMsg,0,0) == g_sChecked){
+                            if(llGetSubString(sMsg,0,0) == llList2String(g_lCheckboxes,TRUE)){
                                 mask -= llList2Integer(g_lMaskData, llListFindList(g_lMaskData, [sLabel]));
                             }else{
                                 mask += llList2Integer(g_lMaskData, llListFindList(g_lMaskData, [sLabel]));
@@ -641,6 +640,7 @@ default
                 }
             } else if (llList2String(lParams, 0) == "rlvsuite_macros") g_lMacros = llParseStringKeepNulls(llList2String(lParams, 1), ["^"],[]);
             else if (llList2String(lParams, 0) == "rlvsuite_auths") AuthSetting(llList2String(lParams, 1));
+            else if(llList2String(lParams,0) == "global_checkboxes") g_lCheckboxes = llCSV2List(llList2String(lParams,1));
         } else if (iNum == CMD_SAFEWORD || iNum == RLV_CLEAR || iNum == RLV_OFF){
             g_iRLV = FALSE;
             ApplyAll(0,0,FALSE);
