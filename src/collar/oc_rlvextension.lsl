@@ -51,8 +51,6 @@ integer DIALOG_TIMEOUT = -9002;
 integer DIALOG_SENSOR = -9003;
 string UPMENU = "BACK";
 string ALL = "ALL";
-string g_sChecked = "☑";
-string g_sUnChecked = "☐";
 
 integer g_bCanStand = TRUE;
 integer g_bCanChat = FALSE;
@@ -60,6 +58,18 @@ integer g_bMuffle = FALSE;
 integer g_iBlurAmount = 5;
 float g_fMaxCamDist = 2.0;
 float g_fMinCamDist = 1.0;
+
+integer g_iRLV = FALSE;
+
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 
 list lUtilitySit  = ["[UNSIT]","BACK"];
 
@@ -118,10 +128,12 @@ string MuffleText(string sText)
 SetMuffle(integer bEnable)
 {
     if (bEnable && g_bCanChat) {
-        llOwnerSay("@redirchat:3728192=add");
+        llMessageLinked(LINK_SET,RLV_CMD,"redirchat:3728192=add","Muffle");
+        //llOwnerSay("@redirchat:3728192=add");
         g_iMuffleListener = llListen(3728192, "", llGetOwner(),"");
     } else {
-        llOwnerSay("@redirchat:3728192=rem");
+        llMessageLinked(LINK_SET,RLV_CMD,"redirchat:3728192=rem","Muffle");
+        //llOwnerSay("@redirchat:3728192=rem");
         llListenRemove(g_iMuffleListener);
     }
 }
@@ -149,11 +161,9 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     
     if (sTarget == "Owner") iExMask = g_iOwnerEx;
     else if (sTarget == "Trusted") iExMask = g_iTrustedEx;
-    // TODO: Handle Strangers
     integer i;
     for (i=0; i<llGetListLength(lRLVEx);i=i+3) {
-        if (iExMask & llList2Integer(lRLVEx,i+2)) lButtons += [g_sChecked+llList2String(lRLVEx,i)];
-        else lButtons += [g_sUnChecked+llList2String(lRLVEx,i)];
+        lButtons += Checkbox((iExMask&llList2Integer(lRLVEx,i+2)), llList2String(lRLVEx,i));
     }
     Dialog(kID, "Select Exceptions:", lButtons, [UPMENU], 0, iAuth, "Exceptions~Set");
 }
@@ -161,8 +171,8 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
 MenuForceSit(key kID, integer iAuth) {
     string sStricBtn = "Strict";
     
-    if (g_bCanStand) sStricBtn = g_sChecked+sStricBtn;
-    else sStricBtn = g_sUnChecked+sStricBtn;
+    sStricBtn = Checkbox(g_bCanStand, sStricBtn);
+    
     Dialog(kID, "Select a Place to sit:", [sStricBtn]+lUtilitySit, [], 0, iAuth, "Restrictions~sensor");
 }
 
@@ -176,8 +186,8 @@ MenuCamera(key kID, integer iAuth){
 
 MenuChat(key kID, integer iAuth){
     string sBtn;
-    if (g_bMuffle) sBtn = g_sChecked+"Muffle";
-    else sBtn = g_sUnChecked+"Muffle";
+    sBtn = Checkbox(g_bMuffle, "Muffle");
+    
     Dialog(kID, "Chat Values", [sBtn], [UPMENU], 0, iAuth, "Settings~Chat");
 }
 
@@ -191,41 +201,39 @@ MenuSetValue(key kID, integer iAuth, string sValueName) {
     Dialog(kID, "Set "+sValueName+"\n \n"+sValueName+"="+sValue, ["+1.0", "+0.5","+0.1","-1.0","-0.5","-0.1"], [UPMENU], 0, iAuth, "Settings~"+sValueName);
 }
 
-ApplyAllExceptions(){
-    llMessageLinked(LINK_SET,RLV_CMD,"clear","Exceptions");
-    list lCmd = [];
-    integer iExIndex;
-    for (iExIndex=1; iExIndex<llGetListLength(lRLVEx);iExIndex=iExIndex + 3){
-        list lTargetList = g_lOwners+g_lTempOwners;
-        integer i;
-        for (i=0; i<llGetListLength(lTargetList);++i) {
-            if (llList2String(lTargetList,i) != llGetOwner()){
-                if (llList2Integer(lRLVEx,iExIndex+1) & g_iOwnerEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add"];
-                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem"];
+ApplyAllExceptions(integer iBoot, integer bClearAll){
+    if (g_iRLV){
+        integer iExIndex;
+        for (iExIndex=1; iExIndex<llGetListLength(lRLVEx);iExIndex=iExIndex + 3){
+            list lTargetList = g_lOwners+g_lTempOwners;
+            integer i;
+            for (i=0; i<llGetListLength(lTargetList);++i) {
+                if (llList2String(lTargetList,i) != llGetOwner()){
+                    if ((llList2Integer(lRLVEx,iExIndex+1) & g_iOwnerEx) && !bClearAll) llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add");
+                    else llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem");
+                }
             }
-        }
-        lTargetList = g_lSecOwners;
-        for (i=0; i<llGetListLength(lTargetList);++i){
-            if (llList2String(lTargetList,i) != llGetOwner()){
-                if (llList2Integer(lRLVEx,iExIndex+1) & g_iTrustedEx) lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add"];
-                else lCmd += [llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem"];
+            lTargetList = g_lSecOwners;
+            for (i=0; i<llGetListLength(lTargetList);++i){
+                if (llList2String(lTargetList,i) != llGetOwner()){
+                    if ((llList2Integer(lRLVEx,iExIndex+1) & g_iTrustedEx) && !bClearAll) llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=add");
+                    else llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem");
+                }
             }
         }
     }
-    
-    //llOwnerSay("DEBUG: Apply Exceptions: "+llDumpList2String(lCmd,","));
-    
-    llMessageLinked(LINK_SET,RLV_CMD,llDumpList2String(lCmd,","),"Exceptions");
-    Save();
+    Save(iBoot);
 }
 
-Save(){
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MinCamDist="+(string)g_fMinCamDist, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MaxCamDist="+(string)g_fMaxCamDist, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_BlurAmount="+(string)g_iBlurAmount, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Muffle="+(string)g_bMuffle, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Owner="+(string)g_iOwnerEx, "");
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Trusted="+(string)g_iTrustedEx, "");
+Save(integer iBoot){
+    if (!iBoot) {
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MinCamDist="+(string)g_fMinCamDist, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_MaxCamDist="+(string)g_fMaxCamDist, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_BlurAmount="+(string)g_iBlurAmount, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Muffle="+(string)g_bMuffle, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Owner="+(string)g_iOwnerEx, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Trusted="+(string)g_iTrustedEx, "");
+    }
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -243,12 +251,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
-            if (sChangekey == g_sChecked+"Strict" && iNum != CMD_WEARER) {
+            if (sChangekey == Checkbox(TRUE,"Strict") && iNum != CMD_WEARER) {
                 llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=0="+(string)iNum,kID);
                 g_bCanStand = !g_bCanStand;
                 //ApplyCommand("Stand Up",FALSE,kID, iNum);
                 MenuForceSit(kID, iNum);
-            } else if (sChangekey == g_sUnChecked+"Strict") {
+            } else if (sChangekey == Checkbox(FALSE,"Strict") ){
                 llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=1="+(string)iNum,kID);
                 g_bCanStand = !g_bCanStand;
                 //ApplyCommand("Stand Up",TRUE,kID, iNum);
@@ -303,9 +311,8 @@ default
                             } else if (g_sExTarget == "Trusted") {
                                 if (g_iTrustedEx & llList2Integer(lRLVEx,iIndex+2)) g_iTrustedEx = g_iTrustedEx ^ llList2Integer(lRLVEx,iIndex+2);
                                 else g_iTrustedEx = g_iTrustedEx | llList2Integer(lRLVEx,iIndex+2);
-                            // TODO Add Exceptions for Strangers
                             }
-                            ApplyAllExceptions();
+                            ApplyAllExceptions(FALSE,FALSE);
                         }
                         MenuSetExceptions(kAv, iAuth, g_sExTarget);
                     }
@@ -337,7 +344,7 @@ default
                         if (sMsg == "Muffle") {
                             g_bMuffle = !g_bMuffle;
                             SetMuffle(g_bMuffle);
-                            Save();
+                            Save(FALSE);
                         }
                         MenuChat(kAv,iAuth);
                     }
@@ -377,7 +384,7 @@ default
                                 else if (g_iBlurAmount > 30) g_iBlurAmount = 30;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_iBlurAmount,kAv);
                             }
-                            Save();
+                            Save(FALSE);
                             MenuSetValue(kAv,iAuth,llList2String(lMenu,1));
                         }
                     }
@@ -406,28 +413,49 @@ default
             } else if (sToken == "rlvext_Trusted") {
                 g_iTrustedEx = (integer) sValue;
             }else if (llGetSubString(sToken, 0, i) == "auth_") {
-                if (sToken == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
-                else if (sToken == "auth_trust") g_lSecOwners = llParseString2List(sValue, [","], []);
-                else if (sToken == "auth_tempowner") g_lTempOwners = llParseString2List(sValue, [","], []);
-                ApplyAllExceptions();
-            } else if (sToken == "settings" && sValue == "send") ApplyAllExceptions();
+                if (sToken == "auth_owner") {
+                    g_lOwners = llParseString2List(sValue, [","], []);
+                    if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
+                } else if (sToken == "auth_trust") {
+                    g_lSecOwners = llParseString2List(sValue, [","], []);
+                    if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
+                } else if (sToken == "auth_tempowner") {
+                    g_lTempOwners = llParseString2List(sValue, [","], []);
+                    if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
+                }
+            } else if (sToken == "settings" && sValue == "send" && g_iRLV) ApplyAllExceptions(TRUE,FALSE);
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
+                } else if(llList2String(lSettings,1) == "checkboxes"){
+                    g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            if(sStr == "global_locked") g_iLocked=FALSE;
+            else if (sStr == "auth_owner") {
+                ApplyAllExceptions(TRUE,TRUE);
+                g_lOwners = []; 
+                ApplyAllExceptions(TRUE,FALSE);
+            } else if (sStr == "auth_trust") {
+                ApplyAllExceptions(TRUE,TRUE);
+                g_lSecOwners = []; 
+                ApplyAllExceptions(TRUE,FALSE);
+            } else if (sStr == "auth_tempowner") {
+                ApplyAllExceptions(TRUE,TRUE);
+                g_lTempOwners = []; 
+                ApplyAllExceptions(TRUE,FALSE);
+            }
         } else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
         }else if (iNum == RLV_OFF){
-            llMessageLinked(LINK_SET,RLV_CMD,"clear","Exceptions");
+            ApplyAllExceptions(TRUE,TRUE);
+            g_iRLV = FALSE;
         } else if (iNum == RLV_REFRESH || iNum == RLV_ON) {
-            ApplyAllExceptions();
+            g_iRLV = TRUE;
+            ApplyAllExceptions(TRUE,FALSE);
             SetMuffle(g_bMuffle);
             llSleep(1);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
