@@ -103,6 +103,15 @@ Debug(string sStr) {
     llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
 }*/
 
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+
 string NameURI(string sID){
     return "secondlife:///app/agent/"+sID+"/about";
 }
@@ -130,10 +139,8 @@ AuthMenu(key kAv, integer iAuth) {
     string sPrompt = "\n[Access & Authorization]";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "− Owner", "− Trust", "− Block"];
 
-    if (g_kGroup=="") lButtons += ["Group ☐"];    //set group
-    else lButtons += ["Group ☑"];    //unset group
-    if (g_iOpenAccess) lButtons += ["Public ☑"];    //set open access
-    else lButtons += ["Public ☐"];    //unset open access
+    lButtons += Checkbox(bool((g_kGroup!="")), "Group");
+    lButtons += Checkbox(g_iOpenAccess, "Public");
 
     lButtons += ["Runaway","Access List"];
     Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Auth",FALSE);
@@ -674,6 +681,10 @@ default {
                     if(Flag&4)
                         g_iCaptureIsActive=TRUE;
                 }
+            } else if(llToLower(llGetSubString(sToken,0,i)) == "global_"){
+                if(llGetSubString(sToken,i+1,-1) == "checkboxes"){
+                    g_lCheckboxes=llCSV2List(sValue);
+                }
             }
         } else if (iNum == RLV_REFRESH || iNum == RLV_CLEAR){
             if (g_iGroupEnabled) llMessageLinked(LINK_SET, RLV_CMD, "setgroup=n", "auth"); // This restriction should be active as long as group access is active!
@@ -713,10 +724,10 @@ default {
                             "− Owner","rm owner",
                             "− Trust","rm trust",
                             "− Block","rm block",
-                            "Group ☐","group on",
-                            "Group ☑","group off",
-                            "Public ☐","public on",
-                            "Public ☑","public off",
+                            Checkbox(FALSE,"Group"),"group on",
+                            Checkbox(TRUE,"Group"),"group off",
+                            Checkbox(FALSE,"Public"),"public on",
+                            Checkbox(TRUE, "Public"),"public off",
                             "Access List","list",
                             "Runaway","runaway"
                           ];
@@ -812,7 +823,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_SET)return;
+                if(llGetLinkNumber()==LINK_ROOT)return;
                 
                 llOwnerSay("Moving oc_auth!");
                 integer i=0;
