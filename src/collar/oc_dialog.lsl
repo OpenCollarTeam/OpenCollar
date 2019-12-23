@@ -190,6 +190,7 @@ Say(string sMsg, integer iWhisper) {
     else llSay(0, sMsg);
     llSetObjectName(sObjectName);
 }
+integer g_iShowLevel;
 
 Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
 {
@@ -309,6 +310,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (llGetListLength(lMenuItems+lUtilityButtons)){
         list lNavButtons;
         if (iNumitems > iMyPageSize) lNavButtons=[PREV,MORE];
+        if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
         llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons, lNavButtons), iChan);
     }
     else llTextBox(kRecipient, sThisPrompt, iChan);
@@ -626,6 +628,7 @@ default {
             } else if (sToken == g_sGlobalToken+"channel") g_iListenChan = (integer)sValue;
             else if (sToken == "auth_owner")
                 g_lOwners = llParseString2List(sValue, [","], []);
+            else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
@@ -709,7 +712,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_SET)return;
+                if(llGetLinkNumber()==LINK_ROOT)return;
                 
                 llOwnerSay("Moving "+llGetScriptName()+"!");
                 integer i=0;
