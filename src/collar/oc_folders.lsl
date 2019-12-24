@@ -23,7 +23,7 @@ string g_sSubMenu = "# Folders";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-//integer CMD_TRUSTED = 501;
+integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
@@ -324,7 +324,7 @@ doLockUnshared() { // sends command to the viewer to update all locks concerning
 // Browsing menu, called asynchronously only (after querying folder state). Queries user and auth from globals.
 FolderBrowseMenu(string sStr) {
     g_iAsyncMenuRequested = FALSE;
-    list lUtilityButtons = [UPMENU];
+    list lUtilityButtons = ["◌ Configure", UPMENU];
     string sPrompt = "\n[RLV Folders]\n\nCurrent folder is ";
     if (g_sCurrentFolder == "") sPrompt += "root";
     else sPrompt += g_sCurrentFolder;
@@ -435,7 +435,10 @@ searchSingle(string sItem) {
     } else llOwnerSay("@findfolder:"+sItem+"="+(string)g_iFolderRLV); //Unstored one-shot commands are better performed locally to save the linked message.
 
 }
-
+integer g_iFoldersAccessFlags=7; // All allowed by default!
+integer g_iTrusted;
+integer g_iGroup;
+integer g_iPublic;
 // set a dialog to be requested after the next viewer answer
 SetAsyncMenu(key kAv, integer iAuth) {
     g_iAsyncMenuRequested = TRUE;
@@ -443,8 +446,46 @@ SetAsyncMenu(key kAv, integer iAuth) {
     g_iAsyncMenuAuth = iAuth;
 }
 
+integer bool(integer a){
+    if(a)return TRUE;
+    else return FALSE;
+}
+list g_lCheckboxes=["⬜","⬛"];
+string Checkbox(integer iValue, string sLabel) {
+    return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
+}
+string TrueOrFalse(integer iCheck){
+    if(iCheck)return "True";
+    else return "False";
+}
+ConfigMenu(key kAv, integer iAuth){
+    string sPrompt;
+    list lButtons;
+    if(g_iFoldersAccessFlags&1) g_iTrusted=TRUE;
+    else g_iTrusted=FALSE;
+    if(g_iFoldersAccessFlags&2) g_iGroup=TRUE;
+    else g_iGroup=FALSE;
+    if(g_iFoldersAccessFlags&4) g_iPublic=TRUE;
+    else g_iPublic=FALSE;
+    sPrompt+="[Folders Config]\n \nOwner: Always Allowed\nTrusted: "+TrueOrFalse(g_iTrusted)+"\nGroup: "+TrueOrFalse(g_iGroup) + "\nPublic: "+TrueOrFalse(g_iPublic);
+    
+    lButtons = [Checkbox(g_iTrusted,"Trusted"), Checkbox(g_iGroup, "Group"), Checkbox(g_iPublic, "Public")];
+    Dialog(kAv, sPrompt, lButtons, [UPMENU], 0, iAuth, "Folders~Config");
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     if (llToLower(sStr) == "folders" || llToLower(sStr) == "#rlv" || sStr == "menu # Folders") {
+        // check access flags here!
+        
+        integer no=FALSE;
+        if(!(g_iFoldersAccessFlags&1) && iNum == CMD_TRUSTED)no=TRUE;
+        if(!(g_iFoldersAccessFlags&2) && iNum == CMD_GROUP)no=TRUE;
+        if(!(g_iFoldersAccessFlags&4) && iNum == CMD_EVERYONE)no=TRUE;
+        if(no){
+            llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to browse folders!", kID);
+            llMessageLinked(LINK_SET,iNum,"menu",kID);
+            return;
+        }
         g_sCurrentFolder = "";
         QueryFolders("browse");
         SetAsyncMenu(kID, iNum);
@@ -520,6 +561,25 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                         SetAsyncMenu(kAv, iAuth);
                         QueryFolders("history");
                     }
+                } else if(sMenu == "Folders~Config"){
+                    if(sMessage == UPMENU){
+                        g_sCurrentFolder="";
+                        QueryFolders("browse");
+                        return;
+                    }else {
+                        if(sMessage == Checkbox(g_iTrusted,"Trusted")){
+                            if(g_iTrusted)g_iFoldersAccessFlags-=1;
+                            else g_iFoldersAccessFlags+=1;
+                        } else if(sMessage == Checkbox(g_iGroup, "Group")){
+                            if(g_iGroup)g_iFoldersAccessFlags -=2;
+                            else g_iFoldersAccessFlags+=2;
+                        }else if(sMessage == Checkbox(g_iPublic, "Public")){
+                            if(g_iPublic)g_iFoldersAccessFlags-=4;
+                            else g_iFoldersAccessFlags+=4;
+                        }
+                        ConfigMenu(kAv, iAuth);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken+"accessflags="+(string)g_iFoldersAccessFlags, "");
+                    }
                 } else if (sMenu == "MultipleFoldersOnSearch") {
                     if (sMessage == UPMENU) {
                             g_sCurrentFolder = "";
@@ -563,9 +623,13 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     } else if (sMessage == ACTIONS_CURRENT) {
                         FolderActionsMenu(g_iLastFolderState, kAv, iAuth);
                         return;
-                    } else if (sMessage == PARENT)
+                    } else if (sMessage == PARENT){
                         ParentFolder();
-                    else { //we got a folder.  send the RLV command to remove/attach it.
+                    } else if(sMessage == "◌ Configure"){
+                        // Open Config menu
+                        ConfigMenu(kAv, iAuth);
+                        return;
+                    } else { //we got a folder.  send the RLV command to remove/attach it.
                         integer iState = StateFromButton(sMessage);
                         string folder = FolderFromButton(sMessage);
                         if (g_sCurrentFolder == "") g_sCurrentFolder = folder;
@@ -643,7 +707,7 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                     SetAsyncMenu(kAv, iAuth);
                     QueryFolders("browse");
                 }
-            }
+            } 
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
@@ -662,7 +726,14 @@ integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
                 } else if (sToken == "Unshared") {
                     g_iUnsharedLocks = (integer) sValue;
                     doLockUnshared();
+                } else if(sToken == "accessflags"){
+                    g_iFoldersAccessFlags=(integer)sValue;
                 }
+            } else if(llGetSubString(sToken,0,i) == "global_"){
+                sToken = llGetSubString(sToken, i+1,-1);
+                
+                if(sToken == "checkboxes")g_lCheckboxes = llCSV2List(sValue);
+            
             }
         } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
         else if(iNum == LINK_CMD_DEBUG){
