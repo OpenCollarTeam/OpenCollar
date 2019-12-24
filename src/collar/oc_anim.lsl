@@ -700,15 +700,19 @@ default {
                     //Debug("Got message " + sMessage);
                     if (sMessage == "BACK") {
                         llMessageLinked(LINK_SET, iAuth, "menu Main", kAv);
+                        return;
                     } else if (sMessage == "Pose") {
                         PoseMenu(kAv, 0, iAuth);
+                        return;
                     } else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") {
                         PoseMoveMenu(kAv, iAuth);
+                        return;
                     } else if (~llListFindList(g_lAnimButtons, [sMessage])) {
                         llMessageLinked(LINK_SET, iAuth, "menu " + sMessage, kAv);  // SA: can be child scripts menus, not handled in UserCommand()
                     } else if (sMessage == "AO Menu") {
                         llMessageLinked(LINK_SET, NOTIFY, "0" + "\n\nAttempting to trigger the AO menu. This will only work if %WEARERNAME% is using an OpenCollar AO or an AO Link script in their AO HUD.\n", kAv);
                         AOMenu(kAv, iAuth);
+                        return;
                     } else {
                         integer stat = llListFindList(g_lCheckboxes, [llGetSubString(sMessage,0,0)]);
                         string cmd = llToLower(llGetSubString(sMessage,2,-1));
