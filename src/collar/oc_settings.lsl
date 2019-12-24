@@ -315,10 +315,6 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 default {
     state_entry() {
-        if (llGetStartParameter()!=0){
-            state inUpdate;
-        }
-        
         // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         llSleep(0.5);
@@ -469,35 +465,6 @@ default {
             } else {
                 llSetTimerEvent(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
                 SendValues();
-            }
-        }
-    }
-}
-
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
-        else if(iNum == 0){
-            if(sMsg == "do_move"){
-                
-                if(llGetLinkNumber()==LINK_ROOT)return;
-                
-                llOwnerSay("Moving "+llGetScriptName()+"!");
-                integer i=0;
-                integer end=llGetInventoryNumber(INVENTORY_ALL);
-                for(i=0;i<end;i++){
-                    string item = llGetInventoryName(INVENTORY_ALL,i);
-                    if(llGetInventoryType(item)==INVENTORY_SCRIPT && item!=llGetScriptName()){
-                        llRemoveInventory(item);
-                    }else if(llGetInventoryType(item)!=INVENTORY_SCRIPT){
-                        llGiveInventory(kID, item);
-                        llRemoveInventory(item);
-                        i=-1;
-                        end=llGetInventoryNumber(INVENTORY_ALL);
-                    }
-                }
-                
-                llRemoveInventory(llGetScriptName());
             }
         }
     }
