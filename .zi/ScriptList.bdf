@@ -213,6 +213,13 @@
       "Container": "spares",
       "ScriptPath": null,
       "FileExt": ".lsl"
+    },
+    "oc_detach": {
+      "ScriptName": "oc_detach",
+      "Type": "script",
+      "Container": "spares/Apps",
+      "ScriptPath": null,
+      "FileExt": ".lsl"
     }
   }
 }
