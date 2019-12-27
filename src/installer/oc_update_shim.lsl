@@ -28,7 +28,8 @@ list g_lSettings;
 integer g_iIsUpdate;
 
 // list of deprecated tokens to remove from previous collar scripts
-list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint","auth_groupname"];
+list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint","auth_groupname",
+"rlvsuite_mask1", "rlvsuite_mask2"];
 
 integer CMD_OWNER = 500;
 
@@ -109,13 +110,17 @@ PermsCheck() {
 default {
     state_entry() {
         PermsCheck();
+        
         g_iStartParam = llGetStartParameter();
         if (g_iStartParam < 0 ){
             g_iIsUpdate = TRUE;
         }
+        
+        llOwnerSay("Update will start shortly. Checking for existing settings");
         // build script list
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
         string sName;
+        integer TotalScriptsFound=i;
         do { i--;
             sName = llGetInventoryName(INVENTORY_SCRIPT,i);
             if (~llListFindList(g_lCore5Scripts,[sName])) {
@@ -127,11 +132,15 @@ default {
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
         //llWhisper(g_iStartParam, "reallyready");
-        llSleep(5); // settle for a moment: oc_settings will not be ready right away to handle our request
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
-        llResetTime();
-        llSetTimerEvent(1); // Timeout the settings request in 30 seconds
-        
+        if(TotalScriptsFound>2){
+            llSleep(5); // settle for a moment: oc_settings will not be ready right away to handle our request
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+            llResetTime();
+            llSetTimerEvent(1); // Timeout the settings request in 30 seconds
+        }else{
+            llOwnerSay("No existing settings found. Starting install");
+            llWhisper(g_iStartParam,"reallyready");
+        }
     }
 
     listen(integer iChannel, string sWho, key kID, string sMsg) {
