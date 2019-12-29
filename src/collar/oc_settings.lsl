@@ -19,6 +19,7 @@ key g_kURLLoadRequest;
 key g_kWearer;
 string g_sURL;
 key g_kConfirmLoadDialogID;
+integer g_iInUpdate=FALSE;
 
 integer LINK_CMD_DEBUG= 1999;
 //string g_sSettingToken = "settings_";
@@ -317,6 +318,7 @@ default {
     state_entry() {
         // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
+        if(llGetStartParameter() != 0) g_iInUpdate=TRUE; // do NOT spam linked messages
         llSleep(0.5);
         g_kWearer = llGetOwner();
         g_iLineNr = 0;
@@ -332,6 +334,7 @@ default {
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
             g_iCheckNews = TRUE;
+            g_iInUpdate=FALSE;
             llSetTimerEvent(10.0);
             //llSleep(0.5); // brief wait for others to reset
             //llMessageLinked(LINK_SET,LINK_UPDATE,"LINK_SET","");
@@ -443,6 +446,12 @@ default {
             llInstantMessage(kID, llGetScriptName() +" lSettings length: "+(string)llGetListLength(g_lSettings));
 
             PrintSettings(kID, "");
+        } else if(iNum == -99999){
+            if(sStr == "update_active"){
+                g_iInUpdate=TRUE;
+            }
+        } else if(iNum == REBOOT){
+            g_iInUpdate=FALSE;
         }
     }
 
@@ -464,7 +473,8 @@ default {
                 }
             } else {
                 llSetTimerEvent(1.0);   //pause, then send values if inventory changes, in case script was edited and needs its settings again
-                SendValues();
+                if(!g_iInUpdate)
+                    SendValues();
             }
         }
     }
