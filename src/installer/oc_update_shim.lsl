@@ -24,7 +24,7 @@ list g_lCore5Scripts = ["oc_auth","oc_dialog","oc_rlvsys","oc_settings","oc_anim
 // list where we'll record all the settings and local settings we're sent, for replay later.
 // they're stored as strings, in form "<cmd>|<data>", where cmd is either LM_SETTING_SAVE
 list g_lSettings;
-
+integer g_iIgnoreSent=FALSE;
 integer g_iIsUpdate;
 
 // list of deprecated tokens to remove from previous collar scripts
@@ -79,7 +79,7 @@ Check4Core5Script() {
         sScriptName = llGetInventoryName(INVENTORY_SCRIPT,i);
         integer index = llListFindList(g_lCore5Scripts,[sScriptName]);
         if (~index) {
-            llMessageLinked(LINK_SET,LOADPIN,sScriptName,"");
+            llMessageLinked(LINK_ALL_OTHERS,LOADPIN,sScriptName,"");
             g_lCore5Scripts = llDeleteSubList(g_lCore5Scripts,index,index);
             return;
         }
@@ -292,6 +292,8 @@ default {
                     g_lSettings += [sStr];
                 }
             }else{
+                if(g_iIgnoreSent)return;
+                g_iIgnoreSent=TRUE;
                 llOwnerSay("Got Settings! Starting Update");
                 llSetTimerEvent(0);
                 llWhisper(g_iStartParam, "reallyready");
@@ -316,7 +318,9 @@ default {
     timer(){
         if(llGetTime()>30){
             llSetTimerEvent(0);
+            llMessageLinked(LINK_SET, -99999, "update_active", "");
             llOwnerSay("Starting Update");
+            g_iIgnoreSent=TRUE;
             llWhisper(g_iStartParam,"reallyready");
         } else if(llGetTime()>5 && llGetTime()<6.9){
             llOwnerSay("* oc_settings has not yet sent us settings! Retry (Count:1)");
