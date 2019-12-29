@@ -193,12 +193,18 @@ MenuCategory(key kID, integer iAuth, string sCategory, integer iSetAccess)
     
     list lMenu = [];
     integer i;
-    for (i=1; i<llGetListLength(g_lRLVList);i=i+6) {
-        if (llList2Integer(g_lRLVList,i) == iCatIndex) {
-            if (iSetAccess) lMenu += [llList2String(g_lRLVList,i-1)];
-            else if (llList2Integer(g_lRLVList,i+4) >= iAuth){
-                if ((g_iRestrictions1 & llList2Integer(g_lRLVList,i+2)) || (g_iRestrictions2 & llList2Integer(g_lRLVList,i+3))) lMenu += [Checkbox(TRUE,llList2String(g_lRLVList,i-1))];
-                else lMenu += [Checkbox(FALSE,llList2String(g_lRLVList,i-1))];
+    
+    for(i=0; i<llGetListLength(g_lRLVList); i+= 4){
+        if(llList2Integer(g_lRLVList,i+1) == iCatIndex){
+            
+            if(iSetAccess) lMenu+= [llList2String(g_lRLVList,i)];
+            else {
+                integer Flag = llRound(llPow(2,(i/4)));
+                if(isAuthed(llList2Integer(g_lRLVList,i+3), iAuth)){
+                    if((g_iRestrictions1 & Flag) || (g_iRestrictions2 & Flag)) lMenu+= [Checkbox(TRUE, llList2String(g_lRLVList, i))];
+                    else lMenu += [Checkbox(FALSE, llList2String(g_lRLVList,i))];
+                }else {
+                }
             }
         }
     }
@@ -272,6 +278,7 @@ list bitpos (integer flag1,integer flag2){
     return ret;
 }
 integer isAuthed(integer Flag, integer iAuth){   ///// TODO: Modify the MaskData to include the iAuth value to make this easier on memory with a one liner
+    
     if(Flag&1 && iAuth==CMD_OWNER)return TRUE;
     if(Flag&2 && iAuth==CMD_TRUSTED)return TRUE;
     if(Flag&4 && iAuth == CMD_GROUP)return TRUE;
