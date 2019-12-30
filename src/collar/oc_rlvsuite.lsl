@@ -81,7 +81,7 @@ list g_lUtilityNone = ["BACK"];
 
 
 list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD, Auth
-    "Emote"         , 0 , "emote"                               , 15 ,  // 1
+    "EmoteTrunc"    , 0 , "emote"                               , 15 ,   // 1
     "Send Chat"     , 0 , "sendchat"                            , 15 ,   // 2
     "See Chat"      , 0 , "recvchat"                            , 15 ,   // 3
     "See Emote"     , 0 , "recvemote"                           , 15 ,   // 4
