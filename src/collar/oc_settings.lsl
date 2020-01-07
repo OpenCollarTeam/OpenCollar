@@ -319,6 +319,21 @@ default {
         // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         if(llGetStartParameter() != 0) g_iInUpdate=TRUE; // do NOT spam linked messages
+        
+        
+        if(g_iInUpdate && llGetLinkNumber()!=LINK_ROOT){
+            llOwnerSay("Moved oc_settings");
+            if(llGetInventoryType(".settings")==INVENTORY_NOTECARD){
+                key sendTo = llGetLinkKey(LINK_ROOT);
+                llGiveInventory(sendTo, ".settings");
+            }
+            
+            llSleep(1);
+            llRemoveInventory(llGetScriptName());
+            return;
+        }
+        
+        
         llSleep(0.5);
         g_kWearer = llGetOwner();
         g_iLineNr = 0;
