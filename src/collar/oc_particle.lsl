@@ -147,8 +147,7 @@ FindLinkedPrims() {
     for (i=-1; i<=linkcount;++i) {
         string sPrimName = llToLower(llStringTrim(llList2String(llGetLinkPrimitiveParams(i,[PRIM_NAME]),0),STRING_TRIM));
         if (llToLower(sPrimName) == "leashpoint" || llToLower(sPrimName) == "ooc") {
-            llSetLinkPrimitiveParams(i,[PRIM_NAME,"fcollar"]);
-            llOwnerSay("Prim '"+sPrimName+"' renamed to 'fcollar'!");
+            g_lLeashPrims += ["fcollar", i];
             sPrimName = "fcollar";
         }
         integer iIndex = llListFindList(g_lCollarPoints,[sPrimName]);
@@ -160,7 +159,6 @@ FindLinkedPrims() {
     }
     
     if (llListFindList(g_lLeashPrims,["fcollar"]) < 0){
-        llOwnerSay("Warning: There is no leash prim! Please create a invisible Prim in front of the collar and name it 'fcollar'");
         g_lLeashPrims += ["fcollar",LINK_ROOT];
     }
 }
