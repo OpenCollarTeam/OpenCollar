@@ -398,16 +398,14 @@ integer Auth(string sObjID) {
         iNum = CMD_TRUSTED;
     else if (sID == g_sWearerID)
         iNum = CMD_WEARER;
-    else if (g_iOpenAccess)
-        if(in_range((key)sID))
-            iNum = CMD_EVERYONE;
-        else
-            iNum = CMD_NOACCESS;
+    
+    
+    if(!in_range((key)sObjID)) return CMD_BLOCKED;
+    
+    if (g_iOpenAccess)
+        iNum = CMD_EVERYONE;
     else if (g_iGroupEnabled && (string)llGetObjectDetails((key)sObjID, [OBJECT_GROUP]) == (string)g_kGroup && (key)sID != g_sWearerID)  //meaning that the command came from an object set to our control group, and is not owned by the wearer
-        if(in_range((key)sID))
-            iNum = CMD_GROUP;
-        else
-            iNum = CMD_NOACCESS;
+        iNum = CMD_GROUP;
     else if (llSameGroup(sID) && g_iGroupEnabled && sID != g_sWearerID) {
         iNum = CMD_GROUP;
     } else
