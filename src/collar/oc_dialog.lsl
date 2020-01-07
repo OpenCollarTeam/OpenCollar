@@ -52,6 +52,8 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
 //integer FIND_AGENT = -9005;
+integer DIALOG_ACTUAL = -9010;
+integer DIALOG_TEXTBOX = -9011;
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -313,12 +315,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
         list lPretty = PrettyButtons(lButtons, lUtilityButtons, lNavButtons);
         
-        llMessageLinked(LINK_SET, DIALOG+1, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
+        llMessageLinked(LINK_SET, DIALOG_ACTUAL, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
         
         llDialog(kRecipient, sThisPrompt, lPretty, iChan);
     }
     else{
-        llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
+        llMessageLinked(LINK_SET, DIALOG_TEXTBOX, sThisPrompt+"|"+(string)iAuth, "");
         llTextBox(kRecipient, sThisPrompt, iChan);
     }
     //LED OFF
