@@ -311,9 +311,16 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         list lNavButtons;
         if (iNumitems > iMyPageSize) lNavButtons=[PREV,MORE];
         if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
-        llDialog(kRecipient, sThisPrompt, PrettyButtons(lButtons, lUtilityButtons, lNavButtons), iChan);
+        list lPretty = PrettyButtons(lButtons, lUtilityButtons, lNavButtons);
+        
+        llMessageLinked(LINK_SET, DIALOG+1, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
+        
+        llDialog(kRecipient, sThisPrompt, lPretty, iChan);
     }
-    else llTextBox(kRecipient, sThisPrompt, iChan);
+    else{
+        llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
+        llTextBox(kRecipient, sThisPrompt, iChan);
+    }
     //LED OFF
     //set dialog timeout
     llSetTimerEvent(g_iReapeat);
