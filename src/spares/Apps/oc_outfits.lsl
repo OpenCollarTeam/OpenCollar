@@ -6,6 +6,7 @@ Copyright ©2019
 
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
+    * Jan 2020      - Added BrowseCore
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -19,7 +20,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.1";
+string g_sAppVersion = "1.2";
 string g_sScriptVersion = "7.4";
 
 
@@ -83,7 +84,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Outfits App "+g_sAppVersion+"]";
-    list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "Help" ];
+    list lButtons = [TickBox(g_iLockCore, "Lock Core"), "◌ Configure", "Browse", "BrowseCore", "Help" ];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 string TrueOrFalse(integer iCheck){
@@ -103,7 +104,9 @@ key g_kListenTo;
 integer g_iListenToAuth;
 
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
+    string sAppend;
+    if(llSubStringIndex(g_sPath, ".core")!=-1)sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core"+sAppend, Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
 }
 
 
@@ -124,6 +127,19 @@ FolderBrowser (key kID, integer iAuth){
     g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
     TickBrowser();
     
+    
+    llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
+    llSetTimerEvent(1);
+}
+
+CoreBrowser(key kID, integer iAuth){
+    g_sPath = ".outfits/.core";
+    g_kListenTo = kID;
+    g_iListenToAuth = iAuth;
+    g_iListenChannel = llRound(llFrand(9999999));
+    if(g_iListenHandle>0) llListenRemove(g_iListenHandle);
+    g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
+    TickBrowser();
     
     llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
     llSetTimerEvent(1);
@@ -213,6 +229,10 @@ ForceLockCore(){
     llSleep(0.5);
 }
 
+RmCorelock(){
+    llOwnerSay("@detachallthis:.outfits/.core=y");
+}
+
 default
 {
     on_rez(integer t){
@@ -265,6 +285,9 @@ default
                     } else if(sMsg == "Browse"){
                         FolderBrowser(kAv,iAuth);
                         iRespring=FALSE;
+                    } else if(sMsg == "BrowseCore"){
+                        CoreBrowser(kAv, iAuth);
+                        iRespring=FALSE;
                     } else if(sMsg == "Help"){
                         llMessageLinked(LINK_SET,NOTIFY, "0 \n \n[Outfits Help]\n* This is the typical structure of a Outfits folder: \n#RLV\n-> .outfits\n---> .core\n-> My Outfit\n \nAnything placed in .core will never be removed during a outfit change using this script. If you enable 'Lock Core' then your core folder will stay locked for any changes made outside of this script, (for example:  your relay)", kAv);
                     }
@@ -316,20 +339,26 @@ default
                         return;
                     } else if(sMsg == ">Wear<"){
                         // add recursive. Adds subfolder contents too
-                        if(!Bool((g_iAccessBitSet&32)))
-                            llOwnerSay("@detachall:.outfits=force");
+                        if(!Bool((g_iAccessBitSet&32))){
+                            if(llSubStringIndex(g_sPath, ".core")==-1)
+                                llOwnerSay("@detachall:.outfits=force");
+                        }
                         else{
                             llOwnerSay("@detach=force");
                             llOwnerSay("@remoutfit=force");
                         }
                         llSleep(2); // incase of lag
                         g_sLastOutfit=g_sPath;
+                        RmCorelock();
+                        llSleep(1);
                         llOwnerSay("@attachallover:"+g_sPath+"=force");
                         
                     } else if(sMsg == ">RemoveAll<"){
                         g_sLastOutfit="NONE";
-                        if(!Bool((g_iAccessBitSet&32)))
+                        if(!Bool((g_iAccessBitSet&32))){
+                            if(llSubStringIndex(g_sPath, ".core")!=-1)RmCorelock();
                             llOwnerSay("@detachall:"+g_sPath+"=force");
+                        }
                         else{
                             llOwnerSay("@detach=force");
                             llOwnerSay("@remoutfit=force");
