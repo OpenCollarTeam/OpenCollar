@@ -406,10 +406,10 @@ integer Auth(string sObjID) {
         iNum = CMD_GROUP;
     } else{
         iNum = CMD_NOACCESS;
-        if(!in_range((key)sID))iNum = CMD_BLOCKED;
-        
-        
     }
+    
+    
+    if(!in_range((key)sID) && (iNum != CMD_OWNER || iNum != CMD_TRUSTED || iNum != CMD_WEARER))iNum = CMD_BLOCKED;
     //Debug("Authed as "+(string)iNum);
     return iNum;
 }
