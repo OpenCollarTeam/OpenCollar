@@ -121,13 +121,6 @@ default {
         integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
         string sName;
         integer TotalScriptsFound=i;
-        do { i--;
-            sName = llGetInventoryName(INVENTORY_SCRIPT,i);
-            if (~llListFindList(g_lCore5Scripts,[sName])) {
-                if (llGetInventoryType(sName) == INVENTORY_SCRIPT)
-                    llRemoveInventory(sName);
-            } else g_lScripts += sName;
-        } while (i);
         // listen on the start param channel
         llListen(g_iStartParam, "", "", "");
         // let mama know we're ready
