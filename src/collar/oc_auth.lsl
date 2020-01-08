@@ -404,12 +404,8 @@ integer Auth(string sObjID) {
         iNum = CMD_GROUP;
     else if (llSameGroup(sID) && g_iGroupEnabled && sID != g_sWearerID) {
         iNum = CMD_GROUP;
-    } else{
+    } else
         iNum = CMD_NOACCESS;
-    }
-    
-    
-    if(!in_range((key)sID) && (iNum != CMD_OWNER || iNum != CMD_TRUSTED || iNum != CMD_WEARER))iNum = CMD_BLOCKED;
     //Debug("Authed as "+(string)iNum);
     return iNum;
 }
