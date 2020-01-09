@@ -135,7 +135,7 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD, Auth
     "Stand TP"      , 6 , "standtp"                             , 15 ,   // 52
     "Always Run"    , 6 , "alwaysrun"                           , 15 ,   // 53
     "Temp Run"      , 6 , "temprun"                             , 15 ,   // 54
-    "Unlock Cam"    , 7 , "camunlock"                           , 15    ,   // 55
+    "Unlock Cam"    , 7 , "camunlock"                           , 15 ,   // 55
     "Blur View"     , 7 , "setdebug_renderresolutiondivisor"    , 15 ,   // 56
     "MaxDistance"   , 7 , "setcam_avdistmax"                    , 15 ,   // 57
     "MinDistance"   , 7 , "setcam_avdistmin"                    , 15     // 58
@@ -223,9 +223,9 @@ MenuSetAccess(key kID, integer iAuth, string sCommand)
     integer iIndex = llListFindList(g_lRLVList,[sCommand]);
     if (iIndex > -1) {
         g_sTmpRestName = sCommand;
-        integer iCurrentAuth = llList2Integer(g_lRLVList,iIndex+5);
+        integer iCurrentAuth = llList2Integer(g_lRLVList,iIndex+3);
         
-        lButtons = [Checkbox(bool((iCurrentAuth&1)), "Owner"), Checkbox(bool((iCurrentAuth&2)), "Trusted"), Checkbox(bool((iCurrentAuth&4)), "Group"), Checkbox(bool((iCurrentAuth&8)), "Everyone")];
+        lButtons = [Checkbox(bool((iCurrentAuth&2)), "Trusted"), Checkbox(bool((iCurrentAuth&4)), "Group"), Checkbox(bool((iCurrentAuth&8)), "Everyone")];
     }
     Dialog(kID, "Set who will have access to '"+sCommand+"'", lButtons, g_lUtilityNone, 0, iAuth, "Restrictions~SetPerm");
 }
@@ -359,18 +359,22 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
         
         
         if (iIndex > -1 && bool(iMax1 & iMask1) != bool(iMax1 & g_iRestrictions1)) {
-                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex), bool(iMax1 & iMask1))];
+            lResult += [FormatCommand(llList2String(g_lRLVList,iIndex), bool(iMax1 & iMask1))];
+           // llSay(0, "lRLVListPart1.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
         }
         iMax1 = iMax1 >> 1;
     }
     
     while (iMax2 > 0) {
         list pos = bitpos(0,iMax2);
-        integer iIndex = (llList2Integer(pos,1)*4)+30+2;
+        integer iIndex = ((llList2Integer(pos,1)+30)*4)+2;
         if (iIndex > -1 && bool(iMax2 & iMask2) != bool(iMax2 & g_iRestrictions2)) {
-                lResult += [FormatCommand(llList2String(g_lRLVList,iIndex),bool(iMax2 & iMask2))];
+            lResult += [FormatCommand(llList2String(g_lRLVList,iIndex),bool(iMax2 & iMask2))];
+          //  llSay(0, "lRLVListPart2.\npos: "+(string)pos+"\niIndex: "+(string)iIndex+"\nlResult[-1]: "+llList2String(lResult,-1));
         }
         iMax2 = iMax2 >> 1;
+        
+        
     }
     
     
@@ -388,7 +392,7 @@ ApplyAll(integer iMask1, integer iMask2, integer iBoot)
 
 ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 {
-   // llOwnerSay("Apply CMD");
+    //llSay(0, "Apply CMD");
     integer iMenuIndex = llListFindList(g_lRLVList,[sCommand]);
     integer iActualIndex=iMenuIndex;
     integer iMenuIndex2;
@@ -592,16 +596,20 @@ default
                     else {
                         integer iIndex = llListFindList(g_lRLVList,[g_sTmpRestName]);
                         if (iIndex > -1) {
-                            string sLabel = llGetSubString( sMsg, 1, -1);
-                            integer mask = llList2Integer(g_lRLVList, iIndex+5);
-                            
+                            string sLabel = llGetSubString( sMsg, 2, -1);
+                            integer mask = llList2Integer(g_lRLVList, iIndex+3);
+                            integer ipos= llListFindList(g_lMaskData, [sLabel]);
+                            integer maskData = llList2Integer(g_lMaskData, ipos+1);
                             
                             if(llGetSubString(sMsg,0,0) == llList2String(g_lCheckboxes,TRUE)){
-                                mask -= llList2Integer(g_lMaskData, llListFindList(g_lMaskData, [sLabel]));
+                                mask -= maskData;
                             }else{
-                                mask += llList2Integer(g_lMaskData, llListFindList(g_lMaskData, [sLabel]));
+                                mask += maskData;
                             }
-                            g_lRLVList = llListReplaceList(g_lRLVList, [mask], iIndex+5, iIndex+5);
+                            
+                            if(mask<0)mask=15;
+                            if(!(mask&1))mask+=1;
+                            g_lRLVList = llListReplaceList(g_lRLVList, [mask], iIndex+3, iIndex+3);
                             
                             AuthSetting("");
                         }
