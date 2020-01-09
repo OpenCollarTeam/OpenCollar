@@ -314,12 +314,50 @@ UserCommand(integer iAuth, string sStr, key kID) {
 
 
 
+ExtractPart(){
+    g_sScriptPart = llList2String(llParseString2List(llGetScriptName(), ["_"],[]),1);
+}
+
+string g_sScriptPart; // oc_<part>
+integer INDICATOR_THIS;
+SearchIndicators(){
+    ExtractPart();
+    
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=0;i<end;i++){
+        list Params = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0), ["~"],[]);
+        
+        if(llListFindList(Params, ["indicator_"+g_sScriptPart])!=-1){
+            INDICATOR_THIS = i;
+            return;
+        }
+    }
+    
+    
+}
+Indicator(integer iMode){
+    if(iMode){
+        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+        llSetTimerEvent(1);
+    }else
+        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
+}
+
 default {
     state_entry() {
         // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
         if(llGetStartParameter() != 0) g_iInUpdate=TRUE; // do NOT spam linked messages
         
+        if(g_iInUpdate && llGetLinkNumber()!= LINK_ROOT){
+            
+            list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
+            ExtractPart();
+            Parameters += "indicator_"+g_sScriptPart;
+            llSetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC, llDumpList2String(Parameters,"~")]);
+                
+        }
         
         if(g_iInUpdate && llGetLinkNumber()!=LINK_ROOT){
             llOwnerSay("Moved oc_settings");
@@ -409,6 +447,7 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_SAVE) {
+            Indicator(TRUE);
             //save the token, value
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
@@ -423,6 +462,7 @@ default {
         }
         else if (iNum == LM_SETTING_REQUEST) {
              //check the cache for the token
+             Indicator(TRUE);
             if (SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr + "=" + GetSetting(sStr), "");
             else if (sStr == "ALL") {
                 g_iCheckNews = FALSE;
@@ -432,6 +472,7 @@ default {
         else if (iNum == LM_SETTING_DELETE){
             //llMessageLinked(LINK_SET, LM_SETTING_DELETE,sStr,"");
             DelSetting(sStr);
+            Indicator(TRUE);
         } else if(iNum == LM_SETTING_RELAY_CONTENT) LoadSetting(sStr, (integer)((string)kID));
         else if (iNum == DIALOG_RESPONSE && kID == g_kConfirmDialogID) {
             list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -473,7 +514,7 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         SendValues();
-        if (g_iCheckNews) g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
+        Indicator(FALSE);
     }
 
     changed(integer iChange) {
