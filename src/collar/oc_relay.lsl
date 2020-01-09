@@ -356,7 +356,7 @@ string Checkbox(integer iValue, string sLabel) {
 //----Menu functions section---//
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Relay]";
-    list lButtons = ["☐ Trusted","☐ Ask","☐ Auto"];
+    list lButtons = [Checkbox(FALSE, "Trusted"), Checkbox(FALSE, "Ask"), Checkbox(FALSE, "Auto")];
     if (g_iBaseMode == 1){
         lButtons = llListReplaceList(lButtons, [Checkbox(TRUE, "Trusted")],0,0);
         sPrompt += " is set to trusted mode.";
@@ -696,10 +696,11 @@ default {
                         Menu(kAv, iAuth);
                     } else {
                         sMsg = llToLower(sMsg);
-                        if (llSubStringIndex(sMsg,llList2String(g_lCheckboxes,FALSE))==0)
-                            sMsg = llDeleteSubString(sMsg,0,1)+" on";
-                        else if (llSubStringIndex(sMsg,llList2String(g_lCheckboxes,TRUE))==0)
+                        if(llGetSubString(sMsg,0,0) == llList2String(g_lCheckboxes,FALSE)){
+                            sMsg = llDeleteSubString(sMsg,0,1) + " on";
+                        }else if(llGetSubString(sMsg,0,0) == llList2String(g_lCheckboxes,TRUE)){
                             sMsg = llDeleteSubString(sMsg,0,1)+" off";
+                        }
                         sMsg ="relay "+sMsg;
                         UserCommand(iAuth, sMsg, kAv);
                         Menu(kAv, iAuth);
