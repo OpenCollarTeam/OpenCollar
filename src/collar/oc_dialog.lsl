@@ -52,8 +52,6 @@ integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 integer SENSORDIALOG = -9003;
 //integer FIND_AGENT = -9005;
-integer DIALOG_ACTUAL = -9010;
-integer DIALOG_TEXTBOX = -9011;
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -308,6 +306,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
     //LED ON
+    Indicator(TRUE);
     //send dialog to viewer
     if (llGetListLength(lMenuItems+lUtilityButtons)){
         list lNavButtons;
@@ -315,15 +314,16 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         if(g_iShowLevel)sThisPrompt += "\nAuth Level: "+(string)iAuth;
         list lPretty = PrettyButtons(lButtons, lUtilityButtons, lNavButtons);
         
-        llMessageLinked(LINK_SET, DIALOG_ACTUAL, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
+        llMessageLinked(LINK_SET, DIALOG+1, sThisPrompt + "|" + llDumpList2String(lPretty, "`") + "|" + (string)iAuth, "");
         
         llDialog(kRecipient, sThisPrompt, lPretty, iChan);
     }
     else{
-        llMessageLinked(LINK_SET, DIALOG_TEXTBOX, sThisPrompt+"|"+(string)iAuth, "");
+        llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
         llTextBox(kRecipient, sThisPrompt, iChan);
     }
     //LED OFF
+    Indicator(FALSE);
     //set dialog timeout
     llSetTimerEvent(g_iReapeat);
     integer ts = llGetUnixTime() + g_iTimeOut;
@@ -465,6 +465,35 @@ dequeueSensor() {
     llSensor(llList2String(lSensorInfo,0),(key)llList2String(lSensorInfo,1),llList2Integer(lSensorInfo,2),llList2Float(lSensorInfo,3),llList2Float(lSensorInfo,4));
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
+}
+
+ExtractPart(){
+    g_sScriptPart = llList2String(llParseString2List(llGetScriptName(), ["_"],[]),1);
+}
+
+string g_sScriptPart; // oc_<part>
+integer INDICATOR_THIS;
+SearchIndicators(){
+    ExtractPart();
+    
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=0;i<end;i++){
+        list Params = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0), ["~"],[]);
+        
+        if(llListFindList(Params, ["indicator_"+g_sScriptPart])!=-1){
+            INDICATOR_THIS = i;
+            return;
+        }
+    }
+    
+    
+}
+Indicator(integer iMode){
+    if(iMode)
+        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
+    else
+        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
 }
 
 default {
@@ -627,7 +656,7 @@ default {
             else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") {
                 g_sDeviceName = sValue;
-                llSetLinkPrimitiveParamsFast(LINK_THIS,[PRIM_NAME,g_sDeviceName]);
+                llSetLinkPrimitiveParamsFast(LINK_ROOT,[PRIM_NAME,g_sDeviceName]);
             } else if (sToken == g_sGlobalToken+"WearerName") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
@@ -722,6 +751,11 @@ state inUpdate{
             if(sMsg == "do_move"){
                 
                 if(llGetLinkNumber()==LINK_ROOT)return;
+                
+                list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
+                ExtractPart();
+                Parameters += "indicator_"+g_sScriptPart;
+                llSetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC, llDumpList2String(Parameters,"~")]);
                 
                 llOwnerSay("Moving "+llGetScriptName()+"!");
                 integer i=0;
