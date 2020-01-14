@@ -187,7 +187,11 @@ UserCommand(integer iNum, string sStr, key kID) {
 //                            llSay(0, "=> Ask for consent from wearer <=\n* Not yet implemented");
                         }
                     } else {
-                        llMessageLinked(LINK_SET, NOTIFY, "0 Error in capture settings: g_kCaptor; Line 123\n* Attempting repairs", g_kWearer);
+                        if(g_kCaptor == kID){
+                            llMessageLinked(LINK_SET, NOTIFY, "0Your request is already pending. Try again later!", g_kCaptor);
+                            return;
+                        }
+                        llMessageLinked(LINK_SET, NOTIFY, "0 Error in capture settings: g_kCaptor; Line 193\n* Attempting repairs", g_kWearer);
                         g_kCaptor=NULL_KEY;
                         g_iCaptured=FALSE;
                         Commit();
