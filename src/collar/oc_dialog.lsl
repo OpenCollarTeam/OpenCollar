@@ -667,6 +667,15 @@ default {
             else if (sToken == "auth_owner")
                 g_lOwners = llParseString2List(sValue, [","], []);
             else if(sToken == g_sGlobalToken + "showlevel") g_iShowLevel = (integer)sValue;
+            else if(sToken == "auth_block"){
+                list lBlock = llParseString2List(sValue,[","],[]);
+                
+                integer iPos =0;
+                integer iEnd = llGetListLength(lBlock);
+                for(iPos=0;iPos<iEnd;iPos++){
+                    ClearUser((key)llList2String(lBlock, iPos));
+                }
+            }
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);
