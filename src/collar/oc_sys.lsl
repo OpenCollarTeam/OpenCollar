@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="RC 1";
+string g_sDevStage="Beta 5";
 string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
@@ -432,6 +432,7 @@ BuildLockElementList() {//EB
 }
 
 PermsCheck() {
+    if(!g_iFirstInit)return;
     if (!(llGetObjectPermMask(MASK_OWNER) & PERM_MODIFY)) {
         llOwnerSay("You have been given a no-modify OpenCollar object.  This could break future updates.  Please ask the provider to make the object modifiable.");
     }
@@ -456,6 +457,8 @@ PermsCheck() {
             }
         }
     }
+    
+    g_iFirstInit=FALSE;
 }
 
 
@@ -524,14 +527,14 @@ StartUpdate(){
     llSetRemoteScriptAccessPin(pin);
     llRegionSayTo(g_kUpdaterOrb, g_iUpdateChan, "ready|" + (string)pin );
 }
-
+integer g_iFirstInit=FALSE;
 default {
     state_entry() {
         if(llGetStartParameter()!=0)state inUpdate;
         
         g_kWearer = llGetOwner();
         BuildLockElementList();
-        
+        g_iFirstInit=TRUE;
         llSleep(10.0);
         init();
         //Debug("Starting, max memory used: "+(string)llGetSPMaxMemory());
