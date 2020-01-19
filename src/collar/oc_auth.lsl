@@ -628,12 +628,13 @@ SearchIndicators(){
     
 }
 Indicator(integer iMode){
-    if(iMode){
+    if(INDICATOR_THIS==-1)return;
+    if(iMode)
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-        llSetTimerEvent(1);
-    }else
+    else
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
 }
+
 
 default {
     on_rez(integer iParam) {
