@@ -350,6 +350,7 @@ SearchIndicators(){
     
 }
 Indicator(integer iMode){
+    if(INDICATOR_THIS==-1)return;
     if(iMode)
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
     else
@@ -367,8 +368,12 @@ default {
 */
         g_iRlvActive=FALSE;
         g_iViewerCheck=FALSE;
-        g_iRLVOn=FALSE;
+        g_iRLVOn=TRUE;
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
+        
+        // Begin to detect RLV
+        llOwnerSay("@clear");
+        setRlvState();
     }
 
     state_entry() {
