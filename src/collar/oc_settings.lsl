@@ -337,6 +337,7 @@ SearchIndicators(){
     
 }
 Indicator(integer iMode){
+    if(INDICATOR_THIS==-1)return;
     if(iMode){
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
         llSetTimerEvent(1);
@@ -382,16 +383,18 @@ default {
              g_kCardID = llGetInventoryKey(g_sCard);
             } else if (g_lSettings) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, llDumpList2String(g_lSettings, "="), "");
         }
+        
+        
+       /// llSay(0, "debug: settings was reset");
     }
 
     on_rez(integer iParam) {
         if (g_kWearer == llGetOwner()) {
-            g_iCheckNews = TRUE;
             g_iInUpdate=FALSE;
             llSetTimerEvent(10.0);
             //llSleep(0.5); // brief wait for others to reset
             //llMessageLinked(LINK_SET,LINK_UPDATE,"LINK_SET","");
-            //SendValues();
+            SendValues();
         } else llResetScript();
     }
 
@@ -453,10 +456,6 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             g_lSettings = SetSetting(g_lSettings, sToken, sValue);
-            if (sToken == "intern_news") {
-                g_fLastNewsStamp = (float)sValue;
-                g_kURLRequestID = llHTTPRequest(g_sEmergencyURL+"attn.txt",[HTTP_METHOD,"GET",HTTP_VERBOSE_THROTTLE,FALSE],"");
-            }
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
         
         }
