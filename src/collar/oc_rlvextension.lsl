@@ -169,11 +169,8 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
 }
 
 MenuForceSit(key kID, integer iAuth) {
-    string sStricBtn = "Strict";
     
-    sStricBtn = Checkbox(g_bCanStand, sStricBtn);
-    
-    Dialog(kID, "Select a Place to sit:", [sStricBtn]+lUtilitySit, [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "Select a Place to sit:", lUtilitySit, [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuSettings(key kID, integer iAuth){
@@ -251,24 +248,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
-            if (sChangekey == Checkbox(TRUE,"Strict") && iNum != CMD_WEARER) {
-                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=0="+(string)iNum,kID);
-                g_bCanStand = !g_bCanStand;
-                //ApplyCommand("Stand Up",FALSE,kID, iNum);
-                MenuForceSit(kID, iNum);
-            } else if (sChangekey == Checkbox(FALSE,"Strict") ){
-                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,"Stand Up=1="+(string)iNum,kID);
-                g_bCanStand = !g_bCanStand;
-                //ApplyCommand("Stand Up",TRUE,kID, iNum);
-                MenuForceSit(kID, iNum);
-            } else if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
-                string sTmp = "y";
-                if (g_bCanStand) sTmp = "n";
-                else sTmp = "y";
-                llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force,unsit="+sTmp,"Macros");
+            if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
+                llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force","Macros");
+                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=0="+(string)iNum, kID);
                 MenuForceSit(kID, iNum);
             } else {
                 llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
+                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=1="+(string)iNum,kID);
                 MenuForceSit(kID, iNum);
             }
         }
@@ -302,7 +288,7 @@ default
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) Dialog(kAv, "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.", ["Owner","Trusted"], [UPMENU], 0, iNum, "Exceptions~Main");
                     else {
-                        sMsg = llGetSubString( sMsg, 1, -1);
+                        sMsg = llGetSubString( sMsg, 2, -1);
                         integer iIndex = llListFindList(lRLVEx,[sMsg]);
                         if (iIndex > -1) {
                             if (g_sExTarget == "Owner") {
@@ -329,7 +315,7 @@ default
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "Exceptions"){
                         if (iAuth <= CMD_OWNER) MenuExceptions(kAv, iAuth);
-                        else llMessageLinked(LINK_SET, NOTIFY, "0"+"Acces Denied!", kAv);
+                        else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%!", kAv);
                     } else if (sMsg == "Camera") MenuCamera(kAv, iAuth);
                     else if (sMsg == "Chat") MenuChat(kAv, iAuth);
                 } else if (sMenu == "Settings~Camera") {
@@ -340,7 +326,7 @@ default
                 } else if (sMenu == "Settings~Chat") {
                     if (sMsg == UPMENU) MenuSettings(kAv,iAuth);
                     else {
-                        sMsg = llGetSubString(sMsg,1,-1);
+                        sMsg = llGetSubString(sMsg,2,-1);
                         if (sMsg == "Muffle") {
                             g_bMuffle = !g_bMuffle;
                             SetMuffle(g_bMuffle);
