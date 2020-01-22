@@ -146,13 +146,15 @@ AnimMenu(key kID, integer iAuth) {
     lButtons += [Checkbox(g_bAnimLock, "AnimLock")];
 
     if (llGetInventoryType("~stiff") == INVENTORY_ANIMATION) {
+        lButtons += Checkbox(g_bPosture, "Posture");
         if (g_bPosture) {
             sPrompt += " and has their neck forced stiff.";
         } else {
             sPrompt += " and can relax their neck.";
         }
+    } else {
+        sPrompt += "\n* Posture unavailable because the ~stiff anim is not present";
     }
-    lButtons += Checkbox(g_bPosture, "Posture");
 
     lButtons += Checkbox(g_bTweakPoseAO, "AntiSlide");
     lButtons += ["AO Menu", "AO ON", "AO OFF", "Pose"];
