@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="Beta 5";
+string g_sDevStage="Beta 6";
 string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
@@ -542,8 +542,14 @@ default {
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
-        if(sStr == "debug")llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"",kID);
-        if(sStr == "versions")llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"ver",kID);
+        if(sStr == "debug" && iNum==0){
+            llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"",kID);
+            return;
+        }
+        if(sStr == "versions" && iNum==0){
+            llMessageLinked(LINK_SET,LINK_CMD_DEBUG,"ver",kID);
+            return;
+        }
         if (iNum == MENUNAME_RESPONSE) {
             //sStr will be in form of "parent|menuname"
             list lParams = llParseString2List(sStr, ["|"], []);
