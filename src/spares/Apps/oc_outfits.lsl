@@ -1,12 +1,12 @@
 /*
 This file is a part of OpenCollar.
-Copyright ©2019
+Copyright ©2020
 
 : Contributors :
 
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
-    * Jan 2020      - Added BrowseCore
+    * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -20,7 +20,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.2";
+string g_sAppVersion = "1.3";
 string g_sScriptVersion = "7.4";
 
 
@@ -106,7 +106,7 @@ integer g_iListenToAuth;
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
     if(llSubStringIndex(g_sPath, ".core")!=-1)sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core"+sAppend, Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
 }
 
 
@@ -173,7 +173,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return; 
     if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
-    if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
+    //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
@@ -182,9 +182,41 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        list Params=llParseString2List(sStr, [" "], []);
+        
+        string sChangetype = llList2String(Params,0);
+        string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
+        
+        if(sChangetype == "wear"){
+            if(g_sPath!=sChangevalue){
+                g_sPath=".outfits/"+sChangevalue;
+                g_iListenTimeout=0;
+            }
+            
+            
+            if(!g_iLocked){
+                llOwnerSay("@detach=n");
+            }
+                    
+            ForceLockCore();
+            TickBrowser();
+            llSetTimerEvent(1);
+            if(!Bool((g_iAccessBitSet&32))){
+                if(llSubStringIndex(g_sPath, ".core")==-1)
+                    llOwnerSay("@detachall:.outfits=force");
+            }
+            else{
+                llOwnerSay("@detach=force");
+                llOwnerSay("@remoutfit=force");
+            }
+            llSleep(2); // incase of lag
+            g_sLastOutfit=g_sPath;
+                        
+            RmCorelock();
+            llSleep(1);
+            llOwnerSay("@attachallover:"+g_sPath+"=force");
+        }
         
     }
 }
@@ -339,19 +371,7 @@ default
                         return;
                     } else if(sMsg == ">Wear<"){
                         // add recursive. Adds subfolder contents too
-                        if(!Bool((g_iAccessBitSet&32))){
-                            if(llSubStringIndex(g_sPath, ".core")==-1)
-                                llOwnerSay("@detachall:.outfits=force");
-                        }
-                        else{
-                            llOwnerSay("@detach=force");
-                            llOwnerSay("@remoutfit=force");
-                        }
-                        llSleep(2); // incase of lag
-                        g_sLastOutfit=g_sPath;
-                        RmCorelock();
-                        llSleep(1);
-                        llOwnerSay("@attachallover:"+g_sPath+"=force");
+                        UserCommand(iAuth, "wear "+g_sPath, kAv);
                         
                     } else if(sMsg == ">RemoveAll<"){
                         g_sLastOutfit="NONE";
