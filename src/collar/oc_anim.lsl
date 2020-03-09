@@ -513,6 +513,7 @@ UserCommand(integer iNum, string sStr, key kID) {
       AOMenu(kID, iNum);
     } else if (sValue == "off" || sValue == "on") {
       MessageAOs(llToUpper(sValue), "AO");
+        AnimMenu(kID, iNum);
     } else {
       llMessageLinked(LINK_SET, ATTACHMENT_RESPONSE, "CollarCommand|" + (string)EXT_CMD_COLLAR + "|ZHAO_" + sStr + "|" + (string)kID, kID);
     }
@@ -738,7 +739,7 @@ default {
                     } else if (sMessage == "Pose") {
                         PoseMenu(kAv, 0, iAuth);
                         return;
-                    } else if (llGetSubString(sMessage, 2, -1) == "AntiSlide") {
+                    } else if (sMessage == Checkbox(g_bTweakPoseAO, "AntiSlide")){
                         PoseMoveMenu(kAv, iAuth);
                         return;
                     } else if (~llListFindList(g_lAnimButtons, [sMessage])) {
@@ -750,6 +751,7 @@ default {
                     } else {
                         integer stat = llListFindList(g_lCheckboxes, [llGetSubString(sMessage,0,0)]);
                         string cmd = llToLower(llGetSubString(sMessage,2,-1));
+                        
                           
                         if(stat==-1){
                             UserCommand(iAuth,sMessage,kAv);
@@ -757,9 +759,9 @@ default {
                         }
                         if(stat) UserCommand(iAuth, cmd+" off",kAv);
                         else if(!stat) UserCommand(iAuth, cmd+" on",kAv);
+                        AnimMenu(kAv, iAuth);
                           
                     }
-                    AnimMenu(kAv, iAuth);
                 
                 } else if (sMenuType == "Pose") {
                     if (sMessage == "BACK") {
