@@ -411,6 +411,19 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
         
         if (allow){
             if (!iAdd) {
+                if(iMenuIndex==0){
+                    if(!(g_iRestrictions2 & iMenuIndex2)){
+                        // STOP
+                        //llSay(0, "BIT NOT SET. REFUSE TO LIFT NON_EXISTING RESTRICTION");
+                        return;
+                    }
+                } else if(iMenuIndex2 ==0){
+                    if(!(g_iRestrictions1 & iMenuIndex)){
+                        //STOP
+                        //llSay(0, "BIT NOT SET. REFUSE TO LIFT NON_EXISTING RESTRICTION");
+                        return;
+                    }
+                }
                 g_iRestrictions1 -= iMenuIndex;
                 g_iRestrictions2 -= iMenuIndex2;
                 
@@ -418,6 +431,19 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
                 if (kID != NULL_KEY) llOwnerSay(llList2String(g_lCategory, llList2Integer(g_lRLVList,iActualIndex+1))+" - "+llList2String(g_lRLVList,iActualIndex)+" is not restricted anymore!");
             } else {
                 
+                if(iMenuIndex==0){
+                    if(!(g_iRestrictions2 & iMenuIndex2)){
+                        // STOP
+                        //llSay(0, "BIT NOT SET. REFUSE EXISTING RESTRICTION");
+                        return;
+                    }
+                } else if(iMenuIndex2 ==0){
+                    if(!(g_iRestrictions1 & iMenuIndex)){
+                        //STOP
+                        //llSay(0, "BIT NOT SET. REFUSE EXISTING RESTRICTION");
+                        return;
+                    }
+                }
                 g_iRestrictions1 += iMenuIndex;
                 g_iRestrictions2 += iMenuIndex2;
                 
