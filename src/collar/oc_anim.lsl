@@ -688,7 +688,8 @@ default {
                     list lAnimParams = llParseString2List(sValue, [","], []);
                     g_sCurrentPose = llList2String(lAnimParams, 0);
                     g_iLastRank = (integer)llList2String(lAnimParams, 1);
-                    StartAnim(g_sCurrentPose);
+                    if(llGetListLength(g_lAnims)>0&&llList2String(g_lAnims,0)==g_sCurrentPose){}else
+                        StartAnim(g_sCurrentPose);
                 }
                 else if (sToken == "animlock") g_bAnimLock = (integer)sValue;
                 else if (sToken =="posture") SetPosture((integer)sValue, NULL_KEY);
