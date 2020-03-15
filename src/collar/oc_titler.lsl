@@ -4,6 +4,8 @@ Copyright 2020
 
 : Contributors :
 Aria (Tashia Redrose)
+    * Mar 2020      - Fix bug where title would not detect the float text prim.
+                    - Fixed bug where titler would display garbled text as a result of failing to decode base64
     * Jan 2020      - Rewrote titler to cleanup the code and make easier to read
 
 et al.
@@ -26,6 +28,7 @@ DebugOutput(key kID, list ITEMS){
     llInstantMessage(kID, llGetScriptName() +" "+final);
 }
 integer LINK_CMD_DEBUG=1999;
+integer g_iWasUpgraded=FALSE; // This will not harm anything if set to true after being upgraded. However, it should eventually be set to false again
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -178,14 +181,25 @@ ScanFloatText(){
         list Params = llGetLinkPrimitiveParams(i, [PRIM_NAME,PRIM_DESC]);
         if(llSubStringIndex(llList2String(Params,0), "FloatText")!=-1){
             g_iTextPrim = i;
+            return;
         }
         
         if(llSubStringIndex(llList2String(Params,1), "FloatText")!=-1){
             g_iTextPrim=i;
+            return;
         }
     }
     g_iTextPrim=LINK_THIS;
 }
+
+NukeOtherText(){
+    integer i = 1;
+    integer end = llGetNumberOfPrims();
+    for(i=1;i<=end;i++){
+        llSetLinkPrimitiveParamsFast(i,[PRIM_TEXT, "", ZERO_VECTOR,0]);
+    }
+}
+
 default
 {
     on_rez(integer t){
@@ -195,7 +209,7 @@ default
     {
         g_kWearer = llGetOwner();
         
-        
+        NukeOtherText();
     }
     timer(){
         // calculate offset
@@ -209,6 +223,17 @@ default
         }else llSetLinkPrimitiveParams(g_iTextPrim, [PRIM_TEXT, "", ZERO_VECTOR, 0]);
         llSetTimerEvent(0);
     }
+    
+    changed(integer iChange){
+        if(iChange&CHANGED_LINK){
+            integer iCur = g_iTextPrim;
+            ScanFloatText();
+            if(g_iTextPrim!=iCur)NukeOtherText();
+            Titler();
+            
+        }
+    }
+    
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
@@ -309,15 +334,35 @@ default
                     g_lCheckboxes = llCSV2List(llList2String(lSettings,2));
                 }
             } else if(llList2String(lSettings,0) == "titler"){
+                integer curPrim=g_iTextPrim;
                 ScanFloatText();
+                
+                if(g_iTextPrim!=curPrim)NukeOtherText(); // permit changing the float text prim
+                
                 if(llList2String(lSettings,1) == "show"){
                     g_iShow=TRUE;
                 }else if(llList2String(lSettings,1) == "offset"){
                     g_iOffset=(integer)llList2String(lSettings,2);
                 }else if(llList2String(lSettings,1) == "title"){
-                    g_sTitle = llBase64ToString(llList2String(lSettings,2));
+                    g_sTitle = llBase64ToString(llList2String(lSettings,2)); // We can't really check if this is a base64 string
+                    if(g_iWasUpgraded) {
+                        g_sTitle = llList2String(lSettings,2);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
+                        g_iWasUpgraded=FALSE;
+                    }
                 } else if(llList2String(lSettings,1)=="color"){
                     g_vColor=(vector)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) == "on"){
+                    // this was definitely a upgrade. Re-request!
+                    g_iWasUpgraded=TRUE;
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+                    
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_auth", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_on", "");
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_height", "");
+
+                    g_iShow=(integer)llList2String(lSettings,2);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show="+(string)g_iShow, "");
                 }
                 Titler();
             }
