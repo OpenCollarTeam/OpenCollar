@@ -28,6 +28,7 @@ DebugOutput(key kID, list ITEMS){
     llInstantMessage(kID, llGetScriptName() +" "+final);
 }
 integer LINK_CMD_DEBUG=1999;
+integer g_iNoB64=FALSE; // Use base64 by default
 integer g_iWasUpgraded=FALSE; // This will not harm anything if set to true after being upgraded. However, it should eventually be set to false again
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -136,6 +137,20 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_iOffset--;
             if(g_iOffset<0)g_iOffset=0;
             Save();
+        }else if(sChangevalue == "plain"){
+            g_iNoB64 = ! g_iNoB64;
+            Save();
+                    
+            string ToggleMsg = "0Titler plain text mode is now set to ";
+            
+            if(g_iNoB64) {
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_plain=1", "");
+                ToggleMsg += "PLAIN";
+            } else {
+                ToggleMsg += "BASE64";
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_plain", "");
+            }
+            llMessageLinked(LINK_SET, NOTIFY, ToggleMsg, kID);
         }
         
     }
@@ -147,8 +162,10 @@ Save(){
     
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_offset="+(string)g_iOffset, "");
     
-    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
-    
+    if(!g_iNoB64)
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
+    else
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
     
     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_color="+(string)g_vColor,"");
     
@@ -344,10 +361,17 @@ default
                 }else if(llList2String(lSettings,1) == "offset"){
                     g_iOffset=(integer)llList2String(lSettings,2);
                 }else if(llList2String(lSettings,1) == "title"){
-                    g_sTitle = llBase64ToString(llList2String(lSettings,2)); // We can't really check if this is a base64 string
+                    if(!g_iNoB64)
+                        g_sTitle = llBase64ToString(llList2String(lSettings,2)); // We can't really check if this is a base64 string
+                    else
+                        g_sTitle = llList2String(lSettings,2);
+                        
                     if(g_iWasUpgraded) {
                         g_sTitle = llList2String(lSettings,2);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
+                        if(!g_iNoB64)
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+llStringToBase64(g_sTitle), "");
+                        else
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_title="+g_sTitle, "");
                         g_iWasUpgraded=FALSE;
                     }
                 } else if(llList2String(lSettings,1)=="color"){
@@ -363,6 +387,9 @@ default
 
                     g_iShow=(integer)llList2String(lSettings,2);
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_show="+(string)g_iShow, "");
+                } else if(llList2String(lSettings,1) == "plain"){
+                    g_iNoB64 = TRUE;
+                    llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
                 }
                 Titler();
             }
