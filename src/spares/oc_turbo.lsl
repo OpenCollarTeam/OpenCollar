@@ -1,20 +1,7 @@
-/*
-This file is a part of OpenCollar.
-Copyright 2020
-
-: Contributors :
-Aria (Tashia Redrose)
-    * Mar 2020      - Wrote Turbo Relay plugin for OpenCollar compatibility
-
-et al.
-
-Licensed under the GPLv2. See LICENSE for full details.
-https://github.com/OpenCollarTeam/OpenCollar
-*/
-
 integer CMD_RELAY = 507;
 string MSG;
 key g_kAsking;
+integer g_iMode;
 
 default
 {
@@ -40,7 +27,7 @@ default
         } else if(llJsonGetValue(sMsg, ["type"]) == "mode"){
             if(llJsonGetValue(sMsg, ["cmd"]) == "set"){
                 integer val = (integer)llJsonGetValue(sMsg,["value"]);
-                
+                if(g_iMode==val)return;
                 if(val == -1){
                     // power off
                     llMessageLinked(LINK_SET, 0, "PowerOff", "");
