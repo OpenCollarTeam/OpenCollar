@@ -10,12 +10,12 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="Beta 6";
+string g_sDevStage="RC 3";
 string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;
-float g_fBuildVersion = 0.5;
+float g_fBuildVersion = 1.0;
 
 key g_kWearer;
 // Entries for the .settings relay
