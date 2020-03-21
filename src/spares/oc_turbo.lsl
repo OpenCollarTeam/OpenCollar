@@ -1,3 +1,17 @@
+/*
+This file is a part of OpenCollar.
+Copyright 2020
+
+: Contributors :
+Aria (Tashia Redrose)
+    * Mar 2020      - Wrote Turbo Relay plugin for OpenCollar compatibility
+
+et al.
+
+Licensed under the GPLv2. See LICENSE for full details.
+https://github.com/OpenCollarTeam/OpenCollar
+*/
+
 integer CMD_RELAY = 507;
 string MSG;
 key g_kAsking;
