@@ -17,6 +17,7 @@ string g_sParentMenu = "RLV";
 string g_sSubMenu = "Relay";
 string g_sScriptVersion="7.4";
 integer LINK_CMD_DEBUG=1999;
+integer g_iRelayWorn = FALSE;
 
 DebugOutput(key kDest, list lParams){
     llInstantMessage(kDest, llGetScriptName()+": "+llDumpList2String(lParams," "));
@@ -69,14 +70,35 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[RLV Relay - Turbo Relay App]";
+    string sPrompt = "\n[RLV Relay - Turbo Relay App]\n\n";
+    if(g_iRelayWorn)sPrompt+="Relay is worn\n";
+    else sPrompt+="Relay is not currently worn";
+    
+    sPrompt+= "Relay Mode: ";
+    sPrompt += RelayMode2Str();
+    
+    
     list lButtons = ["Mode", "Safeword", "Get Relay", "About"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
+string RelayMode2Str(){
+    string sPrompt;
+    
+    if(g_iMode==-1)sPrompt+="OFF";
+    else if(g_iMode==0)sPrompt += "ASK";
+    else if(g_iMode == 1) sPrompt += "Semi-Auto";
+    else if(g_iMode == 2) sPrompt += "Auto (w/Blocks)";
+    else if(g_iMode == 3) sPrompt += "Auto (w/oBlocks)";
+    else sPrompt += "UNKNOWN";
+    
+    return sPrompt;
+}
+
+
 ModeMenu(key kID, integer iAuth){
     list lButtons = ["Ask", "Auto (w/Blocks)", "Auto (w/oBlocks)", "Semi-Auto", "OFF"];
-    string sPrompt = "\n[RLV Relay - Turbo Relay App]\n\nAsk\nSemi-Auto\tAuto Force, Ask Restrictions\nAuto (w/Blocks)\tAuto mode, but includes blacklist\nAuto (w/oBlocks)\tAuto mode with no blacklist (CAUTION)";
+    string sPrompt = "\n[RLV Relay - Turbo Relay App]\nCurrent Mode: "+RelayMode2Str()+"\n\nAsk\nSemi-Auto\tAuto Force, Ask Restrictions\nAuto (w/Blocks)\tAuto mode, but includes blacklist\nAuto (w/oBlocks)\tAuto mode with no blacklist (CAUTION)";
 
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Mode");
 }
@@ -196,7 +218,11 @@ default
                     if(g_iHaveSettings) Send();
                     else llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
                     
+                    g_iRelayWorn=TRUE;
+                    
                 }
+            } else if(llJsonGetValue(sMsg, ["type"]) == "disconnect"){
+                g_iRelayWorn=FALSE;
             } else if(llJsonGetValue(sMsg, ["type"]) == "update"){
                 if(g_iHaveSettings)Send();
                 else llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");

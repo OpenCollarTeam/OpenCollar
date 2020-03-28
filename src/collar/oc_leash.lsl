@@ -84,6 +84,7 @@ integer g_iStrictRank;
 vector g_vPos = ZERO_VECTOR;
 key g_kCmdGiver;
 key g_kLeashedTo = NULL_KEY;
+string g_sLeashedToName = "(none)";
 integer g_bLeashedToAvi;
 integer g_bFollowMode;
 string g_sSettingToken = "leash_";
@@ -302,6 +303,7 @@ integer LeashTo(key kTarget, key kCmdGiver, integer iAuth, list lPoints, integer
 DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
     g_iLastRank = iAuth;
     g_kLeashedTo = kTarget;
+    dtext("func: doleash\n"+llDumpList2String([kTarget,iAuth,bSave]+llDumpList2String(lPoints,", "),"\n"));
     if (g_bFollowMode)
         llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
     else {
@@ -313,8 +315,9 @@ DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
         //Send link message to the particle script
         //Debug("leashing with "+g_sCheck);
         llMessageLinked(LINK_SET, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
-        llSetTimerEvent(3.0);   //check for leasher out of range
     }
+    llSetTimerEvent(3.0);   //check for leasher out of range
+    
     // change to llTarget events by Lulu Pink
     g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo, [OBJECT_POS]), 0);
     //to prevent multiple target events and llMoveToTargets
@@ -324,15 +327,19 @@ DoLeash(key kTarget, integer iAuth, list lPoints, integer bSave) {
     if (g_vPos != ZERO_VECTOR) {
         llMoveToTarget(g_vPos, 0.7);
     }
-    if(bSave)
+    if(bSave){
+        g_sLeashedToName = llList2String(llGetObjectDetails(kTarget, [OBJECT_NAME]),0);
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "name=" + g_sLeashedToName , "");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + TOK_DEST + "=" + (string)kTarget + "," + (string)iAuth + "," + (string)g_bLeashedToAvi + "," + (string)g_bFollowMode, "");
+    }
+    
     g_iLeasherInRange=TRUE;
     ApplyRestrictions();
 }
 
 // Wrapper for DoUnleash()
 Unleash(key kCmdGiver) {
-    string sTarget = NameURI(g_kLeashedTo);
+    string sTarget = g_sLeashedToName; // names were not showing if the person was off sim. Lets make this more reliable!
     if ( (key)g_kLeashedTo ) {
         string sCmdGiver = NameURI(kCmdGiver);
         string sWearMess;
@@ -381,12 +388,17 @@ Unleash(key kCmdGiver) {
 }
 
 DoUnleash(integer iDelSettings) {
+    dtext("func : dounleash\n"+(string)iDelSettings);
     llTargetRemove(g_iTargetHandle);
     llStopMoveToTarget();
     llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
     g_kLeashedTo = NULL_KEY;
     g_iLastRank = CMD_NOACCESS;
-    if (iDelSettings) llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
+    if (iDelSettings){
+        g_sLeashedToName = "(none)";
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST+"name","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + TOK_DEST, "");
+    }
     llSetTimerEvent(0.0);   //stop checking for leasher out of range
     g_iLeasherInRange=FALSE;
     ApplyRestrictions();
@@ -475,11 +487,6 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
         } else if (sMessage == "unleash" || sMessage == "unfollow" || (sMessage == "toggleleash" && NULL_KEY != g_kLeashedTo)) {
             if (CheckCommandAuth(kMessageID, iAuth)) Unleash(kMessageID);
             if (bFromMenu) UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);
-        } else if (sMessage == "park") {
-            if (llGetInventoryType("Pretty Balloon") == INVENTORY_OBJECT) {
-                g_iRezAuth=iAuth;
-                llRezObject("Pretty Balloon", llGetPos() + (<0.2, 0.0, 1.2> * llGetRot()), ZERO_VECTOR, llEuler2Rot(<0, 0, 0> * DEG_TO_RAD), 0);
-            }
         } else if (sMessage == "yank" && kMessageID == g_kLeashedTo) {
             //Person holding the leash can yank.
             if(llGetAgentInfo(g_kWearer)&AGENT_SITTING) llMessageLinked(LINK_SET, RLV_CMD, "unsit=force", "realleash");
@@ -622,9 +629,13 @@ LHSearch(){
         }
     }
 }
+dtext(string m){
+   // llSetText(m+"\n \n \n \n \n \n \n",<0,1,1>,1);
+}
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
+        g_kLeashedTo = NULL_KEY;
     }
 
     state_entry() {
@@ -636,42 +647,58 @@ default {
     }
 
     timer() {
+        dtext("timer : ping");
         //inlined old isInSimOrJustOutside function
+        if(g_bFollowMode){
+            dtext("Mode is follow");
+        }
         vector vLeashedToPos=llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
         integer iIsInSimOrJustOutside=TRUE;
-        if(vLeashedToPos == ZERO_VECTOR || vLeashedToPos.x < -25 || vLeashedToPos.x > 280 || vLeashedToPos.y < -25 || vLeashedToPos.y > 280) iIsInSimOrJustOutside=FALSE;
-
-        if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<60) {   //if the leasher is now in range
+        if(vLeashedToPos == ZERO_VECTOR || llVecDist(llGetPos(), vLeashedToPos)> 255) iIsInSimOrJustOutside=FALSE;
+        
+        if (iIsInSimOrJustOutside && llVecDist(llGetPos(),vLeashedToPos)<(60+g_iLength)) {   //if the leasher is now in range
+            dtext("timer : iIsInSimOrJustOutside && VecDist < (60+(iLength=3))");
             if(!g_iLeasherInRange) { //and the leasher was previously not in range
                 if (g_iAwayCounter) {
-                    g_iAwayCounter = 0;
+                    g_iAwayCounter = -1;
                     llSetTimerEvent(3.0);
                 }
                 //Debug("leashing with "+g_sCheck);
-                llMessageLinked(LINK_SET, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
+                
+                if(!g_bFollowMode)
+                    llMessageLinked(LINK_SET, CMD_PARTICLE, "leash" + g_sCheck + "|" + (string)g_bLeashedToAvi, g_kLeashedTo);
                 g_iLeasherInRange = TRUE;
 
                 llTargetRemove(g_iTargetHandle);
+                dtext("Status: OK");
                 g_vPos = vLeashedToPos;
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
                 if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.8);
                 ApplyRestrictions();
+            } else {
+                dtext("timer : LeasherInRange = TRUE");
             }
         } else {   //the leasher is not now in range
+            dtext("timer : NotInSimOrOutside OR VecDist > (60+(iLength=3))");
             if(g_iLeasherInRange) {  //but was a short while ago
-                if (g_iAwayCounter > 3) {
+                if (g_iAwayCounter <= llGetUnixTime()) {
                     llTargetRemove(g_iTargetHandle);
                     llStopMoveToTarget();
-                    llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
+                    if(!g_bFollowMode)
+                        llMessageLinked(LINK_SET, CMD_PARTICLE, "unleash", g_kLeashedTo);
                     g_iLeasherInRange=FALSE;
                     ApplyRestrictions();
+                    g_iAwayCounter=-1;
+                    dtext("No leash holder in range\n* Stopping leash particles");
+                } else if(g_iAwayCounter==-1){
+                    g_iAwayCounter = llGetUnixTime()+15;
+                    dtext("Leash holder was previously in range");
                 }
-            }
-            g_iAwayCounter++; //+1 every 3 secs
-            if (g_iAwayCounter > 200) {//3mins 20 secs
-            //slow down the sensor:
-                g_iAwayCounter = 1;
-                llSetTimerEvent(11.0);
+            } else {
+                // nothing else to do with the away counter
+                // slow down the timer
+                llSetTimerEvent(11);
+                dtext("No leash holder in range");
             }
         }
     }
@@ -701,15 +728,17 @@ default {
                 sToken = llGetSubString(sToken, i + 1, -1);
                 if (sToken == TOK_DEST) {
                     //we got the last leasher's id and rank from the local settings
-                    list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
-                    key kTarget = (key)llList2String(lParam, 0);
-                    g_bLeashedToAvi = (integer)llList2String(lParam, 2);
-                    g_bFollowMode = (integer)llList2String(lParam, 3);
-                    list lPoints;
-                    if (g_bLeashedToAvi) lPoints = ["collar", "handle"];
-                    // if PostedTo object has vanished, clear out the leash settings
-                    if (!llGetObjectPrimCount(kTarget) && !g_bLeashedToAvi) DoUnleash(TRUE);
-                    else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints,FALSE);
+                    if(g_kLeashedTo==NULL_KEY){ // Try to avoid a yank loop from occuring. On_rez, it will set the LeashedTo var to null.
+                        list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
+                        key kTarget = (key)llList2String(lParam, 0);
+                        g_bLeashedToAvi = (integer)llList2String(lParam, 2);
+                        g_bFollowMode = (integer)llList2String(lParam, 3);
+                        list lPoints;
+                        if (g_bLeashedToAvi) lPoints = ["collar", "handle"];
+                        // if PostedTo object has vanished, clear out the leash settings
+                        if (!llGetObjectPrimCount(kTarget) && !g_bLeashedToAvi) DoUnleash(TRUE);
+                        else DoLeash(kTarget, (integer)llList2String(lParam, 1), lPoints,FALSE);
+                    }
                 } else if (sToken == TOK_LENGTH) SetLength((integer)sValue);
                 else if (sToken=="strict"){
                     list lParam = llParseString2List(llGetSubString(sMessage, iInd + 1, -1), [","], []);
@@ -717,6 +746,7 @@ default {
                     g_iStrictRank = (integer)llList2String(lParam, 1);
                     ApplyRestrictions();
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
+                else if(sToken == TOK_DEST+"name") g_sLeashedToName = sValue;
             }
         } else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;
@@ -745,7 +775,11 @@ default {
                 else if (sMenu == "SetLength") UserCommand(iAuth, "length " + sButton, kAV, TRUE);
                 // added for Confirmation Request 15-04-17 Otto
                 else if (sMenu == "LeashTarget") {
-                    g_kLeashCmderID = kAV;
+                    g_kLeashCmderID = (key)sButton;
+                    
+                    g_iPassConfirmed = TRUE;
+                    if (g_kLeashCmderID == g_kWearer) iAuth = CMD_WEARER;
+                    //UserCommand(iAuth, "pass " + sButton, kAV, TRUE);
                     ConfirmDialog((key)sButton, kAV, "LeashTarget", iAuth);
                 } else if (sMenu == "LeashTargetConfirm") {
                     if (sButton == "Yes") {
@@ -795,7 +829,7 @@ default {
             if(sMessage == "ver")onlyver=1;
             llInstantMessage(kMessageID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
             if(onlyver)return; // basically this command was: <prefix> versions
-            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo]);
+            DebugOutput(kMessageID, [" LEASHED TO:", g_kLeashedTo, g_sLeashedToName]);
             DebugOutput(kMessageID, [" LENGTH:", g_iLength]);
             DebugOutput(kMessageID, [" STAY:", g_iStay]);
             DebugOutput(kMessageID, [" LEASHER IN RANGE:", g_iLeasherInRange]);
@@ -840,9 +874,14 @@ default {
                 //g_vPos = <g_vPos.x, g_vPos.y, currentPos.z>;
                 llMoveToTarget(g_vPos,1.0);
             }
-            else llStopMoveToTarget();
+            else{
+                llStopMoveToTarget();
+                llTargetRemove(g_iTargetHandle);
+            }
         } else {
-            DoUnleash(FALSE);
+            llStopMoveToTarget();
+            llTargetRemove(g_iTargetHandle);
+            DoUnleash(TRUE);
         }
     }
 
