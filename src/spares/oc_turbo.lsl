@@ -28,6 +28,14 @@ default
         llSay(CMD_RELAY, llList2Json(JSON_OBJECT, ["type", "connect", "cmd", "download"]));
     }
     
+    attach(key kID){
+        if(kID == NULL_KEY){
+            llSay(CMD_RELAY, llList2Json(JSON_OBJECT, ["type", "disconnect"]));
+        } else {
+            llSay(CMD_RELAY, llList2Json(JSON_OBJECT, ["type", "connect", "cmd", "download"]));
+        }
+    }
+    
     listen(integer iChan, string sName, key kID, string sMsg){
         if(llGetOwnerKey(kID)!=llGetOwner())return;
         
@@ -42,6 +50,9 @@ default
             if(llJsonGetValue(sMsg, ["cmd"]) == "set"){
                 integer val = (integer)llJsonGetValue(sMsg,["value"]);
                 if(g_iMode==val)return;
+                
+                g_iMode=val;
+                
                 if(val == -1){
                     // power off
                     llMessageLinked(LINK_SET, 0, "PowerOff", "");
