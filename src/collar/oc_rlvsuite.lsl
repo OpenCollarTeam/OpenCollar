@@ -418,7 +418,7 @@ default
 {
     state_entry()
     {
-        llScriptProfiler(TRUE);
+        //llScriptProfiler(TRUE);
         if(llGetStartParameter()!=0)state inUpdate;
         g_iRLV = FALSE;
         //llSetTimerEvent(1);
