@@ -280,7 +280,6 @@ list bitpos (integer flag1,integer flag2){
         ret = llListReplaceList(ret,[llRound(llLog10(flag2)/llLog10(2))],1,1);
     }
     
-    llOwnerSay("Returning  bitpos : "+(string)ret);
     
     return ret;
 }
@@ -523,11 +522,23 @@ default
         if(llGetStartParameter()!=0)state inUpdate;
         g_iRLV = FALSE;
 //        llSetTimerEvent(1);
-//        llSay(0, llList2String(bitpos(64,1),0));
     }
-    //    timer(){
-//        llSetText("Free memory: "+(string)llGetFreeMemory()+"\n \n \n \n \n \n \n \n", <0,1,0>,1);
-//    }
+    
+    on_rez(integer iRez){
+        // Restrictions are likely not applied at the moment, reinit the variables
+        llResetTime();
+        llSetTimerEvent(1);
+    }
+    
+    timer(){
+        if(llGetTime()>=20){
+            g_iRestrictions1=0;
+            g_iRestrictions2=0;
+            llSetTimerEvent(0);
+            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+        }
+    }
+        
     link_message(integer iSender,integer iNum,string sStr,key kID){
        // llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
