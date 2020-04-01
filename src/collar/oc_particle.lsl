@@ -159,7 +159,7 @@ FindLinkedPrims() {
     }
     
     if (llListFindList(g_lLeashPrims,["fcollar"]) < 0){
-        g_lLeashPrims += ["fcollar",LINK_ROOT];
+        g_lLeashPrims += ["fcollar",LINK_ROOT, "collar", LINK_ROOT, "collarfrontloop", LINK_ROOT];
     }
 }
 
