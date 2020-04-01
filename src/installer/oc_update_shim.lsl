@@ -29,7 +29,10 @@ integer g_iIsUpdate;
 
 // list of deprecated tokens to remove from previous collar scripts
 list g_lDeprecatedSettingTokens = ["collarversion","global_integrity","intern_hovers","intern_standhover","leashpoint","auth_groupname",
-"rlvsuite_mask1", "rlvsuite_mask2"];
+"rlvsuite_mask1", "rlvsuite_mask2",
+ "rlvsuite_auths" //< - Auths was a token in 7.4 betas which allowed setting access to specific restrictions, but it proved to push us over the memory limit. This may be readded in the future under a different script, and different token name.
+ 
+ ];
 
 integer CMD_OWNER = 500;
 
