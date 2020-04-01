@@ -280,6 +280,8 @@ list bitpos (integer flag1,integer flag2){
         ret = llListReplaceList(ret,[llRound(llLog10(flag2)/llLog10(2))],1,1);
     }
     
+    llOwnerSay("Returning  bitpos : "+(string)ret);
+    
     return ret;
 }
 integer isAuthed(integer Flag, integer iAuth){   ///// TODO: Modify the MaskData to include the iAuth value to make this easier on memory with a one liner
@@ -432,15 +434,15 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
             } else {
                 
                 if(iMenuIndex==0){
-                    if(!(g_iRestrictions2 & iMenuIndex2)){
+                    if((g_iRestrictions2 & iMenuIndex2)){
                         // STOP
-                        //llSay(0, "BIT NOT SET. REFUSE EXISTING RESTRICTION");
+                        //llSay(0, "BIT SET. REFUSE EXISTING RESTRICTION");
                         return;
                     }
                 } else if(iMenuIndex2 ==0){
-                    if(!(g_iRestrictions1 & iMenuIndex)){
+                    if((g_iRestrictions1 & iMenuIndex)){
                         //STOP
-                        //llSay(0, "BIT NOT SET. REFUSE EXISTING RESTRICTION");
+                        //llSay(0, "BIT SET. REFUSE EXISTING RESTRICTION");
                         return;
                     }
                 }
