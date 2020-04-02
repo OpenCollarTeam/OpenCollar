@@ -288,7 +288,7 @@ default
                 } else if (sMenu == "Exceptions~Set") {
                     if (sMsg == UPMENU) Dialog(kAv, "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.", ["Owner","Trusted"], [UPMENU], 0, iAuth, "Exceptions~Main");
                     else {
-                        sMsg = llGetSubString( sMsg, 2, -1);
+                        sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
                         integer iIndex = llListFindList(lRLVEx,[sMsg]);
                         if (iIndex > -1) {
                             if (g_sExTarget == "Owner") {
