@@ -501,7 +501,7 @@ default
                 } else if (sMenu == "Restrictions~Category"){
                     if(sMsg == "BACK") MenuRestrictions(kAv,iAuth);
                     else {
-                        sMsg = llGetSubString( sMsg, 2, -1);
+                        sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
                         integer iMenuIndex = llListFindList(g_lRLVList,[sMsg]);
                         integer iMenuIndex2=0;
                         if(iMenuIndex/3 >=31){
