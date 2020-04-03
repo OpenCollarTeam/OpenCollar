@@ -1,17 +1,18 @@
 SCRIPT|oc_bell
-SCRIPT|oc_capture
-SCRIPT|oc_exceptions
 SCRIPT|oc_folders
 SCRIPT|oc_label
 SCRIPT|oc_leash
+SCRIPT|oc_titler
 SCRIPT|oc_meshlabel
+SCRIPT|oc_detach
+SCRIPT|oc_outfits
 SCRIPT|oc_particle
-SCRIPT|oc_relay
 SCRIPT|oc_resizer
-SCRIPT|oc_rlvsuite
 SCRIPT|oc_themes
 SCRIPT|oc_meshthemes
-SCRIPT|oc_titler
+SCRIPT|oc_relay
+ITEM|Turbo Safety RLV Relay
+ITEM|Turbo RLV Relay
 ITEM|.license
 ITEM|OpenCollar_Help
 ITEM|s&p_leashholder
