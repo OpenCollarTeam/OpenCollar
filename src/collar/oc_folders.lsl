@@ -6,6 +6,7 @@
 
 string g_sScriptVersion = "7.4";
 integer LINK_CMD_DEBUG=1999;
+/*
 DebugOutput(key kID, list ITEMS){
     integer i=0;
     integer end=llGetListLength(ITEMS);
@@ -14,7 +15,7 @@ DebugOutput(key kID, list ITEMS){
         final+=llList2String(ITEMS,i)+" ";
     }
     llInstantMessage(kID, llGetScriptName() +final);
-}
+}*/
 
 string g_sParentMenu = "RLV";
 
@@ -25,7 +26,7 @@ string g_sSubMenu = "# Folders";
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;

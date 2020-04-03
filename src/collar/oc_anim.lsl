@@ -87,11 +87,6 @@ integer DIALOG_TIMEOUT = -9002;
 
 integer g_iAOChannel = -782690;
 
-integer MVANIM_INIT = 13000;
-integer MVANIM_ANNOUNCE = 13001;
-integer MVANIM_SKIP = 13002;
-integer MVANIM_GIVE = 13003;
-
 string g_sSettingToken = "anim_";
 //string g_sGlobalToken = "global_";
 key g_kWearer;
@@ -592,13 +587,14 @@ SearchIndicators(){
     
     
 }
+/*
 Indicator(integer iMode){
     if(INDICATOR_THIS==-1)return;
     if(iMode)
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
     else
         llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
-}
+}*/
 
 
 default {

@@ -56,7 +56,7 @@ integer LOADPIN = -1904;
 integer g_iRebootConfirmed;
 key g_kConfirmDialogID;
 string g_sSampleURL = "https://goo.gl/SQLFnV";
-string g_sEmergencyURL = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
+//string g_sEmergencyURL = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
 key g_kURLRequestID;
 float g_fLastNewsStamp;
 integer g_iCheckNews;
@@ -365,6 +365,7 @@ default {
     state_entry() {
         // remove the intern_dist setting
         // Ensure that settings resets AFTER every other script, so that they don't reset after they get settings
+        SearchIndicators();
         if(llGetStartParameter() != 0) g_iInUpdate=TRUE; // do NOT spam linked messages
         
         if(g_iInUpdate && llGetLinkNumber()!= LINK_ROOT){

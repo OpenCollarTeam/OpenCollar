@@ -64,7 +64,7 @@ integer g_iHide ; // global hide
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;

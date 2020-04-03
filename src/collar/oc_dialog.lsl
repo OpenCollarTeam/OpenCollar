@@ -507,6 +507,7 @@ default {
             state inUpdate;
         }
         g_kWearer=llGetOwner();
+        SearchIndicators();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);

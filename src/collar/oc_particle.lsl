@@ -40,8 +40,8 @@ integer DIALOG_TIMEOUT      = -9002;
 integer g_iChan_LOCKMEISTER = -8888;
 integer g_iChan_LOCKGUARD   = -9119;
 integer g_iChan_OCChain = -9889;                   // OpenCollar Chain CMD Channel (for cuff compatibility)
-integer g_iLMListener;
-integer g_iLMListernerDetach;
+//integer g_iLMListener;
+//integer g_iLMListernerDetach;
 
 integer CMD_PARTICLE = 20000;
 
@@ -465,11 +465,11 @@ DebugOutput(key kID, list ITEMS){
 
 HandleOccCMD(string sCMD){
     list lOcCMD = llParseString2List(sCMD, [":"],[]);
-    string sCMD = llList2String(lOcCMD,0);
-    if (sCMD == "occhains") ParseOcChains(llList2String(lOcCMD,1));         // Request keys
-    else if (sCMD == "occhain") doOcChain(llList2String(lOcCMD,1));         // Request Chain
-    else if (sCMD == "clearchain") doClearChain(llList2String(lOcCMD,1));   // Clear Chain
-    else if (sCMD == "chaintex" && g_sOccParticleTexture != llList2Key(lOcCMD,1)) {
+    string sCMDs = llList2String(lOcCMD,0);
+    if (sCMDs == "occhains") ParseOcChains(llList2String(lOcCMD,1));         // Request keys
+    else if (sCMDs == "occhain") doOcChain(llList2String(lOcCMD,1));         // Request Chain
+    else if (sCMDs == "clearchain") doClearChain(llList2String(lOcCMD,1));   // Clear Chain
+    else if (sCMDs == "chaintex" && g_sOccParticleTexture != llList2Key(lOcCMD,1)) {
         g_sOccParticleTexture = llList2Key(lOcCMD,1);
         list lActiveChains = g_lCurrentChains;
         doClearChain("all"); // Restart all Chains so the change can be seen live!
