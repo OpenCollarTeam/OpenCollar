@@ -7,6 +7,7 @@ Copyright ©2020
 Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
+    * Apr 2020      - Added chat commands, and a link message API to wear/remove
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -20,7 +21,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.3";
+string g_sAppVersion = "1.4";
 string g_sScriptVersion = "7.4";
 
 
@@ -49,6 +50,9 @@ integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
+
+integer OUTFITS_ADD = -999901;
+integer OUTFITS_REM = -999902;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -216,6 +220,17 @@ UserCommand(integer iNum, string sStr, key kID) {
             RmCorelock();
             llSleep(1);
             llOwnerSay("@attachallover:"+g_sPath+"=force");
+        } else if(sChangetype == "rem"){
+            g_sLastOutfit="NONE";
+            
+            if(!Bool((g_iAccessBitSet&32))){
+                if(llSubStringIndex(sChangevalue, ".core")!=-1)RmCorelock();
+                llOwnerSay("@detachall:"+sChangevalue+"=force");
+            }
+            else{
+                llOwnerSay("@detach=force");
+                llOwnerSay("@remoutfit=force");
+            }
         }
         
     }
@@ -374,15 +389,7 @@ default
                         UserCommand(iAuth, "wear "+g_sPath, kAv);
                         
                     } else if(sMsg == ">RemoveAll<"){
-                        g_sLastOutfit="NONE";
-                        if(!Bool((g_iAccessBitSet&32))){
-                            if(llSubStringIndex(g_sPath, ".core")!=-1)RmCorelock();
-                            llOwnerSay("@detachall:"+g_sPath+"=force");
-                        }
-                        else{
-                            llOwnerSay("@detach=force");
-                            llOwnerSay("@remoutfit=force");
-                        }
+                        UserCommand(iAuth, "rem "+g_sPath, kAv);
                     } else if(sMsg == "^"){
                         // go up a path
                         list edit = llParseString2List(g_sPath,["/"],[]);
@@ -402,6 +409,10 @@ default
                     if(iRespring)llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                 }
             }
+        } else if(iNum == OUTFITS_ADD){
+            UserCommand(CMD_OWNER, "wear "+sStr, kID);
+        } else if(iNum == OUTFITS_REM){
+            UserCommand(CMD_OWNER, "rem "+sStr, kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
