@@ -12,13 +12,13 @@ string g_sSubMenu3 = "RLV Settings";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
-integer CMD_TRUSTED = 501;
+//integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
-integer CMD_RLV_RELAY = 507;
-integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RLV_RELAY = 507;
+//integer CMD_SAFEWORD = 510;
+//integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 
@@ -29,28 +29,28 @@ integer LINK_CMD_RESTDATA = -2577;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
+//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
 
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-integer DIALOG_TIMEOUT = -9002;
+//integer DIALOG_TIMEOUT = -9002;
 integer DIALOG_SENSOR = -9003;
 string UPMENU = "BACK";
-string ALL = "ALL";
+//string ALL = "ALL";
 
 integer g_bCanStand = TRUE;
 integer g_bCanChat = FALSE;
@@ -96,7 +96,7 @@ list g_lMenuIDs;
 integer g_iMenuStride;
 integer g_iLocked=FALSE;
 
-list g_lStrangerEx = [];
+//list g_lStrangerEx = [];
 
 list g_lMuffleReplace = [
     "p" , "h",
@@ -246,7 +246,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else { 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
+//        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
             if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
                 llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force","Macros");
@@ -346,7 +346,7 @@ default
                                 else if (sMsg == "-1.0") g_fMinCamDist -= 1.0;
                                 else if (sMsg == "-0.5") g_fMinCamDist -= 0.5;
                                 else if (sMsg == "-0.1") g_fMinCamDist -= 0.1;
-                                if (g_fMinCamDist < 0.5) g_fMinCamDist = 0.5;
+                                if (g_fMinCamDist < 0.1) g_fMinCamDist = 0.1;
                                 else if (g_fMinCamDist > g_fMaxCamDist) g_fMinCamDist = g_fMaxCamDist;
                                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,llList2String(lMenu,1)+"="+(string)g_fMinCamDist,kAv);
                             } else if (llList2String(lMenu,1) == "MaxCamDist") {
