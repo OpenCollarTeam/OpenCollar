@@ -72,13 +72,13 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[RLV Relay - Turbo Relay App]\n\n";
     if(g_iRelayWorn)sPrompt+="Relay is worn\n";
-    else sPrompt+="Relay is not currently worn";
+    else sPrompt+="Relay is not currently worn\n";
     
     sPrompt+= "Relay Mode: ";
     sPrompt += RelayMode2Str();
     
     
-    list lButtons = ["Mode", "Safeword", "Get Relay", "Safety Relay",  "About"];
+    list lButtons = ["Mode", "Safeword", "Get Relay",  "About"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
@@ -259,8 +259,6 @@ default
                         SafewordMenu(kAv, iAuth);
                         iRespring=FALSE;
                     } else if(sMsg == "Get Relay"){
-                        llGiveInventory(kAv, "Turbo RLV Relay");
-                    } else if(sMsg == "Safety Relay"){
                         llGiveInventory(kAv, "Turbo Safety RLV Relay");
                     } else if(sMsg == "About"){
                         llMessageLinked(LINK_SET, NOTIFY, "0The Turbo RLV Relay is written by secondlife:///app/agent/c9d1c876-b65f-4c59-84e2-5c492f94ad11/about and secondlife:///app/agent/5033978d-44f1-4177-9333-a0c9115fddeb/about\nThe contributors to OpenCollar's relay app can be viewed by looking at the copyright section of this script ("+llGetScriptName()+")", kAv);
