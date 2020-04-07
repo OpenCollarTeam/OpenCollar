@@ -762,7 +762,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_ROOT)return;
+                if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
                 
                 list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
                 ExtractPart();

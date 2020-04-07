@@ -368,7 +368,7 @@ default {
         SearchIndicators();
         if(llGetStartParameter() != 0) g_iInUpdate=TRUE; // do NOT spam linked messages
         
-        if(g_iInUpdate && llGetLinkNumber()!= LINK_ROOT){
+        if(g_iInUpdate && llGetLinkNumber()!= LINK_ROOT && llGetLinkNumber() != 0){
             
             list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
             ExtractPart();
@@ -377,7 +377,7 @@ default {
                 
         }
         
-        if(g_iInUpdate && llGetLinkNumber()!=LINK_ROOT){
+        if(g_iInUpdate && llGetLinkNumber()!=LINK_ROOT  &&  llGetLinkNumber() != 0){
             llOwnerSay("Moved oc_settings");
             if(llGetInventoryType(".settings")==INVENTORY_NOTECARD){
                 key sendTo = llGetLinkKey(LINK_ROOT);
