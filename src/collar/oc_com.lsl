@@ -22,7 +22,6 @@ string g_sPrefix = ".";
 
 integer g_iPublicListener;
 integer g_iPrivateListener;
-integer g_iLockMeisterListener;
 integer g_iLeashPrim;
 
 integer g_iHUDListener;
@@ -33,7 +32,7 @@ integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
-integer CMD_WEARER = 503;
+//integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
@@ -55,7 +54,7 @@ integer LM_SETTING_DELETE = 2003;
 //integer MENUNAME_RESPONSE = 3001;
 integer TOUCH_REQUEST = -9500;
 integer TOUCH_CANCEL = -9501;
-integer TOUCH_RESPONSE = -9502;
+//integer TOUCH_RESPONSE = -9502;
 integer TOUCH_EXPIRE = -9503;
 
 integer MVANIM_INIT = 13000;
@@ -83,15 +82,15 @@ string g_sWearerName;
 list g_lTouchRequests; // 4-strided list in form of touchid, recipient, flags, auth level
 integer g_iStrideLength = 4;
 
-integer FLAG_TOUCHSTART = 0x01;
-integer FLAG_TOUCHEND = 0x02;
+//integer FLAG_TOUCHSTART = 0x01;
+//integer FLAG_TOUCHEND = 0x02;
 
 integer g_iNeedsPose = FALSE;  // should the avatar be forced into a still pose for making touching easier
 string g_sPOSE_ANIM = "turn_180";
 
 integer g_iTouchNotify = FALSE;  // for Touch Notify
 integer g_iHighlander = TRUE;
-integer g_iVerify;
+//integer g_iVerify;
 /*integer g_iProfiled;
 Debug(string sStr) {
     //if you delete the first // from the preceeding and following  lines,

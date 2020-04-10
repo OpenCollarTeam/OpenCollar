@@ -1,1 +1,0 @@
-Beta OpenCollar cuffs scripts.

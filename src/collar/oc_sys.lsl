@@ -10,7 +10,7 @@
 //on menu request, give dialog, with alphabetized list of submenus
 //on listen, send submenu link message
 
-string g_sDevStage="RC 3";
+string g_sDevStage="";
 string g_sCollarVersion="7.4";
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
@@ -22,7 +22,7 @@ key g_kWearer;
 // Relay will read .settings from root prim and send to oc_settings for storage.
 key g_kSettingsReader;
 integer g_iSettingsReader; 
-key g_kExistingSettings; // To prevent excess linked messages if the settings notecard is not modified, or load is not requested, cache the settings UUID
+//key g_kExistingSettings; // To prevent excess linked messages if the settings notecard is not modified, or load is not requested, cache the settings UUID
 // End .settings relay
 
 list g_lMenuIDs;//3-strided list of avatars given menus, their dialog ids, and the name of the menu they were given
@@ -105,7 +105,7 @@ key g_kCurrentUser;
 
 list g_lAppsButtons;
 list g_lResizeButtons;
-integer MVANIM_ANNOUNCE = 13001;
+//integer MVANIM_ANNOUNCE = 13001;
 
 integer g_iLocked = FALSE;
 integer g_bDetached = FALSE;
@@ -135,8 +135,8 @@ integer g_iUpdateFromMenu;
 
 key github_version_request;
 string g_sOtherDist;
-key news_request;
-string g_sLastNewsTime = "0";
+//key news_request;
+//string g_sLastNewsTime = "0";
 
 string g_sWeb = "https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/";
 

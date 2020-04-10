@@ -507,6 +507,7 @@ default {
             state inUpdate;
         }
         g_kWearer=llGetOwner();
+        SearchIndicators();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
         g_sWearerName = NameURI(g_kWearer);
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
@@ -761,7 +762,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_ROOT)return;
+                if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
                 
                 list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
                 ExtractPart();

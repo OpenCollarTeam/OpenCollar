@@ -13,12 +13,12 @@ integer g_iJustRezzed=FALSE;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
-integer CMD_GROUP = 502;
+//integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
 //integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+//integer CMD_RELAY_SAFEWORD = 511;
 
 integer NOTIFY = 1002;
 
@@ -31,14 +31,14 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
 //integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
-string g_sSettingToken = "rlvsuite_";
+//string g_sSettingToken = "rlvsuite_";
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
-integer MENUNAME_REMOVE = 3003;
+//integer MENUNAME_REMOVE = 3003;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -69,7 +69,7 @@ list g_lMacros = ["Hear", 4, 0, "Talk" , 2, 0, "Touch", 0, 16384, "Stray", 29360
 integer g_lMaxMacros = 10;  // Maximum number of Macros allowed
 
 string g_sTmpMacroName = "";
-string g_sTmpRestName = "";
+//string g_sTmpRestName = "";
 list g_lCategory = ["Chat",
                     "Show/Hide",
                     "Teleport",
@@ -502,17 +502,17 @@ default
                     if(sMsg == "BACK") MenuRestrictions(kAv,iAuth);
                     else {
                         sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
-                        integer iMenuIndex = llListFindList(g_lRLVList,[sMsg]);
+                        integer iMenuIndex1 = llListFindList(g_lRLVList,[sMsg]);
                         integer iMenuIndex2=0;
-                        if(iMenuIndex/3 >=31){
-                            iMenuIndex2 = (iMenuIndex/3)-30;
-                            iMenuIndex=0;
+                        if(iMenuIndex1/3 >=31){
+                            iMenuIndex2 = (iMenuIndex1/3)-30;
+                            iMenuIndex1=0;
                         } else {
-                            iMenuIndex /= 3;
+                            iMenuIndex1 /= 3;
                         }
                         
-                        if (iMenuIndex > -1) {
-                            if (g_iRestrictions1 & (integer)llPow(2,iMenuIndex) || g_iRestrictions2 & (integer)llPow(2,iMenuIndex2)) {
+                        if (iMenuIndex1 > -1) {
+                            if (g_iRestrictions1 & (integer)llPow(2,iMenuIndex1) || g_iRestrictions2 & (integer)llPow(2,iMenuIndex2)) {
                                 if (iAuth != CMD_WEARER) ApplyCommand(sMsg,FALSE,kAv, iAuth);
                                 else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS%", kAv);
                             } else {

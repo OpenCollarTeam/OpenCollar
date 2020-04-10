@@ -90,7 +90,7 @@ list g_lSecOwners = [];
 list g_lTempOwners = [];
 
 integer g_iOwnerEx = 127;
-integer g_iTrustedEx = 110;
+integer g_iTrustedEx = 95;
 
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -251,12 +251,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
                 llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force","Macros");
                 llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=0="+(string)iNum, kID);
-                MenuForceSit(kID, iNum);
             } else {
                 llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
                 llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=1="+(string)iNum,kID);
-                MenuForceSit(kID, iNum);
             }
+        } else if(sChangetype == "unsit"){
+            UserCommand(iNum, "sit unsit", kID);
         }
     }
 }
@@ -310,7 +310,11 @@ default
                 } else if (sMenu == "Force Sit") MenuForceSit(kAv,iAuth);
                 else if (sMenu == "Restrictions~sensor") {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    else UserCommand(iAuth,"sit "+sMsg,kAv);
+                    else{
+                        UserCommand(iAuth,"sit "+sMsg,kAv);
+                        
+                        MenuForceSit(kID, iNum);
+                    }
                 } else if (sMenu == "Settings~Main") {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "Exceptions"){

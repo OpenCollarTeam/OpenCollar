@@ -382,6 +382,7 @@ default {
         }
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
+        SearchIndicators();
         //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         //llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "on="+(string)g_iRLVOn, "");
         llOwnerSay("@clear");
@@ -663,7 +664,7 @@ state inUpdate{
         else if(iNum == 0){
             if(sMsg == "do_move"){
                 
-                if(llGetLinkNumber()==LINK_ROOT)return;
+                if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
                 
                 list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
                 ExtractPart();
