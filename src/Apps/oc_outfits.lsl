@@ -228,8 +228,16 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llOwnerSay("@detachall:"+sChangevalue+"=force");
             }
             else{
-                llOwnerSay("@detach=force");
-                llOwnerSay("@remoutfit=force");
+                
+                
+                if(llSubStringIndex(sChangevalue, ".core")!=-1){
+                    RmCorelock();
+                    llOwnerSay("@detachall:"+sChangevalue+"=force");
+                }else{
+                    
+                    llOwnerSay("@detach=force");
+                    llOwnerSay("@remoutfit=force");
+                }
             }
         }
         
