@@ -491,7 +491,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
     } else if (sCommand == "add") { //add a person to a list
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
-        if (iNum!=CMD_OWNER && !( sAction == "trust" && kID==g_sWearerID )) {
+        if (iNum!=CMD_OWNER) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to adding new person",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID){
@@ -509,7 +509,7 @@ UserCommand(integer iNum, string sStr, key kID, integer iRemenu) { // here iNum:
         if (!~llListFindList(["owner","trust","block"],[sAction])) return; //not a valid command
         string sTmpID = llList2String(lParams,2); //get full name
         //llSay(0, "lParams 2: "+llList2String(lParams,2)+"; lParams 3: "+llList2String(lParams,3));
-        if (iNum != CMD_OWNER && !( sAction == "trust" && kID == g_sWearerID )) {
+        if (iNum != CMD_OWNER) {
             llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to removing user from list",kID);
             if (iRemenu) AuthMenu(kID, Auth(kID));
         } else if ((key)sTmpID) {
