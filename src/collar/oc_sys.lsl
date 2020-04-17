@@ -11,7 +11,7 @@
 //on listen, send submenu link message
 
 string g_sDevStage="";
-string g_sCollarVersion="7.4";
+string g_sCollarVersion="7.5"; // in reality: 7.4.1 but since checkversion in this and previous code does not allow for a minor rev number, this is what we have to work with
 
 integer g_iCaptureIsActive=FALSE; // this is a fix for ensuring proper permissions with capture
 integer g_iLatestVersion=TRUE;

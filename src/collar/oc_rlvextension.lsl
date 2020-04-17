@@ -7,7 +7,7 @@ string g_sScriptVersion = "7.4";
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
 string g_sSubMenu3 = "RLV Settings";
-
+integer g_iStrictSit=FALSE; // Default - do not use strict mode
 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -69,9 +69,6 @@ list g_lCheckboxes=["⬜","⬛"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
-
-
-list lUtilitySit  = ["[UNSIT]","BACK"];
 
 list lRLVEx = [
     "IM"            , "sendim"      , 1     ,
@@ -170,7 +167,7 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
 
 MenuForceSit(key kID, integer iAuth) {
     
-    Dialog(kID, "Select a Place to sit:", lUtilitySit, [], 0, iAuth, "Restrictions~sensor");
+    Dialog(kID, "Select a Place to sit:", [Checkbox(g_iStrictSit, "Strict Sit"), UPMENU, "[UNSIT]"], [], 0, iAuth, "Restrictions~sensor");
 }
 
 MenuSettings(key kID, integer iAuth){
@@ -249,11 +246,16 @@ UserCommand(integer iNum, string sStr, key kID) {
 //        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
             if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
-                llMessageLinked(LINK_SET,RLV_CMD,"unsit=y,unsit=force","Macros");
-                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=0="+(string)iNum, kID);
+                if(g_iStrictSit){
+                    llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=0="+(string)iNum, kID);
+                }
+                llSleep(1.5);
+                llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
             } else {
+                if(g_iStrictSit){
+                    llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=1="+(string)iNum,kID);
+                }
                 llMessageLinked(LINK_SET,RLV_CMD,"sit:"+sChangekey+"=force","Macros");
-                llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=1="+(string)iNum,kID);
             }
         } else if(sChangetype == "unsit"){
             UserCommand(iNum, "sit unsit", kID);
@@ -309,11 +311,18 @@ default
                     } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Acces Denied!", kAv);
                 } else if (sMenu == "Force Sit") MenuForceSit(kAv,iAuth);
                 else if (sMenu == "Restrictions~sensor") {
+                    if(sMsg == Checkbox(g_iStrictSit,"Strict Sit") && iAuth == CMD_OWNER){
+                        g_iStrictSit=1-g_iStrictSit;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_strict="+(string)g_iStrictSit, "");
+                        MenuForceSit(kAv,iAuth);
+                        return;
+                    }
+                    
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else{
                         UserCommand(iAuth,"sit "+sMsg,kAv);
                         
-                        MenuForceSit(kID, iNum);
+                        MenuForceSit(kAv, iAuth);
                     }
                 } else if (sMenu == "Settings~Main") {
                     if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
@@ -389,6 +398,8 @@ default
             if (sToken == "rlvext_MinCamDist") {
                 g_fMinCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
+            } else if(sToken == "rlvext_strict"){
+                g_iStrictSit=(integer)sValue;
             } else if (sToken == "rlvext_MaxCamDist") {
                 g_fMaxCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
