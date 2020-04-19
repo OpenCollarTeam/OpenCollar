@@ -142,6 +142,22 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llSay(0,(string)g_iFlagAtLoad+" [InitialBootFlags]");
                 llSay(0, (string)g_kCaptor+" [TempOwner]");
                 llSay(0, (string)iNum+" [AuthLevel]");
+            }else if(sChangevalue=="on"){
+                if(g_iEnabled){
+                    llMessageLinked(LINK_SET,NOTIFY, "0Capture mode already enabled.", g_kWearer);
+                }else{
+                    llMessageLinked(LINK_SET,NOTIFY, "0Capture mode enabled.", g_kWearer);
+                    g_iEnabled=TRUE;
+                    Commit();
+                }
+            }else if(sChangevalue=="off"){
+                if(!g_iEnabled){
+                    llMessageLinked(LINK_SET,NOTIFY, "0Capture mode already disabled.", g_kWearer);
+                }else{
+                    llMessageLinked(LINK_SET,NOTIFY, "0Capture mode disabled.", g_kWearer);
+                    g_iEnabled=FALSE;
+                    Commit();
+                }
             }else if(sChangevalue==""){
                 // Attempt to capture
                 if(g_iCaptured){
