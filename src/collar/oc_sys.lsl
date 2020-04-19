@@ -701,7 +701,7 @@ default {
     on_rez(integer iParam) {
         g_iHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
         llSleep(7.0);
-        init();
+        llMessageLinked(LINK_SET, REBOOT, "reboot", ""); // not all scripts reboot properly on relog
     }
 
     changed(integer iChange) {
