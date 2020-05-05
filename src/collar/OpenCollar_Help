@@ -26,13 +26,13 @@ Your prefix is used to issue commands in the Nearby Chat.
 
 If you don’t like your prefix, you can change it. Only the owner can change the prefix, and the wearer if there is no owner set.
 
-    ws prefix wen
+    sr prefix ss
     wr prefix we
     js prefix sex
 
 There are two special prefixes. * issues commands to everyone nearby and # issues commands to everyone except yourself.
 
-    *trauma
+    *grab
     #grab
 
 ------------
@@ -100,17 +100,13 @@ General Commands:
     channel -1
     channel 0
 
-    prefix [custom prefix]
+    prefix [newprefix]
 
     RED
     /1RED
     ((RED))
 
-    safeword [custom safeword]
-
-    CustomSafeword
-    /1CustomSafeword
-    ((CustomSafeword))
+    prefix safeword [newsafeword]
 
 --------------
 Bookmarks:
@@ -299,7 +295,7 @@ Force Sit:
 -----------
 
     sit
-    stand
+    unsit
 
     forbid stand
     allow stand
