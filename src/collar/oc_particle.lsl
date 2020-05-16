@@ -4,7 +4,7 @@
 // lillith xue, littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "7.5";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -63,6 +63,10 @@ string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle
 // Defalut leash particle, can read from defaultsettings:
 // leashParticle=Shine~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
 list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
+
+string Uncheckbox(string Button){
+    return llGetSubString(Button, llStringLength(llList2String(g_lCheckboxes, 0))+1, -1);
+}
 
 list g_lSettings=g_lDefaultSettings;
 
@@ -544,9 +548,7 @@ default {
                     if(sMenu == "configure") llMessageLinked(LINK_SET, iAuth, "menu " + PARENTMENU, kAv);
                     else ConfigureMenu(kAv, iAuth);
                 } else  if (sMenu == "configure") {
-                    string sButtonType = llGetSubString(sButton,2,-1);
-                    string sButtonCheck = llGetSubString(sButton,0,0);
-                    integer toggleMode = llListFindList(g_lCheckboxes, [sButtonCheck]);
+                    string sButtonType = Uncheckbox(sButton);
                     if (sButton == L_COLOR) {
                         ColorMenu(kAv, iAuth);
                         return;
@@ -554,16 +556,14 @@ default {
                         FeelMenu(kAv, iAuth);
                         return;
                     } else if(sButtonType == L_GLOW) {
-                        if (!toggleMode) g_iParticleGlow = TRUE;
-                        else g_iParticleGlow = FALSE;
+                        g_iParticleGlow = 1-g_iParticleGlow;
                         SaveSettings(sButtonType, (string)g_iParticleGlow, TRUE);
                     } else if(sButtonType == L_TURN) {
-                        if (!toggleMode) g_iTurnMode = TRUE;
-                        else g_iTurnMode = FALSE;
+                        g_iTurnMode = 1-g_iTurnMode;
                         if (g_iTurnMode) llMessageLinked(LINK_SET, iAuth, "turn on", kAv);
                         else llMessageLinked(LINK_SET, iAuth, "turn off", kAv);
                     } else if(sButtonType == L_STRICT) {
-                        if (!toggleMode) {
+                        if (!g_iStrictMode) {
                             g_iStrictMode = TRUE;
                             g_iStrictRank = iAuth;
                             llMessageLinked(LINK_SET, iAuth, "strict on", kAv);
@@ -573,7 +573,8 @@ default {
                             llMessageLinked(LINK_SET, iAuth, "strict off", kAv);
                         } else llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to changing strict settings",kAv);
                     } else if(sButtonType == L_RIBBON_TEX) {
-                        if (!toggleMode) {
+                        
+                        if (!(g_sLeashParticleMode == "Ribbon")) {
                             g_sLeashParticleMode = "Ribbon";
                             SetTexture(g_sRibbonTexture, kAv);
                             SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
@@ -584,7 +585,7 @@ default {
                         }
                         SaveSettings("ParticleMode", g_sLeashParticleMode, TRUE);
                     } else if(sButtonType == L_CLASSIC_TEX) {
-                        if (!toggleMode) {
+                        if (!(g_sLeashParticleMode == "Classic")) {
                             g_sLeashParticleMode = "Classic";
                             SetTexture(g_sClassicTexture, kAv);
                             SaveSettings("C_Texture", g_sClassicTexture, TRUE);
@@ -595,7 +596,7 @@ default {
                         }
                         SaveSettings("ParticleMode", g_sLeashParticleMode, TRUE);
                     } else if(sButtonType == "Invisible") {
-                        if (!toggleMode) {
+                        if (!(g_sLeashParticleMode=="noParticle")) {
                             g_sLeashParticleMode = "noParticle";
                             g_sParticleTexture = "noleash";
                             SetTexture("noleash", kAv);
