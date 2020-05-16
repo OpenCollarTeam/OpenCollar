@@ -169,6 +169,10 @@ FindLinkedPrims() {
 
 Particles(integer iLink, key kParticleTarget, vector vScale) {
     //when we have no target to send particles to, dont create any
+    if(g_sLeashParticleMode == "noParticle") {
+        StopParticles(FALSE);
+        return;
+    }
     if (kParticleTarget == NULLKEY) return;
 
     integer iFlags = PSYS_PART_FOLLOW_VELOCITY_MASK | PSYS_PART_TARGET_POS_MASK | PSYS_PART_FOLLOW_SRC_MASK;
