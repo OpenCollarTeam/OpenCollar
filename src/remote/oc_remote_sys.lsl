@@ -474,7 +474,7 @@ default {
     touch_start(integer iNum) {
         if (llGetAttached() && (llDetectedKey(0)==g_kOwner)) {// Dont do anything if not attached to the HUD
 //          I made the root prim the "menu" prim, and the button action default to "menu."
-            string sButton = llToLower((string)llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]));
+            string sButton = llList2String(llGetLinkPrimitiveParams(llDetectedLinkNumber(0),[PRIM_DESC]),0);
             if (~llSubStringIndex(sButton,"remote")) {
                 g_iHidden = !g_iHidden;
                 PositionButtons();
