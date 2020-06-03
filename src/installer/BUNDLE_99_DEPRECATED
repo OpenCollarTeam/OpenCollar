@@ -3,6 +3,5 @@ SCRIPT|oc_update
 SCRIPT|oc_lock
 SCRIPT|oc_stealth
 SCRIPT|oc_exceptions
-ITEM|Turbo RLV Relay
-ITEM|Turbo Safety RLV Relay
+LIKE|Turbo
 LIKE|OpenCollar -
