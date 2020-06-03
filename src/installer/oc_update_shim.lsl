@@ -188,6 +188,15 @@ default {
                     if (llGetInventoryType(sName) != INVENTORY_NONE) {
                         llRemoveInventory(sName);
                     }
+                } else if(sType == "LIKE"){
+                    integer iV = 0;
+                    integer iE = llGetInventoryNumber(INVENTORY_ALL);
+                    for(iV=0;iV<iE;iV++){
+                        string name = llGetInventoryName(INVENTORY_ALL,iV);
+                        if(llSubStringIndex(name, sName)!=-1){
+                            llRemoveInventory(name);
+                        }
+                    }
                 }
                 sCmd = "OK";
             } else if  (sMode == "OPTIONAL") {
