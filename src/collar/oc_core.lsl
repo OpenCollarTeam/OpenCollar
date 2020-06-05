@@ -22,7 +22,7 @@ string g_sParentMenu = "";
 string g_sSubMenu = "Main";
 string COLLAR_VERSION = "8.0.0000"; // Provide enough room
 integer UPDATE_AVAILABLE=FALSE;
-string NEW_VERSION = "8.0.0000";
+string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
 
 
@@ -74,7 +74,12 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
-
+integer g_iHide=FALSE;
+Settings(key kID, integer iAuth){
+    string sPrompt = "OpenCollar\n\n[Settings]";
+    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide")];
+    Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
+}
 Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
     list lButtons = g_lMainMenu;
@@ -84,15 +89,16 @@ Menu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "Menu~Main");
 }
 key g_kGroup = "";
-integer g_iOpenAccess=FALSE;
+integer g_iLimitRange=TRUE;
+integer g_iPublic=FALSE;
 AccessMenu(key kID, integer iAuth){
     string sPrompt = "\nOpenCollar Access Controls";
-    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iOpenAccess, "Public")];
+    list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iPublic, "Public")];
 
-    lButtons += ["Runaway", "Access List"];
+    lButtons += [Checkbox(g_iLimitRange, "Limit Range"), "Runaway", "Access List"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Auth");
 }
-    
+
 integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
@@ -109,13 +115,18 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
     if(sStr == "Access" || sStr == "menu Access") AccessMenu(kID,iNum);
+    if(sStr == "Settings" || sStr == "menu Settings")Settings(kID,iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
-        
+        if(sChangetype=="fix"){
+            g_lMainMenu = ["-", "Plugins", "Addons", "Leash", "Access", "Settings", "Help/About"];
+            
+            llMessageLinked(LINK_SET,0,"initialize","");
+        }
     }
 }
 
@@ -141,6 +152,8 @@ Compare(string V1, string V2){
     else if(iV1 > iV2){
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
+        
+        llSetText("*ALERT*\nThis version is newer than publicly released copies", <1,0,0>,1);
     }
 }
 
@@ -204,8 +217,11 @@ default
                     if(sMsg == "Access"){
                         iRespring=FALSE;
                         AccessMenu(kAv,iAuth);
+                    } else if(sMsg == "Settings"){
+                        iRespring=FALSE;
+                        Settings(kAv,iAuth);
                     }
-                    
+                     
                     
                     if(iRespring)Menu(kAv,iAuth);
                 } else if(sMenu=="Menu~Auth"){
@@ -226,25 +242,76 @@ default
                         } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to removing a person", kAv);
                     } else if(sMsg == "Access List"){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);
+                    } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
+                        if(g_kGroup!=""){
+                            g_kGroup="";
+                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "");
+                        }else{
+                            g_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "");
+                        }
+                    } else if(sMsg == Checkbox(g_iPublic, "Public")){
+                        g_iPublic=1-g_iPublic;
+                        
+                        if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "");
+                        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","");
+                    } else if(sMsg == Checkbox(g_iLimitRange, "Limit Range")){
+                        g_iLimitRange=1-g_iLimitRange;
+                        
+                        if(g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=1","");
+                        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "");
                     }
                     
                     
                     if(iRespring)AccessMenu(kAv,iAuth);
+                } else if(sMenu == "Menu~Settings"){
+                    if(sMsg == UPMENU){
+                        iRespring=FALSE;
+                        Menu(kAv, iAuth);
+                    } else if(sMsg == "Print"){
+                        llMessageLinked(LINK_SET, iAuth, "print settings", kAv);
+                    } else if(sMsg == "Fix Menus"){
+                        llMessageLinked(LINK_SET, iAuth, "fix", kAv);
+                        llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
+                    }
+                    
+                    
+                    
+                    if(iRespring)Settings(kAv,iAuth);
                 }
             }
         } else if(iNum == LM_SETTING_RESPONSE){
-            // Detect here the Settings
-            list lSettings = llParseString2List(sStr, ["_","="],[]);
-            if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1)=="locked"){
-                    g_iLocked=llList2Integer(lSettings,2);
+            list lPar = llParseString2List(sStr, ["_","="],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            string sVal = llList2String(lPar,2);
+            
+            
+            if(sToken=="global"){
+                if(sVar=="locked"){
+                    g_iLocked=(integer)sVal;
+                }
+            } else if(sToken == "auth"){
+                if(sVar == "group"){
+                    g_kGroup=(key)sVal;
+                } else if(sVar == "public"){
+                    g_iPublic = (integer)sVal;
+                } else if(sVar == "limitrange"){
+                    g_iLimitRange=(integer)sVal;
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
-            // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            list lPar = llParseString2List(sStr, ["_"],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            
+            if(sToken=="global"){
+                if(sVar == "locked") g_iLocked=FALSE;
+            } else if(sToken == "auth"){
+                if(sVar == "group")g_kGroup="";
+                else if(sVar == "public")g_iPublic=FALSE;
+                else if(sVar == "limitrange")g_iLimitRange=TRUE;
+            }
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
                 llResetScript();
