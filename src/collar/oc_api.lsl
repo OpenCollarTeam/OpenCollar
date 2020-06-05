@@ -42,6 +42,7 @@ integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
 
+integer REBOOT = -1000;
 string UPMENU = "BACK";
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -64,7 +65,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 string SLURL(key kID){
     return "secondlife:///app/agent/"+(string)kID+"/about";
 }
-
+key g_kGroup;
 key g_kWearer;
 key g_kTry;
 integer g_iCurrentAuth;
@@ -72,18 +73,24 @@ key g_kMenuUser;
 integer CalcAuth(key kID){
     string sID = (string)kID;
     // First check
-    if(llGetListLength(g_lOwner) == 0 && llGetListLength(g_lTrust)==0 && kID==g_kWearer)
+    if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer)
         return CMD_OWNER;
     else{
         if(llListFindList(g_lBlock,[sID])!=-1)return CMD_NOACCESS;
         if(llListFindList(g_lOwner, [sID])!=-1)return CMD_OWNER;
         if(llListFindList(g_lTrust,[sID])!=-1)return CMD_TRUSTED;
+        if(in_range(kID)){
+            if(g_kGroup!=""){
+                if(llSameGroup(kID))return CMD_GROUP;
+            }
         
-        if(g_iPublic)return CMD_EVERYONE;
-        
+            if(g_iPublic)return CMD_EVERYONE;
+        } else {
+            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% because you are out of range", kID);
+        }
     }
         
-    
+    if(kID==g_kWearer)return CMD_WEARER;
     
     return CMD_NOACCESS;
 }
@@ -92,7 +99,6 @@ list g_lMenuIDs;
 integer g_iMenuStride;
 
 integer NOTIFY = 1002;
-integer REBOOT = -1000;
 integer g_iPublic;
 string g_sPrefix;
 integer g_iChannel=1;
@@ -117,6 +123,7 @@ PrintAccess(key kID){
         sFinal += "\n   "+SLURL(llList2String(g_lBlock,i));
     }
     sFinal+="\n";
+    if(llGetListLength(g_lOwner)==0 || llListFindList(g_lOwner, [(string)g_kWearer])!=-1)sFinal+="\n* Wearer is unowned or owns themselves.\nThe wearer has owner access";
     llMessageLinked(LINK_SET,NOTIFY, "0"+sFinal,kID);
     llSay(0, sFinal);
 }
@@ -184,6 +191,16 @@ UpdateLists(key kID){
         }
     }
 }
+integer g_iLimitRange=TRUE;
+integer in_range(key kID){
+    if(!g_iLimitRange)return TRUE;
+    if(kID == g_kWearer)return TRUE;
+    else{
+        vector pos = llList2Vector(llGetObjectDetails(kID, [OBJECT_POS]),0);
+        if(llVecDist(llGetPos(),pos) <=20.0)return TRUE;
+        else return FALSE;
+    }
+}
 default
 {
     state_entry(){
@@ -200,8 +217,9 @@ default
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == CMD_ZERO){
+            if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
-            llSay(0, "{API} Calculate auth for "+(string)kID+"="+(string)iAuth);
+            llSay(0, "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
@@ -218,6 +236,10 @@ default
                     g_lBlock = llParseString2List(sVal,[","],[]);
                 } else if(sVar == "public"){
                     g_iPublic=(integer)sVal;
+                } else if(sVar == "group"){
+                    g_kGroup = (key)sVal;
+                } else if(sVar == "limitrange"){
+                    g_iLimitRange = (integer)sVal;
                 }
             } else if(sToken == "global"){
                 if(sVar == "channel"){
@@ -225,6 +247,34 @@ default
                     DoListeners();
                 } else if(sVar == "prefix"){
                     g_sPrefix = sVal;
+                }
+            }
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            list lPar = llParseString2List(sStr, ["_","="],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            string sVal = llList2String(lPar,2);
+            if(sToken == "auth"){
+                if(sVar == "owner"){
+                    g_lOwner=[];
+                } else if(sVar == "trust"){
+                    g_lTrust = [];
+                } else if(sVar == "block"){
+                    g_lBlock = [];
+                } else if(sVar == "public"){
+                    g_iPublic=FALSE;
+                } else if(sVar == "group"){
+                    g_kGroup = "";
+                } else if(sVar == "limitrange"){
+                    g_iLimitRange = TRUE;
+                }
+            } else if(sToken == "global"){
+                if(sVar == "channel"){
+                    g_iChannel = 1;
+                    DoListeners();
+                } else if(sVar == "prefix"){
+                    g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
                 }
             }
         } else if(iNum == CMD_OWNER){
@@ -269,6 +319,10 @@ default
                 }
             } else if(sStr == "print auth"){
                 PrintAccess(kID);
+            }
+        } else if(iNum == REBOOT){
+            if(sStr=="reboot"){
+                llResetScript();
             }
         }
         else if(iNum == DIALOG_RESPONSE){
