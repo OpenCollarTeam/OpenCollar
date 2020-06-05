@@ -105,10 +105,10 @@ string Checkbox(integer iValue, string sLabel) {
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
-        g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
+    if(sStr == "Access" || sStr == "menu Access") AccessMenu(kID,iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
@@ -122,9 +122,6 @@ UserCommand(integer iNum, string sStr, key kID) {
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
-list g_lOwner;
-list g_lTrust;
-list g_lBlock;
 integer g_iLocked=FALSE;
 Compare(string V1, string V2){
     NEW_VERSION=V2;
@@ -145,16 +142,6 @@ Compare(string V1, string V2){
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
     }
-}
-
-integer CalcAuth(key kID){
-    string sID = (string)kID;
-    // First check
-    if(llGetListLength(g_lOwner) == 0 && llGetListLength(g_lTrust)==0 && kID==g_kWearer)
-        return CMD_OWNER;
-    
-    
-    return CMD_NOACCESS;
 }
 
 key g_kUpdateCheck = NULL_KEY;
@@ -225,6 +212,20 @@ default
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
+                    } else if(llGetSubString(sMsg,0,0) == "+"){
+                        if(iAuth == CMD_OWNER){
+                            iRespring=FALSE;
+                            llMessageLinked(LINK_SET, iAuth, "add "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
+                        }
+                        else
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to adding a person", kAv);
+                    } else if(llGetSubString(sMsg,0,0)=="-"){
+                        if(iAuth == CMD_OWNER){
+                            iRespring=FALSE;
+                            llMessageLinked(LINK_SET, iAuth, "rem "+llToLower(llGetSubString(sMsg,2,-1)), kAv);
+                        } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to removing a person", kAv);
+                    } else if(sMsg == "Access List"){
+                        llMessageLinked(LINK_SET, iAuth, "print auth", kAv);
                     }
                     
                     
@@ -256,9 +257,6 @@ default
                 
                 DoCheckUpdate();
             }
-            
-            integer iAuth = CalcAuth(kID);
-            llMessageLinked(LINK_SET, iAuth, sStr, kID);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
