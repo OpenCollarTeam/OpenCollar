@@ -407,9 +407,7 @@ Access:
     public on
     public off
 
-    flavor
-
-    ownself on
+    ownself on (to add wearer)
     ownself off
 
     runaway
