@@ -7,8 +7,8 @@ Do not allow pending requests to multiply.
 3) Add relay safeword.  Name it "Refuse".
 4) Make relay safeword when on auto pause the relay for 30 seconds
 4 1/2) Make "helpless mode" with checkbox to turn off Refuse and also stop collar safeword (can this be done with a single setting?)
-5) add checkbox to lock out wearer from changing relay settings  
-6)Relay needs to send a signal to rlvsuite, and rlvsuite needs to clear what restrictions it thinks it has set, 
+5) add checkbox to lock out wearer from changing relay settings
+6) Relay needs to send a signal to rlvsuite, and rlvsuite needs to clear what restrictions it thinks it has set, 
 then request them from settings. This will trigger it to re-issue all restrictions)
 7) rlvsys: Allow RLV Clear All signal to clear relay restrictions
 8) add blacklist.  Set limit for blacklisted sources.
