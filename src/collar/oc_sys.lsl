@@ -126,6 +126,7 @@ string g_sUnlockSound="82fa6d06-b494-f97c-2908-84009380c8d1";
 
 integer g_iAnimsMenu=FALSE;
 integer g_iRlvMenu=FALSE;
+integer g_iLeashMenu=FALSE;
 integer g_iLooks;
 
 integer g_iUpdateChan = -7483213;
@@ -243,7 +244,8 @@ MainMenu(key kID, integer iAuth) {
     if (g_iAnimsMenu) lStaticButtons+="Animations";
     else lStaticButtons+="-";
     lStaticButtons+="-";
-    lStaticButtons+=["Leash"];
+    if (g_iLeashMenu) lStaticButtons+="Leash";
+    else lStaticButtons+="-";
     if (g_iRlvMenu) lStaticButtons+="RLV";
     else lStaticButtons+="-";
     lStaticButtons+=["Access","Settings","Help/About"];
@@ -561,7 +563,8 @@ default {
                     g_lAppsButtons += [sSubMenu];
                     g_lAppsButtons = llListSort(g_lAppsButtons, 1, TRUE);
                 }
-            } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;
+            } else if (sStr=="Main|Animations") g_iAnimsMenu=TRUE;            
+            else if (sStr=="Main|Leash") g_iLeashMenu=TRUE;
             else if (sStr=="Main|RLV") g_iRlvMenu=TRUE;
             else if (sStr=="Settings|Size/Position") g_lResizeButtons = ["Position","Rotation","Size"];
         } else if (iNum == MENUNAME_REMOVE) {
