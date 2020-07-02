@@ -80,7 +80,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Detach App]";
     
-    Dialog(kID, sPrompt, llSortList(llGetAttachedList(llGetOwner()),1,TRUE),  [UPMENU], 0, iAuth, "Menu~Main");
+    Dialog(kID, sPrompt, llListSort(llGetAttachedList(llGetOwner()),1,TRUE),  [UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
