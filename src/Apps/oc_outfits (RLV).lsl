@@ -125,7 +125,7 @@ integer TimedOut(){
 }
 
 FolderBrowser (key kID, integer iAuth){
-    g_sPath = ".outfits";
+    g_sPath = "outfits";
     g_kListenTo = kID;
     g_iListenToAuth=iAuth;
     g_iListenChannel = llRound(llFrand(99999999));
@@ -139,7 +139,7 @@ FolderBrowser (key kID, integer iAuth){
 }
 
 CoreBrowser(key kID, integer iAuth){
-    g_sPath = ".outfits/.core";
+    g_sPath = "outfits/core";
     g_kListenTo = kID;
     g_iListenToAuth = iAuth;
     g_iListenChannel = llRound(llFrand(9999999));
@@ -167,7 +167,7 @@ ConfigMenu(key kID, integer iAuth){
     string sStripAll = TrueOrFalse(iStripAll);
     
 
-    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
+    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -232,7 +232,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             else{
                 
                 
-                if(llSubStringIndex(sChangevalue, ".core")!=-1){
+                if(llSubStringIndex(sChangevalue, "core")!=-1){
                     RmCorelock();
                     llOwnerSay("@detachall:"+sChangevalue+"=force");
                 }else{
@@ -272,22 +272,22 @@ Commit(){
 Process(){
     g_iJail = Bool((g_iAccessBitSet&16));
     if(g_iLockCore){
-        llOwnerSay("@detachallthis:outfits/.core=n");
+        llOwnerSay("@detachallthis:outfits/core=n");
     }
     else{
-        llOwnerSay("@detachallthis:outfits/.core=y");
+        llOwnerSay("@detachallthis:outfits/core=y");
     }
 }
 
 ForceLockCore(){
-    llOwnerSay("@detachallthis:outfits/.core=y");
+    llOwnerSay("@detachallthis:outfits/core=y");
     llSleep(1);
-    llOwnerSay("@detachallthis:outfits/.core=n");
+    llOwnerSay("@detachallthis:outfits/core=n");
     llSleep(0.5);
 }
 
 RmCorelock(){
-    llOwnerSay("@detachallthis:outfits/.core=y");
+    llOwnerSay("@detachallthis:outfits/core=y");
 }
 
 default
@@ -384,7 +384,7 @@ default
                     // Process commands!
                     
                     ForceLockCore(); // unlocks/relocks - compatible with the Lock Core option. 
-                    // The above is a workaround for a viewer bug where any newly added items to .core will not be protected.
+                    // The above is a workaround for a viewer bug where any newly added items to core will not be protected.
                     if(!g_iLocked){
                         llOwnerSay("@detach=n");
                     }
@@ -407,7 +407,7 @@ default
                         if(llGetSubString(sEdit,-1,-1)=="/")sEdit = llGetSubString(sEdit,0,-2);
                         g_sPath=sEdit;
                         iRespring=FALSE;
-                        if(g_iJail && g_sPath == "")g_sPath = ".outfits";
+                        if(g_iJail && g_sPath == "")g_sPath = "outfits";
                         llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                     } else {
                         g_sPath+="/"+sMsg;
