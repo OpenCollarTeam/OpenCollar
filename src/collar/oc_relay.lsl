@@ -43,6 +43,7 @@ Release(){
 }
         
 //MESSAGE MAP
+integer RLV_CLEAR=6002;
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
@@ -51,7 +52,7 @@ integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
-integer CMD_RELAY_SAFEWORD = 511;
+integer CMD_RELAY_SAFEWORD = 51200;
 
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
@@ -101,35 +102,77 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
+integer g_iWearer=TRUE; // Lockout wearer option
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Relay App]\n\n";
+    string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay";
+    list lButtons = [Checkbox(bool((g_iMode==0)), "OFF"), Checkbox(bool((g_iMode==MODE_ASK)),"Ask"), Checkbox(bool((g_iMode==MODE_AUTO)),"Auto"), Checkbox(g_iWearer, "Wearer")];
     if(Source){
         sPrompt += "Source: "+llKey2Name(Source);
+        lButtons+=["REFUSE"];
+        sPrompt+="\n\nREFUSE -> Will safeword the relay only";
     } else {
         sPrompt += "Source: NONE";
     }
-    list lButtons = [Checkbox(bool((g_iMode==0)), "OFF"), Checkbox(bool((g_iMode==MODE_ASK)),"Ask"), Checkbox(bool((g_iMode==MODE_AUTO)),"Auto"), "Safeword"];
+    
+    if(!g_iWearer){
+        lButtons += [Checkbox(g_iHelplessMode, "Helpless")];
+    }
+    
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    sStr=llToLower(sStr);
     if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (sStr==llToLower(g_sSubMenu) || sStr == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
+        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         string sText;
+        if(sChangetype == "refuse" && !g_iWearer && iNum==CMD_WEARER && !g_iHelplessMode){
+            llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "","");
+            string sReply = "Relay ";
+            if(sChangetype == "refuse")sReply +="safeworded!";
+            llMessageLinked(LINK_SET, NOTIFY, "0"+sReply, kID);
+            return;
+        }
+        if(kID==g_kWearer && !g_iWearer){
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% due to wearer lockout", kID);
+            return;
+        }
         
+        if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+            
+            if(sChangetype == "off")g_iMode=0;
+            else if(sChangetype=="ask")g_iMode=MODE_ASK;
+            else if(sChangetype == "auto")g_iMode=MODE_AUTO;
+            else if(sChangetype == "helpless") g_iHelplessMode = 1-g_iHelplessMode;
+            else if(sChangetype == "wearer") g_iWearer=1-g_iWearer;
+            else if(sChangetype == "refuse" ) llMessageLinked(LINK_SET,CMD_RELAY_SAFEWORD,"","");
+            else{
+                llMessageLinked(LINK_SET, NOTIFY, "0Command unknown", kID);
+                return;
+            }
+            string sReply = "Relay ";
+            if(sChangetype == "refuse")sReply +="safeworded!";
+            else if(sChangetype == "helpless")sReply += "helpless toggled to "+tf(g_iHelplessMode);
+            else if(sChangetype == "wearer")sReply += "wearer access toggled to "+tf(g_iWearer);
+            else sReply += "mode set to "+sChangetype;
+            llMessageLinked(LINK_SET, NOTIFY, "0"+sReply, kID);
+        }
     }
 }
-
+string tf(integer a){
+    if(a)return "true";
+    else return "false";
+}
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -200,6 +243,13 @@ Process(string msg, key id){
             else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");            
         }
 }
+integer g_iHelplessMode=FALSE;
+HelplessChecks(){
+    if(g_iWearer) {
+        g_iHelplessMode=FALSE;
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless=0", "");
+    }
+}
 default
 {
     state_entry()
@@ -214,6 +264,7 @@ default
             g_iResit_status = 0;
             llSetTimerEvent(30);
             llRegionSayTo(Source, RLV_RELAY_CHANNEL, "ping,"+(string)Source+",ping,ping");
+            
         }
     }
     
@@ -247,7 +298,15 @@ default
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
-                    else if(sMsg == Checkbox(bool((g_iMode==0)), "OFF")){
+                    if(kAv == g_kWearer && !g_iWearer){
+                        llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to relay options", kAv);
+                        jump noaccess;
+                    }
+                    if(!(iAuth == CMD_OWNER || iAuth == CMD_WEARER)) {
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to relay options", kAv);
+                        jump noaccess;
+                    }
+                    if(sMsg == Checkbox(bool((g_iMode==0)), "OFF")){
                         if(g_iMode == 0){
                             llMessageLinked(LINK_SET, NOTIFY, "0The relay is already off", kAv);
                             
@@ -279,12 +338,23 @@ default
                         
                         g_lAllowedSources=[];
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
-                    } else if(sMsg == "Safeword"){
+                    } else if(sMsg == Checkbox(g_iWearer, "Wearer")){
+                        g_iWearer=1-g_iWearer;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer="+(string)g_iWearer, "");
+                        if(g_iWearer)llMessageLinked(LINK_SET, NOTIFY, "0Wearer access now allowed", kAv);
+                        else llMessageLinked(LINK_SET, NOTIFY, "0Wearer access now denied", kAv);
+                    } else if(sMsg == Checkbox(g_iHelplessMode, "Helpless")){
+                        g_iHelplessMode = 1-g_iHelplessMode;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless="+(string)g_iHelplessMode,"");
+                    }
+                    @noaccess;
+                    if(sMsg == "REFUSE" && (iAuth == CMD_OWNER || iAuth==CMD_WEARER) && !g_iHelplessMode){
                         llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
                     }
                     
                     if(iRespring)Menu(kAv,iAuth);
-                    
+                    if(g_iHelplessMode)
+                        HelplessChecks();
                 } else if(sMenu == "AskPrompt"){
                     if(sMsg == "No"){
                         llMessageLinked(LINK_SET, NOTIFY, "0Ignoring this relay request!", g_kWearer);
@@ -313,6 +383,12 @@ default
                     } else {
                         RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
                     }
+                } else if(llList2String(lSettings,1) == "wearer"){
+                    g_iWearer=(integer)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) == "helpless"){
+                    g_iHelplessMode = (integer)llList2String(lSettings,2);
+                    // Perform sanity check on helpless mode
+                    HelplessChecks();
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -323,11 +399,14 @@ default
         } else if(iNum == CMD_SAFEWORD){
             // Process safeword
             llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
+        } else if(iNum == RLV_CLEAR){
+            llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "","");
         } else if(iNum == CMD_RELAY_SAFEWORD){
+            if(g_iHelplessMode)return;
             Release();
             integer iOldMode=g_iMode;
             g_iMode=0;
-            llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily disabled due to safeword. The relay will reactivate in 30 seconds", g_kWearer);
+            llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily disabled due to safeword or clear all. The relay will reactivate in 30 seconds", g_kWearer);
             llSleep(30);
             g_iMode=iOldMode;
             llMessageLinked(LINK_SET,NOTIFY, "0Relay has been reactivated",g_kWearer);
@@ -349,7 +428,10 @@ default
             
             
         }
-
+        
+        // Strip lists if too long
+        if(llGetListLength(g_lAllowedSources)>5)g_lAllowedSources = llList2List(g_lAllowedSources,0,4);
+        if(llGetListLength(g_lDisallowedSources)>5)g_lDisallowedSources = llList2List(g_lDisallowedSources,0,4);
         Process(msg,id);
     }
 }
