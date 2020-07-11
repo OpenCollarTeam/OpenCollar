@@ -105,13 +105,13 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 integer g_iWearer=TRUE; // Lockout wearer option
 Menu(key kID, integer iAuth) {
-                if(iAuth == CMD_OWNER && kID==g_kWearer){
-                    if(!g_iWearer){
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
-                    }
-                    g_iWearer=TRUE;
-                    HelplessChecks();
-                }
+    if(iAuth == CMD_OWNER && kID==g_kWearer && !g_iHasOwners){
+        if(!g_iWearer){
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
+        }
+        g_iWearer=TRUE;
+        HelplessChecks();
+    }
     string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay\n\n";
     list lButtons = [Checkbox(bool((g_iMode==0)), "OFF"), Checkbox(bool((g_iMode==MODE_ASK)),"Ask"), Checkbox(bool((g_iMode==MODE_AUTO)),"Auto"), Checkbox(g_iWearer, "Wearer")];
     if(Source){
