@@ -40,6 +40,7 @@ Release(){
     }
     Source=NULL_KEY;
     Restrictions=[];
+    g_lAllowedSources=[];
 }
         
 //MESSAGE MAP
@@ -104,7 +105,14 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 integer g_iWearer=TRUE; // Lockout wearer option
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay";
+                if(iAuth == CMD_OWNER && kID==g_kWearer){
+                    if(!g_iWearer){
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
+                    }
+                    g_iWearer=TRUE;
+                    HelplessChecks();
+                }
+    string sPrompt = "\n[Relay App]\n\nNote: Wearer checkbox will allow or disallow wearer changes to relay\n\n";
     list lButtons = [Checkbox(bool((g_iMode==0)), "OFF"), Checkbox(bool((g_iMode==MODE_ASK)),"Ask"), Checkbox(bool((g_iMode==MODE_AUTO)),"Auto"), Checkbox(g_iWearer, "Wearer")];
     if(Source){
         sPrompt += "Source: "+llKey2Name(Source);
@@ -124,9 +132,10 @@ Menu(key kID, integer iAuth) {
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     sStr=llToLower(sStr);
-    if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
+    if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+llToLower(g_sSubMenu)) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
         return;
     }
     if (sStr==llToLower(g_sSubMenu) || sStr == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
@@ -250,6 +259,8 @@ HelplessChecks(){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless=0", "");
     }
 }
+
+integer g_iHasOwners=FALSE;
 default
 {
     state_entry()
@@ -292,7 +303,7 @@ default
                 string sMsg = llList2String(lMenuParams,1);
                 integer iAuth = llList2Integer(lMenuParams,3);
                 integer iRespring=TRUE;
-                
+                // do some sanity checks
                 if(sMenu == "Menu~Main"){
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
@@ -390,12 +401,24 @@ default
                     // Perform sanity check on helpless mode
                     HelplessChecks();
                 }
+            } else if(llList2String(lSettings,0)=="auth"){
+                if(llList2String(lSettings,1)=="owner"){
+                    g_iHasOwners=TRUE;
+                }
             }
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
+            if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            } else if(llList2String(lSettings,0)=="auth"){
+                if(llList2String(lSettings,1)=="owner"){
+                    if(!g_iWearer){
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer=1","");
+                    }
+                    g_iHasOwners=FALSE;
+                }
+            }
         } else if(iNum == CMD_SAFEWORD){
             // Process safeword
             llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
@@ -420,6 +443,7 @@ default
         if (Source) { if (Source != id) return; } // already grabbed by another device
         if(g_iMode==MODE_ASK){
             if(llListFindList(g_lDisallowedSources, [id])!=-1)return;
+            if(g_kPendingSource == id)return;
             
             if(llListFindList(g_lAllowedSources, [id]) ==-1){
                 PromptForSource(id,msg);
