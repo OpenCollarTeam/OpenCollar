@@ -41,6 +41,8 @@ Release(){
     Source=NULL_KEY;
     Restrictions=[];
     g_lAllowedSources=[];
+    g_kPendingSource=NULL_KEY;
+    g_lPendingRLV=[];
 }
         
 //MESSAGE MAP
@@ -164,6 +166,15 @@ UserCommand(integer iNum, string sStr, key kID) {
             else if(sChangetype == "auto")g_iMode=MODE_AUTO;
             else if(sChangetype == "helpless") g_iHelplessMode = 1-g_iHelplessMode;
             else if(sChangetype == "wearer") g_iWearer=1-g_iWearer;
+            else if(sChangetype == "pending"){
+                if(g_kPendingSource==NULL_KEY){
+                    llMessageLinked(LINK_SET, NOTIFY, "0No pending source", kID);
+                    return;
+                }else {
+                    RepromptForSource(g_kPendingSource);
+//                    PromptForSource(g_kPendingSource, g_sPendingRLV);
+                }
+            }
             else if(sChangetype == "refuse" ) llMessageLinked(LINK_SET,CMD_RELAY_SAFEWORD,"","");
             else{
                 llMessageLinked(LINK_SET, NOTIFY, "0Command unknown", kID);
@@ -175,6 +186,11 @@ UserCommand(integer iNum, string sStr, key kID) {
             else if(sChangetype == "wearer")sReply += "wearer access toggled to "+tf(g_iWearer);
             else sReply += "mode set to "+sChangetype;
             llMessageLinked(LINK_SET, NOTIFY, "0"+sReply, kID);
+            
+            // Save data
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless="+(string)g_iHelplessMode, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_wearer="+(string)g_iWearer, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_mode="+(string)g_iMode, "");
         }
     }
 }
@@ -193,18 +209,21 @@ integer g_iLocked=FALSE;
 list g_lAllowedSources=[];
 list g_lDisallowedSources=[];
 key g_kPendingSource;
-string g_sPendingRLV;
+list g_lPendingRLV;
 
 PromptForSource(key kID, string sPendingCommand){
     g_kPendingSource=kID;
-    g_sPendingRLV = sPendingCommand;
+    g_lPendingRLV = [sPendingCommand];
+    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
+}
+RepromptForSource(key kID){
     Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
 }
 
 ///param id=source
 ///param msg=RLV command
-Process(string msg, key id){
-    
+Process(string msg, key id, integer iWillPrompt){
+    integer DoPrompt=FALSE;
         list args = llParseStringKeepNulls(msg,[","],[]);
         if (llGetListLength(args)!=3) return;
         if (llList2Key(args,1)!=g_kWearer && llList2Key(args, 1)!=(key)"ffffffff-ffff-ffff-ffff-ffffffffffff") return;
@@ -216,6 +235,12 @@ Process(string msg, key id){
         for (i=0; i<nc; ++i) {
             command = llList2String(commands,i);
             if (llGetSubString(command,0,0)=="@") {
+                if(llSubStringIndex(command, "@version")!=-1){
+                    jump overPromptChecks;
+                }
+                if(iWillPrompt)DoPrompt=TRUE;
+                if(iWillPrompt)jump skipSection;
+                @overPromptChecks;
                 if(command == "@clear" || command == "@detach=y"){
                     Release();
                     return;
@@ -243,14 +268,17 @@ Process(string msg, key id){
                     }
                     if (behav == "unsit") sitid = NULL_KEY;
                 }
+                @skipSection;
             }
             else if (command=="!pong" && id == forcesitter && sitid != NULL_KEY) g_iResit_status = 1;
             else if (command=="!version") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!version,1100");
             else if (command=="!implversion") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!implversion,ORG=0003/Satomi's Damn Fast Relay v4:OPENCOLLAR");
             else if (command=="!x-orgversions") llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+",!x-orgversions,ORG=0003");
-            else if (command=="!release") Release();
-            else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");            
+            else if (command=="!release" && id == Source) Release();
+            else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");           
         }
+        
+        if(DoPrompt)PromptForSource(id,msg);
 }
 integer g_iHelplessMode=FALSE;
 HelplessChecks(){
@@ -370,10 +398,18 @@ default
                     if(sMsg == "No"){
                         llMessageLinked(LINK_SET, NOTIFY, "0Ignoring this relay request!", g_kWearer);
                         g_lDisallowedSources=[g_kPendingSource]+g_lDisallowedSources;
+                        g_lPendingRLV=[];
+                        g_kPendingSource=NULL_KEY;
                     } else {
                         g_lAllowedSources = [g_kPendingSource]+g_lAllowedSources;
-                        Process(g_sPendingRLV, g_kPendingSource);
-                        g_sPendingRLV="";
+                        integer ii = 0;
+                        integer iEnd = llGetListLength(g_lPendingRLV);
+                        for(ii=0;ii<iEnd;ii++){
+                            
+                            Process(llList2String(g_lPendingRLV,ii), g_kPendingSource, FALSE);
+                        }
+                        g_lPendingRLV=[];
+                        g_kPendingSource=NULL_KEY;
                     }
                 }
             }
@@ -429,6 +465,7 @@ default
             Release();
             integer iOldMode=g_iMode;
             g_iMode=0;
+            if(!g_iLocked)llOwnerSay("@detach=y");
             llMessageLinked(LINK_SET, NOTIFY,"0Relay temporarily disabled due to safeword or clear all. The relay will reactivate in 30 seconds", g_kWearer);
             llSleep(30);
             g_iMode=iOldMode;
@@ -441,13 +478,17 @@ default
     
     listen(integer c, string w, key id, string msg) {
         if (Source) { if (Source != id) return; } // already grabbed by another device
+        integer iWillPrompt=FALSE;
         if(g_iMode==MODE_ASK){
             if(llListFindList(g_lDisallowedSources, [id])!=-1)return;
-            if(g_kPendingSource == id)return;
+            if(g_kPendingSource == id){
+                if(llGetListLength(g_lPendingRLV)<11)
+                    g_lPendingRLV+=msg;
+                return;
+            }
             
             if(llListFindList(g_lAllowedSources, [id]) ==-1){
-                PromptForSource(id,msg);
-                return;
+                iWillPrompt=TRUE;
             }
             
             
@@ -456,6 +497,6 @@ default
         // Strip lists if too long
         if(llGetListLength(g_lAllowedSources)>5)g_lAllowedSources = llList2List(g_lAllowedSources,0,4);
         if(llGetListLength(g_lDisallowedSources)>5)g_lDisallowedSources = llList2List(g_lDisallowedSources,0,4);
-        Process(msg,id);
+        Process(msg,id, iWillPrompt); // Prompt is moved inside of PROCESS
     }
 }
