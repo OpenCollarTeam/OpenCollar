@@ -254,7 +254,7 @@ Process(string msg, key id){
 }
 integer g_iHelplessMode=FALSE;
 HelplessChecks(){
-    if(g_iWearer) {
+    if(g_iWearer && g_iHelplessMode) {
         g_iHelplessMode=FALSE;
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless=0", "");
     }
