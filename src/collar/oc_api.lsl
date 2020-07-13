@@ -219,7 +219,7 @@ default
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
-            llSay(0, "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
+            //llSay(0, "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);

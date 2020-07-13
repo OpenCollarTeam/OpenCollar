@@ -64,7 +64,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
-list g_lMainMenu=["-", "Plugins", "Addons", "Leash", "Access", "Settings", "Help/About"];
+list g_lMainMenu=["Plugins", "Addons", "Access", "Settings", "Help/About"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -82,7 +82,7 @@ Settings(key kID, integer iAuth){
 }
 Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
-    list lButtons = g_lMainMenu;
+    list lButtons = [Checkbox(g_iLocked, "Lock")]+g_lMainMenu;
     
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs";
@@ -97,6 +97,12 @@ AccessMenu(key kID, integer iAuth){
 
     lButtons += [Checkbox(g_iLimitRange, "Limit Range"), "Runaway", "Access List"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Auth");
+}
+
+HelpMenu(key kID, integer iAuth){
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
+    list lButtons = ["Update"];
+    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
 integer bool(integer a){
@@ -153,13 +159,25 @@ Compare(string V1, string V2){
         UPDATE_AVAILABLE=FALSE;
         g_iAmNewer=TRUE;
         
-        llSetText("*ALERT*\nThis version is newer than publicly released copies", <1,0,0>,1);
+        llSetText("", <1,0,0>,1);
     }
 }
 
 key g_kUpdateCheck = NULL_KEY;
 DoCheckUpdate(){
     g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/version.txt",[],"");
+}
+
+
+///The setor method is derived from a similar PHP proposed function, though it was denied, 
+///https://wiki.php.net/rfc/ifsetor
+///The concept is roughly the same though we're not dealing with lists in this method, so is just modified
+///The ifsetor proposal would give a function which would be more like
+///ifsetor(list[index], sTrue, sFalse)
+///LSL can't check if a list item is set without a stack heap if it is out of range, this is significantly easier for us to just check for a integer boolean
+string setor(integer iTest, string sTrue, string sFalse){
+    if(iTest)return sTrue;
+    else return sFalse;
 }
 default
 {
@@ -220,6 +238,12 @@ default
                     } else if(sMsg == "Settings"){
                         iRespring=FALSE;
                         Settings(kAv,iAuth);
+                    } else if(sMsg=="Help/About"){
+                        iRespring=FALSE;
+                        HelpMenu(kAv,iAuth);
+                    } else {
+                        iRespring=FALSE;
+                        llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv);
                     }
                      
                     
@@ -273,11 +297,27 @@ default
                     } else if(sMsg == "Fix Menus"){
                         llMessageLinked(LINK_SET, iAuth, "fix", kAv);
                         llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
+                    } else if(sMsg == Checkbox(g_iHide,"Hide")){
+                        g_iHide=1-g_iHide;
+                        llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
+                    } else if(sMsg == "Load"){
+                        llMessageLinked(LINK_SET, iAuth, sMsg, kAv);
+                    } else if(sMsg == "Resize"){
+                        // Resizer!!
+                        iRespring=FALSE;
+                        llMessageLinked(LINK_SET, iAuth, "menu Size/Position", kAv);
                     }
                     
                     
                     
                     if(iRespring)Settings(kAv,iAuth);
+                } else if(sMenu == "Menu~Help"){
+                    if(sMsg == UPMENU){
+                        iRespring=FALSE;
+                        Menu(kAv,iAuth);
+                    }
+                    
+                    if(iRespring)HelpMenu(kAv,iAuth);
                 }
             }
         } else if(iNum == LM_SETTING_RESPONSE){
