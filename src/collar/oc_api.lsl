@@ -216,10 +216,11 @@ default
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
-            //llSay(0, "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
+            llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);

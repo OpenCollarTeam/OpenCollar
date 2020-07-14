@@ -32,7 +32,7 @@ integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -64,7 +64,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
-list g_lMainMenu=["Plugins", "Addons", "Access", "Settings", "Help/About"];
+list g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
@@ -80,6 +80,13 @@ Settings(key kID, integer iAuth){
     list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
+
+list g_lApps;
+AppsMenu(key kID, integer iAuth){
+    string sPrompt = "\n[Apps]\nYou have "+(string)llGetListLength(g_lApps)+" apps installed";
+    Dialog(kID, sPrompt, g_lApps, [UPMENU],0,iAuth, "Menu~Apps");
+}
+
 Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
     list lButtons = [Checkbox(g_iLocked, "Lock")]+g_lMainMenu;
@@ -101,7 +108,8 @@ AccessMenu(key kID, integer iAuth){
 
 HelpMenu(key kID, integer iAuth){
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
-    list lButtons = ["Update"];
+    sPrompt += "\n\nDocumentation https://opencollar.cc";
+    list lButtons = ["Update", "Support", "License"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
 
@@ -115,7 +123,7 @@ string Checkbox(integer iValue, string sLabel) {
 }
     
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         return;
     }
@@ -129,7 +137,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
         if(sChangetype=="fix"){
-            g_lMainMenu = ["-", "Plugins", "Addons", "Leash", "Access", "Settings", "Help/About"];
+            g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
             
             llMessageLinked(LINK_SET,0,"initialize","");
         }
@@ -197,7 +205,7 @@ default
         llMessageLinked(LINK_SET, 0, "menu", llDetectedKey(0)); // Temporary until API v8's implementation is done, use v7 in the meantime
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_RESPONSE){
             list lPara = llParseString2List(sStr, ["|"],[]);
             string sName = llList2String(lPara,0);
@@ -206,6 +214,8 @@ default
                 if(llListFindList(g_lMainMenu, [sMenu])==-1){
                     g_lMainMenu = [sMenu] + g_lMainMenu;
                 }
+            } else if(sName == "Apps"){
+                if(llListFindList(g_lApps,[sMenu])==-1)g_lApps= [sMenu]+g_lApps;
             }
         } else if(iNum == MENUNAME_REMOVE){
             // This is not really used much if at all in 7.x
@@ -218,6 +228,9 @@ default
                 if(loc!=-1){
                     g_lMainMenu = llDeleteSubList(g_lMainMenu, loc,loc);
                 }
+            } else if(sName == "Apps"){
+                integer loc = llListFindList(g_lApps,[sMenu]);
+                if(loc!=-1)g_lApps = llDeleteSubList(g_lApps, loc,loc);
             }
             
         }
@@ -241,6 +254,12 @@ default
                     } else if(sMsg=="Help/About"){
                         iRespring=FALSE;
                         HelpMenu(kAv,iAuth);
+                    } else if(sMsg == Checkbox(g_iLocked,"Lock")){
+                        g_iLocked=1-g_iLocked;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
+                    } else if(sMsg == "Apps"){
+                        iRespring=FALSE;
+                        AppsMenu(kAv,iAuth);
                     } else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv);
@@ -315,9 +334,19 @@ default
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
                         Menu(kAv,iAuth);
+                    } else if(sMsg == "License"){
+                        llGiveInventory(kAv, ".license");
+                    } else if(sMsg == "Support"){
+                        llMessageLinked(LINK_SET, NOTIFY, "0You can get support for OpenCollar in the following group: secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about or for scripting related questions or beta versions: secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about", kAv);
                     }
                     
                     if(iRespring)HelpMenu(kAv,iAuth);
+                } else if(sMenu == "Menu~Apps"){
+                    if(sMsg == UPMENU){
+                        Menu(kAv, iAuth);
+                    }else{
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
+                    }
                 }
             }
         } else if(iNum == LM_SETTING_RESPONSE){
@@ -330,6 +359,12 @@ default
             if(sToken=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
+                    
+                    if(g_iLocked){
+                        llOwnerSay("@detach=n");
+                    }else{
+                        llOwnerSay("@detach=y");
+                    }
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
@@ -361,6 +396,7 @@ default
             // Auth request!
             if(sStr=="initialize"){
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
+                llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
                 
                 DoCheckUpdate();
             }
