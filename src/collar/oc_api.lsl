@@ -21,7 +21,8 @@ list g_lTrust;
 list g_lBlock;
 
 integer g_iMode;
-
+string g_sSafeword;
+integer g_iSafewordDisable=FALSE;
 integer ACTION_ADD = 1;
 integer ACTION_REM = 2;
 integer ACTION_SCANNER = 4;
@@ -79,6 +80,7 @@ integer CalcAuth(key kID){
         if(llListFindList(g_lBlock,[sID])!=-1)return CMD_NOACCESS;
         if(llListFindList(g_lOwner, [sID])!=-1)return CMD_OWNER;
         if(llListFindList(g_lTrust,[sID])!=-1)return CMD_TRUSTED;
+        if(kID==g_kWearer)return CMD_WEARER;
         if(in_range(kID)){
             if(g_kGroup!=""){
                 if(llSameGroup(kID))return CMD_GROUP;
@@ -90,7 +92,6 @@ integer CalcAuth(key kID){
         }
     }
         
-    if(kID==g_kWearer)return CMD_WEARER;
     
     return CMD_NOACCESS;
 }
@@ -99,6 +100,7 @@ list g_lMenuIDs;
 integer g_iMenuStride;
 
 integer NOTIFY = 1002;
+integer NOTIFY_OWNERS=1003;
 integer g_iPublic;
 string g_sPrefix;
 integer g_iChannel=1;
@@ -201,6 +203,22 @@ integer in_range(key kID){
         else return FALSE;
     }
 }
+
+UserCommand(integer iAuth, string sCmd, key kID){
+    if(iAuth == CMD_OWNER){
+        if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
+        else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
+    }
+}
+
+SW(){
+    llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44"); // okay what the fuck is this? How can we make this more readable??!
+    llMessageLinked(LINK_SET, NOTIFY,"0You used the safeword, your owners have been notified", g_kWearer);
+    llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%.","");
+}
+
+
+integer g_iInterfaceChannel;
 default
 {
     state_entry(){
@@ -213,6 +231,18 @@ default
             string CMD=llGetSubString(m,2,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
+        } else {
+            if(m == g_sSafeword && !g_iSafewordDisable && i == g_kWearer){
+                llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
+                SW();
+            } else {
+                // check for OOC quotes and the safeword
+                if(llSubStringIndex(m,"((")!=-1 && llSubStringIndex(m,g_sSafeword) !=-1 && llSubStringIndex(m,"))")!=-1 && !g_iSafewordDisable && i==g_kWearer){
+                    // okay!
+                    llMessageLinked(LINK_SET, CMD_SAFEWORD, "" , "");
+                    SW();
+                }
+            }
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -222,7 +252,8 @@ default
             integer iAuth = CalcAuth(kID);
             llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
-        } else if(iNum == LM_SETTING_RESPONSE){
+        } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
@@ -239,6 +270,7 @@ default
                     g_iPublic=(integer)sVal;
                 } else if(sVar == "group"){
                     g_kGroup = (key)sVal;
+                    llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = (integer)sVal;
                 }
@@ -248,6 +280,8 @@ default
                     DoListeners();
                 } else if(sVar == "prefix"){
                     g_sPrefix = sVal;
+                } else if(sVar == "safeword"){
+                    g_sSafeword = sVal;
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
@@ -276,6 +310,8 @@ default
                     DoListeners();
                 } else if(sVar == "prefix"){
                     g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
+                } else if(sVar == "safeword"){
+                    g_sSafeword = "RED";
                 }
             }
         } else if(iNum == CMD_OWNER){

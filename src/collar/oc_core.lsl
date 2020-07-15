@@ -25,7 +25,7 @@ integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
 
-
+string g_sSafeword="RED";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -154,6 +154,21 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llWhisper(g_iUpdateChan, "UPDATE|"+COLLAR_VERSION);
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
+            }
+        } else if(sChangetype == "safeword"){
+            if(sChangevalue!=""){
+                if(iNum == CMD_OWNER){
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeword="+sChangevalue, "");
+                    llMessageLinked(LINK_SET,NOTIFY,"1Safeword is now set to '"+sChangevalue,kID);
+                    
+                    if(sChangevalue == "RED"){
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
+                    }
+                }
+            } else {
+                if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+                    llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
+                }
             }
         }
     }
@@ -387,6 +402,11 @@ default
                     }else{
                         llOwnerSay("@detach=y");
                     }
+                } else if(sVar == "safeword"){
+                    g_sSafeword = sVal;
+                    if(g_sSafeword == "0"){
+                        llMessageLinked(LINK_SET, CMD_OWNER, "safeword-disabled","");
+                    }
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
@@ -404,6 +424,10 @@ default
             
             if(sToken=="global"){
                 if(sVar == "locked") g_iLocked=FALSE;
+                else if(sVar == "safeword"){
+                    g_sSafeword = "RED";
+                    llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
+                }
             } else if(sToken == "auth"){
                 if(sVar == "group")g_kGroup="";
                 else if(sVar == "public")g_iPublic=FALSE;
