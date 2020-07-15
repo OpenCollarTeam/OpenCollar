@@ -140,10 +140,32 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
             
             llMessageLinked(LINK_SET,0,"initialize","");
+        } else if(sChangetype == "update"){
+            if(iNum == CMD_OWNER || iNum == CMD_WEARER){
+                integer pin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
+                llSetRemoteScriptAccessPin(pin);
+                
+                // Now that a pin is set, scan for a updater and chainload
+                g_iDiscoveredUpdaters=0;
+                g_kUpdater=NULL_KEY;
+                g_kUpdateUser=kID;
+                llMessageLinked(LINK_SET, NOTIFY, "0Searching for a updater", kID);
+                g_iUpdateAuth = iNum;
+                llWhisper(g_iUpdateChan, "UPDATE|"+COLLAR_VERSION);
+                g_iWaitUpdate = TRUE;
+                llSetTimerEvent(5);
+            }
         }
     }
 }
 
+integer g_iUpdateListener;
+key g_kUpdater;
+integer g_iDiscoveredUpdaters;
+key g_kUpdateUser;
+integer g_iUpdateAuth;
+integer g_iWaitUpdate;
+integer g_iUpdateChan = -7483213;
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -301,7 +323,7 @@ default
                     } else if(sMsg == Checkbox(g_iLimitRange, "Limit Range")){
                         g_iLimitRange=1-g_iLimitRange;
                         
-                        if(g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=1","");
+                        if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","");
                         else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "");
                     }
                     
@@ -399,6 +421,9 @@ default
                 llMessageLinked(LINK_SET, MENUNAME_REQUEST, "Apps", "");
                 
                 DoCheckUpdate();
+                
+                llListenRemove(g_iUpdateListener);
+                g_iUpdateListener = llListen(g_iUpdateChan, "", "", "");
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
@@ -408,5 +433,38 @@ default
             Compare(COLLAR_VERSION, sBody);
         else
             llOwnerSay("Could not check for an update. The server returned a unknown status code");
+    }
+    
+    timer(){
+    }
+    
+    listen(integer iChan, string sName, key kID, string sMsg){
+        if(iChan == g_iUpdateChan){
+            // dont check object owner. But do check if it is using v8 protocol for updates
+            list lTemp = llParseStringKeepNulls(sMsg, ["|"],[]);
+            string Cmd = llList2String(lTemp,0);
+            string sOpt = llList2String(lTemp,1);
+            string sImpl = llList2String(lTemp,2);
+            if(sImpl=="8000"){ // v8.0.00
+                // Nothing to do here. Continue
+            } else {
+                // Not v8 or above
+                // Require object owner is wearer
+                if(llGetOwnerKey(kID)!=g_kWearer){
+                    return;
+                }
+            }
+            
+            if(Cmd == "-.. ---"){ //Seriously why the fuck are we using morse code?
+                // sOpt is strictly going to be the version string now
+                Compare(COLLAR_VERSION, sOpt);
+                if(UPDATE_AVAILABLE && !g_iAmNewer){
+                    // valid update
+                } else {
+                    // this updater is older, dont install it
+                    llMessageLinked(LINK_SET, NOTIFY, "0The version you are trying to install is older than the currently installed scripts, or it is the same version. To install anyway, trigger the install a second time", g_kUpdateUser);
+                }
+            }
+        }
     }
 }
