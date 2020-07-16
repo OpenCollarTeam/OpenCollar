@@ -125,11 +125,12 @@ string Checkbox(integer iValue, string sLabel) {
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","");
         return;
     }
     if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu || sStr == "menu") Menu(kID, iNum);
-    if(sStr == "Access" || sStr == "menu Access") AccessMenu(kID,iNum);
-    if(sStr == "Settings" || sStr == "menu Settings")Settings(kID,iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
@@ -169,6 +170,14 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if(iNum == CMD_OWNER || iNum == CMD_WEARER){
                     llMessageLinked(LINK_SET, NOTIFY, "0The safeword is current set to: '"+g_sSafeword+"'",kID);
                 }
+            }
+        } else if(sChangetype == "menu"){
+            if(llToLower(sChangevalue) == "access"){
+                AccessMenu(kID,iNum);
+            } else if(llToLower(sChangevalue) == "settings"){
+                Settings(kID,iNum);
+            } else if(llToLower(sChangevalue) == "apps"){
+                AppsMenu(kID,iNum);
             }
         }
     }
@@ -282,24 +291,15 @@ default
                 integer iAuth = llList2Integer(lMenuParams,3);
                 integer iRespring=TRUE;
                 if(sMenu == "Menu~Main"){
-                    if(sMsg == "Access"){
-                        iRespring=FALSE;
-                        AccessMenu(kAv,iAuth);
-                    } else if(sMsg == "Settings"){
-                        iRespring=FALSE;
-                        Settings(kAv,iAuth);
-                    } else if(sMsg=="Help/About"){
+                    if(sMsg=="Help/About"){
                         iRespring=FALSE;
                         HelpMenu(kAv,iAuth);
                     } else if(sMsg == Checkbox(g_iLocked,"Lock")){
                         g_iLocked=1-g_iLocked;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
-                    } else if(sMsg == "Apps"){
+                    }  else {
                         iRespring=FALSE;
-                        AppsMenu(kAv,iAuth);
-                    } else {
-                        iRespring=FALSE;
-                        llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv);
+                        llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
                     }
                      
                     
@@ -429,7 +429,10 @@ default
                     llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
                 }
             } else if(sToken == "auth"){
-                if(sVar == "group")g_kGroup="";
+                if(sVar == "group"){
+                    g_kGroup="";
+                    llOwnerSay("@setgroup=y");
+                }
                 else if(sVar == "public")g_iPublic=FALSE;
                 else if(sVar == "limitrange")g_iLimitRange=TRUE;
             }

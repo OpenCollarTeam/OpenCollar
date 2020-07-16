@@ -30,6 +30,8 @@ integer ACTION_OWNER = 8;
 integer ACTION_TRUST = 16;
 integer ACTION_BLOCK = 32;
 
+integer API_CHANNEL = 0x60b97b5e;
+
 //MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -135,6 +137,7 @@ DoListeners(){
     g_iListenHandlePrivate = llListen(g_iChannel, "", "", "");
     llListenRemove(g_iListenHandle);
     g_iListenHandle = llListen(0, "", "", "");
+    
 }
 UpdateLists(key kID){
     integer iMode = g_iMode;
@@ -209,6 +212,33 @@ UserCommand(integer iAuth, string sCmd, key kID){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
         else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
     }
+    if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
+    if (iAuth == CMD_OWNER && sCmd == "runaway") {
+        
+        return;
+    }
+    
+    if(llToLower(sCmd) == "menu addons" || llToLower(sCmd)=="addons"){
+        AddonsMenu(kID, iAuth);
+    }
+}
+ 
+list StrideOfList(list src, integer stride, integer start, integer end)
+{
+    list l = [];
+    integer ll = llGetListLength(src);
+    if(start < 0)start += ll;
+    if(end < 0)end += ll;
+    if(end < start) return llList2List(src, start, start);
+    while(start <= end)
+    {
+        l += llList2List(src, start, start);
+        start += stride;
+    }
+    return l;
+}
+AddonsMenu(key kID, integer iAuth){
+    Dialog(kID, "[Addons]\n\nThese are addons you have worn, or rezzed that are compatible with OpenCollar and have requested collar access", StrideOfList(g_lAddons,2,1,llGetListLength(g_lAddons)), [UPMENU],0,iAuth,"addons");
 }
 
 SW(){
@@ -216,17 +246,49 @@ SW(){
     llMessageLinked(LINK_SET, NOTIFY,"0You used the safeword, your owners have been notified", g_kWearer);
     llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%.","");
 }
-
-
+list g_lAddons;
+key g_kAddonPending;
+string g_sAddonName;
 integer g_iInterfaceChannel;
+integer g_iLMCounter=0;
 default
 {
     state_entry(){
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         DoListeners();
+        // make the API Channel be per user
+        API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
+        llListen(API_CHANNEL, "", "", "");
     }
     listen(integer c,string n,key i,string m){
+        if(c==API_CHANNEL){
+            integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
+            if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
+            // begin to pass stuff to link messages!
+            // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+            if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
+                g_kAddonPending = i;
+                g_sAddonName = llJsonGetValue(m,["addon_name"]);
+                Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
+                return;
+            }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer){
+                // Add the addon and be done with
+                g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
+            }
+            
+            integer iNum = (integer)llJsonGetValue(m,["iNum"]);
+            string sMsg = llJsonGetValue(m,["sMsg"]);
+            key kID = llJsonGetValue(m,["kID"]);
+            
+            
+            
+            
+            return;
+        }
+            
+        
+        
         if(llToLower(llGetSubString(m,0,1))==g_sPrefix){
             string CMD=llGetSubString(m,2,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
@@ -246,6 +308,20 @@ default
         }
     }
     link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(llGetTime()>30){
+            llResetTime();
+            g_iLMCounter=0;
+        }
+        g_iLMCounter++;
+        if(g_iLMCounter < 50){
+            
+            // Max of 50 LMs to send out in a 30 second period, after that ignore
+            if(llGetListLength(g_lAddons)>0){
+                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID]));
+            }
+        }
+        
+        
         if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
@@ -401,6 +477,13 @@ default
                         llMessageLinked(LINK_SET,0, "menu Access", kAv);
                     }else{
                         UpdateLists(sMsg);
+                    }
+                } else if(sMenu == "addons"){
+                    if(sMsg == UPMENU){
+                        llMessageLinked(LINK_SET,0,"menu",kAv);
+                    } else {
+                        // Call this addon
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
                     }
                 }
             }
