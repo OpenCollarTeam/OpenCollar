@@ -21,7 +21,7 @@ list g_lTrust;
 list g_lBlock;
 
 integer g_iMode;
-string g_sSafeword;
+string g_sSafeword = "RED";
 integer g_iSafewordDisable=FALSE;
 integer ACTION_ADD = 1;
 integer ACTION_REM = 2;
@@ -242,7 +242,6 @@ AddonsMenu(key kID, integer iAuth){
 }
 
 SW(){
-    llRegionSayTo(g_kWearer,g_iInterfaceChannel,"%53%41%46%45%57%4F%52%44"); // okay what the fuck is this? How can we make this more readable??!
     llMessageLinked(LINK_SET, NOTIFY,"0You used the safeword, your owners have been notified", g_kWearer);
     llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% had to use the safeword. Please check on %WEARERNAME%.","");
 }
@@ -251,6 +250,11 @@ key g_kAddonPending;
 string g_sAddonName;
 integer g_iInterfaceChannel;
 integer g_iLMCounter=0;
+
+string tf(integer a){
+    if(a)return "true";
+    return "false";
+}
 default
 {
     state_entry(){
@@ -294,16 +298,12 @@ default
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
         } else {
-            if(m == g_sSafeword && !g_iSafewordDisable && i == g_kWearer){
+            list lTmp = llParseString2List(m,[" ","(",")"],[]);
+            string sDump = llToLower(llDumpList2String(lTmp, ""));
+            
+            if(sDump == llToLower(g_sSafeword) && !g_iSafewordDisable && i == g_kWearer){
                 llMessageLinked(LINK_SET, CMD_SAFEWORD, "","");
                 SW();
-            } else {
-                // check for OOC quotes and the safeword
-                if(llSubStringIndex(m,"((")!=-1 && llSubStringIndex(m,g_sSafeword) !=-1 && llSubStringIndex(m,"))")!=-1 && !g_iSafewordDisable && i==g_kWearer){
-                    // okay!
-                    llMessageLinked(LINK_SET, CMD_SAFEWORD, "" , "");
-                    SW();
-                }
             }
         }
     }
