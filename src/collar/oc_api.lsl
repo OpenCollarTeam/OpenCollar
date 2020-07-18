@@ -293,7 +293,7 @@ default
             
         
         
-        if(llToLower(llGetSubString(m,0,1))==g_sPrefix){
+        if(llToLower(llGetSubString(m,0,1))==g_sPrefix || llGetSubString(m,0,0) == "*"){
             string CMD=llGetSubString(m,2,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);

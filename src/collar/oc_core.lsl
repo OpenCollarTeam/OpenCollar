@@ -299,7 +299,7 @@ default
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
                     }  else {
                         iRespring=FALSE;
-                        llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
+                        llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv); // Recalculate
                     }
                      
                     
