@@ -33,6 +33,9 @@ integer ACTION_BLOCK = 32;
 integer API_CHANNEL = 0x60b97b5e;
 
 //MESSAGE MAP
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
+
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
@@ -293,7 +296,7 @@ default
             
         
         
-        if(llToLower(llGetSubString(m,0,1))==g_sPrefix || llGetSubString(m,0,0) == "*"){
+        if(llToLower(llGetSubString(m,0,1))==g_sPrefix){
             string CMD=llGetSubString(m,2,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
@@ -328,6 +331,10 @@ default
             integer iAuth = CalcAuth(kID);
             llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
+        } else if(iNum == AUTH_REQUEST){
+            integer iAuth = CalcAuth(kID);
+            llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
+            llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);

@@ -2,10 +2,10 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 
 string g_sParentMenu = "RLV";
-string g_sSubMenu = "Restrictions";
+string g_sSubMenu = "Macros";
 
 
 integer g_iJustRezzed=FALSE;
@@ -81,7 +81,7 @@ list g_lCategory = ["Chat",
                     "Outfit"
                 ];
 
-list g_lUtilityMain = ["[Individual]","[Manage]","BACK"];
+list g_lUtilityMain = ["[Manage]","BACK"];
 list g_lUtilityNone = ["BACK"];
 
 
@@ -171,11 +171,18 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     
-    list lButtons = [];
+    list lButtons =[];
     integer i;
-    for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
+    for(i=0;i<llGetListLength(g_lMacros);i+=3){
+        // calculate checkbox
+        integer b1 = llList2Integer(g_lMacros,i+1);
+        integer b2 = llList2Integer(g_lMacros, i+2);
+        
+        lButtons+=[Checkbox(bool((g_iRestrictions1 & b1 ) && ( g_iRestrictions2 & b2)), llList2String(g_lMacros,i))];
+    }
+    //for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
     
-    Dialog(kID, "\n[Macros]\n \nClick on a Macro to see more Options.", lButtons, g_lUtilityMain, 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Macros]\n \nClick on a Macro to toggle it.", lButtons, g_lUtilityMain, 0, iAuth, "Restrictions~Main");
 }
 
 MenuRestrictions(key kID, integer iAuth){
@@ -413,6 +420,20 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+integer CheckboxState(string CheckboxLabel){
+    list lTmp = llParseString2List(CheckboxLabel,[" "],[]);
+    integer iPos = llListFindList(g_lCheckboxes, [llList2String(lTmp,0)]);
+    if(iPos==-1){
+        return FALSE;
+    }else {
+        return iPos;
+    }
+}
+
+string CheckboxText(string CheckboxLabel){
+    list lTmp = llParseString2List(CheckboxLabel, [" "],[]);
+    return llList2String(lTmp,1);
+}
 
 default
 {
@@ -466,14 +487,17 @@ default
                 if(sMenu == "Restrictions~Main"){ 
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "[Manage]") Dialog(kAv, "Select an Option:\n \nSave As: Save current restrictions into a Macro\nDelete: Delete a Macro", ["Save As","Delete"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
-                    else if(sMsg == "[Individual]") {
-                       MenuRestrictions(kAv,iAuth);
-                    } else {
-                        integer iIndex = llListFindList(g_lMacros,[sMsg]);
-                        if (iIndex > -1) {
-                            g_sTmpMacroName = sMsg;
-                            Dialog(kAv, "What do you want to do with that macro?", ["Add","Replace","Clear"], g_lUtilityNone, 0, iAuth, "Restrictions~Options");
+                    else {
+                        integer iChkbxState = CheckboxState(sMsg);
+                        string sChkbxLbl = CheckboxText(sMsg);
+                        
+                        if(!iChkbxState){
+                            // toggle the macro
+                            UserCommand(iAuth, "macro add "+sChkbxLbl, kAv);
+                        } else {
+                            UserCommand(iAuth, "macro clear "+sChkbxLbl,kAv);
                         }
+                        Menu(kAv,iAuth);
                     }
                 } else if (sMenu == "Restrictions~Manage"){
                     if (sMsg == "Save As") {
@@ -558,10 +582,6 @@ default
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
-                } else if (sMenu == "Restrictions~Options") {
-                    integer iIndex = llListFindList(g_lMacros,[g_sTmpMacroName]);
-                    if (iIndex > -1) UserCommand(iAuth, "macro "+llToLower(sMsg)+" "+g_sTmpMacroName, kAv);
-                    Menu(kAv,iAuth);
                 }
             }
         } else if(iNum == -99999){
