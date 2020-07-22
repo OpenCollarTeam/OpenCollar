@@ -18,9 +18,10 @@ https://github.com/OpenCollarTeam/OpenCollar
 */
 
 
-string g_sParentMenu = "";
+string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0000"; // Provide enough room
+string COLLAR_VERSION = "8.0.0001"; // Provide enough room
+// LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
@@ -92,7 +93,7 @@ Menu(key kID, integer iAuth) {
     list lButtons = [Checkbox(g_iLocked, "Lock")]+g_lMainMenu;
     
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
-    if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs";
+    if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
     Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "Menu~Main");
 }
 key g_kGroup = "";
@@ -107,7 +108,11 @@ AccessMenu(key kID, integer iAuth){
 }
 
 HelpMenu(key kID, integer iAuth){
-    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
+    string EXTRA_VER_TXT = setor(bool((llGetSubString(COLLAR_VERSION,-1,-1)=="0")), "", " (ALPHA "+llGetSubString(COLLAR_VERSION,-1,-1)+") ");
+    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-2,-2)=="0")), "", " (BETA "+llGetSubString(COLLAR_VERSION,-2,-2)+") ");
+    EXTRA_VER_TXT += setor(bool((llGetSubString(COLLAR_VERSION,-3,-3) == "0")), "", " (RC "+llGetSubString(COLLAR_VERSION,-3,-3)+") ");
+    
+    string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
     sPrompt += "\n\nDocumentation https://opencollar.cc";
     list lButtons = ["Update", "Support", "License"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
@@ -121,7 +126,8 @@ list g_lCheckboxes=["⬜","⬛"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
-    
+integer g_iUpdatePin = 0;
+
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
@@ -143,8 +149,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET,0,"initialize","");
         } else if(sChangetype == "update"){
             if(iNum == CMD_OWNER || iNum == CMD_WEARER){
-                integer pin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
-                llSetRemoteScriptAccessPin(pin);
+                g_iUpdatePin = llRound(llFrand(0x7FFFFFFF))+1; // Maximum integer size
+                llSetRemoteScriptAccessPin(g_iUpdatePin);
                 
                 // Now that a pin is set, scan for a updater and chainload
                 g_iDiscoveredUpdaters=0;
@@ -152,6 +158,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_kUpdateUser=kID;
                 llMessageLinked(LINK_SET, NOTIFY, "0Searching for a updater", kID);
                 g_iUpdateAuth = iNum;
+                llListenRemove(g_iUpdateListener);
+                g_iUpdateListener = llListen(g_iUpdateChan, "", "", "");
                 llWhisper(g_iUpdateChan, "UPDATE|"+COLLAR_VERSION);
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
@@ -232,6 +240,12 @@ DoCheckUpdate(){
 string setor(integer iTest, string sTrue, string sFalse){
     if(iTest)return sTrue;
     else return sFalse;
+}
+
+integer g_iDoTriggerUpdate=FALSE;
+
+StartUpdate(){
+    llRegionSayTo(g_kUpdater, g_iUpdateChan, "ready|"+(string)g_iUpdatePin);
 }
 default
 {
@@ -375,6 +389,8 @@ default
                         llGiveInventory(kAv, ".license");
                     } else if(sMsg == "Support"){
                         llMessageLinked(LINK_SET, NOTIFY, "0You can get support for OpenCollar in the following group: secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about or for scripting related questions or beta versions: secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about", kAv);
+                    } else if(sMsg == "Update"){
+                        UserCommand(iAuth, "update", kAv);
                     }
                     
                     if(iRespring)HelpMenu(kAv,iAuth);
@@ -450,7 +466,6 @@ default
                 DoCheckUpdate();
                 
                 llListenRemove(g_iUpdateListener);
-                g_iUpdateListener = llListen(g_iUpdateChan, "", "", "");
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
@@ -463,6 +478,24 @@ default
     }
     
     timer(){
+        if(g_iWaitUpdate){
+            g_iWaitUpdate=FALSE;
+            llListenRemove(g_iUpdateListener);
+            if(!g_iDiscoveredUpdaters){
+                llMessageLinked(LINK_SET,NOTIFY, "0No updater found. Please ensure you are attempting to use a updater obtained from secondlife:///app/group/45d71cc1-17fc-8ee4-8799-7164ee264811/about", g_kWearer);
+                llSetRemoteScriptAccessPin(0);
+            }else if(g_iDiscoveredUpdaters > 1){
+                llMessageLinked(LINK_SET, NOTIFY, "0Error. Too many updaters found nearby. Please ensure only 1 is rezzed out", g_kWearer);
+                llSetRemoteScriptAccessPin(0);
+            } else {
+                // Trigger update
+                StartUpdate();
+            }
+            
+            
+        }else {
+            llSetTimerEvent(0);
+        }
     }
     
     listen(integer iChan, string sName, key kID, string sMsg){
@@ -471,25 +504,33 @@ default
             list lTemp = llParseStringKeepNulls(sMsg, ["|"],[]);
             string Cmd = llList2String(lTemp,0);
             string sOpt = llList2String(lTemp,1);
-            string sImpl = llList2String(lTemp,2);
-            if(sImpl=="8000"){ // v8.0.00
-                // Nothing to do here. Continue
-            } else {
-                // Not v8 or above
-                // Require object owner is wearer
-                if(llGetOwnerKey(kID)!=g_kWearer){
-                    return;
+            string sImpl = "";
+            
+            if(llGetListLength(lTemp)>=3){
+                sImpl = llList2String(lTemp,2);
+                if(sImpl=="8000"){ // v8.0.00
+                    // Nothing to do here. Continue
+                } else {
+                    // Not v8 or above
+                    // Require object owner is wearer
+                    if(llGetOwnerKey(kID)!=g_kWearer){
+                        return;
+                    }
                 }
             }
             
-            if(Cmd == "-.. ---"){ //Seriously why the fuck are we using morse code?
+            if(Cmd == "-.. ---" && sImpl == ""){ //Seriously why the fuck are we using morse code?
                 // sOpt is strictly going to be the version string now
                 Compare(COLLAR_VERSION, sOpt);
-                if(UPDATE_AVAILABLE && !g_iAmNewer){
+                if((UPDATE_AVAILABLE && !g_iAmNewer) || g_iDoTriggerUpdate){
                     // valid update
+                    g_iDiscoveredUpdaters++;
+                    g_kUpdater = kID;
                 } else {
                     // this updater is older, dont install it
                     llMessageLinked(LINK_SET, NOTIFY, "0The version you are trying to install is older than the currently installed scripts, or it is the same version. To install anyway, trigger the install a second time", g_kUpdateUser);
+                    llSay(0, "Current version is newer or the same as the updater. Trigger update a second time to confirm you want to actually do this");
+                    g_iDoTriggerUpdate=TRUE;
                 }
             }
         }

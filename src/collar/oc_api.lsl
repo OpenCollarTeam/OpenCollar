@@ -132,7 +132,7 @@ PrintAccess(key kID){
     sFinal+="\n";
     if(llGetListLength(g_lOwner)==0 || llListFindList(g_lOwner, [(string)g_kWearer])!=-1)sFinal+="\n* Wearer is unowned or owns themselves.\nThe wearer has owner access";
     llMessageLinked(LINK_SET,NOTIFY, "0"+sFinal,kID);
-    llSay(0, sFinal);
+    //llSay(0, sFinal);
 }
 
 DoListeners(){
@@ -214,6 +214,47 @@ UserCommand(integer iAuth, string sCmd, key kID){
     if(iAuth == CMD_OWNER){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
         else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
+            
+        list lCmd = llParseString2List(sCmd, [" "],[]);
+        string sCmd = llToLower(llList2String(lCmd,0));
+                
+        if(sCmd == "channel"){
+            g_iChannel = (integer)llList2String(lCmd,1);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
+        } else if(sCmd == "prefix"){
+            g_sPrefix = llList2String(lCmd,1);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
+        } else if(sCmd == "add" || sCmd == "rem"){
+            string sType = llToLower(llList2String(lCmd,1));
+            string sID;
+            if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);
+                    
+            g_kMenuUser=kID;
+            g_iCurrentAuth = iAuth;
+            if(sCmd=="add")
+                g_iMode = ACTION_ADD;
+            else g_iMode=ACTION_REM;
+            if(sType == "owner")g_iMode = g_iMode|ACTION_OWNER;
+            else if(sType == "trust")g_iMode = g_iMode|ACTION_TRUST;
+            else if(sType == "block")g_iMode=g_iMode|ACTION_BLOCK;
+            else return; // Invalid, don't continue
+                    
+            if(sID == ""){
+                // Open Scanner Menu to add
+                if(g_iMode&ACTION_ADD){
+                    g_iMode = g_iMode|ACTION_SCANNER;
+                    llSensor("", "", AGENT, 20, PI);
+                } else {
+                    list lOpts;
+                    if(sType == "owner")lOpts=g_lOwner;
+                    else if(sType == "trust")lOpts=g_lTrust;
+                    else if(sType == "block")lOpts=g_lBlock;
+                    Dialog(kID, "OpenCollar\n\nRemove "+sType, lOpts, [UPMENU],0,iAuth,"removeUser");
+                }
+            }else {
+                UpdateLists((key)sID);
+            }
+        }
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
     if (iAuth == CMD_OWNER && sCmd == "runaway") {
@@ -223,6 +264,9 @@ UserCommand(integer iAuth, string sCmd, key kID){
     
     if(llToLower(sCmd) == "menu addons" || llToLower(sCmd)=="addons"){
         AddonsMenu(kID, iAuth);
+    }
+     if(sCmd == "print auth"){
+        PrintAccess(kID);
     }
 }
  
@@ -267,7 +311,27 @@ default
         // make the API Channel be per user
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
         llListen(API_CHANNEL, "", "", "");
+        
+        llSetTimerEvent(15);
     }
+    
+    timer(){
+        integer i=0;
+        integer iEnd = llGetInventoryNumber(INVENTORY_SCRIPT);
+        
+        for(i=0;i<iEnd;i++){
+            string sName = llGetInventoryName(INVENTORY_SCRIPT,i);
+            if(llGetScriptState(sName) == FALSE){
+                llMessageLinked(LINK_SET, NOTIFY, "0[ANTICRASH] "+sName+" is stopped. Restarting this script. If this script crashed, please report the bug", g_kWearer);
+
+                llResetOtherScript(sName);
+                llSleep(0.25);
+                llSetScriptState(sName,TRUE);
+                
+            }
+        }
+    }
+    
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
             integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
@@ -287,7 +351,7 @@ default
             integer iNum = (integer)llJsonGetValue(m,["iNum"]);
             string sMsg = llJsonGetValue(m,["sMsg"]);
             key kID = llJsonGetValue(m,["kID"]);
-            
+            llMessageLinked(LINK_SET, iNum, sMsg,kID);
             
             
             
@@ -299,6 +363,10 @@ default
         if(llToLower(llGetSubString(m,0,1))==g_sPrefix){
             string CMD=llGetSubString(m,2,-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
+            llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
+        } else if(llGetSubString(m,0,0) == "*"){
+            string CMD = llGetSubString(m,1,-1);
+            if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[])," ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
         } else {
             list lTmp = llParseString2List(m,[" ","(",")"],[]);
@@ -325,15 +393,15 @@ default
         }
         
         
-        if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
+        //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
         if(iNum == CMD_ZERO){
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
-            llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
+            //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
             integer iAuth = CalcAuth(kID);
-            llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
+            //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
         } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == LM_SETTING_RESPONSE){
@@ -396,49 +464,6 @@ default
                 } else if(sVar == "safeword"){
                     g_sSafeword = "RED";
                 }
-            }
-        } else if(iNum == CMD_OWNER){
-            list lCmd = llParseString2List(sStr, [" "],[]);
-            string sCmd = llToLower(llList2String(lCmd,0));
-            
-            if(sCmd == "channel"){
-                g_iChannel = (integer)llList2String(lCmd,1);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
-            } else if(sCmd == "prefix"){
-                g_sPrefix = llList2String(lCmd,1);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
-            } else if(sCmd == "add" || sCmd == "rem"){
-                string sType = llToLower(llList2String(lCmd,1));
-                string sID;
-                if(llGetListLength(lCmd)==3) sID = llList2String(lCmd,2);
-                
-                g_kMenuUser=kID;
-                g_iCurrentAuth = iNum;
-                if(sCmd=="add")
-                    g_iMode = ACTION_ADD;
-                else g_iMode=ACTION_REM;
-                if(sType == "owner")g_iMode = g_iMode|ACTION_OWNER;
-                else if(sType == "trust")g_iMode = g_iMode|ACTION_TRUST;
-                else if(sType == "block")g_iMode=g_iMode|ACTION_BLOCK;
-                else return; // Invalid, don't continue
-                
-                if(sID == ""){
-                    // Open Scanner Menu to add
-                    if(g_iMode&ACTION_ADD){
-                        g_iMode = g_iMode|ACTION_SCANNER;
-                        llSensor("", "", AGENT, 20, PI);
-                    } else {
-                        list lOpts;
-                        if(sType == "owner")lOpts=g_lOwner;
-                        else if(sType == "trust")lOpts=g_lTrust;
-                        else if(sType == "block")lOpts=g_lBlock;
-                        Dialog(kID, "OpenCollar\n\nRemove "+sType, lOpts, [UPMENU],0,iNum,"removeUser");
-                    }
-                }else {
-                    UpdateLists((key)sID);
-                }
-            } else if(sStr == "print auth"){
-                PrintAccess(kID);
             }
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
