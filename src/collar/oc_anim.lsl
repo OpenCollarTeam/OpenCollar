@@ -3,7 +3,7 @@
 // Master Starship, Satomi Ahn, Joy Stipe, Wendy Starfall, Medea Destiny,
 // Sumi Perl, Romka Swallowtail, littlemousy, North Glenwalker et al.
 // Licensed under the GPLv2.  See LICENSE for full details.
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "7.5";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -418,7 +418,7 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else if (sValue == "animations") {
       AnimMenu(kID, iNum);
     }
-  } else if (sStr == "release" || sStr == "stop") { // Only release if person giving command outranks person who posed us
+  } else if (llToLower(sStr) == "release" || llToLower(sStr) == "stop") { // Only release if person giving command outranks person who posed us
     if (iNum <= g_iLastRank || !g_bAnimLock) {
       g_iLastRank = 0;
       StopAnim(g_sCurrentPose);
@@ -552,17 +552,26 @@ UserCommand(integer iNum, string sStr, key kID) {
     } else {
       llMessageLinked(LINK_SET, NOTIFY, "0" + "Only owners or the wearer can change antislide settings.", g_kWearer);
     }
-  } else if (llGetInventoryType(sStr) == INVENTORY_ANIMATION) {
-    if (iNum <= g_iLastRank || !g_bAnimLock || g_sCurrentPose == "") {
-      StopAnim(g_sCurrentPose);
-      g_sCurrentPose = sStr;
-      g_iLastRank = iNum;
-      StartAnim(g_sCurrentPose);
-      llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
     } else {
-      llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change pose", kID);
-    }
-  } 
+        integer ix=0;
+        integer iEnd = llGetInventoryNumber(INVENTORY_ANIMATION);
+        for(ix=0;ix<iEnd;ix++){
+            string InvItem = llGetInventoryName(INVENTORY_ANIMATION, ix);
+            if(llToLower(sStr) == llToLower(InvItem)){
+                if (iNum <= g_iLastRank || !g_bAnimLock || g_sCurrentPose == "") {
+                    StopAnim(g_sCurrentPose);
+                    g_sCurrentPose = InvItem;
+                    g_iLastRank = iNum;
+                    StartAnim(g_sCurrentPose);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + "currentpose=" + g_sCurrentPose + "," + (string)g_iLastRank, "");
+                    return;
+                } else {
+                    llMessageLinked(LINK_SET, NOTIFY, "0" + "%NOACCESS% to change pose", kID);
+                    return;
+                }
+            }
+        }
+    } 
 }
 
 ExtractPart(){
