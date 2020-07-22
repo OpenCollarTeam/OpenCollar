@@ -2,10 +2,10 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 
 string g_sParentMenu = "RLV";
-string g_sSubMenu = "Restrictions";
+string g_sSubMenu = "Macros";
 
 
 integer g_iJustRezzed=FALSE;
@@ -81,7 +81,7 @@ list g_lCategory = ["Chat",
                     "Outfit"
                 ];
 
-list g_lUtilityMain = ["[Individual]","[Manage]","BACK"];
+list g_lUtilityMain = ["[Manage]","BACK"];
 list g_lUtilityNone = ["BACK"];
 
 
@@ -113,7 +113,7 @@ list g_lRLVList = [   // ButtonText, CategoryIndex, RLVCMD
     "Local"         , 2 , "tplocal"                             ,    // 25
     "Accept"        , 2 , "tplure"                              ,    // 26
     "Offer"         , 2 , "tprequest"                           ,    // 27
-    "Accept Perm"   , 3 , "acceptpermission"                    ,    // 28
+    "Permissions"   , 3 , "acceptpermission"                    ,    // 28
     "Edit"          , 4 , "edit"                                ,    // 29
     "Edit Object"   , 4 , "editobj"                             ,    // 30
     "Rez"           , 4 , "rez"                                 ,    // 31
@@ -171,11 +171,18 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     
-    list lButtons = [];
+    list lButtons =[];
     integer i;
-    for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
+    for(i=0;i<llGetListLength(g_lMacros);i+=3){
+        // calculate checkbox
+        integer b1 = llList2Integer(g_lMacros,i+1);
+        integer b2 = llList2Integer(g_lMacros, i+2);
+        
+        lButtons+=[Checkbox(bool((g_iRestrictions1 & b1 ) || ( g_iRestrictions2 & b2)), llList2String(g_lMacros,i))];
+    }
+    //for (i=0; i<llGetListLength(g_lMacros);i=i+3) lButtons += llList2String(g_lMacros,i);
     
-    Dialog(kID, "\n[Macros]\n \nClick on a Macro to see more Options.", lButtons, g_lUtilityMain, 0, iAuth, "Restrictions~Main");
+    Dialog(kID, "\n[Macros]\n \nClick on a Macro to toggle it.", lButtons, g_lUtilityMain, 0, iAuth, "Restrictions~Main");
 }
 
 MenuRestrictions(key kID, integer iAuth){
@@ -380,8 +387,9 @@ ApplyCommand(string sCommand, integer iAdd,key kID, integer iAuth)
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
-    if (llSubStringIndex(sStr,"macro") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit") && sStr != "menu "+g_sSubMenu && sStr != "menu ") return;
-    if (sStr=="macro" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (llSubStringIndex(sStr,"macro") && llSubStringIndex(sStr,"restriction") && llSubStringIndex(sStr,"restrictions") && llSubStringIndex(sStr,"sit") && sStr != "menu "+g_sSubMenu && sStr != "menu Restrictions") return;
+    if (llToLower(sStr)=="macro" || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if(llToLower(sStr)=="restrictions" || sStr == "menu Restrictions")MenuRestrictions(kID, iNum);
     else { 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
@@ -413,6 +421,20 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+integer CheckboxState(string CheckboxLabel){
+    list lTmp = llParseString2List(CheckboxLabel,[" "],[]);
+    integer iPos = llListFindList(g_lCheckboxes, [llList2String(lTmp,0)]);
+    if(iPos==-1){
+        return FALSE;
+    }else {
+        return iPos;
+    }
+}
+
+string CheckboxText(string CheckboxLabel){
+    list lTmp = llParseString2List(CheckboxLabel, [" "],[]);
+    return llList2String(lTmp,1);
+}
 
 default
 {
@@ -434,11 +456,7 @@ default
     
     timer(){
         if(llGetTime()>=20 && g_iJustRezzed){
-            g_iRestrictions1=0;
-            g_iJustRezzed=FALSE;
-            g_iRestrictions2=0;
-            llSetTimerEvent(0);
-            llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL", "");
+            llMessageLinked(LINK_SET, RLV_REFRESH, "",""); // refreshes rlvsuite restrictions
         }
         
         //llSetText("rlvsuite\n\n=> Free Memory: "+(string)llGetFreeMemory()+"\nProfiler Max used: "+(string)llGetSPMaxMemory()+"\nUsed Memory: "+(string)llGetUsedMemory()+"\nTotal Mem: "+(string)llGetMemoryLimit()+"\n \n \n \n \n \n \n \n \n", <0,1,0>,1);
@@ -447,8 +465,13 @@ default
     link_message(integer iSender,integer iNum,string sStr,key kID){
        // llOwnerSay(llDumpList2String([iSender, iNum, llGetSPMaxMemory(), llGetFreeMemory()], " ^ "));
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
+        else if(iNum == MENUNAME_REQUEST) {
+            if(sStr == g_sParentMenu){
+                
+                
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");  // Register menu "Restrictions"
+                llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|Restrictions", "");
+            }
         } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -466,14 +489,17 @@ default
                 if(sMenu == "Restrictions~Main"){ 
                     if(sMsg == "BACK") llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     else if (sMsg == "[Manage]") Dialog(kAv, "Select an Option:\n \nSave As: Save current restrictions into a Macro\nDelete: Delete a Macro", ["Save As","Delete"], g_lUtilityNone, 0, iAuth, "Restrictions~Manage");
-                    else if(sMsg == "[Individual]") {
-                       MenuRestrictions(kAv,iAuth);
-                    } else {
-                        integer iIndex = llListFindList(g_lMacros,[sMsg]);
-                        if (iIndex > -1) {
-                            g_sTmpMacroName = sMsg;
-                            Dialog(kAv, "What do you want to do with that macro?", ["Add","Replace","Clear"], g_lUtilityNone, 0, iAuth, "Restrictions~Options");
+                    else {
+                        integer iChkbxState = CheckboxState(sMsg);
+                        string sChkbxLbl = CheckboxText(sMsg);
+                        
+                        if(!iChkbxState){
+                            // toggle the macro
+                            UserCommand(iAuth, "macro add "+sChkbxLbl, kAv);
+                        } else {
+                            UserCommand(iAuth, "macro clear "+sChkbxLbl,kAv);
                         }
+                        Menu(kAv,iAuth);
                     }
                 } else if (sMenu == "Restrictions~Manage"){
                     if (sMsg == "Save As") {
@@ -486,7 +512,7 @@ default
                     } else if (sMsg == "Delete") MenuDelete(kAv, iAuth);
                       else if (sMsg == "BACK") Menu(kAv, iAuth);
                 } else if (sMenu == "Restrictions~Restrictions"){
-                    if(sMsg == "BACK") Menu(kAv,iAuth);
+                    if(sMsg == "BACK") llMessageLinked(LINK_SET,0,"menu "+g_sParentMenu,kAv);
                     else if (sMsg == "[Clear All]") {
                         if (iAuth != CMD_WEARER && (iAuth == CMD_OWNER||iAuth==CMD_TRUSTED)) {
                             ApplyAll(0,0, FALSE);
@@ -558,10 +584,6 @@ default
                         llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS%", kAv);
                         llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
                     }
-                } else if (sMenu == "Restrictions~Options") {
-                    integer iIndex = llListFindList(g_lMacros,[g_sTmpMacroName]);
-                    if (iIndex > -1) UserCommand(iAuth, "macro "+llToLower(sMsg)+" "+g_sTmpMacroName, kAv);
-                    Menu(kAv,iAuth);
                 }
             }
         } else if(iNum == -99999){

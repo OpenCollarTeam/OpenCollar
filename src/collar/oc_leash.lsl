@@ -4,7 +4,7 @@
 // Kaori Gray, Sei Lisa, Wendy Starfall, littlemousy, Romka Swallowtail,  
 // Sumi Perl, Karo Weirsider, Kurt Burleigh, Marissa Mistwallow et al.   
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 
 // ------ TOKEN DEFINITIONS ------
@@ -161,6 +161,7 @@ ConfirmDialog(key kAv, key kCmdGiver, string sType, integer iAuth) {
         if (kCmdGiver == g_kWearer) sPrompt += "pass you their leash.";
         else sPrompt += "pass you %WEARERNAME%'s leash.";
         sPrompt += "\n\nAre you OK with this?";
+        
         Dialog(kAv,sPrompt,["Yes","No"],[],0,iAuth,"LeashTargetConfirm");
     } else {
         sMessage = "Asking "+NameURI(kAv)+" to accept %WEARERNAME% to follow them.";
@@ -706,6 +707,7 @@ default {
         if (iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sMessage, kMessageID, FALSE);
         if (iNum == MENUNAME_REQUEST  && sMessage == BUTTON_PARENTMENU) {
             g_lButtons = [] ; // flush submenu buttons
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, BUTTON_PARENTMENU+"|"+BUTTON_SUBMENU, "");
             llMessageLinked(iSender, MENUNAME_REQUEST, BUTTON_SUBMENU, "");
         } else if (iNum == MENUNAME_RESPONSE) {
             list lParts = llParseString2List(sMessage, ["|"], []);

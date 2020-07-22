@@ -43,6 +43,8 @@ Release(){
     g_lAllowedSources=[];
     g_kPendingSource=NULL_KEY;
     g_lPendingRLV=[];
+    
+    llMessageLinked(LINK_SET, RLV_REFRESH, "", "");
 }
         
 //MESSAGE MAP

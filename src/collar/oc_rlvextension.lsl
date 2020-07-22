@@ -2,7 +2,7 @@
 //  Copyright (c) 2018 - 2019 Tashia Redrose, Silkie Sabra, lillith xue                            
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 
 string g_sParentMenu = "RLV";
 string g_sSubMenu1 = "Force Sit";
@@ -148,7 +148,28 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 MenuExceptions(key kID, integer iAuth) {
     string sPrompt = "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.";
-    Dialog(kID, sPrompt, ["Owner","Trusted"], [UPMENU], 0, iAuth, "Exceptions~Main");
+    Dialog(kID, sPrompt, ["Owner","Trusted","Custom"], [UPMENU], 0, iAuth, "Exceptions~Main");
+}
+list g_lCustomExceptions = []; // Exception name, Exception UUID, integer bitmask
+
+MenuCustomExceptionsSelect(key kID,integer iAuth){
+    string sPrompt = "\n[Exceptions]\n\nHere are your custom exceptions that are set\n\nNOTE: For groups, there are obviously some exceptions which will do nothing as there is no support for them viewer-side. We have no way to hide options that are irrelevant.";
+    Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0,-1,3),["+ ADD", "- REM", UPMENU], 0, iAuth, "Exceptions~Custom");
+}
+
+MenuCustomExceptionsRem(key kID, integer iAuth){
+    string sPrompt = "\n[Exceptions]\n\nWhich custom exception do you want to remove?";
+    Dialog(kID, sPrompt, llList2ListStrided(g_lCustomExceptions, 0, -1, 3), [UPMENU], 0, iAuth, "Exceptions~CustomRem");
+}
+
+string g_sTmpExceptionName;
+MenuAddCustomExceptionName(key kID, integer iAuth){
+    Dialog(kID,"What should we call this custom exception?", [],[],0,iAuth,"Exceptions~AddCustomName");
+}
+
+key g_kTmpExceptionID;
+MenuAddCustomExceptionID(key kID, integer iAuth){
+    Dialog(kID, "What UUID does this exception affect?", [],[],0,iAuth,"Exceptions~AddCustomID");
 }
 
 MenuSetExceptions(key kID, integer iAuth, string sTarget){
@@ -158,6 +179,9 @@ MenuSetExceptions(key kID, integer iAuth, string sTarget){
     
     if (sTarget == "Owner") iExMask = g_iOwnerEx;
     else if (sTarget == "Trusted") iExMask = g_iTrustedEx;
+    else if(sTarget == "Custom"){
+        iExMask = llList2Integer(g_lCustomExceptions, llListFindList(g_lCustomExceptions, [g_sTmpExceptionName])+2);
+    }
     integer i;
     for (i=0; i<llGetListLength(lRLVEx);i=i+3) {
         lButtons += Checkbox((iExMask&llList2Integer(lRLVEx,i+2)), llList2String(lRLVEx,i));
@@ -214,6 +238,13 @@ ApplyAllExceptions(integer iBoot, integer bClearAll){
                     else llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(lTargetList,i)+"=rem");
                 }
             }
+            if(llGetListLength(g_lCustomExceptions)>2){
+                for(i=2;i<llGetListLength(g_lCustomExceptions);i+=3){
+                    
+                    if ((llList2Integer(lRLVEx,iExIndex+1) & llList2Integer(g_lCustomExceptions,i)) && !bClearAll) llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(g_lCustomExceptions,i-1)+"=add");
+                    else llOwnerSay("@"+llList2String(lRLVEx,iExIndex)+":"+llList2String(g_lCustomExceptions,i-1)+"=rem");
+                }
+            }
         }
     }
     Save(iBoot);
@@ -227,6 +258,7 @@ Save(integer iBoot){
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Muffle="+(string)g_bMuffle, "");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Owner="+(string)g_iOwnerEx, "");
         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_Trusted="+(string)g_iTrustedEx, "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvext_custom="+llDumpList2String(g_lCustomExceptions, "^"),"");
     }
 }
 
@@ -286,9 +318,45 @@ default
                 
                 if(sMenu == "Exceptions~Main"){
                     if(sMsg == UPMENU) MenuSettings(kAv,iAuth);
+                    else if(sMsg == "Custom")MenuCustomExceptionsSelect(kAv,iAuth);
                     else MenuSetExceptions(kAv,iAuth,sMsg);
+                } else if(sMenu == "Exceptions~Custom"){
+                    if(sMsg == UPMENU) MenuExceptions(kAv,iAuth);
+                    else if(sMsg == "+ ADD"){
+                        MenuAddCustomExceptionName(kAv,iAuth);
+                    } else if(sMsg == "- REM"){
+                        MenuCustomExceptionsRem(kAv, iAuth);
+                    } else {
+                        // view this exception's data and permit editting
+                        g_sTmpExceptionName = sMsg;
+                        MenuSetExceptions(kAv, iAuth, "Custom");
+                    }
+                } else if(sMenu == "Exceptions~CustomRem"){
+                    if(sMsg == UPMENU) MenuCustomExceptionsSelect(kAv, iAuth);
+                    else{
+                        // remove it
+                        integer iPos = llListFindList(g_lCustomExceptions, [sMsg]);
+                        
+                        ApplyAllExceptions(TRUE,TRUE);
+                        llSleep(0.5);
+                        
+                        g_lCustomExceptions = llDeleteSubList(g_lCustomExceptions, iPos,iPos+2);
+                        MenuCustomExceptionsSelect(kAv,iAuth);
+                        
+                        ApplyAllExceptions(FALSE,FALSE);
+                    }
+                } else if(sMenu == "Exceptions~AddCustomName"){
+                    g_sTmpExceptionName=sMsg;
+                    MenuAddCustomExceptionID(kAv,iAuth);
+                } else if(sMenu == "Exceptions~AddCustomID"){
+                    g_kTmpExceptionID = (key)sMsg;
+                    llMessageLinked(LINK_SET,NOTIFY,"0Adding exception..", kAv);
+                    g_lCustomExceptions += [g_sTmpExceptionName,g_kTmpExceptionID,0];
+                    
+                    Save(FALSE);
+                    MenuSetExceptions(kAv, iAuth, "Custom");
                 } else if (sMenu == "Exceptions~Set") {
-                    if (sMsg == UPMENU) Dialog(kAv, "\n[Exceptions]\n \nSet exceptions to the restrictions for RLV commands.", ["Owner","Trusted"], [UPMENU], 0, iAuth, "Exceptions~Main");
+                    if (sMsg == UPMENU) MenuExceptions(kAv,iAuth);
                     else {
                         sMsg = llGetSubString( sMsg, llStringLength(llList2String(g_lCheckboxes,0))+1, -1);
                         integer iIndex = llListFindList(lRLVEx,[sMsg]);
@@ -299,16 +367,19 @@ default
                             } else if (g_sExTarget == "Trusted") {
                                 if (g_iTrustedEx & llList2Integer(lRLVEx,iIndex+2)) g_iTrustedEx = g_iTrustedEx ^ llList2Integer(lRLVEx,iIndex+2);
                                 else g_iTrustedEx = g_iTrustedEx | llList2Integer(lRLVEx,iIndex+2);
+                            } else if(g_sExTarget == "Custom"){
+                                integer iPos=llListFindList(g_lCustomExceptions, [g_sTmpExceptionName])+2;
+                                integer iTmpBits = llList2Integer(g_lCustomExceptions, iPos);
+                                // do stuff
+                                if(iTmpBits & llList2Integer(lRLVEx,iIndex+2)) iTmpBits = iTmpBits ^ llList2Integer(lRLVEx,iIndex+2);
+                                else iTmpBits = iTmpBits | llList2Integer(lRLVEx,iIndex+2);
+                                
+                                g_lCustomExceptions = llListReplaceList(g_lCustomExceptions, [iTmpBits], iPos, iPos);
                             }
                             ApplyAllExceptions(FALSE,FALSE);
                         }
                         MenuSetExceptions(kAv, iAuth, g_sExTarget);
                     }
-                } else if (sMenu == "Exceptions~Main") {
-                if (iAuth == CMD_OWNER) {
-                    if (sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu "+g_sParentMenu, kAv);
-                    else MenuSetExceptions(kAv, iAuth, sMsg);
-                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+"Acces Denied!", kAv);
                 } else if (sMenu == "Force Sit") MenuForceSit(kAv,iAuth);
                 else if (sMenu == "Restrictions~sensor") {
                     if(sMsg == Checkbox(g_iStrictSit,"Strict Sit") && iAuth == CMD_OWNER){
@@ -413,6 +484,8 @@ default
                 g_iOwnerEx = (integer) sValue;
             } else if (sToken == "rlvext_Trusted") {
                 g_iTrustedEx = (integer) sValue;
+            } else if(sToken == "rlvext_custom"){
+                g_lCustomExceptions = llParseString2List(sValue,["^"],[]);
             }else if (llGetSubString(sToken, 0, i) == "auth_") {
                 if (sToken == "auth_owner") {
                     g_lOwners = llParseString2List(sValue, [","], []);
