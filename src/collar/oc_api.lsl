@@ -313,6 +313,9 @@ default
         llListen(API_CHANNEL, "", "", "");
         
         llSetTimerEvent(15);
+        
+        
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
     }
     
     timer(){
@@ -360,7 +363,7 @@ default
             
         
         
-        if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==g_sPrefix){
+        if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==llToLower(g_sPrefix)){
             string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
