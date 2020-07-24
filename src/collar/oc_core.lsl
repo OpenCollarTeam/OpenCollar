@@ -18,6 +18,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 */
 
+integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
@@ -83,6 +84,9 @@ Settings(key kID, integer iAuth){
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
+integer g_iWelded=FALSE;
+// The original idea in #356, was to make this as a app, but i fail to see why we must use an extra app just to create the weld, the extra app or possibly an addon could be made to unweld should the wearer desire it.
+
 list g_lApps;
 AppsMenu(key kID, integer iAuth){
     string sPrompt = "\n[Apps]\nYou have "+(string)llGetListLength(g_lApps)+" apps installed";
@@ -91,10 +95,16 @@ AppsMenu(key kID, integer iAuth){
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION;
-    list lButtons = [Checkbox(g_iLocked, "Lock")]+g_lMainMenu;
+    list lButtons = [Checkbox(g_iLocked, "Lock")];
+    
+    if(!g_iWelded)lButtons+=g_lMainMenu;
+    else lButtons=g_lMainMenu;
     
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
+
+    if(g_iWelded)sPrompt+="\n\n* The Collar is Welded *";
+    if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
     Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "Menu~Main");
 }
 key g_kGroup = "";
@@ -188,6 +198,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else if(llToLower(sChangevalue) == "apps"){
                 AppsMenu(kID,iNum);
             }
+        } else if(llToLower(sChangetype) == "weld" && iNum == CMD_OWNER){
+            g_kWelder=kID;
+            llMessageLinked(LINK_SET, NOTIFY, "1secondlife:///app/agent/"+(string)kID+"/about is attempting to weld the collar. Consent is required", kID);
+            Dialog(g_kWearer, "[WELD CONSENT REQUIRED]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants to weld your collar. If you agree, you may not be able to unweld it without the use of a plugin or a addon designed to break the weld. If you disagree with this action, press no.", ["Yes", "No"], [], 0, iNum, "weld~consent");
+        } else if(llToLower(sChangetype) == "debug-unweld"){
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "intern_weld", "");
+            llSay(0, "debug unweld triggered");
         }
     }
 }
@@ -244,7 +261,7 @@ string setor(integer iTest, string sTrue, string sFalse){
 }
 
 integer g_iDoTriggerUpdate=FALSE;
-
+key g_kWelder = NULL_KEY;
 StartUpdate(){
     llRegionSayTo(g_kUpdater, g_iUpdateChan, "ready|"+(string)g_iUpdatePin);
 }
@@ -321,6 +338,8 @@ default
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to the lock", kAv);
                         }
+                    } else if(sMsg == "Weld"){
+                        UserCommand(iAuth, "weld", kAv);
                     }  else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
@@ -328,6 +347,18 @@ default
                      
                     
                     if(iRespring)Menu(kAv,iAuth);
+                } else if(sMenu == "weld~consent"){
+                    if(sMsg == "No"){
+                        llMessageLinked(LINK_SET, NOTIFY, "1%NOACCESS% to welding the collar.", g_kWelder);
+                    } else {
+                        // do weld
+                        llMessageLinked(LINK_SET, NOTIFY, "1Please wait...", g_kWelder);
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", "");
+                        g_iWelded=TRUE;
+                        
+                        llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWelder);
+                    }
                 } else if(sMenu=="Menu~Auth"){
                     if(sMsg == UPMENU){
                         iRespring=FALSE;
@@ -442,6 +473,12 @@ default
                 } else if(sVar == "limitrange"){
                     g_iLimitRange=(integer)sVal;
                 }
+            } else if(sToken == "intern"){
+                if(sVar == "weld"){
+                    g_iWelded=TRUE;
+                    
+                    if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
+                }
             }
         } else if(iNum == LM_SETTING_DELETE){
             list lPar = llParseString2List(sStr, ["_"],[]);
@@ -460,6 +497,12 @@ default
                 }
                 else if(sVar == "public")g_iPublic=FALSE;
                 else if(sVar == "limitrange")g_iLimitRange=TRUE;
+            } else if(sToken == "intern"){
+                if(sVar == "weld"){
+                    g_iWelded=FALSE;
+                    // Unwelded, reboot collar now
+                    llMessageLinked(LINK_SET, REBOOT,"reboot","");
+                }
             }
         } else if(iNum == REBOOT){
             if(sStr=="reboot"){
