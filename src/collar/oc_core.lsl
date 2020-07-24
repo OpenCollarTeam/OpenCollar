@@ -9,6 +9,7 @@ Copyright ©2020
 Aria (Tashia Redrose)
     *June 2020       -       Created oc_core
       * This combines oc_com, oc_auth, and oc_sys
+    * July 2020     -       Maintenance fixes, feature implementations
     
     
 et al.
@@ -20,7 +21,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0001"; // Provide enough room
+string COLLAR_VERSION = "8.0.0002"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -309,8 +310,17 @@ default
                         iRespring=FALSE;
                         HelpMenu(kAv,iAuth);
                     } else if(sMsg == Checkbox(g_iLocked,"Lock")){
-                        g_iLocked=1-g_iLocked;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
+                        if(iAuth==CMD_OWNER && g_iLocked){
+                            g_iLocked=FALSE;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
+                            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been unlocked", kAv);
+                        } else if((iAuth == CMD_OWNER || iAuth == CMD_TRUSTED || iAuth == CMD_WEARER )  && !g_iLocked){
+                            g_iLocked=TRUE;
+                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
+                            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been locked", kAv);
+                        } else {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to the lock", kAv);
+                        }
                     }  else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
@@ -466,6 +476,10 @@ default
                 DoCheckUpdate();
                 
                 llListenRemove(g_iUpdateListener);
+            }
+        } else if(iNum == RLV_REFRESH){
+            if(g_iLocked){
+                llOwnerSay("@detach=n");
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
