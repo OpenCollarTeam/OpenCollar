@@ -360,8 +360,8 @@ default
             
         
         
-        if(llToLower(llGetSubString(m,0,1))==g_sPrefix){
-            string CMD=llGetSubString(m,2,-1);
+        if(llToLower(llGetSubString(m,0,llStringLength(g_sPrefix)-1))==g_sPrefix){
+            string CMD=llGetSubString(m,llStringLength(g_sPrefix),-1);
             if(llGetSubString(CMD,0,0)==" ")CMD=llDumpList2String(llParseString2List(CMD,[" "],[]), " ");
             llMessageLinked(LINK_SET, CMD_ZERO, CMD, i);
         } else if(llGetSubString(m,0,0) == "*"){
