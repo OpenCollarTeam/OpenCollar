@@ -457,7 +457,6 @@ default
             } else if(sToken == "auth"){
                 if(sVar == "group"){
                     g_kGroup="";
-                    llOwnerSay("@setgroup=y");
                 }
                 else if(sVar == "public")g_iPublic=FALSE;
                 else if(sVar == "limitrange")g_iLimitRange=TRUE;
@@ -481,6 +480,7 @@ default
             if(g_iLocked){
                 llOwnerSay("@detach=n");
             }
+            
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

@@ -32,6 +32,12 @@ integer ACTION_BLOCK = 32;
 
 integer API_CHANNEL = 0x60b97b5e;
 
+
+integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+
+integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 //MESSAGE MAP
 integer AUTH_REQUEST = 600;
 integer AUTH_REPLY=601;
@@ -424,7 +430,10 @@ default
                     g_iPublic=(integer)sVal;
                 } else if(sVar == "group"){
                     g_kGroup = (key)sVal;
-                    llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
+                    
+                    if(g_kGroup!=NULL_KEY)
+                        llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
+                    else llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = (integer)sVal;
                 }
@@ -455,6 +464,7 @@ default
                     g_iPublic=FALSE;
                 } else if(sVar == "group"){
                     g_kGroup = "";
+                    llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = TRUE;
                 }
@@ -522,6 +532,9 @@ default
                     }
                 }
             }
+        } else if(iNum == RLV_REFRESH){
+            if(g_kGroup==NULL_KEY)llOwnerSay("@setgroup=y");
+            else llOwnerSay("@setgroup:"+(string)g_kGroup+"=force;setgroup=n");
         }
     }
     sensor(integer iNum){
