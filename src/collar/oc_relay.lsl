@@ -6,7 +6,7 @@ Copyright ©2020
 
 Aria (Tashia Redrose)
     *May 2020       -       Created new Integrated relay
-    *July 2020      -       Finish integrated relay
+    *July 2020      -       Finish integrated relay. Fix bug where the wearer could lock themselves out of the relay options
     
 et al.
 
@@ -167,7 +167,13 @@ UserCommand(integer iNum, string sStr, key kID) {
             else if(sChangetype=="ask")g_iMode=MODE_ASK;
             else if(sChangetype == "auto")g_iMode=MODE_AUTO;
             else if(sChangetype == "helpless") g_iHelplessMode = 1-g_iHelplessMode;
-            else if(sChangetype == "wearer") g_iWearer=1-g_iWearer;
+            else if(sChangetype == "wearer") {
+                g_iWearer=1-g_iWearer;
+                if(!g_iWearer && !g_iHasOwners){
+                    g_iWearer=TRUE;
+                    llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to locking self out of relay options while unowned", kID);
+                }
+            }
             else if(sChangetype == "pending"){
                 if(g_kPendingSource==NULL_KEY){
                     llMessageLinked(LINK_SET, NOTIFY, "0No pending source", kID);
@@ -442,6 +448,17 @@ default
             } else if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner"){
                     g_iHasOwners=TRUE;
+                    list lTmp = llParseString2List(llList2String(lSettings,2), [","],[]);
+                    if(llGetListLength(lTmp)==1 && llList2Key(lTmp,0)==g_kWearer)g_iHasOwners=FALSE;
+                    if(lTmp == [])g_iHasOwners=FALSE;
+                    
+                }
+            }
+            
+            if(sStr=="settings=sent"){
+                if(!g_iWearer && !g_iHasOwners){
+                    g_iWearer=TRUE;
+                    llMessageLinked(LINK_SET,LM_SETTING_DELETE, "relay_wearer","");
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
