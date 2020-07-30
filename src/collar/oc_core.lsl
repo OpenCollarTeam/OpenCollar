@@ -278,6 +278,12 @@ DoCheckUpdate(){
     g_kUpdateCheck = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/version.txt",[],"");
 }
 
+key g_kCheckDev;
+
+DoCheckDevUpdate()
+{
+    g_kCheckDev = llHTTPRequest("https://raw.githubusercontent.com/OpenCollarTeam/OpenCollar/master/web/dev_version.txt",[],"");
+}
 
 ///The setor method is derived from a similar PHP proposed function, though it was denied, 
 ///https://wiki.php.net/rfc/ifsetor
@@ -289,6 +295,7 @@ string setor(integer iTest, string sTrue, string sFalse){
     if(iTest)return sTrue;
     else return sFalse;
 }
+
 list g_lTestReports = ["5556d037-3990-4204-a949-73e56cd3cb06", "1a828b4e-6345-4bb3-8d41-f93e6621ba25"]; // Aria and Roan
 // Any other team members please add yourself if you want feedback/bug reports. Or ask to be added if you do not have commit access
 // These IDs will only be in here during the testing period to allow for the experimental feedback/bug report system to do its thing
@@ -592,10 +599,18 @@ default
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     http_response(key kRequest, integer iStatus, list lMeta, string sBody){
-        if(iStatus==200)
-            Compare(COLLAR_VERSION, sBody);
-        else
-            llOwnerSay("Could not check for an update. The server returned a unknown status code");
+        if(kRequest == g_kUpdateCheck){
+            if(iStatus==200){
+                Compare(COLLAR_VERSION, sBody);
+                if(g_iAmNewer)DoCheckDevUpdate();
+            }
+            else
+                llOwnerSay("Could not check for an update. The server returned a unknown status code");
+        } else if(kRequest == g_kCheckDev){
+            if(iStatus==200){
+                Compare(COLLAR_VERSION, sBody);
+            } else llOwnerSay("Could not check the latest development version. The file might not exist or github is not working");
+        }
     }
     
     timer(){
