@@ -285,6 +285,10 @@ default
     }
     
     timer(){
+        if(llGetAnimation(g_kWearer) != "Standing") {
+            llResetTime();
+            return;
+        }
         if(llGetTime()>30.0)llSetTimerEvent(FALSE);
         
         if(g_iTimerMode == TIMER_START_ANIMATION && llGetTime()>3.0){
