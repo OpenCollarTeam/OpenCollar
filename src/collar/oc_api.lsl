@@ -429,9 +429,10 @@ default
                 } else if(sVar == "public"){
                     g_iPublic=(integer)sVal;
                 } else if(sVar == "group"){
+                    if(sVal == (string)NULL_KEY)sVal="";
                     g_kGroup = (key)sVal;
                     
-                    if(g_kGroup!=NULL_KEY)
+                    if(g_kGroup!="")
                         llOwnerSay("@setgroup:"+(string)g_kGroup+"=force,setgroup=n");
                     else llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){

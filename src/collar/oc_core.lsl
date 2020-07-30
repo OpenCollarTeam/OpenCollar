@@ -467,6 +467,7 @@ default
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
+                    if(sVal==(string)NULL_KEY)sVal="";
                     g_kGroup=(key)sVal;
                 } else if(sVar == "public"){
                     g_iPublic = (integer)sVal;
@@ -479,6 +480,10 @@ default
                     
                     if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
                 }
+            }
+            
+            if(sStr == "settings=sent"){
+                if(g_kGroup==(string)NULL_KEY)g_kGroup="";
             }
         } else if(iNum == LM_SETTING_DELETE){
             list lPar = llParseString2List(sStr, ["_"],[]);
