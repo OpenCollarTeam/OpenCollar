@@ -109,7 +109,12 @@ Menu(key kID, integer iAuth) {
 
     if(g_iWelded)sPrompt+="\n\n* The Collar is Welded *";
     if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
-    Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "Menu~Main");
+    
+    
+    list lUtility;
+    if(g_iAmNewer)lUtility += ["FEEDBACK", "BUG"];
+    
+    Dialog(kID, sPrompt, lButtons, lUtility, 0, iAuth, "Menu~Main");
 }
 key g_kGroup = "";
 integer g_iLimitRange=TRUE;
@@ -284,6 +289,10 @@ string setor(integer iTest, string sTrue, string sFalse){
     if(iTest)return sTrue;
     else return sFalse;
 }
+list g_lTestReports = ["5556d037-3990-4204-a949-73e56cd3cb06", "1a828b4e-6345-4bb3-8d41-f93e6621ba25"]; // Aria and Roan
+// Any other team members please add yourself if you want feedback/bug reports. Or ask to be added if you do not have commit access
+// These IDs will only be in here during the testing period to allow for the experimental feedback/bug report system to do its thing
+// As most do not post to github, i am experimenting to see if a menu option in the collar of a Alpha/Beta might encourage feedback or bugs to be sent even if it has to be sent through a llInstantMessage
 
 integer g_iDoTriggerUpdate=FALSE;
 key g_kWelder = NULL_KEY;
@@ -362,6 +371,12 @@ default
                         }
                     } else if(sMsg == "Weld"){
                         UserCommand(iAuth, "weld", kAv);
+                    } else if(sMsg == "FEEDBACK"){
+                        Dialog(kAv, "Please submit your feedback for this alpha/beta/rc", [],[],0,iAuth,"Main~Feedback");
+                        iRespring=FALSE;
+                    } else if(sMsg == "BUG"){
+                        Dialog(kAv, "Please type your bug report, including any reproduction steps. If it is easier, please contact the secondlife:///app/group/c5e0525c-29a9-3b66-e302-34fe1bc1bd43/about group, or submit your bug report on [https://github.com/OpenCollarTeam/OpenCollar GitHub] - or both!", [],[],0,iAuth, "Main~Bug");
+                        iRespring=FALSE;
                     }  else {
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
@@ -463,6 +478,19 @@ default
                     }else{
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
                     }
+                } else if(sMenu == "Main~Feedback" || sMenu == "Main~Bug"){
+                    integer iStart=0;
+                    integer iEnd = llGetListLength(g_lTestReports);
+                    if(!g_iAmNewer){
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Testing period has ended for this version", kAv);
+                        return;
+                    }
+                    for(iStart=0;iStart<iEnd;iStart++){
+                        llInstantMessage((key)llList2String(g_lTestReports, iStart), "T:"+sMenu+":"+COLLAR_VERSION+"\nFROM: "+llKey2Name(kAv)+"\nBODY: "+sMsg);
+                    }
+                    
+                    llMessageLinked(LINK_SET, NOTIFY, "0Thank you. Your report has been sent. Please do not abuse this tool, it is intended to send feedback or bug reports during a testing period", kAv);
+                    Menu(kAv,iAuth);
                 }
             }
         } else if(iNum == LM_SETTING_RESPONSE){
