@@ -21,8 +21,8 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.4";
-string g_sScriptVersion = "7.4";
+string g_sAppVersion = "1.5";
+string g_sScriptVersion = "8.0";
 
 
 //MESSAGE MAP
@@ -178,17 +178,18 @@ UserCommand(integer iNum, string sStr, key kID) {
     if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
-    if (iNum == CMD_OWNER && sStr == "runaway") {
+    if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+
+    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
         list Params=llParseString2List(sStr, [" "], []);
         
-        string sChangetype = llList2String(Params,0);
+        string sChangetype = llToLower(llList2String(Params,0));
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
         
