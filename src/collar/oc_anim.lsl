@@ -53,6 +53,7 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
 
+list g_lAdditionalButtons=[];
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -89,7 +90,7 @@ string Checkbox(integer iValue, string sLabel) {
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_sCurrentAnimation==""), "None", g_sCurrentAnimation);
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Animations");
+    Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
 
 string UP_ARROW = "⩓";
@@ -318,8 +319,21 @@ default
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
+        else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu){
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
+            llMessageLinked(LINK_SET, MENUNAME_REQUEST, g_sSubMenu, "");
+        }else if(iNum == MENUNAME_RESPONSE){
+            list ltmp = llParseString2List(sStr,["|"],[]);
+            if(llList2String(ltmp,0) == g_sSubMenu){
+                if(llListFindList(g_lAdditionalButtons,[llList2String(ltmp,1)])==-1)g_lAdditionalButtons+=llList2String(ltmp,1);
+            }
+        } else if(iNum == MENUNAME_REMOVE){
+            list ltmp = llParseString2List(sStr,["|"],[]);
+            if(llList2String(ltmp,0) == g_sSubMenu){
+                integer iPos=llListFindList(g_lAdditionalButtons,[llList2String(ltmp,1)]);
+                if(iPos!=-1)g_lAdditionalButtons = llDeleteSubList(g_lAdditionalButtons, iPos,iPos);
+            }
+        }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -342,6 +356,9 @@ default
                     else if(sMsg == "Pose"){
                         PoseMenu(kAv,iAuth);
                         iRespring=FALSE;
+                    }else {
+                        iRespring=FALSE;
+                        llMessageLinked(LINK_SET, iAuth, "menu "+sMsg,kAv);
                     }
 
                     if(iRespring)Menu(kAv,iAuth);
