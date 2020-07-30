@@ -7,6 +7,9 @@
 
 
 // Central storage for settings of other plugins in the device.
+
+//    llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID]));
+
 string g_sScriptVersion= "7.4";
 string g_sCard = ".settings";
 string g_sSplitLine; // to parse lines that were split due to lsl constraints
@@ -48,6 +51,8 @@ integer LM_SETTING_DELETE = 2003;
 integer LM_SETTING_EMPTY = 2004;
 integer LM_SETTING_RELAY_CONTENT = 2100;
 integer LM_SETTING_RELAY_LOAD = 2101; // used on 'Load' and on initial boot to read the .settings from root prim if applicable.
+integer LM_SETTING_REQUEST_EXTENSION = 2200;
+integer LM_SETTING_RESPONSE_EXTENSION = 2201;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
@@ -66,6 +71,24 @@ list g_lSettings;
 integer g_iSayLimit = 1024; // lsl "say" string limit
 integer g_iCardLimit = 255; // lsl card-line string limit
 string g_sDelimiter = "\\";
+
+/*//--                       Anti-License Text                         --//*/
+/*//     Contributed Freely to the Public Domain without limitation.     //*/
+/*//   2009 (CC0) [ http://creativecommons.org/publicdomain/zero/1.0 ]   //*/
+/*//  Void Singer [ https://wiki.secondlife.com/wiki/User:Void_Singer ]  //*/
+/*//--                                                                 --//*/
+// Returns a integer that is the positive index of the last vStrTst within vStrSrc
+integer uSubStringLastIndex(string vStrSrc,string vStrTst) {
+    integer vIdxFnd =
+        llStringLength( vStrSrc ) -
+        llStringLength( vStrTst ) -
+        llStringLength(
+            llList2String(
+                llParseStringKeepNulls( vStrSrc, (list)vStrTst, [] ),
+                0xFFFFFFFF ) //-- (-1)
+        );
+    return (vIdxFnd | (vIdxFnd >> 31));
+}
 
 // Get Group or Token, 0=Group, 1=Token
 string SplitToken(string sIn, integer iSlot) {
@@ -208,8 +231,13 @@ LoadSetting(string sData, integer iLine) {
         g_sSplitLine = "" ;
     }
     if (iLine) {
+        // Remove comments at end of line
+        integer endComment=uSubStringLastIndex(sData,"#");
+        if (endComment!=-1 && (endComment>uSubStringLastIndex(sData, "\""))) {
+            sData = llDeleteSubString(sData,endComment,-1);
+        }
         // first we can filter out & skip blank lines & remarks
-        sData = llStringTrim(sData, STRING_TRIM_HEAD);
+        sData = llStringTrim(sData, STRING_TRIM_HEAD);    
         if (sData == "" || llGetSubString(sData, 0, 0) == "#") return;
         // check for "continued" line pieces
         if (llStringLength(g_sSplitLine)) {
@@ -484,6 +512,20 @@ default {
                 g_iCheckNews = FALSE;
                 llSetTimerEvent(2.0);
             } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, "");
+        }
+        else if (iNum == LM_SETTING_REQUEST_EXTENSION) {
+             //check the cache for the token
+            list lRequests = llCSV2List(sStr);
+            string sResponse = "";
+            integer iIndex = 0;
+            integer iLimit = llGetListLength(lRequests);
+            if (iIndex < iLimit) sResponse = llJsonSetValue(sResponse, ["source"], llList2String(lRequests, 0));
+            for (iIndex = 1; iIndex < iLimit; ++iIndex) {
+                if (SettingExists(llList2String(lRequests, iIndex))) {
+                    sResponse = llJsonSetValue(sResponse, [llList2String(lRequests, iIndex)], GetSetting(llList2String(lRequests, iIndex)));
+                }
+            }
+            llMessageLinked(LINK_SET, LM_SETTING_RESPONSE_EXTENSION, sResponse, "");
         }
         else if (iNum == LM_SETTING_DELETE){
             //llMessageLinked(LINK_SET, LM_SETTING_DELETE,sStr,"");
