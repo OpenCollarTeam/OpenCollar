@@ -27,6 +27,10 @@ string COLLAR_VERSION = "8.0.0002"; // Provide enough room
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
 integer g_iAmNewer=FALSE;
+integer g_iChannel=1;
+string g_sPrefix;
+
+integer g_iNotifyInfo=FALSE;
 
 string g_sSafeword="RED";
 //MESSAGE MAP
@@ -125,6 +129,13 @@ HelpMenu(key kID, integer iAuth){
     
     string sPrompt = "\nOpenCollar "+COLLAR_VERSION+" "+EXTRA_VER_TXT+"\nVersion: "+setor(g_iAmNewer, "(Newer than release)", "")+" "+setor(UPDATE_AVAILABLE, "(Update Available)", "(Most current version)");
     sPrompt += "\n\nDocumentation https://opencollar.cc";
+    sPrompt += "\nPrefix: "+g_sPrefix+"\nChannel: "+(string)g_iChannel;
+    
+    if(g_iNotifyInfo){
+        g_iNotifyInfo=FALSE;
+        llMessageLinked(LINK_SET, NOTIFY, sPrompt, kID);
+        return;
+    }
     list lButtons = ["Update", "Support", "License"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Help");
 }
@@ -197,6 +208,8 @@ UserCommand(integer iNum, string sStr, key kID) {
                 Settings(kID,iNum);
             } else if(llToLower(sChangevalue) == "apps"){
                 AppsMenu(kID,iNum);
+            } else if(llToLower(sChangevalue) == "help/about"){
+                HelpMenu(kID,iNum);
             }
         } else if(llToLower(sChangetype) == "weld" && iNum == CMD_OWNER){
             g_kWelder=kID;
@@ -205,6 +218,18 @@ UserCommand(integer iNum, string sStr, key kID) {
         } else if(llToLower(sChangetype) == "debug-unweld"){
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "intern_weld", "");
             llSay(0, "debug unweld triggered");
+        } else if(llToLower(sChangetype) == "info"){
+            if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
+                g_iNotifyInfo = TRUE;
+                HelpMenu(kID,iNum);
+            }
+        } else if(llToLower(sChangetype) == "getauth"){
+            llMessageLinked(LINK_SET, NOTIFY, "0Your auth level is: "+(string)iNum, kID);
+        } else {
+            if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
+            else if(llToLower(sChangetype) == "settings")Settings(kID,iNum);
+            else if(llToLower(sChangetype) == "apps")AppsMenu(kID,iNum);
+            else if(llToLower(sChangetype) == "help/about") HelpMenu(kID,iNum);
         }
     }
 }
@@ -323,10 +348,7 @@ default
                 integer iAuth = llList2Integer(lMenuParams,3);
                 integer iRespring=TRUE;
                 if(sMenu == "Menu~Main"){
-                    if(sMsg=="Help/About"){
-                        iRespring=FALSE;
-                        HelpMenu(kAv,iAuth);
-                    } else if(sMsg == Checkbox(g_iLocked,"Lock")){
+                    if(sMsg == Checkbox(g_iLocked,"Lock")){
                         if(iAuth==CMD_OWNER && g_iLocked){
                             g_iLocked=FALSE;
                             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
@@ -464,6 +486,10 @@ default
                     if(g_sSafeword == "0"){
                         llMessageLinked(LINK_SET, CMD_OWNER, "safeword-disabled","");
                     }
+                } else if(sVar == "prefix"){
+                    g_sPrefix = sVal;
+                } else if(sVar == "channel"){
+                    g_iChannel = (integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
@@ -495,6 +521,11 @@ default
                 else if(sVar == "safeword"){
                     g_sSafeword = "RED";
                     llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
+                } else if(sVar == "prefix"){
+                    // revert to default calculation
+                    g_sPrefix = llGetSubString(llKey2Name(g_kWearer),0,1);
+                } else if(sVar = "channel"){
+                    g_iChannel = 1;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
