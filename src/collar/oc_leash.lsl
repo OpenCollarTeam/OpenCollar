@@ -48,6 +48,9 @@ integer RLV_CMD = 6000;
 integer RLV_OFF = 6100;
 integer RLV_ON = 6101;
 
+integer LEASH_START_MOVEMENT = 6200;
+integer LEASH_END_MOVEMENT = 6201;
+
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
 integer DIALOG_TIMEOUT      = -9002;
@@ -633,6 +636,7 @@ LHSearch(){
 dtext(string m){
    // llSetText(m+"\n \n \n \n \n \n \n",<0,1,1>,1);
 }
+integer g_iAlreadyMoving=FALSE;
 default {
     on_rez(integer start_param) {
         DoUnleash(FALSE);
@@ -676,6 +680,8 @@ default {
                 g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
                 if (g_vPos != ZERO_VECTOR) llMoveToTarget(g_vPos, 0.8);
                 ApplyRestrictions();
+                
+                if(!g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_START_MOVEMENT,"","");
             } else {
                 dtext("timer : LeasherInRange = TRUE");
             }
@@ -691,6 +697,7 @@ default {
                     ApplyRestrictions();
                     g_iAwayCounter=-1;
                     dtext("No leash holder in range\n* Stopping leash particles");
+                    if(g_iAlreadyMoving)llMessageLinked(LINK_SET, LEASH_END_MOVEMENT,"","");
                 } else if(g_iAwayCounter==-1){
                     g_iAwayCounter = llGetUnixTime()+15;
                     dtext("Leash holder was previously in range");
@@ -753,7 +760,9 @@ default {
         } else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;
             ApplyRestrictions();
-        } else if (iNum == RLV_OFF) {
+        } else if(iNum == LEASH_START_MOVEMENT) g_iAlreadyMoving=TRUE;
+        else if(iNum == LEASH_END_MOVEMENT) g_iAlreadyMoving=FALSE;
+        else if (iNum == RLV_OFF) {
             g_iRLVOn = FALSE;
             ApplyRestrictions();
         } else if (iNum == DIALOG_RESPONSE) {
@@ -846,6 +855,7 @@ default {
 
     at_target(integer iNum, vector vTarget, vector vMe) {
         llStopMoveToTarget();
+        
         llTargetRemove(g_iTargetHandle);
         g_vPos = llList2Vector(llGetObjectDetails(g_kLeashedTo,[OBJECT_POS]),0);
         g_iTargetHandle = llTarget(g_vPos, (float)g_iLength);
@@ -855,6 +865,8 @@ default {
             if (g_iTurnModeOn) llMessageLinked(LINK_SET, RLV_CMD, "setrot:" + (string)(turnAngle) + "=force", NULL_KEY);   //transient command, doesn;t need our fakekey
             g_iJustMoved = 0;
         }
+        
+        if(g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_END_MOVEMENT, "","");
     }
 
     not_at_target() {
@@ -880,6 +892,9 @@ default {
                 llStopMoveToTarget();
                 llTargetRemove(g_iTargetHandle);
             }
+            
+            
+            if(!g_iAlreadyMoving) llMessageLinked(LINK_SET, LEASH_START_MOVEMENT, "","");
         } else {
             llStopMoveToTarget();
             llTargetRemove(g_iTargetHandle);

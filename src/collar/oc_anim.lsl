@@ -50,6 +50,10 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
+integer LEASH_START_MOVEMENT = 6200;
+integer LEASH_END_MOVEMENT = 6201;
+
+
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
@@ -142,6 +146,9 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else g_fStandHover-=g_fAdjustment;
                 if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
                 else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
+                
+                
+                llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
             } else {
                 integer iPos=llListFindList(g_lAdjustments,[g_sCurrentAnimation]);
                 if(iPos==-1){
@@ -160,12 +167,14 @@ UserCommand(integer iNum, string sStr, key kID) {
                         fCurrent -= g_fAdjustment;
                     
                     
+                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+g_sCurrentAnimation+"' is now "+(string)fCurrent, g_kWearer);
                     if(fCurrent!=0)
                         g_lAdjustments = llListReplaceList(g_lAdjustments, [fCurrent],iPos+1,iPos+1);
                     else
                         g_lAdjustments = llDeleteSubList(g_lAdjustments,iPos,iPos+1);
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_hovers="+llDumpList2String(g_lAdjustments,","),"");
+                
                 
             }
         } else if(sChangetype == "animlock"){
@@ -215,6 +224,28 @@ integer g_iStoppedAdjust;
 
 integer g_iTimerMode;
 integer TIMER_START_ANIMATION =1;
+MoveStart(){
+    if(!g_iStoppedAdjust && g_sCurrentAnimation!=""){
+        g_iStoppedAdjust=TRUE;
+        llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+        llResetTime();
+    }
+}
+
+MoveEnd(){
+    
+    if(g_iPermissionGranted && g_sCurrentAnimation != ""){
+        g_iTimerMode = TIMER_START_ANIMATION;
+        llResetTime();
+        llResetAnimationOverride("Standing");
+        // wait a few seconds before restarting the animation
+        llSetTimerEvent(1);
+        g_iStoppedAdjust=FALSE;
+    } else if(g_iPermissionGranted && g_sCurrentAnimation=="" && g_fStandHover != 0){
+        llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+    }
+}
+
 default
 {
     on_rez(integer t){
@@ -272,22 +303,9 @@ default
     control(key kID, integer iLevel, integer iEdge){
         if(iLevel == 0){
             // all movement has ceased
-            
-            if(g_iPermissionGranted && g_sCurrentAnimation != ""){
-                g_iTimerMode = TIMER_START_ANIMATION;
-                llResetTime();
-                llResetAnimationOverride("Standing");
-                // wait a few seconds before restarting the animation
-                llSetTimerEvent(1);
-                g_iStoppedAdjust=FALSE;
-            } else if(g_iPermissionGranted && g_sCurrentAnimation=="" && g_fStandHover != 0){
-                llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
-            }
+            MoveEnd();
         } else {
-            if(!g_iStoppedAdjust && g_sCurrentAnimation!=""){
-                g_iStoppedAdjust=TRUE;
-                llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
-            }
+            MoveStart();
         }
                 
         //integer iStart = iLevel & iEdge;
@@ -396,6 +414,11 @@ default
                     llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
                 }
             }
+        } else if(iNum == LEASH_START_MOVEMENT){
+            g_iStoppedAdjust=FALSE;
+            MoveStart();
+        } else if(iNum == LEASH_END_MOVEMENT){
+            MoveEnd();
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
