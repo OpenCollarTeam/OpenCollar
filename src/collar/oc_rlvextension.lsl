@@ -481,20 +481,37 @@ default
                 g_bMuffle = (integer)sValue;
                 SetMuffle(g_bMuffle);
             } else if (sToken == "rlvext_Owner") {
+                if(g_iOwnerEx == (integer)sValue)return;
                 g_iOwnerEx = (integer) sValue;
+                
+                if(g_iRLV)ApplyAllExceptions(TRUE,FALSE);
             } else if (sToken == "rlvext_Trusted") {
+                if(g_iTrustedEx==(integer)sValue)return;
                 g_iTrustedEx = (integer) sValue;
+                
+                if(g_iRLV)ApplyAllExceptions(TRUE,FALSE);
+                
             } else if(sToken == "rlvext_custom"){
-                g_lCustomExceptions = llParseString2List(sValue,["^"],[]);
+                list lCustomExceptions = llParseString2List(sValue,["^"],[]);
+                if(g_lCustomExceptions == lCustomExceptions)return;
+                else g_lCustomExceptions = lCustomExceptions;
+                
+                if(g_iRLV)ApplyAllExceptions(TRUE,FALSE);
             }else if (llGetSubString(sToken, 0, i) == "auth_") {
                 if (sToken == "auth_owner") {
-                    g_lOwners = llParseString2List(sValue, [","], []);
+                    list lOwners = llParseString2List(sValue, [","], []);
+                    if(lOwners==g_lOwners)return;
+                    else g_lOwners=lOwners;
                     if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
                 } else if (sToken == "auth_trust") {
-                    g_lSecOwners = llParseString2List(sValue, [","], []);
+                    list lSecOwners = llParseString2List(sValue, [","], []);
+                    if(lSecOwners==g_lSecOwners)return;
+                    else g_lSecOwners=lSecOwners;
                     if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
                 } else if (sToken == "auth_tempowner") {
-                    g_lTempOwners = llParseString2List(sValue, [","], []);
+                    list lTempOwners = llParseString2List(sValue, [","], []);
+                    if(g_lTempOwners==lTempOwners)return;
+                    else g_lTempOwners=lTempOwners;
                     if (g_iRLV) ApplyAllExceptions(TRUE,FALSE); // Only reapply when RLV is on.
                 }
             } else if (sToken == "settings" && sValue == "send" && g_iRLV) ApplyAllExceptions(TRUE,FALSE);
@@ -536,16 +553,10 @@ default
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MaxCamDist="+(string)g_fMaxCamDist,kID);
             llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"BlurAmount="+(string)g_iBlurAmount,kID);
         } else if (iNum == REBOOT && sStr == "reboot") {
-            llOwnerSay("Rebooting RLV Extension");
             llResetScript();
         } else if(iNum == LINK_CMD_DEBUG){
-            integer onlyver=0;
-            if(sStr == "ver")onlyver=1;
-            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
-            if(onlyver)return; // basically this command was: <prefix> versions
-            
-            llInstantMessage(kID, llGetScriptName() +" MEMORY USED: "+(string)llGetUsedMemory());
-            llInstantMessage(kID, llGetScriptName() +" MEMORY FREE: "+(string)llGetFreeMemory());
+            /// This will be changed to handle information differently..
+            // TODO
         } else if (iNum == LINK_CMD_RESTRICTIONS) {
             list lCMD = llParseString2List(sStr,["="],[]);
             if (llList2String(lCMD,0) == "unsit" && llList2Integer(lCMD,2) < 0) g_bCanStand = llList2Integer(lCMD,1);
