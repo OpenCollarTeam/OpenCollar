@@ -228,6 +228,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
             g_iChannel = (integer)llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_channel="+(string)g_iChannel, kID);
         } else if(sCmd == "prefix"){
+            if(llList2String(lCmd,1)==""){
+                llMessageLinked(LINK_SET,NOTIFY,"0The prefix is currently set to: "+g_sPrefix+". If you wish to change it, supply the new prefix to this same command", kID);
+                return;
+            }
             g_sPrefix = llList2String(lCmd,1);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_prefix="+g_sPrefix,kID);
         } else if(sCmd == "add" || sCmd == "rem"){
