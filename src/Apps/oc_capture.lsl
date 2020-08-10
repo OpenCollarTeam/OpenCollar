@@ -41,12 +41,17 @@ integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
+integer CMD_BLOCKED = 505; // <--- Used in auth_request, will not return on a CMD_ZERO
 integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 
 integer CMD_SAFEWORD = 510;
 integer CMD_NOACCESS = 599; // Required for when public is disabled
+
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
+
 
 integer g_iEnabled=FALSE ; // DEFAULT
 integer g_iRisky=FALSE;
@@ -101,8 +106,11 @@ WearerConsent(string SLURL){
     Dialog(g_kWearer, sPrompt, ["YES", "NO"], [], 0, CMD_WEARER, "ConsentPrompt");
 }
 
-StartCapture(key kID, integer iAuth)
+StartCapture(key kID, integer iAuth) // This is a dialog prompt on the cmd no access
 {
+    if(!g_iEnabled)return;
+    if(iAuth == CMD_NOACCESS)return;
+    
     Dialog(kID,  "\n[Capture]\n \nDo you want to capture secondlife:///app/agent/"+(string)g_kWearer+"/about?", ["YES", "NO"], [], 0, iAuth, "StartPrompt");
 }
 
@@ -160,6 +168,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
             }else if(sChangevalue==""){
                 // Attempt to capture
+                if(!g_iEnabled)return;
                 if(g_iCaptured){
                     // Check if ID is captor, as they may be trying to release
                     if(kID == g_kCaptor){
@@ -191,15 +200,16 @@ UserCommand(integer iNum, string sStr, key kID) {
                             g_iCaptured=TRUE;
                             llMessageLinked(LINK_SET, NOTIFY, "0You have been captured by secondlife:///app/agent/"+(string)g_kCaptor+"/about ! If you need to free yourself, you can always use your safeword '"+g_sSafeword+"'. Also by saying your prefix capture", g_kWearer);
                             Commit();
-                        }
-                        else {
+                        } else {
                             // Ask the wearer for consent to allow capture
                             g_kCaptor=kID;
                             if (!g_iCaptured) llSetTimerEvent(1);
                             g_kExpireFor=g_kWearer;
                             g_iExpireMode=1;
                             g_iExpire=llGetUnixTime()+30;
-                            WearerConsent("secondlife:///app/agent/"+(string)kID+"/about");
+                            
+                            llMessageLinked(LINK_SET, AUTH_REQUEST, "capture", kID);
+//                            WearerConsent("secondlife:///app/agent/"+(string)kID+"/about");
 //                            llSay(0, "=> Ask for consent from wearer <=\n* Not yet implemented");
                         }
                     } else {
@@ -284,6 +294,21 @@ default
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
+        } else if(iNum == AUTH_REPLY){
+            list lTmp = llParseString2List(sStr, ["|"],[]);
+            if(llList2String(lTmp,0)=="AuthReply"){
+                if(kID == "capture"){
+                    // check auth
+                    integer iAuth = (integer)llList2String(lTmp,2);
+                    key kAv = (key)llList2String(lTmp,1);
+                    
+                    if(iAuth == CMD_BLOCKED)return;
+                    // auth should be ok, check if enabled
+                    if(!g_iEnabled)return;
+                    // process the capture system, perform wearer consent
+                    WearerConsent("secondlife:///app/agent/"+(string)kAv+"/about");
+                }
+            }
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -378,8 +403,9 @@ default
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
+            if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            }
         } else if(iNum == LM_SETTING_EMPTY){
             if(sStr == "capture_status"){
                 g_iAutoRelease=TRUE;

@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0002"; // Provide enough room
+string COLLAR_VERSION = "8.0.0003"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -119,7 +119,13 @@ Menu(key kID, integer iAuth) {
 key g_kGroup = "";
 integer g_iLimitRange=TRUE;
 integer g_iPublic=FALSE;
+integer g_iCaptured = FALSE;
 AccessMenu(key kID, integer iAuth){
+    if(g_iCaptured){
+        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to the access settings while capture is active!", kID);
+        llMessageLinked(LINK_SET, 0, "menu", kID);
+        return;
+    }
     string sPrompt = "\nOpenCollar Access Controls";
     list lButtons = ["+ Owner", "+ Trust", "+ Block", "- Owner", "- Trust", "- Block", Checkbox(bool((g_kGroup!="")), "Group"), Checkbox(g_iPublic, "Public")];
 
@@ -493,7 +499,7 @@ default
                         return;
                     }
                     for(iStart=0;iStart<iEnd;iStart++){
-                        llInstantMessage((key)llList2String(g_lTestReports, iStart), "T:"+sMenu+":"+COLLAR_VERSION+"\nFROM: "+llKey2Name(kAv)+"\nBODY: "+sMsg);
+                        llInstantMessage((key)llList2String(g_lTestReports, iStart), "T:"+sMenu+":"+COLLAR_VERSION+"\nFROM: "+llKey2Name(kAv)+"\nAUTH LEVEL: "+(string)iAuth+"\nBODY: "+sMsg);
                     }
                     
                     llMessageLinked(LINK_SET, NOTIFY, "0Thank you. Your report has been sent. Please do not abuse this tool, it is intended to send feedback or bug reports during a testing period", kAv);
@@ -540,6 +546,15 @@ default
                     g_iWelded=TRUE;
                     
                     if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
+                }
+            } else if(sToken == "capture"){
+                if(sVar == "status"){
+                    integer iFlag = (integer)sVal;
+                    if(iFlag&4){
+                        g_iCaptured=TRUE;
+                    }else{
+                        g_iCaptured=FALSE;
+                    }
                 }
             }
             

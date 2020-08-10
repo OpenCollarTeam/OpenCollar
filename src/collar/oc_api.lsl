@@ -20,6 +20,8 @@ list g_lOwner;
 list g_lTrust;
 list g_lBlock;
 
+key g_kTempOwner;
+
 integer g_iMode;
 string g_sSafeword = "RED";
 integer g_iSafewordDisable=FALSE;
@@ -31,6 +33,13 @@ integer ACTION_TRUST = 16;
 integer ACTION_BLOCK = 32;
 
 integer API_CHANNEL = 0x60b97b5e;
+
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
+
+integer g_iLastGranted;
+key g_kLastGranted;
+string g_sLastGranted;
 
 
 integer RLV_CMD = 6000;
@@ -48,6 +57,7 @@ integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 integer CMD_EVERYONE = 504;
+integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 integer CMD_RLV_RELAY = 507;
 integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -88,9 +98,10 @@ integer CalcAuth(key kID){
     if(llGetListLength(g_lOwner) == 0 && kID==g_kWearer)
         return CMD_OWNER;
     else{
-        if(llListFindList(g_lBlock,[sID])!=-1)return CMD_NOACCESS;
+        if(llListFindList(g_lBlock,[sID])!=-1)return CMD_BLOCKED;
         if(llListFindList(g_lOwner, [sID])!=-1)return CMD_OWNER;
         if(llListFindList(g_lTrust,[sID])!=-1)return CMD_TRUSTED;
+        if(g_kTempOwner == kID) return CMD_TRUSTED;
         if(kID==g_kWearer)return CMD_WEARER;
         if(in_range(kID)){
             if(g_kGroup!=""){
@@ -326,6 +337,7 @@ default
         
         
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
+        
     }
     
     timer(){
@@ -441,6 +453,8 @@ default
                     else llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = (integer)sVal;
+                } else if(sVar == "tempowner"){
+                    g_kTempOwner = (key)sVal;
                 }
             } else if(sToken == "global"){
                 if(sVar == "channel"){
@@ -472,6 +486,8 @@ default
                     llOwnerSay("@setgroup=y");
                 } else if(sVar == "limitrange"){
                     g_iLimitRange = TRUE;
+                } else if(sVar == "tempowner"){
+                    g_kTempOwner = "";
                 }
             } else if(sToken == "global"){
                 if(sVar == "channel"){
