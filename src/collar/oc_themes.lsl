@@ -282,7 +282,7 @@ BuildElementsList(){
         }
     }
 }
-
+integer g_iAllowHide=TRUE;
 UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
     string sStrLower = llToLower(sStr);
 // This is needed as we react on touch for our "choose element on touch" feature, else we get an element on every collar touch!
@@ -320,6 +320,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
             } else if (sCommand == "looks") LooksMenu(kID,iNum);
             else if (sCommand == "menu") ElementMenu(kID, 0, iNum, sElement);
             else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
+                if(iNum == CMD_WEARER && !g_iAllowHide)return;
                 //get currently shown state
                 integer iCurrentlyShown;
                 if (sElement=="") sElement=g_sDeviceType;
@@ -546,6 +547,7 @@ default {
             string sCategory=llGetSubString(sID, 0, i);
             string sToken = llGetSubString(sID, i + 1, -1);
             if (sID == "global_DeviceType") g_sDeviceType = sValue;
+            else if(sID == "global_allowhide") g_iAllowHide=(integer)sValue;
             else if (sID == "intern_looks") g_iLooks = (integer)sValue;
             else if (sCategory == "texture_") {
                 i = llListFindList(g_lTextureDefaults, [sToken]);

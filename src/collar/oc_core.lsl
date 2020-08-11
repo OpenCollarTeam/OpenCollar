@@ -82,9 +82,10 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 integer g_iHide=FALSE;
+integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
     string sPrompt = "OpenCollar\n\n[Settings]";
-    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide")];
+    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide"), Checkbox(g_iAllowHide, "AllowHiding")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
@@ -263,6 +264,12 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_DeviceName="+sChangevalue,"");
                 llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
+            }
+        } else if(llToLower(sChangetype) == "allowhide"){
+            if(iNum == CMD_OWNER){
+                if(g_iAllowHide)llMessageLinked(LINK_SET, NOTIFY, "0The wearer can no longer hide the collar", kID);
+                else llMessageLinked(LINK_SET,NOTIFY, "0The wearer can hide the collar on their own", kID);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)(!g_iAllowHide), "");
             }
         } else {
             if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
@@ -493,6 +500,13 @@ default
                         llMessageLinked(LINK_SET, iAuth, "fix", kAv);
                         llMessageLinked(LINK_SET, NOTIFY, "0Menus have been fixed", kAv);
                     } else if(sMsg == Checkbox(g_iHide,"Hide")){
+                        
+                        if(!g_iAllowHide && iAuth == CMD_WEARER){
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
+                            return;
+                        }
+                        
+                        
                         g_iHide=1-g_iHide;
                         llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
                     } else if(sMsg == "Load"){
@@ -501,6 +515,8 @@ default
                         // Resizer!!
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu Size/Position", kAv);
+                    } else if(sMsg == Checkbox(g_iAllowHide,"AllowHiding")){
+                        llMessageLinked(LINK_SET, 0, "allowhide", kAv);
                     }
                     
                     
@@ -567,10 +583,8 @@ default
                     g_iChannel = (integer)sVal;
                 } else if(sVar == "touchnotify"){
                     g_iTouchNotify=(integer)sVal;
-                } else if(sVar == "WearerName"){
-                    g_sWearerName = sVal;
-                } else if(sVar == "DeviceName"){
-                    g_sDeviceName = sVal;
+                } else if(sVar == "allowhide"){
+                    g_iAllowHide = (integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){

@@ -1,7 +1,7 @@
 // This file is part of OpenCollar.
 // Copyright (c) 2017 Nirea Resident
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 
 integer CMD_OWNER = 500;
 //integer CMD_TRUSTED = 501;
@@ -15,6 +15,12 @@ integer CMD_WEARER = 503;
 
 integer LINK_CMD_DEBUG=1999;
 
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//str must be in form of "token=value"
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer DIALOG              = -9000;
 integer DIALOG_RESPONSE     = -9001;
@@ -22,7 +28,7 @@ integer DIALOG_RESPONSE     = -9001;
 
 integer NOTIFY = 1002;
 
-
+integer g_iAllowHide=TRUE; // default is true
 integer g_iLine;
 key g_kLineID;
 string CARD = ".meshthemes";
@@ -130,6 +136,7 @@ default
             } else if (sStr == "menu Themes") {
                 ThemeMenu(kID, iNum);
             } else if (sCommand == "hide" || sCommand == "show" || sCommand == "stealth") {
+                if(iNum == CMD_WEARER && !g_iAllowHide)return;
                 HideShow(sCommand);
             }
         } else if (iNum == DIALOG_RESPONSE && kID == g_kDialog) {
@@ -150,6 +157,18 @@ default
             if(onlyver)return; // basically this command was: <prefix> versions
             llInstantMessage(kID, llGetScriptName()+" THEMES: "+llDumpList2String(g_lThemes,", "));
             llInstantMessage(kID, llGetScriptName()+" HIDDEN: "+(string)g_iCollarHidden);
+        } else if(iNum == LM_SETTING_RESPONSE){
+            
+            list lPar = llParseString2List(sStr, ["_","="],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            string sVal = llList2String(lPar,2);
+            
+            if(sToken =="global"){
+                if(sVar == "allowhide"){
+                    g_iAllowHide = (integer)sVal;
+                }
+            }
         }
     }
     
