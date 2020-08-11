@@ -67,12 +67,15 @@ list StrideOfList(list src, integer stride, integer start, integer end)
     }
     return l;
 }
+integer NOTIFY = 1002;
+integer NOTIFY_OWNERS=1003;
 integer g_iInitialScan = TRUE;
 integer g_iReboot=FALSE;
 integer g_iRescan=TRUE;
 StartAll(){
     g_lManagedScripts = [];
     llSetTimerEvent(1);
+    g_iRescan=TRUE;
 }
 default
 {
@@ -116,6 +119,9 @@ default
                     llSetScriptState(scriptName,TRUE);
                     llSleep(1);
                     iModified=TRUE;
+                    
+                    if(g_iReboot || g_iInitialScan){}else
+                        llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github. If the script is supposed to be off, please ensure it is registering with State Manager", llGetOwner());
                 }
             } else {
                 //llWhisper(0, scriptName+" - is a managed script");
