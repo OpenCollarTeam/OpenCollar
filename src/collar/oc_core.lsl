@@ -234,8 +234,12 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iNotifyInfo = TRUE;
                 HelpMenu(kID,iNum);
             }
-        } else if(llToLower(sChangetype) == "getauth"){
-            llMessageLinked(LINK_SET, NOTIFY, "0Your auth level is: "+(string)iNum, kID);
+        } else if(llToLower(sChangetype) == "touchnotify"){
+            if(g_iTouchNotify) llMessageLinked(LINK_SET,NOTIFY,"1The wearer will no longer be notified when someone touches their collar", kID);
+            else llMessageLinked(LINK_SET, NOTIFY, "1The wearer will now be notified whenever someone touches their collar", kID);
+            
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_touchnotify="+(string)(!g_iTouchNotify), "");
+            
         } else {
             if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
             else if(llToLower(sChangetype) == "settings")Settings(kID,iNum);
@@ -312,6 +316,9 @@ key g_kWelder = NULL_KEY;
 StartUpdate(){
     llRegionSayTo(g_kUpdater, g_iUpdateChan, "ready|"+(string)g_iUpdatePin);
 }
+
+
+integer g_iTouchNotify=FALSE;
 default
 {
     on_rez(integer t){
@@ -327,6 +334,8 @@ default
         llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
     }
     touch_start(integer iNum){
+        if(g_iTouchNotify) llMessageLinked(LINK_SET, NOTIFY, "0secondlife:///app/agent/"+(string)llDetectedKey(0)+"/about has touched your collar!", g_kWearer);
+
         llMessageLinked(LINK_SET, 0, "menu", llDetectedKey(0)); // Temporary until API v8's implementation is done, use v7 in the meantime
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
@@ -392,7 +401,8 @@ default
                         iRespring=FALSE;
                     }  else {
                         iRespring=FALSE;
-                        llMessageLinked(LINK_SET, 0,"menu "+ sMsg, kAv); // Recalculate
+                        // don't recaculate while developing
+                        llMessageLinked(LINK_SET, iAuth,"menu "+ sMsg, kAv); // Recalculate
                     }
                      
                     
@@ -531,6 +541,8 @@ default
                     g_sPrefix = sVal;
                 } else if(sVar == "channel"){
                     g_iChannel = (integer)sVal;
+                } else if(sVar == "touchnotify"){
+                    g_iTouchNotify=(integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
