@@ -57,6 +57,9 @@ integer g_iEnabled=FALSE ; // DEFAULT
 integer g_iRisky=FALSE;
 integer g_iAutoRelease=FALSE;
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
+
 integer NOTIFY = 1002;
 integer LINK_CMD_DEBUG=1999;
 integer REBOOT = -1000;
@@ -283,6 +286,7 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "capture"]), "");
         llSleep(2);
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "capture_status", ""); // Needed to get the EMPTY reply
     }
@@ -294,6 +298,14 @@ default
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "capture"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(!g_iCaptured && llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         } else if(iNum == AUTH_REPLY){
             list lTmp = llParseString2List(sStr, ["|"],[]);
             if(llList2String(lTmp,0)=="AuthReply"){
@@ -317,6 +329,9 @@ default
                     WearerConsent("secondlife:///app/agent/"+(string)kAv+"/about");
                 }
             }
+        } else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

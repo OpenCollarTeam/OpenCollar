@@ -80,7 +80,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Detach App]";
     
-    Dialog(kID, sPrompt, llListSort(llGetAttachedList(llGetOwner()),1,TRUE),  [UPMENU], 0, iAuth, "Menu~Main");
+    Dialog(kID, sPrompt, llGetAttachedList(llGetOwner()),  [UPMENU], 0, iAuth, "Menu~Main");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -98,6 +98,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -111,6 +113,7 @@ default
     {
         //llScriptProfiler(TRUE);
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", ""]), "");
         //float baseCalc = llPow(2, 0);
         //llSay(0, "Pow 2^0 : "+(string)baseCalc);
         //llSetTimerEvent(1);
@@ -142,6 +145,17 @@ default
                     }
                 }
             }
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", ""]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

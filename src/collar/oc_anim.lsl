@@ -33,6 +33,8 @@ integer CMD_RELAY_SAFEWORD = 511;
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
+
+
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
@@ -133,9 +135,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_sCurrentAnimation = sChangetype;
             
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+g_sCurrentAnimation,"");
-        } else if(llToLower(sChangetype) == "stop"){
+        } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
-            g_sCurrentAnimation = "";
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // adjust current pose
             integer iUp= FALSE;
@@ -238,7 +239,8 @@ MoveEnd(){
     if(g_iPermissionGranted && g_sCurrentAnimation != ""){
         g_iTimerMode = TIMER_START_ANIMATION;
         llResetTime();
-        llResetAnimationOverride("Standing");
+        llStopAnimation(g_sCurrentAnimation);
+        //llResetAnimationOverride("Standing");
         // wait a few seconds before restarting the animation
         llSetTimerEvent(1);
         g_iStoppedAdjust=FALSE;
@@ -277,7 +279,7 @@ default
                 CONTROL_ROT_RIGHT |
                 CONTROL_UP |
                 CONTROL_DOWN |
-                CONTROL_ML_LBUTTON |
+                CONTROL_ML_LBUTTON | 
                 0x02 |
                 0x04,
                 TRUE,TRUE);
@@ -285,19 +287,27 @@ default
     }
     
     timer(){
-        if(llGetAnimation(g_kWearer) != "Standing") {
-            llResetTime();
+        
+        string sAnim = llGetAnimation(g_kWearer);
+        if(sAnim == ""){
+            // Avatar is logging out. Goodbye!
+            llSetTimerEvent(FALSE);
             return;
         }
+        
+        if(sAnim == "Falling Down" || sAnim == "Jumping" || sAnim == "Landing" || sAnim == "Soft Landing"){
+            llResetTime();
+        }
+        
         if(llGetTime()>30.0)llSetTimerEvent(FALSE);
         
-        if(g_iTimerMode == TIMER_START_ANIMATION && llGetTime()>3.0){
+        if(g_iTimerMode == TIMER_START_ANIMATION && llGetTime()>2.5){
             integer iPos = llListFindList(g_lAdjustments,[g_sCurrentAnimation]);
             if(iPos!=-1){
                 llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+llList2String(g_lAdjustments,iPos+1)+"=force",g_kWearer);
             }
             if(g_sCurrentAnimation!="")
-                llSetAnimationOverride("Standing", g_sCurrentAnimation);
+                llStartAnimation(g_sCurrentAnimation);
             else{
                 if(g_fStandHover != 0) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover,g_kWearer);
             }
@@ -399,7 +409,8 @@ default
                     g_iTimerMode = TIMER_START_ANIMATION;
                     llSetTimerEvent(1);
                     if(g_iPermissionGranted)
-                        llSetAnimationOverride("Standing", g_sCurrentAnimation);
+                        llStartAnimation(g_sCurrentAnimation);
+                        //llSetAnimationOverride("Standing", g_sCurrentAnimation);
                 } else if(sVar == "animlock"){
                     g_iAnimLock = (integer)sVal; // <-- used incase its set in .settings to false for some reason
                 }
@@ -421,8 +432,9 @@ default
                 if(sVar == "locked") g_iLocked=FALSE;
             }else if(sTok == "anim"){
                 if(sVar == "pose"){
+                    llStopAnimation(g_sCurrentAnimation);
                     g_sCurrentAnimation="";
-                    llResetAnimationOverride("Standing");
+                    //llResetAnimationOverride("Standing");
                     
                     if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
                     else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);

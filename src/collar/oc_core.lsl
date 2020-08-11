@@ -539,7 +539,7 @@ default
                     if(sMsg == UPMENU){
                         Menu(kAv, iAuth);
                     }else{
-                        llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
+                        llMessageLinked(LINK_SET, 0, "menu "+sMsg, kAv);
                     }
                 } else if(sMenu == "Main~Feedback" || sMenu == "Main~Bug"){
                     integer iStart=0;
@@ -556,6 +556,9 @@ default
                     Menu(kAv,iAuth);
                 }
             }
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         } else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);

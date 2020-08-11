@@ -8,6 +8,7 @@ Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
+    * Aug 2020      - Added State Manager Support
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -25,6 +26,8 @@ string g_sAppVersion = "1.5";
 string g_sScriptVersion = "8.0";
 
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -178,18 +181,17 @@ UserCommand(integer iNum, string sStr, key kID) {
     if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return; 
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     //if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
-    if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
+    if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-
-    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
+    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
         list Params=llParseString2List(sStr, [" "], []);
         
-        string sChangetype = llToLower(llList2String(Params,0));
+        string sChangetype = llList2String(Params,0);
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
         
@@ -298,6 +300,7 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "outfits"]), "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
@@ -306,6 +309,17 @@ default
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr=="update_active")state inUpdate;
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "outfits"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
