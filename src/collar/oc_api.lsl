@@ -243,6 +243,12 @@ UserCommand(integer iAuth, string sCmd, key kID){
         return;
     } else if(sCmd == "debug" || sCmd == "versions"){
         // here's where the debug or versions commands will ask consent, then trigger
+    } else if(sCmd == "help"){
+        if(iAuth >= CMD_OWNER && iAuth <= CMD_EVERYONE){
+            llGiveInventory(kID, "OpenCollar_Help");
+            llSleep(2);
+            llLoadURL(kID, "Want to open our website for further help?", "https://opencollar.cc");
+        }
     }
     
     if(iAuth == CMD_OWNER){

@@ -160,6 +160,9 @@ string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 integer g_iUpdatePin = 0;
+string g_sDeviceName;
+string g_sWearerName;
+
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
@@ -173,8 +176,9 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        list lParameters = llParseString2List(sStr, [" "], []);
+        string sChangetype = llList2String(lParameters,0);
+        string sChangevalue = llList2String(lParameters,1);
         string sText;
         if(sChangetype=="fix"){
             g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
@@ -239,7 +243,27 @@ UserCommand(integer iNum, string sStr, key kID) {
             else llMessageLinked(LINK_SET, NOTIFY, "1The wearer will now be notified whenever someone touches their collar", kID);
             
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_touchnotify="+(string)(!g_iTouchNotify), "");
-            
+        } else if(llToLower(sChangetype) == "name" && iNum==CMD_OWNER){
+            // set wearer name
+            sChangevalue = llDumpList2String(llList2List(lParameters,1,-1), " ");
+            if(llGetListLength(lParameters)==1){
+                // print current device name
+                llMessageLinked(LINK_SET, NOTIFY, "0The wearer name is: %WEARERNAME%",kID);
+                return;
+            }
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_WearerName="+sChangevalue, "");
+            llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME%", kID);
+        } else if(llToLower(sChangetype) == "device" && iNum == CMD_OWNER){
+            if(llToLower(sChangevalue) == "name"){
+                sChangevalue = llDumpList2String(llList2List(lParameters,2,-1), " ");
+                if(llGetListLength(lParameters) == 2){
+                    // print current device name
+                    llMessageLinked(LINK_SET, NOTIFY, "0The current device name is: %DEVICENAME%",kID);
+                    return;
+                }
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_DeviceName="+sChangevalue,"");
+                llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
+            }
         } else {
             if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
             else if(llToLower(sChangetype) == "settings")Settings(kID,iNum);
@@ -543,6 +567,10 @@ default
                     g_iChannel = (integer)sVal;
                 } else if(sVar == "touchnotify"){
                     g_iTouchNotify=(integer)sVal;
+                } else if(sVar == "WearerName"){
+                    g_sWearerName = sVal;
+                } else if(sVar == "DeviceName"){
+                    g_sDeviceName = sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){

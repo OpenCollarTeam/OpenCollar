@@ -3,7 +3,7 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
 // Romka Swallowtail, Garvin Twine et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="7.4";
+string g_sScriptVersion="8.0";
 integer LINK_CMD_DEBUG=1999;
 
 
@@ -141,6 +141,8 @@ string SubstitudeVars(string sMsg) {
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%DEVICETYPE%"], []), g_sDeviceType);
         if (~llSubStringIndex(sMsg, "%WEARERNAME%"))
             sMsg = llDumpList2String(llParseStringKeepNulls((sMsg = "") + sMsg, ["%WEARERNAME%"], []), g_sWearerName);
+        if(~llSubStringIndex(sMsg, "%DEVICENAME%"))
+            sMsg = llDumpList2String(llParseStringKeepNulls((sMsg="")+sMsg, ["%DEVICENAME%"],[]),g_sDeviceName);
         
         return sMsg;
 }
@@ -158,6 +160,8 @@ Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
         }
         llSetObjectName(sObjectName);
     }//else Debug("something went wrong in Notify, Msg: \""+sMsg+"\" is missing an ID to be sent to.");
+    
+    //llSay(0, "(debug collarmsg) "+sMsg);
 }
 
 NotifyOwners(string sMsg, string comments) {
