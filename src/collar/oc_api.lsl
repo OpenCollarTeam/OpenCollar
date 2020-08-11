@@ -63,6 +63,16 @@ integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
+string Auth2Str(integer iAuth){
+    if(iAuth == CMD_OWNER)return "Owner";
+    else if(iAuth == CMD_TRUSTED)return "Trusted";
+    else if(iAuth == CMD_GROUP)return "Group";
+    else if(iAuth == CMD_WEARER)return "Wearer";
+    else if(iAuth == CMD_EVERYONE)return "Public";
+    else if(iAuth == CMD_BLOCKED)return "Blocked";
+    else if(iAuth == CMD_NOACCESS)return "No Access";
+    else return "Unknown = "+(string)iAuth;
+}
 
 integer REBOOT = -1000;
 string UPMENU = "BACK";
@@ -228,6 +238,13 @@ integer in_range(key kID){
 }
 
 UserCommand(integer iAuth, string sCmd, key kID){
+    if(sCmd == "getauth"){
+        llMessageLinked(LINK_SET, NOTIFY, "0Your access level is: "+Auth2Str(iAuth)+" ("+(string)iAuth+")", kID);
+        return;
+    } else if(sCmd == "debug" || sCmd == "versions"){
+        // here's where the debug or versions commands will ask consent, then trigger
+    }
+    
     if(iAuth == CMD_OWNER){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
         else if(sCmd == "safeword-enable")g_iSafewordDisable=FALSE;
@@ -428,7 +445,7 @@ default
             integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
             llMessageLinked(LINK_SET, AUTH_REPLY, "AuthReply|"+(string)kID+"|"+(string)iAuth,sStr);
-        } else if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
+        } else if(iNum >= CMD_OWNER && iNum <= CMD_NOACCESS) UserCommand(iNum, sStr, kID);
         else if(iNum == LM_SETTING_RESPONSE){
             list lPar = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lPar,0);

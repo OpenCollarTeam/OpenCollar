@@ -41,7 +41,7 @@ integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
 //integer CMD_EVERYONE = 504;
-integer CMD_BLOCKED = 505; // <--- Used in auth_request, will not return on a CMD_ZERO
+integer CMD_BLOCKED = 598; // <--- Used in auth_request, will not return on a CMD_ZERO
 integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -302,7 +302,15 @@ default
                     integer iAuth = (integer)llList2String(lTmp,2);
                     key kAv = (key)llList2String(lTmp,1);
                     
-                    if(iAuth == CMD_BLOCKED)return;
+                    if(iAuth == CMD_BLOCKED){
+                        g_kExpireFor="";
+                        g_iExpireMode=0;
+                        g_kCaptor=NULL_KEY;
+                        g_iExpire=0;
+                        
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to capture because you have been blocked on this collar", kAv);
+                        return;
+                    }
                     // auth should be ok, check if enabled
                     if(!g_iEnabled)return;
                     // process the capture system, perform wearer consent
@@ -429,7 +437,7 @@ default
        // llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
     timer(){
-        if(g_iExpire <=llGetUnixTime() && g_kExpireFor != NULL_KEY){
+        if(g_iExpire <=llGetUnixTime() && g_kExpireFor != ""){
             if (!g_iCaptured) llSetTimerEvent(0);
             llMessageLinked(LINK_SET,NOTIFY, "0Timed Out.",g_kExpireFor);
             g_iExpire=0;
