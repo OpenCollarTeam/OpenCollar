@@ -136,8 +136,6 @@ integer NOTIFY_OWNERS=1003;
 integer g_iPublic;
 string g_sPrefix;
 integer g_iChannel=1;
-integer g_iListenHandle;
-integer g_iListenHandlePrivate;
 
 PrintAccess(key kID){
     string sFinal = "\n \nAccess List:\nOwners:";
@@ -162,11 +160,14 @@ PrintAccess(key kID){
     //llSay(0, sFinal);
 }
 
+list g_lActiveListeners;
 DoListeners(){
-    llListenRemove(g_iListenHandlePrivate);
-    g_iListenHandlePrivate = llListen(g_iChannel, "", "", "");
-    llListenRemove(g_iListenHandle);
-    g_iListenHandle = llListen(0, "", "", "");
+    integer i=0;
+    integer end = llGetListLength(g_lActiveListeners);
+    for(i=0;i<end;i++){
+        llListenRemove(llList2Integer(g_lActiveListeners, i));
+    }
+    g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""), llListen(API_CHANNEL, "","","")];
     
 }
 UpdateLists(key kID){
@@ -351,10 +352,9 @@ default
     state_entry(){
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
-        DoListeners();
         // make the API Channel be per user
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
-        llListen(API_CHANNEL, "", "", "");
+        DoListeners();
         
         llSetTimerEvent(15);
         
@@ -432,9 +432,9 @@ default
             g_iLMCounter=0;
         }
         g_iLMCounter++;
-        if(g_iLMCounter < 50){
+        if(g_iLMCounter < 100){
             
-            // Max of 50 LMs to send out in a 30 second period, after that ignore
+            // Max of 100 LMs to send out in a 30 second period, after that ignore
             if(llGetListLength(g_lAddons)>0){
                 llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID]));
             }
