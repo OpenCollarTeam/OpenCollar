@@ -120,7 +120,7 @@ default
                     llSleep(1);
                     iModified=TRUE;
                     
-                    if(g_iReboot || g_iInitialScan){}else
+                    if(g_iReboot || g_iInitialScan || g_iRescan){}else
                         llMessageLinked(LINK_SET, NOTIFY, "0"+scriptName+" has been reset. If the script stack heaped, please file a bug report on our github. If the script is supposed to be off, please ensure it is registering with State Manager", llGetOwner());
                 }
             } else {

@@ -364,6 +364,15 @@ default
     }
     
     timer(){
+        if(llGetInventoryType("oc_states")==INVENTORY_NONE)llSetTimerEvent(0); // The state manager is not installed.
+        if(llGetScriptState("oc_states")==FALSE){
+            llResetOtherScript("oc_states");
+            llSleep(0.5);
+            llSetScriptState("oc_states",TRUE);
+        }
+    }
+    /*
+    timer(){
         integer i=0;
         integer iEnd = llGetInventoryNumber(INVENTORY_SCRIPT);
         
@@ -378,7 +387,7 @@ default
                 
             }
         }
-    }
+    }*/
     
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
@@ -446,7 +455,8 @@ default
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
-            llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            //llMessageLinked(LINK_SET, iAuth, sStr, kID);
+            llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "run", "authorization", iAuth, "cmd", sStr, "kID", kID]), "");
         } else if(iNum == AUTH_REQUEST){
             integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
