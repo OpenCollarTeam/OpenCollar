@@ -577,7 +577,7 @@ default
                 }
             }
         } else if(iNum == RLV_REFRESH){
-            if(g_kGroup==NULL_KEY)llOwnerSay("@setgroup=y");
+            if(g_kGroup=="")llOwnerSay("@setgroup=y");
             else llOwnerSay("@setgroup:"+(string)g_kGroup+"=force;setgroup=n");
         }
     }
@@ -597,5 +597,11 @@ default
         }
         
         Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", lPeople, [">Wearer<",UPMENU], 0, g_iCurrentAuth, "scan~add");
+    }
+    
+    no_sensor(){
+        if(!(g_iMode&ACTION_SCANNER))return;
+        
+        Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", [], [">Wearer<", UPMENU], 0, g_iCurrentAuth, "scan~add");
     }
 }
