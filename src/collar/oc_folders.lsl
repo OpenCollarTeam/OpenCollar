@@ -4,7 +4,7 @@
 // Garvin Twine et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 /*
 DebugOutput(key kID, list ITEMS){
@@ -21,6 +21,8 @@ string g_sParentMenu = "RLV";
 
 string g_sSubMenu = "# Folders";
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -532,6 +534,7 @@ default {
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
         //Debug("Starting");
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "-|+|&|folders|#rlv|# folders"]), "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -542,6 +545,15 @@ default {
             llMessageLinked(LINK_SET, LM_SETTING_DELETE,  g_sSettingToken + "Locks", NULL_KEY);
         } else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
+        else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "+|-|&|folders|#rlv|# folders"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
+        }
         else if (iNum == DIALOG_RESPONSE) {
 integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {
