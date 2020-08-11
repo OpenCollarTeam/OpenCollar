@@ -16,7 +16,7 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Titler";
-string g_sVersion = "7.4"; // leave unmodified if not changed at all after release, otherwise change to next version number
+string g_sVersion = "8.0"; // leave unmodified if not changed at all after release, otherwise change to next version number
 
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -63,7 +63,7 @@ integer MENUNAME_RESPONSE = 3001;
 
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
-//integer DIALOG_TIMEOUT = -9002;
+integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 //string ALL = "ALL";
 
@@ -99,17 +99,17 @@ ColorMenu(key kAv, integer iAuth){
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llSubStringIndex(sStr,llToLower(g_sSubMenu)) && sStr != "menu "+g_sSubMenu) return;
+    if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
     }
-    if (sStr==g_sSubMenu || sStr == "menu "+g_sSubMenu) Menu(kID, iNum);
+    if (llToLower(sStr)==llToLower(g_sSubMenu) || llToLower(sStr) == "menu "+llToLower(g_sSubMenu)) Menu(kID, iNum);
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0; 
         //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sChangevalue = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
         string sParam = llList2String(llParseString2List(sStr, [" "], []),2);
         //string sText;
         if(iNum !=CMD_OWNER)return;
@@ -217,6 +217,8 @@ NukeOtherText(){
     }
 }
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 default
 {
     on_rez(integer t){
@@ -226,6 +228,7 @@ default
     {
         g_kWearer = llGetOwner();
         
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "titler"]), "");
         NukeOtherText();
     }
     timer(){
@@ -341,6 +344,17 @@ default
                     Save();
                 }
             }
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "detach"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

@@ -534,7 +534,7 @@ default {
         //llSetMemoryLimit(65536);
         g_kWearer = llGetOwner();
         //Debug("Starting");
-        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "-|+|&|folders|#rlv|# folders"]), "");
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "-|+|&|folders|#rlv|# folders"]), "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
@@ -547,7 +547,7 @@ default {
         else if (iNum == RLVA_VERSION) g_iRLVaOn = TRUE;
         else if(iNum == STATE_MANAGER){
             if(llJsonGetValue(sStr,["type"])=="scan"){
-                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_level", g_sSubMenu, "dependencies", -1, "baseCmds", "+|-|&|folders|#rlv|# folders"]), "");
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "+|-|&|folders|#rlv|# folders"]), "");
             } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
                 if(llGetListLength(g_lMenuIDs) == 0){}else{
                     llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");

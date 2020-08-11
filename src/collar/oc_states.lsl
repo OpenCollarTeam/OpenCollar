@@ -49,6 +49,7 @@ SetLastAlive(string MenuName)
     if(GetLastAlive(MenuName)!=-2){
         integer iPos = llListFindList(g_lManagedScripts,[MenuName])+2;
         g_lManagedScripts = llListReplaceList(g_lManagedScripts, [llGetUnixTime()], iPos,iPos);
+        //llOwnerSay("New managed list: "+llDumpList2String(g_lManagedScripts,"; "));
     }
 }    
 
@@ -68,6 +69,7 @@ list StrideOfList(list src, integer stride, integer start, integer end)
 }
 integer g_iInitialScan = TRUE;
 integer g_iReboot=FALSE;
+integer g_iRescan=TRUE;
 StartAll(){
     g_lManagedScripts = [];
     llSetTimerEvent(1);
@@ -77,13 +79,19 @@ default
     state_entry()
     {
         llSetTimerEvent(1);
-        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "scan"]), ""); // scan state manager
-
     }
+    
+    
+    on_rez(integer iRez){
+        StartAll();
+        g_iReboot=TRUE;
+    }
+    
     
     changed(integer iChange){
         if(iChange&CHANGED_INVENTORY){
             StartAll();
+            g_iRescan=TRUE;
         }
     }
     
@@ -115,6 +123,7 @@ default
                 integer iLastAlive = GetLastAlive(scriptName);
                 if(((iLastAlive+30) < llGetUnixTime()) && llGetScriptState(scriptName)){
                     if(llGetScriptState(scriptName)==TRUE){
+                        //llOwnerSay("Turning off "+scriptName);
                         //llWhisper(0, "Turning off "+scriptName);
                         llSetScriptState(scriptName,FALSE);
                     }
@@ -155,7 +164,13 @@ default
         }
         
         if(iModified) llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-        if(g_iReboot)llResetScript();
+        if(g_iReboot){
+            llMessageLinked(LINK_SET, REBOOT,"reboot", "");
+            llSleep(1);
+            llResetScript();
+        }
+        
+        if(g_iInitialScan||g_iRescan)llMessageLinked(LINK_SET,STATE_MANAGER, llList2Json(JSON_OBJECT, ["type","scan"]),"");
     }
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
@@ -164,7 +179,7 @@ default
             StartAll();
             
         }
-         if(iNum == STATE_MANAGER_REPLY){
+        if(iNum == STATE_MANAGER_REPLY){
             string sReplyType = llJsonGetValue(sStr, ["type"]);
             integer iPos = llListFindList(g_lManagedScripts,[llJsonGetValue(sStr,["script"])]);
             if(sReplyType == "no_manage"){
@@ -172,6 +187,7 @@ default
                 if(iPos!=-1){
                     // remove from the manage list until re-subscribed
                     g_lManagedScripts = llDeleteSubList(g_lManagedScripts,iPos,iPos+4); // script name, menu label, dependent script list, lastAlive, baseCmds
+                    //llOwnerSay("New managed list: "+llDumpList2String(g_lManagedScripts,"; "));
                 }
             } else if(sReplyType == "pong"){
                 // script is alive. prevent state manager from turning off the script
@@ -183,6 +199,8 @@ default
             if(sReplyType == "subscribe"){
                 if(iPos==-1){
                     g_lManagedScripts += [llJsonGetValue(sStr,["script"]), llJsonGetValue(sStr, ["menu_label"]), llJsonGetValue(sStr,["dependencies"]),llGetUnixTime(), llJsonGetValue(sStr, ["baseCmds"])];
+
+                    //llOwnerSay("New managed list: "+llDumpList2String(g_lManagedScripts,"; "));
                 }
             } else if(sReplyType == "run"){
                 // get datas
@@ -197,11 +215,16 @@ default
                         // it includes a menu name
                         list lTmp = StrideOfList(g_lManagedScripts,5,1,-1);
                         if(llListFindList(lTmp, [llGetSubString(sCmd,5,-1)])==-1){
+                            //llOwnerSay("menu not found - forwarding");
                             llMessageLinked(LINK_SET, iAuth, sCmd, kAv);
                         } else {
                             // the script is managed
                             // get script name, ensure script is running, set last alive, forward command
                             string sScript = llList2String(g_lManagedScripts, llListFindList(g_lManagedScripts, [llGetSubString(sCmd,5,-1)])-1);
+
+
+
+                            //llOwnerSay("Turning on "+sScript);
                             llSetScriptState(sScript,TRUE);
                             g_sLastCmd = sCmd;
                             g_iLastAuth = iAuth;
@@ -230,7 +253,7 @@ default
                             iNotFound=FALSE;
                             // boot the script!
                             string sScript = llList2String(g_lManagedScripts, llListFindList(g_lManagedScripts, [llList2String(lTmp,ix)])-4);
-
+                            //llOwnerSay("Turning on "+sScript);
 
                             llSetScriptState(sScript,TRUE);
                             g_sLastCmd = sCmd;
@@ -248,7 +271,10 @@ default
                         }
                     }
                     
-                    if(iNotFound)llMessageLinked(LINK_SET, iAuth, sCmd,kAv);
+                    if(iNotFound){
+                        //llOwnerSay( "command not found- forwarding");
+                        llMessageLinked(LINK_SET, iAuth, sCmd,kAv);
+                    }
                 }
             }
         }

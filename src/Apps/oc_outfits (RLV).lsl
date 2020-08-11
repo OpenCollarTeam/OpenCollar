@@ -8,12 +8,11 @@ Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
+    * Aug 2020      - Added State Manager Support
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
 et al.
-
-NON-RLVa VARIANT OF OC_OUTFITS~!
 
 
 Licensed under the GPLv2. See LICENSE for full details.
@@ -23,10 +22,12 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.4";
-string g_sScriptVersion = "7.5";
+string g_sAppVersion = "1.5";
+string g_sScriptVersion = "8.0";
 
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -112,7 +113,7 @@ integer g_iListenToAuth;
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
     if(llSubStringIndex(g_sPath, "core")!=-1)sAppend="\n\n* You are browsing core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
 }
 
 
@@ -167,7 +168,7 @@ ConfigMenu(key kID, integer iAuth){
     string sStripAll = TrueOrFalse(iStripAll);
     
 
-    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
+    Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
@@ -299,6 +300,7 @@ default
     {
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "outfits"]), "");
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
@@ -307,6 +309,17 @@ default
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr=="update_active")state inUpdate;
+        }else if (iNum == DIALOG_TIMEOUT) {
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "outfits"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -384,7 +397,7 @@ default
                     // Process commands!
                     
                     ForceLockCore(); // unlocks/relocks - compatible with the Lock Core option. 
-                    // The above is a workaround for a viewer bug where any newly added items to core will not be protected.
+                    // The above is a workaround for a viewer bug where any newly added items to .core will not be protected.
                     if(!g_iLocked){
                         llOwnerSay("@detach=n");
                     }
@@ -407,7 +420,7 @@ default
                         if(llGetSubString(sEdit,-1,-1)=="/")sEdit = llGetSubString(sEdit,0,-2);
                         g_sPath=sEdit;
                         iRespring=FALSE;
-                        if(g_iJail && g_sPath == "")g_sPath = "outfits";
+                        if(g_iJail && g_sPath == "")g_sPath = ".outfits";
                         llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
                     } else {
                         g_sPath+="/"+sMsg;
