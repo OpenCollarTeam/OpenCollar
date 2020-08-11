@@ -132,6 +132,7 @@ default
                         //llOwnerSay("Turning off "+scriptName);
                         //llWhisper(0, "Turning off "+scriptName);
                         llSetScriptState(scriptName,FALSE);
+                        llResetOtherScript(scriptName);
                     }
                 } else if(((iLastAlive+30) < llGetUnixTime()) && !llGetScriptState(scriptName)){
                 }else {

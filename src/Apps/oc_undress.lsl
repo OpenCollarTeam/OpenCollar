@@ -6,7 +6,7 @@
 
 //gives menus for clothing and attachment, stripping and locking
 
-string g_sAppVersion = "¹⋅³";
+string g_sAppVersion = "1.4";
 
 string g_sSubMenu = "Un/Dress";
 string g_sParentMenu = "RLV";
@@ -118,10 +118,6 @@ integer NOTIFY = 1002;
 //integer NOTIFY_OWNERS = 1003;
 //integer LOADPIN = -1904;
 integer REBOOT  = -1000;
-integer LINK_DIALOG = 3;
-integer LINK_RLV    = 4;
-integer LINK_SAVE   = 5;
-integer LINK_UPDATE = -10;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved to httpdb
 //str must be in form of "token=value"
@@ -151,6 +147,8 @@ string ALL = " ALL";
 string TICKED = "☑ ";
 string UNTICKED = "☐ ";
 
+integer STATE_MANAGER = 7003;
+integer STATE_MANAGER_REPLY = 7004;
 list g_lMenuIDs;
 integer g_iMenuStride = 3;
 
@@ -185,7 +183,7 @@ Debug(string sStr) {
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
-    llMessageLinked(LINK_DIALOG, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
+    llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
 
     integer iIndex = llListFindList(g_lMenuIDs, [kID]);
     if (~iIndex) g_lMenuIDs = llListReplaceList(g_lMenuIDs, [kID, kMenuID, sName], iIndex, iIndex + g_iMenuStride - 1);
@@ -194,7 +192,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer)
 {
-    llMessageLinked(LINK_DIALOG,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
+    llMessageLinked(LINK_SET,NOTIFY,(string)iAlsoNotifyWearer+sMsg,kID);
 }
 
 MainMenu(key kID, integer iAuth)
@@ -217,7 +215,7 @@ QueryClothing(key kAv, integer iAuth)
     //start timer
     llSetTimerEvent(g_iRLVTimeOut);
     //send rlvcmd
-    //llMessageLinked(LINK_RLV, RLV_CMD, "getoutfit=" + (string)g_iClothRLV, NULL_KEY);
+    //llMessageLinked(LINK_SET, RLV_CMD, "getoutfit=" + (string)g_iClothRLV, NULL_KEY);
     if (g_iRLVOn) llOwnerSay("@getoutfit=" + (string)g_iClothRLV);
     g_kMenuUser = kAv;
     g_iMenuAuth = iAuth;
@@ -314,7 +312,7 @@ UpdateSettings()
             }
         }
         //output that string to viewer
-        //llMessageLinked(LINK_RLV, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
+        //llMessageLinked(LINK_SET, RLV_CMD, llDumpList2String(lNewList, ","), NULL_KEY);
         if (g_iRLVOn) llOwnerSay("@"+llDumpList2String(lNewList, ","));
         //Debug("Loaded locks: Cloth- " + llList2CSV(g_lLockedItems) + ": Attach- " + llList2CSV(g_lLockedAttach));
     }
@@ -328,7 +326,7 @@ ClearSettings()
     g_lLockedAttach=[];
     SaveLockAllFlag(0);
     //remove tpsettings from DB
-    llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvundress_List", "");
+    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "rlvundress_List", "");
     //main RLV script will take care of sending @clear to viewer
 }
 
@@ -337,19 +335,19 @@ SaveLockAllFlag(integer iSetting)
     if (g_iAllLocked == iSetting) return;
 
     g_iAllLocked = iSetting;
-    if (iSetting > 0) llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvundress_LockAll=1", "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvundress_LockAll", "");
+    if (iSetting > 0) llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvundress_LockAll=1", "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "rlvundress_LockAll", "");
 }
 
 DoLockAll()
 {
-    //llMessageLinked(LINK_RLV, RLV_CMD, "addattach=n,remattach=n,addoutfit=n,remoutfit=n", NULL_KEY);
+    //llMessageLinked(LINK_SET, RLV_CMD, "addattach=n,remattach=n,addoutfit=n,remoutfit=n", NULL_KEY);
     if (g_iRLVOn) llOwnerSay("@addattach=n,remattach=n,addoutfit=n,remoutfit=n");
 }
 
 DoUnlockAll()
 {
-    //llMessageLinked(LINK_RLV, RLV_CMD, "addattach=y,remattach=y,addoutfit=y,remoutfit=y", NULL_KEY);
+    //llMessageLinked(LINK_SET, RLV_CMD, "addattach=y,remattach=y,addoutfit=y,remoutfit=y", NULL_KEY);
     if (g_iRLVOn) llOwnerSay("@addattach=y,remattach=y,addoutfit=y,remoutfit=y");
 }
 
@@ -380,7 +378,7 @@ UserCommand(integer iNum, string sStr, key kID)
     if (llToLower(sStr) == "rm undress" || llToLower(sStr) == "rm un/dress") {
         if (iNum == CMD_OWNER || kID == g_kWearer)
             Dialog(kID, "\nDo you really want to uninstall the "+g_sSubMenu+" App?", ["Yes","No","Cancel"], [], 0, iNum,"rmundress");
-        else llMessageLinked(LINK_DIALOG,NOTIFY,"0"+"%NOACCESS%",kID);
+        else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS%",kID);
         return;
     }
     if (!g_iRLVOn)
@@ -388,7 +386,7 @@ UserCommand(integer iNum, string sStr, key kID)
         if (~llListFindList(["menu "+g_sSubMenu,"undress","lockall","unlockall"],[sStr]))
         {
             Notify(kID, "RLV features are now disabled in this %DEVICETYPE%. You can enable those in RLV submenu. Opening it now.", FALSE);
-            llMessageLinked(LINK_RLV, iNum, "menu "+g_sParentMenu, kID);
+            llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
         }
         return;
     }
@@ -427,12 +425,12 @@ UserCommand(integer iNum, string sStr, key kID)
             if (sOpt == "on")
             {
                 g_iSmartStrip = TRUE;
-                llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvundress_smartstrip=1","");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvundress_smartstrip=1","");
             }
             else
             {
                 g_iSmartStrip = FALSE;
-                llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvundress_smartstrip","");
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "rlvundress_smartstrip","");
             }
         }
         else Notify(kID,"This requires a properly set-up outfit, only wearer or owner can turn it on.", FALSE);
@@ -450,11 +448,11 @@ UserCommand(integer iNum, string sStr, key kID)
                     if(x==13) x=9; //skip hair,skin,shape,eyes
                     --x;
                     string sItem=llToLower(llList2String(DETACH_CLOTH_POINTS,x));
-                    //llMessageLinked(LINK_RLV, RLV_CMD, "detachallthis:"+ sItem +"=force", NULL_KEY);
+                    //llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:"+ sItem +"=force", NULL_KEY);
                     if (g_iRLVOn) llOwnerSay("@detachallthis:"+ sItem +"=force");
                  }
             }
-           //llMessageLinked(LINK_RLV, RLV_CMD, "remoutfit=force", NULL_KEY);
+           //llMessageLinked(LINK_SET, RLV_CMD, "remoutfit=force", NULL_KEY);
            if (g_iRLVOn) llOwnerSay("@remoutfit=force");
            return ;
         }
@@ -463,8 +461,8 @@ UserCommand(integer iNum, string sStr, key kID)
         if(llListFindList(DETACH_CLOTH_POINTS,[test])==-1) return;
 
         //send the RLV command to remove it.
-        //if (g_iSmartStrip==TRUE) llMessageLinked(LINK_RLV, RLV_CMD, "detachallthis:" + sOpt + "=force", NULL_KEY);
-        //llMessageLinked(LINK_RLV, RLV_CMD, "remoutfit:" + sOpt + "=force", NULL_KEY); //yes, this isn't an else. We do it in case the item isn't in #RLV.
+        //if (g_iSmartStrip==TRUE) llMessageLinked(LINK_SET, RLV_CMD, "detachallthis:" + sOpt + "=force", NULL_KEY);
+        //llMessageLinked(LINK_SET, RLV_CMD, "remoutfit:" + sOpt + "=force", NULL_KEY); //yes, this isn't an else. We do it in case the item isn't in #RLV.
         if (g_iRLVOn)
         {
             if (g_iSmartStrip==TRUE) llOwnerSay("@detachallthis:" + sOpt + "=force");
@@ -565,7 +563,7 @@ UserCommand(integer iNum, string sStr, key kID)
 RLVCMD(string sStr)
 {    //we've received an RLV command that we control.  only execute if not sub
 
-    //llMessageLinked(LINK_RLV, RLV_CMD, sStr, NULL_KEY);
+    //llMessageLinked(LINK_SET, RLV_CMD, sStr, NULL_KEY);
     if (g_iRLVOn) llOwnerSay("@"+sStr);
 
     string sOption = llList2String(llParseString2List(sStr, ["="], []), 0);
@@ -584,8 +582,8 @@ RLVCMD(string sStr)
     }
 
     if (llGetListLength(g_lSettings)>0)
-        llMessageLinked(LINK_SAVE, LM_SETTING_SAVE, "rlvundress_List=" + llDumpList2String(g_lSettings, ","), "");
-    else llMessageLinked(LINK_SAVE, LM_SETTING_DELETE, "rlvundress_List", "");
+        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "rlvundress_List=" + llDumpList2String(g_lSettings, ","), "");
+    else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "rlvundress_List", "");
 }
 
 
@@ -600,6 +598,7 @@ default {
         g_kWearer = llGetOwner();
         PermsCheck();
         //Debug("Starting");
+        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "lockall|unlockall|strip|smartstrip|lockattachment|unlockattachment|lockclothing|unlockclothing"]), "");
     }
 
     link_message(integer iSender, integer iNum, string sStr, key kID)
@@ -616,9 +615,17 @@ default {
         else if (iNum == RLV_CLEAR) ClearSettings();
         else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         {
-            llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
+            llMessageLinked(LINK_SET, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
             g_lSubMenus = []; //flush submenu buttons
             llMessageLinked(LINK_THIS, MENUNAME_REQUEST, g_sSubMenu, "");
+        } else if(iNum == STATE_MANAGER){
+            if(llJsonGetValue(sStr,["type"])=="scan"){
+                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "lockall|unlockall|strip|smartstrip|lockattachment|unlockattachment|lockclothing|unlockclothing"]), "");
+            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
+                if(llGetListLength(g_lMenuIDs) == 0){}else{
+                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
+                }
+            } 
         }
         else if (iNum == LM_SETTING_RESPONSE)
         {
@@ -678,7 +685,7 @@ default {
 
                 if (sMenu == "Menu")
                 {
-                    if (sMessage == UPMENU) llMessageLinked(LINK_RLV, iAuth, "menu " + g_sParentMenu, kAv);
+                    if (sMessage == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else if (sMessage == "Rem. Clothing") QueryClothing(kAv, iAuth);
                     else if (sMessage == "Rem. Attach.") llMessageLinked(LINK_THIS, iAuth, "menu detach", kAv); // this is in oc_rlvsuite now
                     else if (sMessage == "Lock Clothing") LockClothMenu(kAv, iAuth);
@@ -715,10 +722,10 @@ default {
                     }
                 } else if (sMenu == "rmundress") {
                     if (sMessage == "Yes") {
-                        llMessageLinked(LINK_RLV, MENUNAME_REMOVE , g_sParentMenu + "|"+g_sSubMenu, "");
-                        llMessageLinked(LINK_DIALOG, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
+                        llMessageLinked(LINK_SET, MENUNAME_REMOVE , g_sParentMenu + "|"+g_sSubMenu, "");
+                        llMessageLinked(LINK_SET, NOTIFY, "1"+g_sSubMenu+" App has been removed.", kAv);
                         if (llGetInventoryType(llGetScriptName()) == INVENTORY_SCRIPT) llRemoveInventory(llGetScriptName());
-                    } else llMessageLinked(LINK_DIALOG, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
+                    } else llMessageLinked(LINK_SET, NOTIFY, "0"+g_sSubMenu+" App remains installed.", kAv);
                 }
             }
         }
@@ -727,13 +734,7 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex-1, iMenuIndex-2+g_iMenuStride);
         }
-        else if (iNum == LINK_UPDATE)
-        {
-            if (sStr == "LINK_DIALOG") LINK_DIALOG = iSender;
-            else if (sStr == "LINK_RLV") LINK_RLV = iSender;
-            else if (sStr == "LINK_SAVE") LINK_SAVE = iSender;
-        }
-        else if (iNum == REBOOT && sStr == "reboot") llResetScript();
+        else if (iNum == REBOOT) llResetScript();
     }
 
     listen(integer iChan, string sName, key kID, string sMessage)

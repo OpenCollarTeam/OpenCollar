@@ -5,3 +5,4 @@ SCRIPT|oc_stealth
 SCRIPT|oc_exceptions
 LIKE|Turbo
 LIKE|OpenCollar -
+SCRIPT|oc_anticrash
