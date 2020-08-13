@@ -22,9 +22,6 @@ DebugOutput(key kID, list ITEMS){
 }
 string g_sAppVersion = "1.1";
 
-integer STATE_MANAGER = 7003;
-integer STATE_MANAGER_REPLY = 7004;
-
 
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
@@ -293,15 +290,6 @@ default {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
         else if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE)
             UserCommand(iNum, sStr, kID);
-        else if(iNum == STATE_MANAGER){
-            if(llJsonGetValue(sStr,["type"])=="scan"){
-                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "bell"]), "");
-            } else if(llJsonGetValue(sStr,["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
-                if(!g_iBellOn && llGetListLength(g_lMenuIDs)==0){}else {
-                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type", "pong", "script", llGetScriptName(), "menu", g_sSubMenu]), "");
-                }
-            }
-        }
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {

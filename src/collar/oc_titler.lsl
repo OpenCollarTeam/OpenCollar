@@ -216,9 +216,6 @@ NukeOtherText(){
         llSetLinkPrimitiveParamsFast(i,[PRIM_TEXT, "", ZERO_VECTOR,0]);
     }
 }
-
-integer STATE_MANAGER = 7003;
-integer STATE_MANAGER_REPLY = 7004;
 default
 {
     on_rez(integer t){
@@ -228,7 +225,6 @@ default
     {
         g_kWearer = llGetOwner();
         
-        llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "titler"]), "");
         NukeOtherText();
     }
     timer(){
@@ -347,14 +343,6 @@ default
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        } else if(iNum == STATE_MANAGER){
-            if(llJsonGetValue(sStr,["type"])=="scan"){
-                llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "subscribe", "script", llGetScriptName(), "menu_label", g_sSubMenu, "dependencies", -1, "baseCmds", "detach"]), "");
-            } else if(llJsonGetValue(sStr, ["type"])=="ping" && llJsonGetValue(sStr,["script"])==llGetScriptName()){
-                if(llGetListLength(g_lMenuIDs) == 0){}else{
-                    llMessageLinked(LINK_SET, STATE_MANAGER_REPLY, llList2Json(JSON_OBJECT, ["type","pong", "script", llGetScriptName(), "menu", g_sSubMenu]),"");
-                }
-            } 
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);

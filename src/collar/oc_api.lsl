@@ -455,8 +455,7 @@ default
             if(sStr == "initialize")return;
             integer iAuth = CalcAuth(kID);
             //llOwnerSay( "{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
-            //llMessageLinked(LINK_SET, iAuth, sStr, kID);
-            llMessageLinked(LINK_SET, STATE_MANAGER, llList2Json(JSON_OBJECT, ["type", "run", "authorization", iAuth, "cmd", sStr, "kID", kID]), "");
+            llMessageLinked(LINK_SET, iAuth, sStr, kID);
         } else if(iNum == AUTH_REQUEST){
             integer iAuth = CalcAuth(kID);
             //llOwnerSay("{API} Calculate auth for "+(string)kID+"="+(string)iAuth+";"+sStr);
