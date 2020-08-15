@@ -459,6 +459,7 @@ default
                 if(!g_iWearer && !g_iHasOwners){
                     g_iWearer=TRUE;
                     llMessageLinked(LINK_SET,LM_SETTING_DELETE, "relay_wearer","");
+                    llMessageLinked(LINK_SET, NOTIFY, "0Wearer access to relay enabled due to no owners or self owned and only owner is wearer", g_kWearer);
                 }
             }
         } else if(iNum == LM_SETTING_DELETE){
