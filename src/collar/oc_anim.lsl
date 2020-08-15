@@ -126,7 +126,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
         
-        if(g_iAnimLock && kID == g_kWearer) {
+        if(g_iAnimLock && kID == g_kWearer && (llGetInventoryType(sChangetype)!=INVENTORY_NONE)) {
             llMessageLinked(LINK_SET, NOTIFY,"0%NOACCESS% to changing animations", g_kWearer);
             jump checkRemenu;
         }
