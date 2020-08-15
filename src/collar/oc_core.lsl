@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0003"; // Provide enough room
+string COLLAR_VERSION = "8.0.0004"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -85,7 +85,7 @@ integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
     string sPrompt = "OpenCollar\n\n[Settings]";
-    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide"), Checkbox(g_iAllowHide, "AllowHiding")];
+    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
@@ -272,6 +272,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)(!g_iAllowHide), "");
             }
         } else {
+            if(sChangevalue!="")return;
             if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
             else if(llToLower(sChangetype) == "settings")Settings(kID,iNum);
             else if(llToLower(sChangetype) == "apps")AppsMenu(kID,iNum);
@@ -517,6 +518,9 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu Size/Position", kAv);
                     } else if(sMsg == Checkbox(g_iAllowHide,"AllowHiding")){
                         llMessageLinked(LINK_SET, 0, "allowhide", kAv);
+                    } else if(sMsg == "EDITOR"){
+                        llMessageLinked(LINK_SET, 0, "settings edit", kAv);
+                        iRespring=FALSE;
                     }
                     
                     
