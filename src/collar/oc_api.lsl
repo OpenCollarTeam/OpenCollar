@@ -342,7 +342,7 @@ key g_kAddonPending;
 string g_sAddonName;
 integer g_iInterfaceChannel;
 integer g_iLMCounter=0;
-
+list g_lAliveAddons;
 string tf(integer a){
     if(a)return "true";
     return "false";
@@ -370,6 +370,30 @@ default
             llSleep(0.5);
             llSetScriptState("oc_states",TRUE);
         }
+        
+        
+        if(llGetTime()>=120){
+            // flush the alive addons and ping all addons
+            list lTmp = llList2ListStrided(g_lAddons, 0,-1,2);
+            integer i=0;
+            integer end = llGetListLength(lTmp);
+            for(i=0;i<end;i++){
+                if(llListFindList(g_lAliveAddons, [llList2Key(lTmp, i)])==-1){
+                    // addon has died, remove from list.
+                    g_lAddons = llDeleteSubList(g_lAddons, llListFindList(g_lAddons, [llList2Key(lTmp,i)]), llListFindList(g_lAddons, [llList2Key(lTmp,i)])+1);
+                }
+            }
+            g_lAliveAddons = [];
+            lTmp = llList2ListStrided(g_lAddons,0,-1,2);
+            end=llGetListLength(lTmp);
+            
+            
+            for(i=0;i<end;i++){
+                llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
+            }
+            
+            
+        }
     }
     /*
     timer(){
@@ -391,28 +415,43 @@ default
     
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
-            integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
-            if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
-            // begin to pass stuff to link messages!
-            // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
-            if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer){
-                g_kAddonPending = i;
-                g_sAddonName = llJsonGetValue(m,["addon_name"]);
-                Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
+            // All addons as of 8.0.00004 must include a ping and pong. This lets the collar know an addon is alive and not to automatically remove it.
+            // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
+            string PacketType = llJsonGetValue(m,["pkt_type"]);
+            
+            if(PacketType=="pong"){
+                if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
                 return;
-            }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer){
-                // Add the addon and be done with
-                g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
+            } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
+            else if(PacketType == "from_addon"){
+            
+            
+            
+            
+                integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
+                if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
+                // begin to pass stuff to link messages!
+                // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+                
+                if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer && !isAddonBridge){
+                    g_kAddonPending = i;
+                    g_sAddonName = llJsonGetValue(m,["addon_name"]);
+                    Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
+                    return;
+                }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer && !isAddonBridge){
+                    // Add the addon and be done with
+                    g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
+                }
+                
+                integer iNum = (integer)llJsonGetValue(m,["iNum"]);
+                string sMsg = llJsonGetValue(m,["sMsg"]);
+                key kID = llJsonGetValue(m,["kID"]);
+                llMessageLinked(LINK_SET, iNum, sMsg,kID);
+                
+                
+                
+                return;
             }
-            
-            integer iNum = (integer)llJsonGetValue(m,["iNum"]);
-            string sMsg = llJsonGetValue(m,["sMsg"]);
-            key kID = llJsonGetValue(m,["kID"]);
-            llMessageLinked(LINK_SET, iNum, sMsg,kID);
-            
-            
-            
-            return;
         }
             
         
@@ -445,7 +484,7 @@ default
             
             // Max of 100 LMs to send out in a 30 second period, after that ignore
             if(llGetListLength(g_lAddons)>0){
-                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID]));
+                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID, "pkt_type", "from_collar"]));
             }
         }
         
