@@ -356,6 +356,8 @@ default
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
         DoListeners();
         
+        
+        
         llSetTimerEvent(15);
         
         
@@ -371,12 +373,18 @@ default
             llSetScriptState("oc_states",TRUE);
         }
         
-        
         if(llGetTime()>=120){
             // flush the alive addons and ping all addons
+            llResetTime();
             list lTmp = llList2ListStrided(g_lAddons, 0,-1,2);
             integer i=0;
-            integer end = llGetListLength(lTmp);
+            integer end=llGetListLength(lTmp);
+            
+            
+            for(i=0;i<end;i++){
+                llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
+            }
+            end = llGetListLength(lTmp);
             for(i=0;i<end;i++){
                 if(llListFindList(g_lAliveAddons, [llList2Key(lTmp, i)])==-1){
                     // addon has died, remove from list.
@@ -384,13 +392,6 @@ default
                 }
             }
             g_lAliveAddons = [];
-            lTmp = llList2ListStrided(g_lAddons,0,-1,2);
-            end=llGetListLength(lTmp);
-            
-            
-            for(i=0;i<end;i++){
-                llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
-            }
             
             
         }
@@ -415,6 +416,7 @@ default
     
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
+            //llWhisper(0, m);
             // All addons as of 8.0.00004 must include a ping and pong. This lets the collar know an addon is alive and not to automatically remove it.
             // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
             string PacketType = llJsonGetValue(m,["pkt_type"]);
