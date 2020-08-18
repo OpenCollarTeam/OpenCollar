@@ -273,8 +273,8 @@ UserCommand(integer iNum, string sStr, key kID) {
             llMessageLinked(LINK_SET, iNum, "menu "+g_sParentMenu, kID);
         }
     } else { 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangekey = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sChangetype = llToLower(llList2String(llParseString2List(sStr, [" "], []),0));
+        string sChangekey = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
 //        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
             if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
@@ -291,6 +291,56 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         } else if(sChangetype == "unsit"){
             UserCommand(iNum, "sit unsit", kID);
+        } else if(sChangetype == "rlvex" && iNum == CMD_OWNER){
+            if(sChangekey == "modify"){
+                string sChangeArg1 = llToLower(llList2String(llParseString2List(sStr, [" "],[]), 2));
+                string sChangeArg2 = llToLower(llList2String(llParseString2List(sStr,[" "],[]), 3));
+                if(sChangeArg1 == "owner"){
+                    g_iOwnerEx = (integer)sChangeArg2;
+                    llMessageLinked(LINK_SET, NOTIFY, "0Owner exceptions modified", kID);
+                } else if(sChangeArg1 == "trust"){
+                    g_iTrustedEx = (integer)sChangeArg2;
+                    llMessageLinked(LINK_SET, NOTIFY, "0Trusted exceptions modified", kID);
+                } else {
+                    // modify custom exception. arg1 = name, arg2 = uuid, arg3 = bitmask. remove old if exists, replace with new. including updating the exception uuid
+                    string sChangeArg3 = llToLower(llList2String(llParseString2List(sStr,[" "],[]),4));
+                    if(sChangeArg1==""||sChangeArg2==""||sChangeArg3==""){
+                        llMessageLinked(LINK_SET, NOTIFY, "0Invalid amount of arguments for modifying a custom exception", kID);
+                        return;
+                    }
+                    integer iPosx=llListFindList(g_lCustomExceptions, [sChangeArg1]);
+                    if(iPosx!=-1){
+                        // process
+                        g_lCustomExceptions = llDeleteSubList(g_lCustomExceptions, iPosx, iPosx+2);
+                    }
+                    
+                    
+                    llMessageLinked(LINK_SET, NOTIFY, "0Custom exceptions modified  ("+sChangeArg1+"): "+sChangeArg2+" = "+sChangeArg3, kID);
+                    g_lCustomExceptions += [sChangeArg1, sChangeArg2, (integer)sChangeArg3];
+                }
+                
+                Save(FALSE);
+            } else if(sChangekey == "listmasks"){
+                integer ix=0;
+                string sExceptionMasks;
+                integer end = llGetListLength(lRLVEx);
+                for(ix=0;ix<end;ix+=3){
+                    sExceptionMasks += llList2String(lRLVEx,ix)+" = "+llList2String(lRLVEx,ix+2)+", ";
+                }
+                // list all possible bitmasks
+                llMessageLinked(LINK_SET, NOTIFY, "0The exceptions all use a bitmask. The following are acceptable bitmask values: "+sExceptionMasks+". To calculate a bitmask, add the values into one larger integer for only the options you want. 127 is the max possible bitmask for exceptions", kID);
+            } else if(sChangekey == "help"){
+                llMessageLinked(LINK_SET, NOTIFY, "0Valid commands: listmasks, modify, listcustom\n\nmodify takes a range of 2-3 arguments.\nmodify owner [newBitmask]\nmodify trust [newMask]\nmodify [customExceptionName(no spaces)] [customExceptionUUID] [bitmask]", kID);
+            } else if(sChangekey == "listcustom"){
+                integer ix=0;
+                string sCustom;
+                integer end = llGetListLength(g_lCustomExceptions);
+                for(ix=0;ix<end;ix+=3){
+                    sCustom  += llList2String(g_lCustomExceptions,ix)+": "+llList2String(g_lCustomExceptions, ix+1)+" = "+llList2String(g_lCustomExceptions,ix+2)+"\n";
+                }
+                
+                llMessageLinked(LINK_SET, NOTIFY, "0Custom Exceptions:\n\n"+sCustom,kID);
+            }
         }
     }
 }
