@@ -4,7 +4,7 @@
 // lillith xue, littlemousy et al.    
 // Licensed under the GPLv2.  See LICENSE for full details. 
 
-string g_sScriptVersion = "7.5";
+string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -62,7 +62,7 @@ string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle st
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
 // Defalut leash particle, can read from defaultsettings:
 // leashParticle=Shine~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
-list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","R_Texture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
+list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","RTexture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
 
 string Uncheckbox(string Button){
     return llGetSubString(Button, llStringLength(llList2String(g_lCheckboxes, 0))+1, -1);
@@ -339,11 +339,11 @@ SaveSettings(string sToken, string sValue, integer iSaveToLocal) {
     if (iIndex>=0) g_lSettings = llListReplaceList(g_lSettings, [sValue], iIndex +1, iIndex +1);
     else g_lSettings += [sToken, sValue];
 
-    if (sToken == "R_Texture") {
+    if (sToken == "RTexture") {
         if (llToLower(llGetSubString(sValue,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sValue, 8, -1);
         else L_RIBBON_TEX = sValue;
     }
-    else if (sToken == "C_Texture") {
+    else if (sToken == "CTexture") {
         if (llToLower(llGetSubString(sValue,0,7)) == "!classic") L_CLASSIC_TEX = llGetSubString(sValue, 9, -1);
         else L_CLASSIC_TEX = sValue;
     }
@@ -368,8 +368,8 @@ GetSettings(integer iStartParticles) {
    // Debug("settings: "+llList2CSV(g_lSettings));
     g_sLeashParticleMode = GetSetting("ParticleMode");
     g_sParticleMode = g_sLeashParticleMode;
-    g_sClassicTexture = GetSetting("C_Texture");
-    g_sRibbonTexture = GetSetting("R_Texture");
+    g_sClassicTexture = GetSetting("CTexture");
+    g_sRibbonTexture = GetSetting("RTexture");
     g_vLeashSize = (vector)GetSetting(L_SIZE);
     g_vLeashColor = (vector)GetSetting(L_COLOR);
     g_vLeashGravity.z = (float)GetSetting(L_GRAVITY);
@@ -399,14 +399,14 @@ SetTexture(string sIn, key kIn) {
     if (g_sLeashParticleMode == "Ribbon") {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
-        if (GetSetting("R_TextureID")) g_sLeashParticleTexture = GetSetting("R_TextureID");
+        if (GetSetting("RTextureID")) g_sLeashParticleTexture = GetSetting("RTextureID");
         if (kIn)
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);
     }
     else if (g_sLeashParticleMode == "Classic") {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
         else L_CLASSIC_TEX = sIn;
-        if (GetSetting("C_TextureID")) g_sLeashParticleTexture = GetSetting("C_TextureID");
+        if (GetSetting("CTextureID")) g_sLeashParticleTexture = GetSetting("CTextureID");
         if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_CLASSIC_TEX,kIn);
     } else  if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + g_sParticleTexture,kIn);
     //Debug("particleTextureID= " + (string)g_sLeashParticleTexture);
@@ -581,22 +581,22 @@ default {
                         if (!(g_sLeashParticleMode == "Ribbon")) {
                             g_sLeashParticleMode = "Ribbon";
                             SetTexture(g_sRibbonTexture, kAv);
-                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
+                            SaveSettings("RTexture", g_sRibbonTexture, TRUE);
                         } else {
                             g_sLeashParticleMode = "Classic";
                             SetTexture(g_sClassicTexture, kAv);
-                            SaveSettings("C_Texture", g_sClassicTexture, TRUE);
+                            SaveSettings("CTexture", g_sClassicTexture, TRUE);
                         }
                         SaveSettings("ParticleMode", g_sLeashParticleMode, TRUE);
                     } else if(sButtonType == L_CLASSIC_TEX) {
                         if (!(g_sLeashParticleMode == "Classic")) {
                             g_sLeashParticleMode = "Classic";
                             SetTexture(g_sClassicTexture, kAv);
-                            SaveSettings("C_Texture", g_sClassicTexture, TRUE);
+                            SaveSettings("CTexture", g_sClassicTexture, TRUE);
                         } else {
                             g_sLeashParticleMode = "Ribbon";
                             SetTexture(g_sRibbonTexture, kAv);
-                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
+                            SaveSettings("RTexture", g_sRibbonTexture, TRUE);
                         }
                         SaveSettings("ParticleMode", g_sLeashParticleMode, TRUE);
                     } else if(sButtonType == "Invisible") {
@@ -607,7 +607,7 @@ default {
                         } else {
                             g_sLeashParticleMode = "Ribbon";
                             SetTexture(g_sRibbonTexture, kAv);
-                            SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
+                            SaveSettings("RTexture", g_sRibbonTexture, TRUE);
                         }
                         SaveSettings("ParticleMode", g_sLeashParticleMode, TRUE);
                     }
@@ -820,24 +820,24 @@ default {
                     if (llToLower(llGetSubString(sName,0,6)) == "!ribbon") {
                         g_sRibbonTexture = sName;
                         L_RIBBON_TEX = llGetSubString(g_sRibbonTexture, 8, -1);
-                        SaveSettings("R_Texture", g_sRibbonTexture, TRUE);
+                        SaveSettings("RTexture", g_sRibbonTexture, TRUE);
                         iLeashTexture = iLeashTexture +1;
                     }
                     else if (llToLower(llGetSubString(sName,0,7)) == "!classic") {
                         g_sClassicTexture = sName;
                         L_CLASSIC_TEX = llGetSubString(g_sClassicTexture, 9, -1);
-                        SaveSettings("C_Texture", g_sClassicTexture, TRUE);
+                        SaveSettings("CTexture", g_sClassicTexture, TRUE);
                         iLeashTexture = iLeashTexture +2;
                     }
                 }
             }
             if (!iLeashTexture) {
-                if (llSubStringIndex(GetSetting("C_Texture"), "!")==0) SaveSettings("C_Texture", "Chain", TRUE);
-                if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE);
+                if (llSubStringIndex(GetSetting("CTexture"), "!")==0) SaveSettings("CTexture", "Chain", TRUE);
+                if (llSubStringIndex(GetSetting("RTexture"), "!")==0) SaveSettings("RTexture", "Silk", TRUE);
             } else if (iLeashTexture == 1) {
-                if (llSubStringIndex(GetSetting("C_Texture"), "!")==0) SaveSettings("C_Texture", "Chain", TRUE);
+                if (llSubStringIndex(GetSetting("CTexture"), "!")==0) SaveSettings("CTexture", "Chain", TRUE);
             } else if (iLeashTexture == 2) {
-                if (llSubStringIndex(GetSetting("R_Texture"), "!")==0) SaveSettings("R_Texture", "Silk", TRUE);
+                if (llSubStringIndex(GetSetting("RTexture"), "!")==0) SaveSettings("RTexture", "Silk", TRUE);
             }
            // GetSettings(TRUE);
         }
