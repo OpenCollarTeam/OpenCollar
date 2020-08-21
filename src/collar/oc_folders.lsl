@@ -165,7 +165,6 @@ Browser(key kID, integer iAuth, string sPath){
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         g_lOwner=[];
         g_lTrust=[];
@@ -177,8 +176,15 @@ UserCommand(integer iNum, string sStr, key kID) {
     else {
         integer iWSuccess = 0; 
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
+        string sChangevalue = llDumpList2String(llList2List(llParseString2List(sStr, [" "], []),1,-1)," ");
         string sText;
+        
+        if(sChangetype == "&"){
+            // add folder path
+            llOwnerSay("@attachallover:"+sChangevalue+"=force");
+        } else if(sChangetype == "-"){
+            llOwnerSay("@detachall:"+sChangevalue+"=force");
+        }
         
     }
 }
@@ -365,7 +371,9 @@ default
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1) == "checkboxes"){
+                if(llList2String(lSettings,1)=="locked"){
+                    g_iLocked=llList2Integer(lSettings,2);
+                } else if(llList2String(lSettings,1) == "checkboxes"){
                     g_lFolderCheckboxes = llParseString2List(llList2String(lSettings,2),[","],[])+["◑"];
                 }
             } else if(llList2String(lSettings,0)=="folders"){

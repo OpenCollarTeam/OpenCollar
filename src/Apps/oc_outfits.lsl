@@ -8,7 +8,6 @@ Aria (Tashia Redrose)
     * Dec 2019      - Rewrote Capture & Reset Script Version to 1.0
     * Jan 2020      - Added BrowseCore, and added in chat commands for Outfits
     * Apr 2020      - Added chat commands, and a link message API to wear/remove
-    * Aug 2020      - Added State Manager Support
 Lillith (Lillith Xue)
     * Dec 2019      - Fixed bug: Outfits not working for non-wearer as menu user due to listen typo
 
@@ -22,8 +21,8 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Outfits";
-string g_sAppVersion = "1.5";
-string g_sScriptVersion = "8.0";
+string g_sAppVersion = "1.4";
+string g_sScriptVersion = "7.4";
 
 
 //MESSAGE MAP
@@ -193,7 +192,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
         
-        if(sChangetype == "wear"){
+        if(sChangetype == "+"){
             if(g_sPath!=sChangevalue){
                 g_sPath=".outfits/"+sChangevalue;
                 g_iListenTimeout=0;
@@ -221,8 +220,12 @@ UserCommand(integer iNum, string sStr, key kID) {
             RmCorelock();
             llSleep(1);
             llOwnerSay("@attachallover:"+g_sPath+"=force");
-        } else if(sChangetype == "rem"){
+        } else if(sChangetype == "-"){
             g_sLastOutfit="NONE";
+            if(g_sPath != sChangevalue){
+                g_sPath = ".outfits/"+sChangevalue;
+                g_iListenTimeout=0;
+            }
             
             if(!Bool((g_iAccessBitSet&32))){
                 if(llSubStringIndex(sChangevalue, ".core")!=-1)RmCorelock();
@@ -306,9 +309,6 @@ default
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
             if(sStr=="update_active")state inUpdate;
-        }else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);

@@ -1,26 +1,14 @@
 // This file is part of OpenCollar.
-// Copyright (c) 2007 - 2017 Schmobag Hogfather, Nandana Singh,      
+// Copyright (c) 2007 - 2020 Schmobag Hogfather, Nandana Singh,      
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, littlemousy,    
-// Romka Swallowtail, Garvin Twine et al.  
+// Romka Swallowtail, Garvin Twine, and Tashia Redrose,  et al.  
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="8.0";
-integer LINK_CMD_DEBUG=1999;
 
-
-//an adaptation of Schmobag Hogfather's SchmoDialog script
-
-//MESSAGE MAP
 integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
-//integer CMD_RLV_RELAY = 507;
-//integer CMD_SAFEWORD = 510;
-//integer CMD_RELAY_SAFEWORD = 511;
-//integer CMD_BLOCKED = 520;
-
 integer NOTIFY = 1002;
 integer NOTIFY_OWNERS=1003;
 integer SAY = 1004;
@@ -30,28 +18,9 @@ integer LM_SETTING_SAVE = 2000;
 //integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
-
-//integer MENUNAME_REQUEST = 3000;
-//integer MENUNAME_RESPONSE = 3001;
-//integer MENUNAME_REMOVE = 3003;
-
-//integer RLV_CMD = 6000;
-//integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
-//integer RLV_CLEAR = 6002;//RLV plugins should clear their restriction lists upon receiving this message.
-//integer RLV_VERSION = 6003; //RLV Plugins can recieve the used rl viewer version upon receiving this message..
-
-//integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
-//integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
-
-//integer ANIM_START = 7000;//send this with the name of an anim in the string part of the message to play the anim
-//integer ANIM_STOP = 7001;//send this with the name of an anim in the string part of the message to stop the anim
-
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
-integer SENSORDIALOG = -9003;
-//integer FIND_AGENT = -9005;
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -63,18 +32,15 @@ string BLANK = "-";
 integer g_iTimeOut = 300;
 integer g_iReapeat = 5;//how often the timer will go off, in seconds
 
-list g_lMenus;//11-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, button digits, auth level
+list g_lMenus;//13-strided list in form listenChan, dialogid, listener, starttime, recipient, prompt, list buttons, utility buttons, currentpage, button digits, auth level,extra info,  sorted
 //where "list buttons" means the big list of choices presented to the user
 //and "page buttons" means utility buttons that will appear on every page, such as one saying "go up one level"
 //and "currentpage" is an integer meaning which page of the menu the user is currently viewing
-
-list g_lRemoteMenus;
-integer g_iStrideLength = 12;
-
-// List of user keys who opt-out of chat-spammage, ie chose "off"
-list MRSBUN = []; // blatant monty python reference - list of those who do not like spam
-string SPAMSWITCH = "verbose"; // lowercase chat-command token
-
+integer g_iStrideLength = 13;
+integer SENSORDIALOG = -9003;
+string NameURI(key kID){
+    return "secondlife:///app/agent/"+(string)kID+"/about";
+}
 key g_kWearer;
 string g_sSettingToken = "dialog_";
 string g_sGlobalToken = "global_";
@@ -85,52 +51,14 @@ string g_sDeviceName;
 string g_sWearerName;
 list g_lOwners;
 
+
 list g_lSensorDetails;
 integer g_bSensorLock;
 integer g_iSensorTimeout;
 integer g_iSelectAviMenu; //added to show URIs in menus june 2015 Otto(garvin.twine)
 integer g_iColorMenu;
 
-list g_lColors = [
-"Red",<1.00000, 0.00000, 0.00000>,
-"Green",<0.00000, 1.00000, 0.00000>,
-"Blue",<0.00000, 0.50196, 1.00000>,
-"Yellow",<1.00000, 1.00000, 0.00000>,
-"Pink",<1.00000, 0.50588, 0.62353>,
-"Brown",<0.24314, 0.14902, 0.07059>,
-"Purple",<0.62353, 0.29020, 0.71765>,
-"Black",<0.00000, 0.00000, 0.00000>,
-"White",<1.00000, 1.00000, 1.00000>,
-"Barbie",<0.91373, 0.00000, 0.34510>,
-"Orange",<0.96078, 0.60784, 0.00000>,
-"Toad",<0.25098, 0.25098, 0.00000>,
-"Khaki",<0.62745, 0.50196, 0.38824>,
-"Pool",<0.14902, 0.88235, 0.94510>,
-"Blood",<0.42353, 0.00000, 0.00000>,
-"Gray",<0.70588, 0.70588, 0.70588>,
-"Anthracite",<0.08627, 0.08627, 0.08627>,
-"Midnight",<0.00000, 0.10588, 0.21176>
-];
-
-
-/*integer g_iProfiled=1;
-Debug(string sStr) {
-    //if you delete the first // from the preceeding and following  lines,
-    //  profiling is off, debug is off, and the compiler will remind you to
-    //  remove the debug calls from the code, we're back to production mode
-    if (!g_iProfiled){
-        g_iProfiled=1;
-        llScriptProfiler(1);
-    }
-    llOwnerSay(llGetScriptName() + "(min free:"+(string)(llGetMemoryLimit()-llGetSPMaxMemory())+")["+(string)llGetFreeMemory()+"] :\n" + sStr);
-}*/
-
-
-string NameURI(key kID){
-    return "secondlife:///app/agent/"+(string)kID+"/about";
-}
-
-string SubstitudeVars(string sMsg) {
+string SubstituteVars(string sMsg) {
         if (~llSubStringIndex(sMsg, "%NOACCESS"))
             sMsg = llDumpList2String(llParseStringKeepNulls(sMsg, ["%NOACCESS%"], []), "Access Denied");
         if (~llSubStringIndex(sMsg, "%PREFIX%"))
@@ -146,10 +74,9 @@ string SubstitudeVars(string sMsg) {
         
         return sMsg;
 }
-
 Notify(key kID, string sMsg, integer iAlsoNotifyWearer) {
     if ((key)kID){
-        sMsg = SubstitudeVars(sMsg);
+        sMsg = SubstituteVars(sMsg);
         string sObjectName = llGetObjectName();
         if (g_sDeviceName != sObjectName) llSetObjectName(g_sDeviceName);
         if (kID == g_kWearer) llOwnerSay(sMsg);
@@ -187,16 +114,36 @@ NotifyOwners(string sMsg, string comments) {
 }
 
 Say(string sMsg, integer iWhisper) {
-    sMsg = SubstitudeVars(sMsg);
+    sMsg = SubstituteVars(sMsg);
     string sObjectName = llGetObjectName();
     llSetObjectName("");
     if (iWhisper) llWhisper(0,"/me "+sMsg);
     else llSay(0, sMsg);
     llSetObjectName(sObjectName);
 }
-integer g_iShowLevel;
 
-Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo)
+list g_lColors = [
+            "Red",<1.00000, 0.00000, 0.00000>,
+            "Green",<0.00000, 1.00000, 0.00000>,
+            "Blue",<0.00000, 0.50196, 1.00000>,
+            "Yellow",<1.00000, 1.00000, 0.00000>,
+            "Pink",<1.00000, 0.50588, 0.62353>,
+            "Brown",<0.24314, 0.14902, 0.07059>,
+            "Purple",<0.62353, 0.29020, 0.71765>,
+            "Black",<0.00000, 0.00000, 0.00000>,
+            "White",<1.00000, 1.00000, 1.00000>,
+            "Barbie",<0.91373, 0.00000, 0.34510>,
+            "Orange",<0.96078, 0.60784, 0.00000>,
+            "Toad",<0.25098, 0.25098, 0.00000>,
+            "Khaki",<0.62745, 0.50196, 0.38824>,
+            "Pool",<0.14902, 0.88235, 0.94510>,
+            "Blood",<0.42353, 0.00000, 0.00000>,
+            "Gray",<0.70588, 0.70588, 0.70588>,
+            "Anthracite",<0.08627, 0.08627, 0.08627>,
+            "Midnight",<0.00000, 0.10588, 0.21176>
+];
+
+Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, integer iPage, key kID, integer iWithNums, integer iAuth,string extraInfo, integer iSorted)
 {
     //calculate page start and end
     integer iNumitems = llGetListLength(lMenuItems);
@@ -256,6 +203,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
                 else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
                 else sButton=llKey2Name((key)sButton);
             }
+            lButtons += [sButton];
+        }
+        if(iSorted)lButtons=llListSort(lButtons, 1, TRUE);
+        iEnd = llGetListLength(lButtons);
+        for(iCur=0;iCur<iEnd;iCur++){
+            string sButton = llList2String(lButtons,iCur);
             //inlined single use Integer2String function
             string sButtonNumber = (string)iCur;
 
@@ -267,13 +220,15 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
             if(g_iSelectAviMenu) sButton = sButtonNumber;
-            lButtons += [sButton];
+            
+            
+            lButtons = llListReplaceList(lButtons, [sButton], iCur,iCur);
         }
         iNBPromptlen=GetStringBytes(sNumberedButtons);
     } else if (iNumitems > iMyPageSize) lButtons = llList2List(lMenuItems, iStart, iEnd);
     else  lButtons = lMenuItems;
     //Debug("buttons:"+llDumpList2String(lButtons,","));
-    sPrompt = SubstitudeVars(sPrompt);
+    sPrompt = SubstituteVars(sPrompt);
     //make a prompt small enough to fit in the 512 limit for dialogs, prepare overflow for chat message
     integer iPromptlen=GetStringBytes(sPrompt);
     string sThisPrompt;
@@ -290,27 +245,11 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         sThisPrompt=TruncateString(sPrompt,510-iPagerPromptLen)+sPagerPrompt;
         sThisChat = sPrompt+sNumberedButtons;
     }
-    //Debug("prompt:"+sThisPrompt);
-    //unless asked not to, chat anything that wouldn't fit to menu user
-    if (! ~llListFindList(MRSBUN, [kRecipient])){
-        integer iRemainingChatLen;
-        while ((iRemainingChatLen=llStringLength(sThisChat))){ //capture and compare in one go
-            if(iRemainingChatLen<1015) {
-                Notify(kRecipient,sThisChat,FALSE); //if its short enough, IM it in one chunk
-                sThisChat="";
-            } else {
-                string sMessageChunk=TruncateString(sPrompt,1015);
-                Notify(kRecipient,sMessageChunk,FALSE);
-                sThisChat=llGetSubString(sThisChat,llStringLength(sMessageChunk),-1);
-            }
-        }
-    }
     //Debug("chat prompt:"+sThisChat);
     integer iChan=llRound(llFrand(10000000)) + 100000;
     while (~llListFindList(g_lMenus, [iChan])) iChan=llRound(llFrand(10000000)) + 100000;
     integer iListener = llListen(iChan, "", kRecipient, "");
-    //LED ON
-    Indicator(TRUE);
+    
     //send dialog to viewer
     if (llGetListLength(lMenuItems+lUtilityButtons)){
         list lNavButtons;
@@ -326,14 +265,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         llMessageLinked(LINK_SET, DIALOG+2, sThisPrompt+"|"+(string)iAuth, "");
         llTextBox(kRecipient, sThisPrompt, iChan);
     }
-    //LED OFF
-    Indicator(FALSE);
-    //set dialog timeout
+    
     llSetTimerEvent(g_iReapeat);
     integer ts = llGetUnixTime() + g_iTimeOut;
 
     //write entry in tracking list
-    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo];
+    g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo, iSorted];
     //Debug("Made Dialog");
 }
 
@@ -343,6 +280,7 @@ integer GetStringBytes(string sStr) {
     list lAtoms = llParseStringKeepNulls(sStr, ["%"], []);
     return l - 2 * llGetListLength(lAtoms) + 2;
 }
+
 
 string TruncateString(string sStr, integer iBytes) {
     sStr = llEscapeURL(sStr);
@@ -386,15 +324,6 @@ list PrettyButtons(list lOptions, list lUtilityButtons, list iPagebuttons) { //r
     return lOut;
 }
 
-RemoveMenuStride(integer iIndex)  {     //fixme:  duplicates entire global lMenu list
-    //tell this function the menu you wish to remove, identified by list index
-    //it will close the listener, remove the menu's entry from the list, and return the new list
-    //should be called in the listen event, and on menu timeout
-    integer iListener = llList2Integer(g_lMenus, iIndex + 2);
-    llListenRemove(iListener);
-    g_lMenus=llDeleteSubList(g_lMenus, iIndex, iIndex + g_iStrideLength - 1);
-}
-
 CleanList() {
     //Debug("cleaning list");
     //loop through menus and remove any whose timeouts are in the past
@@ -418,6 +347,7 @@ CleanList() {
     }
 }
 
+
 ClearUser(key kRCPT) {
     //find any strides belonging to user and remove them
     integer iIndex = llListFindList(g_lMenus, [kRCPT]);
@@ -430,25 +360,15 @@ ClearUser(key kRCPT) {
     //Debug(llDumpList2String(g_lMenus, ","));
 }
 
-UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum == CMD_GROUP) return;
-    list lParams = llParseString2List(llToLower(sStr), ["="], []);
-    string sToken = llList2String(lParams, 0);
-    string sValue = llList2String(lParams, 1);
-    if (sToken == SPAMSWITCH) {// add/rem user to verbose=off list
-        integer i = llListFindList(MRSBUN, [kID]);
-        if (sValue == "off") {
-            if (~i) return; // already in list
-            MRSBUN += [kID];
-            Notify(kID,"Verbose Feature activated for you.",FALSE);
-        } else if (~i) {
-            MRSBUN = llDeleteSubList(MRSBUN, i, i);
-            Notify(kID,"Verbose Feature de-activated for you.",FALSE);
-        } else return; // not in list to start with
-        if (!llGetListLength(MRSBUN)) llMessageLinked(LINK_SET, LM_SETTING_DELETE, g_sSettingToken + SPAMSWITCH, "");
-        else llMessageLinked(LINK_SET, LM_SETTING_SAVE, g_sSettingToken + SPAMSWITCH + "=" + llList2CSV(MRSBUN), "");
-    }
+RemoveMenuStride(integer iIndex)  {     //fixme:  duplicates entire global lMenu list
+    //tell this function the menu you wish to remove, identified by list index
+    //it will close the listener, remove the menu's entry from the list, and return the new list
+    //should be called in the listen event, and on menu timeout
+    integer iListener = llList2Integer(g_lMenus, iIndex + 2);
+    llListenRemove(iListener);
+    g_lMenus=llDeleteSubList(g_lMenus, iIndex, iIndex + g_iStrideLength - 1);
 }
+
 
 dequeueSensor() {
     //get sStr of first set of sensor details, unpack it and run the apropriate sensor
@@ -470,56 +390,70 @@ dequeueSensor() {
     g_iSensorTimeout=llGetUnixTime()+10;
     llSetTimerEvent(g_iReapeat);
 }
+integer g_iShowLevel;
 
-ExtractPart(){
-    g_sScriptPart = llList2String(llParseString2List(llGetScriptName(), ["_"],[]),1);
+UserCommand (integer iAuth, string sCmd,  key kID){
 }
-
-string g_sScriptPart; // oc_<part>
-integer INDICATOR_THIS;
-SearchIndicators(){
-    ExtractPart();
-    
-    integer i=0;
-    integer end = llGetNumberOfPrims();
-    for(i=0;i<end;i++){
-        list Params = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0), ["~"],[]);
-        
-        if(llListFindList(Params, ["indicator_"+g_sScriptPart])!=-1){
-            INDICATOR_THIS = i;
-            return;
-        }
-    }
-    
-    
-}
-Indicator(integer iMode){
-    if(INDICATOR_THIS==-1)return;
-    if(iMode)
-        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,TRUE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_NONE,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.4]);
-    else
-        llSetLinkPrimitiveParamsFast(INDICATOR_THIS,[PRIM_FULLBRIGHT,ALL_SIDES,FALSE,PRIM_BUMP_SHINY,ALL_SIDES,PRIM_SHINY_HIGH,PRIM_BUMP_NONE,PRIM_GLOW,ALL_SIDES,0.0]);
-}
-
-default {
-    on_rez(integer iParam) {
+default
+{
+    on_rez(integer iParam){
         llResetScript();
     }
+    
 
-    state_entry() {
-        if (llGetStartParameter()!=0){
-            state inUpdate;
+    timer() {
+        CleanList();
+        //if list is empty after that, then stop timer
+        if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails)) {
+            //Debug("no active dialogs, stopping timer");
+            g_iSelectAviMenu = FALSE;
+            llSetTimerEvent(0.0);
         }
-        g_kWearer=llGetOwner();
-        SearchIndicators();
-        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
-        g_sWearerName = NameURI(g_kWearer);
-        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
-        if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") 
-            g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
-        //Debug("Starting");
     }
+    
+    listen(integer iChan, string sName, key kID, string sMessage) {
+        integer iMenuIndex = llListFindList(g_lMenus, [iChan]);
+        if (~iMenuIndex) {
+            key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
+            key kAv = llList2Key(g_lMenus, iMenuIndex + 4);
+            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);
+            // SA: null strings should not be kept for dialog buttons
+            list items = llParseString2List(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
+            list ubuttons = llParseString2List(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
+            integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);
+            integer iDigits = llList2Integer(g_lMenus, iMenuIndex + 9);
+            integer iAuth = llList2Integer(g_lMenus, iMenuIndex + 10);
+            string sExtraInfo = llList2String(g_lMenus, iMenuIndex + 11);
+            integer iSorted = llList2Integer(g_lMenus, iMenuIndex+12);
 
+            RemoveMenuStride(iMenuIndex);
+
+            if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth,sExtraInfo, iSorted);
+            else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
+            else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
+            else {
+                g_iSelectAviMenu = FALSE;
+                string sAnswer;
+                integer iIndex = llListFindList(ubuttons, [sMessage]);
+                if (iDigits && !~iIndex) {
+                    integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
+                    sAnswer = llList2String(items, iBIndex);
+                } else if (g_iColorMenu) {
+                    integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sMessage]);
+                    if (~iColorIndex) sAnswer = llList2String(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
+                    else sAnswer = sMessage;
+                    g_iColorMenu = FALSE;
+                } else sAnswer = sMessage;
+                if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
+                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
+            }
+        }
+    }
+    changed(integer iChange){
+        if (iChange & CHANGED_OWNER) llResetScript();
+    }
+    
+    
     sensor(integer num_detected){
         //get sensot request info from list
         list lSensorInfo=llList2List(g_lSensorDetails,0,3);
@@ -583,6 +517,8 @@ default {
             g_bSensorLock=FALSE;
         }
     }
+    
+    
 
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == SENSORDIALOG){
@@ -598,18 +534,11 @@ default {
             }
         } else if (iNum == DIALOG) {
         //give a dialog with the options on the button labels
-            //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth
+            //str will be pipe-delimited list with rcpt|prompt|page|backtick-delimited-list-buttons|backtick-delimited-utility-buttons|auth|sorted
             //Debug("DIALOG:"+sStr);
             if (iSender != llGetLinkNumber()) g_iSelectAviMenu = FALSE;
             list lParams = llParseStringKeepNulls(sStr, ["|"], []);
             key kRCPT = llGetOwnerKey((key)llList2String(lParams, 0));
-            integer iIndex = llListFindList(g_lRemoteMenus, [kRCPT]);
-            if (~iIndex) {
-                if (llKey2Name(kRCPT)=="") { //if recipient is not in the sim.  Inlined single use InSim(kRCPT) function
-                    llHTTPRequest(llList2String(g_lRemoteMenus, iIndex+1), [HTTP_METHOD, "POST"], sStr+"|"+(string)kID);
-                    return;
-                } else g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [], iIndex, iIndex+1);
-            }
             string sPrompt = llList2String(lParams, 1);
             integer iPage = (integer)llList2String(lParams, 2);
             if (iPage < 0 ) {
@@ -624,42 +553,20 @@ default {
             integer iDigits=-1;   //iDigits==-1 means Dialog should run idigits on the buttons
             list ubuttons = llParseString2List(llList2String(lParams, 4), ["`"], []);
             integer iAuth = CMD_ZERO;
+            integer iSorted=FALSE;
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
+            if (llGetListLength(lParams)>=7) iSorted = llList2Integer(lParams, 6);
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
             ClearUser(kRCPT);
-            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"");
+            Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"", iSorted);
         }
-        else if (llGetSubString(sStr, 0, 10) == "remotemenu:") {
-            if (iNum == CMD_OWNER || iNum == CMD_TRUSTED) {
-                string sCmd = llGetSubString(sStr, 11, -1);
-                //Debug("dialog cmd:" + sCmd);
-                if (llGetSubString(sCmd, 0, 3) == "url:") {
-                    integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
-                    if (~iIndex)
-                        g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [kID, llGetSubString(sCmd, 4, -1)], iIndex, iIndex+1);
-                    else
-                        g_lRemoteMenus += [kID, llGetSubString(sCmd, 4, -1)];
-                    llMessageLinked(LINK_SET, iNum, "menu", kID);
-                } else if (llGetSubString(sCmd, 0, 2) == "off") {
-                    integer iIndex = llListFindList(g_lRemoteMenus, [kID]);
-                    if (~iIndex)
-                        g_lRemoteMenus = llListReplaceList(g_lRemoteMenus, [], iIndex, iIndex+1);
-                }
-                else if (llGetSubString(sCmd, 0, 8) == "response:") {
-                    list lParams = llParseString2List(llGetSubString(sCmd, 9, -1), ["|"], []);
-                    //llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sMessage + "|" + (string)iPage, kMenuID);
-                    llMessageLinked(LINK_SET, DIALOG_RESPONSE, llList2String(lParams, 0) + "|" + llList2String(lParams, 1) + "|" + llList2String(lParams, 2), llList2String(lParams, 3));
-                } else if (llGetSubString(sCmd, 0, 7) == "timeout:")
-                    llMessageLinked(LINK_SET, DIALOG_TIMEOUT, "", llGetSubString(sCmd, 8, -1));
-            }
-        }
+        
         else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
         else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sSettingToken + SPAMSWITCH) MRSBUN = llParseString2List(sValue, [","], []);
-            else if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
+            if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"DeviceName") {
                 g_sDeviceName = sValue;
                 //llSetObjectName(g_sDeviceName);
@@ -691,74 +598,23 @@ default {
         else if (iNum == SAY)         Say(llGetSubString(sStr,1,-1),(integer)llGetSubString(sStr,0,0));
         else if (iNum==NOTIFY_OWNERS) NotifyOwners(sStr,(string)kID);
         else if (iNum == REBOOT && sStr == "reboot") llResetScript();
-        else if(iNum == LINK_CMD_DEBUG){
-            integer onlyver=0;
-            if(sStr == "ver")onlyver=1;
-            llInstantMessage(kID, llGetScriptName() +" SCRIPT VERSION: "+g_sScriptVersion);
-            if(onlyver)return; // basically this command was: <prefix> versions
-        }
+        
     }
 
-    listen(integer iChan, string sName, key kID, string sMessage) {
-        integer iMenuIndex = llListFindList(g_lMenus, [iChan]);
-        if (~iMenuIndex) {
-            key kMenuID = llList2Key(g_lMenus, iMenuIndex + 1);
-            key kAv = llList2Key(g_lMenus, iMenuIndex + 4);
-            string sPrompt = llList2String(g_lMenus, iMenuIndex + 5);
-            // SA: null strings should not be kept for dialog buttons
-            list items = llParseString2List(llList2String(g_lMenus, iMenuIndex + 6), ["|"], []);
-            list ubuttons = llParseString2List(llList2String(g_lMenus, iMenuIndex + 7), ["|"], []);
-            integer iPage = llList2Integer(g_lMenus, iMenuIndex + 8);
-            integer iDigits = llList2Integer(g_lMenus, iMenuIndex + 9);
-            integer iAuth = llList2Integer(g_lMenus, iMenuIndex + 10);
-            string sExtraInfo = llList2String(g_lMenus, iMenuIndex + 11);
-
-            RemoveMenuStride(iMenuIndex);
-
-            if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth,sExtraInfo);
-            else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo);
-            else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo);
-            else {
-                g_iSelectAviMenu = FALSE;
-                string sAnswer;
-                integer iIndex = llListFindList(ubuttons, [sMessage]);
-                if (iDigits && !~iIndex) {
-                    integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
-                    sAnswer = llList2String(items, iBIndex);
-                } else if (g_iColorMenu) {
-                    integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sMessage]);
-                    if (~iColorIndex) sAnswer = llList2String(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
-                    else sAnswer = sMessage;
-                    g_iColorMenu = FALSE;
-                } else sAnswer = sMessage;
-                if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
-                llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
-            }
+    state_entry(){
+        
+        if (llGetStartParameter()!=0){
+            state inUpdate;
         }
-    }
-
-    timer() {
-        CleanList();
-        //if list is empty after that, then stop timer
-        if (!llGetListLength(g_lMenus) && !llGetListLength(g_lSensorDetails)) {
-            //Debug("no active dialogs, stopping timer");
-            g_iSelectAviMenu = FALSE;
-            llSetTimerEvent(0.0);
-        }
-    }
-
-    changed(integer iChange){
-        if (iChange & CHANGED_OWNER) llResetScript();
-/*
-        if (iChange & CHANGED_REGION) {
-            if (g_iProfiled){
-                llScriptProfiler(1);
-                Debug("profiling restarted");
-            }
-        }
-*/
+        g_kWearer=llGetOwner();
+        g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()), 0,1));
+        g_sWearerName = NameURI(g_kWearer);
+        g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_DESC]),0);
+        if (g_sDeviceName == "" || g_sDeviceName =="(No Description)") 
+            g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
     }
 }
+
 
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
@@ -767,11 +623,6 @@ state inUpdate{
             if(sMsg == "do_move"){
                 
                 if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
-                
-                list Parameters = llParseStringKeepNulls(llList2String(llGetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC]),0), ["~"],[]);
-                ExtractPart();
-                Parameters += "indicator_"+g_sScriptPart;
-                llSetLinkPrimitiveParams(llGetLinkNumber(), [PRIM_DESC, llDumpList2String(Parameters,"~")]);
                 
                 llOwnerSay("Moving "+llGetScriptName()+"!");
                 integer i=0;
