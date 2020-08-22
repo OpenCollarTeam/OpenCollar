@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0004"; // Provide enough room
+string COLLAR_VERSION = "8.0.0005"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -470,23 +470,40 @@ default
                     } else if(sMsg == "Access List"){
                         llMessageLinked(LINK_SET, iAuth, "print auth", kAv);
                     } else if(sMsg == Checkbox(bool((g_kGroup!="")), "Group")){
-                        if(g_kGroup!=""){
-                            g_kGroup="";
-                            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "");
-                        }else{
-                            g_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "");
+                        if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
+                            if(g_kGroup!=""){
+                                g_kGroup="";
+                                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_group", "");
+                            }else{
+                                g_kGroup = llList2Key(llGetObjectDetails(llGetKey(), [OBJECT_GROUP]),0);
+                                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_group="+(string)g_kGroup, "");
+                            }
+                        } else {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing group access", kAv);
                         }
                     } else if(sMsg == Checkbox(g_iPublic, "Public")){
-                        g_iPublic=1-g_iPublic;
-                        
-                        if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "");
-                        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","");
+                        if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
+                            
+                            g_iPublic=1-g_iPublic;
+                            
+                            if(g_iPublic)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_public=1", "");
+                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_public","");
+                            
+                        } else {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing public", kAv);
+                        }
                     } else if(sMsg == Checkbox(g_iLimitRange, "Limit Range")){
-                        g_iLimitRange=1-g_iLimitRange;
+                        if(iAuth >=CMD_OWNER && iAuth <= CMD_TRUSTED){
+                            g_iLimitRange=1-g_iLimitRange;
                         
-                        if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","");
-                        else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "");
+                            if(!g_iLimitRange)llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_limitrange=0","");
+                            else llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_limitrange", "");
+                        } else {
+                            llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing range limit", kAv);
+                        }
+                    } else if(sMsg == "Runaway"){
+                        llMessageLinked(LINK_SET,0,"menu runaway", kAv);
+                        iRespring=FALSE;
                     }
                     
                     

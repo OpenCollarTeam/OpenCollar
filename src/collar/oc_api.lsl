@@ -170,6 +170,19 @@ DoListeners(){
     g_lActiveListeners = [llListen(g_iChannel, "","",""), llListen(0,"","",""), llListen(API_CHANNEL, "","","")];
     
 }
+integer g_iRunaway=TRUE;
+RunawayMenu(key kID, integer iAuth){
+    string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
+    list lButtons = ["Yes", "No"];
+    
+    if(iAuth == CMD_OWNER){
+        sPrompt+="\n\nAs the owner you have the abliity to disable or enable runaway.";
+        if(g_iRunaway)lButtons+=["Disable"];
+        else lButtons += ["Enable"];
+    }
+    Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
+}
+    
 UpdateLists(key kID){
     integer iMode = g_iMode;
     if(iMode&ACTION_ADD){
@@ -251,6 +264,12 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llLoadURL(kID, "Want to open our website for further help?", "https://opencollar.cc");
         }
     }
+    if(iAuth == CMD_WEARER || kID==g_kWearer){
+        if(llToLower(sCmd) == "runaway" || llToLower(sCmd) == "menu runaway"){
+            RunawayMenu(kID, iAuth);
+        }
+    }
+    
     
     if(iAuth == CMD_OWNER){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
@@ -299,11 +318,19 @@ UserCommand(integer iAuth, string sCmd, key kID){
             }else {
                 UpdateLists((key)sID);
             }
+        } else if(llToLower(sCmd) == "menu runaway"){
+            RunawayMenu(kID,iAuth);
         }
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
     if (iAuth == CMD_OWNER && sCmd == "runaway") {
+        // trigger runaway sequence
         
+        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0Runaway completed on %WEARERNAME%'s collar", kID);
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_owner","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_trust","");
+        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_block","");
+        llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
         return;
     }
     
@@ -528,6 +555,8 @@ default
                     g_iLimitRange = (integer)sVal;
                 } else if(sVar == "tempowner"){
                     g_kTempOwner = (key)sVal;
+                } else if(sVar == "runawaydisable"){
+                    g_iRunaway=(integer)sVal;
                 }
             } else if(sToken == "global"){
                 if(sVar == "channel"){
@@ -561,6 +590,8 @@ default
                     g_iLimitRange = TRUE;
                 } else if(sVar == "tempowner"){
                     g_kTempOwner = "";
+                } else if(sVar == "runawaydisable"){
+                    g_iRunaway=TRUE;
                 }
             } else if(sToken == "global"){
                 if(sVar == "channel"){
@@ -623,6 +654,23 @@ default
                     } else {
                         // Call this addon
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
+                    }
+                } else if(sMenu == "RunawayMenu"){
+                    if(sMsg == "Enable" && iAuth == CMD_OWNER){
+                        g_iRunaway=TRUE;
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH=runawaydisable","");
+                    } else if(sMsg == "Disable"){
+                        g_iRunaway=FALSE;
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH=runawaydisable~0", "");
+                    } else if(sMsg == "No"){
+                        // return
+                        return;
+                    } else if(sMsg == "Yes"){
+                        // trigger runaway
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0%WEARERNAME% has runaway.", "");
+                        llMessageLinked(LINK_SET,CMD_OWNER, "runaway", g_kWearer);
+                        llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
+                        llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
                     }
                 }
             }
