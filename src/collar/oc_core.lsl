@@ -306,6 +306,7 @@ Compare(string V1, string V2){
     
     if(iV1 < iV2){
         UPDATE_AVAILABLE=TRUE;
+        g_iAmNewer=FALSE;
     } else if(iV1 == iV2) return;
     else if(iV1 > iV2){
         UPDATE_AVAILABLE=FALSE;

@@ -97,7 +97,7 @@ ReadName() {
 }
 
 SetFloatText() {
-    llSetText(g_sObjectType+"\n\n "+g_sName, <1,1,1>, 1.0);
+    llSetText(g_sObjectType+"\n\n "+g_sName+"\nBuild Version: "+g_sBuildVersion, <1,1,1>, 1.0);
 }
 
 Particles(key kTarget) {
@@ -322,7 +322,7 @@ default {
             // make sure that object name matches this card.
             integer index = llSubStringIndex(sData,"&");
             g_sBuildVersion = llStringTrim(llGetSubString(sData,index+1,-1),STRING_TRIM);
-            if ((float)g_sBuildVersion == 0.0 && g_sBuildVersion != "AppInstall") {
+            if (g_sBuildVersion == "" && g_sBuildVersion != "AppInstall") {
                 llOwnerSay("Invalid .name notecard, please fix!");
                 return;
             }
