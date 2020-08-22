@@ -73,6 +73,9 @@ integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
 integer MENUNAME_REMOVE = 3003;
 
+integer AUTH_REQUEST = 600;
+integer AUTH_REPLY=601;
+
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
@@ -93,7 +96,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
@@ -108,6 +111,8 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 }
 
 integer g_iWearer=TRUE; // Lockout wearer option
+integer g_iTrustOwners = FALSE;
+integer g_iTrustTrusted = FALSE;
 Menu(key kID, integer iAuth) {
     if(iAuth == CMD_OWNER && kID==g_kWearer && !g_iHasOwners){
         if(!g_iWearer){
@@ -129,6 +134,8 @@ Menu(key kID, integer iAuth) {
     if(!g_iWearer){
         lButtons += [Checkbox(g_iHelplessMode, "Helpless")];
     }
+    
+    lButtons += [Checkbox(g_iTrustOwners, "Trust Owners"), Checkbox(g_iTrustTrusted, "Trust Trusted")];
     
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
 }
@@ -286,7 +293,11 @@ Process(string msg, key id, integer iWillPrompt){
             else llRegionSayTo(id, RLV_RELAY_CHANNEL, ident+","+(string)id+","+command+",ko");           
         }
         
-        if(DoPrompt)PromptForSource(id,msg);
+        if(DoPrompt){
+            // Calculate authorization first
+            llMessageLinked(LINK_SET, AUTH_REQUEST,  "relay`"+msg, llList2Key(llGetObjectDetails(id, [OBJECT_OWNER]),0));
+            //PromptForSource(id,msg);
+        }
 }
 integer g_iHelplessMode=FALSE;
 HelplessChecks(){
@@ -297,6 +308,17 @@ HelplessChecks(){
 }
 
 integer g_iHasOwners=FALSE;
+
+DoPending(){
+    g_lAllowedSources = [g_kPendingSource]+g_lAllowedSources;
+    integer ii = 0;
+    integer iEnd = llGetListLength(g_lPendingRLV);
+    for(ii=0;ii<iEnd;ii++){
+        Process(llList2String(g_lPendingRLV,ii), g_kPendingSource, FALSE);
+    }
+    g_lPendingRLV=[];
+    g_kPendingSource=NULL_KEY;
+}
 default
 {
     state_entry()
@@ -393,13 +415,17 @@ default
                     } else if(sMsg == Checkbox(g_iHelplessMode, "Helpless")){
                         g_iHelplessMode = 1-g_iHelplessMode;
                         llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_helpless="+(string)g_iHelplessMode,"");
+                    } else if(sMsg == Checkbox(g_iTrustOwners, "Trust Owners")){
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_trustowner="+(string)((g_iTrustOwners=1-g_iTrustOwners)), "");
+                    } else if(sMsg == Checkbox(g_iTrustTrusted, "Trust Trusted")){
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "relay_trusttrust="+(string)((g_iTrustTrusted=1-g_iTrustTrusted)),"");
                     }
                     @noaccess;
                     if(sMsg == "REFUSE" && (iAuth == CMD_OWNER || iAuth==CMD_WEARER) && !g_iHelplessMode){
                         llMessageLinked(LINK_SET, CMD_RELAY_SAFEWORD, "safeword", "");
                     }
                     
-                    if(iRespring)Menu(kAv,iAuth);
+                    if(iRespring)llMessageLinked(LINK_SET, 0, "menu Relay", kAv);
                     if(g_iHelplessMode)
                         HelplessChecks();
                 } else if(sMenu == "AskPrompt"){
@@ -409,15 +435,24 @@ default
                         g_lPendingRLV=[];
                         g_kPendingSource=NULL_KEY;
                     } else {
-                        g_lAllowedSources = [g_kPendingSource]+g_lAllowedSources;
-                        integer ii = 0;
-                        integer iEnd = llGetListLength(g_lPendingRLV);
-                        for(ii=0;ii<iEnd;ii++){
-                            
-                            Process(llList2String(g_lPendingRLV,ii), g_kPendingSource, FALSE);
+                        DoPending();
+                    }
+                }
+            }
+        } else if(iNum == AUTH_REPLY){
+            list lTmp = llParseString2List(sStr, ["|"],[]);
+            key kAv = (key)llList2String(lTmp,1);
+            integer iAuth=(integer)llList2String(lTmp,2);
+            if(llList2String(lTmp,0) == "AuthReply"){
+                // OK
+                list lTmp2 = llParseString2List((string)kID, ["`"],[]);
+                if(llList2String(lTmp2, 0)=="relay"){
+                    if(g_iMode == MODE_ASK){
+                        if((g_iTrustOwners && iAuth == CMD_OWNER) || (g_iTrustTrusted && iAuth==CMD_TRUSTED)){
+                            DoPending();
+                        } else {
+                            PromptForSource(kAv, kID);
                         }
-                        g_lPendingRLV=[];
-                        g_kPendingSource=NULL_KEY;
                     }
                 }
             }
@@ -444,6 +479,10 @@ default
                     g_iHelplessMode = (integer)llList2String(lSettings,2);
                     // Perform sanity check on helpless mode
                     HelplessChecks();
+                } else if(llList2String(lSettings,1) == "trustowner"){
+                    g_iTrustOwners = (integer)llList2String(lSettings,2);
+                } else if(llList2String(lSettings,1) == "trusttrust"){
+                    g_iTrustTrusted=(integer)llList2String(lSettings,2);
                 }
             } else if(llList2String(lSettings,0)=="auth"){
                 if(llList2String(lSettings,1)=="owner"){

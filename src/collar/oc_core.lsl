@@ -502,7 +502,7 @@ default
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing range limit", kAv);
                         }
                     } else if(sMsg == "Runaway"){
-                        llMessageLinked(LINK_SET,0,"menu runaway", kAv);
+                        llMessageLinked(LINK_SET,0,"menu run", kAv);
                         iRespring=FALSE;
                     }
                     

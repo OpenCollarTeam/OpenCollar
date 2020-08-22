@@ -264,8 +264,8 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llLoadURL(kID, "Want to open our website for further help?", "https://opencollar.cc");
         }
     }
-    if(iAuth == CMD_WEARER || kID==g_kWearer){
-        if(llToLower(sCmd) == "runaway" || llToLower(sCmd) == "menu runaway"){
+    if(iAuth == CMD_WEARER || kID==g_kWearer && iAuth != CMD_OWNER){
+        if(llToLower(sCmd) == "run" || llToLower(sCmd) == "menu run" || llToLower(sCmd) == "runaway"){
             RunawayMenu(kID, iAuth);
         }
     }
@@ -318,7 +318,7 @@ UserCommand(integer iAuth, string sCmd, key kID){
             }else {
                 UpdateLists((key)sID);
             }
-        } else if(llToLower(sCmd) == "menu runaway"){
+        } else if(llToLower(sCmd) == "menu run" && kID != g_kWearer){
             RunawayMenu(kID,iAuth);
         }
     }
@@ -668,7 +668,7 @@ default
                     } else if(sMsg == "Yes"){
                         // trigger runaway
                         llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0%WEARERNAME% has runaway.", "");
-                        llMessageLinked(LINK_SET,CMD_OWNER, "runaway", g_kWearer);
+                        llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                         llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
                         llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
                     }
