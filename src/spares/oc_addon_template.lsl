@@ -55,7 +55,7 @@ Menu(key kID, integer iAuth) {
     list lButtons = ["A Button"];
     
     //llSay(0, "opening menu");
-    Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main");
+    Dialog(kID, sPrompt, lButtons, ["DISCONNECT", UPMENU], 0, iAuth, "Menu~Main");
 }
 
 
@@ -88,7 +88,7 @@ default
     touch_start(integer t){
         // Send a settings request to the collar
         //llSay(0, "Packet sent to collar");
-        llWhisper(API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "from_addon", "addon_name", g_sAddon, "bridge", FALSE, "iNum", LM_SETTING_REQUEST, "sMsg", "ALL", "kID", llDetectedKey(0)]));
+        llWhisper(API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "addon_name", g_sAddon, "bridge", FALSE]));
     }
     
     listen(integer c,string n,key i,string m){
@@ -137,6 +137,10 @@ default
                         if(sMenu == "Menu~Main"){
                             if(sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu Addons", kAv);
                             else if(sMsg == "A Button") llSay(0, "This is a example addon.");
+                            else if(sMsg == "DISCONNECT"){
+                                llRegionSayTo(i, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "bridge", FALSE, "addon_name", g_sAddon]));
+                                g_lMenuIDs=[];
+                            }
                         }
                     }
                 }
