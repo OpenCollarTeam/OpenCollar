@@ -562,6 +562,9 @@ UserCommand(integer iAuth, string sMessage, key kMessageID, integer bFromMenu) {
             } else
                 SensorDialog(g_kCmdGiver, "\nWho shall we pass the leash?\n", sVal,iAuth,"LeashTarget", AGENT);
         } else if (sComm == "length") {
+            if(!CheckCommandAuth(kMessageID,iAuth)){
+                return;
+            }
             integer iNewLength = (integer)sVal;
             if (sVal==llToLower(BUTTON_UPMENU)){
                 UserCommand(iAuth, "leashmenu", kMessageID ,bFromMenu);

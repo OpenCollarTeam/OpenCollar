@@ -62,7 +62,7 @@ string L_CLASSIC_TEX= "Chain"; //texture name when using the classic particle st
 string L_RIBBON_TEX = "Silk"; //texture name when using the ribbon_mask particle stream
 // Defalut leash particle, can read from defaultsettings:
 // leashParticle=Shine~1~ParticleMode~Ribbon~R_Texture~Silk~C_Texture~Chain~Color~<1,1,1>~Size~<0.07,0.07,1.0>~Gravity~-0.7~C_TextureID~keyID~R_TextureID~keyID
-list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","RTexture","Silk","C_Texture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
+list g_lDefaultSettings = [L_GLOW,"1",L_TURN,"0",L_STRICT,"0","ParticleMode","Ribbon","RTexture","Silk","CTexture","Chain",L_COLOR,"<1.0,1.0,1.0>",L_SIZE,"<0.04,0.04,1.0>",L_GRAVITY,"-1.0"];
 
 string Uncheckbox(string Button){
     return llGetSubString(Button, llStringLength(llList2String(g_lCheckboxes, 0))+1, -1);
