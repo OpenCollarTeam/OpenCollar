@@ -452,11 +452,9 @@ default
                 if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
                 return;
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
-            else if(PacketType == "from_addon"){
-            
-            
-            
-            
+            else if(PacketType == "online"){
+                // this is a initial handshake
+                
                 integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
                 if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
                 // begin to pass stuff to link messages!
@@ -471,6 +469,25 @@ default
                     // Add the addon and be done with
                     g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
                 }
+            } else if(PacketType == "offline"){
+                // unpair
+                integer iPos = llListFindList(g_lAddons, [i]);
+                if(iPos==-1)return;
+                else{
+                    g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
+                }
+            }
+            else if(PacketType == "from_addon"){
+            
+            
+            
+            
+                integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
+                if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
+                // begin to pass stuff to link messages!
+                // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+                
+                if(llListFindList(g_lAddons, [i])==-1)return; //<--- deny further action. Addon not registered
                 
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
@@ -670,7 +687,8 @@ default
                         llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0%WEARERNAME% has runaway.", "");
                         llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                         llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
-                        llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
+                        llOwnerSay("@clear");
+                        llMessageLinked(LINK_SET, RLV_REFRESH, "","");
                     }
                 }
             }
