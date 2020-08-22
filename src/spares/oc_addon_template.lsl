@@ -75,7 +75,13 @@ UserCommand(integer iNum, string sStr, key kID) {
         
     }
 }
-
+Link(string packet, integer iNum, string sStr, key kID){
+    string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID]);
+    if(g_kCollar!= "" || g_kCollar!= NULL_KEY) 
+        llRegionSayTo(g_kCollar, API_CHANNEL, pkt);
+    else
+        llRegionSay(API_CHANNEL, pkt);
+}
 key g_kCollar;
 default
 {
@@ -88,14 +94,19 @@ default
     touch_start(integer t){
         // Send a settings request to the collar
         //llSay(0, "Packet sent to collar");
-        llWhisper(API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "addon_name", g_sAddon, "bridge", FALSE]));
+        g_kCollar=llDetectedKey(0);
+        Link("online", 0, (string)llGetCreator(), llDetectedKey(0)); // todo: make collar actually use the kID value to filter who the addon is trying to ping. also todo: make sStr the creator value, to filter out wearer created addons by a optional settings flag.
+
+        g_kCollar=""; // todo: replace this when a signal is added to tell the addon the collar accepted it
+
+//        llWhisper(API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "addon_name", g_sAddon, "bridge", FALSE]));
     }
     
     listen(integer c,string n,key i,string m){
         //llWhisper(0, "message from collar: "+m);
         if(llJsonGetValue(m,["pkt_type"])=="ping"){
             if(g_kCollar==i){
-                llRegionSay(API_CHANNEL,llList2Json(JSON_OBJECT, ["pkt_type", "pong"]));
+                Link("pong", 0,"","");
             }
         } else if(llJsonGetValue(m,["pkt_type"])=="from_collar"){
             // process link message if in range of addon
@@ -135,10 +146,10 @@ default
                         integer iAuth = llList2Integer(lMenuParams,3);
                         
                         if(sMenu == "Menu~Main"){
-                            if(sMsg == UPMENU) llMessageLinked(LINK_SET, iAuth, "menu Addons", kAv);
+                            if(sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
                             else if(sMsg == "A Button") llSay(0, "This is a example addon.");
                             else if(sMsg == "DISCONNECT"){
-                                llRegionSayTo(i, API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "offline", "bridge", FALSE, "addon_name", g_sAddon]));
+                                Link("offline", 0, "","");
                                 g_lMenuIDs=[];
                             }
                         }
