@@ -132,6 +132,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         if(llListFindList(g_lPoses,[sChangetype])!=-1){
             // this is a pose
+            if(g_sCurrentAnimation!="")llStopAnimation(g_sCurrentAnimation);
             g_sCurrentAnimation = sChangetype;
             
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+g_sCurrentAnimation,"");
@@ -409,11 +410,15 @@ default
                 }
             } else if(sTok == "anim"){
                 if(sVar == "pose"){
+                    string sFormerAnimation = g_sCurrentAnimation;
+                    if(sFormerAnimation!="")llStopAnimation(sFormerAnimation);
                     g_sCurrentAnimation = sVal;
                     g_iTimerMode = TIMER_START_ANIMATION;
                     llSetTimerEvent(1);
-                    if(g_iPermissionGranted)
+                    if(g_iPermissionGranted){
+                        llStopAnimation(sFormerAnimation);
                         llStartAnimation(g_sCurrentAnimation);
+                    }
                         //llSetAnimationOverride("Standing", g_sCurrentAnimation);
                 } else if(sVar == "animlock"){
                     g_iAnimLock = (integer)sVal; // <-- used incase its set in .settings to false for some reason
@@ -436,12 +441,14 @@ default
                 if(sVar == "locked") g_iLocked=FALSE;
             }else if(sTok == "anim"){
                 if(sVar == "pose"){
-                    llStopAnimation(g_sCurrentAnimation);
-                    g_sCurrentAnimation="";
-                    //llResetAnimationOverride("Standing");
+                    if(g_sCurrentAnimation!= ""){
+                        llStopAnimation(g_sCurrentAnimation);
+                        g_sCurrentAnimation="";
+                        //llResetAnimationOverride("Standing");
                     
-                    if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
-                    else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+                        if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+                        else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+                    }
                 } else if(sVar == "animlock")g_iAnimLock=FALSE;
             } else if(sTok == "offset"){
                 if(sVar == "hovers"){
