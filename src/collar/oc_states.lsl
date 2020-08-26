@@ -159,7 +159,9 @@ default
 {
     state_entry()
     {
+        llSetMemoryLimit(30000);
         llSetTimerEvent(1);
+        //llScriptProfiler(TRUE);
     }
     
     
@@ -201,6 +203,8 @@ default
             g_iWaitMenu=FALSE;
             SettingsMenu(0,g_kMenuUser,g_iLastAuth);
         }
+        
+        //llWhisper(0, "oc_states max used over time: "+(string)llGetSPMaxMemory());
     }
     
     

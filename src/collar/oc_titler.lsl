@@ -223,9 +223,11 @@ default
     }
     state_entry()
     {
+        llSetMemoryLimit(35000);
         g_kWearer = llGetOwner();
         
         NukeOtherText();
+        //llOwnerSay((string)llGetUsedMemory());
     }
     timer(){
         // calculate offset

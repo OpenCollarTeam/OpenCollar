@@ -282,6 +282,7 @@ default
     }
     state_entry()
     {
+        llSetMemoryLimit(40000);
         if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
         llSleep(2);
