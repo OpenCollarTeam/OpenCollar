@@ -1,3 +1,0 @@
-20171212.1
-
-Welcome to OpenCollar version 7!  To see what's new, visit https://github.com/OpenCollarTeam/OpenCollar/blob/master/RELEASE_NOTES.md.
