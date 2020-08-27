@@ -240,7 +240,7 @@ MoveEnd(){
     if(g_iPermissionGranted && g_sCurrentAnimation != ""){
         g_iTimerMode = TIMER_START_ANIMATION;
         llResetTime();
-        llStopAnimation(g_sCurrentAnimation);
+        if(g_sCurrentAnimation!="")llStopAnimation(g_sCurrentAnimation);
         //llResetAnimationOverride("Standing");
         // wait a few seconds before restarting the animation
         llSetTimerEvent(1);
@@ -411,12 +411,11 @@ default
             } else if(sTok == "anim"){
                 if(sVar == "pose"){
                     string sFormerAnimation = g_sCurrentAnimation;
-                    if(sFormerAnimation!="")llStopAnimation(sFormerAnimation);
                     g_sCurrentAnimation = sVal;
                     g_iTimerMode = TIMER_START_ANIMATION;
                     llSetTimerEvent(1);
                     if(g_iPermissionGranted){
-                        llStopAnimation(sFormerAnimation);
+                        if(sFormerAnimation!="")llStopAnimation(sFormerAnimation);
                         llStartAnimation(g_sCurrentAnimation);
                     }
                         //llSetAnimationOverride("Standing", g_sCurrentAnimation);
