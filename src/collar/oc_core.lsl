@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0005"; // Provide enough room
+string COLLAR_VERSION = "8.0.0006"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -166,7 +166,7 @@ string g_sWearerName;
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
+    if (iNum != CMD_OWNER && iNum != CMD_WEARER && iNum != CMD_TRUSTED) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
@@ -181,9 +181,10 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llList2String(lParameters,0);
         string sChangevalue = llList2String(lParameters,1);
         string sText;
+        
         if(sChangetype=="fix"){
             g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
-            
+            llMessageLinked(LINK_SET,NOTIFY, "0Fixed menus", kID);
             llMessageLinked(LINK_SET,0,"initialize","");
         } else if(sChangetype == "update"){
             if(iNum == CMD_OWNER || iNum == CMD_WEARER){
@@ -252,7 +253,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, NOTIFY, "0The wearer name is: %WEARERNAME%",kID);
                 return;
             }
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_WearerName="+sChangevalue, "");
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_wearername="+sChangevalue, "");
             llMessageLinked(LINK_SET, NOTIFY, "0The wearer's name is now set to %WEARERNAME%", kID);
         } else if(llToLower(sChangetype) == "device" && iNum == CMD_OWNER){
             if(llToLower(sChangevalue) == "name"){
@@ -262,7 +263,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                     llMessageLinked(LINK_SET, NOTIFY, "0The current device name is: %DEVICENAME%",kID);
                     return;
                 }
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_DeviceName="+sChangevalue,"");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_devicename="+sChangevalue,"");
                 llMessageLinked(LINK_SET, NOTIFY, "0The device name is now set to: %DEVICENAME%", kID);
             }
         } else if(llToLower(sChangetype) == "allowhide"){
@@ -271,6 +272,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 else llMessageLinked(LINK_SET,NOTIFY, "0The wearer can hide the collar on their own", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)(!g_iAllowHide), "");
             }
+        } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
+            // allow locking
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
+            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been locked", kID);
+        } else if(llToLower(sChangetype) == "unlock" && (iNum == CMD_OWNER || iNum == CMD_TRUSTED) && !g_iWelded){
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_locked","");
+            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been unlocked", kID);
         } else {
             if(sChangevalue!="")return;
             if(llToLower(sChangetype) == "access")AccessMenu(kID,iNum);
@@ -413,14 +421,10 @@ default
                 integer iRespring=TRUE;
                 if(sMenu == "Menu~Main"){
                     if(sMsg == Checkbox(g_iLocked,"Lock")){
-                        if(iAuth==CMD_OWNER && g_iLocked){
-                            g_iLocked=FALSE;
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
-                            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been unlocked", kAv);
+                        if((iAuth==CMD_OWNER || iAuth == CMD_TRUSTED) && g_iLocked){
+                            UserCommand(iAuth, "unlock", kAv);
                         } else if((iAuth == CMD_OWNER || iAuth == CMD_TRUSTED || iAuth == CMD_WEARER )  && !g_iLocked){
-                            g_iLocked=TRUE;
-                            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
-                            llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been locked", kAv);
+                            UserCommand(iAuth, "lock", kAv);
                         } else {
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to the lock", kAv);
                         }
