@@ -571,12 +571,12 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-            if (sToken == g_sGlobalToken+"DeviceType") g_sDeviceType = sValue;
-            else if (sToken == g_sGlobalToken+"DeviceName") {
+            if (sToken == g_sGlobalToken+"devicetype") g_sDeviceType = sValue;
+            else if (sToken == g_sGlobalToken+"devicename") {
                 g_sDeviceName = sValue;
                 //llSetObjectName(g_sDeviceName);
 //                llSetLinkPrimitiveParamsFast(LINK_ROOT,[PRIM_NAME,g_sDeviceName]);
-            } else if (sToken == g_sGlobalToken+"WearerName") {
+            } else if (sToken == g_sGlobalToken+"wearername") {
                 if (llSubStringIndex(sValue, "secondlife:///app/agent"))
                     g_sWearerName =  "["+NameURI(g_kWearer)+" " + sValue + "]";
                 else g_sWearerName = sValue;
