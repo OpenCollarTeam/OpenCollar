@@ -340,6 +340,7 @@ GetSettings(integer iStartParticles) {
 // Added bSave as a boolean, to make this a more versatile wrapper
 SetTexture(string sIn, key kIn) {
     g_sParticleTexture = sIn;
+    g_sLeashParticleTexture=(string)NULL_KEY;
     if (sIn=="Silk") g_sLeashParticleTexture="cdb7025a-9283-17d9-8d20-cee010f36e90";
     else if (sIn=="Chain") g_sLeashParticleTexture="4cde01ac-4279-2742-71e1-47ff81cc3529";
     else if (sIn=="Leather") g_sLeashParticleTexture="8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
@@ -351,10 +352,14 @@ SetTexture(string sIn, key kIn) {
         g_sLeashParticleTexture = llGetInventoryKey(g_sParticleTexture);
         if(g_sLeashParticleTexture == NULL_KEY) g_sLeashParticleTexture=sIn; //for textures without full perm, we send the texture name. For this to work, texture must be in the emitter prim as well as in root, if different.
     }
+    
+    if(g_sLeashParticleTexture!=(string)NULL_KEY)return;
+    
     if (g_sLeashParticleMode == "Ribbon") {
         if (llToLower(llGetSubString(sIn,0,6)) == "!ribbon") L_RIBBON_TEX = llGetSubString(sIn, 8, -1);
         else L_RIBBON_TEX = sIn;
         if (GetSetting("rtexture")) g_sLeashParticleTexture = GetSetting("rtexture");
+        
         if (kIn)
             llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_RIBBON_TEX,kIn);
     }
@@ -362,6 +367,7 @@ SetTexture(string sIn, key kIn) {
         if (llToLower(llGetSubString(sIn,0,7)) == "!classic") L_CLASSIC_TEX =  llGetSubString(sIn, 9, -1);
         else L_CLASSIC_TEX = sIn;
         if (GetSetting("ctexture")) g_sLeashParticleTexture = GetSetting("ctexture");
+        
         if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + L_CLASSIC_TEX,kIn);
     } else  if (kIn) llMessageLinked(LINK_SET,NOTIFY,"0"+"Leash texture set to " + g_sParticleTexture,kIn);
     //Debug("particleTextureID= " + (string)g_sLeashParticleTexture);
@@ -374,6 +380,7 @@ SetTexture(string sIn, key kIn) {
             StartParticles(g_kParticleTarget);
         }
     }
+    
 }
 
 //Menus
@@ -499,7 +506,7 @@ default {
                     if (sButton == L_COLOR) {
                         ColorMenu(kAv, iAuth);
                         return;
-                    } else if (sButton == "Feel") {
+                    } else if (sButton == "feel") {
                         FeelMenu(kAv, iAuth);
                         return;
                     } else if(sButtonType == L_GLOW) {
