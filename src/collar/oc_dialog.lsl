@@ -113,6 +113,12 @@ NotifyOwners(string sMsg, string comments) {
     }
 }
 
+integer IsLikelyAvatar(key kID){
+    if(llGetAgentSize(kID)!=ZERO_VECTOR)return TRUE;
+    else if(llGetOwnerKey(kID) == kID)return TRUE;
+    else return FALSE;
+}
+
 Say(string sMsg, integer iWhisper) {
     sMsg = SubstituteVars(sMsg);
     string sObjectName = llGetObjectName();
@@ -199,8 +205,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) {
                 //fixme: inlined single use key2name function
-                if (g_iSelectAviMenu) sButton = NameURI((key)sButton);
-                else if (llGetDisplayName((key)sButton)) sButton=llGetDisplayName((key)sButton);
+                if(IsLikelyAvatar((key)sButton)) sButton = NameURI((key)sButton);
                 else sButton=llKey2Name((key)sButton);
             }
             lButtons += [sButton];
@@ -219,7 +224,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
 
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
-            if(g_iSelectAviMenu) sButton = sButtonNumber;
+            if(llSubStringIndex(sButton, "secondlife:///app")!=-1) sButton = sButtonNumber;
             
             
             lButtons = llListReplaceList(lButtons, [sButton], iCur,iCur);
