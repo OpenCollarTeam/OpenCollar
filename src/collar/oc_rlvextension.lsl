@@ -262,6 +262,7 @@ Save(integer iBoot){
     }
 }
 
+integer g_iLastSitAuth = 599;
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
    // if ((llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu1) || (llSubStringIndex(sStr,"exceptions") && sStr != "menu "+g_sSubMenu2)) return;
@@ -277,13 +278,19 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangekey = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
 //        string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),2);
         if (sChangetype == "sit") {
-            if ((sChangekey == "[UNSIT]" || sChangekey == "unsit") && iNum != CMD_WEARER ) {
+            if ((sChangekey == "[unsit]" || sChangekey == "unsit") && iNum <= g_iLastSitAuth ) {
                 if(g_iStrictSit){
                     llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=0="+(string)iNum, kID);
                 }
                 llSleep(1.5);
                 llMessageLinked(LINK_SET,RLV_CMD,"unsit=force","Macros");
+                g_iLastSitAuth = 599;
             } else {
+                if(iNum > g_iLastSitAuth){
+                    llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to sit.", kID);
+                    return;
+                }
+                g_iLastSitAuth = iNum;
                 if(g_iStrictSit){
                     llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, "Stand Up=1="+(string)iNum,kID);
                 }
