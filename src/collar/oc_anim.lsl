@@ -228,9 +228,12 @@ integer g_iStoppedAdjust;
 integer g_iTimerMode;
 integer TIMER_START_ANIMATION =1;
 MoveStart(){
-    if(!g_iStoppedAdjust && g_sCurrentAnimation!=""){
+    if(g_sCurrentAnimation!=""){
+        if(!g_iStoppedAdjust){
+            llStopAnimation(g_sCurrentAnimation);
+            llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+        }
         g_iStoppedAdjust=TRUE;
-        llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
         llResetTime();
     }
 }
@@ -248,6 +251,14 @@ MoveEnd(){
     } else if(g_iPermissionGranted && g_sCurrentAnimation=="" && g_fStandHover != 0){
         llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
     }
+}
+
+PlayAnimation(){
+    // plays g_sCurrentAnimation
+    if(g_sCurrentAnimation=="")return;
+    list lTmps = llGetAnimationList(g_kWearer);
+    if(llListFindList(lTmps, [llGetInventoryKey(g_sCurrentAnimation)])==-1)llStartAnimation(g_sCurrentAnimation);
+    else return;
 }
 
 default
@@ -308,7 +319,7 @@ default
                 llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+llList2String(g_lAdjustments,iPos+1)+"=force",g_kWearer);
             }
             if(g_sCurrentAnimation!="")
-                llStartAnimation(g_sCurrentAnimation);
+                PlayAnimation();
             else{
                 if(g_fStandHover != 0) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover,g_kWearer);
             }
@@ -416,7 +427,8 @@ default
                     llSetTimerEvent(1);
                     if(g_iPermissionGranted){
                         if(sFormerAnimation!="")llStopAnimation(sFormerAnimation);
-                        llStartAnimation(g_sCurrentAnimation);
+                        if(llGetInventoryType(g_sCurrentAnimation)==INVENTORY_ANIMATION)
+                            PlayAnimation();
                     }
                         //llSetAnimationOverride("Standing", g_sCurrentAnimation);
                 } else if(sVar == "animlock"){
