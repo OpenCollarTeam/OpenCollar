@@ -182,59 +182,89 @@ RunawayMenu(key kID, integer iAuth){
     }
     Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
 }
-    
-UpdateLists(key kID){
+
+WearerConfirmListUpdate(key kID, string sReason)
+{
+    g_kMenuUser=kID;
+    // This should only be triggered if the wearer is being affected by a sensitive action
+    Dialog(g_kWearer, "\n[Access]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants change your access level.\n\nChange that will occur: "+sReason+"\n\nYou may grant or deny this action.", [], ["Allow", "Disallow"], 0, CMD_WEARER, "WearerConfirmation");
+}
+
+integer g_iGrantedConsent=FALSE;
+
+UpdateLists(key kID, key kIssuer){
     integer iMode = g_iMode;
     if(iMode&ACTION_ADD){
         if(iMode&ACTION_OWNER){
             if(llListFindList(g_lOwner, [(string)kID])==-1){
                 g_lOwner+=kID;
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added as owner", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added as owner", kIssuer);
+                llMessageLinked(LINK_SET, NOTIFY, "0You are now a owner on this collar", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), kID);
                 g_iMode = ACTION_REM | ACTION_TRUST | ACTION_BLOCK;
-                UpdateLists(kID);
+                UpdateLists(kID, kIssuer);
             }
         }
         if(iMode & ACTION_TRUST){
             if(llListFindList(g_lTrust, [(string)kID])==-1){
                 g_lTrust+=kID;
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added to the trusted user list", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added to the trusted user list", kIssuer);
+                llMessageLinked(LINK_SET, NOTIFY, "0You are now a trusted user on this collar", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),kID);
                 g_iMode = ACTION_REM | ACTION_OWNER | ACTION_BLOCK;
-                UpdateLists(kID);
+                UpdateLists(kID, kIssuer);
             }
         }
         if(iMode & ACTION_BLOCK){
             if(llListFindList(g_lBlock, [(string)kID])==-1){
-                g_lBlock+=kID;
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been blocked", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"");
-                g_iMode=ACTION_REM|ACTION_OWNER|ACTION_TRUST;
-                UpdateLists(kID);
+                if(kID != g_kWearer || g_iGrantedConsent){
+                    g_lBlock+=kID;
+                    llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been blocked", kIssuer);
+                    llMessageLinked(LINK_SET, NOTIFY, "0Your access to this collar is now blocked", kID);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"");
+                    g_iMode=ACTION_REM|ACTION_OWNER|ACTION_TRUST;
+                    UpdateLists(kID, kIssuer);
+                    g_iGrantedConsent=FALSE;
+                } else if(kID==g_kWearer && !g_iGrantedConsent){
+                    WearerConfirmListUpdate(kIssuer, "Block access entirely");
+                }
             }
         }
     } else if(iMode&ACTION_REM){
         if(iMode&ACTION_OWNER){
             if(llListFindList(g_lOwner, [(string)kID])!=-1){
-                integer iPos = llListFindList(g_lOwner, [(string)kID]);
-                g_lOwner = llDeleteSubList(g_lOwner, iPos, iPos);
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the owner role", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","),"");
+                if(kID!=g_kWearer || g_iGrantedConsent){
+                    integer iPos = llListFindList(g_lOwner, [(string)kID]);
+                    g_lOwner = llDeleteSubList(g_lOwner, iPos, iPos);
+                    llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the owner role", kIssuer);
+                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","),"");
+                    g_iGrantedConsent=FALSE;
+                } else if(kID == g_kWearer && !g_iGrantedConsent){
+                    WearerConfirmListUpdate(kIssuer, "Removal of self ownership");
+                }
             }
         } 
         if(iMode&ACTION_TRUST){
             if(llListFindList(g_lTrust, [(string)kID])!=-1){
-                integer iPos = llListFindList(g_lTrust, [(string)kID]);
-                g_lTrust = llDeleteSubList(g_lTrust, iPos, iPos);
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the trusted role", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),"");
+                if(kID != g_kWearer || g_iGrantedConsent){
+                    integer iPos = llListFindList(g_lTrust, [(string)kID]);
+                    g_lTrust = llDeleteSubList(g_lTrust, iPos, iPos);
+                    llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the trusted role", kIssuer);
+                    llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),"");
+                    g_iGrantedConsent=FALSE;
+                } else if(kID == g_kWearer && !g_iGrantedConsent){
+                    WearerConfirmListUpdate(kIssuer, "Removal from Trusted List");
+                }
             }
         }
-        if(iMode & ACTION_BLOCK){
+        if(iMode & ACTION_BLOCK){ // no need to do a confirmation to the wearer if they become unblocked
             if(llListFindList(g_lBlock, [(string)kID])!=-1){
                 integer iPos = llListFindList(g_lBlock, [(string)kID]);
                 g_lBlock = llDeleteSubList(g_lBlock, iPos, iPos);
-                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the blocked list", kID);
+                llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the blocked list", kIssuer);
+                llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar blacklist", kID);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"");
             }
         }
@@ -313,10 +343,11 @@ UserCommand(integer iAuth, string sCmd, key kID){
                     if(sType == "owner")lOpts=g_lOwner;
                     else if(sType == "trust")lOpts=g_lTrust;
                     else if(sType == "block")lOpts=g_lBlock;
+                    
                     Dialog(kID, "OpenCollar\n\nRemove "+sType, lOpts, [UPMENU],0,iAuth,"removeUser");
                 }
             }else {
-                UpdateLists((key)sID);
+                UpdateLists((key)sID, kID);
             }
         } else if(llToLower(sCmd) == "menu run" && kID != g_kWearer){
             RunawayMenu(kID,iAuth);
@@ -452,9 +483,11 @@ default
                 if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
                 return;
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
-            else if(PacketType == "online"){
-                // this is a initial handshake
-                
+            else if(PacketType == "from_addon"){
+            
+            
+            
+            
                 integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
                 if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
                 // begin to pass stuff to link messages!
@@ -469,25 +502,6 @@ default
                     // Add the addon and be done with
                     g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
                 }
-            } else if(PacketType == "offline"){
-                // unpair
-                integer iPos = llListFindList(g_lAddons, [i]);
-                if(iPos==-1)return;
-                else{
-                    g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
-                }
-            }
-            else if(PacketType == "from_addon"){
-            
-            
-            
-            
-                integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
-                if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
-                // begin to pass stuff to link messages!
-                // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
-                
-                if(llListFindList(g_lAddons, [i])==-1)return; //<--- deny further action. Addon not registered
                 
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
@@ -641,21 +655,29 @@ default
                         llMessageLinked(LINK_SET, iAuth, "menu Access", kAv);
                         return;
                     } else if(sMsg == ">Wearer<"){
-                        UpdateLists(llGetOwner());
+                        UpdateLists(llGetOwner(), g_kMenuUser);
                         llMessageLinked(LINK_SET, 0, "menu Access", kAv);
                     }else {
                         //UpdateLists((key)sMsg);
                         g_kTry = (key)sMsg;
                         if(!(g_iMode&ACTION_BLOCK))
                             Dialog(g_kTry, "OpenCollar\n\n"+SLURL(g_kTry)+" is trying to add you to an access list, do you agree?", ["Yes", "No"], [], 0, CMD_NOACCESS, "scan~confirm");
-                        else UpdateLists((key)sMsg);
+                        else UpdateLists((key)sMsg, g_kMenuUser);
+                    }
+                } else if(sMenu == "WearerConfirmation"){
+                    if(sMsg == "Allow"){
+                        // process
+                        UpdateLists(g_kWearer, g_kMenuUser);
+                    } else if(sMsg == "Disallow"){
+                        llMessageLinked(LINK_SET, NOTIFY, "0The wearer did not give consent for this action", g_kMenuUser);
+                        g_iMode=0;
                     }
                 } else if(sMenu == "scan~confirm"){
                     if(sMsg == "No"){
                         g_iMode = 0;
                         llMessageLinked(LINK_SET, 0, "menu Access", kAv);
                     } else if(sMsg == "Yes"){
-                        UpdateLists(g_kTry);
+                        UpdateLists(g_kTry, g_kMenuUser);
                         llSleep(1);
                         llMessageLinked(LINK_SET, 0, "menu Access", kAv);
                     }
@@ -663,7 +685,7 @@ default
                     if(sMsg == UPMENU){
                         llMessageLinked(LINK_SET,0, "menu Access", kAv);
                     }else{
-                        UpdateLists(sMsg);
+                        UpdateLists(sMsg, g_kMenuUser);
                     }
                 } else if(sMenu == "addons"){
                     if(sMsg == UPMENU){
@@ -687,8 +709,7 @@ default
                         llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0%WEARERNAME% has runaway.", "");
                         llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                         llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
-                        llOwnerSay("@clear");
-                        llMessageLinked(LINK_SET, RLV_REFRESH, "","");
+                        llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
                     }
                 }
             }

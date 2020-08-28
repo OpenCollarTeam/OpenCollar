@@ -274,9 +274,11 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
             // allow locking
+            g_iLocked=TRUE;
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_locked="+(string)g_iLocked,"");
             llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been locked", kID);
         } else if(llToLower(sChangetype) == "unlock" && (iNum == CMD_OWNER || iNum == CMD_TRUSTED) && !g_iWelded){
+            g_iLocked=FALSE;
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_locked","");
             llMessageLinked(LINK_SET, NOTIFY, "1%WEARERNAME%'s collar has been unlocked", kID);
         } else {
