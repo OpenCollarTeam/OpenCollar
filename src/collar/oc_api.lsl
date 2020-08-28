@@ -193,6 +193,7 @@ WearerConfirmListUpdate(key kID, string sReason)
 integer g_iGrantedConsent=FALSE;
 
 UpdateLists(key kID, key kIssuer){
+    //llOwnerSay(llDumpList2String([kID, kIssuer, g_kMenuUser, g_iMode, g_iGrantedConsent], ", "));
     integer iMode = g_iMode;
     if(iMode&ACTION_ADD){
         if(iMode&ACTION_OWNER){
@@ -217,7 +218,7 @@ UpdateLists(key kID, key kIssuer){
         }
         if(iMode & ACTION_BLOCK){
             if(llListFindList(g_lBlock, [(string)kID])==-1){
-                if(kID != g_kWearer || g_iGrantedConsent){
+                if(kID != g_kWearer || g_iGrantedConsent || kIssuer==g_kWearer){
                     g_lBlock+=kID;
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been blocked", kIssuer);
                     llMessageLinked(LINK_SET, NOTIFY, "0Your access to this collar is now blocked", kID);
@@ -233,7 +234,7 @@ UpdateLists(key kID, key kIssuer){
     } else if(iMode&ACTION_REM){
         if(iMode&ACTION_OWNER){
             if(llListFindList(g_lOwner, [(string)kID])!=-1){
-                if(kID!=g_kWearer || g_iGrantedConsent){
+                if(kID!=g_kWearer || g_iGrantedConsent || kIssuer==g_kWearer){
                     integer iPos = llListFindList(g_lOwner, [(string)kID]);
                     g_lOwner = llDeleteSubList(g_lOwner, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the owner role", kIssuer);
@@ -247,7 +248,7 @@ UpdateLists(key kID, key kIssuer){
         } 
         if(iMode&ACTION_TRUST){
             if(llListFindList(g_lTrust, [(string)kID])!=-1){
-                if(kID != g_kWearer || g_iGrantedConsent){
+                if(kID != g_kWearer || g_iGrantedConsent || kIssuer==g_kWearer){
                     integer iPos = llListFindList(g_lTrust, [(string)kID]);
                     g_lTrust = llDeleteSubList(g_lTrust, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the trusted role", kIssuer);
@@ -667,10 +668,13 @@ default
                 } else if(sMenu == "WearerConfirmation"){
                     if(sMsg == "Allow"){
                         // process
+                        g_iGrantedConsent=TRUE;
                         UpdateLists(g_kWearer, g_kMenuUser);
+                        llMessageLinked(LINK_SET, 0, "menu Access", g_kMenuUser);
                     } else if(sMsg == "Disallow"){
                         llMessageLinked(LINK_SET, NOTIFY, "0The wearer did not give consent for this action", g_kMenuUser);
                         g_iMode=0;
+                        llMessageLinked(LINK_SET, 0, "menu Access", g_kMenuUser);
                     }
                 } else if(sMenu == "scan~confirm"){
                     if(sMsg == "No"){
