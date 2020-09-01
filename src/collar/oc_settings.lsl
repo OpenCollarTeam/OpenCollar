@@ -344,7 +344,7 @@ default
     timer(){
         if(!SendAValue()){
             llSetTimerEvent(0);
-        }else llSetTimerEvent(1); // send 1 setting per second
+        }else llSetTimerEvent(0.5); // send 1 setting per half second
     }
     
     
