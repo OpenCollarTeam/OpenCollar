@@ -406,6 +406,13 @@ string tf(integer a){
     if(a)return "true";
     return "false";
 }
+
+SayToAddon(string pkt, integer iNum, string sStr, key kID){
+    llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "pkt_type", pkt, "iNum", iNum, "sMsg", sStr, "kID", kID]));
+}
+SayToAddonX(key k, string pkt, integer iNum, string sStr, key kID){
+    llRegionSayTo(k, API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "pkt_type", pkt, "iNum", iNum, "sMsg", sStr, "kID", kID]));
+}
 default
 {
     state_entry(){
@@ -441,7 +448,8 @@ default
             
             
             for(i=0;i<end;i++){
-                llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
+                SayToAddonX(llList2Key(g_lAddons,i), "ping", 0, "","");
+                //llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
             }
             end = llGetListLength(lTmp);
             for(i=0;i<end;i++){
@@ -455,23 +463,7 @@ default
             
         }
     }
-    /*
-    timer(){
-        integer i=0;
-        integer iEnd = llGetInventoryNumber(INVENTORY_SCRIPT);
-        
-        for(i=0;i<iEnd;i++){
-            string sName = llGetInventoryName(INVENTORY_SCRIPT,i);
-            if(llGetScriptState(sName) == FALSE){
-                llMessageLinked(LINK_SET, NOTIFY, "0[ANTICRASH] "+sName+" is stopped. Restarting this script. If this script crashed, please report the bug", g_kWearer);
-
-                llResetOtherScript(sName);
-                llSleep(0.25);
-                llSetScriptState(sName,TRUE);
-                
-            }
-        }
-    }*/
+    
     
     listen(integer c,string n,key i,string m){
         if(c==API_CHANNEL){
@@ -484,11 +476,9 @@ default
                 if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
                 return;
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
-            else if(PacketType == "from_addon"){
-            
-            
-            
-            
+            else if(PacketType == "online"){
+                // this is a initial handshake
+                
                 integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
                 if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
                 // begin to pass stuff to link messages!
@@ -502,7 +492,27 @@ default
                 }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer && !isAddonBridge){
                     // Add the addon and be done with
                     g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
+                    SayToAddon("approved", 0, "", "");
                 }
+            } else if(PacketType == "offline"){
+                // unpair
+                integer iPos = llListFindList(g_lAddons, [i]);
+                if(iPos==-1)return;
+                else{
+                    g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
+                }
+            }
+            else if(PacketType == "from_addon"){
+            
+            
+            
+            
+                integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
+                if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
+                // begin to pass stuff to link messages!
+                // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+                
+                if(llListFindList(g_lAddons, [i])==-1)return; //<--- deny further action. Addon not registered
                 
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sMsg = llJsonGetValue(m,["sMsg"]);
@@ -545,7 +555,8 @@ default
             
             // Max of 100 LMs to send out in a 30 second period, after that ignore
             if(llGetListLength(g_lAddons)>0){
-                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID, "pkt_type", "from_collar"]));
+                SayToAddon("from_collar", iNum, sStr, kID);
+//                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID, "pkt_type", "from_collar"]));
             }
         }
         
@@ -697,6 +708,15 @@ default
                     } else {
                         // Call this addon
                         llMessageLinked(LINK_SET, iAuth, "menu "+sMsg, kAv);
+                    }
+                } else if(sMenu == "addon~add"){
+                    // process reply
+                    if(sMsg == "No"){
+                        return;
+                    }else {
+                        // Yes
+                        SayToAddonX(g_kAddonPending, "approved", 0, "", "");
+                        g_lAddons += [g_kAddonPending, g_sAddonName];
                     }
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){

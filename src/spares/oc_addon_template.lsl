@@ -108,6 +108,9 @@ default
             if(g_kCollar==i){
                 Link("pong", 0,"","");
             }
+        } else if(llJsonGetValue(m,["pkt_type"])=="approved"){
+            // request settings
+            Link("from_addon", LM_SETTING_REQUEST, "ALL","");
         } else if(llJsonGetValue(m,["pkt_type"])=="from_collar"){
             // process link message if in range of addon
             if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))<=10.0){

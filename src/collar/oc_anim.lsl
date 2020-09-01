@@ -239,7 +239,7 @@ MoveStart(){
 }
 
 MoveEnd(){
-    
+    if(g_iLeashMove)return;
     if(g_iPermissionGranted && g_sCurrentAnimation != ""){
         g_iTimerMode = TIMER_START_ANIMATION;
         llResetTime();
@@ -260,7 +260,7 @@ PlayAnimation(){
     if(llListFindList(lTmps, [llGetInventoryKey(g_sCurrentAnimation)])==-1)llStartAnimation(g_sCurrentAnimation);
     else return;
 }
-
+integer g_iLeashMove=FALSE;
 default
 {
     on_rez(integer t){
@@ -299,7 +299,7 @@ default
     }
     
     timer(){
-        
+        if(g_iLeashMove)return;
         string sAnim = llGetAnimation(g_kWearer);
         if(sAnim == ""){
             // Avatar is logging out. Goodbye!
@@ -471,9 +471,12 @@ default
             }
         } else if(iNum == LEASH_START_MOVEMENT){
             g_iStoppedAdjust=FALSE;
+            g_iLeashMove=TRUE;
             MoveStart();
         } else if(iNum == LEASH_END_MOVEMENT){
+            g_iLeashMove=FALSE;
             MoveEnd();
+            
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
