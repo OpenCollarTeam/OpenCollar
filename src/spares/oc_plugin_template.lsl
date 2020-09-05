@@ -126,7 +126,7 @@ default
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sToken = llList2String(lSettings,0);
-            string sVar = llList2Strign(lSettings,1);
+            string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
             
             if(sToken=="global"){
