@@ -79,7 +79,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llList2String(llParseString2List(sStr, [" "], []),1);
         string sText;
-        
+        /// [prefix] g_sSubMenu sChangetype sChangevalue
     }
 }
 
@@ -125,11 +125,19 @@ default
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
-            if(llList2String(lSettings,0)=="global"){
-                if(llList2String(lSettings,1)=="locked"){
-                    g_iLocked=llList2Integer(lSettings,2);
+            string sToken = llList2String(lSettings,0);
+            string sVar = llList2Strign(lSettings,1);
+            string sVal = llList2String(lSettings,2);
+            
+            if(sToken=="global"){
+                if(sVar=="locked"){
+                    g_iLocked=(integer)sVal;
                 }
-            }
+            }/* else if(sToken == "auth"){
+                if(sVar == "owner"){
+                    g_lOwners = llParseString2List(sVal,[","],[]);
+                }
+            }*/
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
