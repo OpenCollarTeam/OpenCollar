@@ -201,6 +201,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     if (iWithNums) { // put numbers in front of buttons: "00 Button1", "01 Button2", ...
         integer iCur;
         sNumberedButtons="\n"; //let's make this a linebreak instead
+        integer iStartNum = (iPage*iMyPageSize);
         for (iCur = iStart; iCur <= iEnd; iCur++) {
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) {
@@ -215,13 +216,13 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
         for(iCur=0;iCur<iEnd;iCur++){
             string sButton = llList2String(lButtons,iCur);
             //inlined single use Integer2String function
-            string sButtonNumber = (string)iCur;
-
+            string sButtonNumber = (string)iStartNum;
+            iStartNum++;
             while (llStringLength(sButtonNumber)<iWithNums)
                sButtonNumber = "0"+sButtonNumber;
             sButton=sButtonNumber + " " + sButton;
             //Debug("ButtonNumber="+sButtonNumber);
-
+            
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
             if(llSubStringIndex(sButton, "secondlife:///app")!=-1) sButton = sButtonNumber;
@@ -432,7 +433,8 @@ default
             integer iSorted = llList2Integer(g_lMenus, iMenuIndex+12);
 
             RemoveMenuStride(iMenuIndex);
-
+            
+            
             if (sMessage == MORE) Dialog(kID, sPrompt, items, ubuttons, ++iPage, kMenuID, iDigits, iAuth,sExtraInfo, iSorted);
             else if (sMessage == PREV) Dialog(kID, sPrompt, items, ubuttons, --iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
             else if (sMessage == BLANK) Dialog(kID, sPrompt, items, ubuttons, iPage, kMenuID, iDigits, iAuth, sExtraInfo, iSorted);
@@ -443,6 +445,8 @@ default
                 if (iDigits && !~iIndex) {
                     integer iBIndex = (integer) llGetSubString(sMessage, 0, iDigits);
                     sAnswer = llList2String(items, iBIndex);
+                    
+                    
                 } else if (g_iColorMenu) {
                     integer iColorIndex  =llListFindList(llList2ListStrided(g_lColors,0,-1,2),[sMessage]);
                     if (~iColorIndex) sAnswer = llList2String(llList2ListStrided(llDeleteSubList(g_lColors,0,0),0,-1,2),iColorIndex);
@@ -450,6 +454,7 @@ default
                     g_iColorMenu = FALSE;
                 } else sAnswer = sMessage;
                 if (sAnswer == "") sAnswer = " "; //to have an answer to deal with send " "
+
                 llMessageLinked(LINK_SET, DIALOG_RESPONSE, (string)kAv + "|" + sAnswer + "|" + (string)iPage + "|" + (string)iAuth, kMenuID);
             }
         }
