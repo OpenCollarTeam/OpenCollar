@@ -43,6 +43,7 @@ Release(){
     g_lAllowedSources=[];
     g_kPendingSource=NULL_KEY;
     g_lPendingRLV=[];
+    if(!g_iLocked) llOwnerSay("@detach=y");
     
     llMessageLinked(LINK_SET, RLV_REFRESH, "", "");
 }
