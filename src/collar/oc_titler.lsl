@@ -99,7 +99,7 @@ ColorMenu(key kAv, integer iAuth){
 
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
-    if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
+    //if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
     if (iNum == CMD_OWNER && sStr == "runaway") {
         g_lOwner = g_lTrust = g_lBlock = [];
         return;
@@ -108,51 +108,55 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         //integer iWSuccess = 0; 
-        //string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
+        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
         string sChangevalue = llToLower(llList2String(llParseString2List(sStr, [" "], []),1));
         string sParam = llList2String(llParseString2List(sStr, [" "], []),2);
         //string sText;
         if(iNum !=CMD_OWNER)return;
         
-        if(sChangevalue == "title"){
-            g_sTitle = llList2String(llList2List(llParseString2List(sStr,[" "],[]), 2,-1),0);
+        if(sChangetype == "title"){
+            g_sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 1,-1)," ");
             if(g_sTitle == ""){
                 Dialog(kID, "What should the title say?", [], [], 0, iNum, "Textbox~Title");
                 
             }
             Save();
-        } else if(sChangevalue == "color"){
-            g_vColor=(vector)sParam;
-            Save();
-        } else if(sChangevalue == "show"){
-            g_iShow=TRUE;
-            Save();
-        } else if(sChangevalue == "hide"){
-            g_iShow=FALSE;
-            Save();
-        } else if(sChangevalue == "up"){
-            g_iOffset++;
-            Save();
-        } else if(sChangevalue == "down"){
-            g_iOffset--;
-            if(g_iOffset<0)g_iOffset=0;
-            Save();
-        }else if(sChangevalue == "plain"){
-            g_iNoB64 = ! g_iNoB64;
-            Save();
-                    
-            string ToggleMsg = "0Titler plain text mode is now set to ";
-            
-            if(g_iNoB64) {
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_plain=1", "");
-                ToggleMsg += "PLAIN";
-            } else {
-                ToggleMsg += "BASE64";
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_plain", "");
+        } else if(sChangetype == "titler"){
+            if(sChangevalue == "color"){
+                g_vColor=(vector)sParam;
+                Save();
+            } else if(sChangevalue == "show"){
+                g_iShow=TRUE;
+                Save();
+            } else if(sChangevalue == "hide"){
+                g_iShow=FALSE;
+                Save();
+            } else if(sChangevalue == "up"){
+                g_iOffset++;
+                Save();
+            } else if(sChangevalue == "down"){
+                g_iOffset--;
+                if(g_iOffset<0)g_iOffset=0;
+                Save();
+            }else if(sChangevalue == "plain"){
+                g_iNoB64 = ! g_iNoB64;
+                Save();
+                        
+                string ToggleMsg = "0Titler plain text mode is now set to ";
+                
+                if(g_iNoB64) {
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "titler_plain=1", "");
+                    ToggleMsg += "PLAIN";
+                } else {
+                    ToggleMsg += "BASE64";
+                    llMessageLinked(LINK_SET, LM_SETTING_DELETE, "titler_plain", "");
+                }
+                llMessageLinked(LINK_SET, NOTIFY, ToggleMsg, kID);
+            } else if(sChangevalue == "title"){
+                g_sTitle = llDumpList2String(llList2List(llParseString2List(sStr,[" "],[]), 2,-1)," ");
+                UserCommand(iNum, "title "+g_sTitle, kID);
             }
-            llMessageLinked(LINK_SET, NOTIFY, ToggleMsg, kID);
         }
-        
     }
 }
 integer g_iShow=FALSE;
