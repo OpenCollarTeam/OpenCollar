@@ -206,7 +206,12 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             string sButton = llList2String(lMenuItems, iCur);
             if ((key)sButton) {
                 //fixme: inlined single use key2name function
-                if(IsLikelyAvatar((key)sButton)) sButton = NameURI((key)sButton);
+                if(IsLikelyAvatar((key)sButton)){
+                    if(llGetAgentSize((key)sButton)==ZERO_VECTOR)
+                        sButton = NameURI((key)sButton);
+                    else
+                        sButton = llGetDisplayName(sButton)+" ("+llKey2Name(sButton)+")";
+                }
                 else sButton=llKey2Name((key)sButton);
             }
             lButtons += [sButton];
@@ -225,7 +230,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             
             sNumberedButtons+=sButton+"\n";
             sButton = TruncateString(sButton, 24);
-            if(llSubStringIndex(sButton, "secondlife:///app")!=-1) sButton = sButtonNumber;
+            if(llSubStringIndex(sButton, "secondlife://")!=-1) sButton = sButtonNumber;
             
             
             lButtons = llListReplaceList(lButtons, [sButton], iCur,iCur);
