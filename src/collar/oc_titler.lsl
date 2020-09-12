@@ -322,7 +322,7 @@ default
                     } else if(sMsg == "Orange"){
                         g_vColor = <1,0.5,0>;
                     } else if(sMsg == "Custom"){
-                        Dialog(kAv, "What are the RGB values to set the color to? \n \n(Example: <1,0,0> = red)", [], [], 0, iAuth, "Textbox~Color");
+                        Dialog(kAv, "What color?", ["colormenu please"], [], 0, iAuth, "Textbox~Color");
                         iRespring=FALSE;
                     }
                     

@@ -278,6 +278,10 @@ default
         
     }
     
+    changed(integer t){
+        if(t&CHANGED_INVENTORY)llResetScript(); // maybe changed animations
+    }
+    
     run_time_permissions(integer iPerms){
         // Check if both permissions granted
         if(iPerms& PERMISSION_OVERRIDE_ANIMATIONS && iPerms&PERMISSION_TRIGGER_ANIMATION && iPerms&PERMISSION_TAKE_CONTROLS){
@@ -477,7 +481,7 @@ default
             g_iLeashMove=FALSE;
             MoveEnd();
             
-        }
+        } else if(iNum == REBOOT)llResetScript();
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
