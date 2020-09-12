@@ -629,7 +629,7 @@ default
                 }
             } else if(sToken == "intern"){
                 if(sVar == "weld"){
-                    g_iWelded=TRUE;
+                    g_iWelded=(integer)sVal;
                     
                     if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
                 } else if(sVar == "weldby"){
