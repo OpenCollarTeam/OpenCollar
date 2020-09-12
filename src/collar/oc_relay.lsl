@@ -531,7 +531,8 @@ default
             g_iMode=iOldMode;
             llMessageLinked(LINK_SET,NOTIFY, "0Relay has been reactivated",g_kWearer);
         } else if(iNum == REBOOT){
-            llResetScript();
+            if(Source=="" || Source==NULL_KEY)
+                llResetScript();
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
