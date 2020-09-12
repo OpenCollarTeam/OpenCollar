@@ -44,7 +44,7 @@ Release(){
     g_kPendingSource=NULL_KEY;
     g_lPendingRLV=[];
     
-    llMessageLinked(LINK_SET, RLV_REFRESH, "", "");
+    llMessageLinked(LINK_SET, DO_RLV_REFRESH, "", "");
 }
         
 //MESSAGE MAP
@@ -78,6 +78,7 @@ integer AUTH_REPLY=601;
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+integer DO_RLV_REFRESH = 26001;//RLV plugins should reinstate their restrictions upon receiving this message.
 
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
@@ -268,7 +269,7 @@ Process(string msg, key id, integer iWillPrompt){
                 string comtype = llList2String(subargs, 1);                
                 if (index == -1 && (comtype == "n" || comtype == "add")) {
                     Restrictions += [behav];
-                    llOwnerSay("@detach=add");
+                    llOwnerSay("@detach=n");
                     Source = id;
                     if (behav == "unsit" && llGetAgentInfo(g_kWearer) & AGENT_SITTING) {
                         sitid = llList2Key(llGetObjectDetails(g_kWearer, [OBJECT_ROOT]), 0);
@@ -279,7 +280,7 @@ Process(string msg, key id, integer iWillPrompt){
                     Restrictions = llDeleteSubList(Restrictions, index, index);
                     if (Restrictions == []) {
                         Source = NULL_KEY;
-                        llOwnerSay("@detach=rem");
+                        llMessageLinked(LINK_SET, DO_RLV_REFRESH, "","");
                     }
                     if (behav == "unsit") sitid = NULL_KEY;
                 }

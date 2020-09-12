@@ -31,6 +31,9 @@ integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
 list StrideOfList(list src, integer stride, integer start, integer end)
 {
     list l = [];
@@ -155,6 +158,8 @@ integer g_iLocked=FALSE;
 string g_sTokenView="";
 integer g_iLastStride;
 integer g_iWaitMenu;
+
+list g_lTimers; // signal, start_time, seconds_from
 default
 {
     state_entry()
@@ -177,7 +182,7 @@ default
     }
     
     timer(){
-        if(!g_iWaitMenu)
+        if(!g_iWaitMenu && llGetListLength(g_lTimers) == 0)
             llSetTimerEvent(15);
         // Check all script states, then check list of managed scripts
         integer i=0;
@@ -204,6 +209,25 @@ default
             SettingsMenu(0,g_kMenuUser,g_iLastAuth);
         }
         
+        
+        // proceed
+        i=0;
+        end = llGetListLength(g_lTimers);
+        for(i=0;i<end;i+=3){
+            integer now = llGetUnixTime();
+            integer start = llList2Integer(g_lTimers, i+1);
+            integer diff = llList2Integer(g_lTimers,i+2);
+            if((now-start)>=diff){
+                string signal = llList2String(g_lTimers,i);
+                
+                g_lTimers = llDeleteSubList(g_lTimers, i,i+2);
+                i=0;
+                end=llGetListLength(g_lTimers);
+                llMessageLinked(LINK_SET, TIMEOUT_FIRED, signal, "");
+                
+            }
+        }
+        
         //llWhisper(0, "oc_states max used over time: "+(string)llGetSPMaxMemory());
     }
     
@@ -223,7 +247,10 @@ default
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
                 llSetTimerEvent(1);
             }
-        
+        } else if(iNum == TIMEOUT_REGISTER){
+            g_lTimers += [(string)kID, llGetUnixTime(), (integer)sStr];
+            llResetTime();
+            llSetTimerEvent(1);
         } else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
