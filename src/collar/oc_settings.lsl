@@ -15,6 +15,9 @@ https://github.com/OpenCollarTeam/OpenCollar
 
 string g_sParentMenu = "Apps";
 
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
 
 string GetSetting(string sToken) {
     integer i = llListFindList(g_lSettings, [llToLower(sToken)]);
@@ -266,7 +269,8 @@ ProcessSettingLine(string sLine)
     list l2 = llParseString2List(llDumpList2String(llList2List(lTmp,2,-1),""), ["~"],[]);
     integer iAppendMode = iSetor((llList2String(lTmp,1)=="+"),TRUE,FALSE);
     
-    
+    integer iWeldSetting=FALSE;
+    if(~llSubStringIndex(sLine, "weld"))iWeldSetting=TRUE;
     if(!iAppendMode){
         // start setting!
         integer i=0;
@@ -295,6 +299,84 @@ ProcessSettingLine(string sLine)
         }
         
     }
+    if(iWeldSetting) llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "check_weld");
+}
+integer g_iWeldStorage = -99;
+FindLeashpointOrLock()
+{
+    g_iWeldStorage=-99;
+    integer i=0;
+    integer end = llGetNumberOfPrims();
+    for(i=0;i<end;i++){
+        if(llToLower(llGetLinkName(i))=="lock"){
+            g_iWeldStorage = i;
+            return;
+        }else if(llToLower(llGetLinkName(i)) == "leashpoint"){
+            g_iWeldStorage = i; // keep going incase we find the lock prim
+        }
+    }
+    if(g_iWeldStorage!=-99)return;
+    g_iWeldStorage=-99;
+}
+
+CheckForAndSaveWeld(){
+    FindLeashpointOrLock();
+    if(g_iWeldStorage==-99)return;
+    if(g_iWeldStorage == LINK_ROOT)return;
+    if(SettingExists("intern_weld") || SettingExists("intern_weldby")){
+        integer Welded = (integer)GetSetting("intern_weld");
+        
+        // begin
+        string sDesc = llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]),0);
+        //llSay(0, "original description: "+sDesc);
+        vector vColor = llList2Vector(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_COLOR, 0]),0);
+        // use the Z vector position to save the weld state
+        vColor.z = (float)(((string)llRound(vColor.z))+".0"+(string)Welded);
+        llSetLinkColor(g_iWeldStorage, vColor, 0);
+            
+        list lPara = llParseString2List(sDesc, ["~"],[]);
+        //llSay(0, "Parameters: "+llList2CSV(lPara));
+        if(llListFindList(lPara, ["weld"])==-1){
+            if(Welded){
+                if(GetSetting("intern_weldby")=="NOT_FOUND")g_lSettings = SetSetting("intern_weldby", (string)NULL_KEY);
+                lPara+=["weld",GetSetting("intern_weldby")];
+            }
+        }else {
+            if(!Welded){
+                integer index = llListFindList(lPara, ["weld"]);
+                lPara=llDeleteSubList(lPara,index,index+1);
+            }else {
+                // update the weld flag for weldby
+                integer index = llListFindList(lPara,["weld"]);
+                lPara=llListReplaceList(lPara,[GetSetting("intern_weldby")],index+1,index+1);
+            }
+        }
+        
+        llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
+        //llSay(0, "saved weld state as: "+llDumpList2String(lPara,"~") + "("+(string)llStringLength(llDumpList2String(lPara,"~"))+") to prim "+(string)g_iWeldStorage + "("+llGetLinkName(g_iWeldStorage)+")");
+        
+    }
+}
+
+RestoreWeldState(){
+    FindLeashpointOrLock();
+    if(g_iWeldStorage==-99)return;
+    vector vColor = llList2Vector(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_COLOR,0]),0);
+
+    string z = (string)vColor.z;
+    integer index=llSubStringIndex(z,".");
+    g_lSettings = SetSetting("intern_weld", (string)llRound((integer)llGetSubString(z,index+1,-1)));
+    
+    // get welded by
+    list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage,[PRIM_DESC]),0),["~"],[]);
+    if(llListFindList(lPara,["weld"])!=-1){
+        index = llListFindList(lPara,["weld"]);
+        g_lSettings = SetSetting("intern_weldby", llList2String(lPara, index+1));
+        g_lSettings = SetSetting("intern_weld","1");
+        
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weld","");
+        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
+    }
 }
 default
 {
@@ -306,6 +388,9 @@ default
     state_entry()
     {
         g_kWearer = llGetOwner();
+        
+        FindLeashpointOrLock();
+        RestoreWeldState();
         
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
@@ -344,7 +429,7 @@ default
     timer(){
         if(!SendAValue()){
             llSetTimerEvent(0);
-        }else llSetTimerEvent(0.5); // send 1 setting per half second
+        }else llSetTimerEvent(0.25); // send 1 setting per quarter second
     }
     
     
@@ -375,6 +460,8 @@ default
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        } else if(iNum == TIMEOUT_FIRED){
+            if(sStr == "check_weld")CheckForAndSaveWeld();
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             DelSetting(sStr);
@@ -395,6 +482,8 @@ default
             string sTok = llList2String(lTmp,0);
             string sVal = llList2String(lTmp,1);
             
+            if(sTok == "intern_weld" || sTok == "intern_weldby") llMessageLinked(LINK_SET,TIMEOUT_REGISTER, "10", "check_weld");
+            
             g_lSettings = SetSetting(sTok,sVal);
             
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
@@ -404,7 +493,7 @@ default
             else if(sStr == "ALL"){
                 g_iCurrentIndex=0;
                 llSetTimerEvent(2);
-            } else llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "empty"); // Unfortunately. The only time you ever get the empty signal is when you explicitly request the setting. This will allow simply checking the key value for 'empty' without adding duplicate code in a separate signal
+            } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, ""); // Unfortunately. The only time you ever get the empty signal is when you explicitly request the setting.
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

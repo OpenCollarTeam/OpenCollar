@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0006"; // Provide enough room
+string COLLAR_VERSION = "8.0.0007"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -71,6 +71,7 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
+key g_kWeldBy;
 list g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
 
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
@@ -108,7 +109,7 @@ Menu(key kID, integer iAuth) {
     if(UPDATE_AVAILABLE ) sPrompt += "\n\nUPDATE AVAILABLE: Your version is: "+COLLAR_VERSION+", The current release version is: "+NEW_VERSION;
     if(g_iAmNewer)sPrompt+="\n\nYour collar version is newer than the public release. This may happen if you are using a beta or pre-release copy.\nNote: Pre-Releases may have bugs. Ensure you report any bugs to [https://github.com/OpenCollarTeam/OpenCollar Github]";
 
-    if(g_iWelded)sPrompt+="\n\n* The Collar is Welded *";
+    if(g_iWelded)sPrompt+="\n\n* The Collar is Welded by secondlife:///app/agent/"+(string)g_kWeldBy+"/about *";
     if(iAuth==CMD_OWNER && g_iLocked && !g_iWelded)lButtons+=["Weld"];
     
     
@@ -453,7 +454,7 @@ default
                         // do weld
                         llMessageLinked(LINK_SET, NOTIFY, "1Please wait...", g_kWelder);
                         llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME%'s collar has been welded", g_kWelder);
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "intern_weld=1", g_kWelder);
                         g_iWelded=TRUE;
                         
                         llMessageLinked(LINK_SET, NOTIFY, "1Weld completed", g_kWelder);
@@ -631,6 +632,8 @@ default
                     g_iWelded=TRUE;
                     
                     if(!g_iLocked)llMessageLinked(LINK_SET,LM_SETTING_SAVE, "global_locked=1","");
+                } else if(sVar == "weldby"){
+                    g_kWeldBy = (key)sVal;
                 }
             } else if(sToken == "capture"){
                 if(sVar == "status"){
