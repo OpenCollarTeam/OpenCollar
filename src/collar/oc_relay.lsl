@@ -226,14 +226,15 @@ list g_lAllowedSources=[];
 list g_lDisallowedSources=[];
 key g_kPendingSource;
 list g_lPendingRLV;
+key g_kObjectOwner;
 
 PromptForSource(key kID, string sPendingCommand){
-    g_kPendingSource=kID;
     g_lPendingRLV = [sPendingCommand];
-    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
+    g_kObjectOwner = kID;
+    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(g_kPendingSource)+"\nObject ID: "+(string)g_kPendingSource+"\nObject Owner: secondlife:///app/agent/"+(string)kID+"/about\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
 }
 RepromptForSource(key kID){
-    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
+    Dialog(llGetOwner(), "[Relay]\n\nObject Name: "+llKey2Name(kID)+"\nObject ID: "+(string)kID+"\nObject Owner: secondlife:///app/agent/"+(string)g_kObjectOwner+"/about\n\nIs requesting to use your RLV Relay, do you want to allow it?", ["Yes", "No"], [], 0, CMD_WEARER, "AskPrompt");
 }
 
 ///param id=source
@@ -296,6 +297,7 @@ Process(string msg, key id, integer iWillPrompt){
         
         if(DoPrompt){
             // Calculate authorization first
+            g_kPendingSource=id;
             llMessageLinked(LINK_SET, AUTH_REQUEST,  "relay`"+msg, llList2Key(llGetObjectDetails(id, [OBJECT_OWNER]),0));
             //PromptForSource(id,msg);
         }
@@ -541,7 +543,6 @@ default
         if (Source) { if (Source != id) return; } // already grabbed by another device
         integer iWillPrompt=FALSE;
         if(g_iMode==MODE_ASK){
-            if(llListFindList(g_lDisallowedSources, [id])!=-1)return;
             if(g_kPendingSource == id){
                 if(llGetListLength(g_lPendingRLV)<11)
                     g_lPendingRLV+=msg;
