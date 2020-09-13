@@ -95,8 +95,8 @@ Menu(key kID, integer iAuth) {
     Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
 
-string UP_ARROW = "⩓";
-string DOWN_ARROW = "⩖";
+string UP_ARROW = "↑";
+string DOWN_ARROW = "↓";
 
 PoseMenu(key kID, integer iAuth){
     string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_sCurrentAnimation==""), "None", g_sCurrentAnimation);
