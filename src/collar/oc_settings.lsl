@@ -387,10 +387,13 @@ default
     }
     state_entry()
     {
+
         g_kWearer = llGetOwner();
         
         FindLeashpointOrLock();
         RestoreWeldState();
+        
+        if (!SettingExists("global_checkboxes") SetSetting("global_checkboxes", "▢,▣");
         
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;

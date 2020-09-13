@@ -86,7 +86,10 @@ integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
     string sPrompt = "OpenCollar\n\n[Settings]";
-    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
+    list lButtons = ["Print", "Load", "Fix Menus"];
+    if (llGetInventoryType("oc_resizer") == INVENTORY_SCRIPT) lbuttons += ["Resize"];
+    else lbuttons += ["-"];
+    lbuttons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
@@ -157,7 +160,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
@@ -617,6 +620,8 @@ default
                     g_iTouchNotify=(integer)sVal;
                 } else if(sVar == "allowhide"){
                     g_iAllowHide = (integer)sVal;
+                } else if(sVar == "checkboxes")
+                    g_lCheckboxes = llCSV2List(sVal);
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
