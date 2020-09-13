@@ -192,7 +192,6 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         
         @checkRemenu;
-        // FIXME: the animation label on the menu is out-of-date
         if(sChangevalue == "remenu")PoseMenu(kID,iNum);
 
     }
@@ -287,6 +286,16 @@ StopAnimation(string anim){
         }else PlayAnimation();
     }
 }
+
+StopAllAnimations(){
+    if(g_sCurrentAnimations==[])return;
+    llStopAnimation(llList2String(g_sCurrentAnimations, 0));
+    g_sCurrentAnimations = [];
+    g_pose = "";
+    if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+    else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+}
+
 
 StartAnimation(string anim){
     if(llGetInventoryType(anim)!=INVENTORY_ANIMATION)return;//fail
@@ -511,7 +520,10 @@ default
             StopAnimation(sStr);
         } else if (iNum == ANIM_LIST_REQ){
             llMessageLinked(LINK_SET, ANIM_LIST_RES, llDumpList2String(g_lPoses, "|"), "");
-        } else if(iNum == REBOOT)llResetScript();
+        } else if(iNum == REBOOT){
+            StopAllAnimations();
+            llResetScript();
+        }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
@@ -520,8 +532,10 @@ default
 
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
-        else if(iNum == 0){
+        if(iNum == REBOOT){
+            StopAllAnimations();
+            llResetScript();
+        }else if(iNum == 0){
             if(sMsg == "do_move" && !g_iIsMoving){
                 
                 if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
