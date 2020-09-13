@@ -86,7 +86,10 @@ integer g_iHide=FALSE;
 integer g_iAllowHide=TRUE;
 Settings(key kID, integer iAuth){
     string sPrompt = "OpenCollar\n\n[Settings]";
-    list lButtons = ["Print", "Load", "Fix Menus", "Resize", Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
+    list lButtons = ["Print", "Load", "Fix Menus"];
+    if (llGetInventoryType("oc_resizer") == INVENTORY_SCRIPT) lbuttons += ["Resize"];
+    else lbuttons += ["-"];
+    lbuttons += [Checkbox(g_iHide, "Hide"), "EDITOR", Checkbox(g_iAllowHide, "AllowHiding")];
     Dialog(kID, sPrompt, lButtons, [UPMENU],0,iAuth, "Menu~Settings");
 }
 
