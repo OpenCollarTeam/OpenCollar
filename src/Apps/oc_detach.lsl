@@ -158,7 +158,15 @@ default
             } 
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
-            list lSettings = llParseString2List(sStr, ["_","="],[]);
+            list lPar = llParseString2List(sStr, ["_","="],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            string sVal = llList2String(lPar,2);
+            if (sToken == "global") {
+                if (sVar == "checkboxes") {
+                    g_lCheckboxes = llCSV2List(sVal);
+                }
+            }
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
