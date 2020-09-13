@@ -620,6 +620,8 @@ default
                     g_iTouchNotify=(integer)sVal;
                 } else if(sVar == "allowhide"){
                     g_iAllowHide = (integer)sVal;
+                } else if(sVar == "checkboxes")
+                    g_lCheckboxes = llCSV2List(sVal);
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){
