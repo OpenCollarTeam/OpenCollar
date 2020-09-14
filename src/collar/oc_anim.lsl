@@ -89,13 +89,13 @@ integer bool(integer a){
     else return FALSE;
 }
 integer g_iAnimLock=FALSE;
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0));
+    string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
     Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
@@ -104,11 +104,11 @@ string UP_ARROW = "↑";
 string DOWN_ARROW = "↓";
 
 PoseMenu(key kID, integer iAuth){
-    string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0));
+    string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_sPose==""), "None", g_sPose);
     sPrompt += "\nCurrent Height Adjustment: ";
     if(g_lCurrentAnimations==[])sPrompt+=(string)g_fStandHover;
     else{
-        integer iPos = llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
+        integer iPos = llListFindList(g_lAdjustments, [g_sPose]);
         if(iPos==-1)sPrompt += "0";
         else sPrompt += llList2String(g_lAdjustments,iPos+1);
     }
@@ -137,10 +137,15 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         if(llListFindList(g_lPoses,[sChangetype])!=-1){
             // this is a pose
+            if (g_sPose != "")StopAnimation(g_sPose);
+            g_sPose = sChangetype;
             StartAnimation(sChangetype);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
-            if(g_lCurrentAnimations!=[]) StopAnimation(llList2String(g_lCurrentAnimations, 0));
+            if (g_sPose != ""){
+                StopAnimation(g_sPose);
+                g_sPose = "";
+            }
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // adjust current pose
