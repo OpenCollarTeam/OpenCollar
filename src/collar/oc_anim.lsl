@@ -55,6 +55,11 @@ integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no mes
 integer LEASH_START_MOVEMENT = 6200;
 integer LEASH_END_MOVEMENT = 6201;
 
+integer ANIM_START = 7000;
+integer ANIM_STOP = 7001;
+integer ANIM_LIST_REQ = 7002;
+integer ANIM_LIST_RES = 7003;
+
 list g_lAdditionalButtons=[];
 
 integer DIALOG = -9000;
@@ -72,7 +77,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
     else g_lMenuIDs += [kID, kMenuID, sName];
 }
 
-string g_sCurrentAnimation= "";
+list g_lCurrentAnimations=[];
 
 string setor(integer iTest, string sTrue, string sFalse){
     if(iTest)return sTrue;
@@ -84,13 +89,13 @@ integer bool(integer a){
     else return FALSE;
 }
 integer g_iAnimLock=FALSE;
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["▢", "▣"];
 string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 
 Menu(key kID, integer iAuth) {
-    string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_sCurrentAnimation==""), "None", g_sCurrentAnimation);
+    string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
     Dialog(kID, sPrompt, lButtons+g_lAdditionalButtons, [UPMENU], 0, iAuth, "Menu~Animations");
 }
@@ -99,11 +104,11 @@ string UP_ARROW = "↑";
 string DOWN_ARROW = "↓";
 
 PoseMenu(key kID, integer iAuth){
-    string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_sCurrentAnimation==""), "None", g_sCurrentAnimation);
+    string sPrompt = "\n[Pose Menu]\n\nCurrent Animation: "+setor((g_sPose==""), "None", g_sPose);
     sPrompt += "\nCurrent Height Adjustment: ";
-    if(g_sCurrentAnimation=="")sPrompt+=(string)g_fStandHover;
+    if(g_lCurrentAnimations==[])sPrompt+=(string)g_fStandHover;
     else{
-        integer iPos = llListFindList(g_lAdjustments,[g_sCurrentAnimation]);
+        integer iPos = llListFindList(g_lAdjustments, [g_sPose]);
         if(iPos==-1)sPrompt += "0";
         else sPrompt += llList2String(g_lAdjustments,iPos+1);
     }
@@ -132,35 +137,36 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         if(llListFindList(g_lPoses,[sChangetype])!=-1){
             // this is a pose
-            if(g_sCurrentAnimation!="")llStopAnimation(g_sCurrentAnimation);
-            g_sCurrentAnimation = sChangetype;
-            
-            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+g_sCurrentAnimation,"");
+            if (g_sPose != "")StopAnimation(g_sPose);
+            g_sPose = sChangetype;
+            StartAnimation(sChangetype);
+            llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
+            if (g_sPose != ""){
+                StopAnimation(g_sPose);
+                g_sPose = "";
+            }
             llMessageLinked(LINK_SET, LM_SETTING_DELETE, "anim_pose","");
         } else if(sChangetype == UP_ARROW || sChangetype == "up" || sChangetype == DOWN_ARROW || sChangetype == "down"){
             // adjust current pose
             integer iUp= FALSE;
             if(sChangetype == UP_ARROW || sChangetype == "up")iUp=TRUE;
-            if(g_sCurrentAnimation == ""){
+            if(g_lCurrentAnimations == []){
                 // adjust standing
-                if(iUp)
-                    g_fStandHover += g_fAdjustment;
+                if(iUp)g_fStandHover += g_fAdjustment;
                 else g_fStandHover-=g_fAdjustment;
                 if(g_fStandHover==0)llMessageLinked(LINK_SET,LM_SETTING_DELETE,"offset_standhover","");
                 else llMessageLinked(LINK_SET, LM_SETTING_SAVE, "offset_standhover="+(string)g_fStandHover,"");
-                
-                
                 llMessageLinked(LINK_SET, NOTIFY, "0The hover height for 'Standing' is now "+(string)g_fStandHover, g_kWearer);
             } else {
-                integer iPos=llListFindList(g_lAdjustments,[g_sCurrentAnimation]);
+                integer iPos=llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
                 if(iPos==-1){
                     // OK now we make a new entry
                     
                     if(iUp)
-                        g_lAdjustments+=[g_sCurrentAnimation, g_fAdjustment];
+                        g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0), g_fAdjustment];
                     else
-                        g_lAdjustments+=[g_sCurrentAnimation,-g_fAdjustment];
+                        g_lAdjustments+=[llList2String(g_lCurrentAnimations, 0),-g_fAdjustment];
                 } else {
                     
                     float fCurrent = (float)llList2String(g_lAdjustments, iPos+1);
@@ -170,7 +176,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         fCurrent -= g_fAdjustment;
                     
                     
-                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+g_sCurrentAnimation+"' is now "+(string)fCurrent, g_kWearer);
+                    llMessageLinked(LINK_SET, NOTIFY, "0The hover height for '"+llList2String(g_lCurrentAnimations, 0)+"' is now "+(string)fCurrent, g_kWearer);
                     if(fCurrent!=0)
                         g_lAdjustments = llListReplaceList(g_lAdjustments, [fCurrent],iPos+1,iPos+1);
                     else
@@ -222,15 +228,15 @@ float g_fStandHover=0;
 list g_lAdjustments;
 float g_fAdjustment = 0.02;
 integer g_iStoppedAdjust;
-
+string g_sPose = "";
 
 
 integer g_iTimerMode;
 integer TIMER_START_ANIMATION =1;
 MoveStart(){
-    if(g_sCurrentAnimation!=""){
+    if(g_lCurrentAnimations!=[]){
         if(!g_iStoppedAdjust){
-            llStopAnimation(g_sCurrentAnimation);
+            llStopAnimation(llList2String(g_lCurrentAnimations, 0));
             llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
         }
         g_iStoppedAdjust=TRUE;
@@ -240,25 +246,75 @@ MoveStart(){
 
 MoveEnd(){
     if(g_iLeashMove)return;
-    if(g_iPermissionGranted && g_sCurrentAnimation != ""){
-        g_iTimerMode = TIMER_START_ANIMATION;
-        llResetTime();
-        if(g_sCurrentAnimation!="")llStopAnimation(g_sCurrentAnimation);
-        //llResetAnimationOverride("Standing");
-        // wait a few seconds before restarting the animation
-        llSetTimerEvent(1);
-        g_iStoppedAdjust=FALSE;
-    } else if(g_iPermissionGranted && g_sCurrentAnimation=="" && g_fStandHover != 0){
-        llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+    if(g_iPermissionGranted){
+        if(g_lCurrentAnimations==[]){
+            if (g_fStandHover != 0.0)
+                llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force",g_kWearer);
+        }else{
+            g_iTimerMode = TIMER_START_ANIMATION;
+            llResetTime();
+            // wait a few seconds before restarting the animation
+            llSetTimerEvent(1);
+            g_iStoppedAdjust=FALSE;
+        }
     }
+    // should we set the timer if we don't have permissions yet?
 }
 
 PlayAnimation(){
-    // plays g_sCurrentAnimation
-    if(g_sCurrentAnimation=="")return;
-    list lTmps = llGetAnimationList(g_kWearer);
-    if(llListFindList(lTmps, [llGetInventoryKey(g_sCurrentAnimation)])==-1)llStartAnimation(g_sCurrentAnimation);
-    else return;
+    // plays g_lCurrentAnimations[0] and makes adjustments
+    if(g_lCurrentAnimations==[])return;
+    // i think we must just try to start it even if it may already be playing.
+    if(g_iPermissionGranted){
+        llStartAnimation(llList2String(g_lCurrentAnimations, 0));
+        integer iPos = llListFindList(g_lAdjustments,llList2List(g_lCurrentAnimations, 0, 0));
+        if(iPos!=-1){
+            llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+llList2String(g_lAdjustments,iPos+1)+"=force",g_kWearer);
+        }
+        g_iTimerMode = 0;
+    }else{
+        g_iTimerMode = TIMER_START_ANIMATION;
+        llSetTimerEvent(1);
+    }
+}
+
+StopAnimation(string anim){
+    if(g_lCurrentAnimations==[])return;
+    integer aPos = llListFindList(g_lCurrentAnimations, [anim]);
+    if (aPos == -1)return;
+    if (aPos == 0) llStopAnimation(llList2String(g_lCurrentAnimations, 0));
+    g_lCurrentAnimations = llDeleteSubList(g_lCurrentAnimations, aPos, aPos);
+    if (aPos == 0){
+        if (g_lCurrentAnimations == []){
+            if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+            else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+        }else PlayAnimation();
+    }
+}
+
+StopAllAnimations(){
+    if(g_lCurrentAnimations==[])return;
+    llStopAnimation(llList2String(g_lCurrentAnimations, 0));
+    g_lCurrentAnimations = [];
+    g_sPose = "";
+    if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
+    else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+}
+
+
+StartAnimation(string anim){
+    if(llGetInventoryType(anim)!=INVENTORY_ANIMATION)return;//fail
+    integer anim_count = llGetListLength(g_lCurrentAnimations);
+    if (anim_count == 30)return;//fail
+    if(anim_count)llStopAnimation(llList2String(g_lCurrentAnimations, 0));
+    // if we have it in the stack, let's move it to top
+    integer aPos = llListFindList(g_lCurrentAnimations, [anim]);
+    if (aPos == -1){
+        g_lCurrentAnimations = [anim] + g_lCurrentAnimations;
+    }else{
+        g_lCurrentAnimations = [anim] + llDeleteSubList(g_lCurrentAnimations, aPos, aPos);
+    }
+    PlayAnimation();
 }
 integer g_iLeashMove=FALSE;
 default
@@ -318,15 +374,9 @@ default
         if(llGetTime()>30.0)llSetTimerEvent(FALSE);
         
         if(g_iTimerMode == TIMER_START_ANIMATION && llGetTime()>2.5){
-            integer iPos = llListFindList(g_lAdjustments,[g_sCurrentAnimation]);
-            if(iPos!=-1){
-                llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+llList2String(g_lAdjustments,iPos+1)+"=force",g_kWearer);
-            }
-            if(g_sCurrentAnimation!="")
-                PlayAnimation();
-            else{
+            if(g_lCurrentAnimations==[]){
                 if(g_fStandHover != 0) llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover,g_kWearer);
-            }
+            }else PlayAnimation();
             llSetTimerEvent(FALSE);
         }
     }
@@ -425,16 +475,9 @@ default
                 }
             } else if(sTok == "anim"){
                 if(sVar == "pose"){
-                    string sFormerAnimation = g_sCurrentAnimation;
-                    g_sCurrentAnimation = sVal;
-                    g_iTimerMode = TIMER_START_ANIMATION;
-                    llSetTimerEvent(1);
-                    if(g_iPermissionGranted){
-                        if(sFormerAnimation!="")llStopAnimation(sFormerAnimation);
-                        if(llGetInventoryType(g_sCurrentAnimation)==INVENTORY_ANIMATION)
-                            PlayAnimation();
-                    }
-                        //llSetAnimationOverride("Standing", g_sCurrentAnimation);
+                    if (g_sPose != "")StopAnimation(g_sPose);
+                    g_sPose = sVal;
+                    StartAnimation(sVal);
                 } else if(sVar == "animlock"){
                     g_iAnimLock = (integer)sVal; // <-- used incase its set in .settings to false for some reason
                 }
@@ -456,13 +499,9 @@ default
                 if(sVar == "locked") g_iLocked=FALSE;
             }else if(sTok == "anim"){
                 if(sVar == "pose"){
-                    if(g_sCurrentAnimation!= ""){
-                        llStopAnimation(g_sCurrentAnimation);
-                        g_sCurrentAnimation="";
-                        //llResetAnimationOverride("Standing");
-                    
-                        if(g_fStandHover!=0)llMessageLinked(LINK_SET,RLV_CMD, "adjustheight:1;0;"+(string)g_fStandHover+"=force", g_kWearer);
-                        else llMessageLinked(LINK_SET, RLV_CMD, "adjustheight:1;0;0=force",g_kWearer);
+                    if (g_sPose != ""){
+                        StopAnimation(g_sPose);
+                        g_sPose = "";
                     }
                 } else if(sVar == "animlock")g_iAnimLock=FALSE;
             } else if(sTok == "offset"){
@@ -480,8 +519,16 @@ default
         } else if(iNum == LEASH_END_MOVEMENT){
             g_iLeashMove=FALSE;
             MoveEnd();
-            
-        } else if(iNum == REBOOT)llResetScript();
+        } else if(iNum == ANIM_START){
+            StartAnimation(sStr);
+        } else if(iNum == ANIM_STOP){
+            StopAnimation(sStr);
+        } else if (iNum == ANIM_LIST_REQ){
+            llMessageLinked(LINK_SET, ANIM_LIST_RES, llDumpList2String(g_lPoses, "|"), "");
+        } else if(iNum == REBOOT){
+            StopAllAnimations();
+            llResetScript();
+        }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
@@ -490,8 +537,10 @@ default
 
 state inUpdate{
     link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
-        else if(iNum == 0){
+        if(iNum == REBOOT){
+            StopAllAnimations();
+            llResetScript();
+        }else if(iNum == 0){
             if(sMsg == "do_move" && !g_iIsMoving){
                 
                 if(llGetLinkNumber()==LINK_ROOT || llGetLinkNumber() == 0)return;
