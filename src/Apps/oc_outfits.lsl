@@ -70,7 +70,7 @@ integer bool(integer a){
     if(a)return TRUE;
     else return FALSE;
 }
-list g_lCheckboxes=["⬜","⬛"];
+list g_lCheckboxes=["▢", "▣"];
 string TickBox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
@@ -110,7 +110,7 @@ integer g_iListenToAuth;
 DoBrowserPath(list Options, key kListenTo, integer iAuth){
     string sAppend;
     if(llSubStringIndex(g_sPath, ".core")!=-1)sAppend="\n\n* You are browsing .core! This will change which items in your core folder are actively worn. This will work similarly to #Folders, to remove other core items, you will need to go to that folder and select >RemoveAll<, it will not be automatic here!";
-    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Remove will remove all worn outfits. Aside from .core", Options, [">Wear<", ">RemoveAll<", UPMENU, "^"], 0, iAuth, "Browser");
+    Dialog(kListenTo, "[Outfit Browser]\n \nLast outfit worn: "+g_sLastOutfit+"\n \n* You are currently browsing: "+g_sPath+"\n \n*Note: >Wear< will wear the current outfit, removing any other worn outfit, Naked will remove all worn outfits. Aside from .core", Options, [">Wear<", ">Naked<", UPMENU, "^"], 0, iAuth, "Browser");
 }
 
 
@@ -131,7 +131,6 @@ FolderBrowser (key kID, integer iAuth){
     g_iListenHandle = llListen(g_iListenChannel, "", g_kWearer, "");
     TickBrowser();
     
-    
     llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
     llSetTimerEvent(1);
 }
@@ -148,7 +147,6 @@ CoreBrowser(key kID, integer iAuth){
     llOwnerSay("@getinv:"+g_sPath+"="+(string)g_iListenChannel);
     llSetTimerEvent(1);
 }
-    
 
 ConfigMenu(key kID, integer iAuth){
     integer iTrusted = Bool((g_iAccessBitSet&1));
@@ -164,7 +162,6 @@ ConfigMenu(key kID, integer iAuth){
     string sJail = TrueOrFalse(iJail);
     string sStripAll = TrueOrFalse(iStripAll);
     
-
     Dialog(kID, "\n[Outfits App "+g_sAppVersion+"]\n \nConfigure Access\n * Owner: ALWAYS\n * Trusted: "+sTrusted+"\n * Public: "+sPublic+"\n * Group: "+sGroup+"\n * Wearer: "+sWearer+"\n * Jail: "+sJail+"\n * Strip All (even not in .outfits): "+sStripAll+"\n \n** WARNING: If you disable the jail, then outfits WILL be able to browse your entire #RLV folder, not just under #RLV/.outfits", [TickBox(iTrusted, "Trusted"), TickBox(iPublic, "Public") ,TickBox(iGroup, "Group"), TickBox(iWearer, "Wearer"), TickBox(iJail, "Jail"), TickBox(iStripAll, "Strip All")], [UPMENU], 0, iAuth, "Menu~Configure");
 }
 
@@ -192,12 +189,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangevalue = llDumpList2String(llList2List(Params,1,-1)," ");
         string sText;
         
-        if(sChangetype == "+"){
+        if(sChangetype == "wear" || sChangetype == "naked"){
             if(g_sPath!=sChangevalue){
                 g_sPath=".outfits/"+sChangevalue;
                 g_iListenTimeout=0;
             }
-            
             
             if(!g_iLocked){
                 llOwnerSay("@detach=n");
@@ -215,36 +211,15 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llOwnerSay("@remoutfit=force");
             }
             llSleep(2); // incase of lag
-            g_sLastOutfit=g_sPath;
-                        
+            if (g_sPath == ".outfits/" || g_sPath == ".outfits/.") g_sLastOutfit = "NONE";
+            else g_sLastOutfit=g_sPath;
+        
             RmCorelock();
             llSleep(1);
-            llOwnerSay("@attachallover:"+g_sPath+"=force");
-        } else if(sChangetype == "-"){
-            g_sLastOutfit="NONE";
-            if(g_sPath != sChangevalue){
-                g_sPath = ".outfits/"+sChangevalue;
-                g_iListenTimeout=0;
-            }
-            
-            if(!Bool((g_iAccessBitSet&32))){
-                if(llSubStringIndex(sChangevalue, ".core")!=-1)RmCorelock();
-                llOwnerSay("@detachall:"+sChangevalue+"=force");
-            }
-            else{
-                
-                
-                if(llSubStringIndex(sChangevalue, ".core")!=-1){
-                    RmCorelock();
-                    llOwnerSay("@detachall:"+sChangevalue+"=force");
-                }else{
-                    
-                    llOwnerSay("@detach=force");
-                    llOwnerSay("@remoutfit=force");
-                }
-            }
         }
-        
+        if(sChangetype == "wear"){
+            if (g_sPath != "" && g_sPath != ".") llOwnerSay("@attachallover:"+g_sPath+"=force");
+        }
     }
 }
 
@@ -399,9 +374,8 @@ default
                     } else if(sMsg == ">Wear<"){
                         // add recursive. Adds subfolder contents too
                         UserCommand(iAuth, "wear "+g_sPath, kAv);
-                        
-                    } else if(sMsg == ">RemoveAll<"){
-                        UserCommand(iAuth, "rem "+g_sPath, kAv);
+                    } else if(sMsg == ">Naked<"){
+                        UserCommand(iAuth, "naked", kAv);
                     } else if(sMsg == "^"){
                         // go up a path
                         list edit = llParseString2List(g_sPath,["/"],[]);
