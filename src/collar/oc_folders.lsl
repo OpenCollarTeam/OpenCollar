@@ -306,8 +306,10 @@ default
                         Menu(kAv,iAuth);
                     } else if(sMsg == "+ Add Items"){
                         llOwnerSay("@attachallover:"+g_sPath+"=force");
+                        llSleep(2.0);
                     } else if(sMsg == "- Rem Items"){
                         llOwnerSay("@detachall:"+g_sPath+"=force");
+                        llSleep(2.0);
                     } else if(sMsg == "^ UP"){
                         iRespring=FALSE;
                         Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
