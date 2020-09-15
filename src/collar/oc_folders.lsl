@@ -175,8 +175,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llDumpList2String(llList2List(llParseString2List(sStr, [" "], []),1,-1)," ");
+        string sChangetype = llGetSubString(sStr, 0, 0);
+        string sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
         string sText;
         
         if(sChangetype == "&"){
@@ -262,7 +262,7 @@ default
             sPrompt += llList2String(g_lFolderCheckboxes,1) + " = All items in either this folder or its subfolder are worn\n";
             sPrompt += llList2String(g_lFolderCheckboxes,2) + " = Some items are worn in this folder, or its subfolders\n";
             // show current folder with state indicator
-            sPrompt += "\nCurrently browsing path: "+Checkbox(iState, g_sPath)+"\n";
+            sPrompt += "\nCurrently browsing path: "+Checkbox(iState, setor(g_sPath == "", "#RLV", g_sPath))+"\n";
             // buttons for other folders
             integer i;
             integer len = llGetListLength(lFolders);
