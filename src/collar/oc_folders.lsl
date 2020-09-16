@@ -175,8 +175,8 @@ UserCommand(integer iNum, string sStr, key kID) {
     //else if (iNum!=CMD_OWNER && iNum!=CMD_TRUSTED && kID!=g_kWearer) RelayNotify(kID,"Access denied!",0);
     else {
         integer iWSuccess = 0; 
-        string sChangetype = llList2String(llParseString2List(sStr, [" "], []),0);
-        string sChangevalue = llDumpList2String(llList2List(llParseString2List(sStr, [" "], []),1,-1)," ");
+        string sChangetype = llGetSubString(sStr, 0, 0);
+        string sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
         string sText;
         
         if(sChangetype == "&"){
@@ -246,36 +246,38 @@ default
 
             */
             
-            list lFolders = llParseString2List(sMsg, ["|"],[]);
+            list lFolders = llParseString2List(sMsg, [","],[]);
             list lButtons = [];
-            //llWhisper(0, "Currently browsing folder path: "+g_sPath);
-            integer i=0;
-            integer end = llGetListLength(lFolders)-1;
-            for(i=0;i<end;i++){
-                list lTmp1 = llParseString2List(llList2String(lFolders,i),[","],[]);
-                integer iSub1 = (integer)llGetSubString(llList2String(lTmp1,0),0,0);
-                integer iSub2 = (integer)llGetSubString(llList2String(lTmp1,0),1,1);
-                integer iState=0;
+            
+            list lTmp1 = llParseStringKeepNulls(llList2String(lFolders,0),["|"],[]);
+            integer iSub1 = (integer)llGetSubString(llList2String(lTmp1,1),0,0);
+            integer iSub2 = (integer)llGetSubString(llList2String(lTmp1,1),1,1);
+            integer iState;
+            if(iSub1 == 3 || iSub2 == 3) iState=1;
+            else if(iSub1 == 2 || iSub2 == 2)iState = 2;
+            else if(iSub1 == 1 || iSub2 == 1)iState=0;
+            // Build menu prompt
+            string sPrompt = "\n[Folder Browser]\n\nLegend:\n";
+            sPrompt += llList2String(g_lFolderCheckboxes,0) + " = Nothing in the folder is worn, or any subfolders\n";
+            sPrompt += llList2String(g_lFolderCheckboxes,1) + " = All items in either this folder or its subfolder are worn\n";
+            sPrompt += llList2String(g_lFolderCheckboxes,2) + " = Some items are worn in this folder, or its subfolders\n";
+            // show current folder with state indicator
+            sPrompt += "\nCurrently browsing path: "+Checkbox(iState, setor(g_sPath == "", "#RLV", g_sPath))+"\n";
+            // buttons for other folders
+            integer i;
+            integer len = llGetListLength(lFolders);
+            for(i=1;i<len;++i){
+                lTmp1 = llParseStringKeepNulls(llList2String(lFolders,i),["|"],[]);
+                iSub1 = (integer)llGetSubString(llList2String(lTmp1,1),0,0);
+                iSub2 = (integer)llGetSubString(llList2String(lTmp1,1),1,1);
 
                 if(iSub1 == 3 || iSub2 == 3) iState=1;
                 else if(iSub1 == 2 || iSub2 == 2)iState = 2;
                 else if(iSub1 == 1 || iSub2 == 1)iState=0;
 
-
-                lButtons += [Checkbox(iState, llList2String(lTmp1,1))];
-
-                //llWhisper(0, "Adding to menu options: "+Checkbox(iState, llList2String(lTmp1,1)));
+                lButtons += [Checkbox(iState, llList2String(lTmp1,0))];
             }
-
-            // Now display menu
-            string sPrompt = "\n[Folder Browser]\n\nLegend:\n";
             
-            sPrompt += "Currently browsing path: "+g_sPath+"\n";
-            sPrompt += llList2String(g_lFolderCheckboxes,0) + " = Nothing in the folder is worn, or any subfolders\n";
-            sPrompt += llList2String(g_lFolderCheckboxes,1) + " = All items in either this folder or its subfolder are worn\n";
-            sPrompt += llList2String(g_lFolderCheckboxes,2) + " = Some items are worn in this folder, or its subfolders\n";
-            
-            // dialog syntax: Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) 
             Dialog(g_kMenuUser, sPrompt, lButtons, ["+ Add Items", "- Rem Items", setor((g_sPath == ""), UPMENU, "^ UP")], 0, g_iMenuUser, "FolderBrowser~");
         }
     }
@@ -283,6 +285,7 @@ default
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
+        else if(iNum == CMD_EVERYONE && (g_iAccessBitSet & 2)) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){
@@ -303,8 +306,10 @@ default
                         Menu(kAv,iAuth);
                     } else if(sMsg == "+ Add Items"){
                         llOwnerSay("@attachallover:"+g_sPath+"=force");
+                        llSleep(2.0);
                     } else if(sMsg == "- Rem Items"){
                         llOwnerSay("@detachall:"+g_sPath+"=force");
+                        llSleep(2.0);
                     } else if(sMsg == "^ UP"){
                         iRespring=FALSE;
                         Browser(kAv,iAuth, GoBackOneFolder(g_sPath));
