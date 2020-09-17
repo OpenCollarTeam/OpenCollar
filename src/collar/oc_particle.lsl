@@ -74,7 +74,7 @@ key g_kDefaultLeather = "8f4c3616-46a4-1ed6-37dc-9705b754b7f1";
 
 // For particle settings, this is what I shall use:
 // [key texture, vector size, float life, float gravity, vector color, integer glow, integer ribbon]
-list g_lLeashSettings = [g_kDefaultChain, <0.0625, 0.0625, 1.0>, 1.0, -0.5, <1.0, 1.0, 1.0>, FALSE, FALSE];
+list g_lLeashSettings = [g_kDefaultChain, <0.0625, 0.0625, 1.0>, 1.0, -1.5, <1.0, 1.0, 1.0>, FALSE, FALSE];
 /*
     So, we can configure the leash settings here in the collar.  I may end up implementing the actual menu here.
     LockMeister generates its own particle chains, I believe.
@@ -200,6 +200,9 @@ StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
     key kTex;
     if (llList2String(lParams, 0) == "") {
         kTex = llList2String(g_lLeashSettings, 0);
+        // emissive and ribbon flags are not supported by LockGuard, so 
+        // only apply them when no texture is supplied in lParams and we
+        // are using the leash configuration's texture as well.
         if (llList2Integer(g_lLeashSettings, 5)) iPartFlags = iPartFlags | PSYS_PART_EMISSIVE_MASK;
         if (llList2Integer(g_lLeashSettings, 6)) iPartFlags = iPartFlags | PSYS_PART_RIBBON_MASK;
     } else kTex = llList2String(lParams, 0);
@@ -215,8 +218,6 @@ StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
     vector vColor;
     if (llList2String(lParams, 4) == "") vColor = llList2Vector(g_lLeashSettings, 4);
     else vColor = llList2Vector(lParams, 4);
-    
-    // TODO: emissive and ribbon, which are not supported by LockGuard
 
     llLinkParticleSystem(iLinkNum, []);
     if (kTex == TEXTURE_TRANSPARENT) return;
@@ -230,9 +231,9 @@ StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
         PSYS_PART_START_ALPHA, 1.0,
         PSYS_PART_START_SCALE, vSize,
         PSYS_SRC_PATTERN, PSYS_SRC_PATTERN_DROP,
-        PSYS_SRC_BURST_RATE, 0.001,
+        PSYS_SRC_BURST_RATE, 0.0001,
         PSYS_SRC_ACCEL, <0.0, 0.0, fGravity>,
-        PSYS_SRC_BURST_PART_COUNT, 10,
+        PSYS_SRC_BURST_PART_COUNT, 1,
         PSYS_SRC_BURST_RADIUS, 0.0,
         PSYS_SRC_BURST_SPEED_MIN, 0.0,
         PSYS_SRC_BURST_SPEED_MAX, 0.0,
@@ -279,7 +280,8 @@ LockGuardUnlink(key kTarget, integer iLeashPoint) {
     if (kTarget != llList2Key(g_lLGTargets, iLeashPoint)) return;
     StopParticleChain(iPointLink);
     g_lLGTargets = llListReplaceList(g_lLGTargets, [NULL_KEY], iLeashPoint, iLeashPoint);
-    // TODO: clear settings after unlinking
+    // clear the LockGuard settings after unlinking
+    SetLockGuardSettings(iPointLink, []);
     // can the leash be hooked to anything beside front?
     if (iLeashPoint == 0) {
         if (g_kLeashTarget) StartParticleChain(g_kLeashTarget, iPointLink, g_lLeashSettings);
@@ -442,7 +444,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 sSubMenu += "~Feel";
                 float fGrav = (float)llList2String(lTokens, 2);
                 if (fGrav > 0.0) fGrav = 0.0 - fGrav;
-                fGrav = Clamp(fGrav, -3.0, 0.0);
+                fGrav = Clamp(fGrav, -10.0, 0.0);
                 g_lLeashSettings = llListReplaceList(g_lLeashSettings, [fGrav], 3, 3);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leash_gravity="+(string)fGrav, "");
                 if (llToLower(llList2String(lTokens, -1)) == "remenu") iRemenu = TRUE;
@@ -490,6 +492,7 @@ default {
     state_entry() {
         llListen(g_iChan_LOCKGUARD,"",NULL_KEY,"");     // Lockguard Listener
         llListen(g_iChan_LOCKMEISTER,"",NULL_KEY,"");   // Lockmeister Listener
+        while (llGetListLength(g_lLGSettings) < 20) g_lLGSettings += [""];
         GetPointLinks();
         ClearAllChains();
         //GetSettings(FALSE);
@@ -505,8 +508,6 @@ default {
                 if (kLGTarget) {
                     if (llGetAgentSize(kLGTarget) == ZERO_VECTOR) {
                         llRegionSayTo(llGetOwnerKey(kID), PUBLIC_CHANNEL, "You will grab the leash once it is released from " + llKey2Name(kLGTarget) + ".");
-                    //} else {
-                        //llRegionSayTo(kMessageID, PUBLIC_CHANNEL, "You will grab the leash once it is released from " + llKey2Name(kLGTarget) + ".");
                     }
                 } else {
                     StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, 0), []);
@@ -531,9 +532,6 @@ default {
             }
         } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Color", "");
-            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Feel", "");
-            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Color", "");
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
@@ -594,13 +592,13 @@ default {
                         llMessageLinked(LINK_SET, iAuth, "leash size " + ((string)fLeashX) + " " + ((string)fLeashY) + " remenu", kAv);
                     } else if (sButton == "Heavier") {
                         float fLeashGrav = llList2Float(g_lLeashSettings, 3);
-                        llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav - 0.1, -3.0, 0.0)) + " remenu", kAv);
+                        llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav - 0.25, -10.0, 0.0)) + " remenu", kAv);
                     } else if (sButton == "Lighter") {
                         float fLeashGrav = llList2Float(g_lLeashSettings, 3);
-                        llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav + 0.1, -3.0, 0.0)) + " remenu", kAv);
+                        llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav + 0.25, -10.0, 0.0)) + " remenu", kAv);
                     }
                 } else if (sMenu == g_sSubMenu + "~texture") {
-                    // TODO
+                    llMessageLinked(LINK_SET, iAuth, "leash texture " + sButton + " remenu", kAv);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
