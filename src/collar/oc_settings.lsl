@@ -28,6 +28,7 @@ string GetSetting(string sToken) {
 DelSetting(string sToken) { // we'll only ever delete user settings
     sToken = llToLower(sToken);
     integer i = llGetListLength(g_lSettings) - 1;
+    if(sToken == "intern_weld")DeleteWeldFlag();
     if (SplitToken(sToken, 1) == "all") {
         sToken = SplitToken(sToken, 0);
       //  string sVar;
@@ -328,13 +329,10 @@ CheckForAndSaveWeld(){
         
         // begin
         string sDesc = llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]),0);
-        //llSay(0, "original description: "+sDesc);
-        vector vColor = llList2Vector(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_COLOR, 0]),0);
-        // use the Z vector position to save the weld state
-        vColor.z = (float)(((string)llRound(vColor.z))+".0"+(string)Welded);
-        llSetLinkColor(g_iWeldStorage, vColor, 0);
-            
+        
+        
         list lPara = llParseString2List(sDesc, ["~"],[]);
+        
         //llSay(0, "Parameters: "+llList2CSV(lPara));
         if(llListFindList(lPara, ["weld"])==-1){
             if(Welded){
@@ -361,16 +359,13 @@ CheckForAndSaveWeld(){
 RestoreWeldState(){
     FindLeashpointOrLock();
     if(g_iWeldStorage==-99)return;
-    vector vColor = llList2Vector(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_COLOR,0]),0);
-
-    string z = (string)vColor.z;
-    integer index=llSubStringIndex(z,".");
-    g_lSettings = SetSetting("intern_weld", (string)llRound((integer)llGetSubString(z,index+1,-1)));
+    if(g_iWeldStorage == LINK_ROOT)return;
     
-    // get welded by
+    
+    // get welded
     list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage,[PRIM_DESC]),0),["~"],[]);
     if(llListFindList(lPara,["weld"])!=-1){
-        index = llListFindList(lPara,["weld"]);
+        integer index = llListFindList(lPara,["weld"]);
         g_lSettings = SetSetting("intern_weldby", llList2String(lPara, index+1));
         g_lSettings = SetSetting("intern_weld","1");
         
@@ -378,6 +373,24 @@ RestoreWeldState(){
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "intern_weldby","");
     }
 }
+
+DeleteWeldFlag()
+{
+    FindLeashpointOrLock();
+    if(g_iWeldStorage == -99)return;
+    if(g_iWeldStorage == LINK_ROOT)return;
+    
+    list lPara = llParseString2List(llList2String(llGetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC]) , 0), ["~"], []);
+    integer iIndex = llListFindList(lPara,["weld"]);
+    
+
+    if(iIndex==-1)return;
+    
+    lPara = llDeleteSubList(lPara,iIndex,iIndex+1);
+    
+    llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
+}
+
 default
 {
     on_rez(integer t){
@@ -393,7 +406,7 @@ default
         FindLeashpointOrLock();
         RestoreWeldState();
         
-        if (!SettingExists("global_checkboxes") SetSetting("global_checkboxes", "▢,▣");
+        if (!SettingExists("global_checkboxes")) g_lSettings = SetSetting("global_checkboxes", "▢,▣");
         
         if(llGetInventoryType(g_sSettings)!=INVENTORY_NONE){
             g_iSettingsRead=0;
