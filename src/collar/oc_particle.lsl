@@ -510,8 +510,9 @@ default {
                     }
                 } else {
                     StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, 0), []);
-                    if (llGetAgentSize(g_kLeashTarget) == ZERO_VECTOR) {
+                    if (llGetAgentSize(g_kLeashTarget) != ZERO_VECTOR) {
                         llRegionSayTo(g_kLeashTarget, PUBLIC_CHANNEL, "You grab " + llKey2Name(llGetOwner()) + "'s leash.");
+                        llSay(g_iChan_LOCKMEISTER, ((string)g_kLeashTarget) + "handle");
                     }
                 }
             } else {
@@ -523,7 +524,7 @@ default {
                     }
                 } else {
                     StopParticleChain(llList2Integer(g_lPointLinks, 0));
-                    if (llGetAgentSize(kLGTarget) == ZERO_VECTOR) {
+                    if (llGetAgentSize(kLGTarget) != ZERO_VECTOR) {
                         llRegionSayTo(llGetOwnerKey(kID), PUBLIC_CHANNEL, "You detach " + llKey2Name(llGetOwner()) + "'s leash.");
                     }
                 }
@@ -632,9 +633,9 @@ default {
                 } else if(sToken == "length"){
                     g_iLeashLength = (integer)sValue;
                 }
-            } else if(llGetSubString(sToken,0,i) == "global_"){
-                sToken = llGetSubString(sToken,i+1,-1);
-                if(sToken == "checkboxes")g_lCheckboxes = llCSV2List(sValue);
+            } else if(llGetSubString(sToken,0,i) == "global_") {
+                sToken = llGetSubString(sToken, i+1, -1);
+                if(sToken == "checkboxes") g_lCheckboxes = llCSV2List(sValue);
             }
                 
                  //else if (sToken == "strictAuthError") {
@@ -714,7 +715,48 @@ default {
         } else if (iChannel == g_iChan_LOCKMEISTER) {
             // LockMeister v2 Chains
             // Leash Holders use this, it seems
-            // TODO:
+            key kWearer = llGetOwner();
+            if (llGetSubString(sMessage, 0, 35) == (string)kWearer) {
+                if (llGetSubString(sMessage, 36, 41) == "|LMV2|") {
+                    list lLMFields = llParseStringKeepNulls(sMessage, ["|"], []);
+                    if (llList2String(lLMFields, 2) == "RequestPoint") {
+                        integer iPointIndex = llListFindList(g_lLMPointIDs, llList2List(lLMFields, 3, 3));
+                        if (iPointIndex != -1) {
+                            llRegionSayTo(kID, g_iChan_LOCKMEISTER, llDumpList2String([kWearer, "LMV2", "ReplyPoint", llList2String(g_lLMPointIDs, iPointIndex), llGetLinkKey(llList2Integer(g_lPointLinks, iPointIndex))], "|"));
+                        }
+                    }
+                } else {
+                    integer iPointIndex = llListFindList(g_lLMPointIDs, [llGetSubString(sMessage, 36, -1)]);
+                    if (iPointIndex != -1) {
+                        llRegionSayTo(kID, g_iChan_LOCKMEISTER, sMessage + " ok");
+                    }
+                }
+            } else if (g_kLeashTarget != NULL_KEY && llGetSubString(sMessage, 0, 35) == (string)llGetOwnerKey(g_kLeashTarget)) {
+                if (llGetSubString(sMessage, 36, 41) == "|LMV2|") {
+                    list lLMFields = llParseStringKeepNulls(sMessage, ["|"], []);
+                    if (llList2String(lLMFields, 2) == "ReplyPoint" && llList2String(lLMFields, 3) == "handle") {
+                        g_kLeashTarget = kID;
+                        StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, 0), []);
+                    }
+                } else if (llGetSubString(sMessage, 36, -1) == "handle ok") {
+                    g_kLeashTarget = kID;
+                    StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, 0), []);
+                    llRegionSayTo(kID, g_iChan_LOCKMEISTER, llDumpList2String([llGetOwnerKey(g_kLeashTarget), "LMV2", "RequestPoint", "handle"], "|"));
+                } else if (llGetSubString(sMessage, 36, -1) == "handle detached") {
+                    g_kLeashTarget = NULL_KEY;
+                    key kLGTarget = llList2Key(g_lLGTargets, 0);
+                    if (kLGTarget) {
+                        if (llGetAgentSize(kLGTarget) == ZERO_VECTOR) {
+                            llRegionSayTo(llGetOwnerKey(kID), PUBLIC_CHANNEL, "You leave " + llKey2Name(llGetOwner()) + " chained to " + llKey2Name(kLGTarget) + ".");
+                        }
+                    } else {
+                        StopParticleChain(llList2Integer(g_lPointLinks, 0));
+                        if (llGetAgentSize(kLGTarget) == ZERO_VECTOR) {
+                            llRegionSayTo(llGetOwnerKey(kID), PUBLIC_CHANNEL, "You detach " + llKey2Name(llGetOwner()) + "'s leash.");
+                        }
+                    }
+                }
+            }
         }
     }
 }
