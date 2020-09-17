@@ -90,7 +90,7 @@ list g_lLeashSettings = [g_kDefaultChain, <0.0625, 0.0625, 1.0>, 1.0, -0.5, <1.0
 
 // very LockGuard-specific
 list g_lLGSettings = [];
-key g_lLGTargets = [NULL_KEY, NULL_KEY, NULL_KEY, NULL_KEY];
+list g_lLGTargets = [NULL_KEY, NULL_KEY, NULL_KEY, NULL_KEY];
 key g_kLGDefaultChain = "40809979-b6be-2b42-e915-254ccd8d9a08";
 key g_kLGDefaultRope = "bc586d76-c5b9-de10-5b66-e8840f175e0d";
 
@@ -149,7 +149,7 @@ ConfigureMenu(key kIn, integer iAuth) {
 }
 
 FeelMenu(key kIn, integer iAuth) {
-    list lButtons = ["Bigger", "Smaller", L_DEFAULTS, "Heavier", "Lighter"];
+    list lButtons = ["Bigger", "Smaller", "Defaults", "Heavier", "Lighter"];
     string sPrompt = "\nHere you can change the weight and size of your leash.";
     Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth, "leash/feel");
 }
@@ -211,7 +211,7 @@ StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
 
     llLinkParticleSystem(iLinkNum, [
         PSYS_PART_MAX_AGE, fLife,
-        PSYS_PART_FLAGS, nBitField,
+        PSYS_PART_FLAGS, iPartFlags,
         PSYS_PART_START_COLOR, vColor,
         PSYS_PART_START_ALPHA, 1.0,
         PSYS_PART_START_SCALE, vSize,
@@ -261,14 +261,14 @@ LockGuardLink(key kTarget, integer iLeashPoint) {
 
 LockGuardUnlink(key kTarget, integer iLeashPoint) {
     integer iPointLink = llList2Integer(g_lPointLinks, iLeashPoint);
-    if (iPointlink == -1) return;
+    if (iPointLink == -1) return;
     if (kTarget != llList2Key(g_lLGTargets, iLeashPoint)) return;
-    StopParticleChain(llList2Integer(iPointLink);
+    StopParticleChain(iPointLink);
     g_lLGTargets = llListReplaceList(g_lLGTargets, [NULL_KEY], iLeashPoint, iLeashPoint);
     // TODO: clear settings after unlinking
     // can the leash be hooked to anything beside front?
     if (iLeashPoint == 0) {
-        if (g_kLeashTarget) StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, iLeashPoint), g_lLeashSettings);
+        if (g_kLeashTarget) StartParticleChain(g_kLeashTarget, iPointLink, g_lLeashSettings);
     }
 }
 
@@ -298,15 +298,15 @@ string ColorToHex(vector vColor) {
     integer iGrn = (integer)(vColor.y * 255.0);
     integer iBlu = (integer)(vColor.z * 255.0);
     return ( "#" + 
-        llGetSubString(sOctets, iRed / 16, iRed / 16) + llGetSubString(sOctets, iRed % 16, iRed % 16),
-        llGetSubString(sOctets, iGrn / 16, iGrn / 16) + llGetSubString(sOctets, iGrn % 16, iGrn % 16),
-        llGetSubString(sOctets, iBlu / 16, iBlu / 16) + llGetSubString(sOctets, iBlu % 16, iBlu % 16),
+        llGetSubString(sOctets, iRed / 16, iRed / 16) + llGetSubString(sOctets, iRed % 16, iRed % 16) +
+        llGetSubString(sOctets, iGrn / 16, iGrn / 16) + llGetSubString(sOctets, iGrn % 16, iGrn % 16) +
+        llGetSubString(sOctets, iBlu / 16, iBlu / 16) + llGetSubString(sOctets, iBlu % 16, iBlu % 16)
     );
 }
 
 vector HexToColor(string sHexColor) {
     if (llGetSubString(sHexColor, 0, 0) == "#") sHexColor = llGetSubString(sHexColor, 1, -1);
-    if (llStringLength(sHexColor == 6)) {
+    if (llStringLength(sHexColor) == 6) {
         integer iRed = (integer)("0x" + llGetSubString(sHexColor, 0, 1));
         integer iGrn = (integer)("0x" + llGetSubString(sHexColor, 2, 3));
         integer iBlu = (integer)("0x" + llGetSubString(sHexColor, 4, 5));
@@ -320,22 +320,22 @@ vector HexToColor(string sHexColor) {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (sMessage == "menu "+SUBMENU) {
-        if(iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kMessageID, iNum);
+    if (sStr == "menu " + g_sSubMenu) {
+        if(iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kID, iNum);
         else {
-            llMessageLinked(LINK_SET, NOTIFY,"0"+"%NOACCESS% to leash configure menu", kMessageID);
-            llMessageLinked(LINK_SET, iNum, "menu "+PARENTMENU, kMessageID);
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to leash configure menu", kID);
+            llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
     } else {
         integer iRemenu = FALSE;
         string sSubMenu = "configure";
         integer iPartMod = FALSE;
-        list lTokens = llParseString2List(sMessage, [" "], []);
+        list lTokens = llParseString2List(sStr, [" "], []);
         if (llToLower(llList2String(lTokens, 0)) == "leash/configure") {
             string sSubCmd = llToLower(llList2String(lTokens, 1));
             if (sSubCmd == "configure") {
-                if (iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kMessageID, iNum);
-                else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to configuring the leash particles", kMessageID);
+                if (iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kID, iNum);
+                else llMessageLinked(LINK_SET,NOTIFY,"0"+"%NOACCESS% to configuring the leash particles", kID);
             } else if (sSubCmd == "glow") {
                 integer iNewGlow = StringBoolean(llToLower(llList2String(lTokens, 2)));
                 g_lLeashSettings = llListReplaceList(g_lLeashSettings, [iNewGlow], 5, 5);
@@ -396,7 +396,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                         }
                     }
                 }
-                if (iTexOK)
+                if (iTexOK) {
                     llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leash_texture="+llList2String(g_lLeashSettings, 0), "");
                     if (llToLower(llList2String(lTokens, -1)) == "remenu") iRemenu = TRUE;
                     iPartMod = TRUE;
@@ -420,7 +420,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 sSubMenu = "leash/feel";
                 float fGrav = (float)llList2String(lTokens, 2);
                 if (fGrav > 0.0) fGrav = 0.0 - fGrav;
-                fGrav = Clamp(fGrav, -3.0, 0.0))
+                fGrav = Clamp(fGrav, -3.0, 0.0);
                 g_lLeashSettings = llListReplaceList(g_lLeashSettings, [fGrav], 3, 3);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leash_gravity="+(string)fGrav, "");
                 if (llToLower(llList2String(lTokens, -1)) == "remenu") iRemenu = TRUE;
@@ -444,7 +444,7 @@ UserCommand(integer iNum, string sStr, key kID) {
             }
         }
         if (iRemenu) {
-            llMessageLinked(LINK_SET, iNum, "menu "+sSubMenu, kMessageID);
+            llMessageLinked(LINK_SET, iNum, "menu "+sSubMenu, kID);
         }
     }
     // I copied this from the old script until I figure out if I want to reimplement.
@@ -501,7 +501,7 @@ default {
                 } else {
                     StopParticleChain(llList2Integer(g_lPointLinks, 0));
                     if (llGetAgentSize(kLGTarget) == ZERO_VECTOR) {
-                        llRegionSayTo(llGetOwnerKey(kMessageID), PUBLIC_CHANNEL, "You detach " + llKey2Name(llGetOwner()) + "'s leash.");
+                        llRegionSayTo(llGetOwnerKey(kID), PUBLIC_CHANNEL, "You detach " + llKey2Name(llGetOwner()) + "'s leash.");
                     }
                 }
             }
@@ -510,12 +510,12 @@ default {
         else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
-                list lMenuParams = llParseString2List(sMessage, ["|"], []);
+                list lMenuParams = llParseString2List(sStr, ["|"], []);
                 key kAv = (key)llList2String(lMenuParams, 0);
                 string sButton = llList2String(lMenuParams, 1);
                 integer iAuth = (integer)llList2String(lMenuParams, 3);
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
-                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+                g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sButton == UPMENU) {
                     if(sMenu == "leash/configure") llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else ConfigureMenu(kAv, iAuth);
@@ -577,8 +577,8 @@ default {
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
-            integer iMenuIndex = llListFindList(g_lMenuIDs, [kMessageID]);
-            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex - 2 + g_iMenuStride);
+            integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
+            g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
         } else if (iNum == LM_SETTING_RESPONSE) {
             /* TODO: Rewrite
             integer i = llSubStringIndex(sMessage, "=");
@@ -621,7 +621,7 @@ default {
             */
         } else if (iNum == LM_SETTING_DELETE) {
             // TODO: rewrite this too
-        } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
+        } else if (iNum == REBOOT && sStr == "reboot") llResetScript();
     }
 
     listen(integer iChannel, string sName, key kID, string sMessage) {
