@@ -138,29 +138,40 @@ ConfigureMenu(key kIn, integer iAuth) {
     integer iRibbon = llList2Integer(g_lLeashSettings, 6);
     lButtons += [Checkbox(iGlow, "Glow"), Checkbox(g_iTurnMode, "Turn"), Checkbox(g_iStrictMode, "Strict")];
     lButtons += [Checkbox(iRibbon, "Ribbon")];
-    lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == g_kDefaultChain, "Classic")];
+    lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == g_kDefaultChain, "Chain")];
     lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == g_kDefaultSilk, "Silk")];
     lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == g_kDefaultRope, "Rope")];
     lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == g_kDefaultLeather, "Leather")];
     lButtons += [Checkbox(llList2String(g_lLeashSettings, 0) == TEXTURE_TRANSPARENT, "Invisible")];
     lButtons += ["Texture", "Color", "Feel"];
     string sPrompt = "\n[Leash Configuration]\n\nCustomize the looks and feel of your leash.";
-    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth, "leash/configure");
+    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth, g_sSubMenu);
 }
 
 FeelMenu(key kIn, integer iAuth) {
     list lButtons = ["Bigger", "Smaller", "Defaults", "Heavier", "Lighter"];
     string sPrompt = "\nHere you can change the weight and size of your leash.";
-    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth, "leash/feel");
+    vector vSize = llList2Vector(g_lLeashSettings, 1);
+    sPrompt += ("\nCurrent Size: " + llGetSubString((string)(vSize.x), 0, 5) + " x " + llGetSubString((string)(vSize.y), 0, 5));
+    sPrompt += ("\nCurrent Weight: " + (string)(0.0 - llList2Float(g_lLeashSettings, 3)));
+    Dialog(kIn, sPrompt, lButtons, [UPMENU], 0, iAuth, g_sSubMenu + "~Feel");
 }
 
 ColorMenu(key kIn, integer iAuth) {
     string sPrompt = "\nChoose a color.";
-    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth, "leash/color");
+    Dialog(kIn, sPrompt, ["colormenu please"], [UPMENU], 0, iAuth, g_sSubMenu + "~Color");
 }
 
 TextureMenu(key kIn, integer iAuth) {
-    // TODO
+    list lTextures;
+    integer iTexCount = llGetInventoryNumber(INVENTORY_TEXTURE);
+    integer i;
+    for (i = 0; i < iTexCount; ++i) {
+        string sName = llGetInventoryName(INVENTORY_TEXTURE, i);
+        if (sName != "" && llGetSubString(sName, 0, 0) != "~") lTextures += [sName];
+    }
+    string sText = "\nChoose a particle texture to use:\n";
+    Dialog(kIn, sText, lTextures, [UPMENU], 0, iAuth, g_sSubMenu + "~Texture");
 }
 
 // setup function
@@ -185,9 +196,13 @@ GetPointLinks() {
 
 // Particle chain start/stop
 StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
+    integer iPartFlags = PSYS_PART_TARGET_POS_MASK | PSYS_PART_FOLLOW_VELOCITY_MASK;
     key kTex;
-    if (llList2String(lParams, 0) == "") kTex = llList2String(g_lLeashSettings, 0);
-    else kTex = llList2String(lParams, 0);
+    if (llList2String(lParams, 0) == "") {
+        kTex = llList2String(g_lLeashSettings, 0);
+        if (llList2Integer(g_lLeashSettings, 5)) iPartFlags = iPartFlags | PSYS_PART_EMISSIVE_MASK;
+        if (llList2Integer(g_lLeashSettings, 6)) iPartFlags = iPartFlags | PSYS_PART_RIBBON_MASK;
+    } else kTex = llList2String(lParams, 0);
     vector vSize;
     if (llList2String(lParams, 1) == "") vSize = llList2Vector(g_lLeashSettings, 1);
     else vSize = llList2Vector(lParams, 1);
@@ -203,7 +218,6 @@ StartParticleChain(key kTarget, integer iLinkNum, list lParams) {
     
     // TODO: emissive and ribbon, which are not supported by LockGuard
 
-    integer iPartFlags = PSYS_PART_TARGET_POS_MASK | PSYS_PART_FOLLOW_VELOCITY_MASK;
     llLinkParticleSystem(iLinkNum, []);
     if (kTex == TEXTURE_TRANSPARENT) return;
 
@@ -320,18 +334,26 @@ vector HexToColor(string sHexColor) {
 }
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (sStr == "menu " + g_sSubMenu) {
-        if(iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kID, iNum);
-        else {
-            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to leash configure menu", kID);
+    if (llGetSubString(sStr, 0, 4) == "menu ") {
+        if (iNum <= CMD_TRUSTED || iNum == CMD_WEARER) {
+            list lMenuPath = llParseString2List(llGetSubString(sStr, 5, -1), ["/", "~", "|"], [" "]);
+            if (llList2String(lMenuPath, 0) == g_sSubMenu) {
+                string sConfSubMenu = llList2String(lMenuPath, 1);
+                if (sConfSubMenu == "Color") ColorMenu(kID, iNum);
+                else if (sConfSubMenu == "Feel") FeelMenu(kID, iNum);
+                else if (sConfSubMenu == "Texture") TextureMenu(kID, iNum);
+                else ConfigureMenu(kID, iNum);
+            }
+        } else {
+            llMessageLinked(LINK_SET, NOTIFY, "0"+"%NOACCESS% to leash configure menus", kID);
             llMessageLinked(LINK_SET, iNum, "menu " + g_sParentMenu, kID);
         }
     } else {
         integer iRemenu = FALSE;
-        string sSubMenu = "configure";
+        string sSubMenu = g_sSubMenu;
         integer iPartMod = FALSE;
         list lTokens = llParseString2List(sStr, [" "], []);
-        if (llToLower(llList2String(lTokens, 0)) == "leash/configure") {
+        if (llToLower(llList2String(lTokens, 0)) == "leash") {
             string sSubCmd = llToLower(llList2String(lTokens, 1));
             if (sSubCmd == "configure") {
                 if (iNum <= CMD_TRUSTED || iNum == CMD_WEARER) ConfigureMenu(kID, iNum);
@@ -387,7 +409,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                             sTexID = llDumpList2String(llList2List(lTokens, 2, -2), " ");
                         else sTexID = llDumpList2String(llList2List(lTokens, 2, -1), " ");
                         if (llGetInventoryType(sTexID) == INVENTORY_TEXTURE) {
-                            sSubMenu = "leash/texture";
+                            sSubMenu += "~Texture";
                             kTmp = llGetInventoryKey(sTexID);
                             if (kTmp) {
                                 g_lLeashSettings = llListReplaceList(g_lLeashSettings, [kTmp], 0, 0);
@@ -402,13 +424,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                     iPartMod = TRUE;
                 }
             } else if (sSubCmd == "color") {
-                sSubMenu = "leash/color";
+                sSubMenu += "~Color";
                 g_lLeashSettings = llListReplaceList(g_lLeashSettings, [HexToColor(llList2String(lTokens, 2))], 4, 4);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "leash_color="+llList2String(lTokens, 2), "");
                 if (llToLower(llList2String(lTokens, -1)) == "remenu") iRemenu = TRUE;
                 iPartMod = TRUE;
             } else if (sSubCmd == "size") {
-                sSubMenu = "leash/feel";
+                sSubMenu += "~Feel";
                 float fSizeX = (float)llList2String(lTokens, 2);
                 float fSizeY = (float)llList2String(lTokens, 3);
                 vector vNewSize = <Clamp(fSizeX, 0.03125, 4.0), Clamp(fSizeY, 0.03125, 4.0), 1.0>;
@@ -417,7 +439,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 if (llToLower(llList2String(lTokens, 4)) == "remenu") iRemenu = TRUE;
                 iPartMod = TRUE;
             } else if (sSubCmd == "gravity") {
-                sSubMenu = "leash/feel";
+                sSubMenu += "~Feel";
                 float fGrav = (float)llList2String(lTokens, 2);
                 if (fGrav > 0.0) fGrav = 0.0 - fGrav;
                 fGrav = Clamp(fGrav, -3.0, 0.0);
@@ -440,7 +462,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 }
             }
             if (!iLeashedLG) {
-                if (g_kLeashTarget) StartParticleChain(g_kLeashTarget, 0, []);
+                if (g_kLeashTarget) StartParticleChain(g_kLeashTarget, llList2Integer(g_lPointLinks, 0), []);
             }
         }
         if (iRemenu) {
@@ -476,7 +498,8 @@ default {
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if (iNum == CMD_PARTICLE) {
-            if (sStr == "leash") {
+            list lFields = llParseStringKeepNulls(sStr, ["|"], []);
+            if (llList2String(lFields, 0) == "leash") {
                 g_kLeashTarget = kID;
                 key kLGTarget = llList2Key(g_lLGTargets, 0);
                 if (kLGTarget) {
@@ -505,9 +528,12 @@ default {
                     }
                 }
             }
-        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
+        } else if (iNum == MENUNAME_REQUEST && sStr == g_sParentMenu) {
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu, "");
-        else if (iNum == DIALOG_RESPONSE) {
+            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Color", "");
+            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Feel", "");
+            //llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu + "|" + g_sSubMenu + "|Color", "");
+        } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (iMenuIndex != -1) {
                 list lMenuParams = llParseString2List(sStr, ["|"], []);
@@ -517,9 +543,9 @@ default {
                 string sMenu=llList2String(g_lMenuIDs, iMenuIndex + 1);
                 g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
                 if (sButton == UPMENU) {
-                    if(sMenu == "leash/configure") llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
+                    if(sMenu == g_sSubMenu) llMessageLinked(LINK_SET, iAuth, "menu " + g_sParentMenu, kAv);
                     else ConfigureMenu(kAv, iAuth);
-                } else  if (sMenu == "leash/configure") {
+                } else  if (sMenu == g_sSubMenu) {
                     if (sButton == "Color") {
                         ColorMenu(kAv, iAuth);
                         return;
@@ -550,9 +576,9 @@ default {
                     } else if (llGetSubString(sButton, 1, -1) == " Invisible") {
                         llMessageLinked(LINK_SET, iAuth, "leash invisible remenu", kAv);
                     }
-                } else if (sMenu == "leash/color") {
+                } else if (sMenu == g_sSubMenu + "~Color") {
                     llMessageLinked(LINK_SET, iAuth, "leash color " + ColorToHex((vector)sButton) + " remenu", kAv);
-                } else if (sMenu == "leash/feel") {
+                } else if (sMenu == g_sSubMenu + "~Feel") {
                     if (sButton == "Defaults") {
                         llMessageLinked(LINK_SET, iAuth, "leash defaults remenu", kAv);
                     } else if (sButton == "Bigger") {
@@ -572,7 +598,7 @@ default {
                         float fLeashGrav = llList2Float(g_lLeashSettings, 3);
                         llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav + 0.1, -3.0, 0.0)) + " remenu", kAv);
                     }
-                } else if (sMenu == "leash/texture") {
+                } else if (sMenu == g_sSubMenu + "~texture") {
                     // TODO
                 }
             }
