@@ -361,17 +361,17 @@ list GetTextureInfo(string sNameOrKey) {
     key kRet = NULL_KEY;
     integer iRet = FALSE;
     if (llToLower(sNameOrKey) == "chain") kRet = g_kDefaultChain;
-    else if (llToLower(sTexID) == "rope") kRet = g_kDefaultRope;
-    else if (llToLower(sTexID) == "silk") kRet = g_kDefaultSilk;
-    else if (llToLower(sTexID) == "leather") kRet = g_kDefaultLeather;
-    else if (llToLower(sTexID) == "invisible") kRet = TEXTURE_TRANSPARENT;
+    else if (llToLower(sNameOrKey) == "rope") kRet = g_kDefaultRope;
+    else if (llToLower(sNameOrKey) == "silk") kRet = g_kDefaultSilk;
+    else if (llToLower(sNameOrKey) == "leather") kRet = g_kDefaultLeather;
+    else if (llToLower(sNameOrKey) == "invisible") kRet = TEXTURE_TRANSPARENT;
     else {
-        key kTmp = (key)sTexID;
-        if (kTmp) kRet = kTmp
+        key kTmp = (key)sNameOrKey;
+        if (kTmp) kRet = kTmp;
         else {
-            if (llGetInventoryType(sTexID) == INVENTORY_TEXTURE) {
-                kTmp = llGetInventoryKey(sTexID);
-                if (kTmp) kRet = kTmp
+            if (llGetInventoryType(sNameOrKey) == INVENTORY_TEXTURE) {
+                kTmp = llGetInventoryKey(sNameOrKey);
+                if (kTmp) kRet = kTmp;
                 // else (handle non-full-perm textures: warn about them needing to be in all prims, etc?)
             }
         }
@@ -596,9 +596,9 @@ default {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex + 1);
         } else if (iNum == LM_SETTING_RESPONSE) {
-            integer i = llSubStringIndex(sMessage, "=");
-            string sToken = llGetSubString(sMessage, 0, i - 1);
-            string sValue = llGetSubString(sMessage, i + 1, -1);
+            integer i = llSubStringIndex(sStr, "=");
+            string sToken = llGetSubString(sStr, 0, i - 1);
+            string sValue = llGetSubString(sStr, i + 1, -1);
             list lSettingSplit = llParseString2List(sToken, ["_"], []);
             if (llList2String(lSettingSplit, 0) == "leash") {
                 string sSetting = llList2String(lSettingSplit, 1);
