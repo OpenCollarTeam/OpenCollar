@@ -588,7 +588,7 @@ default {
                         float fLeashGrav = llList2Float(g_lLeashSettings, 3);
                         llMessageLinked(LINK_SET, iAuth, "leash gravity " + ((string)Clamp(fLeashGrav + 0.25, -10.0, 0.0)) + " remenu", kAv);
                     }
-                } else if (sMenu == g_sSubMenu + "~texture") {
+                } else if (sMenu == g_sSubMenu + "~Texture") {
                     llMessageLinked(LINK_SET, iAuth, "leash texture " + sButton + " remenu", kAv);
                 }
             }
