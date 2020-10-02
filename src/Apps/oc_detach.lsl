@@ -43,12 +43,12 @@ integer CMD_RELAY_SAFEWORD = 511;
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
-integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
-integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-integer LM_SETTING_DELETE = 2003;//delete token from settings
-integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+//integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+//integer LM_SETTING_DELETE = 2003;//delete token from settings
+//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -145,15 +145,6 @@ default
         }else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
-        } else if(iNum == LM_SETTING_RESPONSE){
-            // Detect here the Settings
-            list lPar = llParseString2List(sStr, ["_","="],[]);
-            string sToken = llList2String(lPar,0);
-            string sVar = llList2String(lPar,1);
-            string sVal = llList2String(lPar,2);
-        } else if(iNum == LM_SETTING_DELETE){
-            // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

@@ -47,8 +47,8 @@ integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
 integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
+integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -76,8 +76,11 @@ string TURNOFF = " OFF";
 string CLEAR = "CLEAR ALL";
 
 key g_kWearer;
+integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
+list g_lSettingsReqs = [];
+
 
 string g_sSettingToken = "rlvsys_";
 string g_sGlobalToken = "global_";
@@ -445,11 +448,44 @@ default {
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
                 if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["auth_owner", "global_locked", "global_handshakes", "rlvsys_on"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlv~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlv~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+            
+            
+            if(sStr == "recheck_lock"){
+                if(!g_iCollarLocked){
+                    llOwnerSay("@detach=y");
+                }
+            }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["_","="], []);
             string sToken = llList2String(lParams, 0);
             string sVar = llList2String(lParams,1);
             string sValue = llList2String(lParams, 2);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             lParams=[];
             if (sToken+"_"+sVar == "auth_owner") g_lOwners = llParseString2List(sValue, [","], []);
             else if(sToken == "global"){
@@ -566,13 +602,7 @@ default {
                 llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "30", "recheck_lock");
                 llMessageLinked(LINK_SET, RLV_REFRESH, "","");
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "ALL","");
-            } else if(iNum == TIMEOUT_FIRED){
-                if(sStr == "recheck_lock"){
-                    if(!g_iCollarLocked){
-                        llOwnerSay("@detach=y");
-                    }
-                }
-            }
+            } 
         }
 
         if(iNum == LINK_CMD_DEBUG){

@@ -65,11 +65,18 @@ integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upo
 integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
 integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+list g_lSettingsReqs = [];
+
+
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
+
 
 key g_kWeldBy;
 list g_lMainMenu=["Apps", "Addons", "Access", "Settings", "Help/About"];
@@ -170,7 +177,7 @@ string g_sWearerName;
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum != CMD_OWNER && iNum != CMD_WEARER && iNum != CMD_TRUSTED) return;
+    // Serenity  -   Remove line that prevented anyone but owner, wearer or trusted from executing commands here. That made it so that even if public or group was enabled it would block functionality. Additionally - the link message block already checks auth level
     if (iNum == CMD_OWNER && sStr == "runaway") {
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
@@ -274,7 +281,9 @@ UserCommand(integer iNum, string sStr, key kID) {
             if(iNum == CMD_OWNER){
                 if(g_iAllowHide)llMessageLinked(LINK_SET, NOTIFY, "0The wearer can no longer hide the collar", kID);
                 else llMessageLinked(LINK_SET,NOTIFY, "0The wearer can hide the collar on their own", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)(!g_iAllowHide), "");
+                g_iAllowHide=1-g_iAllowHide;
+                if(sChangevalue=="remenu")Settings(kID,iNum);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)g_iAllowHide, "");
             }
         } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
             // allow locking
@@ -370,12 +379,10 @@ default
 {
     on_rez(integer t){
         if(llGetOwner()!=g_kWearer) llResetScript();
-        
-        llSleep(15);
-        llMessageLinked(LINK_SET, REBOOT, "reboot", "");// Reboot after 15 seconds
     }
     state_entry()
     {
+        if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
         
         llMessageLinked(LINK_SET, 0, "initialize", llGetKey());
@@ -545,7 +552,8 @@ default
                         iRespring=FALSE;
                         llMessageLinked(LINK_SET, iAuth, "menu Size/Position", kAv);
                     } else if(sMsg == Checkbox(g_iAllowHide,"AllowHiding")){
-                        llMessageLinked(LINK_SET, 0, "allowhide", kAv);
+                        llMessageLinked(LINK_SET, 0, "allowhide remenu", kAv);
+                        iRespring=FALSE;
                     } else if(sMsg == "EDITOR"){
                         llMessageLinked(LINK_SET, 0, "settings edit", kAv);
                         iRespring=FALSE;
@@ -596,6 +604,10 @@ default
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
             string sVal = llList2String(lPar,2);
+            
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if(sToken=="global"){
@@ -654,10 +666,18 @@ default
             if(sStr == "settings=sent"){
                 if(g_kGroup==(string)NULL_KEY)g_kGroup="";
             }
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if(iNum == LM_SETTING_DELETE){
             list lPar = llParseString2List(sStr, ["_"],[]);
             string sToken = llList2String(lPar,0);
             string sVar = llList2String(lPar,1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sToken=="global"){
                 if(sVar == "locked") g_iLocked=FALSE;
@@ -703,6 +723,18 @@ default
                 llOwnerSay("@detach=n");
             }
             
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["global_locked", "global_safeword", "global_prefix", "global_channel", "auth_group", "auth_public", "auth_limitrange", "intern_weld"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "core~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "core~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        }else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
@@ -778,5 +810,15 @@ default
                 }
             }
         }
+    }
+}
+
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
     }
 }

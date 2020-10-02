@@ -29,10 +29,10 @@ integer LINK_CMD_RESTDATA = -2577;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
 //str must be in form of "token=value"
-//integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -90,6 +90,10 @@ integer g_iOwnerEx = 127;
 integer g_iTrustedEx = 95;
 
 list g_lMenuIDs;
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+list g_lSettingsReqs = [];
 integer g_iMenuStride;
 integer g_iLocked=FALSE;
 
@@ -517,12 +521,35 @@ default
                     }
                 }
             }
+            
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["rlvext_mincamdist", "rlvext_strict", "rlvext_maxcamdist", "rlvext_bluramount", "rlvext_muffle", "rlvext_owner", "rlvext_trusted", "rlvext_custom", "auth_owner", "auth_trust", "auth_tempowner", "global_locked", "global_checkboxes"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvext~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvext~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if(iNum == LM_SETTING_RESPONSE){
         // Detect here the Settings
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
              integer i = llSubStringIndex(sToken, "_");
+            
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if (sToken == "rlvext_mincamdist") {
                 g_fMinCamDist = (float)sValue;
                 llMessageLinked(LINK_SET,LINK_CMD_RESTDATA,"MinCamDist="+(string)g_fMinCamDist,kID);
@@ -582,6 +609,10 @@ default
             }
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if(sStr == "global_locked") g_iLocked=FALSE;
             else if (sStr == "auth_owner") {
                 ApplyAllExceptions(TRUE,TRUE);
@@ -634,8 +665,12 @@ default
         }
     }
 }
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
     }
 }

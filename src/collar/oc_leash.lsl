@@ -15,6 +15,11 @@ string TOK_LENGTH   = "leashlength";
 string TOK_DEST     = "leashedto"; // format: uuid,rank
 // --- channel tokens ---
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -37,7 +42,8 @@ integer LM_SETTING_SAVE       = 2000;
 integer LM_SETTING_REQUEST    = 2001;
 integer LM_SETTING_RESPONSE   = 2002;
 integer LM_SETTING_DELETE     = 2003;
-//integer LM_SETTING_EMPTY            = 2004;
+integer LM_SETTING_EMPTY            = 2004;
+
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
@@ -735,6 +741,12 @@ default {
             string sToken = llGetSubString(sMessage, 0, iInd -1);
             string sValue = llGetSubString(sMessage, iInd + 1, -1);
             integer i = llSubStringIndex(sToken, "_");
+            
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
                 //Debug("got Leash settings:"+sMessage);
                 sToken = llGetSubString(sToken, i + 1, -1);
@@ -760,6 +772,27 @@ default {
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
                 else if(sToken == TOK_DEST+"name") g_sLeashedToName = sValue;
             }
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = [g_sSettingToken+TOK_DEST, g_sSettingToken + TOK_LENGTH, g_sSettingToken + "strict", g_sSettingToken + "turn", g_sSettingToken + "name"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "leash~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "leash~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
+        } else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;
             ApplyRestrictions();

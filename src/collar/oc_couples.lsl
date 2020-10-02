@@ -3,7 +3,7 @@
 // Cleo Collins, Satomi Ahn, Joy Stipe, Wendy Starfall, Garvin Twine,   
 // littlemousy, Romka Swallowtail, Sumi Perl et al. 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion="7.3";
+string g_sScriptVersion="8.0";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -26,6 +26,11 @@ integer g_iPermissionTimeout;
 
 key g_kWearer;
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
 string STOP_COUPLES = "STOP";
 string TIME_COUPLES = "TIME";
 
@@ -79,10 +84,10 @@ integer SAY = 1004;
 integer LOADPIN = -1904;
 integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
-//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
+integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -306,12 +311,36 @@ default {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
             if(sToken == g_sSettingToken + "timeout")
                 g_fTimeOut = (float)sValue;
             else if (sToken == g_sSettingToken + "verbose")
                 g_iVerbose = (integer)sValue;
-            else if (sToken == g_sGlobalToken+"DeviceName")
+            else if (sToken == g_sGlobalToken+"devicename")
                 g_sDeviceName = sValue;
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = [g_sSettingToken + "timeout", g_sSettingToken + "verbose", g_sGlobalToken+"devicename"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "couples~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "couples~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if (~iMenuIndex) {

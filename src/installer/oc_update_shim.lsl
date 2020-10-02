@@ -194,7 +194,11 @@ default {
                     for(iV=0;iV<iE;iV++){
                         string name = llGetInventoryName(INVENTORY_ALL,iV);
                         if(llSubStringIndex(name, sName)!=-1){
-                            llRemoveInventory(name);
+                            if(name != llGetScriptName()){
+                                llRemoveInventory(name);
+                                iV = -1;
+                                iE = llGetInventoryNumber(INVENTORY_ALL);
+                            }
                         }
                     }
                 }

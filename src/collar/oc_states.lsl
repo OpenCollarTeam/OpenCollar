@@ -31,6 +31,7 @@ integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
 integer CMD_NOACCESS=599;
 
+integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
@@ -164,13 +165,17 @@ default
 {
     state_entry()
     {
-        llSetMemoryLimit(30000);
+        if(llGetStartParameter() != 0) state inUpdate;
         llSetTimerEvent(1);
         //llScriptProfiler(TRUE);
+        llMessageLinked(LINK_SET, REBOOT,"reboot", "");
+        llSleep(5);
+        llMessageLinked(LINK_SET, 0, "initialize", "");
     }
     
     
     on_rez(integer iRez){
+        llSleep(10);
         llResetScript();
     }
     
@@ -234,8 +239,15 @@ default
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(sStr == "fix" || iNum == REBOOT){
-            llResetScript();
+            if(iNum == REBOOT){
+                if(sStr == "reboot --f"){
+                    llResetScript();
+                }
+            } else {
+                llResetScript();
+            }
         }
+        
         if(iNum>=CMD_OWNER && iNum <= CMD_EVERYONE){
             if(llToLower(sStr)=="settings edit"){
                 g_lSettings=[];
@@ -348,6 +360,22 @@ default
             
             if(g_iLoading)g_lSettings+=[llList2String(lSettings,0), llList2String(lSettings,1), llList2String(lSettings,2)];
             
+        } else if(iNum == 0){
+            if(sStr == "initialize"){
+                llMessageLinked(LINK_SET, TIMEOUT_READY, "","");
+            }
+        }else if(iNum == -99999){
+            if(sStr == "update_active")state inUpdate;
         }
+    }
+}
+
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
     }
 }

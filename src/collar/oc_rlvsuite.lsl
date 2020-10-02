@@ -20,6 +20,12 @@ integer CMD_EVERYONE = 504;
 integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+list g_lSettingsReqs = [];
+
+
 integer NOTIFY = 1002;
 
 integer REBOOT = -1000;
@@ -31,8 +37,8 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 //str must be in form of "token=value"
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
-//integer LM_SETTING_DELETE = 2003;//delete token from settings
-//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 //string g_sSettingToken = "rlvsuite_";
 
@@ -588,8 +594,24 @@ default
             }
         } else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["rlvsuite_masks", "rlvsuite_macros", "global_checkboxes"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvs~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvs~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [llList2String(lParams,0)]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if (llList2String(lParams, 0) == "rlvsuite_masks") {
                 list lMasks = llParseString2List(llList2String(lParams, 1),[","],[]);
                 if (g_iRLV) { // bad timing, RLV_ON was already called
@@ -645,12 +667,26 @@ default
                 g_fMinCamDist = llList2Float(lCMD,1);
                 if (bWasTrue) ApplyCommand("MinDistance",TRUE, NULL_KEY, 0);
             }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }
     }
     
 }
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
         if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
     }
 }

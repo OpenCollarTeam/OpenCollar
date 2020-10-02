@@ -17,6 +17,11 @@ integer CMD_EVERYONE = 504;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
 integer g_iLeashedToAvatar=FALSE;
 
 //integer POPUP_HELP          = 1001;
@@ -25,10 +30,10 @@ integer NOTIFY              = 1002;
 integer REBOOT              = -1000;
 // -- SETTINGS
 integer LM_SETTING_SAVE     = 2000;
-//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE   = 2003;
-//integer LM_SETTING_EMPTY            = 2004;
+integer LM_SETTING_EMPTY            = 2004;
 // -- MENU/DIALOG
 integer MENUNAME_REQUEST    = 3000;
 integer MENUNAME_RESPONSE   = 3001;
@@ -624,6 +629,12 @@ default {
             integer i = llSubStringIndex(sMessage, "=");
             string sToken = llGetSubString(sMessage, 0, i - 1);
             string sValue = llGetSubString(sMessage, i + 1, -1);
+            
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             i = llSubStringIndex(sToken, "_");
             if (sToken == "leash_leashedto") {
                 g_iLeashActive=TRUE;
@@ -658,6 +669,28 @@ default {
             // in case wearer is currently leashed
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent")
                 GetSettings(TRUE);
+            
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["leash_leashedto", "leash", "strict", "leash_turn", "leash_length", "global_checkboxes", "particle_rtexture", "particle_ctexture"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "particle~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "particle~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
        /* else if (iNum == LM_SETTING_DELETE) {
             if (sMessage == "leash_leashedto") StopParticles(TRUE);

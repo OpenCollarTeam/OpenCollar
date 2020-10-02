@@ -68,6 +68,13 @@ integer DIALOG_TIMEOUT = -9002;
 string UPMENU = "BACK";
 string ALL = "ALL";
 
+
+
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+
 Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sName) {
     key kMenuID = llGenerateKey();
     llMessageLinked(LINK_SET, DIALOG, (string)kID + "|" + sPrompt + "|" + (string)iPage + "|" + llDumpList2String(lChoices, "`") + "|" + llDumpList2String(lUtilityButtons, "`") + "|" + (string)iAuth, kMenuID);
@@ -94,6 +101,7 @@ string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 
+list g_lSettingsReqs = [];
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
@@ -197,7 +205,7 @@ UserCommand(integer iNum, string sStr, key kID) {
         }
         
         @checkRemenu;
-        if(sChangevalue == "remenu")PoseMenu(kID,iNum);
+        if(sChangevalue == "remenu" && llGetInventoryType(sChangetype)==INVENTORY_ANIMATION)PoseMenu(kID,iNum);
 
     }
 }
@@ -461,12 +469,21 @@ default
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             string sTok = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sTok + "_" + sVar]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
             if(sTok=="global"){
                 if(sVar=="locked"){
                     g_iLocked=(integer)sVal;
@@ -495,6 +512,11 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             string sTok = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if(sTok=="global"){
                 if(sVar == "locked") g_iLocked=FALSE;
             }else if(sTok == "anim"){
@@ -528,6 +550,16 @@ default
         } else if(iNum == REBOOT){
             StopAllAnimations();
             llResetScript();
+        }else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["global_locked", "anim_pose", "anim_animlock", "offset_hovers","offset_standhover", "global_checkboxes"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "anim~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "anim~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

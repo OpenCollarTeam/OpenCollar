@@ -41,6 +41,12 @@ integer CMD_WEARER = 503;
 //integer CMD_SAFEWORD = 510;
 //integer CMD_RELAY_SAFEWORD = 511;
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+list g_lSettingsReqs = [];
+
+
 integer NOTIFY = 1002;
 integer REBOOT = -1000;
 
@@ -49,7 +55,7 @@ integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have s
 integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
 integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
 integer LM_SETTING_DELETE = 2003;//delete token from settings
-//integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -227,6 +233,7 @@ default
     }
     state_entry()
     {
+        if(llGetStartParameter()!=0)state inUpdate;
         llSetMemoryLimit(35000);
         g_kWearer = llGetOwner();
         
@@ -352,6 +359,12 @@ default
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
+            
+            
+            integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
@@ -401,11 +414,32 @@ default
                 }
                 Titler();
             }
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["global_locked", "global_checkboxes", "titler_plain", "titler_on", "titler_color", "titler_title", "titler_offset", "titler_show"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "titler~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "titler~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if(iNum == LM_SETTING_DELETE){
-            // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            list lPar = llParseString2List(sStr, ["_"],[]);
+            string sToken = llList2String(lPar,0);
+            string sVar = llList2String(lPar,1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            if(sToken=="global")
+                if(sVar == "locked") g_iLocked=FALSE;
         } else if(iNum == LINK_CMD_DEBUG){
             // send data
             if(sStr == "ver"){
@@ -421,5 +455,15 @@ default
             DebugOutput(kID, ["FLOATTEXT:",g_iTextPrim]);
         } else if(iNum == REBOOT && sStr == "reboot")  llResetScript();
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
+    }
+}
+
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
     }
 }

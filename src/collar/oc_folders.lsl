@@ -143,7 +143,6 @@ Browser(key kID, integer iAuth, string sPath){
     g_iMenuUser=iAuth;
     g_sPath = sPath;
 
-    if(iAuth > CMD_EVERYONE)return R();
     if(iAuth == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R(); 
     if(iAuth == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R(); 
     if(iAuth == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R(); 
@@ -164,7 +163,10 @@ Browser(key kID, integer iAuth, string sPath){
 
 
 UserCommand(integer iNum, string sStr, key kID) {
-    if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
+    
+    
+    
+    if (iNum<CMD_OWNER || iNum>CMD_EVERYONE) return;
     if (iNum == CMD_OWNER && llToLower(sStr) == "runaway") {
         g_lOwner=[];
         g_lTrust=[];
@@ -178,7 +180,11 @@ UserCommand(integer iNum, string sStr, key kID) {
         string sChangetype = llGetSubString(sStr, 0, 0);
         string sChangevalue = llStringTrim(llGetSubString(sStr, 1, -1), STRING_TRIM);
         string sText;
-        
+    
+        if(iNum == CMD_TRUSTED && !Bool((g_iAccessBitSet&1)))return R(); 
+        if(iNum == CMD_EVERYONE && !Bool((g_iAccessBitSet&2)))return R(); 
+        if(iNum == CMD_GROUP && !Bool((g_iAccessBitSet&4)))return R(); 
+        if(iNum == CMD_WEARER && !Bool((g_iAccessBitSet&8)))return R();     
         if(sChangetype == "&"){
             // add folder path
             llOwnerSay("@attachallover:"+sChangevalue+"=force");
@@ -189,6 +195,11 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -225,8 +236,8 @@ default
     }
     state_entry()
     {
+        if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     timer(){
         if(llGetTime()>=60.0){
@@ -284,8 +295,7 @@ default
     
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum >= CMD_OWNER && iNum <= CMD_WEARER) UserCommand(iNum, sStr, kID);
-        else if(iNum == CMD_EVERYONE && (g_iAccessBitSet & 2)) UserCommand(iNum, sStr, kID);
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){
@@ -375,6 +385,11 @@ default
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if(llList2String(lSettings,0)=="global"){
                 if(llList2String(lSettings,1)=="locked"){
                     g_iLocked=llList2Integer(lSettings,2);
@@ -386,10 +401,37 @@ default
                     g_iAccessBitSet=(integer)llList2String(lSettings,2);
                 }
             }
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["global_locked", "global_checkboxes", "folders_accessflags"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "folders~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "folders~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        } else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if(iNum == LM_SETTING_DELETE){
-            // This is recieved back from settings when a setting is deleted
-            list lSettings = llParseString2List(sStr, ["_"],[]);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
+
+state inUpdate
+{
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT)llResetScript();
+    }
+    on_rez(integer iNum){
+        llResetScript();
+    }
+}
+

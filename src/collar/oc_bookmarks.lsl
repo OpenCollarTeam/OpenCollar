@@ -3,7 +3,7 @@
 // Sumi Perl, Master Starship, littlemousy, mewtwo064, ml132,       
 // Romka Swallowtail, Garvin Twine et al.                 
 // Licensed under the GPLv2.  See LICENSE for full details. 
-string g_sScriptVersion = "7.4";
+string g_sScriptVersion = "8.0";
 integer LINK_CMD_DEBUG=1999;
 DebugOutput(key kID, list ITEMS){
     integer i=0;
@@ -51,31 +51,46 @@ key     g_kCommander;
 list    PLUGIN_BUTTONS              = ["SAVE", "PRINT", "REMOVE"];
 
 //MESSAGE MAP
-//integer CMD_ZERO                  = 0;
-integer CMD_OWNER                   = 500;
-//integer CMD_TRUSTED               = 501;
-integer CMD_GROUP                   = 502;
-integer CMD_WEARER                  = 503;
-//integer CMD_EVERYONE              = 504;
-//integer CMD_RLV_RELAY             = 507;
-//integer CMD_SAFEWORD              = 510;
-//integer CMD_BLOCKED               = 520;
+//integer CMD_ZERO = 0;
+integer CMD_OWNER = 500;
+integer CMD_TRUSTED = 501;
+integer CMD_GROUP = 502;
+integer CMD_WEARER = 503;
+integer CMD_EVERYONE = 504;
+integer CMD_RLV_RELAY = 507;
+integer CMD_SAFEWORD = 510;
+integer CMD_RELAY_SAFEWORD = 511;
+integer CMD_NOACCESS=599;
 
-integer NOTIFY                     = 1002;
-//integer SAY                        = 1004;
-integer REBOOT                     = -1000;
-integer LM_SETTING_SAVE            = 2000;
-integer LM_SETTING_RESPONSE        = 2002;
-integer LM_SETTING_DELETE          = 2003;
-integer MENUNAME_REQUEST           = 3000;
-integer MENUNAME_RESPONSE          = 3001;
-integer MENUNAME_REMOVE            = 3003;
-integer RLV_CMD                    = 6000;
-integer RLV_OFF                    = 6100;
-integer RLV_ON                     = 6101;
-integer DIALOG                     = -9000;
-integer DIALOG_RESPONSE            = -9001;
-integer DIALOG_TIMEOUT             = -9002;
+integer NOTIFY = 1002;
+integer REBOOT = -1000;
+
+integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
+//str must be in form of "token=value"
+integer LM_SETTING_REQUEST = 2001;//when startup, scripts send requests for settings on this channel
+integer LM_SETTING_RESPONSE = 2002;//the settings script sends responses on this channel
+integer LM_SETTING_DELETE = 2003;//delete token from settings
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
+
+integer MENUNAME_REQUEST = 3000;
+integer MENUNAME_RESPONSE = 3001;
+integer MENUNAME_REMOVE = 3003;
+
+integer RLV_CMD = 6000;
+integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
+
+integer RLV_OFF = 6100; // send to inform plugins that RLV is disabled now, no message or key needed
+integer RLV_ON = 6101; // send to inform plugins that RLV is enabled now, no message or key needed
+
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
+
+integer DIALOG = -9000;
+integer DIALOG_RESPONSE = -9001;
+integer DIALOG_TIMEOUT = -9002;
 
 Dialog(key kRCPT, string sPrompt, list lChoices, list lUtilityButtons, integer iPage, integer iAuth, string sMenuType) {
     key kMenuID = llGenerateKey();
@@ -444,6 +459,10 @@ default {
         else if(iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
             string sValue = llList2String(lParams, 1);
             integer i = llSubStringIndex(sToken, "_");
             if(llGetSubString(sToken, 0, i) == g_sSettingToken) {
@@ -453,6 +472,16 @@ default {
                     g_lVolatile_Slurls += [sValue];
                 }
             }
+        } else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum >= CMD_OWNER && iNum <= CMD_WEARER && iNum != CMD_GROUP) UserCommand(iNum, sStr, kID); // This is intentionally not available to public access.
         else if(iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -516,7 +545,7 @@ default {
             if(onlyver)return; // basically this command was: <prefix> versions
             DebugOutput(kID, [" DESTINATIONS:"]+g_lDestinations);
             DebugOutput(kID, [" TEMPORARY DESTINATIONS:"]+g_lVolatile_Destinations);
-        }
+        } // TODO: Add timer callback - this script must be rewritten to comply with new coding standards for OpenCollar. It does not save a predictable token, therefore cannot be reasonably requested or deleted.
     }
 
     changed(integer iChange) {

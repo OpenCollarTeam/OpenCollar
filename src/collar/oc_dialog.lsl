@@ -15,12 +15,20 @@ integer SAY = 1004;
 integer REBOOT = -1000;
 integer LOADPIN = -1904;
 integer LM_SETTING_SAVE = 2000;
-//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
 integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;//sent when a token has no value
 integer DIALOG = -9000;
 integer DIALOG_RESPONSE = -9001;
 integer DIALOG_TIMEOUT = -9002;
+
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
+
 
 integer g_iPagesize = 12;
 string MORE = "►";
@@ -216,7 +224,7 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
             }
             lButtons += [sButton];
         }
-        if(iSorted)lButtons=llListSort(lButtons, 1, TRUE);
+        
         iEnd = llGetListLength(lButtons);
         for(iCur=0;iCur<iEnd;iCur++){
             string sButton = llList2String(lButtons,iCur);
@@ -283,6 +291,40 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //write entry in tracking list
     g_lMenus += [iChan, kID, iListener, ts, kRecipient, sPrompt, llDumpList2String(lMenuItems, "|"), llDumpList2String(lUtilityButtons, "|"), iPage, iWithNums, iAuth,extraInfo, iSorted];
     //Debug("Made Dialog");
+}
+
+list SortUUIDList(list lToSort){
+    integer i = 0;
+    list lNameList = [];
+    list lSorted;
+    integer end = llGetListLength(lToSort);
+    for(i=0;i<end;i++){
+        string sButton = llList2String(lToSort,i);
+        if(IsLikelyAvatar((key)sButton)){
+            if(llGetAgentSize((key)sButton)==ZERO_VECTOR)
+                sButton = NameURI((key)sButton);
+            else
+                sButton = llGetDisplayName(sButton)+" ("+llKey2Name(sButton)+")";
+        }
+        else sButton=llKey2Name((key)sButton);
+        lNameList += [llList2String(lToSort,i), sButton];
+        lSorted+=sButton;
+    }
+    //llSay(0, "lNameList : "+ llDumpList2String(lNameList, " - "));
+    lToSort= [];
+    lSorted = llListSort(lSorted, 1, TRUE);
+    i=0;
+    //llSay(0, "lSorted : "+ llDumpList2String(lSorted, " - "));
+    list lFinal;
+    end=llGetListLength(lSorted);
+    for(i=0;i<end;i++){
+        integer index = llListFindList(lNameList, [llList2String(lSorted,i)]);
+        lFinal += [llList2String(lNameList, index-1)];
+    }
+    //llSay(0, "lFinal : "+ llDumpList2String(lFinal, " - "));
+    lNameList=[];
+    lSorted=[];
+    return lFinal;
 }
 
 integer GetStringBytes(string sStr) {
@@ -572,6 +614,7 @@ default
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
             if (llGetListLength(lParams)>=7) iSorted = llList2Integer(lParams, 6);
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
+            if(iSorted)lButtons = SortUUIDList(lButtons);
             ClearUser(kRCPT);
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"", iSorted);
         }
@@ -581,6 +624,11 @@ default
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             if (sToken == g_sGlobalToken+"devicetype") g_sDeviceType = sValue;
             else if (sToken == g_sGlobalToken+"devicename") {
                 g_sDeviceName = sValue;
@@ -605,6 +653,26 @@ default
                     ClearUser((key)llList2String(lBlock, iPos));
                 }
             }
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["global_devicetype", "global_devicename", "global_wearername", "global_prefix", "global_channel", "global_showlevel", "auth_owner", "auth_block"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "dialog~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "dialog~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
+        
+        }else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == LOADPIN && sStr == llGetScriptName()) {
             integer iPin = (integer)llFrand(99999.0)+1;
             llSetRemoteScriptAccessPin(iPin);

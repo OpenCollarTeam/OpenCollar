@@ -23,6 +23,14 @@ DebugOutput(key kID, list ITEMS){
 string g_sAppVersion = "1.1";
 
 
+integer TIMEOUT_READY = 30497;
+integer TIMEOUT_REGISTER = 30498;
+integer TIMEOUT_FIRED = 30499;
+
+list g_lSettingsReqs = [];
+
+
+
 string g_sSubMenu = "Bell";
 string g_sParentMenu = "Apps";
 list g_lMenuIDs;  //three strided list of avkey, dialogid, and menuname
@@ -77,10 +85,10 @@ integer SAY = 1004;
 
 integer REBOOT = -1000;
 integer LM_SETTING_SAVE = 2000;
-//integer LM_SETTING_REQUEST = 2001;
+integer LM_SETTING_REQUEST = 2001;
 integer LM_SETTING_RESPONSE = 2002;
-//integer LM_SETTING_DELETE = 2003;
-//integer LM_SETTING_EMPTY = 2004;
+integer LM_SETTING_DELETE = 2003;
+integer LM_SETTING_EMPTY = 2004;
 
 integer MENUNAME_REQUEST = 3000;
 integer MENUNAME_RESPONSE = 3001;
@@ -340,9 +348,25 @@ default {
         } else if (iNum == DIALOG_TIMEOUT) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
+        
+        } else if(iNum == LM_SETTING_EMPTY){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+        } else if(iNum == LM_SETTING_DELETE){
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
         } else if (iNum == LM_SETTING_RESPONSE) {
             integer i = llSubStringIndex(sStr, "=");
             string sToken = llGetSubString(sStr, 0, i - 1);
+            
+            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            
+            
             string sValue = llGetSubString(sStr, i + 1, -1);
             i = llSubStringIndex(sToken, "_");
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
@@ -376,6 +400,16 @@ default {
             DebugOutput(kID, [" HAS BELL PRIMS:", g_iHasBellPrims]);
             DebugOutput(kID, [" BELL VISIBLE:", g_iBellShow]);
             DebugOutput(kID, [" BELL ON:", g_iBellOn]);
+        } else if(iNum == TIMEOUT_READY)
+        {
+            g_lSettingsReqs = ["bell_vol", "bell_sound", "bell_show", "bell_on"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "bell~settings");
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            if(llGetListLength(g_lSettingsReqs)>0){
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "bell~settings");
+                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
+            }
         }
     }
 
