@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0009"; // Provide enough room
+string COLLAR_VERSION = "8.0.0010"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -680,7 +680,10 @@ default
             if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sToken=="global"){
-                if(sVar == "locked") g_iLocked=FALSE;
+                if(sVar == "locked") {
+                    g_iLocked=FALSE;
+                    llOwnerSay("@detach=y");
+                }
                 else if(sVar == "safeword"){
                     g_sSafeword = "RED";
                     llMessageLinked(LINK_SET, CMD_OWNER, "safeword-enable","");
@@ -721,6 +724,8 @@ default
         } else if(iNum == RLV_REFRESH){
             if(g_iLocked){
                 llOwnerSay("@detach=n");
+            } else {
+                llOwnerSay("@detach=y");
             }
             
         } else if(iNum == TIMEOUT_READY)
