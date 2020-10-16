@@ -77,12 +77,12 @@ UserCommand(integer iNum, string sStr, key kID) {
 }
 Link(string packet, integer iNum, string sStr, key kID){
     string pkt = llList2Json(JSON_OBJECT, ["pkt_type", packet, "iNum", iNum, "addon_name", g_sAddon, "bridge", FALSE, "sMsg", sStr, "kID", kID]);
-    if(g_kCollar!= "" || g_kCollar!= NULL_KEY) 
+    if(g_kCollar!= "" && g_kCollar!= NULL_KEY) 
         llRegionSayTo(g_kCollar, API_CHANNEL, pkt);
     else
         llRegionSay(API_CHANNEL, pkt);
 }
-key g_kCollar;
+key g_kCollar=NULL_KEY;
 default
 {
     state_entry()
@@ -92,31 +92,24 @@ default
     }
     
     touch_start(integer t){
-        // Send a settings request to the collar
-        //llSay(0, "Packet sent to collar");
-        g_kCollar=llDetectedKey(0);
-        Link("online", 0, (string)llGetCreator(), llDetectedKey(0)); // todo: make collar actually use the kID value to filter who the addon is trying to ping. also todo: make sStr the creator value, to filter out wearer created addons by a optional settings flag.
-
-        g_kCollar=""; // todo: replace this when a signal is added to tell the addon the collar accepted it
-
-//        llWhisper(API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "online", "addon_name", g_sAddon, "bridge", FALSE]));
+        Link("online", 0, (string)llGetCreator(), llDetectedKey(0)); // This is the signal to initiate communication between the addon and the collar
     }
     
     listen(integer c,string n,key i,string m){
         //llWhisper(0, "message from collar: "+m);
         if(llJsonGetValue(m,["pkt_type"])=="ping"){
             if(g_kCollar==i){
-                Link("pong", 0,"","");
+                //llWhisper(0, "Responding to ping request!");
+                Link("pong", 0,"",llGetOwnerKey(i));
             }
-        } else if(llJsonGetValue(m,["pkt_type"])=="approved"){
-            // request settings
+        } else if(llJsonGetValue(m,["pkt_type"])=="approved" && g_kCollar==NULL_KEY){
+            // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
+            g_kCollar = i;
             Link("from_addon", LM_SETTING_REQUEST, "ALL","");
         } else if(llJsonGetValue(m,["pkt_type"])=="from_collar"){
             // process link message if in range of addon
             if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))<=10.0){
                 // process it!
-                if(g_kCollar == "" || g_kCollar==NULL_KEY)g_kCollar=i;
-                else if(g_kCollar!=i)return;
                 integer iNum = (integer)llJsonGetValue(m,["iNum"]);
                 string sStr = llJsonGetValue(m,["sMsg"]);
                 key kID = (key)llJsonGetValue(m,["kID"]);
@@ -152,8 +145,9 @@ default
                             if(sMsg == UPMENU) Link("from_addon", iAuth, "menu Addons", kAv);
                             else if(sMsg == "A Button") llSay(0, "This is a example addon.");
                             else if(sMsg == "DISCONNECT"){
-                                Link("offline", 0, "","");
+                                Link("offline", 0, "",llGetOwnerKey(g_kCollar));
                                 g_lMenuIDs=[];
+                                g_kCollar=NULL_KEY;
                             }
                         }
                     }

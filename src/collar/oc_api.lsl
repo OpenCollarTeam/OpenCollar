@@ -445,7 +445,7 @@ default
             llSetScriptState("oc_states",TRUE);
         }
         
-        if(llGetTime()>=120){
+        if(llGetTime()>=60){
             // flush the alive addons and ping all addons
             llResetTime();
             list lTmp = llList2ListStrided(g_lAddons, 0,-1,2);
@@ -455,13 +455,17 @@ default
             
             for(i=0;i<end;i++){
                 SayToAddonX(llList2Key(g_lAddons,i), "ping", 0, "","");
+                //llWhisper(0, "Sending ping signal to addon: "+llList2String(g_lAddons,i));
                 //llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
+                llResetTime();
             }
             end = llGetListLength(lTmp);
             for(i=0;i<end;i++){
                 if(llListFindList(g_lAliveAddons, [llList2Key(lTmp, i)])==-1){
                     // addon has died, remove from list.
+                    //llSay(0, "Removing dead addon: "+llList2String(lTmp,i));
                     g_lAddons = llDeleteSubList(g_lAddons, llListFindList(g_lAddons, [llList2Key(lTmp,i)]), llListFindList(g_lAddons, [llList2Key(lTmp,i)])+1);
+                    
                 }
             }
             g_lAliveAddons = [];
@@ -478,34 +482,41 @@ default
             // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
             string PacketType = llJsonGetValue(m,["pkt_type"]);
             
-            if(PacketType=="pong"){
+            if(PacketType=="pong" && llJsonGetValue(m,["kID"])==(string)llGetOwner()){
+                //llSay(0, "Alive signal seen from addon: "+(string)i);
                 if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
                 return;
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
             else if(PacketType == "online"){
                 // this is a initial handshake
-                
-                integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
-                if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
-                // begin to pass stuff to link messages!
-                // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
-                
-                if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer && !isAddonBridge){
-                    g_kAddonPending = i;
-                    g_sAddonName = llJsonGetValue(m,["addon_name"]);
-                    Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
-                    return;
-                }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer && !isAddonBridge){
-                    // Add the addon and be done with
-                    g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
-                    SayToAddon("approved", 0, "", "");
+                if(llJsonGetValue(m,["kID"])==(string)llGetOwner()){
+                    integer isAddonBridge = (integer)llJsonGetValue(m,["bridge"]);
+                    if(isAddonBridge && llGetOwnerKey(i) != g_kWearer)return; // flat out deny API access to bridges not owned by the wearer because they will not include a addon name, therefore can't be controlled
+                    // begin to pass stuff to link messages!
+                    // first- Check if a pairing was done with this addon, if not ask the user for confirmation, add it to Addons, and then move on
+                    
+                    if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i)!=g_kWearer && !isAddonBridge){
+                        g_kAddonPending = i;
+                        g_sAddonName = llJsonGetValue(m,["addon_name"]);
+                        Dialog(g_kWearer, "[ADDON]\n\nAn object named: "+n+"\nAddon Name: "+g_sAddonName+"\nOwned by: secondlife:///app/agent/"+(string)llGetOwnerKey(i)+"/about\n\nHas requested internal collar access. Grant it?", ["Yes", "No"],[],0,CMD_WEARER,"addon~add");
+                        return;
+                    }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer && !isAddonBridge){
+                        // Add the addon and be done with
+                        g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
+                        g_lAliveAddons += [i];
+                        SayToAddon("approved", 0, "", "");
+                    }
                 }
             } else if(PacketType == "offline"){
                 // unpair
-                integer iPos = llListFindList(g_lAddons, [i]);
-                if(iPos==-1)return;
-                else{
-                    g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
+                if(llJsonGetValue(m,["kID"])==(string)llGetOwner()){
+                    integer iPos = llListFindList(g_lAddons, [i]);
+                    if(iPos==-1)return;
+                    else{
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
+                        iPos = llListFindList(g_lAliveAddons,[i]);
+                        if(iPos!=-1)g_lAliveAddons = llDeleteSubList(g_lAliveAddons, iPos,iPos);
+                    }
                 }
             }
             else if(PacketType == "from_addon"){
@@ -745,6 +756,7 @@ default
                         // Yes
                         SayToAddonX(g_kAddonPending, "approved", 0, "", "");
                         g_lAddons += [g_kAddonPending, g_sAddonName];
+                        g_lAliveAddons += [g_kAddonPending];
                     }
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){
