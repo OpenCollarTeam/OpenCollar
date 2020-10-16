@@ -243,9 +243,6 @@ UserCommand(integer iNum, string sStr, key kID) {
             g_kWelder=kID;
             llMessageLinked(LINK_SET, NOTIFY, "1secondlife:///app/agent/"+(string)kID+"/about is attempting to weld the collar. Consent is required", kID);
             Dialog(g_kWearer, "[WELD CONSENT REQUIRED]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants to weld your collar. If you agree, you may not be able to unweld it without the use of a plugin or a addon designed to break the weld. If you disagree with this action, press no.", ["Yes", "No"], [], 0, iNum, "weld~consent");
-        } else if(llToLower(sChangetype) == "debug-unweld"){
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "intern_weld", "");
-            llSay(0, "debug unweld triggered");
         } else if(llToLower(sChangetype) == "info"){
             if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                 g_iNotifyInfo = TRUE;

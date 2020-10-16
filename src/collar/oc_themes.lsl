@@ -328,7 +328,7 @@ UserCommand(integer iNum, string sStr, key kID, integer reMenu) {
                 else if (sCommand == "hide")  iCurrentlyShown = 0;
                 else if (sCommand == "stealth") iCurrentlyShown = g_iCollarHidden;
                 if (sElement == g_sDeviceType) g_iCollarHidden = !iCurrentlyShown;  //toggle whole collar visibility
-
+                llMessageLinked(LINK_SET,LM_SETTING_SAVE, "intern_visibility="+(string)iCurrentlyShown, "");// This token will only store the hidden state for apps like bell which need to know whether to toggle
                 //do the actual hiding and re/de-glowing of elements
                 integer iLinkCount = llGetNumberOfPrims()+1;
                 while (iLinkCount-- > 1) {

@@ -20,7 +20,7 @@ DebugOutput(key kID, list ITEMS){
     }
     llInstantMessage(kID, llGetScriptName() +final);
 }
-string g_sAppVersion = "1.1";
+string g_sAppVersion = "1.2";
 
 
 integer TIMEOUT_READY = 30497;
@@ -360,18 +360,17 @@ default {
             if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == LM_SETTING_RESPONSE) {
-            integer i = llSubStringIndex(sStr, "=");
-            string sToken = llGetSubString(sStr, 0, i - 1);
+            list lParam = llParseString2List(sStr,["_","="],[]);
+            string sToken = llList2String(lParam,0);
+            string sVar = llList2String(lParam,1);
+            string sValue = llList2String(lParam,2);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
             if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
-            string sValue = llGetSubString(sStr, i + 1, -1);
-            i = llSubStringIndex(sToken, "_");
-            if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
-                sToken = llGetSubString(sToken, i + 1, -1);
-                if (sToken == "on") {
+            if (sToken == g_sSettingToken) {
+                if (sVar == "on") {
                     g_iBellOn=(integer)sValue;
                     if (g_iBellOn && !g_iHasControl)
                         llRequestPermissions(g_kWearer,PERMISSION_TAKE_CONTROLS);
@@ -379,13 +378,19 @@ default {
                         llReleaseControls();
                         g_iHasControl = FALSE;
                     }
-                } else if (sToken == "show") {
+                } else if (sVar == "show") {
                     g_iBellShow=(integer)sValue;
                     SetBellElementAlpha();
-                } else if (sToken == "sound") {
+                } else if (sVar == "sound") {
                     g_iCurrentBellSound = (integer)sValue;
                     g_kCurrentBellSound = llList2Key(g_listBellSounds,g_iCurrentBellSound);
-                } else if (sToken == "vol") g_fVolume = (float)sValue/10;
+                } else if (sVar == "vol") g_fVolume = (float)sValue/10;
+            } else if(sToken == "intern"){
+                if(sVar == "visibility"){
+                    // Here we have the hidden status!
+                    g_iHide = !((integer)sValue); // invert this so that true means hide
+                    SetBellElementAlpha();
+                }
             }
         
         } else if(iNum == CMD_OWNER && sStr == "runaway") {
@@ -402,7 +407,7 @@ default {
             DebugOutput(kID, [" BELL ON:", g_iBellOn]);
         } else if(iNum == TIMEOUT_READY)
         {
-            g_lSettingsReqs = ["bell_vol", "bell_sound", "bell_show", "bell_on"];
+            g_lSettingsReqs = ["bell_vol", "bell_sound", "bell_show", "bell_on", "intern_visibility"];
             llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "bell~settings");
         } else if(iNum == TIMEOUT_FIRED)
         {
@@ -457,13 +462,6 @@ default {
         if(iChange & CHANGED_LINK) BuildBellElementList();
         else if (iChange & CHANGED_INVENTORY) {
             PrepareSounds();
-        }
-        if (iChange & CHANGED_COLOR) {
-            integer iNewHide=!(integer)llGetAlpha(ALL_SIDES) ; //check alpha
-            if (g_iHide != iNewHide){   //check there's a difference to avoid infinite loop
-                g_iHide = iNewHide;
-                SetBellElementAlpha(); // update hide elements
-            }
         }
         if (iChange & CHANGED_OWNER) llResetScript();
 /*
