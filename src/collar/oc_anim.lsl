@@ -150,6 +150,10 @@ UserCommand(integer iNum, string sStr, key kID) {
             StartAnimation(sChangetype);
             llMessageLinked(LINK_SET, LM_SETTING_SAVE, "anim_pose="+llList2String(g_lCurrentAnimations, 0),"");
         } else if(llToLower(sChangetype) == "stop" || llToLower(sChangetype)=="release"){
+            if(g_iAnimLock && kID == g_kWearer){
+                llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to stopping animation", g_kWearer);
+                jump checkRemenu;
+            }
             if (g_sPose != ""){
                 StopAnimation(g_sPose);
                 g_sPose = "";
