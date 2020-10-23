@@ -376,7 +376,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
         AddonsMenu(kID, iAuth);
     }
      if(sCmd == "print auth"){
-        PrintAccess(kID);
+         if(iAuth == CMD_OWNER || iAuth == CMD_TRUSTED || iAuth == CMD_WEARER)
+            PrintAccess(kID);
+        else
+            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to printing access lists!", kID);
     }
 }
  
