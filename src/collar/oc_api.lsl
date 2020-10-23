@@ -190,7 +190,8 @@ RunawayMenu(key kID, integer iAuth){
 
 WearerConfirmListUpdate(key kID, string sReason)
 {
-    g_kMenuUser=kID;
+    key g_kAdder = g_kMenuUser;
+    //g_kMenuUser=kID;
     // This should only be triggered if the wearer is being affected by a sensitive action
     Dialog(g_kWearer, "\n[Access]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants change your access level.\n\nChange that will occur: "+sReason+"\n\nYou may grant or deny this action.", [], ["Allow", "Disallow"], 0, CMD_WEARER, "WearerConfirmation");
 }
@@ -712,7 +713,7 @@ default
                         //UpdateLists((key)sMsg);
                         g_kTry = (key)sMsg;
                         if(!(g_iMode&ACTION_BLOCK))
-                            Dialog(g_kTry, "OpenCollar\n\n"+SLURL(g_kTry)+" is trying to add you to an access list, do you agree?", ["Yes", "No"], [], 0, CMD_NOACCESS, "scan~confirm");
+                            Dialog(g_kTry, "OpenCollar\n\n"+SLURL(kAv)+" is trying to add you to an access list, do you agree?", ["Yes", "No"], [], 0, CMD_NOACCESS, "scan~confirm");
                         else UpdateLists((key)sMsg, g_kMenuUser);
                     }
                 } else if(sMenu == "WearerConfirmation"){
