@@ -642,6 +642,8 @@ default
                     g_sPrefix = sVal;
                 } else if(sVar == "safeword"){
                     g_sSafeword = sVal;
+                } else if(sVar == "safeworddisable"){
+                    g_iSafewordDisable=1;
                 }
             }
         }else if(iNum == LM_SETTING_EMPTY){
@@ -686,6 +688,8 @@ default
                     g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
                 } else if(sVar == "safeword"){
                     g_sSafeword = "RED";
+                } else if(sVar == "safeworddisable"){
+                    g_iSafewordDisable=0;
                 }
             }
         } else if(iNum == REBOOT){
@@ -694,12 +698,12 @@ default
             }
         } else if(iNum == TIMEOUT_READY)
         {
-            g_lSettingsReqs = ["auth_owner", "auth_trust", "auth_block", "auth_public", "auth_group", "auth_limitrange", "auth_tempowner", "auth_runawaydisable", "global_channel", "global_prefix", "global_safeword"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "api~settings");
+            g_lSettingsReqs = ["auth_owner", "auth_trust", "auth_block", "auth_public", "auth_group", "auth_limitrange", "auth_tempowner", "auth_runawaydisable", "global_channel", "global_prefix", "global_safeword", "global_safeworddisable"];
+            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, (string)llRound(llFrand(5)), "api~settings");
         } else if(iNum == TIMEOUT_FIRED)
         {
             if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "api~settings");
+                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, (string)llRound(llFrand(5)), "api~settings");
                 llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
             }
         }

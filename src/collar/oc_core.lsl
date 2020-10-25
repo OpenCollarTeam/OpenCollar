@@ -228,6 +228,12 @@ UserCommand(integer iNum, string sStr, key kID) {
                     if(sChangevalue == "RED"){
                         llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeword","");
                     }
+                    
+                    if(llToLower(sChangevalue) == "off"){
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_safeworddisable=1", "");
+                    } else {
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_safeworddisable","");
+                    }
                 }
             } else {
                 if(iNum == CMD_OWNER || iNum == CMD_WEARER){
@@ -628,9 +634,6 @@ default
                     }
                 } else if(sVar == "safeword"){
                     g_sSafeword = sVal;
-                    if(g_sSafeword == "0"){
-                        llMessageLinked(LINK_SET, CMD_OWNER, "safeword-disabled","");
-                    }
                 } else if(sVar == "prefix"){
                     g_sPrefix = sVal;
                 } else if(sVar == "channel"){
