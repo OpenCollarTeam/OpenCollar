@@ -218,7 +218,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llWhisper(g_iUpdateChan, "UPDATE|"+MajorMinor());
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
-            }
+            } else llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to update the collar", kID);
         } else if(sChangetype == "safeword"){
             if(sChangevalue!=""){
                 if(iNum == CMD_OWNER){
@@ -244,15 +244,17 @@ UserCommand(integer iNum, string sStr, key kID) {
             } else if(llToLower(sChangevalue) == "help/about"){
                 HelpMenu(kID,iNum);
             }
-        } else if(llToLower(sChangetype) == "weld" && iNum == CMD_OWNER){
-            g_kWelder=kID;
-            llMessageLinked(LINK_SET, NOTIFY, "1secondlife:///app/agent/"+(string)kID+"/about is attempting to weld the collar. Consent is required", kID);
-            Dialog(g_kWearer, "[WELD CONSENT REQUIRED]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants to weld your collar. If you agree, you may not be able to unweld it without the use of a plugin or a addon designed to break the weld. If you disagree with this action, press no.", ["Yes", "No"], [], 0, iNum, "weld~consent");
+        } else if(llToLower(sChangetype) == "weld"){
+            if(iNum==CMD_OWNER){
+                g_kWelder=kID;
+                llMessageLinked(LINK_SET, NOTIFY, "1secondlife:///app/agent/"+(string)kID+"/about is attempting to weld the collar. Consent is required", kID);
+                Dialog(g_kWearer, "[WELD CONSENT REQUIRED]\n\nsecondlife:///app/agent/"+(string)kID+"/about wants to weld your collar. If you agree, you may not be able to unweld it without the use of a plugin or a addon designed to break the weld. If you disagree with this action, press no.", ["Yes", "No"], [], 0, iNum, "weld~consent");
+            } else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to welding", kID);
         } else if(llToLower(sChangetype) == "info"){
             if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE){
                 g_iNotifyInfo = TRUE;
                 HelpMenu(kID,iNum);
-            }
+            } else llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS%",kID);
         } else if(llToLower(sChangetype) == "touchnotify"){
             if(g_iTouchNotify) llMessageLinked(LINK_SET,NOTIFY,"1The wearer will no longer be notified when someone touches their collar", kID);
             else llMessageLinked(LINK_SET, NOTIFY, "1The wearer will now be notified whenever someone touches their collar", kID);
@@ -286,6 +288,9 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iAllowHide=1-g_iAllowHide;
                 if(sChangevalue=="remenu")Settings(kID,iNum);
                 llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_allowhide="+(string)g_iAllowHide, "");
+            } else {
+                llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to toggling Allow Hide", kID);
+                if(sChangevalue == "remenu")Settings(kID,iNum);
             }
         } else if(llToLower(sChangetype)=="lock" && !g_iWelded && (iNum == CMD_OWNER || iNum == CMD_WEARER)){
             // allow locking
@@ -522,7 +527,7 @@ default
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to changing range limit", kAv);
                         }
                     } else if(sMsg == "Runaway"){
-                        llMessageLinked(LINK_SET,0,"menu run", kAv);
+                        llMessageLinked(LINK_SET,0,"menu runaway", kAv);
                         iRespring=FALSE;
                     }
                     

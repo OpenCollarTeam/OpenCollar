@@ -84,7 +84,7 @@ integer CMD_OWNER = 500;
 integer CMD_TRUSTED = 501;
 //integer CMD_GROUP = 502;
 integer CMD_WEARER = 503;
-//integer CMD_EVERYONE = 504;
+integer CMD_EVERYONE = 504;
 integer CMD_RLV_RELAY = 507;
 //integer CMD_SAFEWORD = 510;
 integer CMD_RELAY_SAFEWORD = 511;
@@ -204,33 +204,55 @@ integer SendAValue(){
         return TRUE;
     }
 }
-
+integer AuthCheck(integer iMask){
+    if(iMask == CMD_OWNER || iMask==CMD_WEARER)return TRUE;
+    else return FALSE;
+}
+Error(key kID, string sCmd){
+    llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to command: "+sCmd, kID);
+}
 UserCommand(integer iNum, string sStr, key kID) {
     string sLower=  llToLower(sStr);
-    if(sLower == "print settings" || sLower == "debug settings")PrintAll(kID, llGetSubString(sLower,0,4));
+    if(sLower == "print settings" || sLower == "debug settings"){
+        if(AuthCheck(iNum))PrintAll(kID, llGetSubString(sLower,0,4));
+        else Error(kID, sStr);
+    }
     else if(llGetSubString(sLower,0,5) == "reboot")
     {
-        if(g_iRebootConfirmed || sLower == "reboot --f"){
-            llMessageLinked(LINK_SET, NOTIFY, "0Rebooting your %DEVICETYPE%...", kID);
-            g_iRebootConfirmed=FALSE;
-            llMessageLinked(LINK_SET, REBOOT, "reboot", "");
-            llSetTimerEvent(2.0);
-        } else {
-            Dialog(kID, "\n[Settings]\n\nAre you sure you want to reboot the scripts?", ["Yes", "No"], [], 0, iNum, "Reboot");
+        if(AuthCheck(iNum)){
+            if(g_iRebootConfirmed || sLower == "reboot --f"){
+                llMessageLinked(LINK_SET, NOTIFY, "0Rebooting your %DEVICETYPE%...", kID);
+                g_iRebootConfirmed=FALSE;
+                llMessageLinked(LINK_SET, REBOOT, "reboot", "");
+                llSetTimerEvent(2.0);
+            } else {
+                Dialog(kID, "\n[Settings]\n\nAre you sure you want to reboot the scripts?", ["Yes", "No"], [], 0, iNum, "Reboot");
+            }
+        } else Error(kID,sStr);
+    } else if(sLower == "runaway") {
+        if(AuthCheck(iNum)){
+            g_iCurrentIndex=0;
+            llSetTimerEvent(10.0); // schedule refresh
         }
-    } else if(sLower == "runaway") llSetTimerEvent(10.0); // schedule refresh
+    }
     else if(sLower == "load"){
-        // reload settings - assume there is a .settings notecard
-        llMessageLinked(LINK_SET, NOTIFY, "0Loading from notecard...", kID);
-        g_iSettingsRead=0;
-        g_kSettingsRead = llGetNotecardLine(g_sSettings, g_iSettingsRead);
+        if(AuthCheck(iNum)){
+            // reload settings - assume there is a .settings notecard
+            llMessageLinked(LINK_SET, NOTIFY, "0Loading from notecard...", kID);
+            g_iSettingsRead=0;
+            g_kSettingsRead = llGetNotecardLine(g_sSettings, g_iSettingsRead);
+        } else Error(kID,sStr);
     } else if(llSubStringIndex(sLower, "load url")!=-1){
         // prompt to load from a URL
+        // TODO: not yet implemented?
+        if(AuthCheck(iNum)){
+            // load stuff
+        } else Error(kID,sStr);
     } else if(sLower == "fix"){
-        g_iCurrentIndex=0;
-        llSetTimerEvent(10);
-    } else {
-        //llOwnerSay(sStr);
+        if(AuthCheck(iNum)){
+            g_iCurrentIndex=0;
+            llSetTimerEvent(10);
+        }
     }
 }
 integer g_iRebootConfirmed=FALSE;
@@ -450,7 +472,7 @@ default
     
     
     link_message(integer iSender,integer iNum,string sStr,key kID){
-        if(iNum == CMD_OWNER || iNum == CMD_WEARER) UserCommand(iNum, sStr, kID);
+        if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
         //else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
         //    llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == DIALOG_RESPONSE){

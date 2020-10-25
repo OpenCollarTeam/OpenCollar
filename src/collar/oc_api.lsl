@@ -177,15 +177,25 @@ DoListeners(){
 }
 integer g_iRunaway=TRUE;
 RunawayMenu(key kID, integer iAuth){
-    string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
-    list lButtons = ["Yes", "No"];
-    
-    if(iAuth == CMD_OWNER){
-        sPrompt+="\n\nAs the owner you have the abliity to disable or enable runaway.";
-        if(g_iRunaway)lButtons+=["Disable"];
-        else lButtons += ["Enable"];
+    if(iAuth == CMD_OWNER || iAuth==CMD_WEARER){
+        string sPrompt = "\n[Runaway]\n\nAre you sure you want to runaway from all owners?\n\n* This action will reset your owners list, trusted list, and your blocked avatars list.";
+        list lButtons = ["Yes", "No"];
+        
+        if(iAuth == CMD_OWNER){
+            sPrompt+="\n\nAs the owner you have the abliity to disable or enable runaway.";
+            if(g_iRunaway)lButtons+=["Disable"];
+            else lButtons += ["Enable"];
+        } else if(iAuth == CMD_WEARER){
+            if(g_iRunaway){
+                sPrompt += "\n\nAs the wearer, you can choose to disable your ability to runaway, this action cannot be reversed by you";
+                lButtons += ["Disable"];
+            }
+        }
+        Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
+    } else {
+        llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to runaway, or the runaway settings menu", kID);
+        llMessageLinked(LINK_SET,iAuth,"menu Access", kID);
     }
-    Dialog(kID, sPrompt, lButtons, [], 0, iAuth, "RunawayMenu");
 }
 
 WearerConfirmListUpdate(key kID, string sReason)
@@ -197,7 +207,7 @@ WearerConfirmListUpdate(key kID, string sReason)
 }
 
 integer g_iGrantedConsent=FALSE;
-
+integer g_iRunawayMode = -1;
 UpdateLists(key kID, key kIssuer){
     //llOwnerSay(llDumpList2String([kID, kIssuer, g_kMenuUser, g_iMode, g_iGrantedConsent], ", "));
     integer iMode = g_iMode;
@@ -301,12 +311,10 @@ UserCommand(integer iAuth, string sCmd, key kID){
             llLoadURL(kID, "Want to open our website for further help?", "https://opencollar.cc");
         }
     }
-    if(iAuth == CMD_WEARER || kID==g_kWearer && iAuth != CMD_OWNER){
-        if(llToLower(sCmd) == "run" || llToLower(sCmd) == "menu run" || llToLower(sCmd) == "runaway"){
-            RunawayMenu(kID, iAuth);
-        }
+    if((llToLower(sCmd) == "menu runaway" || llToLower(sCmd) == "runaway") && g_iRunawayMode!=2){
+        g_iRunawayMode=0;
+        RunawayMenu(kID,iAuth);
     }
-    
     
     if(iAuth == CMD_OWNER){
         if(sCmd == "safeword-disable")g_iSafewordDisable=TRUE;
@@ -356,20 +364,21 @@ UserCommand(integer iAuth, string sCmd, key kID){
             }else {
                 UpdateLists((key)sID, kID);
             }
-        } else if(llToLower(sCmd) == "menu run" && kID != g_kWearer){
-            RunawayMenu(kID,iAuth);
-        }
+        } 
     }
     if (iAuth <CMD_OWNER || iAuth>CMD_EVERYONE) return;
     if (iAuth == CMD_OWNER && sCmd == "runaway") {
-        // trigger runaway sequence
-        
-        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0Runaway completed on %WEARERNAME%'s collar", kID);
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_owner","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_trust","");
-        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_block","");
-        llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
-        return;
+        // trigger runaway sequence if approval was given
+        if(g_iRunawayMode == 2){
+            g_iRunawayMode=-1;
+            llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s collar", kID);
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","");
+            llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
+            return;
+        }
+            
     }
     
     if(llToLower(sCmd) == "menu addons" || llToLower(sCmd)=="addons"){
@@ -765,16 +774,18 @@ default
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){
                         g_iRunaway=TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH=runawaydisable","");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runawaydisable","");
                     } else if(sMsg == "Disable"){
                         g_iRunaway=FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH=runawaydisable~0", "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runawaydisable=0", "");
                     } else if(sMsg == "No"){
                         // return
+                        g_iRunawayMode=-1;
                         return;
                     } else if(sMsg == "Yes"){
                         // trigger runaway
-                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "0%WEARERNAME% has runaway.", "");
+                        g_iRunawayMode=2;
+                        llMessageLinked(LINK_SET, NOTIFY_OWNERS, "%WEARERNAME% has runaway.", "");
                         llMessageLinked(LINK_SET, CMD_OWNER, "runaway", g_kWearer);
                         llMessageLinked(LINK_SET, CMD_SAFEWORD, "safeword", "");
                         llMessageLinked(LINK_SET, CMD_OWNER, "clear", g_kWearer);
