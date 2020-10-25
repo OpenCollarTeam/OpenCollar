@@ -32,6 +32,11 @@ string g_sPrefix;
 
 integer g_iNotifyInfo=FALSE;
 
+string MajorMinor(){
+    list lTmp = llParseString2List(COLLAR_VERSION,["."],[]);
+    return llList2String(lTmp,0)+"."+llList2String(lTmp,1);
+}
+
 string g_sSafeword="RED";
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
@@ -210,7 +215,7 @@ UserCommand(integer iNum, string sStr, key kID) {
                 g_iUpdateAuth = iNum;
                 llListenRemove(g_iUpdateListener);
                 g_iUpdateListener = llListen(g_iUpdateChan, "", "", "");
-                llWhisper(g_iUpdateChan, "UPDATE|"+COLLAR_VERSION);
+                llWhisper(g_iUpdateChan, "UPDATE|"+MajorMinor());
                 g_iWaitUpdate = TRUE;
                 llSetTimerEvent(5);
             }
