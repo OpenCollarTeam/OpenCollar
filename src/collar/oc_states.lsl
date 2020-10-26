@@ -184,19 +184,13 @@ default
         llMessageLinked(LINK_SET, REBOOT,"reboot", "");
         llSleep(5);
         //llMessageLinked(LINK_SET, 0, "initialize", "");
+        llOwnerSay("Collar is preparing to startup, please be patient.");
     }
     
     
     on_rez(integer iRez){
         llSleep(10);
         llResetScript();
-    }
-    
-    
-    changed(integer iChange){
-        if(iChange&CHANGED_INVENTORY){
-            llResetScript();
-        }
     }
     
     timer(){

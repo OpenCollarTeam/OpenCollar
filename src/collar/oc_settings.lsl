@@ -412,7 +412,7 @@ DeleteWeldFlag()
     
     llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
 }
-
+integer g_iBootup;
 default
 {
     on_rez(integer t){
@@ -466,6 +466,10 @@ default
     
     timer(){
         if(!SendAValue()){
+            if(g_iBootup){
+                llMessageLinked(LINK_SET, NOTIFY, "0Collar ready. Startup complete", llGetOwner());
+                g_iBootup=FALSE;
+            }
             llSetTimerEvent(0);
         }else llSetTimerEvent(0.25); // send 1 setting per quarter second
     }
@@ -532,6 +536,12 @@ default
                 g_iCurrentIndex=0;
                 llSetTimerEvent(2);
             } else llMessageLinked(LINK_SET, LM_SETTING_EMPTY, sStr, ""); // Unfortunately. The only time you ever get the empty signal is when you explicitly request the setting.
+        } else if(iNum == 0){
+            if(sStr == "initialize"){
+                g_iBootup=TRUE;
+                g_iCurrentIndex=0;
+                llSetTimerEvent(5);
+            }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
