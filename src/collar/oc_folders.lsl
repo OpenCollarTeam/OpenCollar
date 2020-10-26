@@ -199,7 +199,7 @@ integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-list g_lSettingsReqs = [];
+
 key g_kWearer;
 list g_lMenuIDs;
 integer g_iMenuStride;
@@ -229,14 +229,36 @@ string setor(integer iTest, string sTrue, string sFalse){
 
 
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer t){
-        if(llGetOwner()!=g_kWearer) llResetScript();
+        llResetScript();
     }
     state_entry()
     {
-        if(llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
     }
     timer(){
@@ -386,8 +408,8 @@ default
             // Detect here the Settings
             list lSettings = llParseString2List(sStr, ["_","="],[]);
             
-            integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lSettings,0)+"_"+llList2String(lSettings,1)]);
+           // if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if(llList2String(lSettings,0)=="global"){
@@ -401,37 +423,16 @@ default
                     g_iAccessBitSet=(integer)llList2String(lSettings,2);
                 }
             }
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["global_locked", "global_checkboxes", "folders_accessflags"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "folders~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "folders~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
         } else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }
 }
-
-state inUpdate
-{
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
-    on_rez(integer iNum){
-        llResetScript();
-    }
-}
-

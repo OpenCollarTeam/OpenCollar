@@ -161,16 +161,29 @@ integer g_iLastStride;
 integer g_iWaitMenu;
 
 list g_lTimers; // signal, start_time, seconds_from
+
+integer g_iExpectAlive=0;
+list g_lAlive;
+integer g_iPasses=-1;
+
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
     state_entry()
     {
         if(llGetStartParameter() != 0) state inUpdate;
+        
+        g_lAlive=[];
+        g_iPasses=-1;
+        g_iExpectAlive=1;
         llSetTimerEvent(1);
         //llScriptProfiler(TRUE);
         llMessageLinked(LINK_SET, REBOOT,"reboot", "");
         llSleep(5);
-        llMessageLinked(LINK_SET, 0, "initialize", "");
+        //llMessageLinked(LINK_SET, 0, "initialize", "");
     }
     
     
@@ -187,6 +200,28 @@ default
     }
     
     timer(){
+        
+        if(g_iExpectAlive){
+            if(llGetTime()>=5 && g_iPasses<3){
+                llMessageLinked(LINK_SET,READY, "","");
+                llResetTime();
+                //llSay(0, "PASS COUNT: "+(string)g_iPasses);
+                g_iPasses++;
+            } else if(llGetTime()>=15.0 && g_iPasses>=3){
+                llOwnerSay("Scripts ready: "+(string)llGetListLength(g_lAlive));
+                llMessageLinked(LINK_SET,STARTUP,llDumpList2String(g_lAlive,","),"");
+                g_iExpectAlive=0;
+                g_lAlive=[];
+                g_iPasses=0;
+                llSleep(10);
+                llMessageLinked(LINK_SET,NOTIFY,"0Startup in progress... be patient", llGetOwner());
+                //llMessageLinked(LINK_SET,LM_SETTING_REQUEST,"ALL","");
+                llMessageLinked(LINK_SET,0,"initialize","");
+            }
+            
+            return;
+        }
+        
         if(!g_iWaitMenu && llGetListLength(g_lTimers) == 0)
             llSetTimerEvent(15);
         // Check all script states, then check list of managed scripts
@@ -240,7 +275,9 @@ default
     link_message(integer iSender, integer iNum, string sStr, key kID){
         if(sStr == "fix" || iNum == REBOOT){
             if(iNum == REBOOT){
+                //llSay(0, "REBOOT RECIEVE.");
                 if(sStr == "reboot --f"){
+                    //llWhisper(0, "Forced reboot");
                     llResetScript();
                 }
             } else {
@@ -366,6 +403,10 @@ default
             }
         }else if(iNum == -99999){
             if(sStr == "update_active")state inUpdate;
+        } else if(iNum == ALIVE){
+            llResetTime();
+            g_iExpectAlive=1;
+            if(llListFindList(g_lAlive,[sStr])==-1)g_lAlive+=[sStr];
         }
     }
 }

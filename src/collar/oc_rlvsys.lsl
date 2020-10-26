@@ -339,7 +339,32 @@ ExtractPart(){
 
 string g_sScriptPart; // oc_<part>
 
-default {
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        if(llGetStartParameter()!=0)state inUpdate;
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer param) {
 /*
         if (g_iProfiled){
@@ -347,19 +372,21 @@ default {
             Debug("profiling restarted");
         }
 */
+        /*
         g_iRlvActive=FALSE;
         g_iViewerCheck=FALSE;
         g_iRLVOn=TRUE;
         g_lBaked=[];    //just been rezzed, so should have no baked restrictions
-        
+        */
         // Begin to detect RLV
         llOwnerSay("@clear");
-        setRlvState();
+        //setRlvState();
+        llResetScript();
     }
 
     state_entry() {
         if (llGetStartParameter()!=0) {
-            state inUpdate;
+            llResetScript();
         }
         //llSetMemoryLimit(65536);  //2015-05-16 (script needs memory for processing)
         setRlvState();
@@ -448,17 +475,8 @@ default {
                 llMessageLinked(LINK_SET, RLV_ON, "", NULL_KEY);
                 if (g_iRlvaVersion) llMessageLinked(LINK_SET, RLVA_VERSION, (string) g_iRlvaVersion, NULL_KEY);
             }
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["auth_owner", "global_locked", "global_handshakes", "rlvsys_on"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlv~settings");
         } else if(iNum == TIMEOUT_FIRED)
         {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlv~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-            
             
             if(sStr == "recheck_lock"){
                 if(!g_iCollarLocked){
@@ -468,13 +486,13 @@ default {
         
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["_","="], []);
@@ -482,8 +500,8 @@ default {
             string sVar = llList2String(lParams,1);
             string sValue = llList2String(lParams, 2);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             lParams=[];

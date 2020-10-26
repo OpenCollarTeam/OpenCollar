@@ -13,6 +13,7 @@ integer CMD_WEARER = 503;
 //integer CMD_RELAY_SAFEWORD = 511;
 //integer CMD_BLOCKED = 520;
 
+integer REBOOT = -1000;
 integer LINK_CMD_DEBUG=1999;
 
 integer LM_SETTING_SAVE = 2000;//scripts send messages on this channel to have settings saved
@@ -124,8 +125,34 @@ HideShow(string sCommand) {
     }
 }
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
+    on_rez(integer t){
+        llResetScript();
+    }
     link_message(integer iSender, integer iNum, string sStr, key kID) {
         if (iNum == CMD_OWNER || iNum == CMD_WEARER) {
 
@@ -169,7 +196,7 @@ default
                     g_iAllowHide = (integer)sVal;
                 }
             }
-        }
+        } else if(iNum == REBOOT)llResetScript();
     }
     
     state_entry() {

@@ -21,7 +21,7 @@ integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-list g_lSettingsReqs = [];
+
 integer g_iLeashedToAvatar=FALSE;
 
 //integer POPUP_HELP          = 1001;
@@ -447,7 +447,32 @@ DebugOutput(key kID, list ITEMS){
     llInstantMessage(kID, llGetScriptName() +final);
 }
 integer g_iPotentialCoffle=FALSE;
-default {
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer iRez) {
         llResetScript();
     }
@@ -631,8 +656,8 @@ default {
             string sValue = llGetSubString(sMessage, i + 1, -1);
             
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             i = llSubStringIndex(sToken, "_");
@@ -670,26 +695,15 @@ default {
             else if (sMessage == "settings=sent" || sMessage == "theme particle sent")
                 GetSettings(TRUE);
             
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["leash_leashedto", "leash", "strict", "leash_turn", "leash_length", "global_checkboxes", "particle_rtexture", "particle_ctexture"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "particle~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "particle~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-        
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == REBOOT && sMessage == "reboot") llResetScript();
        /* else if (iNum == LM_SETTING_DELETE) {

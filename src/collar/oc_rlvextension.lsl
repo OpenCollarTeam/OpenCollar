@@ -356,11 +356,38 @@ UserCommand(integer iNum, string sStr, key kID) {
     }
 }
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    
     state_entry()
     {
-        if(llGetStartParameter()!= 0) state inUpdate;
+        if(llGetStartParameter()!= 0)llResetScript();
     }
     link_message(integer iSender,integer iNum,string sStr,key kID){
         if(iNum >= CMD_OWNER && iNum <= CMD_EVERYONE) UserCommand(iNum, sStr, kID);
@@ -521,33 +548,21 @@ default
                     }
                 }
             }
-            
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["rlvext_mincamdist", "rlvext_strict", "rlvext_maxcamdist", "rlvext_bluramount", "rlvext_muffle", "rlvext_owner", "rlvext_trusted", "rlvext_custom", "auth_owner", "auth_trust", "auth_tempowner", "global_locked", "global_checkboxes"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvext~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvext~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-        
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_RESPONSE){
         // Detect here the Settings
             list lParams = llParseString2List(sStr, ["="], []);
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
-             integer i = llSubStringIndex(sToken, "_");
+            integer i = llSubStringIndex(sToken, "_");
             
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if (sToken == "rlvext_mincamdist") {
@@ -609,8 +624,8 @@ default
             }
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if(sStr == "global_locked") g_iLocked=FALSE;
@@ -628,7 +643,7 @@ default
                 ApplyAllExceptions(TRUE,FALSE);
             }
         } else if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
+            if(sStr == "update_active")llResetScript();
         }else if (iNum == RLV_OFF){
             ApplyAllExceptions(TRUE,TRUE);
             g_iRLV = FALSE;
@@ -663,14 +678,5 @@ default
             llSay(0,MuffleText(sMsg));
             llSetObjectName(sObjectName);
         }
-    }
-}
-state inUpdate
-{
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
-    on_rez(integer iNum){
-        llResetScript();
     }
 }

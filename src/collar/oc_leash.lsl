@@ -18,8 +18,7 @@ string TOK_DEST     = "leashedto"; // format: uuid,rank
 integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
-
-list g_lSettingsReqs = [];
+ 
 //MESSAGE MAP
 //integer CMD_ZERO = 0;
 integer CMD_OWNER = 500;
@@ -646,10 +645,35 @@ dtext(string m){
    // llSetText(m+"\n \n \n \n \n \n \n",<0,1,1>,1);
 }
 integer g_iAlreadyMoving=FALSE;
-default {
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer start_param) {
         DoUnleash(FALSE);
         g_kLeashedTo = NULL_KEY;
+        llResetScript();
     }
 
     state_entry() {
@@ -743,8 +767,8 @@ default {
             integer i = llSubStringIndex(sToken, "_");
             
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if (llGetSubString(sToken, 0, i) == g_sSettingToken) {
@@ -772,26 +796,16 @@ default {
                 } else if (sToken == "turn") g_iTurnModeOn = (integer)sValue;
                 else if(sToken == TOK_DEST+"name") g_sLeashedToName = sValue;
             }
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = [g_sSettingToken+TOK_DEST, g_sSettingToken + TOK_LENGTH, g_sSettingToken + "strict", g_sSettingToken + "turn", g_sSettingToken + "name"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "leash~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "leash~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
         
         } else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sMessage]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == RLV_ON) {
             g_iRLVOn = TRUE;

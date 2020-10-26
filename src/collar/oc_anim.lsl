@@ -101,7 +101,7 @@ string Checkbox(integer iValue, string sLabel) {
     return llList2String(g_lCheckboxes, bool(iValue))+" "+sLabel;
 }
 
-list g_lSettingsReqs = [];
+
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Animations]\n\nCurrent Animation: "+setor((g_lCurrentAnimations==[]), "None", llList2String(g_lCurrentAnimations, 0)+"\nCurrent Pose: "+setor((g_sPose==""), "None", g_sPose));
     list lButtons = [Checkbox(g_iAnimLock,"AnimLock"), "Pose"];
@@ -329,10 +329,34 @@ StartAnimation(string anim){
     PlayAnimation();
 }
 integer g_iLeashMove=FALSE;
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
-    on_rez(integer t){
-        if(llGetOwner()!=g_kWearer) llResetScript();
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
+    on_rez(integer iNum){
+        llResetScript();
     }
     state_entry()
     {
@@ -475,8 +499,8 @@ default
             g_lMenuIDs = llDeleteSubList(g_lMenuIDs, iMenuIndex - 1, iMenuIndex +3);  //remove stride from g_lMenuIDs
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_RESPONSE){
             // Detect here the Settings
@@ -485,8 +509,8 @@ default
             string sVar = llList2String(lSettings,1);
             string sVal = llList2String(lSettings,2);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sTok + "_" + sVar]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sTok + "_" + sVar]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sTok=="global"){
                 if(sVar=="locked"){
@@ -517,8 +541,8 @@ default
             string sTok = llList2String(lSettings,0);
             string sVar = llList2String(lSettings,1);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if(sTok=="global"){
@@ -554,16 +578,6 @@ default
         } else if(iNum == REBOOT){
             StopAllAnimations();
             llResetScript();
-        }else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["global_locked", "anim_pose", "anim_animlock", "offset_hovers","offset_standhover", "global_checkboxes"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "anim~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "anim~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
     }

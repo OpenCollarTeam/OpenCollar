@@ -417,7 +417,7 @@ default
 {
     on_rez(integer t){
         if(llGetOwner()!=g_kWearer) llResetScript();
-        
+        g_iCurrentIndex=0;
         llSetTimerEvent(10);
     }
     state_entry()

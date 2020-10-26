@@ -34,9 +34,6 @@ integer ACTION_BLOCK = 32;
 
 integer API_CHANNEL = 0x60b97b5e;
 
-integer STATE_MANAGER = 7003;
-integer STATE_MANAGER_REPLY = 7004;
-
 integer g_iLastGranted;
 key g_kLastGranted;
 string g_sLastGranted;
@@ -45,7 +42,7 @@ integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
 
-list g_lSettingsReqs = [];
+
 
 integer RLV_CMD = 6000;
 integer RLV_REFRESH = 6001;//RLV plugins should reinstate their restrictions upon receiving this message.
@@ -431,10 +428,37 @@ SayToAddon(string pkt, integer iNum, string sStr, key kID){
 SayToAddonX(key k, string pkt, integer iNum, string sStr, key kID){
     llRegionSayTo(k, API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "pkt_type", pkt, "iNum", iNum, "sMsg", sStr, "kID", kID]));
 }
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
     state_entry(){
-        if(llGetStartParameter()!=0)state inUpdate;
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    
+    state_entry(){
+        if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
         g_sPrefix = llToLower(llGetSubString(llKey2Name(llGetOwner()),0,1));
         // make the API Channel be per user
@@ -608,8 +632,8 @@ default
             string sVar = llList2String(lPar,1);
             string sVal = llList2String(lPar,2);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken+"_"+sVar]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sToken == "auth"){
                 if(sVar == "owner"){
@@ -648,8 +672,8 @@ default
             }
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
@@ -658,8 +682,8 @@ default
             string sVar = llList2String(lPar,1);
             string sVal = llList2String(lPar,2);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sToken == "auth"){
                 if(sVar == "owner"){
@@ -696,17 +720,7 @@ default
             if(sStr=="reboot"){
                 llResetScript();
             }
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["auth_owner", "auth_trust", "auth_block", "auth_public", "auth_group", "auth_limitrange", "auth_tempowner", "auth_runawaydisable", "global_channel", "global_prefix", "global_safeword", "global_safeworddisable"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, (string)llRound(llFrand(5)), "api~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, (string)llRound(llFrand(5)), "api~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-        }
+        } 
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
             if(iMenuIndex!=-1){
@@ -800,7 +814,7 @@ default
             if(g_kGroup=="")llOwnerSay("@setgroup=y");
             else llOwnerSay("@setgroup:"+(string)g_kGroup+"=force;setgroup=n");
         } else if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
+            if(sStr == "update_active")llResetScript();
         }
     }
     sensor(integer iNum){
@@ -825,16 +839,5 @@ default
         if(!(g_iMode&ACTION_SCANNER))return;
         
         Dialog(g_kMenuUser, "OpenCollar\nAdd Menu", [], [">Wearer<", UPMENU], 0, g_iCurrentAuth, "scan~add");
-    }
-}
-
-
-state inUpdate
-{
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
-    on_rez(integer iNum){
-        llResetScript();
     }
 }

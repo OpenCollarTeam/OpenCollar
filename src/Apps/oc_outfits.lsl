@@ -267,14 +267,37 @@ RmCorelock(){
     llOwnerSay("@detachallthis:.outfits/.core=y");
 }
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer t){
-        if(llGetOwner()!=g_kWearer) llResetScript();
+        llResetScript();
     }
     state_entry()
     {
-        if(llGetStartParameter()!=0)state inUpdate;
+        if(llGetStartParameter()!=0)llResetScript();
         g_kWearer = llGetOwner();
         llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
@@ -283,7 +306,7 @@ default
         else if(iNum == MENUNAME_REQUEST && sStr == g_sParentMenu)
             llMessageLinked(iSender, MENUNAME_RESPONSE, g_sParentMenu+"|"+ g_sSubMenu,"");
         else if(iNum == -99999){
-            if(sStr=="update_active")state inUpdate;
+            if(sStr=="update_active")llResetScript();
         }
         else if(iNum == DIALOG_RESPONSE){
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -422,7 +445,7 @@ default
             list lSettings = llParseString2List(sStr, ["_"],[]);
             if(llList2String(lSettings,0)=="global")
                 if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
-        }
+        } else if(iNum == REBOOT)llResetScript();
     }
     
     timer(){
@@ -465,10 +488,4 @@ default
             
     }
             
-}
-
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
 }

@@ -23,7 +23,7 @@ integer CMD_SAFEWORD = 510;
 integer TIMEOUT_READY = 30497;
 integer TIMEOUT_REGISTER = 30498;
 integer TIMEOUT_FIRED = 30499;
-list g_lSettingsReqs = [];
+
 
 
 integer NOTIFY = 1002;
@@ -279,7 +279,7 @@ string FormatCommand(string sCommand,integer bEnable)
     }
        
     //llOwnerSay("Restriction '"+sCommand+"' has changed, sending message");
-    llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS,sCommand+"="+(string)bEnable+"=-1","");
+    llMessageLinked(LINK_SET, LINK_CMD_RESTRICTIONS, sCommand+"="+(string)bEnable+"=-1","");
     
     return sCommand+sMod;
 }
@@ -442,22 +442,46 @@ string CheckboxText(string CheckboxLabel){
     return llList2String(lTmp,1);
 }
 
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
 {
     state_entry()
     {
         //llScriptProfiler(TRUE);
-        if(llGetStartParameter()!=0)state inUpdate;
+        if(llGetStartParameter()!=0)llResetScript();
         g_iRLV = FALSE;
         //llSetTimerEvent(1);
         
     }
     
     on_rez(integer iRez){
-        g_iJustRezzed=TRUE;
+        //g_iJustRezzed=TRUE;
         // Restrictions are likely not applied at the moment, reinit the variables
-        llResetTime();
-        llSetTimerEvent(1);
+        //llResetTime();
+        llResetScript();
+        //llSetTimerEvent(1);
     }
     
     timer(){
@@ -593,23 +617,12 @@ default
                 }
             }
         } else if(iNum == -99999){
-            if(sStr == "update_active")state inUpdate;
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = ["rlvsuite_masks", "rlvsuite_macros", "global_checkboxes"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvs~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "rlvs~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-        
+            if(sStr == "update_active")llResetScript();
         } else if (iNum == LM_SETTING_RESPONSE) {
             list lParams = llParseString2List(sStr, ["="], []);
             
-            integer ind = llListFindList(g_lSettingsReqs, [llList2String(lParams,0)]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [llList2String(lParams,0)]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             
             if (llList2String(lParams, 0) == "rlvsuite_masks") {
@@ -670,23 +683,14 @@ default
         
         }else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
         }
     }
     
-}
-state inUpdate
-{
-    link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT)llResetScript();
-    }
-    on_rez(integer iNum){
-        llResetScript();
-    }
 }

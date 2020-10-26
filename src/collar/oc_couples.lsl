@@ -235,8 +235,33 @@ StartNotecards() {
         }
 }
 
-default {
-    on_rez(integer iStart) {
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
+default
+{
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
+    on_rez(integer iStart) 
+    {
         //added to stop anims after relog when you logged off while in an endless couple anim
         if (g_sSubAnim != "" && g_sDomAnim != "") {
              llSleep(1.0);  // wait a second to make sure the poses script reseted properly
@@ -246,7 +271,6 @@ default {
     }
 
     state_entry() {
-        if (llGetStartParameter()!=0)state inUpdate;
         g_kWearer = llGetOwner();
                 StartNotecards();
         g_sDeviceName = llList2String(llGetLinkPrimitiveParams(1,[PRIM_NAME]),0);
@@ -312,8 +336,8 @@ default {
             string sToken = llList2String(lParams, 0);
             string sValue = llList2String(lParams, 1);
             
-            integer ind = llListFindList(g_lSettingsReqs, [sToken]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sToken]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
             if(sToken == g_sSettingToken + "timeout")
                 g_fTimeOut = (float)sValue;
@@ -321,25 +345,15 @@ default {
                 g_iVerbose = (integer)sValue;
             else if (sToken == g_sGlobalToken+"devicename")
                 g_sDeviceName = sValue;
-        } else if(iNum == TIMEOUT_READY)
-        {
-            g_lSettingsReqs = [g_sSettingToken + "timeout", g_sSettingToken + "verbose", g_sGlobalToken+"devicename"];
-            llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "couples~settings");
-        } else if(iNum == TIMEOUT_FIRED)
-        {
-            if(llGetListLength(g_lSettingsReqs)>0){
-                llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "couples~settings");
-                llMessageLinked(LINK_SET, LM_SETTING_REQUEST, llList2String(g_lSettingsReqs,0),"");
-            }
-        }else if(iNum == LM_SETTING_EMPTY){
+        } else if(iNum == LM_SETTING_EMPTY){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if(iNum == LM_SETTING_DELETE){
             
-            integer ind = llListFindList(g_lSettingsReqs, [sStr]);
-            if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
+            //integer ind = llListFindList(g_lSettingsReqs, [sStr]);
+            //if(ind!=-1)g_lSettingsReqs = llDeleteSubList(g_lSettingsReqs, ind,ind);
             
         } else if (iNum == DIALOG_RESPONSE) {
             integer iMenuIndex = llListFindList(g_lMenuIDs, [kID]);
@@ -539,11 +553,5 @@ default {
             }
         }
 */
-    }
-}
-
-state inUpdate{
-    link_message(integer iSender, integer iNum, string sMsg, key kID){
-        if(iNum == REBOOT)llResetScript();
     }
 }
