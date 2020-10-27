@@ -22,7 +22,7 @@ integer NOTIFY_OWNERS=1003;
 
 string g_sParentMenu = ""; 
 string g_sSubMenu = "Main";
-string COLLAR_VERSION = "8.0.0010"; // Provide enough room
+string COLLAR_VERSION = "8.0.0020"; // Provide enough room
 // LEGEND: Major.Minor.Build RC Beta Alpha
 integer UPDATE_AVAILABLE=FALSE;
 string NEW_VERSION = "";
@@ -580,6 +580,7 @@ state active
                         
                         g_iHide=1-g_iHide;
                         llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide="+(string)g_iHide, "");
                     } else if(sMsg == "Load"){
                         llMessageLinked(LINK_SET, iAuth, sMsg, kAv);
                     } else if(sMsg == "Resize"){
@@ -666,6 +667,8 @@ state active
                     g_iAllowHide = (integer)sVal;
                 } else if(sVar == "checkboxes"){
                     g_lCheckboxes = llCSV2List(sVal);
+                } else if(sVar == "hide"){
+                    g_iHide=(integer)sVal;
                 }
             } else if(sToken == "auth"){
                 if(sVar == "group"){

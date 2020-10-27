@@ -273,6 +273,12 @@ default
                 if(sStr == "reboot --f"){
                     //llWhisper(0, "Forced reboot");
                     llResetScript();
+                }else{
+                    
+                    g_lAlive=[];
+                    g_iPasses=-1;
+                    g_iExpectAlive=1;
+                    llSetTimerEvent(1);
                 }
             } else {
                 llResetScript();

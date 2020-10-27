@@ -408,8 +408,8 @@ state active
                     g_iCurrentBellSound = (integer)sValue;
                     g_kCurrentBellSound = llList2Key(g_listBellSounds,g_iCurrentBellSound);
                 } else if (sVar == "vol") g_fVolume = (float)sValue/10;
-            } else if(sToken == "intern"){
-                if(sVar == "visibility"){
+            } else if(sToken == "global"){
+                if(sVar == "hide"){
                     // Here we have the hidden status!
                     g_iHide = !((integer)sValue); // invert this so that true means hide
                     SetBellElementAlpha();
