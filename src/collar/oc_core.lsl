@@ -576,7 +576,10 @@ state active
                             llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
                             return;
                         }
-                        
+                        if(iAuth != CMD_OWNER && iAuth!= CMD_WEARER){
+                            llMessageLinked(LINK_SET,NOTIFY, "0%NOACCESS% to hiding the collar", kAv);
+                            return;
+                        }
                         
                         g_iHide=1-g_iHide;
                         llMessageLinked(LINK_SET, iAuth, setor(g_iHide, "hide", "show"), kAv);
