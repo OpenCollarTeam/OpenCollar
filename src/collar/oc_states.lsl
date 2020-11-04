@@ -267,7 +267,7 @@ default
     
     
     link_message(integer iSender, integer iNum, string sStr, key kID){
-        if(iNum == REBOOT)llResetScript();
+        if(iNum == REBOOT && sStr == "reboot --f")llResetScript();
         
         if(iNum>=CMD_OWNER && iNum <= CMD_EVERYONE){
             if(sStr == "fix"){
