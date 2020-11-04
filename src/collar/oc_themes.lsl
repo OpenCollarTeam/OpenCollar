@@ -139,14 +139,18 @@ UserCommand(integer iNum, string sStr, key kID) {
             if(kID == g_kWearer && !g_iAllowHide){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow Hiding is blocked", kID);
                 return;
-            } else
+            } else {
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=1", "");
                 ToggleCollarAlpha(FALSE);
+            }
         } else if(sChangetype == "show"){
             if(kID == g_kWearer && !g_iAllowHide){
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow Hiding is blocked", kID);
                 return;
-            } else
+            } else{
+                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_hide", "");
                 ToggleCollarAlpha(TRUE);
+            }
         }
     }
 }
