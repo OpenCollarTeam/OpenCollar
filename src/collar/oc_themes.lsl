@@ -148,13 +148,13 @@ UserCommand(integer iNum, string sStr, key kID) {
                 llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% due to: Allow Hiding is blocked", kID);
                 return;
             } else{
-                llMessageLinked(LINK_SET, LM_SETTING_DELETE, "global_hide", "");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "global_hide=0", "");
                 ToggleCollarAlpha(TRUE);
             }
         }
     }
 }
-integer g_iAllowHide = 0;
+integer g_iAllowHide = 1;
 integer g_iHidden;
 ToggleCollarAlpha(integer iHide){
     integer i=0;
