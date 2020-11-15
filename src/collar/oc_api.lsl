@@ -416,7 +416,6 @@ key g_kAddonPending;
 string g_sAddonName;
 integer g_iInterfaceChannel;
 integer g_iLMCounter=0;
-list g_lAliveAddons;
 string tf(integer a){
     if(a)return "true";
     return "false";
@@ -466,7 +465,7 @@ state active
         DoListeners();
         
         
-        
+        SayToAddonX(NULL_KEY, "dc", 0, "", llGetOwner());
         llSetTimerEvent(15);
         
         
@@ -485,29 +484,20 @@ state active
         if(llGetTime()>=60){
             // flush the alive addons and ping all addons
             llResetTime();
-            list lTmp = llList2ListStrided(g_lAddons, 0,-1,2);
+            integer deadStamp = (5*60);
+            
             integer i=0;
-            integer end=llGetListLength(lTmp);
-            
-            
-            for(i=0;i<end;i++){
-                SayToAddonX(llList2Key(g_lAddons,i), "ping", 0, "","");
-                //llWhisper(0, "Sending ping signal to addon: "+llList2String(g_lAddons,i));
-                //llRegionSayTo(llList2Key(g_lAddons, i), API_CHANNEL, llList2Json(JSON_OBJECT, ["pkt_type", "ping"]));
-                llResetTime();
-            }
-            end = llGetListLength(lTmp);
-            for(i=0;i<end;i++){
-                if(llListFindList(g_lAliveAddons, [llList2Key(lTmp, i)])==-1){
-                    // addon has died, remove from list.
-                    //llSay(0, "Removing dead addon: "+llList2String(lTmp,i));
-                    g_lAddons = llDeleteSubList(g_lAddons, llListFindList(g_lAddons, [llList2Key(lTmp,i)]), llListFindList(g_lAddons, [llList2Key(lTmp,i)])+1);
-                    
+            integer end = llGetListLength(g_lAddons);
+            for(i=0;i<end;i+=3){
+                integer lastSeen = (integer)llList2String(g_lAddons, i+2);
+                if(llGetUnixTime()>lastSeen+deadStamp){
+                    SayToAddonX((key)llList2String(g_lAddons,i), "dc", 0, "", llGetOwner());
+                    llMessageLinked(LINK_SET, NOTIFY, "0Addon: "+llList2String(g_lAddons,i+1)+" has been removed because it has not been seen for 5 minutes or more.", g_kWearer);
+                    g_lAddons = llDeleteSubList(g_lAddons, i, i+2);
+                    i=-1;
+                    end=llGetListLength(g_lAddons);
                 }
             }
-            g_lAliveAddons = [];
-            
-            
         }
     }
     
@@ -519,9 +509,14 @@ state active
             // Addon key will be placed in a temporary list that will be cleared once the timer checks over all the information.
             string PacketType = llJsonGetValue(m,["pkt_type"]);
             
-            if(PacketType=="pong" && llJsonGetValue(m,["kID"])==(string)llGetOwner()){
+            if(PacketType=="ping" && llJsonGetValue(m,["kID"])==(string)llGetKey()){
                 //llSay(0, "Alive signal seen from addon: "+(string)i);
-                if(llListFindList(g_lAliveAddons,[i])==-1) g_lAliveAddons+=i;
+                integer index = llListFindList(g_lAddons, [i]);
+                if(index==-1){
+                    return;
+                } else {
+                    g_lAddons = llListReplaceList(g_lAddons, [llGetUnixTime()], index+2, index+2);
+                }
                 return;
             } else if(PacketType == "from_collar")return; // We should never listen to another collar's LMs, wearer should not be wearing more than one anyway.
             else if(PacketType == "online"){
@@ -539,9 +534,9 @@ state active
                         return;
                     }else if(llListFindList(g_lAddons, [i])==-1 && llGetOwnerKey(i) == g_kWearer && !isAddonBridge){
                         // Add the addon and be done with
-                        g_lAddons += [i, llJsonGetValue(m,["addon_name"])];
-                        g_lAliveAddons += [i];
+                        g_lAddons += [i, llJsonGetValue(m,["addon_name"]), llGetUnixTime()];
                         SayToAddon("approved", 0, "", "");
+                        llMessageLinked(LINK_SET, NOTIFY, "0Addon connected successfully: "+llJsonGetValue(m,["addon_name"]), g_kWearer);
                     }
                 }
             } else if(PacketType == "offline"){
@@ -550,9 +545,7 @@ state active
                     integer iPos = llListFindList(g_lAddons, [i]);
                     if(iPos==-1)return;
                     else{
-                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+1);
-                        iPos = llListFindList(g_lAliveAddons,[i]);
-                        if(iPos!=-1)g_lAliveAddons = llDeleteSubList(g_lAliveAddons, iPos,iPos);
+                        g_lAddons = llDeleteSubList(g_lAddons, iPos, iPos+2);
                     }
                 }
             }
@@ -782,12 +775,12 @@ state active
                 } else if(sMenu == "addon~add"){
                     // process reply
                     if(sMsg == "No"){
+                        SayToAddonX(g_kAddonPending, "denied", 0, "","");
                         return;
                     }else {
                         // Yes
                         SayToAddonX(g_kAddonPending, "approved", 0, "", "");
-                        g_lAddons += [g_kAddonPending, g_sAddonName];
-                        g_lAliveAddons += [g_kAddonPending];
+                        g_lAddons += [g_kAddonPending, g_sAddonName, llGetUnixTime()];
                     }
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){

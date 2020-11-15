@@ -665,17 +665,17 @@ state active
         } else if (iNum == LINK_CMD_RESTDATA) {
             list lCMD = llParseString2List(sStr, ["="], []);
             if (llList2String(lCMD,0) == "BlurAmount") {
-                integer bWasTrue = g_iRestrictions2 & 16777216;
+                integer bWasTrue = g_iRestrictions2 & (integer)(llPow(2,56));
                 if (bWasTrue) ApplyCommand("Blur View",FALSE, NULL_KEY, 0);
                 g_iBlurAmount = llList2Integer(lCMD,1);
                 if (bWasTrue) ApplyCommand("Blur View",TRUE, NULL_KEY, 0);
             } else if (llList2String(lCMD,0) == "MaxCamDist") {
-                integer bWasTrue = g_iRestrictions2 & 33554432;
+                integer bWasTrue = g_iRestrictions2 & (integer)(llPow(2,57));
                 if (bWasTrue) ApplyCommand("MaxDistance",FALSE, NULL_KEY, 0);
                 g_fMaxCamDist = llList2Float(lCMD,1);
                 if (bWasTrue) ApplyCommand("MaxDistance",TRUE, NULL_KEY, 0);
             } else if (llList2String(lCMD,0) == "MinCamDist") { 
-                integer bWasTrue = g_iRestrictions2 & 67108864;
+                integer bWasTrue = g_iRestrictions2 & (integer)(llPow(2,58));
                 if (bWasTrue) ApplyCommand("MinDistance",FALSE, NULL_KEY, 0);
                 g_fMinCamDist = llList2Float(lCMD,1);
                 if (bWasTrue) ApplyCommand("MinDistance",TRUE, NULL_KEY, 0);
