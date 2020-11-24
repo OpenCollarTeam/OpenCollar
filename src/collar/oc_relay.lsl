@@ -517,7 +517,6 @@ state active
                     
                     if(g_iMode==0){
                         llListenRemove(RELAY_LISTENER);
-                        Release();
                     } else {
                         RELAY_LISTENER = llListen(RLV_RELAY_CHANNEL, "", NULL_KEY, "");
                     }
@@ -578,7 +577,7 @@ state active
             g_iMode=iOldMode;
             llMessageLinked(LINK_SET,NOTIFY, "0Relay has been reactivated",g_kWearer);
         } else if(iNum == REBOOT){
-            if(Source=="" || Source==NULL_KEY)
+            if((Source=="" || Source==NULL_KEY) || sStr=="reboot --f") 
                 llResetScript();
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
