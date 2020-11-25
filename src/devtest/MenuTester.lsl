@@ -1,11 +1,21 @@
+  
 /*
-THIS FILE IS HEREBY RELEASED UNDER THE Public Domain
-This script is released public domain, unlike other OC scripts for a specific and limited reason, because we want to encourage third party plugin creators to create for OpenCollar and use whatever permissions on their own work they see fit.  No portion of OpenCollar derived code may be used excepting this script,  without the accompanying GPLv2 license.
--Authors Attribution-
-Aria (tiff589) - (July 2018-December 2019)
-roan (Silkie Sabra) - (September 2018)
-*/
+This file is a part of OpenCollar.
+Copyright ©2020
 
+: Contributors :
+
+Aria (Tashia Redrose)
+    * Nov 2020      - Add a sorted labels option, fix license on menu tester to GPLv2
+    * Sep 2020      - Basic menu tester script to test all functions of the oc_dialog script
+    
+    
+et al.
+
+Licensed under the GPLv2. See LICENSE for full details.
+
+https://github.com/OpenCollarTeam/OpenCollar
+*/
 
 string g_sParentMenu = "Apps";
 string g_sSubMenu = "Menu Test";
@@ -59,7 +69,7 @@ Dialog(key kID, string sPrompt, list lChoices, list lUtilityButtons, integer iPa
 
 Menu(key kID, integer iAuth) {
     string sPrompt = "\n[Menu App]";
-    list lButtons = ["UUID-Avs", "UUID-Objs", "LongText", "ColorMenu", "ObjsSorted"];
+    list lButtons = ["UUID-Avs", "UUID-Objs", "LongText", "ColorMenu", "ObjsSorted", "SortedLabels"];
     Dialog(kID, sPrompt, lButtons, [UPMENU], 0, iAuth, "Menu~Main",0);
 }
 LongTester(key kID, integer iAuth){
@@ -96,6 +106,10 @@ Colors(key kID, integer iAuth){
     Dialog(kID, "\n[Color Tester]", ["colormenu please"], [UPMENU], 0, iAuth, "Menu~Colors",0);
 }
 
+SortedText(key kID, integer iAuth){
+    Dialog(kID, "\n[Labels Sorted Tester]\n\nYou should see the following buttons: A, B, C, D, E, F\n\nOriginal order in source list: B, F, E, C, D, A", ["B", "F", "E", "C", "D", "A"], [UPMENU], 0, iAuth, "Menu~SortedText", 1);
+}
+
 UserCommand(integer iNum, string sStr, key kID) {
     if (iNum<CMD_OWNER || iNum>CMD_WEARER) return;
     if (llSubStringIndex(llToLower(sStr),llToLower(g_sSubMenu)) && llToLower(sStr) != "menu "+llToLower(g_sSubMenu)) return;
@@ -125,15 +139,39 @@ list g_lBlock;
 integer g_iLocked=FALSE;
 key g_kTmpScan;
 integer g_iTmpAuth;
+
+integer ALIVE = -55;
+integer READY = -56;
+integer STARTUP = -57;
 default
 {
+    on_rez(integer iNum){
+        llResetScript();
+    }
+    state_entry(){
+        llMessageLinked(LINK_SET, ALIVE, llGetScriptName(),"");
+    }
+    link_message(integer iSender, integer iNum, string sStr, key kID){
+        if(iNum == REBOOT){
+            if(sStr == "reboot"){
+                llResetScript();
+            }
+        } else if(iNum == READY){
+            llMessageLinked(LINK_SET, ALIVE, llGetScriptName(), "");
+        } else if(iNum == STARTUP){
+            state active;
+        }
+    }
+}
+state active
+{
     on_rez(integer t){
-        if(llGetOwner()!=g_kWearer) llResetScript();
+        llResetScript();
     }
     state_entry()
     {
         g_kWearer = llGetOwner();
-        llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
+        //llMessageLinked(LINK_SET, LM_SETTING_REQUEST, "global_locked","");
     }
     sensor(integer n){
         list lIDS = [];
@@ -180,6 +218,8 @@ default
                         Colors(kAv,iAuth);
                     } else if(sMsg == "ObjsSorted"){
                         ObjsSortTester(kAv,iAuth);
+                    } else if(sMsg == "SortedLabels"){
+                        SortedText(kAv,iAuth);
                     }
                 } else if(sMenu == "Menu~LongText"){
                     if(sMsg == UPMENU){
@@ -226,6 +266,15 @@ default
                     }
                     
                     ObjsSortTester(kAv,iAuth);
+                } else if(sMenu == "Menu~SortedText"){
+                    if(sMsg == UPMENU){
+                        Menu(kAv,iAuth);
+                        return;
+                    } else {
+                        llSay(0, "You selected: "+sMsg);
+                    }
+                    
+                    SortedText(kAv, iAuth);
                 }
             }
         } else if (iNum == DIALOG_TIMEOUT) {
