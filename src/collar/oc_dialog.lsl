@@ -293,6 +293,17 @@ Dialog(key kRecipient, string sPrompt, list lMenuItems, list lUtilityButtons, in
     //Debug("Made Dialog");
 }
 
+integer IsUUIDList(list lTmp)
+{
+    integer i=0;
+    integer end = llGetListLength(lTmp);
+    for(i=0;i<end;i++){
+        key item = (key)llList2String(lTmp,i);
+        if(item) return TRUE;
+    }
+    return FALSE;
+}
+
 list SortUUIDList(list lToSort){
     integer i = 0;
     list lNameList = [];
@@ -637,7 +648,9 @@ state active
             if (llGetListLength(lParams)>=6) iAuth = llList2Integer(lParams, 5);
             if (llGetListLength(lParams)>=7) iSorted = llList2Integer(lParams, 6);
             //first clean out any strides already in place for that user. prevents having lots of listens open if someone uses the menu several times while sat
-            if(iSorted)lButtons = SortUUIDList(lButtons);
+            if(iSorted && IsUUIDList(lButtons))lButtons = SortUUIDList(lButtons);
+            else if(iSorted && !IsUUIDList(lButtons))lButtons = llListSort(lButtons, 1, TRUE);
+            
             ClearUser(kRCPT);
             Dialog(kRCPT, sPrompt, lButtons, ubuttons, iPage, kID, iDigits, iAuth,"", iSorted);
         }
