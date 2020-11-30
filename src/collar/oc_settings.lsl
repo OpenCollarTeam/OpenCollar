@@ -434,6 +434,7 @@ integer CheckModifyPerm(string sSetting, key kStr)
         if(kStr == "origin")return TRUE;
         else return FALSE;
     }
+    if(kStr == "url" && llList2String(lTmp,0) == "intern")return FALSE;
     return TRUE;
 }
 default
@@ -595,7 +596,7 @@ default
             integer end = llGetListLength(lSettings);
             for(i=0;i<end;i++)
             {
-                if(CheckModifyPerm(llList2String(lSettings,i), "") || g_iLoadURLConsented) {
+                if(CheckModifyPerm(llList2String(lSettings,i), "url") || g_iLoadURLConsented) {
                     // permissions to modify this setting passed the security policy.
                     ProcessSettingLine(llList2String(lSettings,i));
                 } else
