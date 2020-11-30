@@ -428,7 +428,7 @@ integer g_iBootup;
 integer CheckModifyPerm(string sSetting, key kStr)
 {
     sSetting = llToLower(sSetting);
-    list lTmp = llParseString2List(sSetting,["_"],[]);
+    list lTmp = llParseString2List(sSetting,["_", "="],[]);
     if(llList2String(lTmp,0)=="auth") // Protect the auth settings against manual editing via load url or via the settings editor
     {
         if(kStr == "origin")return TRUE;
@@ -567,7 +567,6 @@ default
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
         } else if(iNum == LM_SETTING_REQUEST)
         {
-            if(!CheckModifyPerm(sStr, kID))return;
             if(SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
             else if(sStr == "ALL"){
                 g_iCurrentIndex=0;
@@ -590,18 +589,22 @@ default
         {
             g_kLoadURL = NULL_KEY;
             
-            list lSettings = llParseString2List(sBody, ["\n", "\r"],[]);
+            list lSettings = llParseString2List(sBody, ["\n"],[]);
             integer i=0;
             integer iErrorLevel=0;
-            integer end = llGetListLength(lSettings);
-            for(i=0;i<end;i++)
-            {
-                if(CheckModifyPerm(llList2String(lSettings,i), "url") || g_iLoadURLConsented) {
-                    // permissions to modify this setting passed the security policy.
-                    ProcessSettingLine(llList2String(lSettings,i));
-                } else
-                    iErrorLevel++;
-            }
+            if(lSettings){
+                do{
+                    if(CheckModifyPerm(llList2String(lSettings,0), "url") || g_iLoadURLConsented) {
+                        // permissions to modify this setting passed the security policy.
+                        ProcessSettingLine(llList2String(lSettings,0));
+                    } else
+                        iErrorLevel++;
+                    
+                    lSettings = llDeleteSubList(lSettings,0,0);
+                    i=llGetListLength(lSettings);
+                } while(i);
+            }else llMessageLinked(LINK_SET, NOTIFY, "0Empty URL loaded. No settings changes have been made", g_kLoadURLBy);
+            
             if(g_iLoadURLConsented)g_iLoadURLConsented=FALSE;
             if(iErrorLevel > 0){
                 llMessageLinked(LINK_SET, NOTIFY, "1Some settings were not loaded due to the security policy. The wearer has been asked to review the URL and give consent", g_kLoadURLBy);
