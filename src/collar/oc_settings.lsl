@@ -413,6 +413,18 @@ DeleteWeldFlag()
     llSetLinkPrimitiveParams(g_iWeldStorage, [PRIM_DESC, llDumpList2String(lPara,"~")]);
 }
 integer g_iBootup;
+
+integer CheckModifyPerm(string sSetting, key kStr)
+{
+    sSetting = llToLower(sSetting);
+    list lTmp = llParseString2List(sSetting,["_"],[]);
+    if(llList2String(lTmp,0)=="auth") // Protect the auth settings against manual editing via load url or via the settings editor
+    {
+        if(kStr == "origin")return TRUE;
+        else return FALSE;
+    }
+    return TRUE;
+}
 default
 {
     on_rez(integer t){
@@ -506,6 +518,7 @@ default
             if(sStr == "check_weld")CheckForAndSaveWeld();
         } else if(iNum == LM_SETTING_DELETE){
             // This is recieved back from settings when a setting is deleted
+            if(!CheckModifyPerm(sStr, kID))return;
             DelSetting(sStr);
             llMessageLinked(LINK_SET, LM_SETTING_REQUEST, sStr,""); // trigger the empty signal to be dispatched
         } else if(iNum == LM_SETTING_RESPONSE){
@@ -520,6 +533,7 @@ default
                 }
             }
         } else if(iNum == LM_SETTING_SAVE){
+            if(!CheckModifyPerm(sStr, kID))return;
             list lTmp = llParseString2List(sStr,["="],[]);
             string sTok = llList2String(lTmp,0);
             string sVal = llList2String(lTmp,1);
@@ -531,6 +545,7 @@ default
             llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr, "");
         } else if(iNum == LM_SETTING_REQUEST)
         {
+            if(!CheckModifyPerm(sStr, kID))return;
             if(SettingExists(sStr)) llMessageLinked(LINK_SET, LM_SETTING_RESPONSE, sStr+"="+GetSetting(sStr), "");
             else if(sStr == "ALL"){
                 g_iCurrentIndex=0;

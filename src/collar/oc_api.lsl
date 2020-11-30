@@ -214,7 +214,7 @@ UpdateLists(key kID, key kIssuer){
                 g_lOwner+=kID;
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added as owner", kIssuer);
                 llMessageLinked(LINK_SET, NOTIFY, "0You are now a owner on this collar", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), kID);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), "origin");
                 g_iMode = ACTION_REM | ACTION_TRUST | ACTION_BLOCK;
                 UpdateLists(kID, kIssuer);
             }
@@ -224,7 +224,7 @@ UpdateLists(key kID, key kIssuer){
                 g_lTrust+=kID;
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been added to the trusted user list", kIssuer);
                 llMessageLinked(LINK_SET, NOTIFY, "0You are now a trusted user on this collar", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),kID);
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","), "origin");
                 g_iMode = ACTION_REM | ACTION_OWNER | ACTION_BLOCK;
                 UpdateLists(kID, kIssuer);
             }
@@ -235,7 +235,7 @@ UpdateLists(key kID, key kIssuer){
                     g_lBlock+=kID;
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been blocked", kIssuer);
                     llMessageLinked(LINK_SET, NOTIFY, "0Your access to this collar is now blocked", kID);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"origin");
                     g_iMode=ACTION_REM|ACTION_OWNER|ACTION_TRUST;
                     UpdateLists(kID, kIssuer);
                     g_iGrantedConsent=FALSE;
@@ -252,7 +252,7 @@ UpdateLists(key kID, key kIssuer){
                     g_lOwner = llDeleteSubList(g_lOwner, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the owner role", kIssuer);
                     llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","),"");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_owner="+llDumpList2String(g_lOwner,","), "origin");
                     g_iGrantedConsent=FALSE;
                 } else if(kID == g_kWearer && !g_iGrantedConsent){
                     WearerConfirmListUpdate(kIssuer, "Removal of self ownership");
@@ -266,7 +266,7 @@ UpdateLists(key kID, key kIssuer){
                     g_lTrust = llDeleteSubList(g_lTrust, iPos, iPos);
                     llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the trusted role", kIssuer);
                     llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar", kID);
-                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),"");
+                    llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_trust="+llDumpList2String(g_lTrust, ","),"origin");
                     g_iGrantedConsent=FALSE;
                 } else if(kID == g_kWearer && !g_iGrantedConsent){
                     WearerConfirmListUpdate(kIssuer, "Removal from Trusted List");
@@ -279,7 +279,7 @@ UpdateLists(key kID, key kIssuer){
                 g_lBlock = llDeleteSubList(g_lBlock, iPos, iPos);
                 llMessageLinked(LINK_SET, NOTIFY, "1"+SLURL(kID)+" has been removed from the blocked list", kIssuer);
                 llMessageLinked(LINK_SET, NOTIFY, "0You have been removed from %WEARERNAME%'s collar blacklist", kID);
-                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"");
+                llMessageLinked(LINK_SET, LM_SETTING_SAVE, "auth_block="+llDumpList2String(g_lBlock,","),"origin");
             }
         }
     }
@@ -369,9 +369,9 @@ UserCommand(integer iAuth, string sCmd, key kID){
         if(g_iRunawayMode == 2){
             g_iRunawayMode=-1;
             llMessageLinked(LINK_SET, NOTIFY_OWNERS, "Runaway completed on %WEARERNAME%'s collar", kID);
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","");
-            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_owner","origin");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_trust","origin");
+            llMessageLinked(LINK_SET, LM_SETTING_DELETE, "auth_block","origin");
             llMessageLinked(LINK_SET, NOTIFY, "0Runaway complete", g_kWearer);
             return;
         }
@@ -597,15 +597,12 @@ state active
             llResetTime();
             g_iLMCounter=0;
         }
-        g_iLMCounter++;
-        if(g_iLMCounter < 100){
-            
-            // Max of 100 LMs to send out in a 30 second period, after that ignore
-            if(llGetListLength(g_lAddons)>0){
-                SayToAddon("from_collar", iNum, sStr, kID);
+        
+        if(llGetListLength(g_lAddons)>0){
+            SayToAddon("from_collar", iNum, sStr, kID);
 //                llRegionSay(API_CHANNEL, llList2Json(JSON_OBJECT, ["addon_name", "OpenCollar", "iNum", iNum, "sMsg", sStr, "kID", kID, "pkt_type", "from_collar"]));
-            }
         }
+        
         
         
         //if(iNum>=CMD_OWNER && iNum <= CMD_NOACCESS) llOwnerSay(llDumpList2String([iSender, iNum, sStr, kID], " ^ "));
@@ -731,7 +728,8 @@ state active
                         return;
                     } else if(sMsg == ">Wearer<"){
                         UpdateLists(llGetOwner(), g_kMenuUser);
-                        llMessageLinked(LINK_SET, 0, "menu Access", kAv);
+                        // Not enough time to update the lists via settings. Handle via timer callback.
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     }else {
                         //UpdateLists((key)sMsg);
                         g_kTry = (key)sMsg;
@@ -744,11 +742,13 @@ state active
                         // process
                         g_iGrantedConsent=TRUE;
                         UpdateLists(g_kWearer, g_kMenuUser);
-                        llMessageLinked(LINK_SET, 0, "menu Access", g_kMenuUser);
+                        // Not enough time to update the lists via settings. Handle via timer callback.
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)g_kMenuUser);
                     } else if(sMsg == "Disallow"){
                         llMessageLinked(LINK_SET, NOTIFY, "0The wearer did not give consent for this action", g_kMenuUser);
                         g_iMode=0;
-                        llMessageLinked(LINK_SET, 0, "menu Access", g_kMenuUser);
+                        // Not enough time to update the lists via settings. Handle via timer callback.
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)g_kMenuUser);
                     }
                 } else if(sMenu == "scan~confirm"){
                     if(sMsg == "No"){
@@ -756,12 +756,13 @@ state active
                         llMessageLinked(LINK_SET, 0, "menu Access", kAv);
                     } else if(sMsg == "Yes"){
                         UpdateLists(g_kTry, g_kMenuUser);
-                        llSleep(1);
-                        llMessageLinked(LINK_SET, 0, "menu Access", kAv);
+                        // Not enough time to update the lists via settings. Handle via timer callback.
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "5", "spring_access:"+(string)kAv);
                     }
                 } else if(sMenu == "removeUser"){
                     if(sMsg == UPMENU){
-                        llMessageLinked(LINK_SET,0, "menu Access", kAv);
+                        // Not enough time to update the lists via settings. Handle via timer callback.
+                        llMessageLinked(LINK_SET, TIMEOUT_REGISTER, "2", "spring_access:"+(string)kAv);
                     }else{
                         UpdateLists(sMsg, g_kMenuUser);
                     }
@@ -785,10 +786,10 @@ state active
                 } else if(sMenu == "RunawayMenu"){
                     if(sMsg == "Enable" && iAuth == CMD_OWNER){
                         g_iRunaway=TRUE;
-                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runawaydisable","");
+                        llMessageLinked(LINK_SET, LM_SETTING_DELETE, "AUTH_runawaydisable","origin");
                     } else if(sMsg == "Disable"){
                         g_iRunaway=FALSE;
-                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runawaydisable=0", "");
+                        llMessageLinked(LINK_SET, LM_SETTING_SAVE, "AUTH_runawaydisable=0", "origin");
                     } else if(sMsg == "No"){
                         // return
                         g_iRunawayMode=-1;
@@ -808,6 +809,12 @@ state active
             else llOwnerSay("@setgroup:"+(string)g_kGroup+"=force;setgroup=n");
         } else if(iNum == -99999){
             if(sStr == "update_active")llResetScript();
+        } else if(iNum == TIMEOUT_FIRED)
+        {
+            list lTmp = llParseString2List(sStr, [":"],[]);
+            if(llList2String(lTmp,0)=="spring_access"){
+                llMessageLinked(LINK_SET,0,"menu Access", (key)llList2String(lTmp,1));
+            }
         }
     }
     sensor(integer iNum){

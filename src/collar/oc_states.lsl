@@ -318,8 +318,13 @@ default
                         SettingsMenu(8, kAv, iAuth);
                         return;
                     }
-                    g_sTokenView = sMsg;
-                    SettingsMenu(1, kAv,iAuth);
+                    if(sMsg == "intern" || sMsg == "auth"){
+                        llMessageLinked(LINK_SET, NOTIFY, "0Editing of the "+sMsg+" token is prohibited by the security policy", kAv);
+                        SettingsMenu(1, kAv, iAuth);
+                    } else {
+                        g_sTokenView=sMsg;
+                        SettingsMenu(1, kAv,iAuth);
+                    }
                 } else if(sMenu == "settings~edit~1"){
                     if(sMsg==UPMENU){
                         SettingsMenu(0,kAv,iAuth);
@@ -328,8 +333,10 @@ default
                         SettingsMenu(9, kAv, iAuth);
                         return;
                     }
+                    
                     g_sVariableView=sMsg;
                     SettingsMenu(2, kAv,iAuth);
+                    
                 } else if(sMenu == "settings~edit~2"){
                     if(sMsg == UPMENU){
                         SettingsMenu(1,kAv,iAuth);
