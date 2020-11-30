@@ -211,6 +211,11 @@ integer AuthCheck(integer iMask){
 Error(key kID, string sCmd){
     llMessageLinked(LINK_SET,NOTIFY,"0%NOACCESS% to command: "+sCmd, kID);
 }
+
+key g_kLoadURL;
+string g_sLoadURL;
+key g_kLoadURLBy;
+integer g_iLoadURLConsented;
 UserCommand(integer iNum, string sStr, key kID) {
     string sLower=  llToLower(sStr);
     if(sLower == "print settings" || sLower == "debug settings"){
@@ -247,6 +252,12 @@ UserCommand(integer iNum, string sStr, key kID) {
         // TODO: not yet implemented?
         if(AuthCheck(iNum)){
             // load stuff
+            list lTmp = llParseString2List(sStr, [" "],[]);
+            string actualURL = llDumpList2String(llList2List(lTmp,2,-1)," ");
+            g_sLoadURL = actualURL;
+            g_kLoadURLBy = kID;
+            g_kLoadURL = llHTTPRequest(actualURL, [],"");
+            llMessageLinked(LINK_SET, NOTIFY, "1Loading settings from URL.. Please wait a moment..", kID);
         } else Error(kID,sStr);
     } else if(sLower == "fix"){
         if(AuthCheck(iNum)){
@@ -508,6 +519,16 @@ default
                         g_iRebootConfirmed=TRUE;
                         llMessageLinked(LINK_SET, iAuth, "reboot", kAv);
                     }
+                } else if(sMenu == "Consent~LoadURL")
+                {
+                    if(sMsg == "DECLINE"){
+                        llMessageLinked(LINK_SET, NOTIFY, "0%NOACCESS% to loading auth or intern settings", g_kLoadURLBy);
+                    } else if(sMsg == "ACCEPT")
+                    {
+                        llMessageLinked(LINK_SET, NOTIFY, "1Consented. Reloading URL", g_kLoadURLBy);
+                        g_iLoadURLConsented=TRUE;
+                        g_kLoadURL = llHTTPRequest(g_sLoadURL, [], "");
+                    }
                 }
                 
             }
@@ -560,5 +581,36 @@ default
             }
         }
         //llOwnerSay(llDumpList2String([iSender,iNum,sStr,kID],"^"));
+    }
+    
+    http_response(key kID, integer iStatus, list lMeta, string sBody)
+    {
+        if(kID == g_kLoadURL)
+        {
+            g_kLoadURL = NULL_KEY;
+            
+            list lSettings = llParseString2List(sBody, ["\n", "\r"],[]);
+            integer i=0;
+            integer iErrorLevel=0;
+            integer end = llGetListLength(lSettings);
+            for(i=0;i<end;i++)
+            {
+                if(CheckModifyPerm(llList2String(lSettings,i), "") || g_iLoadURLConsented) {
+                    // permissions to modify this setting passed the security policy.
+                    ProcessSettingLine(llList2String(lSettings,i));
+                } else
+                    iErrorLevel++;
+            }
+            if(g_iLoadURLConsented)g_iLoadURLConsented=FALSE;
+            if(iErrorLevel > 0){
+                llMessageLinked(LINK_SET, NOTIFY, "1Some settings were not loaded due to the security policy. The wearer has been asked to review the URL and give consent", g_kLoadURLBy);
+                // Ask wearer for consent
+                Dialog(g_kWearer, "[Settings URL Loader]\n\n"+(string)iErrorLevel+" settings were not loaded from "+g_sLoadURL+".\nReason: Security Policy\n\nLoaded by: secondlife:///app/agent/"+(string)g_kLoadURLBy+"/about\n\nPlease review the url before consenting", ["ACCEPT", "DECLINE"], [], 0, CMD_WEARER, "Consent~LoadURL");
+            }
+            g_iCurrentIndex=0;
+            llSetTimerEvent(2);
+            
+            llMessageLinked(LINK_SET, NOTIFY, "1Settings have been loaded", g_kLoadURLBy);
+        }
     }
 }
