@@ -83,29 +83,45 @@ Link(string packet, integer iNum, string sStr, key kID){
         llRegionSay(API_CHANNEL, pkt);
 }
 key g_kCollar=NULL_KEY;
+integer g_iLMLastRecv;
 default
 {
     state_entry()
     {
         API_CHANNEL = ((integer)("0x"+llGetSubString((string)llGetOwner(),0,8)))+0xf6eb-0xd2;
         llListen(API_CHANNEL, "", "", "");
+        Link("online", 0, "", llGetOwner()); // This is the signal to initiate communication between the addon and the collar
+
+        llSetTimerEvent(60);
     }
     
-    touch_start(integer t){
-        Link("online", 0, (string)llGetCreator(), llDetectedKey(0)); // This is the signal to initiate communication between the addon and the collar
+    timer()
+    {
+        if(llGetTime()>=(3*60)){
+            llResetTime();
+            Link("ping", 0, "", g_kCollar);
+        }
+        
+        if(  llGetUnixTime() > (g_iLMLastRecv+(5*60)) &&  g_kCollar != NULL_KEY ){
+            g_kCollar=NULL_KEY;
+            llResetScript(); // perform our action on disconnect
+        }
+        
+        if(g_kCollar==NULL_KEY)Link("online", 0, "", llGetOwner());
     }
     
     listen(integer c,string n,key i,string m){
-        //llWhisper(0, "message from collar: "+m);
-        if(llJsonGetValue(m,["pkt_type"])=="ping"){
-            if(g_kCollar==i){
-                //llWhisper(0, "Responding to ping request!");
-                Link("pong", 0,"",llGetOwnerKey(i));
-            }
-        } else if(llJsonGetValue(m,["pkt_type"])=="approved" && g_kCollar==NULL_KEY){
+        //llOwnerSay( "message from collar: "+m);
+        if(llJsonGetValue(m,["pkt_type"])=="approved" && g_kCollar==NULL_KEY){
             // This signal, indicates the collar has approved the addon and that communication requests will be responded to if the requests are valid collar LMs.
             g_kCollar = i;
             Link("from_addon", LM_SETTING_REQUEST, "ALL","");
+        } else if(llJsonGetValue(m,["pkt_type"])=="dc" && g_kCollar==i){
+            g_kCollar=NULL_KEY;
+            llResetScript(); // This addon is designed to always be connected because it is a test
+        } else if(llJsonGetValue(m,["pkt_type"])=="pong" && g_kCollar==i)
+        {
+            g_iLMLastRecv = llGetUnixTime();
         } else if(llJsonGetValue(m,["pkt_type"])=="from_collar"){
             // process link message if in range of addon
             if(llVecDist(llGetPos(), llList2Vector(llGetObjectDetails(i, [OBJECT_POS]),0))<=10.0){
@@ -152,8 +168,6 @@ default
                         }
                     }
                 }
-            }else{
-                if(g_kCollar==i)g_kCollar="";
             }
         }
     }
