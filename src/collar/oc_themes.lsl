@@ -156,13 +156,31 @@ UserCommand(integer iNum, string sStr, key kID) {
 }
 integer g_iAllowHide = 1;
 integer g_iHidden;
-ToggleCollarAlpha(integer iHide){
+ToggleCollarAlpha(integer iHide){ // iHide is inverted for the alpha masking. 
     integer i=0;
     integer end = llGetNumberOfPrims();
     for(i=1;i<=end;i++){
         string desc = llList2String(llGetLinkPrimitiveParams(i, [PRIM_DESC]),0);
-        if(llSubStringIndex(desc,"nohide")==-1){
+        list lElements = llParseStringKeepNulls(desc,["~"],[]);
+        if(llListFindList(lElements,["nohide"])==-1){
             llSetLinkAlpha(i, iHide, ALL_SIDES);
+        }
+        if(iHide){
+            if(llListFindList(lElements, ["OpenLock"])!=-1){
+                //llSay(0, "open lock prim found. Setting alpha: "+(string)(!g_iLocked));
+                if(g_iLocked)
+                    llSetLinkAlpha(i, FALSE, ALL_SIDES);
+                else
+                    llSetLinkAlpha(i, TRUE, ALL_SIDES);
+            }
+            if(llListFindList(lElements, ["ClosedLock"])!=-1 || llListFindList(lElements, ["Lock"]) != -1)
+            {
+                //llSay(0, "closed lock prim found. Setting alpha: "+(string)g_iLocked);
+                if(g_iLocked)
+                    llSetLinkAlpha(i, TRUE, ALL_SIDES);
+                else
+                    llSetLinkAlpha(i, FALSE, ALL_SIDES);
+            }
         }
     }
 }
@@ -527,6 +545,9 @@ state active
                 } else if(sVar == "hide"){
                     g_iHide = (integer)sVal;
                     ToggleCollarAlpha(!g_iHide);
+                } else if(sVar == "locked"){
+                    g_iLocked = (integer)sVal;
+                    ToggleCollarAlpha(!g_iHide);
                 }
             }/* else if(sToken == "auth"){
                 if(sVar == "owner"){
@@ -536,8 +557,12 @@ state active
         } else if(iNum == LM_SETTING_DELETE){
             // This is received back from settings when a setting is deleted
             list lSettings = llParseString2List(sStr, ["_"],[]);
-            if(llList2String(lSettings,0)=="global")
-                if(llList2String(lSettings,1) == "locked") g_iLocked=FALSE;
+            if(llList2String(lSettings,0)=="global"){
+                if(llList2String(lSettings,1) == "locked") {
+                    g_iLocked=FALSE;
+                    ToggleCollarAlpha(!g_iHide);
+                }
+            }
         } else if(iNum == REBOOT){
             // Reboot. We dont care if --f or not.
             llResetScript();
